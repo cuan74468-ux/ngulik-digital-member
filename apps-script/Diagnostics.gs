@@ -364,3 +364,43 @@ function diagnosticAdminSettingsScenarios() {
   console.log('ADMIN_SETTINGS_SCENARIOS_OK cases='+count+' mode=MEMORY_ONLY');
   return 'ADMIN_SETTINGS_SCENARIOS_OK';
 }
+
+
+// =====================================
+// TEST 10 — WAITING LIST (MEMORY ONLY)
+// =====================================
+// Tidak membaca/menulis Google Sheets, tidak membuat atau mengubah member.
+function diagnosticMemberQueueScenarios() {
+  var passed=0;
+  function check_(condition,label) {
+    if(!condition)throw new Error('QUEUE_TEST_FAILED: '+label);
+    passed++;console.log('PASS: '+label);
+  }
+  var base=[
+    {member_id:'M-0001',role:'ADMIN',status:'AKTIF',joined_at:new Date('2026-01-01T00:00:00Z'),_row:2},
+    {member_id:'M-0002',role:'MEMBER',status:'AKTIF',joined_at:new Date('2026-01-01T01:00:00Z'),_row:3},
+    {member_id:'M-0003',role:'MEMBER',status:'WAITING_LIST',joined_at:new Date('2026-01-01T02:00:00Z'),_row:4},
+    {member_id:'M-0004',role:'MEMBER',status:'WAITING_LIST',joined_at:new Date('2026-01-01T03:00:00Z'),_row:5},
+    {member_id:'M-0005',role:'MEMBER',status:'SUSPENDED',joined_at:new Date('2026-01-01T04:00:00Z'),_row:6}
+  ];
+  var sorted=memberQueue_(base);
+  check_(sorted.length===2,'Dua anggota waiting list');
+  check_(sorted[0].member_id==='M-0003','Antrean paling awal di posisi pertama');
+  check_(memberAdmissionDecision_(base,2,'M-0003').eligible,'Promosi antrean pertama ketika ada tempat');
+  check_(memberAdmissionDecision_(base,1,'M-0003').reason==='QUOTA_FULL','Promosi saat kuota penuh ditolak');
+  check_(memberAdmissionDecision_(base,2,'M-0004').reason==='QUEUE_ORDER','Melompati antrean ditolak');
+  check_(memberAdmissionDecision_(base,2,'M-0001').reason==='MEMBER_NOT_FOUND','Akun ADMIN tidak boleh dipromosikan');
+  check_(memberAdmissionDecision_(base,2,'M-0002').reason==='NOT_WAITING_LIST','Member aktif tidak bisa dipromosikan ulang');
+  check_(memberAdmissionDecision_(base,2,'M-0005').reason==='NOT_WAITING_LIST','Member ditangguhkan bukan waiting list');
+  check_(memberAdmissionDecision_(base,0,'M-0003').reason==='INVALID_QUOTA','Kuota nol ditolak');
+  check_(memberAdmissionDecision_(base,2,'M-XXXX').reason==='MEMBER_NOT_FOUND','Member tidak ditemukan ditolak');
+  var ties=[
+    {member_id:'M-0011',role:'MEMBER',status:'WAITING_LIST',joined_at:new Date('2026-02-01T00:00:00Z'),_row:11},
+    {member_id:'M-0010',role:'MEMBER',status:'WAITING_LIST',joined_at:new Date('2026-02-01T00:00:00Z'),_row:10}
+  ];
+  check_(memberQueue_(ties)[0].member_id==='M-0010','Waktu sama mengikuti urutan baris');
+  var shuffled=[base[3],base[1],base[2],base[0],base[4]];
+  check_(memberQueue_(shuffled)[0].member_id==='M-0003','Hasil antrean stabil ketika input diacak');
+  console.log('MEMBER_QUEUE_SCENARIOS_OK cases='+passed+' mode=MEMORY_ONLY');
+  return 'MEMBER_QUEUE_SCENARIOS_OK';
+}
