@@ -191,7 +191,7 @@ function viewAffiliate(){
   const stats=a?.saldo||{};
   return title('Bertumbuh bersama','PROGRAM AFFILIATE','Gunakan kode referral Anda untuk mengajak pelaku usaha lain.')+
     '<div class="surface"><p class="card-kicker">KODE REFERRAL</p><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><h2 style="margin:0">'+esc(code||'Belum tersedia')+'</h2>'+
-    '<button class="btn btn-primary" data-copy="'+esc(link)+'" '+(!link?'disabled':'')+'>Salin tautan '+icon('link')+'</button></div><div class="stat-grid">'+
+    '<button class="btn btn-primary" data-copy="'+esc(link)+'" '+(!link||!isWriteEnabled()?'disabled title="Referral belum aktif"':'')+'>Salin tautan '+icon('link')+'</button></div><div class="stat-grid">'+
     '<div class="stat"><div class="stat-value">'+esc(a?.pendaftar??0)+'</div><div class="stat-label">Pendaftar</div></div>'+
     '<div class="stat"><div class="stat-value">'+esc(a?.konversi??0)+'</div><div class="stat-label">Konversi</div></div>'+
     '<div class="stat"><div class="stat-value">'+rupiah(stats.APPROVED??0)+'</div><div class="stat-label">Disetujui</div></div></div></div>'+
