@@ -137,3 +137,70 @@ function diagnosticApiPublic() {
   console.log('Tidak ada penulisan database atau transaksi uji.');
   return 'API_PUBLIC_OK';
 }
+
+
+// =====================================
+// TEST 5 — AUTENTIKASI (TANPA MUTASI)
+// =====================================
+// Tidak menguji login nyata atau membuat sesi. Tidak pernah mencetak PIN/token.
+function diagnosticAuthReadOnly() {
+  var start=Date.now(), passed=0;
+  function check(ok,name) {
+    if (!ok) throw new Error('AUTH_TEST_FAILED: '+name);
+    passed++;console.log('PASS: '+name);
+  }
+  function fails(fn) {
+    try {fn();return false;} catch(e){return true;}
+  }
+  console.log('Mulai pemeriksaan autentikasi baca-saja.');
+
+  check(normalizeWa_('081234567890')==='6281234567890',
+    'Normalisasi WA 08 ke 62');
+  check(normalizeWa_('+6281234567890')==='6281234567890',
+    'Normalisasi WA +62');
+  check(fails(function(){normalizeWa_('abc');}),
+    'Nomor WA tidak valid ditolak');
+  check(fails(function(){normalizeWa_('0812');}),
+    'Nomor WA terlalu pendek ditolak');
+
+  checkPin_('123456');
+  check(true,'Format PIN 6 digit diterima');
+  check(fails(function(){checkPin_('12345');}),
+    'PIN 5 digit ditolak');
+  check(fails(function(){checkPin_('1234567');}),
+    'PIN 7 digit ditolak');
+  check(fails(function(){checkPin_('abcdef');}),
+    'PIN nonangka ditolak');
+
+  var salt='DIAGNOSTIC-SALT-ONLY';
+  var hash=pinHash_('123456',salt);
+  check(/^[a-f0-9]{64}$/.test(hash),'Hash SHA-256 64 karakter');
+  check(hash!==pinHash_('123457',salt),
+    'PIN berbeda menghasilkan hash berbeda');
+  check(hash!==pinHash_('123456','OTHER-DIAGNOSTIC-SALT'),
+    'Salt berbeda menghasilkan hash berbeda');
+
+  var fake='A'.repeat(64);
+  check(fails(function(){session_(fake);}),
+    'Token sesi palsu ditolak');
+  check(fails(function(){session_('token-invalid');}),
+    'Format token tidak valid ditolak');
+
+  var admin=diagnosticCallApi_('adminGetDashboard',{},fake);
+  check(admin.ok===false&&admin.error&&admin.error.code==='UNAUTHORIZED',
+    'API admin menolak token palsu');
+
+  var account=diagnosticCallApi_('getMe',{},fake);
+  check(account.ok===false&&account.error&&account.error.code==='UNAUTHORIZED',
+    'API profil menolak token palsu');
+
+  var settings=diagnosticCallApi_('adminGetSettings',{},'');
+  check(settings.ok===false&&settings.error&&settings.error.code==='UNAUTHORIZED',
+    'Pengaturan admin menolak tanpa sesi');
+
+  console.log('AUTH_READONLY_OK');
+  console.log('Jumlah pemeriksaan: '+passed);
+  console.log('Durasi: '+(Date.now()-start)+' ms');
+  console.log('READ_ONLY: Tidak membuat sesi, akun, PIN, atau transaksi.');
+  return 'AUTH_READONLY_OK';
+}
