@@ -7,6 +7,15 @@ Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliat
 
 **Status: DALAM PENGEMBANGAN — belum siap dipakai publik atau transaksi nyata.**
 
+Perubahan checkpoint 14 November:
+- Backend mutasi sekarang memerlukan Script Property `NGD_MUTATIONS_ENABLED=true`. Properti ini **belum disetel**; bawaan menolak login/registrasi/order/aksi tulis dengan `MAINTENANCE`.
+- Login diserialkan di dalam lock untuk mengurangi bypass throttle PIN akibat request paralel.
+- Komisi `PAID` memerlukan bukti transfer dan verifikasi penerima; koreksi kredit admin harus integer, tidak boleh membuat saldo negatif.
+- Beranda member menjadi dashboard tugas/aktivitas, disertai katalog dan opsi `?preview=member` untuk **data contoh lokal** tanpa login/transaksi.
+- CSP statis, uji keamanan backend, uji XSS/HTML frontend, dan uji kontrak berkas ditambahkan.
+- Tes browser GET baca-saja di `tests/transport-probe.html` disediakan untuk pengujian staging nanti.
+- Panduan P0, CORS, staging, dan rollback ada di [Release Gates](docs/RELEASE_GATES_2026-11-14.md).
+
 | Komponen | Status |
 |---|---|
 | Database Google Sheets 14 tab + satu akun ADMIN | Terverifikasi dari log Apps Script |
@@ -16,7 +25,7 @@ Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliat
 | `diagnosticFinanceReadOnly` | Lulus dengan **0 order / 0 ledger / 0 komisi** |
 | `diagnosticReconciliationReadOnly` | Lulus dengan **0 order** |
 | Skenario murni antrean, keuangan, pengaturan admin | 37/37 assertions lulus di V8 terisolasi |
-| Frontend awal (SPA tanpa build) | **Source dibuat**; belum diuji di browser sungguhan |
+| Frontend awal (SPA tanpa build) | **Source dibuat**; guest/member preview telah diuji pada mock browser; belum diuji di browser sungguhan |
 | Login nyata, pembayaran, refund, affiliate, AI | **Belum lulus uji integrasi/keamanan** |
 | Google Apps Script terbaru vs GitHub | **Belum disinkronkan sejak perubahan lanjutan** |
 | GitHub Pages & Apps Script publik | **Jangan aktifkan dulu** |
@@ -55,7 +64,7 @@ tests/frontend-smoke.test.cjs
 Saat bekerja dalam repository yang memiliki Node.js 20+, jalankan:
 
 ```bash
-node --test tests/backend-pure.test.cjs tests/frontend-smoke.test.cjs
+node --test tests/backend-pure.test.cjs tests/backend-security.test.cjs tests/frontend-smoke.test.cjs tests/static-contract.test.cjs
 ```
 
 Workflow `validate.yml` juga menjalankan perintah itu pada push/PR, **tidak melakukan deployment**. Hasil workflow harus diperiksa sebelum menyatakan CI lulus. Pengujian murni tidak menggantikan uji nyata Apps Script, browser, pembayaran, atau concurrency.
@@ -77,3 +86,10 @@ Workflow `validate.yml` juga menjalankan perintah itu pada push/PR, **tidak mela
 - [Frontend utama](js/app.js)
 
 **Prinsip kerja:** audit source di GitHub → uji tanpa database produksi → sinkronisasi Apps Script setelah checkpoint final → uji integrasi → persetujuan terpisah untuk aktivasi publik.
+
+## Pratinjau aman dan langkah sesudah checkpoint
+
+- Pratinjau beranda tamu: buka URL GitHub Pages **setelah hosting staging mendapat persetujuan**. Beranda member contoh: tambahkan `?preview=member` pada URL halaman. Mode ini **tidak pernah membuat sesi atau transaksi nyata**.
+- Jika hanya melihat source GitHub, `index.html` bukan preview aplikasi interaktif; modul ES memerlukan server HTTPS. GitHub Pages belum dinyalakan melalui pekerjaan ini.
+- Jangan mengganti `Code.gs` di Google Apps Script yang saat ini terikat database aktif; backend masih terus dikembangkan.
+- Untuk QA sebelum rilis, buka [Release Gates & QA](docs/RELEASE_GATES_2026-11-14.md). Jangan menyalakan `NGD_MUTATIONS_ENABLED` tanpa pengujian staging dan persetujuan terpisah.
