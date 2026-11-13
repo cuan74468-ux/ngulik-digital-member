@@ -1,0 +1,349 @@
+import {api, ApiError, isConnected, isWriteEnabled} from './api.js';
+
+const config = window.NGD_CONFIG || {};
+const by = (id) => document.getElementById(id);
+const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g,
+  (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const idSafe = (v) => esc(String(v == null ? '' : v));
+const rupiah = (v) => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(v)||0);
+const friendlyDate = (v) => {
+  const d=new Date(v);return Number.isNaN(d.getTime())?'-':
+    new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeZone:'Asia/Jakarta'}).format(d);
+};
+const urlSafe = (raw) => {
+  try {const u=new URL(String(raw||''));return u.protocol==='https:'?u.href:'';}catch{return '';}
+};
+const icons = {
+  home:'<path d="m3 10 9-7 9 7v10H3z"/><path d="M9 20v-7h6v7"/>',
+  book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  spark:'<path d="m12 3 1.9 6.1L20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9z"/><path d="m19 19 1 2m-4-1 2-1"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  store:'<path d="M3 10h18v11H3zM2 10l2-7h16l2 7"/><path d="M9 21v-8h6v8"/>',
+  clipboard:'<rect x="5" y="4" width="14" height="18" rx="2"/><path d="M9 4.5V3h6v1.5M9 10h6M9 15h6"/>',
+  arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-2 2"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l2-2"/>',
+  wallet:'<rect x="2" y="5" width="20" height="16" rx="3"/><path d="M18 13h4M6 5V3h13"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  shield:'<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  check:'<path d="m4 12 5 5L20 6"/>',
+  gift:'<rect x="3" y="9" width="18" height="12" rx="2"/><path d="M12 9v12M3 13h18"/><path d="M12 9S5 9 5 6a3 3 0 0 1 6 0l1 3Zm0 0s7 0 7-3a3 3 0 0 0-6 0l-1 3Z"/>',
+  alert:'<path d="m12 3 10 18H2z"/><path d="M12 9v5M12 18h.01"/>'
+};
+const icon=(name)=>'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||icons.grid)+'</svg>';
+const screens={
+  beranda:['Beranda','home'],belajar:['Belajar','book'],katalog:['Katalog','store'],
+  ai:['Studio AI','spark'],affiliate:['Affiliate','link'],akun:['Akun','user'],
+  admin:['Admin','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
+  antrean:['Antrean','clock'],login:['Masuk','user'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
+};
+const memberNav=['beranda','belajar','katalog','ai','affiliate','akun'];
+const adminNav=['admin','pesanan','member','antrean','akun'];
+const tokenKey='ngd_member_session';
+const state={
+  route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,
+  info:null,catalog:[],home:null,modules:[],tools:[],orders:[],
+  affiliates:null,waitlist:[],members:[],adminOrders:[],adminSummary:null,
+  reconciliation:null,selectedProduct:null,lastOrder:null,loading:false
+};
+const isAdmin=()=>state.me?.role==='ADMIN';
+const logged=()=>Boolean(state.me&&state.token);
+const title=(heading,eyebrow,detail)=>'<div class="section-head"><div><p class="eyebrow">'+esc(eyebrow)+'</p><h2>'+esc(heading)+'</h2>'+(detail?'<p>'+esc(detail)+'</p>':'')+'</div></div>';
+function toast(message,error=false){
+  const root=by('toast-root');const el=document.createElement('div');el.className='toast'+(error?' error':'');el.textContent=message;
+  root.append(el);setTimeout(()=>el.remove(),5000);
+}
+function notice(){
+  if(!isConnected())return '<div class="banner warning"><div><h3>Mode pratinjau antarmuka</h3><p>Backend Google Apps Script belum dikonfigurasi. Login, pendaftaran, dan pembayaran belum aktif.</p></div><span class="chip orange">Belum terkoneksi</span></div>';
+  if(!isWriteEnabled())return '<div class="banner warning"><div><h3>Mode aman aktif</h3><p>API tersedia, tetapi semua operasi penulisan dinonaktifkan sampai pengujian selesai.</p></div><span class="chip orange">Baca-saja</span></div>';
+  return '';
+}
+function renderNav(){
+  const items=isAdmin()?adminNav:memberNav;
+  const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+icon(screens[route][1])+'<span>'+esc(screens[route][0])+'</span></button>';
+  by('desktop-nav').innerHTML=items.map(button).join('');
+  const mobileItems=isAdmin()?['admin','pesanan','member','antrean','akun']:['beranda','belajar','katalog','ai','akun'];
+  by('mobile-nav').innerHTML=mobileItems.map(button).join('');
+  by('page-label').textContent=screens[state.route]?.[0]||'Beranda';
+  by('account-avatar').textContent=logged()?
+    String(state.me.nama||'M').split(' ').map(v=>v[0]).join('').slice(0,2).toUpperCase():'ND';
+  by('mode-indicator').textContent=isWriteEnabled()?'TERHUBUNG':'PRATINJAU';
+}
+const empty=(heading,message,action='',label='Masuk')=>
+  '<div class="empty"><span class="symbol">◌</span><h3>'+esc(heading)+'</h3><p>'+esc(message)+'</p>'+
+  (action?'<button class="btn btn-primary" data-route="'+action+'">'+esc(label)+' '+icon('arrow')+'</button>':'')+'</div>';
+const needLogin=(feature)=>
+  empty('Masuk untuk membuka '+feature,'Aktivitas member dan data pribadi hanya tersedia setelah login.','login','Masuk sekarang');
+const safeBadge=(s)=>'<span class="chip '+(['AKTIF','FULFILLED','PAID','APPROVED'].includes(String(s))?'green':'orange')+'">'+esc(s||'-')+'</span>';
+function viewHome(){
+  const first=state.me?.nama?.split(' ')[0];
+  const hero='<section class="hero"><div class="hero-copy"><p class="eyebrow">RUANG BELAJAR & BERTUMBUH</p>'+
+    '<h1>'+(first?'Halo, '+esc(first)+'!<br>':'Belajar digital,<br>')+'<span class="accent">bertumbuh nyata.</span></h1>'+
+    '<p class="lead">Satu tempat untuk mengasah kemampuan, mencoba tools AI, dan mengembangkan usaha secara lebih terarah. Dibuat untuk langkah kecil yang berdampak besar.</p>'+
+    '<div class="actions"><button class="btn btn-primary" data-route="'+(logged()?'belajar':'daftar')+'">'+(logged()?'Lanjut belajar':'Jelajahi program')+' '+icon('arrow')+'</button>'+
+    '<button class="btn btn-secondary" data-route="katalog">Lihat katalog</button></div></div>'+
+    '<div class="hero-art" aria-hidden="true"><div class="art-orbit"><div class="art-card"><span class="art-emoji">✦</span><strong>Proses kecil,<br>hasil berarti.</strong><small>Ngulik Digital / Member</small></div></div><i class="art-spark spark-a"></i><i class="art-spark spark-b"></i></div></section>';
+  const stats=logged()&&state.home?
+    '<div class="stat-grid"><div class="stat"><div class="stat-value">'+esc(state.home.saldo_kredit??0)+'</div><div class="stat-label">Kredit AI</div></div>'+
+    '<div class="stat"><div class="stat-value">'+esc(state.home.modul_selesai??0)+' / '+esc(state.home.total_modul??0)+'</div><div class="stat-label">Modul selesai</div></div>'+
+    '<div class="stat"><div class="stat-value">'+esc(state.home.order_aktif?.length||0)+'</div><div class="stat-label">Pesanan aktif</div></div></div>':
+    '<div class="stat-grid"><div class="stat"><div class="stat-value">'+esc(state.info?.kuota??50)+'</div><div class="stat-label">Kuota gelombang</div></div>'+
+    '<div class="stat"><div class="stat-value">'+esc(state.info?.sisa??'—')+'</div><div class="stat-label">Sisa kuota</div></div>'+
+    '<div class="stat"><div class="stat-value">3-in-1</div><div class="stat-label">Program awal</div></div></div>';
+  const feature=[
+    ['book','Belajar terarah','Materi pembelajaran dan tugas praktis yang bisa langsung diterapkan.','belajar'],
+    ['spark','Studio AI','Siapkan ide konten, caption, dan materi pemasaran dengan bantuan AI.','ai'],
+    ['store','Toolkit usaha','Temukan perangkat, layanan, dan akses digital untuk operasional bisnis.','katalog']
+  ];
+  return hero+'<section class="section-gap">'+title('Ekosistem yang menyatu','KENALI NGULIK DIGITAL',
+    'Pilih kebutuhan saat ini; sisanya bisa diikuti bertahap.')+
+    '<div class="grid-3">'+feature.map(f=>'<article class="surface"><div class="surface-icon">'+icon(f[0])+'</div><h3>'+f[1]+'</h3><p class="card-desc">'+f[2]+'</p><div style="margin-top:20px"><button class="btn btn-ghost btn-sm" data-route="'+f[3]+'">Lihat ruang '+icon('arrow')+'</button></div></article>').join('')+'</div></section>'+
+    '<section class="section-gap">'+title('Perkembangan dalam satu layar','AKTIVITAS MEMBER','Pantau aktivitas belajar dan penggunaan platform.')+
+    '<div class="surface">'+stats+'</div></section>';
+}
+function viewCatalog(){
+  const list=state.catalog;
+  if(!list.length)return title('Katalog digital','PERANGKAT PENDUKUNG','Layanan pendukung untuk usaha Anda.')+
+    empty('Katalog belum dimuat',isConnected()?'Belum ada produk aktif atau respons katalog belum tersedia.':'Hubungkan API terverifikasi untuk menampilkan produk dan harga aktual.');
+  return title('Katalog digital','PERANGKAT PENDUKUNG','Layanan digital dan kredit AI. Harga berasal dari backend.')+
+    '<div class="grid-3">'+list.map((p,i)=>'<article class="surface">'+
+      '<div class="surface-icon '+(i%3===1?'orange':'')+'">'+icon(p.tipe==='TOPUP_KREDIT'?'spark':p.tipe==='SEAT_30H'?'users':'store')+'</div>'+
+      '<p class="card-kicker">'+esc(p.tipe||'Produk digital')+'</p><h3>'+esc(p.nama)+'</h3>'+
+      '<p class="card-desc">'+esc(p.deskripsi||'')+'</p>'+
+      '<div class="product-price">'+rupiah(p.harga)+'</div>'+
+      '<button class="btn btn-primary btn-wide" data-buy="'+idSafe(p.product_id)+'" '+(!isWriteEnabled()?'disabled title="Mode pratinjau"':'')+'>Pilih produk '+icon('arrow')+'</button></article>').join('')+'</div>';
+}
+function viewLearn(){
+  if(!logged())return title('Belajar lebih terarah','MODUL PRAKTIS','Belajar sesuai kebutuhan usaha Anda.')+needLogin('materi belajar');
+  const modules=state.modules;
+  return title('Perjalanan belajar Anda','KURIKULUM PRAKTIS','Modul tersedia sesuai program dan akses akun.')+
+    (modules.length?'<div class="stack">'+modules.map((m,i)=>'<article class="surface list-row"><div class="left" style="display:flex;gap:15px;align-items:center"><span class="step-no">'+esc(m.urut||i+1)+'</span><div><strong>'+esc(m.judul)+'</strong><small>'+esc(m.deskripsi||'')+'</small></div></div>'+
+    (urlSafe(m.url_classroom)?'<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href="'+esc(urlSafe(m.url_classroom))+'">Buka modul '+icon('arrow')+'</a>':
+    '<span class="chip">Materi menyusul</span>')+'</article>').join('')+'</div>':
+    empty('Materi belum tersedia','Admin belum menerbitkan modul atau backend belum terhubung.'));
+}
+function viewAI(){
+  if(!logged())return title('Studio AI untuk UMKM','ASISTEN KREATIF','Ide, caption, dan copywriting produk.')+needLogin('Studio AI');
+  const tools=state.tools;
+  return title('Studio AI','TOOLKIT KREATIF','Pilih jenis bantuan yang ingin Anda gunakan.')+
+    '<div class="banner"><div><h3>Saldo kredit Anda</h3><p>Pastikan fitur AI telah dikonfigurasi sebelum menggunakan kredit.</p></div><span class="stat-value">'+esc(state.home?.saldo_kredit??state.me?.saldo_kredit??0)+' kredit</span></div>'+
+    (tools.length?'<div class="grid-2">'+tools.map(t=>'<article class="surface"><div class="surface-icon">'+icon('spark')+'</div><h3>'+esc(t.nama)+'</h3><p class="card-desc">'+esc(t.deskripsi||'')+'</p>'+
+    '<p class="product-meta" style="margin-top:14px">'+esc(t.kredit_biaya)+' kredit / penggunaan</p><button class="btn btn-secondary" disabled title="Integrasi AI belum tersedia">Belum tersedia</button></article>').join('')+'</div>':
+    empty('Tool AI belum aktif','Integrasi AI masih dalam pengembangan. Kredit tidak akan dipotong.'));
+}
+function viewAffiliate(){
+  if(!logged())return title('Bagikan manfaatnya','PROGRAM AFFILIATE','Ajak sesama pelaku usaha untuk ikut belajar.')+needLogin('program affiliate');
+  const a=state.affiliates;const code=a?.kode_referral||state.me?.kode_referral||'';
+  const link=code?(config.siteUrl||location.href.split('#')[0])+'?ref='+encodeURIComponent(code):'';
+  const stats=a?.saldo||{};
+  return title('Bertumbuh bersama','PROGRAM AFFILIATE','Gunakan kode referral Anda untuk mengajak pelaku usaha lain.')+
+    '<div class="surface"><p class="card-kicker">KODE REFERRAL</p><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><h2 style="margin:0">'+esc(code||'Belum tersedia')+'</h2>'+
+    '<button class="btn btn-primary" data-copy="'+esc(link)+'" '+(!link?'disabled':'')+'>Salin tautan '+icon('link')+'</button></div><div class="stat-grid">'+
+    '<div class="stat"><div class="stat-value">'+esc(a?.pendaftar??0)+'</div><div class="stat-label">Pendaftar</div></div>'+
+    '<div class="stat"><div class="stat-value">'+esc(a?.konversi??0)+'</div><div class="stat-label">Konversi</div></div>'+
+    '<div class="stat"><div class="stat-value">'+rupiah(stats.APPROVED??0)+'</div><div class="stat-label">Disetujui</div></div></div></div>'+
+    '<div class="section-gap">'+title('Transparansi program','KETENTUAN','Komisi mengikuti verifikasi pembayaran dan masa tunggu.')+
+    '<div class="banner"><div><h3>Catatan affiliate</h3><p>'+esc(state.info?.disclosure||'Tautan affiliate dapat memberikan komisi kepada perekomendasi tanpa biaya tambahan untuk pembeli.')+'</p></div></div></div>';
+}
+function viewAccount(){
+  if(!logged())return title('Akun member','PROFIL & KEAMANAN','Kelola akses ke ruang belajar.')+
+    '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk dengan nomor WhatsApp dan PIN Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk</button><button class="btn btn-secondary" data-route="daftar">Daftar</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
+  const m=state.me;return title('Akun Anda','PROFIL MEMBER','Data akun berasal dari server.')+
+    '<div class="grid-2"><div class="surface"><p class="card-kicker">INFORMASI AKUN</p>'+
+    '<div class="list-rows">'+[
+      ['Nama',m.nama],['Nama usaha',m.nama_usaha],['WhatsApp',m.wa],['Status',m.status],['Kode referral',m.kode_referral],['Bergabung',friendlyDate(m.joined_at)]
+    ].map(([k,v])=>'<div class="list-row"><div class="left"><small>'+esc(k)+'</small><strong>'+esc(v||'-')+'</strong></div></div>').join('')+'</div></div>'+
+    '<div class="surface"><p class="card-kicker">AKSES & KEAMANAN</p><h3>Keamanan akun</h3><p class="card-desc">Sesi disimpan hanya di tab browser ini. Keluar untuk mengakhiri akses lokal.</p><div class="actions" style="margin-top:24px"><button class="btn btn-secondary" data-action="logout">'+icon('logout')+' Keluar dari akun</button></div>'+
+    '<div class="divider"></div><h3>Pesanan saya</h3><button class="btn btn-ghost" data-route="pesanan">Lihat riwayat pesanan '+icon('arrow')+'</button></div></div>';
+}
+function viewLogin(register=false){
+  return '<div class="login-shell"><p class="eyebrow">'+(register?'MEMULAI PERJALANAN':'SELAMAT DATANG KEMBALI')+'</p><h1 style="font-size:2.25rem">'+(register?'Buat akun member.':'Masuk ke ruang Anda.')+'</h1>'+
+    '<p class="lead">'+(register?'Mulai belajar dan bergabung dengan ekosistem Ngulik Digital.':'Gunakan nomor WhatsApp dan PIN 6 angka yang terdaftar.')+'</p>'+
+    '<form id="auth-form" class="surface" data-mode="'+(register?'register':'login')+'">'+
+    (register?'<div class="field"><label for="nama">Nama lengkap</label><input class="input" id="nama" name="nama" autocomplete="name" required minlength="2" maxlength="80"></div>'+
+      '<div class="field"><label for="usaha">Nama usaha</label><input class="input" id="usaha" name="nama_usaha" required minlength="2" maxlength="100"></div>':'')+
+    '<div class="field"><label for="wa">Nomor WhatsApp</label><input class="input" id="wa" name="wa" required inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx"></div>'+
+    '<div class="field"><label for="pin">PIN 6 angka</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>'+
+    (register?'<div class="field"><label><input type="checkbox" name="setuju_kebijakan" required> Saya menyetujui ketentuan program dan kebijakan privasi.</label></div>':'')+
+    '<button class="btn btn-primary btn-wide" type="submit" '+(!isWriteEnabled()?'disabled':'')+'>'+(register?'Buat akun':'Masuk')+' '+icon('arrow')+'</button>'+
+    '<p class="form-hint" style="margin:13px 0 0">'+(isWriteEnabled()?'Jaga kerahasiaan PIN Anda.':'Pendaftaran dan login dinonaktifkan selama mode pratinjau.')+'</p></form>'+
+    '<p class="small" style="text-align:center;margin-top:17px">'+(register?'Sudah punya akun?':'Belum memiliki akun?')+' <button class="btn btn-ghost btn-sm" data-route="'+(register?'login':'daftar')+'">'+(register?'Masuk':'Daftar member')+'</button></p></div>';
+}
+function viewMyOrders(){
+  if(!logged())return title('Pesanan saya','RIWAYAT TRANSAKSI','Akses data pesanan pribadi.')+needLogin('pesanan');
+  return title('Pesanan saya','RIWAYAT TRANSAKSI','Perubahan status diperbarui oleh admin setelah verifikasi.')+
+    (!state.orders.length?empty('Belum ada pesanan','Produk yang Anda pesan nantinya muncul di sini.','katalog','Lihat katalog'):
+    '<div class="stack">'+state.orders.map(o=>'<article class="surface list-row"><div class="left"><strong>'+esc(o.nama_produk)+'</strong><small>'+esc(o.order_id)+' · '+friendlyDate(o.created_at)+'</small></div><div class="right">'+safeBadge(o.status)+'<div class="product-meta" style="margin-top:7px">'+rupiah(o.total_bayar)+'</div></div></article>').join('')+'</div>');
+}
+function viewCheckout(){
+  const o=state.lastOrder;if(!o)return title('Pembayaran','RINGKASAN ORDER','')+empty('Tidak ada order','Pilih produk terlebih dahulu.','katalog','Kembali ke katalog');
+  return title('Konfirmasi pesanan','PEMBAYARAN QRIS MANUAL','Pembayaran hanya dianggap selesai setelah diverifikasi admin.')+
+    '<div class="two-col"><article class="surface"><p class="card-kicker">RINCIAN</p><h3>'+esc(o.nama_produk)+'</h3>'+
+    '<div class="price-line"><span>Harga</span><strong>'+rupiah(o.harga_dasar)+'</strong></div>'+
+    '<div class="price-line"><span>Kode unik</span><strong>'+rupiah(o.kode_unik)+'</strong></div>'+
+    '<div class="price-line"><span>Total pembayaran</span><strong>'+rupiah(o.total_bayar)+'</strong></div>'+
+    '<p class="small muted" style="margin-top:20px">Nomor order: '+esc(o.order_id)+' · Batas: '+friendlyDate(o.expires_at)+'</p>'+
+    '<button class="btn btn-primary btn-wide" data-action="confirm-payment" '+(!isWriteEnabled()?'disabled':'')+'>Saya sudah membayar</button></article>'+
+    '<article class="surface"><h3>Instruksi pembayaran</h3><p class="card-desc">Gunakan QRIS resmi penyelenggara yang diberikan admin. Jangan melakukan transfer jika QRIS belum diverifikasi.</p><div class="empty" style="margin-top:20px"><span class="symbol">▦</span><p>QRIS resmi belum dipasang pada konfigurasi publik.</p></div></article></div>';
+}
+function viewAdmin(){
+  if(!isAdmin())return needLogin('panel admin');
+  const details=state.adminSummary?.ringkasan||[];
+  return title('Kendali program','ADMIN WORKSPACE','Monitor program dan verifikasi secara terkontrol.')+
+    '<div class="grid-3">'+[
+      ['clipboard','Pesanan','Periksa pembayaran manual dan status fulfillment.','pesanan'],
+      ['users','Kelola member','Lihat data member dan status keanggotaan.','member'],
+      ['clock','Waiting list','Tinjau antrean dan kuota gelombang.','antrean']
+    ].map(x=>'<article class="surface"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" style="margin-top:18px" data-route="'+x[3]+'">Buka '+icon('arrow')+'</button></article>').join('')+'</div>'+
+    '<section class="section-gap">'+title('Ringkasan data','METRIK SISTEM','Nilai berasal dari rumus Google Sheets.')+
+    (details.length?'<div class="grid-3">'+details.slice(0,12).map(x=>'<div class="stat"><div class="stat-value">'+esc(x.nilai)+'</div><div class="stat-label">'+esc(x.metrik)+'</div></div>').join('')+'</div>':
+    empty('Ringkasan belum dimuat','Periksa koneksi dan hak akses admin.'))+'</section>';
+}
+function viewAdminOrders(){
+  if(!isAdmin())return needLogin('pesanan admin');
+  const rows=state.adminOrders;
+  const reconciliation=state.reconciliation?.needs_review||0;
+  return title('Verifikasi & rekonsiliasi','PESANAN ADMIN','Pembayaran QRIS harus diperiksa melalui bukti dan penerimaan dana yang nyata.')+
+    (reconciliation?'<div class="banner warning"><div><h3>'+reconciliation+' pesanan perlu peninjauan</h3><p>Jangan memberikan akses produk dua kali. Lihat catatan rekonsiliasi.</p></div></div>':'')+
+    (!rows.length?empty('Belum ada order','Order dari member akan tercatat di sini.'):
+    '<div class="table-wrap"><table class="table"><thead><tr><th>Order</th><th>Produk</th><th>Total</th><th>Status</th></tr></thead><tbody>'+
+    rows.map(o=>'<tr><td>'+esc(o.order_id)+'</td><td>'+esc(o.nama_produk)+'</td><td>'+rupiah(o.total_bayar)+'</td><td>'+safeBadge(o.status)+'</td></tr>').join('')+'</tbody></table></div>')+
+    '<p class="small muted" style="margin-top:14px">Pengaturan pembayaran dan refund melalui UI belum diaktifkan sampai uji integrasi selesai.</p>';
+}
+function viewMembers(waiting=false){
+  if(!isAdmin())return needLogin('data member admin');
+  const rows=waiting?state.waitlist:state.members;
+  return title(waiting?'Antrean member':'Data member',waiting?'WAITING LIST':'ADMIN MEMBER',
+    waiting?'Urutan pendaftaran menentukan prioritas. Aktivasi dilakukan setelah persetujuan admin.':'Akun member aktif, menunggu, dan ditangguhkan.')+
+    (!rows.length?empty('Belum ada data',waiting?'Tidak ada member dalam antrean.':'Daftar member belum tersedia.'):
+    '<div class="table-wrap"><table class="table"><thead><tr><th>'+(waiting?'Posisi':'Member')+'</th><th>Nama & usaha</th><th>'+(!waiting?'Status':'Tanggal daftar')+'</th></tr></thead><tbody>'+
+    rows.map((m,i)=>'<tr><td>'+esc(waiting?m.posisi||i+1:m.member_id)+'</td><td>'+esc(m.nama)+'<span class="sub">'+esc(m.nama_usaha)+'</span></td><td>'+(waiting?friendlyDate(m.joined_at):safeBadge(m.status))+'</td></tr>').join('')+'</tbody></table></div>')+
+    '<p class="small muted" style="margin-top:14px">Aksi perubahan status member belum dibuka dalam antarmuka ini.</p>';
+}
+function render(){
+  renderNav();
+  by('notice-slot').innerHTML=notice();
+  const routes={
+    beranda:viewHome,belajar:viewLearn,katalog:viewCatalog,ai:viewAI,affiliate:viewAffiliate,
+    akun:viewAccount,login:()=>viewLogin(false),daftar:()=>viewLogin(true),
+    pesanan:()=>isAdmin()?viewAdminOrders():viewMyOrders(),
+    checkout:viewCheckout,admin:viewAdmin,member:()=>viewMembers(false),antrean:()=>viewMembers(true)
+  };
+  by('screen').innerHTML=(routes[state.route]||viewHome)();
+  document.title=(screens[state.route]?.[0]||'Beranda')+' — Ngulik Digital';
+}
+function go(route){
+  if(!screens[route])route='beranda';
+  state.route=route;
+  if(location.hash.slice(1)!==route)history.replaceState(null,'','#'+route);
+  render();window.scrollTo({top:0,behavior:'auto'});loadRoute(route);
+}
+async function refreshPublic(){
+  if(!isConnected())return;
+  try {const [info,catalog]=await Promise.all([api('getPublicInfo'),api('getKatalog')]);state.info=info;state.catalog=catalog||[];render();}
+  catch(e){toast(e.message,true);}
+}
+async function restoreSession(){
+  if(!isConnected()||!state.token)return;
+  try{state.me=await api('getMe',{},state.token);render();}
+  catch {state.token='';state.me=null;sessionStorage.removeItem(tokenKey);render();}
+}
+async function loadRoute(route){
+  if(!isConnected()||!logged())return;
+  try{
+    if(route==='beranda'||route==='ai') {
+      state.home=await api('getBeranda',{},state.token);
+      if(route==='ai'){const d=await api('getTools',{},state.token);state.tools=d.tools||[];}
+    }
+    if(route==='belajar')state.modules=await api('getModulBelajar',{},state.token);
+    if(route==='affiliate')state.affiliates=await api('getAffiliateDashboard',{},state.token);
+    if(route==='pesanan'){
+      if(isAdmin()){
+        const [orders,review]=await Promise.all([
+          api('adminListOrders',{},state.token),api('adminGetReconciliation',{},state.token)]);
+        state.adminOrders=orders||[];state.reconciliation=review;
+      }else state.orders=await api('listMyOrders',{},state.token);
+    }
+    if(route==='admin'&&isAdmin())state.adminSummary=await api('adminGetDashboard',{},state.token);
+    if(route==='member'&&isAdmin())state.members=await api('adminListMembers',{},state.token);
+    if(route==='antrean'&&isAdmin())state.waitlist=await api('adminListWaitingList',{},state.token);
+    if(route===state.route)render();
+  }catch(e){toast(e.message,true);}
+}
+async function processLogin(form,register){
+  if(!isWriteEnabled())return toast('Masih dalam mode pratinjau.',true);
+  const fd=new FormData(form);
+  const payload={wa:String(fd.get('wa')||''),pin:String(fd.get('pin')||'')};
+  if(register){
+    payload.nama=String(fd.get('nama')||'');
+    payload.nama_usaha=String(fd.get('nama_usaha')||'');
+    payload.setuju_kebijakan=fd.get('setuju_kebijakan')==='on';
+    const r=new URLSearchParams(location.search).get('ref');
+    if(r)payload.ref=r;
+  }
+  const btn=form.querySelector('[type=submit]');btn.disabled=true;
+  try{
+    const response=await api(register?'register':'login',payload,'',{write:true});
+    const result=register?response.sesi:response;
+    if(register&&response.status==='WAITING_LIST'){
+      toast('Pendaftaran tercatat dalam waiting list.');go('beranda');return;
+    }
+    if(!result?.token||!result?.profil)throw new ApiError('Respons login belum lengkap.');
+    state.token=result.token;state.me=result.profil;
+    sessionStorage.setItem(tokenKey,result.token);
+    toast('Selamat datang di Ngulik Digital.');
+    go(isAdmin()?'admin':'beranda');
+  }catch(e){toast(e.message,true);}finally{btn.disabled=false;}
+}
+async function logout(){
+  const token=state.token;
+  state.token='';state.me=null;sessionStorage.removeItem(tokenKey);
+  go('beranda');
+  if(token&&isConnected()){try{await api('logout',{},token,{write:true});}catch{}}
+  toast('Anda telah keluar.');
+}
+async function buy(productId){
+  if(!logged()){go('login');toast('Masuk terlebih dahulu untuk memesan.',true);return;}
+  if(!isWriteEnabled()){toast('Transaksi belum diaktifkan.',true);return;}
+  const product=state.catalog.find(p=>p.product_id===productId);
+  if(!product)return toast('Produk tidak ditemukan.',true);
+  if(!confirm('Buat pesanan '+product.nama+' seharga '+rupiah(product.harga)+'?'))return;
+  try{
+    const order=await api('createOrder',{product_id:productId},state.token,{write:true});
+    state.lastOrder=order;go('checkout');toast('Pesanan berhasil dibuat.');
+  }catch(e){toast(e.message,true);}
+}
+async function confirmPayment(){
+  if(!state.lastOrder)return;
+  if(!confirm('Anda yakin pembayaran telah dikirim ke QRIS resmi? Konfirmasi ini bukan bukti pembayaran berhasil.'))return;
+  try{
+    const r=await api('confirmPayment',{order_id:state.lastOrder.order_id},state.token,{write:true});
+    state.lastOrder=r;toast('Konfirmasi diterima. Menunggu pemeriksaan admin.');go('pesanan');
+  }catch(e){toast(e.message,true);}
+}
+document.addEventListener('click',async(e)=>{
+  const target=e.target.closest('[data-route],[data-buy],[data-action],[data-copy]');
+  if(!target)return;
+  if(target.hasAttribute('data-route'))go(target.dataset.route);
+  else if(target.hasAttribute('data-buy'))await buy(target.dataset.buy);
+  else if(target.dataset.action==='logout')await logout();
+  else if(target.dataset.action==='confirm-payment')await confirmPayment();
+  else if(target.dataset.copy){
+    try{await navigator.clipboard.writeText(target.dataset.copy);toast('Tautan tersalin.');}
+    catch{toast('Gagal menyalin. Silakan gunakan browser HTTPS.',true);}
+  }
+});
+document.addEventListener('submit',(e)=>{
+  if(e.target.id==='auth-form'){e.preventDefault();processLogin(e.target,e.target.dataset.mode==='register');}
+});
+by('account-button').addEventListener('click',()=>go('akun'));
+window.addEventListener('hashchange',()=>go(location.hash.slice(1)||'beranda'));
+async function init(){
+  state.route=screens[location.hash.slice(1)]?location.hash.slice(1):'beranda';
+  render();
+  await Promise.all([refreshPublic(),restoreSession()]);
+  loadRoute(state.route);
+}
+init();
