@@ -123,3 +123,11 @@ Perbaikan di branch `main` (belum disalin atau diuji pada runtime Apps Script):
 - **Status kode:** ditulis dan di-commit, namun skenario **belum dijalankan pada Apps Script**; jangan menyebutnya QA lulus sebelum ada log `FINANCE_SCENARIOS_OK`.
 - Selama pengerjaan, **jangan mengganti Code.gs pada editor Apps Script**. Sinkronisasi hanya dilakukan setelah checkpoint pengembangan disepakati.
 - **Masih terbuka:** rollback multi-sheet tidak atomik, pemberian komisi setelah fulfillment dapat gagal parsial, pembayaran QRIS harus diverifikasi manual, keamanan pin 6 digit/rate-limit perlu audit, pengujian akses admin dan onboarding end-to-end serta UI frontend belum selesai.
+
+## Checkpoint aturan bisnis & pengaturan admin — 13 Nov 2026
+
+Commit backend `0c9e4d5`: (1) aktivasi trial tidak menurunkan akses 3-in-1 berbayar yang masih aktif; (2) validasi server untuk pengaturan admin termasuk batas angka, mode pendaftaran dan URL Classroom resmi HTTPS; (3) komisi jatuh tempo hanya disetujui otomatis jika order masih `PAID` atau `FULFILLED`, bukan order dibatalkan/expired.
+
+Commit diagnostik `dcfab8d`: `diagnosticAdminSettingsScenarios()` berisi 15 skenario murni di memori; **belum dieksekusi pada Apps Script**. Tidak mengubah database. Tetap gunakan checkpoint sinkronisasi setelah backend selesai, jangan copy-paste setiap commit.
+
+Risiko yang belum ditutup: transaksi multi-sheet tidak atomik, pemulihan partial fulfillment, perpanjangan/rollback akses digital kompleks, autentikasi dan sesi dalam pemakaian nyata, integrasi API AI, dan pengujian end-to-end UI. Belum production-ready.
