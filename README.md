@@ -30,7 +30,8 @@ Perubahan checkpoint 14 November:
 | Google Apps Script terbaru vs GitHub | **Belum disinkronkan sejak perubahan lanjutan** |
 | GitHub Pages & Apps Script publik | **Jangan aktifkan dulu** |
 
-Arsip lengkap progres sebelumnya: [docs/CHECKPOINT_HISTORY_2026-11-13.md](docs/CHECKPOINT_HISTORY_2026-11-13.md).
+Checkpoint terbaru: [14 November 2026 — hasil dan pekerjaan tersisa](docs/CHECKPOINT_2026-11-14.md).  
+Arsip progres sebelumnya: [13 November 2026](docs/CHECKPOINT_HISTORY_2026-11-13.md).
 
 ## Struktur
 
