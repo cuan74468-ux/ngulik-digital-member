@@ -1,8 +1,8 @@
 /**
- * Ngulik Digital Member — Backend BATCH 1.
- * Fondasi DB, pengaturan, autentikasi, dan instalasi.
- * BATCH 2 akan menambahkan action bisnis serta doPost/doGet.
- * Jangan deploy sebagai layanan publik sebelum seluruh batch dan QA selesai.
+ * Ngulik Digital Member — Apps Script backend (development).
+ * Skema 14 tab, autentikasi, API member/admin, pembayaran manual, kredit,
+ * waiting list, dan rekonsiliasi. Belum lolos QA end-to-end.
+ * Jangan deploy sebagai layanan publik atau mengaktifkan transaksi nyata.
  */
 
 // ===== KONSTANTA =====
@@ -395,7 +395,7 @@ function healthCheck() {
     catch(e){report.push('GAGAL '+name);}
   });
   report.push((PropertiesService.getScriptProperties().getProperty('AI_API_KEY')?'OK ':'BELUM ')+'AI_API_KEY');
-  report.push((ScriptApp.getProjectTriggers().length?'OK ':'BELUM ')+'Triggers (BATCH 2)');
+  report.push((ScriptApp.getProjectTriggers().length?'OK ':'BELUM ')+'Triggers');
   report.push((setting_('wa_admin','')?'OK ':'GAGAL ')+'WA Admin');
   SpreadsheetApp.getUi().alert(report.join('\n'));
   return report;
