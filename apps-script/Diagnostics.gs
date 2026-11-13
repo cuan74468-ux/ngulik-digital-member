@@ -204,3 +204,78 @@ function diagnosticAuthReadOnly() {
   console.log('READ_ONLY: Tidak membuat sesi, akun, PIN, atau transaksi.');
   return 'AUTH_READONLY_OK';
 }
+
+
+// =====================================
+// TEST 6 — AUDIT KEUANGAN BACA-SAJA
+// =====================================
+function diagnosticFinanceReadOnly() {
+  var started=Date.now(),errors=[],warnings=[];
+  console.log('FINANCE_AUDIT_STARTED');
+  var orders=readAll_('orders');
+  var ledger=readAll_('credits_ledger');
+  var commissions=readAll_('affiliate_commissions');
+  var products=readAll_('katalog_produk');
+  var members=readAll_('members');
+  var pids={};products.forEach(function(x){pids[String(x.product_id)]=true;});
+  var mids={};members.forEach(function(x){mids[String(x.member_id)]=true;});
+  var orderIds={},requestIds={},money={};
+  orders.forEach(function(o){
+    var id=String(o.order_id||'');
+    if(!id||orderIds[id])errors.push('ORDER_ID_DUPLICATE_OR_EMPTY');
+    orderIds[id]=true;
+    if(o.request_id){
+      var req=String(o.request_id);
+      if(requestIds[req])errors.push('REQUEST_ID_DUPLICATE');
+      requestIds[req]=true;
+    }
+    if(!mids[String(o.member_id)])errors.push('ORDER_MEMBER_MISSING');
+    if(!pids[String(o.product_id)])errors.push('ORDER_PRODUCT_MISSING');
+    var price=Number(o.harga_dasar),code=Number(o.kode_unik),total=Number(o.total_bayar);
+    if(!Number.isFinite(price)||!Number.isFinite(code)||!Number.isFinite(total)||
+       price+code!==total)errors.push('ORDER_TOTAL_INVALID');
+    if(['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0){
+      if(money[total])errors.push('ACTIVE_PAYMENT_AMOUNT_DUPLICATE');
+      money[total]=true;
+    }
+  });
+  var ledgerIds={},topups={},reversals={};
+  ledger.forEach(function(l){
+    if(!l.entry_id||ledgerIds[l.entry_id])errors.push('LEDGER_ID_DUPLICATE_OR_EMPTY');
+    ledgerIds[l.entry_id]=true;
+    if(!mids[String(l.member_id)])errors.push('LEDGER_MEMBER_MISSING');
+    var amount=Number(l.jumlah);
+    if(!Number.isFinite(amount))errors.push('LEDGER_AMOUNT_INVALID');
+    if(l.tipe==='TOPUP'){
+      var key=l.member_id+'|'+l.ref_id;
+      if(!l.ref_id||topups[key])errors.push('TOPUP_DUPLICATE_OR_NO_REF');
+      topups[key]=true;
+    }
+    if(l.tipe==='ADJUST_REFUND'){
+      var key2=l.member_id+'|'+l.ref_id;
+      if(!l.ref_id||reversals[key2])errors.push('REFUND_ADJUST_DUPLICATE_OR_NO_REF');
+      reversals[key2]=true;
+    }
+  });
+  var commissionIds={},commissionOrders={};
+  commissions.forEach(function(k){
+    if(!k.komisi_id||commissionIds[k.komisi_id])errors.push('COMMISSION_ID_DUPLICATE_OR_EMPTY');
+    commissionIds[k.komisi_id]=true;
+    if(!orderIds[String(k.order_id)])warnings.push('COMMISSION_ORDER_MISSING');
+    var key=k.order_id;
+    if(commissionOrders[key])warnings.push('MULTIPLE_COMMISSION_SAME_ORDER');
+    commissionOrders[key]=true;
+  });
+  var summary={orders:orders.length,ledger:ledger.length,commissions:commissions.length,
+    members:members.length,products:products.length,
+    errors:errors.length,warnings:warnings.length,durationMs:Date.now()-started};
+  console.log('FINANCE_SUMMARY '+JSON.stringify(summary));
+  if(errors.length||warnings.length){
+    var counts={};errors.concat(warnings).forEach(function(e){counts[e]=(counts[e]||0)+1;});
+    console.warn('FINANCE_FINDINGS '+JSON.stringify(counts));
+  }
+  if(errors.length){console.error('FINANCE_AUDIT_FAILED');return 'FINANCE_AUDIT_FAILED';}
+  if(warnings.length){console.warn('FINANCE_AUDIT_WARN');return 'FINANCE_AUDIT_WARN';}
+  console.log('FINANCE_AUDIT_OK — tidak ada anomali yang terdeteksi pemeriksaan ini');
+  return 'FINANCE_AUDIT_OK';
+}
