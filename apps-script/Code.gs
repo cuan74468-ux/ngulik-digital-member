@@ -495,7 +495,7 @@ function adminPromoteWaitlist_(admin,p) {
       updateSetting_('mode_pendaftaran','WAITING_LIST');
     logAudit_(admin.member_id,'ADMIN','WAITLIST_PROMOTED','members',memberId,'WAITING_LIST','AKTIF',{posisi_sebelumnya:result.position});
     return {member_id:memberId,status:'AKTIF',active:result.active+1,quota:quota,
-      initial_credit_applied:initial>0};
+      initial_credit_ensured:initial>0};
   });
 }
 // Penangguhan menonaktifkan sesi, tetapi tidak menghapus transaksi dan saldo.
@@ -527,9 +527,12 @@ function adminReactivateMember_(admin,p) {
     require_(memberQueue_(members).length===0,'CONFLICT','Masih ada waiting list; proses antrean dahulu.');
     var reason=safeText_(p.alasan,300);
     require_(reason.length>=5,'VALIDATION','Alasan aktivasi ulang wajib diisi.');
+    // Pastikan token yang belum sempat terhapus ketika suspend tidak hidup lagi.
+    var staleSessions=findRows_('sessions',function(s){return s.member_id===target.member_id;});
+    staleSessions.reverse().forEach(function(s){tbl_('sessions').sheet.deleteRow(s._row);});
     updateRow_('members',target._row,{status:'AKTIF'});
     logAudit_(admin.member_id,'ADMIN','MEMBER_REACTIVATED','members',target.member_id,'SUSPENDED','AKTIF',{reason:reason});
-    return {member_id:target.member_id,status:'AKTIF',active:active+1,quota:quota};
+    return {member_id:target.member_id,status:'AKTIF',active:active+1,quota:quota,sessions_revoked:staleSessions.length};
   });
 }
 
@@ -617,7 +620,7 @@ function authChangePin_(m,p) {
 function publicInfo_(p) {
   var s=settings_(),quota=Number(s.kuota_gelombang||50),used=memberCount_();
   var ref=String(p.ref||'').toUpperCase(),referer=ref?byId_('members','kode_referral',ref):null;
-  return {nama_brand:s.nama_brand,wa_admin:s.wa_admin,kuota:quota,terpakai:used,sisa:Math.max(0,quota-used),mode:(used>=quota||memberWaitlist_().length>0)?'WAITING_LIST':s.mode_pendaftaran,disclosure:s.teks_disclosure_affiliate,referrer:referer&&referer.status==='AKTIF'?String(referer.nama).split(' ')[0]:null};
+  return {nama_brand:s.nama_brand,wa_admin:s.wa_admin,kuota:quota,terpakai:used,sisa:Math.max(0,quota-used),mode:s.mode_pendaftaran==='TERTUTUP'?'TERTUTUP':(used>=quota||memberWaitlist_().length>0)?'WAITING_LIST':s.mode_pendaftaran,disclosure:s.teks_disclosure_affiliate,referrer:referer&&referer.status==='AKTIF'?String(referer.nama).split(' ')[0]:null};
 }
 function modules_() {return readAll_('modul_belajar').filter(function(r){return r.aktif===true;}).sort(function(a,b){return a.urut-b.urut;});}
 function creditWarning_(id) {
