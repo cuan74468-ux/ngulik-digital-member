@@ -1,0 +1,22 @@
+name: Validate backend and frontend (no deploy)
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js for tests only — no build
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify pure backend rules and frontend smoke
+        run: node --test tests/backend-pure.test.cjs tests/frontend-smoke.test.cjs
