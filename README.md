@@ -99,3 +99,18 @@ Dokumen pengguna `MASTER_PROMPT_Ngulik_Digital_Member.md` adalah acuan fitur dan
 - Untuk menjalankannya, pemilik harus menyalin file `Code.gs` **dan** `Diagnostics.gs` terbaru ke project Apps Script terikat, lalu jalankan **hanya** `diagnosticFinanceReadOnly`.
 - Hasil yang diharapkan `FINANCE_AUDIT_OK`; `WARN` dan `FAILED` harus ditinjau sebelum transaksi diaktifkan.
 - Pengujian runtime atas perbaikan ini belum dilakukan. **Jangan melakukan transaksi atau deploy publik.**
+
+## Checkpoint rekonsiliasi keuangan — 13 November 2026
+
+Perbaikan di branch `main` (belum disalin atau diuji pada runtime Apps Script):
+
+- Bila fulfillment gagal setelah pembayaran terverifikasi, API mengembalikan `needs_review:true`, mencatat log kesalahan dan mengusahakan audit `FULFILLMENT_NEEDS_REVIEW`; status pembayaran tidak otomatis dibatalkan.
+- Membatasi pembuatan komisi menjadi satu record per order agar retry parsial tidak membuat komisi ganda.
+- Refund QRIS manual hanya bisa dicatat setelah `dana_sudah_dikembalikan:true` dan `referensi_refund` diisi, disertai audit. Sistem **tidak** melakukan transfer dana.
+- Refund dengan komisi sudah dibayar atau langganan lain yang sudah terpenuhi diblokir untuk rekonsiliasi manual.
+- Endpoint admin baca-saja `adminGetReconciliation` dan diagnostik `diagnosticReconciliationReadOnly` memberi daftar order yang butuh peninjauan.
+- `FINANCE_AUDIT_OK` sebelumnya menunjukkan 0 orders / 0 ledger / 0 commissions dan **bukan** validasi alur transaksi end-to-end.
+
+**Keterbatasan penting:** Google Sheets tidak memberikan transaksi SQL/rollback otomatis. Mekanisme order/fulfillment/refund masih membutuhkan uji gangguan di staging, jaminan idempotensi lintas langkah, dan verifikasi operasi manual sebelum produksi. Jangan menjalankan fungsi mutasi di basis data aktif hanya untuk testing.
+
+**Sinkronisasi:** GitHub dan proyek Apps Script tidak otomatis tersinkron. Jangan menimpa file Apps Script saat pengerjaan backend masih berlangsung. Tidak perlu menjalankan `setupDatabase` ulang.
