@@ -337,3 +337,30 @@ function diagnosticFinanceScenarios() {
   console.log('FINANCE_SCENARIOS_OK | cases='+pass+' | mode=MEMORY_ONLY');
   return 'FINANCE_SCENARIOS_OK';
 }
+
+
+// =====================================
+// TEST 9 — VALIDASI PENGATURAN (MEMORY ONLY)
+// =====================================
+function diagnosticAdminSettingsScenarios() {
+  var count=0;
+  function ok(test,label){if(!test)throw new Error('SETTINGS_SCENARIO_FAILED: '+label);count++;console.log('PASS: '+label);}
+  function reject(key,value){try{validatedAdminSetting_(key,value);return false;}catch(e){return true;}}
+  ok(validatedAdminSetting_('komisi_persen',25)===25,'Komisi 25 persen valid');
+  ok(reject('komisi_persen',101),'Komisi 101 persen ditolak');
+  ok(reject('komisi_persen','abc'),'Komisi non-angka ditolak');
+  ok(validatedAdminSetting_('masa_tahan_hari',14)===14,'Masa tahan 14 hari valid');
+  ok(reject('masa_tahan_hari',0),'Masa tahan 0 hari ditolak');
+  ok(validatedAdminSetting_('min_payout',50000)===50000,'Minimal payout 50000 valid');
+  ok(reject('min_payout',-1),'Payout negatif ditolak');
+  ok(validatedAdminSetting_('kuota_gelombang',50)===50,'Kuota 50 valid');
+  ok(reject('kuota_gelombang',1.5),'Kuota pecahan ditolak');
+  ok(validatedAdminSetting_('mode_pendaftaran','TERTUTUP')==='TERTUTUP','Mode pendaftaran valid');
+  ok(reject('mode_pendaftaran','BEBAS'),'Mode tidak dikenal ditolak');
+  ok(validatedAdminSetting_('link_classroom','https://classroom.google.com/')==='https://classroom.google.com/','URL Classroom valid');
+  ok(reject('link_classroom','http://classroom.google.com/'),'Classroom non-HTTPS ditolak');
+  ok(reject('link_classroom','https://classroom.google.com.evil.test/'),'Domain Classroom palsu ditolak');
+  ok(reject('AI_API_KEY','do-not-change'),'Kunci rahasia tak boleh ditulis melalui API');
+  console.log('ADMIN_SETTINGS_SCENARIOS_OK cases='+count+' mode=MEMORY_ONLY');
+  return 'ADMIN_SETTINGS_SCENARIOS_OK';
+}
