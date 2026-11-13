@@ -303,3 +303,37 @@ function diagnosticReconciliationReadOnly() {
   console.log('RECONCILIATION_OK — tidak ada anomali pada aturan yang diperiksa.');
   return 'RECONCILIATION_OK';
 }
+
+
+// =====================================
+// TEST 8 — SKENARIO KEUANGAN TANPA SHEETS
+// =====================================
+// Seluruh data buatan di memori. Tidak membuka Spreadsheet, tidak membuat order.
+function diagnosticFinanceScenarios() {
+  var pass=0;
+  function assert_(condition,label){
+    if(!condition)throw new Error('SCENARIO_FAILED: '+label);
+    pass++;console.log('PASS: '+label);
+  }
+  var products=[{product_id:'SIM-CREDIT',tipe:'TOPUP_KREDIT'}];
+  var paid={order_id:'SIM-1',product_id:'SIM-CREDIT',status:'FULFILLED'};
+  var credit={member_id:'SIM-MEMBER',ref_id:'SIM-1',tipe:'TOPUP',jumlah:50};
+  var reversed={member_id:'SIM-MEMBER',ref_id:'SIM-1',tipe:'ADJUST_REFUND',jumlah:-50};
+  function run(order,ledger,commission){
+    return financeFindings_([order],ledger||[],commission||[],products);
+  }
+  function issues(result){return result.findings.length?result.findings[0].issues:[];}
+  assert_(run(paid,[credit]).needs_review===0,'Topup fulfilled dengan satu ledger');
+  assert_(issues(run(paid,[])).indexOf('TOPUP_LEDGER_COUNT_0')>=0,'Fulfilled tanpa ledger terdeteksi');
+  assert_(issues(run(paid,[credit,credit])).indexOf('TOPUP_LEDGER_COUNT_2')>=0,'Topup ganda terdeteksi');
+  var refunded={order_id:'SIM-1',product_id:'SIM-CREDIT',status:'REFUNDED'};
+  assert_(run(refunded,[credit,reversed]).needs_review===0,'Refund dengan satu reversal');
+  assert_(issues(run(refunded,[credit])).indexOf('TOPUP_REFUND_ADJUST_COUNT_0')>=0,'Refund tanpa reversal terdeteksi');
+  assert_(issues(run(refunded,[credit,reversed,reversed])).indexOf('TOPUP_REFUND_ADJUST_COUNT_2')>=0,'Reversal ganda terdeteksi');
+  assert_(issues(run(paid,[credit,reversed])).indexOf('REFUND_ADJUST_WITHOUT_REFUNDED_STATUS')>=0,'Reversal tanpa refund terdeteksi');
+  assert_(issues(run({order_id:'SIM-1',product_id:'SIM-CREDIT',status:'PAID'},[credit])).indexOf('PAID_PENDING_FULFILLMENT_REVIEW')>=0,'PAID butuh review');
+  assert_(issues(run(paid,[credit],[{order_id:'SIM-1'},{order_id:'SIM-1'}])).indexOf('COMMISSION_DUPLICATE')>=0,'Komisi ganda terdeteksi');
+  assert_(issues(run(refunded,[credit,reversed],[{order_id:'SIM-1',status:'PAID'}])).indexOf('PAID_COMMISSION_ON_REFUNDED_ORDER')>=0,'Refund dengan komisi tercairkan terdeteksi');
+  console.log('FINANCE_SCENARIOS_OK | cases='+pass+' | mode=MEMORY_ONLY');
+  return 'FINANCE_SCENARIOS_OK';
+}
