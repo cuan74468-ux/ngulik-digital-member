@@ -318,7 +318,30 @@ function ensureAdmin_() {
   // Dialog harus di luar lock; jangan pernah mencatat PIN di Logger.
   return {created:true,pin:pin,wa:wa};
 }
+function inspectDatabaseSetup() {
+  // Baca-saja: tidak memasang format, proteksi, rumus, atau dialog.
+  var ss=db_(),checks=[],ready=true;
+  Object.keys(NGD.HEADERS).forEach(function(name){
+    var sh=ss.getSheetByName(name),expected=NGD.HEADERS[name].split(',');
+    if(!sh){checks.push(name+':MISSING');ready=false;return;}
+    var actual=sh.getRange(1,1,1,expected.length).getValues()[0].map(String);
+    if(actual.join('|')!==expected.join('|')){checks.push(name+':MISMATCH');ready=false;}
+    else checks.push(name+':OK');
+  });
+  var admins=[];
+  if(ready)admins=findRows_('members',function(r){return r.role==='ADMIN';});
+  var result={schemaOk:ready,tabsChecked:checks.length,adminExists:admins.length>0,adminCount:admins.length,details:checks};
+  console.log('SETUP_INSPECTION '+JSON.stringify(result));
+  return result;
+}
 function setupDatabase() {
+  // Bila database sudah disiapkan, hentikan lebih awal tanpa kunci dan tanpa UI alert.
+  // Jalur pertama kali dipertahankan hanya untuk database yang belum diinisialisasi.
+  var inspection=inspectDatabaseSetup();
+  if(inspection.schemaOk&&inspection.adminExists){
+    console.log('SETUP_ALREADY_COMPLETE — instalasi tidak diulang; tidak ada perubahan data.');
+    return {alreadyInitialized:true,tabs:inspection.tabsChecked,adminCount:inspection.adminCount};
+  }
   // Jangan letakkan UI alert di callback lock: alert menangguhkan eksekusi Apps Script.
   var result=withLock_(function(){
     ensureSheets_();
@@ -376,7 +399,7 @@ function healthCheck() {
 }
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Ngulik Digital')
-    .addItem('Setup database','setupDatabase')
+    .addItem('Periksa database (baca-saja)','inspectDatabaseSetup')
     .addItem('Pasang trigger','installTriggers')
     .addItem('Reset PIN admin','resetAdminPin')
     .addItem('Health check','healthCheck')
