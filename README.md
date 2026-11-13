@@ -82,3 +82,12 @@ README.md
 ## Sumber spesifikasi
 
 Dokumen pengguna `MASTER_PROMPT_Ngulik_Digital_Member.md` adalah acuan fitur dan checklist penerimaan. Implementasi berjalan melalui BATCH 1–6; keputusan keamanan bisa diperketat bila ditemukan risiko nyata.
+
+## Perbaikan pencegahan setup macet — 13 November 2026
+
+- Fungsi `inspectDatabaseSetup()` adalah **read-only**: mengecek seluruh header dan keberadaan akun ADMIN; tidak membuat atau mengubah data.
+- `setupDatabase()` kini **tidak mengulang instalasi** apabila 14 tab/header cocok dan akun ADMIN sudah tersedia. Kondisi tersebut menghasilkan log `SETUP_ALREADY_COMPLETE` tanpa dialog.
+- Jika skema tidak cocok atau ada lebih dari satu ADMIN, setup berhenti dengan `SETUP_BLOCKED` agar tidak memperbaiki/mengubah data secara otomatis.
+- Menu Spreadsheet kini menampilkan `Periksa database (baca-saja)` menggantikan `Setup database` untuk menghindari klik tidak sengaja.
+- **Perubahan ini baru di GitHub.** Apps Script terikat Spreadsheet tidak akan ikut berubah sampai `Code.gs` disalin ulang secara manual; jangan jalankan setup pada versi lama.
+- Perubahan belum diuji langsung pada runtime Apps Script; status bukan production-ready.
