@@ -584,7 +584,19 @@ function transitionOrder_(m,id,type,p) {
     }
     patch.status=to;updateRow_('orders',o._row,patch);
     logAudit_(m.member_id,m.role,'ORDER_'+type.toUpperCase(),'orders',id,from,to,{alasan:patch.catatan_admin||''});
-    if(to==='PAID')onPaid_(o,m);
+    if(to==='PAID'){
+      try{
+        onPaid_(o,m);
+      }catch(err){
+        // Status PAID sengaja dipertahankan: pembayaran telah dikonfirmasi
+        // tetapi penyerahan produk harus diperiksa admin, bukan diulang diam-diam.
+        console.error('FULFILLMENT_NEEDS_REVIEW order_id='+id+' reason='+(err&&err.message||'unknown'));
+        try{
+          logAudit_(m.member_id,m.role,'FULFILLMENT_NEEDS_REVIEW','orders',id,'PAID','PAID',{reason:String(err&&err.message||'unknown').slice(0,180)});
+        }catch(logErr){console.error('FULFILLMENT_AUDIT_FAILED order_id='+id);}
+        return {order_id:id,status:'PAID',needs_review:true,message:'Pembayaran dicatat; pemenuhan produk perlu diperiksa admin.'};
+      }
+    }
     return orderView_(byId_('orders','order_id',id),m);
   });
 }
@@ -616,6 +628,9 @@ function onPaid_(o,actor) {
   if(fulfilled){updateRow_('orders',o._row,{status:'FULFILLED',fulfilled_at:now_()});logAudit_(actor.member_id,actor.role,'ORDER_FULFILLED','orders',o.order_id,'PAID','FULFILLED',{});}
   var s=settings_();
   if(member.referred_by&&product.bisa_komisi===true) {
+    // Komisi harus idempoten per order, termasuk setelah retry dari kegagalan parsial.
+    var existingCommission=findRows_('affiliate_commissions',function(c){return c.order_id===o.order_id;});
+    if(existingCommission.length)return;
     var any=findRows_('affiliate_commissions',function(c){return c.referred_member_id===member.member_id;});
     if(!s.komisi_hanya_order_pertama||!any.length){
       var value=Math.floor(Number(o.harga_dasar)*Number(s.komisi_persen||25)/100);
@@ -650,6 +665,21 @@ function refundOrder_(admin,p) {
     require_(o&&['PAID','FULFILLED'].indexOf(o.status)>=0,'CONFLICT','Pesanan tidak dapat direfund.');
     require_(safeText_(p.alasan,300).length>=5,'VALIDATION','Alasan refund wajib diisi.');
     var m=byId_('members','member_id',o.member_id),product=byId_('katalog_produk','product_id',o.product_id),prev=o.status;
+    require_(m&&product,'CONFLICT','Data member atau produk tidak tersedia.');
+    // Refund uang adalah tindakan eksternal; jangan membalik hak akses yang telah
+    // bertumpuk atau komisi yang sudah dibayarkan secara otomatis.
+    var paidCommission=findRows_('affiliate_commissions',function(x){return x.order_id===o.order_id&&x.status==='PAID';});
+    require_(!paidCommission.length,'RECONCILIATION_REQUIRED','Komisi sudah dicairkan: refund memerlukan rekonsiliasi manual.');
+    if(product.tipe==='LANGGANAN_30H'&&prev==='FULFILLED'){
+      var otherActive=findRows_('orders',function(x){
+        return x.member_id===m.member_id&&x.order_id!==o.order_id&&x.product_id===o.product_id&&x.status==='FULFILLED';
+      });
+      require_(!otherActive.length,'RECONCILIATION_REQUIRED','Ada perpanjangan langganan lain: refund perlu rekonsiliasi manual.');
+    }
+    if(product.tipe==='TOPUP_KREDIT'&&prev==='FULFILLED'){
+      require_(findRows_('credits_ledger',function(x){return x.member_id===m.member_id&&x.ref_id===o.order_id&&x.tipe==='TOPUP';}).length===1,
+        'RECONCILIATION_REQUIRED','Pencatatan top-up belum sesuai; refund harus ditinjau manual.');
+    }
     updateRow_('orders',o._row,{status:'REFUNDED',refunded_at:now_(),catatan_admin:p.alasan});
     if(product.tipe==='TOPUP_KREDIT'&&prev==='FULFILLED')grantCredits_(m.member_id,-Number(product.kredit_diberikan),o.order_id,'ADJUST_REFUND');
     if(product.tipe==='LANGGANAN_30H'&&prev==='FULFILLED'){
@@ -727,6 +757,25 @@ function installTriggers() {
   console.log('TRIGGERS_OK');
   return 'TRIGGERS_OK';
 }
+// Pemeriksaan baca-saja untuk transaksi membutuhkan rekonsiliasi.
+// Tidak menjalankan ulang pembayaran, fulfillment, atau mutasi ledger.
+function adminReconciliation_(admin) {
+  require_(admin&&admin.role==='ADMIN','FORBIDDEN','Akses ditolak.');
+  var orders=readAll_('orders'),ledger=readAll_('credits_ledger'),commissions=readAll_('affiliate_commissions'),findings=[];
+  orders.forEach(function(o){
+    var reasons=[],entries=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='TOPUP';});
+    if(o.status==='PAID')reasons.push('PAID_NOT_FULFILLED_OR_WAITING_MANUAL');
+    if(['FULFILLED','REFUNDED'].indexOf(o.status)>=0&&String(o.product_id).indexOf('P-KREDIT-')===0&&entries.length!==1)
+      reasons.push('TOPUP_LEDGER_COUNT_'+entries.length);
+    if(o.status==='REFUNDED'&&entries.length===1){
+      var reversals=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='ADJUST_REFUND';});
+      if(reversals.length!==1)reasons.push('TOPUP_REFUND_ADJUST_COUNT_'+reversals.length);
+    }
+    if(commissions.filter(function(k){return k.order_id===o.order_id;}).length>1)reasons.push('COMMISSION_DUPLICATE');
+    if(reasons.length)findings.push({order_id:o.order_id,status:o.status,issues:reasons});
+  });
+  return {checked:orders.length,findings:findings,needs_review:findings.length};
+}
 function apiRouter_(action,token,p,requestId) {
   var m=null, admin=null;
   switch(action) {
@@ -771,6 +820,7 @@ function apiRouter_(action,token,p,requestId) {
   switch(action){
     case 'adminGetDashboard':return {ringkasan:readAll_('ringkasan').map(function(r){return {metrik:r.metrik,nilai:r.nilai};}),followup:[]};
     case 'adminListOrders':return readAll_('orders').filter(function(r){return !p.status||r.status===p.status;}).slice(-100).reverse().map(function(r){return orderView_(r,admin);});
+    case 'adminGetReconciliation':return adminReconciliation_(admin);
     case 'adminVerifyOrder':require_(['approve','reject'].indexOf(p.keputusan)>=0,'VALIDATION','Keputusan tidak dikenal.');return transitionOrder_(admin,p.order_id,p.keputusan,p);
     case 'adminFulfillOrder':return approveFulfillment_(admin,p);
     case 'adminRefundOrder':return refundOrder_(admin,p);
@@ -801,7 +851,7 @@ function doPost(e) {
     require_(payload&&typeof payload==='object'&&!Array.isArray(payload),'BAD_REQUEST','Payload tidak valid.');
     // Pembatasan payload dan request_id sebelum mengambil kunci mutasi.
     var id=String(body.request_id||'');
-    var reads=['getPublicInfo','getMe','getBeranda','getKatalog','getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase','getAffiliateDashboard','adminGetDashboard','adminListOrders','adminListMembers','adminListCommissions','adminGetSettings'];
+    var reads=['getPublicInfo','getMe','getBeranda','getKatalog','getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase','getAffiliateDashboard','adminGetDashboard','adminListOrders','adminListMembers','adminListCommissions','adminGetSettings','adminGetReconciliation'];
     if(reads.indexOf(action)<0)require_(/^[a-zA-Z0-9_-]{16,80}$/.test(id),'VALIDATION','ID permintaan tidak valid.');
     var result=apiRouter_(action,String(body.token||''),payload,id);
     return apiOutput_({ok:true,data:result,server_time:isoWib_(now_())});
