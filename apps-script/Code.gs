@@ -32,7 +32,8 @@ const NGD = Object.freeze({
 });
 
 // ===== UTIL =====
-function db_() { return SpreadsheetApp.openById(NGD.DB_ID); }
+var NGD_DB_CACHE_ = null;
+function db_() { return NGD_DB_CACHE_ || (NGD_DB_CACHE_ = SpreadsheetApp.openById(NGD.DB_ID)); }
 function now_() { return new Date(); }
 function uuid_() { return Utilities.getUuid().replace(/-/g, '').toUpperCase(); }
 function hex_(bytes) { return bytes.map(function(n) { return ('0' + ((n + 256) % 256).toString(16)).slice(-2); }).join(''); }
@@ -306,7 +307,7 @@ function ensureFormulas_() {
 }
 function ensureAdmin_() {
   var existing=findRows_('members',function(r){return r.role==='ADMIN';});
-  if (existing.length) return false;
+  if (existing.length) return {created:false,pin:null,wa:null};
   var wa=normalizeWa_(setting_('wa_admin',''));
   if (findRows_('members',function(r){return r.wa===wa;}).length) throw new Error('Nomor WA admin sudah dipakai member.');
   var pin=randomPin_(), salt=newSalt_();
@@ -314,38 +315,52 @@ function ensureAdmin_() {
   if (findRows_('members',function(r){return r.member_id===adminId;}).length) throw new Error('ID admin sudah digunakan.');
   appendRow_('members',{member_id:adminId,role:'ADMIN',nama:'Admin Ngulik Digital',wa:wa,nama_usaha:'Ngulik Digital',pin_hash:pinHash_(pin,salt),pin_salt:salt,kode_referral:uuid_().slice(0,8),referred_by:'',status:'AKTIF',joined_at:now_(),last_active_at:now_(),d14_active:false,d30_active:false,status_pos:'BELUM',status_canva:'BELUM'});
   logAudit_(adminId,'ADMIN','ADMIN_CREATED','members',adminId,'','AKTIF',{});
-  SpreadsheetApp.getUi().alert('Admin Ngulik Digital dibuat.\nWA: '+wa+'\nPIN awal: '+pin+'\nCatat sekarang. PIN ini tidak disimpan dalam bentuk polos.');
-  return true;
+  // Dialog harus di luar lock; jangan pernah mencatat PIN di Logger.
+  return {created:true,pin:pin,wa:wa};
 }
 function setupDatabase() {
+  // Jangan letakkan UI alert di callback lock: alert menangguhkan eksekusi Apps Script.
   var result=withLock_(function(){
     ensureSheets_();
     var counts={pengaturan_sistem:seedSettings_(),katalog_produk:seedCatalog_(),ai_tools:seedAiTools_(),modul_belajar:seedModules_()};
     ensureFormulas_();
-    var adminCreated=ensureAdmin_();
-    var protect=['members','sessions','audit_logs','credits_ledger'];
-    protect.forEach(function(name) {
+    var admin=ensureAdmin_();
+    ['members','sessions','audit_logs','credits_ledger'].forEach(function(name) {
       var sh=tbl_(name).sheet;
       if (!sh.getProtections(SpreadsheetApp.ProtectionType.SHEET).some(function(p){return p.getDescription()==='Ngulik Digital: data sensitif';})) {
         sh.protect().setDescription('Ngulik Digital: data sensitif').setWarningOnly(true);
       }
     });
-    return {tabs:Object.keys(NGD.HEADERS).length,seed:counts,adminCreated:adminCreated};
+    SpreadsheetApp.flush();
+    return {tabs:Object.keys(NGD.HEADERS).length,seed:counts,admin:admin};
   });
-  SpreadsheetApp.getUi().alert('Setup selesai.\nTab: '+result.tabs+'\nSeed baru: '+JSON.stringify(result.seed)+'\nAdmin baru: '+(result.adminCreated?'ya':'tidak')+'\nLanjutkan instalasi trigger setelah BATCH 2, lalu deploy Web App.');
-  return result;
+  var message='Setup selesai.\nTab: '+result.tabs+
+    '\nSeed baru: '+JSON.stringify(result.seed)+
+    '\nAdmin baru: '+(result.admin.created?'ya':'tidak')+
+    '\nJangan deploy sebelum BATCH 2 dan pengujian selesai.';
+  if(result.admin.created) {
+    message+='\n\nPIN ADMIN AWAL (catat secara privat): '+result.admin.pin+
+      '\nWA: '+result.admin.wa+'\nPIN hanya ditampilkan sekali.';
+  } else {
+    message+='\nAkun ADMIN sudah ada. Bila PIN awal belum tercatat, jalankan resetAdminPin satu kali.';
+  }
+  SpreadsheetApp.getUi().alert(message);
+  return {tabs:result.tabs,seed:result.seed,adminCreated:result.admin.created};
 }
 function resetAdminPin() {
-  withLock_(function(){
+  // PIN hanya dibawa di memori hingga dialog tampil; jangan dikirim ke log.
+  var result=withLock_(function(){
     var admin=findRows_('members',function(r){return r.role==='ADMIN';})[0];
     if(!admin) throw new Error('Jalankan setupDatabase lebih dahulu.');
     var pin=randomPin_(),salt=newSalt_();
     updateRow_('members',admin._row,{pin_salt:salt,pin_hash:pinHash_(pin,salt)});
-    // Sesi lama admin dibatalkan.
     findRows_('sessions',function(r){return r.member_id===admin.member_id;}).reverse().forEach(function(r){tbl_('sessions').sheet.deleteRow(r._row);});
     logAudit_(admin.member_id,'ADMIN','ADMIN_PIN_RESET','members',admin.member_id,'','',{});
-    SpreadsheetApp.getUi().alert('PIN admin baru: '+pin+'\nCatat sekarang. PIN hanya ditampilkan sekali.');
+    SpreadsheetApp.flush();
+    return {pin:pin};
   });
+  SpreadsheetApp.getUi().alert('PIN admin baru: '+result.pin+'\nCatat sekarang. PIN hanya ditampilkan sekali.');
+  return {success:true};
 }
 function healthCheck() {
   var report=[];
