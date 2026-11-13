@@ -36,9 +36,13 @@ test('public UI strips unsafe HTML and restricts payments',()=>{
   assert.match(api,/credentials:\s*'omit'/);
   assert.doesNotMatch(api,/mode:\s*'no-cors'/);
 });
-test('browser probe never POSTs or sends credentials',()=>{
+test('browser probe permits only credential-free public reads',()=>{
   const probe=read('tests/transport-probe.js');
-  assert.match(probe,/method:'GET'/);
-  assert.doesNotMatch(probe,/method:'POST'/);
+  assert.match(probe,/perform\('GET'\)/);
+  assert.match(probe,/perform\('POST'\)/);
+  assert.match(probe,/action:'getPublicInfo'/);
+  assert.match(probe,/token:''/);
   assert.match(probe,/credentials:'omit'/);
+  assert.doesNotMatch(probe,/action:'register'/);
+  assert.doesNotMatch(probe,/action:'login'/);
 });
