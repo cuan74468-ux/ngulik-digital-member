@@ -230,6 +230,10 @@ function seedSettings_() {
       count++;
     }
   });
+  // Isi email admin lama yang masih kosong; jangan timpa alamat yang sudah disetel.
+  var emailRow = findRows_('pengaturan_sistem', function(r) { return r.key === 'email_admin'; })[0];
+  var email = Session.getEffectiveUser().getEmail();
+  if (emailRow && !emailRow.value && email) updateRow_('pengaturan_sistem', emailRow._row, {value: email});
   return count;
 }
 function seedCatalog_() {
