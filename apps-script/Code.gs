@@ -664,6 +664,12 @@ function refundOrder_(admin,p) {
     var o=byId_('orders','order_id',p.order_id);
     require_(o&&['PAID','FULFILLED'].indexOf(o.status)>=0,'CONFLICT','Pesanan tidak dapat direfund.');
     require_(safeText_(p.alasan,300).length>=5,'VALIDATION','Alasan refund wajib diisi.');
+    // QRIS statis tidak mengirim refund otomatis. Status REFUNDED hanya sah
+    // setelah admin telah memproses pengembalian uang di luar sistem.
+    require_(p.dana_sudah_dikembalikan===true,'RECONCILIATION_REQUIRED',
+      'Konfirmasi pengembalian dana secara nyata diperlukan sebelum mencatat refund.');
+    require_(safeText_(p.referensi_refund,120).length>=5,'VALIDATION',
+      'Nomor referensi/bukti refund diperlukan.');
     var m=byId_('members','member_id',o.member_id),product=byId_('katalog_produk','product_id',o.product_id),prev=o.status;
     require_(m&&product,'CONFLICT','Data member atau produk tidak tersedia.');
     // Refund uang adalah tindakan eksternal; jangan membalik hak akses yang telah
@@ -680,7 +686,7 @@ function refundOrder_(admin,p) {
       require_(findRows_('credits_ledger',function(x){return x.member_id===m.member_id&&x.ref_id===o.order_id&&x.tipe==='TOPUP';}).length===1,
         'RECONCILIATION_REQUIRED','Pencatatan top-up belum sesuai; refund harus ditinjau manual.');
     }
-    updateRow_('orders',o._row,{status:'REFUNDED',refunded_at:now_(),catatan_admin:p.alasan});
+    updateRow_('orders',o._row,{status:'REFUNDED',refunded_at:now_(),catatan_admin:p.alasan+' | Refund ref: '+safeText_(p.referensi_refund,120)});
     if(product.tipe==='TOPUP_KREDIT'&&prev==='FULFILLED')grantCredits_(m.member_id,-Number(product.kredit_diberikan),o.order_id,'ADJUST_REFUND');
     if(product.tipe==='LANGGANAN_30H'&&prev==='FULFILLED'){
       var old=m.akses_3in1_sampai?new Date(m.akses_3in1_sampai).getTime():Date.now();
@@ -692,7 +698,7 @@ function refundOrder_(admin,p) {
       if(c.status!=='PAID'){updateRow_('affiliate_commissions',c._row,{status:'REVERSED',reversed_at:now_(),reversed_reason:p.alasan});logAudit_(admin.member_id,'ADMIN','COMMISSION_REVERSED','affiliate_commissions',c.komisi_id,c.status,'REVERSED',{});}
       else logAudit_(admin.member_id,'ADMIN','COMMISSION_RECOVERY_REQUIRED','affiliate_commissions',c.komisi_id,'PAID','PAID',{});
     });
-    logAudit_(admin.member_id,'ADMIN','ORDER_REFUNDED','orders',o.order_id,prev,'REFUNDED',{alasan:p.alasan});
+    logAudit_(admin.member_id,'ADMIN','ORDER_REFUNDED','orders',o.order_id,prev,'REFUNDED',{alasan:p.alasan,referensi_refund:p.referensi_refund,dana_sudah_dikembalikan:true});
     return orderView_(byId_('orders','order_id',o.order_id),admin);
   });
 }
