@@ -49,6 +49,8 @@ const state={
   reconciliation:null,selectedProduct:null,lastOrder:null,loading:false
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
+const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true&&Boolean(config.qrisImageUrl)&&Boolean(config.qrisMerchant);
+const qrisUrl=()=>{try{const u=new URL(String(config.qrisImageUrl||''),location.href);return u.origin===location.origin&&u.protocol==='https:'?u.href:'';}catch{return '';}};
 const logged=()=>Boolean(state.me&&state.token);
 const title=(heading,eyebrow,detail)=>'<div class="section-head"><div><p class="eyebrow">'+esc(eyebrow)+'</p><h2>'+esc(heading)+'</h2>'+(detail?'<p>'+esc(detail)+'</p>':'')+'</div></div>';
 function toast(message,error=false){
@@ -113,7 +115,7 @@ function viewCatalog(){
       '<p class="card-kicker">'+esc(p.tipe||'Produk digital')+'</p><h3>'+esc(p.nama)+'</h3>'+
       '<p class="card-desc">'+esc(p.deskripsi||'')+'</p>'+
       '<div class="product-price">'+rupiah(p.harga)+'</div>'+
-      '<button class="btn btn-primary btn-wide" data-buy="'+idSafe(p.product_id)+'" '+(!isWriteEnabled()?'disabled title="Mode pratinjau"':'')+'>Pilih produk '+icon('arrow')+'</button></article>').join('')+'</div>';
+      '<button class="btn btn-primary btn-wide" data-buy="'+idSafe(p.product_id)+'" '+(!paymentEnabled()?'disabled title="Pembayaran belum diaktifkan"':'')+'>Pilih produk '+icon('arrow')+'</button></article>').join('')+'</div>';
 }
 function viewLearn(){
   if(!logged())return title('Belajar lebih terarah','MODUL PRAKTIS','Belajar sesuai kebutuhan usaha Anda.')+needLogin('materi belajar');
@@ -156,7 +158,7 @@ function viewAccount(){
       ['Nama',m.nama],['Nama usaha',m.nama_usaha],['WhatsApp',m.wa],['Status',m.status],['Kode referral',m.kode_referral],['Bergabung',friendlyDate(m.joined_at)]
     ].map(([k,v])=>'<div class="list-row"><div class="left"><small>'+esc(k)+'</small><strong>'+esc(v||'-')+'</strong></div></div>').join('')+'</div></div>'+
     '<div class="surface"><p class="card-kicker">AKSES & KEAMANAN</p><h3>Keamanan akun</h3><p class="card-desc">Sesi disimpan hanya di tab browser ini. Keluar untuk mengakhiri akses lokal.</p><div class="actions" style="margin-top:24px"><button class="btn btn-secondary" data-action="logout">'+icon('logout')+' Keluar dari akun</button></div>'+
-    '<div class="divider"></div><h3>Pesanan saya</h3><button class="btn btn-ghost" data-route="pesanan">Lihat riwayat pesanan '+icon('arrow')+'</button></div></div>';
+    '<div class="divider"></div><h3>Pesanan saya</h3><button class="btn btn-ghost" data-route="pesanan">Lihat riwayat pesanan '+icon('arrow')+'</button><div class="divider"></div><h3>Program affiliate</h3><button class="btn btn-ghost" data-route="affiliate">Lihat referral saya '+icon('arrow')+'</button></div></div>';
 }
 function viewLogin(register=false){
   return '<div class="login-shell"><p class="eyebrow">'+(register?'MEMULAI PERJALANAN':'SELAMAT DATANG KEMBALI')+'</p><h1 style="font-size:2.25rem">'+(register?'Buat akun member.':'Masuk ke ruang Anda.')+'</h1>'+
@@ -185,8 +187,8 @@ function viewCheckout(){
     '<div class="price-line"><span>Kode unik</span><strong>'+rupiah(o.kode_unik)+'</strong></div>'+
     '<div class="price-line"><span>Total pembayaran</span><strong>'+rupiah(o.total_bayar)+'</strong></div>'+
     '<p class="small muted" style="margin-top:20px">Nomor order: '+esc(o.order_id)+' · Batas: '+friendlyDate(o.expires_at)+'</p>'+
-    '<button class="btn btn-primary btn-wide" data-action="confirm-payment" '+(!isWriteEnabled()?'disabled':'')+'>Saya sudah membayar</button></article>'+
-    '<article class="surface"><h3>Instruksi pembayaran</h3><p class="card-desc">Gunakan QRIS resmi penyelenggara yang diberikan admin. Jangan melakukan transfer jika QRIS belum diverifikasi.</p><div class="empty" style="margin-top:20px"><span class="symbol">▦</span><p>QRIS resmi belum dipasang pada konfigurasi publik.</p></div></article></div>';
+    '<button class="btn btn-primary btn-wide" data-action="confirm-payment" '+(!paymentEnabled()?'disabled':'')+'>Saya sudah membayar</button></article>'+
+    '<article class="surface"><h3>Instruksi pembayaran</h3><p class="card-desc">Pastikan nama merchant QRIS sesuai informasi resmi sebelum membayar.</p>'+ (paymentEnabled()&&qrisUrl()?'<div style="text-align:center;margin-top:20px"><img src="'+esc(qrisUrl())+'" alt="QRIS resmi '+esc(config.qrisMerchant)+'" width="220" height="220" style="max-width:100%;height:auto"><p class="small muted">Merchant: '+esc(config.qrisMerchant)+'</p></div>':'<div class="empty" style="margin-top:20px"><span class="symbol">▦</span><p>QRIS resmi belum dipasang atau disetujui.</p></div>')+'</article></div>';
 }
 function viewAdmin(){
   if(!isAdmin())return needLogin('panel admin');
@@ -306,7 +308,7 @@ async function logout(){
 }
 async function buy(productId){
   if(!logged()){go('login');toast('Masuk terlebih dahulu untuk memesan.',true);return;}
-  if(!isWriteEnabled()){toast('Transaksi belum diaktifkan.',true);return;}
+  if(!paymentEnabled()||!qrisUrl()){toast('Transaksi belum diaktifkan dan QRIS belum diverifikasi.',true);return;}
   const product=state.catalog.find(p=>p.product_id===productId);
   if(!product)return toast('Produk tidak ditemukan.',true);
   if(!confirm('Buat pesanan '+product.nama+' seharga '+rupiah(product.harga)+'?'))return;
@@ -316,7 +318,7 @@ async function buy(productId){
   }catch(e){toast(e.message,true);}
 }
 async function confirmPayment(){
-  if(!state.lastOrder)return;
+  if(!state.lastOrder||!paymentEnabled()||!qrisUrl())return toast('Pembayaran belum aktif.',true);
   if(!confirm('Anda yakin pembayaran telah dikirim ke QRIS resmi? Konfirmasi ini bukan bukti pembayaran berhasil.'))return;
   try{
     const r=await api('confirmPayment',{order_id:state.lastOrder.order_id},state.token,{write:true});
