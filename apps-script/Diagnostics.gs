@@ -404,3 +404,23 @@ function diagnosticMemberQueueScenarios() {
   console.log('MEMBER_QUEUE_SCENARIOS_OK cases='+passed+' mode=MEMORY_ONLY');
   return 'MEMBER_QUEUE_SCENARIOS_OK';
 }
+
+
+// =====================================
+// TEST 11 — SERVER MUTATION GATE (SAFE)
+ // =====================================
+// Only runs a mutation request if the server gate is CLOSED; then doPost must
+// reject before any Sheet access. Aborts safely if gate is already open.
+function diagnosticMutationGateReadOnly() {
+  if(mutationsEnabled_()) {
+    console.warn('MUTATION_GATE_OPEN — test not executed; check Script Properties.');
+    return 'MUTATION_GATE_OPEN';
+  }
+  var request={action:'register',request_id:'diagnostic_request_123456789',
+    payload:{},token:''};
+  var response=JSON.parse(doPost({postData:{contents:JSON.stringify(request)}}).getContent());
+  if(response.ok!==false||!response.error||response.error.code!=='MAINTENANCE')
+    throw new Error('MUTATION_GATE_FAILED: expected MAINTENANCE');
+  console.log('MUTATION_GATE_OK — writes blocked before Sheets. No changes made.');
+  return 'MUTATION_GATE_OK';
+}
