@@ -449,6 +449,28 @@ function newReferralCode_() {
   throw ngdError_('CONFLICT','Kode referral belum bisa dibuat. Coba lagi.');
 }
 function memberCount_() {return findRows_('members',function(r){return r.role==='MEMBER'&&r.status==='AKTIF';}).length;}
+// Pure validator: accepts only safe, documented system-setting values.
+function validatedAdminSetting_(key,value) {
+  var enums={mode_pendaftaran:['TERBUKA','WAITING_LIST','TERTUTUP']};
+  var ints={komisi_persen:[0,50],masa_tahan_hari:[1,90],min_payout:[1000,10000000],kuota_gelombang:[1,1000]};
+  if(Object.prototype.hasOwnProperty.call(enums,key)){
+    require_(typeof value==='string'&&enums[key].indexOf(value)>=0,
+      'VALIDATION','Pilihan pengaturan tidak valid.');
+    return value;
+  }
+  if(Object.prototype.hasOwnProperty.call(ints,key)){
+    var n=Number(value),bounds=ints[key];
+    require_(value!==null&&value!==''&&Number.isInteger(n)&&n>=bounds[0]&&n<=bounds[1],
+      'VALIDATION','Nilai pengaturan di luar batas.');
+    return n;
+  }
+  if(key==='link_classroom'){
+    require_(typeof value==='string'&&value.length<=500&&/^https:\/\/classroom\.google\.com\//i.test(value),
+      'VALIDATION','Tautan Google Classroom harus HTTPS resmi.');
+    return value;
+  }
+  throw ngdError_('FORBIDDEN','Pengaturan tidak dapat diubah.');
+}
 function updateSetting_(key,value) {
   var r=byId_('pengaturan_sistem','key',key);require_(r,'NOT_FOUND','Pengaturan tidak ditemukan.');
   updateRow_('pengaturan_sistem',r._row,{value:value});
@@ -714,11 +736,18 @@ function refundOrder_(admin,p) {
 function advanceTrial_(m,p) {
   return withLock_(function(){
     var fresh=byId_('members','member_id',m.member_id);
+    require_(fresh&&fresh.role==='MEMBER'&&fresh.status==='AKTIF','FORBIDDEN','Akun tidak dapat mengaktifkan trial.');
     require_(!fresh.onboarding_at,'CONFLICT','Aktivasi gratis hanya sekali.');
     var now=now_(),days=Number(setting_('trial_hari',30));
-    updateRow_('members',fresh._row,{jenis_usaha:safeText_(p.jenis_usaha,80),kota:safeText_(p.kota,80),deskripsi_usaha:safeText_(p.deskripsi_usaha,500),instagram:safeText_(p.instagram,80),onboarding_at:now,trial_mulai:now,trial_berakhir:new Date(now.getTime()+days*86400000),akses_3in1_sampai:new Date(now.getTime()+days*86400000),sumber_akses_3in1:'TRIAL'});
-    logAudit_(m.member_id,m.role,'TRIAL_ACTIVATED','members',m.member_id,'','TRIAL',{days:days});
-    return {trial_berakhir:isoWib_(new Date(now.getTime()+days*86400000))};
+    require_(Number.isInteger(days)&&days>=1&&days<=90,'VALIDATION','Durasi trial tidak valid.');
+    var trialEnd=new Date(now.getTime()+days*86400000);
+    var existingEnd=fresh.akses_3in1_sampai?new Date(fresh.akses_3in1_sampai).getTime():0;
+    var paidActive=fresh.sumber_akses_3in1==='BERBAYAR'&&existingEnd>now.getTime();
+    var patch={jenis_usaha:safeText_(p.jenis_usaha,80),kota:safeText_(p.kota,80),deskripsi_usaha:safeText_(p.deskripsi_usaha,500),instagram:safeText_(p.instagram,80),onboarding_at:now,trial_mulai:now,trial_berakhir:trialEnd};
+    if(!paidActive){patch.akses_3in1_sampai=trialEnd;patch.sumber_akses_3in1='TRIAL';}
+    updateRow_('members',fresh._row,patch);
+    logAudit_(m.member_id,m.role,'TRIAL_ACTIVATED','members',m.member_id,'','TRIAL',{days:days,paid_preserved:paidActive});
+    return {trial_berakhir:isoWib_(trialEnd),paid_access_preserved:paidActive};
   });
 }
 function publicCatalog_() {return readAll_('katalog_produk').filter(function(r){return r.aktif===true;}).map(function(r){return {product_id:r.product_id,nama:r.nama,deskripsi:r.deskripsi,tipe:r.tipe,harga:r.harga,kredit_diberikan:r.kredit_diberikan,durasi_hari:r.durasi_hari};});}
@@ -750,7 +779,7 @@ function maintenance_() {
     readAll_('affiliate_commissions').forEach(function(c){
       if(c.status==='PENDING'&&new Date(c.approve_after).getTime()<=now){
         var o=byId_('orders','order_id',c.order_id);
-        if(o&&o.status!=='REFUNDED'){updateRow_('affiliate_commissions',c._row,{status:'APPROVED',approved_at:now_()});logAudit_('SYSTEM','SYSTEM','COMMISSION_APPROVED','affiliate_commissions',c.komisi_id,'PENDING','APPROVED',{});changed.commissions++;}
+        if(o&&['PAID','FULFILLED'].indexOf(o.status)>=0){updateRow_('affiliate_commissions',c._row,{status:'APPROVED',approved_at:now_()});logAudit_('SYSTEM','SYSTEM','COMMISSION_APPROVED','affiliate_commissions',c.komisi_id,'PENDING','APPROVED',{});changed.commissions++;}
       }
     });
     readAll_('members').forEach(function(m){
@@ -856,7 +885,14 @@ function apiRouter_(action,token,p,requestId) {
     case 'adminListCommissions':return readAll_('affiliate_commissions');
     case 'adminGetSettings':return settings_();
     case 'adminUpdateSetting':
-      return withLock_(function(){var allow=['link_classroom','mode_pendaftaran','komisi_persen','masa_tahan_hari','min_payout','kuota_gelombang'];require_(allow.indexOf(p.key)>=0,'FORBIDDEN','Pengaturan tidak dapat diubah.');var before=setting_(p.key,'');updateSetting_(p.key,p.value);logAudit_(admin.member_id,'ADMIN','SETTING_CHANGED','pengaturan_sistem',p.key,String(before),String(p.value),{});return {success:true};});
+      return withLock_(function(){
+        var value=validatedAdminSetting_(p.key,p.value);
+        if(p.key==='kuota_gelombang')require_(value>=memberCount_(),'CONFLICT','Kuota tidak boleh kurang dari jumlah member aktif.');
+        var before=setting_(p.key,'');
+        updateSetting_(p.key,value);
+        logAudit_(admin.member_id,'ADMIN','SETTING_CHANGED','pengaturan_sistem',p.key,String(before),String(value),{});
+        return {success:true};
+      });
     case 'adminAdjustCredit':
       return withLock_(function(){var member=byId_('members','member_id',p.member_id);require_(member,'NOT_FOUND','Member tidak ditemukan.');var amount=Number(p.jumlah);require_(Number.isFinite(amount)&&amount!==0&&Math.abs(amount)<=100000,'VALIDATION','Nilai koreksi tidak valid.');require_(safeText_(p.alasan,300).length>=5,'VALIDATION','Alasan wajib diisi.');grantCredits_(member.member_id,amount,'ADMIN:'+admin.member_id,'ADJUST');return {saldo:creditBalance_(member.member_id)};});
     case 'adminMarkCommissionPaid':
