@@ -19,4 +19,4 @@ jobs:
         with:
           node-version: '20'
       - name: Verify pure backend rules and frontend smoke
-        run: node --test tests/backend-pure.test.cjs tests/frontend-smoke.test.cjs
+        run: node --test tests/backend-pure.test.cjs tests/backend-security.test.cjs tests/frontend-smoke.test.cjs
