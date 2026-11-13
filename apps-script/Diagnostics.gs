@@ -279,3 +279,27 @@ function diagnosticFinanceReadOnly() {
   console.log('FINANCE_AUDIT_OK — tidak ada anomali yang terdeteksi pemeriksaan ini');
   return 'FINANCE_AUDIT_OK';
 }
+
+
+// =====================================
+// TEST 7 — REKONSILIASI (READ-ONLY)
+// =====================================
+// Pemanggilan helper internal untuk inspeksi saja; tidak membuat sesi admin.
+function diagnosticReconciliationReadOnly() {
+  var started=Date.now();
+  var result=adminReconciliation_({role:'ADMIN'});
+  console.log('RECONCILIATION_SUMMARY '+JSON.stringify({
+    checked:result.checked,
+    needs_review:result.needs_review,
+    durationMs:Date.now()-started
+  }));
+  result.findings.slice(0,20).forEach(function(f){
+    console.warn('REVIEW_ORDER '+JSON.stringify(f));
+  });
+  if(result.needs_review>0){
+    console.warn('RECONCILIATION_WARN — perlu pemeriksaan admin; tidak ada perubahan data.');
+    return 'RECONCILIATION_WARN';
+  }
+  console.log('RECONCILIATION_OK — tidak ada anomali pada aturan yang diperiksa.');
+  return 'RECONCILIATION_OK';
+}
