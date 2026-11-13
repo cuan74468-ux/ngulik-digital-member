@@ -8,15 +8,35 @@ const base=path.resolve(__dirname,'..');
 const app=fs.readFileSync(path.join(base,'js/app.js'),'utf8');
 const api=fs.readFileSync(path.join(base,'js/api.js'),'utf8');
 const config=fs.readFileSync(path.join(base,'config.js'),'utf8');
-function stripModule(text) {
+function stripModule(text){
   return text.replace(/^import .*?;\s*$/gm,'').replace(/^export /gm,'');
 }
-
+function renderPreview(search=''){
+  const nodes=Object.create(null);
+  function el(id){return nodes[id]||(nodes[id]={
+    innerHTML:'',textContent:'',append(){},addEventListener(){},
+    querySelector(){return {disabled:false}}
+  });}
+  const document={getElementById:el,addEventListener(){},title:''};
+  const window={NGD_CONFIG:{demoMode:true,apiUrl:'',paymentsEnabled:false,
+    qrisImageUrl:'',qrisMerchant:''},addEventListener(){},scrollTo(){}};
+  const location={href:'https://example.invalid/',origin:'https://example.invalid',hash:'',search};
+  const sessionStorage={getItem(){return null;},setItem(){},removeItem(){}};
+  const context=vm.createContext({
+    window,document,location,sessionStorage,history:{replaceState(){}},
+    api(){throw new Error('API must not be called in offline preview');},
+    ApiError:class ApiError extends Error{},
+    isConnected:()=>false,isWriteEnabled:()=>false,
+    setTimeout,clearTimeout,Intl,URL,URLSearchParams,Date,Number,Object,String
+  });
+  vm.runInContext(stripModule(app),context,{filename:'app.js',timeout:3000});
+  return {nodes,context,document};
+}
 test('frontend modules parse without build tools',()=>{
   assert.doesNotThrow(()=>new vm.Script(stripModule(app),{filename:'app.js'}));
   assert.doesNotThrow(()=>new vm.Script(stripModule(api),{filename:'api.js'}));
 });
-test('public config disables mutation/payment by default',()=>{
+test('public config locks mutation and payment by default',()=>{
   const sandbox={window:{}};
   vm.runInNewContext(config,sandbox,{timeout:1000});
   assert.equal(sandbox.window.NGD_CONFIG.apiUrl,'');
@@ -24,26 +44,33 @@ test('public config disables mutation/payment by default',()=>{
   assert.equal(sandbox.window.NGD_CONFIG.paymentsEnabled,false);
   assert.equal(sandbox.window.NGD_CONFIG.qrisImageUrl,'');
 });
-test('guest homepage renders and shows preview warning offline',()=>{
-  const nodes=Object.create(null);
-  function el(id){return nodes[id]||(nodes[id]={
-    innerHTML:'',textContent:'',append(){},addEventListener(){},
-    querySelector(){return {disabled:false}}
-  });}
-  const document={getElementById:el,addEventListener(){},title:''};
-  const window={NGD_CONFIG:{demoMode:true,apiUrl:'',paymentsEnabled:false,qrisImageUrl:'',qrisMerchant:''},addEventListener(){},scrollTo(){}};
-  const location={href:'https://example.invalid/',origin:'https://example.invalid',hash:'',search:''};
-  const sessionStorage={getItem(){return null;},setItem(){},removeItem(){}};
-  const context=vm.createContext({
-    window,document,location,sessionStorage,history:{replaceState(){}},
-    api(){throw new Error('API must not be called in preview mode');},
-    ApiError:class ApiError extends Error{},
-    isConnected:()=>false,isWriteEnabled:()=>false,
-    setTimeout,clearTimeout,Intl,URL,URLSearchParams,Date,Number,Object,String
-  });
-  vm.runInContext(stripModule(app),context,{filename:'app.js',timeout:3000});
-  assert.match(nodes.screen.innerHTML,/bertumbuh nyata/);
-  assert.match(nodes['notice-slot'].innerHTML,/Mode pratinjau/);
+test('guest homepage renders and shows offline preview warning',()=>{
+  const {nodes,document}=renderPreview();
+  assert.match(nodes.screen.innerHTML,/Belajar digital/);
+  assert.match(nodes['notice-slot'].innerHTML,/Pratinjau/);
   assert.match(nodes['desktop-nav'].innerHTML,/Katalog/);
   assert.equal(document.title,'Beranda — Ngulik Digital');
+});
+test('local member preview renders native-like dashboard without login',()=>{
+  const {nodes,context}=renderPreview('?preview=member');
+  assert.match(nodes.screen.innerHTML,/DASHBOARD MEMBER/);
+  assert.match(nodes.screen.innerHTML,/Kredit AI tersisa/);
+  assert.match(nodes['notice-slot'].innerHTML,/DEMO LOKAL/);
+  assert.equal(vm.runInContext('isWriteEnabled()',context),false);
+});
+test('preview catalog uses sample products with disabled buy buttons',()=>{
+  const {nodes,context}=renderPreview('?preview=member');
+  vm.runInContext("go('katalog')",context,{timeout:2000});
+  assert.match(nodes.screen.innerHTML,/Paket 3-in-1/);
+  assert.match(nodes.screen.innerHTML,/Top-up 400 Kredit AI/);
+  assert.match(nodes.screen.innerHTML,/disabled title="Pembayaran belum diaktifkan"/);
+});
+test('catalog escapes untrusted product names, and external URLs are restricted',()=>{
+  const {nodes,context}=renderPreview();
+  vm.runInContext("state.catalog=[{product_id:'P-SAFE',nama:'<img src=x onerror=alert(1)>',deskripsi:'Unsafe <script>',harga:1,tipe:'TOPUP_KREDIT'}];go('katalog')",
+    context,{timeout:2000});
+  assert.match(nodes.screen.innerHTML,/&lt;img src=x onerror=alert\(1\)&gt;/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/<img src=x onerror/);
+  assert.equal(vm.runInContext("urlSafe('javascript:alert(1)')",context),'');
+  assert.equal(vm.runInContext("urlSafe('https://example.org/')",context),'https://example.org/');
 });
