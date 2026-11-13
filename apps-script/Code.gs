@@ -532,7 +532,8 @@ function newOrder_(m,p,requestId) {
     var mine=findRows_('orders',function(o){return o.member_id===m.member_id&&o.product_id===product.product_id&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;});
     if(mine.length){var existing=expireOrder_(mine[0]);if(existing.status!=='EXPIRED')return orderView_(existing,m);}
     var s=settings_(),min=Number(s.kode_unik_min||100),max=Number(s.kode_unik_max||999),price=Number(product.harga);
-    require_(Number.isInteger(price)&&price>=0,'VALIDATION','Harga produk belum valid.');
+    require_(Number.isInteger(price)&&price>0,'VALIDATION','Harga produk belum valid.');
+    require_(Number.isInteger(min)&&Number.isInteger(max)&&min>=100&&max<=999&&min<=max,'VALIDATION','Rentang kode unik tidak valid.');
     var open=readAll_('orders').filter(function(o){return ['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;});
     var taken={};open.forEach(function(o){taken[Number(o.total_bayar)]=true;});
     var code=null;for(var k=0;k<25;k++){var n=min+Math.floor(Math.random()*(max-min+1));if(!taken[price+n]){code=n;break;}}
@@ -567,6 +568,20 @@ function transitionOrder_(m,id,type,p) {
     } else if(type==='reject'&&admin&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(from)>=0){
       require_(safeText_(p.alasan,300).length>=5,'VALIDATION','Alasan penolakan diperlukan.');to='CANCELLED';patch.cancelled_at=now_();patch.catatan_admin=p.alasan;
     } else throw ngdError_('CONFLICT','Status pesanan tidak mengizinkan tindakan ini.');
+    // Validasi data fulfillment sebelum menandai pembayaran sebagai PAID.
+    if(to==='PAID'){
+      var linkedProduct=byId_('katalog_produk','product_id',o.product_id);
+      var linkedMember=byId_('members','member_id',o.member_id);
+      require_(linkedProduct&&linkedMember,'CONFLICT','Produk atau member tidak ditemukan.');
+      require_(['TOPUP_KREDIT','LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H'].indexOf(linkedProduct.tipe)>=0,
+        'CONFLICT','Tipe produk belum mendukung fulfillment.');
+      if(linkedProduct.tipe==='TOPUP_KREDIT')
+        require_(Number.isInteger(Number(linkedProduct.kredit_diberikan))&&Number(linkedProduct.kredit_diberikan)>0,
+          'CONFLICT','Jumlah kredit produk belum valid.');
+      if(linkedProduct.tipe==='LANGGANAN_30H')
+        require_(Number.isInteger(Number(linkedProduct.durasi_hari))&&Number(linkedProduct.durasi_hari)>0,
+          'CONFLICT','Durasi produk belum valid.');
+    }
     patch.status=to;updateRow_('orders',o._row,patch);
     logAudit_(m.member_id,m.role,'ORDER_'+type.toUpperCase(),'orders',id,from,to,{alasan:patch.catatan_admin||''});
     if(to==='PAID')onPaid_(o,m);
@@ -574,9 +589,17 @@ function transitionOrder_(m,id,type,p) {
   });
 }
 function grantCredits_(id,amount,ref,kind) {
+  amount=Number(amount);
+  require_(Number.isFinite(amount)&&Number.isInteger(amount)&&amount!==0,'VALIDATION','Jumlah kredit tidak valid.');
+  // Topup dan pembatalannya harus dapat diulang dengan aman tanpa saldo ganda.
+  if(ref&&['TOPUP','ADJUST_REFUND'].indexOf(kind)>=0){
+    var prior=findRows_('credits_ledger',function(r){return r.member_id===id&&r.ref_id===ref&&r.tipe===kind;});
+    if(prior.length)return {alreadyApplied:true,balance:creditBalance_(id)};
+  }
   var balance=creditBalance_(id),final=balance+amount;
   appendRow_('credits_ledger',{entry_id:recordId_('L'),member_id:id,created_at:now_(),tipe:kind||'ADJUST',jumlah:amount,status:'POSTED',ref_id:ref||'',keterangan:'Transaksi '+(ref||''),saldo_setelah:final});
   logAudit_('SYSTEM','SYSTEM','CREDIT_'+(kind||'ADJUST'),'credits_ledger',ref||id,'','POSTED',{jumlah:amount});
+  return {alreadyApplied:false,balance:final};
 }
 function onPaid_(o,actor) {
   var product=byId_('katalog_produk','product_id',o.product_id),member=byId_('members','member_id',o.member_id);
@@ -628,7 +651,7 @@ function refundOrder_(admin,p) {
     require_(safeText_(p.alasan,300).length>=5,'VALIDATION','Alasan refund wajib diisi.');
     var m=byId_('members','member_id',o.member_id),product=byId_('katalog_produk','product_id',o.product_id),prev=o.status;
     updateRow_('orders',o._row,{status:'REFUNDED',refunded_at:now_(),catatan_admin:p.alasan});
-    if(product.tipe==='TOPUP_KREDIT'&&prev==='FULFILLED')grantCredits_(m.member_id,-Number(product.kredit_diberikan),o.order_id,'ADJUST');
+    if(product.tipe==='TOPUP_KREDIT'&&prev==='FULFILLED')grantCredits_(m.member_id,-Number(product.kredit_diberikan),o.order_id,'ADJUST_REFUND');
     if(product.tipe==='LANGGANAN_30H'&&prev==='FULFILLED'){
       var old=m.akses_3in1_sampai?new Date(m.akses_3in1_sampai).getTime():Date.now();
       updateRow_('members',m._row,{akses_3in1_sampai:new Date(old-Number(product.durasi_hari||30)*86400000)});
