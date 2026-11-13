@@ -403,8 +403,7 @@ function healthCheck() {
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Ngulik Digital')
     .addItem('Periksa database (baca-saja)','inspectDatabaseSetup')
-    .addItem('Pasang trigger','installTriggers')
-    .addItem('Reset PIN admin','resetAdminPin')
+    // Unsafe mutation utilities intentionally hidden from the casual menu.
     .addItem('Health check','healthCheck')
     .addToUi();
 }
@@ -587,14 +586,20 @@ function authRegister_(p) {
 }
 function authLogin_(p) {
   var wa=normalizeWa_(p.wa),pin=String(p.pin||'');checkPin_(pin);
-  loginGuard_(wa);
-  var m=byId_('members','wa',wa);
-  if(!m || pinHash_(pin,m.pin_salt)!==m.pin_hash){
-    noteLoginFailure_(wa);throw ngdError_('UNAUTHORIZED','Nomor WhatsApp atau PIN salah.');
-  }
-  require_(m.status==='AKTIF','FORBIDDEN','Akun belum aktif.');
-  clearLoginFailures_(wa);updateActivity_(m);
-  return newSessionMember_(m);
+  // Guard + counter + session issuance must be serialized to prevent
+  // parallel wrong-PIN requests bypassing the per-account throttle.
+  return withLock_(function(){
+    loginGuard_(wa);
+    var m=byId_('members','wa',wa);
+    if(!m || pinHash_(pin,m.pin_salt)!==m.pin_hash){
+      noteLoginFailure_(wa);
+      throw ngdError_('UNAUTHORIZED','Nomor WhatsApp atau PIN salah.');
+    }
+    require_(m.status==='AKTIF','FORBIDDEN','Akun belum aktif.');
+    clearLoginFailures_(wa);
+    updateActivity_(m);
+    return newSessionMember_(m);
+  });
 }
 function authLogout_(token) {
   var hash=sha256_(token),rows=findRows_('sessions',function(r){return r.token_hash===hash;});
@@ -879,9 +884,10 @@ function maintenance_() {
     return changed;
   });
 }
-function expireOrders() {return withLock_(function(){var count=0;readAll_('orders').forEach(function(o){if(o.status==='PENDING'&&new Date(o.expires_at).getTime()<=Date.now()){expireOrder_(o);count++;}});return count;});}
-function dailyMaintenance() {return maintenance_();}
+function expireOrders() {requireMutationsEnabled_();return withLock_(function(){var count=0;readAll_('orders').forEach(function(o){if(o.status==='PENDING'&&new Date(o.expires_at).getTime()<=Date.now()){expireOrder_(o);count++;}});return count;});}
+function dailyMaintenance() {requireMutationsEnabled_();return maintenance_();}
 function installTriggers() {
+  requireMutationsEnabled_();
   ScriptApp.getProjectTriggers().forEach(function(t){if(['expireOrders','dailyMaintenance'].indexOf(t.getHandlerFunction())>=0)ScriptApp.deleteTrigger(t);});
   ScriptApp.newTrigger('expireOrders').timeBased().everyMinutes(5).create();
   ScriptApp.newTrigger('dailyMaintenance').timeBased().everyDays(1).atHour(1).create();
@@ -996,7 +1002,24 @@ function apiOutput_(value) {
   return ContentService.createTextOutput(JSON.stringify(value,function(k,v){return v instanceof Date?isoWib_(v):v;})).setMimeType(ContentService.MimeType.JSON);
 }
 function doGet(e) {
-  return apiOutput_({ok:true,data:{app:'Ngulik Digital API',version:NGD.VERSION,time:isoWib_(now_())},server_time:isoWib_(now_())});
+  return apiOutput_({ok:true,data:{app:'Ngulik Digital API',version:NGD.VERSION,
+    writes_enabled:mutationsEnabled_(),time:isoWib_(now_())},server_time:isoWib_(now_())});
+}
+// Hard fail-closed release gate. Frontend demoMode is NOT a security boundary.
+// Enable only after QA, by setting NGD_MUTATIONS_ENABLED=true in Script Properties.
+function mutationsEnabled_() {
+  return PropertiesService.getScriptProperties().getProperty('NGD_MUTATIONS_ENABLED')==='true';
+}
+function requireMutationsEnabled_() {
+  require_(mutationsEnabled_(),'MAINTENANCE',
+    'Perubahan data belum diaktifkan. Sistem masih dalam pengujian.');
+}
+function apiReadActions_() {
+  return ['getPublicInfo','getMe','getBeranda','getModulBelajar','getKatalog',
+    'getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase',
+    'getAffiliateDashboard','adminGetDashboard','adminListOrders','adminListMembers',
+    'adminListWaitingList','adminListCommissions','adminGetSettings',
+    'adminGetReconciliation'];
 }
 function doPost(e) {
   try {
@@ -1007,8 +1030,12 @@ function doPost(e) {
     require_(payload&&typeof payload==='object'&&!Array.isArray(payload),'BAD_REQUEST','Payload tidak valid.');
     // Pembatasan payload dan request_id sebelum mengambil kunci mutasi.
     var id=String(body.request_id||'');
-    var reads=['getPublicInfo','getMe','getBeranda','getModulBelajar','getKatalog','getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase','getAffiliateDashboard','adminGetDashboard','adminListOrders','adminListMembers','adminListWaitingList','adminListCommissions','adminGetSettings','adminGetReconciliation'];
-    if(reads.indexOf(action)<0)require_(/^[a-zA-Z0-9_-]{16,80}$/.test(id),'VALIDATION','ID permintaan tidak valid.');
+    var reads=apiReadActions_();
+    if(reads.indexOf(action)<0){
+      // Before any spreadsheet or account access, require a deliberate server-side release.
+      requireMutationsEnabled_();
+      require_(/^[a-zA-Z0-9_-]{16,80}$/.test(id),'VALIDATION','ID permintaan tidak valid.');
+    }
     var result=apiRouter_(action,String(body.token||''),payload,id);
     return apiOutput_({ok:true,data:result,server_time:isoWib_(now_())});
   }catch(err){
