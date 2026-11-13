@@ -91,3 +91,11 @@ Dokumen pengguna `MASTER_PROMPT_Ngulik_Digital_Member.md` adalah acuan fitur dan
 - Menu Spreadsheet kini menampilkan `Periksa database (baca-saja)` menggantikan `Setup database` untuk menghindari klik tidak sengaja.
 - **Perubahan ini baru di GitHub.** Apps Script terikat Spreadsheet tidak akan ikut berubah sampai `Code.gs` disalin ulang secara manual; jangan jalankan setup pada versi lama.
 - Perubahan belum diuji langsung pada runtime Apps Script; status bukan production-ready.
+
+## Audit keuangan baca-saja — 13 November 2026
+
+- Commit backend `df1878c`: validasi awal fulfillment sebelum status pembayaran diubah, serta pengaman agar posting topup/refund dengan referensi order yang sama tidak berulang.
+- Commit diagnostik `5221cbf`: fungsi `diagnosticFinanceReadOnly()` memeriksa order, ledger kredit, dan komisi tanpa menulis data atau mencetak PIN/nomor WA.
+- Untuk menjalankannya, pemilik harus menyalin file `Code.gs` **dan** `Diagnostics.gs` terbaru ke project Apps Script terikat, lalu jalankan **hanya** `diagnosticFinanceReadOnly`.
+- Hasil yang diharapkan `FINANCE_AUDIT_OK`; `WARN` dan `FAILED` harus ditinjau sebelum transaksi diaktifkan.
+- Pengujian runtime atas perbaikan ini belum dilakukan. **Jangan melakukan transaksi atau deploy publik.**
