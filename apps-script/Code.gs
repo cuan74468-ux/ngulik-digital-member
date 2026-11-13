@@ -494,10 +494,19 @@ function authLogout_(token) {
 }
 function authChangePin_(m,p) {
   checkPin_(p.pin_lama);checkPin_(p.pin_baru);
-  require_(pinHash_(p.pin_lama,m.pin_salt)===m.pin_hash,'UNAUTHORIZED','PIN lama salah.');
-  var salt=newSalt_();updateRow_('members',m._row,{pin_salt:salt,pin_hash:pinHash_(p.pin_baru,salt)});
-  logAudit_(m.member_id,m.role,'PIN_CHANGED','members',m.member_id,'','',{});
-  return {success:true};
+  require_(String(p.pin_lama)!==String(p.pin_baru),'VALIDATION','PIN baru harus berbeda.');
+  return withLock_(function(){
+    // Baca ulang agar perubahan PIN dari sesi lain tidak menimpa PIN terbaru.
+    var fresh=byId_('members','member_id',m.member_id);
+    require_(fresh&&fresh.status==='AKTIF','FORBIDDEN','Akun tidak aktif.');
+    require_(pinHash_(p.pin_lama,fresh.pin_salt)===fresh.pin_hash,'UNAUTHORIZED','PIN lama salah.');
+    var salt=newSalt_();
+    updateRow_('members',fresh._row,{pin_salt:salt,pin_hash:pinHash_(p.pin_baru,salt)});
+    var sessions=findRows_('sessions',function(r){return r.member_id===fresh.member_id;});
+    sessions.reverse().forEach(function(r){tbl_('sessions').sheet.deleteRow(r._row);});
+    logAudit_(fresh.member_id,fresh.role,'PIN_CHANGED_SESSIONS_REVOKED','members',fresh.member_id,'','',{sessions_revoked:sessions.length});
+    return {success:true,login_required:true};
+  });
 }
 function publicInfo_(p) {
   var s=settings_(),quota=Number(s.kuota_gelombang||50),used=memberCount_();
@@ -765,22 +774,35 @@ function installTriggers() {
 }
 // Pemeriksaan baca-saja untuk transaksi membutuhkan rekonsiliasi.
 // Tidak menjalankan ulang pembayaran, fulfillment, atau mutasi ledger.
-function adminReconciliation_(admin) {
-  require_(admin&&admin.role==='ADMIN','FORBIDDEN','Akses ditolak.');
-  var orders=readAll_('orders'),ledger=readAll_('credits_ledger'),commissions=readAll_('affiliate_commissions'),findings=[];
+// Engine rekonsiliasi murni. Bisa diuji menggunakan data simulasi
+// tanpa SpreadsheetApp, tanpa akses akun, dan tanpa mutasi database.
+function financeFindings_(orders,ledger,commissions,products) {
+  var findings=[],types={};
+  products.forEach(function(p){types[String(p.product_id)]=p.tipe;});
   orders.forEach(function(o){
     var reasons=[],entries=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='TOPUP';});
-    if(o.status==='PAID')reasons.push('PAID_NOT_FULFILLED_OR_WAITING_MANUAL');
-    if(['FULFILLED','REFUNDED'].indexOf(o.status)>=0&&String(o.product_id).indexOf('P-KREDIT-')===0&&entries.length!==1)
+    var reversals=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='ADJUST_REFUND';});
+    var isTopup=types[String(o.product_id)]==='TOPUP_KREDIT';
+    if(o.status==='PAID')reasons.push('PAID_PENDING_FULFILLMENT_REVIEW');
+    if(isTopup&&['FULFILLED','REFUNDED'].indexOf(o.status)>=0&&entries.length!==1)
       reasons.push('TOPUP_LEDGER_COUNT_'+entries.length);
-    if(o.status==='REFUNDED'&&entries.length===1){
-      var reversals=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='ADJUST_REFUND';});
-      if(reversals.length!==1)reasons.push('TOPUP_REFUND_ADJUST_COUNT_'+reversals.length);
-    }
-    if(commissions.filter(function(k){return k.order_id===o.order_id;}).length>1)reasons.push('COMMISSION_DUPLICATE');
+    if(isTopup&&o.status==='REFUNDED'&&reversals.length!==1)
+      reasons.push('TOPUP_REFUND_ADJUST_COUNT_'+reversals.length);
+    if(isTopup&&o.status!=='REFUNDED'&&reversals.length>0)
+      reasons.push('REFUND_ADJUST_WITHOUT_REFUNDED_STATUS');
+    if(commissions.filter(function(k){return k.order_id===o.order_id;}).length>1)
+      reasons.push('COMMISSION_DUPLICATE');
+    if(o.status==='REFUNDED'&&commissions.some(function(k){
+      return k.order_id===o.order_id&&k.status==='PAID';
+    }))reasons.push('PAID_COMMISSION_ON_REFUNDED_ORDER');
     if(reasons.length)findings.push({order_id:o.order_id,status:o.status,issues:reasons});
   });
   return {checked:orders.length,findings:findings,needs_review:findings.length};
+}
+function adminReconciliation_(admin) {
+  require_(admin&&admin.role==='ADMIN','FORBIDDEN','Akses ditolak.');
+  return financeFindings_(readAll_('orders'),readAll_('credits_ledger'),
+    readAll_('affiliate_commissions'),readAll_('katalog_produk'));
 }
 function apiRouter_(action,token,p,requestId) {
   var m=null, admin=null;
