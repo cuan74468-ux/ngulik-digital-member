@@ -131,3 +131,19 @@ Commit backend `0c9e4d5`: (1) aktivasi trial tidak menurunkan akses 3-in-1 berba
 Commit diagnostik `dcfab8d`: `diagnosticAdminSettingsScenarios()` berisi 15 skenario murni di memori; **belum dieksekusi pada Apps Script**. Tidak mengubah database. Tetap gunakan checkpoint sinkronisasi setelah backend selesai, jangan copy-paste setiap commit.
 
 Risiko yang belum ditutup: transaksi multi-sheet tidak atomik, pemulihan partial fulfillment, perpanjangan/rollback akses digital kompleks, autentikasi dan sesi dalam pemakaian nyata, integrasi API AI, dan pengujian end-to-end UI. Belum production-ready.
+
+## Checkpoint pengelolaan member dan waiting list — 13 November 2026
+
+**Sudah dikodekan di GitHub** (tanpa menjalankan mutasi pada Google Sheets):
+
+- `adminListWaitingList` mengembalikan antrean FIFO secara baca-saja.
+- `adminPromoteWaitlist` hanya dapat mempromosikan anggota paling awal jika kuota tersedia, dengan pengamanan kredit sambutan idempoten.
+- `adminSuspendMember` menangguhkan anggota tanpa menghapus transaksi/saldo dan mencabut sesi.
+- `adminReactivateMember` mengaktifkan ulang hanya ketika masih tersedia kuota, waiting list kosong, dan sesi lama sudah dicabut.
+- Pendaftaran baru tidak bisa melompati anggota waiting list; `TERTUTUP` tetap ditampilkan sebagai ditutup.
+
+**Pengujian saat pengembangan:** kedua file `Code.gs` dan `Diagnostics.gs` lolos pemeriksaan sintaks JavaScript, dan 37 dari 37 *assertions* skenario murni (12 antrean, 10 keuangan, 15 pengaturan admin) berhasil dijalankan dalam lingkungan V8 terisolasi. Ini bukan pengujian runtime Google Apps Script atau uji transaksi nyata.
+
+Untuk mereproduksi pengujian tersebut di Node.js tanpa dependensi pihak ketiga, repository memuat `tests/backend-pure.test.cjs` dengan perintah `node --test tests/backend-pure.test.cjs`. Skrip Node tersebut telah disimpan di GitHub tetapi belum dieksekusi pada lingkungan Node dalam sesi ini; yang telah dieksekusi adalah skenario murni pada V8.
+
+**Batasan yang masih terbuka:** Google Sheets tidak menyediakan rollback atomik lintas-tabel; beberapa penulisan beruntun masih berisiko *partial failure*. Pengujian integrasi member/sesi/pembayaran, proses payout dan UI frontend tetap wajib dilakukan sebelum produksi. Jangan sinkronkan `Code.gs` ke Apps Script sebelum checkpoint final pengembangan.
