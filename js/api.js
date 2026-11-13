@@ -1,0 +1,50 @@
+const config = window.NGD_CONFIG || {};
+const API_URL = String(config.apiUrl || '').trim();
+
+export function isConnected() {
+  return /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:\?.*)?$/.test(API_URL);
+}
+export function isWriteEnabled() {
+  return isConnected() && config.demoMode === false;
+}
+function newRequestId() {
+  if (globalThis.crypto && crypto.randomUUID) return crypto.randomUUID().replaceAll('-', '') + 'aa';
+  return 'rq_' + String(Date.now()) + '_' + Math.random().toString(36).slice(2, 14);
+}
+export class ApiError extends Error {
+  constructor(message, code = 'NETWORK_ERROR') {
+    super(message);
+    this.name = 'ApiError';
+    this.code = code;
+  }
+}
+export async function api(action, payload = {}, token = '', options = {}) {
+  if (!isConnected()) throw new ApiError('Backend belum terhubung. Konfigurasi Web App belum diaktifkan.', 'NOT_CONFIGURED');
+  const {write = false, timeoutMs = 24000} = options;
+  if (write && !isWriteEnabled()) throw new ApiError('Mode pratinjau: perubahan data dinonaktifkan.', 'PREVIEW_ONLY');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    // text/plain avoids cross-origin JSON preflight on Apps Script Web Apps.
+    // Never use mode:no-cors: it would conceal server responses and errors.
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({action, payload, token, request_id: newRequestId()}),
+      redirect: 'follow',
+      signal: controller.signal,
+      credentials: 'omit'
+    });
+    if (!response.ok) throw new ApiError('Backend merespons HTTP ' + response.status);
+    const data = await response.json();
+    if (!data || typeof data.ok !== 'boolean') throw new ApiError('Format respons backend tidak sesuai.');
+    if (!data.ok) throw new ApiError(data.error?.message || 'Permintaan gagal.', data.error?.code || 'API_ERROR');
+    return data.data;
+  } catch (error) {
+    if (error?.name === 'AbortError') throw new ApiError('Permintaan terlalu lama. Periksa koneksi lalu coba lagi.');
+    if (error instanceof ApiError) throw error;
+    throw new ApiError('Tidak dapat menghubungi backend. Periksa deployment atau kebijakan akses Apps Script.');
+  } finally {
+    clearTimeout(timer);
+  }
+}
