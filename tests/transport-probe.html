@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ngulik Digital — Uji koneksi baca-saja</title>
+  <style>
+    :root{font-family:system-ui,sans-serif;background:#f7f9f6;color:#20312d}
+    body{max-width:650px;margin:8vh auto;padding:20px}article{background:#fff;border:1px solid #dde7df;border-radius:18px;padding:24px}
+    button{background:#197a70;color:#fff;border:none;border-radius:11px;padding:12px 18px;font:inherit;cursor:pointer}
+    button:disabled{opacity:.5;cursor:not-allowed}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;background:#f3f6f2;border-radius:11px;padding:16px}
+  </style>
+  <script src="../config.js" defer></script>
+  <script src="./transport-probe.js" defer></script>
+</head>
+<body><article>
+  <p style="font-size:12px;color:#197a70;font-weight:800">NGULIK DIGITAL / QA</p>
+  <h1>Uji koneksi API baca-saja</h1>
+  <p>Hanya memanggil <code>doGet</code>. Tidak mengirim PIN, token, nomor WhatsApp, atau transaksi.</p>
+  <button id="test" disabled>Periksa koneksi</button>
+  <pre id="status" role="status" aria-live="polite">Memeriksa konfigurasi…</pre>
+  <p><small>Hasil gagal dapat disebabkan oleh URL belum tersedia, CORS, redirect, akses deployment, atau layanan Google. Jangan mengaktifkan transaksi hanya karena tes GET lulus.</small></p>
+</article></body></html>
