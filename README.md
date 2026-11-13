@@ -114,3 +114,12 @@ Perbaikan di branch `main` (belum disalin atau diuji pada runtime Apps Script):
 **Keterbatasan penting:** Google Sheets tidak memberikan transaksi SQL/rollback otomatis. Mekanisme order/fulfillment/refund masih membutuhkan uji gangguan di staging, jaminan idempotensi lintas langkah, dan verifikasi operasi manual sebelum produksi. Jangan menjalankan fungsi mutasi di basis data aktif hanya untuk testing.
 
 **Sinkronisasi:** GitHub dan proyek Apps Script tidak otomatis tersinkron. Jangan menimpa file Apps Script saat pengerjaan backend masih berlangsung. Tidak perlu menjalankan `setupDatabase` ulang.
+
+## Checkpoint — pengujian simulasi dan keamanan PIN (13 Nov 2026)
+
+- `financeFindings_(orders,ledger,commissions,products)` adalah fungsi murni untuk mendeteksi anomali rekonsiliasi tanpa Sheets. Endpoint `adminGetReconciliation` menggunakan engine ini.
+- `diagnosticFinanceScenarios()` memuat **10 skenario sintetik** di memori: topup normal, ledger hilang/ganda, refund normal/reversal hilang/ganda, reversal tanpa refund, pembayaran belum terpenuhi, komisi ganda, dan komisi dibayar pada refund.
+- `authChangePin_` kini membacakan ulang akun dalam lock, mensyaratkan PIN baru berbeda dan mencabut seluruh sesi lama setelah PIN berhasil diganti. Pengguna perlu login ulang.
+- **Status kode:** ditulis dan di-commit, namun skenario **belum dijalankan pada Apps Script**; jangan menyebutnya QA lulus sebelum ada log `FINANCE_SCENARIOS_OK`.
+- Selama pengerjaan, **jangan mengganti Code.gs pada editor Apps Script**. Sinkronisasi hanya dilakukan setelah checkpoint pengembangan disepakati.
+- **Masih terbuka:** rollback multi-sheet tidak atomik, pemberian komisi setelah fulfillment dapat gagal parsial, pembayaran QRIS harus diverifikasi manual, keamanan pin 6 digit/rate-limit perlu audit, pengujian akses admin dan onboarding end-to-end serta UI frontend belum selesai.
