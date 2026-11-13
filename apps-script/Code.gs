@@ -944,6 +944,7 @@ function apiRouter_(action,token,p,requestId) {
     case 'logout':return authLogout_(token);
     case 'changePin':return authChangePin_(m,p);
     case 'getBeranda':return dashboard_(m);
+    case 'getModulBelajar':return modules_().map(function(x){return {modul_id:x.modul_id,urut:x.urut,judul:x.judul,deskripsi:x.deskripsi,url_classroom:x.url_classroom};});
     case 'getTools':return {tools:readAll_('ai_tools').filter(function(r){return r.aktif===true;}).map(function(r){return {tool_id:r.tool_id,nama:r.nama,deskripsi:r.deskripsi,placeholder_input:r.placeholder_input,kredit_biaya:r.kredit_biaya};}),saldo:creditBalance_(m.member_id)};
     case 'getKreditRiwayat':return {saldo:creditBalance_(m.member_id),riwayat:creditHistory_(m.member_id),peringatan:creditWarning_(m.member_id)};
     case 'getOrder':return getOrder_(m,p.order_id);
@@ -1006,7 +1007,7 @@ function doPost(e) {
     require_(payload&&typeof payload==='object'&&!Array.isArray(payload),'BAD_REQUEST','Payload tidak valid.');
     // Pembatasan payload dan request_id sebelum mengambil kunci mutasi.
     var id=String(body.request_id||'');
-    var reads=['getPublicInfo','getMe','getBeranda','getKatalog','getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase','getAffiliateDashboard','adminGetDashboard','adminListOrders','adminListMembers','adminListWaitingList','adminListCommissions','adminGetSettings','adminGetReconciliation'];
+    var reads=['getPublicInfo','getMe','getBeranda','getModulBelajar','getKatalog','getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase','getAffiliateDashboard','adminGetDashboard','adminListOrders','adminListMembers','adminListWaitingList','adminListCommissions','adminGetSettings','adminGetReconciliation'];
     if(reads.indexOf(action)<0)require_(/^[a-zA-Z0-9_-]{16,80}$/.test(id),'VALIDATION','ID permintaan tidak valid.');
     var result=apiRouter_(action,String(body.token||''),payload,id);
     return apiOutput_({ok:true,data:result,server_time:isoWib_(now_())});
