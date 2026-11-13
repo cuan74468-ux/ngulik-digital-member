@@ -342,6 +342,9 @@ function setupDatabase() {
     console.log('SETUP_ALREADY_COMPLETE — instalasi tidak diulang; tidak ada perubahan data.');
     return {alreadyInitialized:true,tabs:inspection.tabsChecked,adminCount:inspection.adminCount};
   }
+  if(!inspection.schemaOk || inspection.adminCount>1){
+    throw new Error('SETUP_BLOCKED: Struktur tidak lengkap/berbeda atau akun ADMIN ganda. Jangan ulangi setup; audit manual diperlukan.');
+  }
   // Jangan letakkan UI alert di callback lock: alert menangguhkan eksekusi Apps Script.
   var result=withLock_(function(){
     ensureSheets_();
