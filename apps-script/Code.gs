@@ -501,8 +501,10 @@ function newOrder_(m,p,requestId) {
     require_(m.role==='MEMBER','FORBIDDEN','Hanya member dapat membeli.');
     var product=byId_('katalog_produk','product_id',String(p.product_id||''));
     require_(product&&product.aktif===true,'NOT_FOUND','Produk tidak tersedia.');
+    var retry=byId_('orders','request_id',requestId);
+    if(retry){require_(retry.member_id===m.member_id,'CONFLICT','ID permintaan sudah dipakai.');return orderView_(retry,m);}
     var mine=findRows_('orders',function(o){return o.member_id===m.member_id&&o.product_id===product.product_id&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;});
-    if(mine.length){return orderView_(expireOrder_(mine[0]),m);}
+    if(mine.length){var existing=expireOrder_(mine[0]);if(existing.status!=='EXPIRED')return orderView_(existing,m);}
     var s=settings_(),min=Number(s.kode_unik_min||100),max=Number(s.kode_unik_max||999),price=Number(product.harga);
     require_(Number.isInteger(price)&&price>=0,'VALIDATION','Harga produk belum valid.');
     var open=readAll_('orders').filter(function(o){return ['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;});
@@ -528,6 +530,8 @@ function transitionOrder_(m,id,type,p) {
     var admin=m.role==='ADMIN';
     require_(admin||o.member_id===m.member_id,'FORBIDDEN','Pesanan tidak ditemukan.');
     expireOrder_(o);
+    if(type==='confirm'&&!admin&&o.status==='MENUNGGU_VERIFIKASI')return orderView_(o,m);
+    if(type==='cancel'&&!admin&&o.status==='CANCELLED')return orderView_(o,m);
     var from=o.status,to='',patch={};
     if(type==='confirm'&&!admin&&from==='PENDING'){to='MENUNGGU_VERIFIKASI';patch.konfirmasi_bayar_at=now_();}
     else if(type==='cancel'&&!admin&&from==='PENDING'){to='CANCELLED';patch.cancelled_at=now_();}
@@ -716,9 +720,9 @@ function apiRouter_(action,token,p,requestId) {
   }
   admin=admin_(token);
   switch(action){
-    case 'adminGetDashboard':return {ringkasan:readAll_('ringkasan'),followup:[]};
+    case 'adminGetDashboard':return {ringkasan:readAll_('ringkasan').map(function(r){return {metrik:r.metrik,nilai:r.nilai};}),followup:[]};
     case 'adminListOrders':return readAll_('orders').filter(function(r){return !p.status||r.status===p.status;}).slice(-100).reverse().map(function(r){return orderView_(r,admin);});
-    case 'adminVerifyOrder':return transitionOrder_(admin,p.order_id,p.keputusan==='approve'?'approve':'reject',p);
+    case 'adminVerifyOrder':require_(['approve','reject'].indexOf(p.keputusan)>=0,'VALIDATION','Keputusan tidak dikenal.');return transitionOrder_(admin,p.order_id,p.keputusan,p);
     case 'adminFulfillOrder':return approveFulfillment_(admin,p);
     case 'adminRefundOrder':return refundOrder_(admin,p);
     case 'adminListMembers':return readAll_('members').filter(function(r){return r.role==='MEMBER';}).map(publicMember_);
