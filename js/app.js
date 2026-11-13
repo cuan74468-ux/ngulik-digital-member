@@ -42,6 +42,37 @@ const screens={
 const memberNav=['beranda','belajar','katalog','ai','affiliate','akun'];
 const adminNav=['admin','pesanan','member','antrean','akun'];
 const tokenKey='ngd_member_session';
+// Preview-only fixture data, never used for financial operations.
+const PREVIEW_CATALOG=[
+  {product_id:'P-3IN1',nama:'Paket 3-in-1',deskripsi:'Bio link, profil bisnis, dan katalog checkout selama 30 hari.',tipe:'LANGGANAN_30H',harga:99000},
+  {product_id:'P-POS',nama:'POS Kasir Sederhana',deskripsi:'Lisensi aplikasi kasir satu kali pembayaran.',tipe:'LISENSI_SEKALI',harga:149000},
+  {product_id:'P-CANVA',nama:'Seat Canva 30 Hari',deskripsi:'Undangan seat memerlukan aktivasi admin.',tipe:'SEAT_30H',harga:35000},
+  {product_id:'P-KREDIT-50',nama:'Top-up 50 Kredit AI',deskripsi:'Tambahan kredit penggunaan Studio AI.',tipe:'TOPUP_KREDIT',harga:25000},
+  {product_id:'P-KREDIT-150',nama:'Top-up 150 Kredit AI',deskripsi:'Paket kredit AI tambahan.',tipe:'TOPUP_KREDIT',harga:60000},
+  {product_id:'P-KREDIT-400',nama:'Top-up 400 Kredit AI',deskripsi:'Paket kredit AI untuk kebutuhan lebih besar.',tipe:'TOPUP_KREDIT',harga:140000}
+];
+const PREVIEW_MODULES=[
+  'Orientasi dan Setup Akun','Bio Link dan Profil Bisnis','Katalog dan Checkout Kurir',
+  'Konten Cepat dengan Studio AI','Kasir POS Sederhana','Strategi Referral'
+].map((judul,i)=>({modul_id:'MOD-0'+(i+1),urut:i+1,judul,deskripsi:'Contoh modul pratinjau — tautan materi belum tersedia.',url_classroom:''}));
+function activatePreview(){
+  const params=new URLSearchParams(location.search);
+  if(config.demoMode!==true||isConnected()||params.get('preview')!=='member')return;
+  state.token='PREVIEW_ONLY_NOT_A_REAL_SESSION';
+  state.me={member_id:'PREVIEW',role:'MEMBER',nama:'Member Demo',nama_usaha:'Usaha Contoh',
+    status:'AKTIF',kode_referral:'CONTOH',saldo_kredit:10,wa:'—'};
+  state.home={saldo_kredit:10,modul_selesai:2,total_modul:6,modul_berikutnya:PREVIEW_MODULES[2],
+    order_aktif:[],peringatan_kredit:false};
+  state.modules=PREVIEW_MODULES;
+  state.tools=[
+    {tool_id:'T-CAPTION',nama:'Caption Instagram Produk',deskripsi:'Contoh alat bantu konten',kredit_biaya:1},
+    {tool_id:'T-DESKRIPSI',nama:'Deskripsi Produk Marketplace',deskripsi:'Contoh deskripsi produk',kredit_biaya:1},
+    {tool_id:'T-BALASAN',nama:'Balasan Chat Pelanggan',deskripsi:'Contoh balasan WhatsApp',kredit_biaya:1},
+    {tool_id:'T-KONTEN7',nama:'Ide Konten 7 Hari',deskripsi:'Contoh rencana konten',kredit_biaya:2}
+  ];
+  state.affiliates={kode_referral:'CONTOH',pendaftar:0,konversi:0,saldo:{APPROVED:0}};
+}
+
 const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,
   info:null,catalog:[],home:null,modules:[],tools:[],orders:[],
@@ -58,7 +89,7 @@ function toast(message,error=false){
   root.append(el);setTimeout(()=>el.remove(),5000);
 }
 function notice(){
-  if(!isConnected())return '<div class="banner warning"><div><h3>Mode pratinjau antarmuka</h3><p>Backend Google Apps Script belum dikonfigurasi. Login, pendaftaran, dan pembayaran belum aktif.</p></div><span class="chip orange">Belum terkoneksi</span></div>';
+  if(!isConnected())return '<div class="banner warning"><div><h3>Pratinjau — bukan data transaksi</h3><p>Seluruh data yang tampil adalah contoh lokal. Login, pendaftaran, kredit AI, dan pembayaran tidak aktif.</p></div><span class="chip orange">DEMO LOKAL</span></div>';
   if(!isWriteEnabled())return '<div class="banner warning"><div><h3>Mode aman aktif</h3><p>API tersedia, tetapi semua operasi penulisan dinonaktifkan sampai pengujian selesai.</p></div><span class="chip orange">Baca-saja</span></div>';
   return '';
 }
@@ -80,30 +111,48 @@ const needLogin=(feature)=>
   empty('Masuk untuk membuka '+feature,'Aktivitas member dan data pribadi hanya tersedia setelah login.','login','Masuk sekarang');
 const safeBadge=(s)=>'<span class="chip '+(['AKTIF','FULFILLED','PAID','APPROVED'].includes(String(s))?'green':'orange')+'">'+esc(s||'-')+'</span>';
 function viewHome(){
-  const first=state.me?.nama?.split(' ')[0];
-  const hero='<section class="hero"><div class="hero-copy"><p class="eyebrow">RUANG BELAJAR & BERTUMBUH</p>'+
-    '<h1>'+(first?'Halo, '+esc(first)+'!<br>':'Belajar digital,<br>')+'<span class="accent">bertumbuh nyata.</span></h1>'+
-    '<p class="lead">Satu tempat untuk mengasah kemampuan, mencoba tools AI, dan mengembangkan usaha secara lebih terarah. Dibuat untuk langkah kecil yang berdampak besar.</p>'+
-    '<div class="actions"><button class="btn btn-primary" data-route="'+(logged()?'belajar':'daftar')+'">'+(logged()?'Lanjut belajar':'Jelajahi program')+' '+icon('arrow')+'</button>'+
+  if(isAdmin())return viewAdmin();
+  if(logged()){
+    const first=String(state.me.nama||'Member').split(' ')[0];
+    const d=state.home||{},done=Number(d.modul_selesai)||0,total=Number(d.total_modul)||0;
+    const progress=total?Math.max(0,Math.min(100,Math.round(done/total*100))):0;
+    const orderCount=Array.isArray(d.order_aktif)?d.order_aktif.length:0;
+    const next=d.modul_berikutnya;
+    return '<section class="member-welcome"><div><p class="eyebrow">DASHBOARD MEMBER</p>'+
+      '<h1>Selamat datang, <span class="accent">'+esc(first)+'.</span></h1>'+
+      '<p class="lead">Aktivitas belajar dan bisnis Anda, dalam satu tempat.</p></div>'+
+      '<span class="chip green">'+esc(state.me.status||'AKTIF')+'</span></section>'+
+      '<div class="metric-grid">'+[
+        [icon('spark'),esc(d.saldo_kredit??state.me.saldo_kredit??0),'Kredit AI tersisa','ai'],
+        [icon('book'),esc(done)+' / '+esc(total),'Modul selesai','belajar'],
+        [icon('clipboard'),esc(orderCount),'Pesanan aktif','pesanan']
+      ].map(x=>'<button class="metric-card" data-route="'+x[3]+'"><span class="metric-icon">'+x[0]+'</span><strong>'+x[1]+'</strong><small>'+x[2]+'</small></button>').join('')+'</div>'+
+      '<div class="two-col section-gap"><section class="surface"><p class="card-kicker">LANJUTKAN BELAJAR</p>'+
+      (next?'<h2>'+esc(next.judul||'Modul berikutnya')+'</h2><p class="card-desc">Lanjutkan pembelajaran dari modul yang belum selesai.</p>':
+      '<h2>'+(total?'Seluruh modul selesai':'Materi sedang disiapkan')+'</h2><p class="card-desc">'+
+      (total?'Pertahankan progres dan jelajahi materi tambahan.':'Modul akan muncul ketika diterbitkan oleh admin.')+'</p>')+
+      '<div class="progress-wrap"><div class="progress-track" role="progressbar" aria-valuenow="'+progress+'" aria-valuemin="0" aria-valuemax="100" aria-label="Progres belajar"><span style="width:'+progress+'%"></span></div>'+
+      '<span class="tiny muted">'+progress+'% selesai</span></div><button class="btn btn-primary" data-route="belajar">Buka pembelajaran '+icon('arrow')+'</button></section>'+
+      '<section class="surface"><p class="card-kicker">AKSI CEPAT</p><div class="quick-actions">'+[
+        ['spark','Buka Studio AI','ai'],['store','Lihat katalog digital','katalog'],
+        ['link','Program affiliate','affiliate'],['user','Kelola akun','akun']
+      ].map(x=>'<button class="quick-action" data-route="'+x[2]+'">'+icon(x[0])+'<span>'+x[1]+'</span>'+icon('arrow')+'</button>').join('')+
+      '</div></section></div>'+
+      (d.peringatan_kredit?'<div class="banner warning section-gap"><div><h3>Saldo kredit menipis</h3><p>Periksa penggunaan kredit sebelum memakai tools AI.</p></div><button class="btn btn-secondary" data-route="ai">Lihat saldo</button></div>':'');
+  }
+  const hero='<section class="hero"><div class="hero-copy"><p class="eyebrow">NGULIK DIGITAL UNTUK UMKM</p>'+
+    '<h1>Belajar digital.<br><span class="accent">Terapkan langsung.</span></h1>'+
+    '<p class="lead">Materi praktis, alat bantu AI, dan toolkit usaha dalam satu ruang digital untuk pelaku UMKM.</p>'+
+    '<div class="actions"><button class="btn btn-primary" data-route="daftar">Daftar member '+icon('arrow')+'</button>'+
     '<button class="btn btn-secondary" data-route="katalog">Lihat katalog</button></div></div>'+
-    '<div class="hero-art" aria-hidden="true"><div class="art-orbit"><div class="art-card"><span class="art-emoji">✦</span><strong>Proses kecil,<br>hasil berarti.</strong><small>Ngulik Digital / Member</small></div></div><i class="art-spark spark-a"></i><i class="art-spark spark-b"></i></div></section>';
-  const stats=logged()&&state.home?
-    '<div class="stat-grid"><div class="stat"><div class="stat-value">'+esc(state.home.saldo_kredit??0)+'</div><div class="stat-label">Kredit AI</div></div>'+
-    '<div class="stat"><div class="stat-value">'+esc(state.home.modul_selesai??0)+' / '+esc(state.home.total_modul??0)+'</div><div class="stat-label">Modul selesai</div></div>'+
-    '<div class="stat"><div class="stat-value">'+esc(state.home.order_aktif?.length||0)+'</div><div class="stat-label">Pesanan aktif</div></div></div>':
-    '<div class="stat-grid"><div class="stat"><div class="stat-value">'+esc(state.info?.kuota??50)+'</div><div class="stat-label">Kuota gelombang</div></div>'+
-    '<div class="stat"><div class="stat-value">'+esc(state.info?.sisa??'—')+'</div><div class="stat-label">Sisa kuota</div></div>'+
-    '<div class="stat"><div class="stat-value">3-in-1</div><div class="stat-label">Program awal</div></div></div>';
-  const feature=[
-    ['book','Belajar terarah','Materi pembelajaran dan tugas praktis yang bisa langsung diterapkan.','belajar'],
-    ['spark','Studio AI','Siapkan ide konten, caption, dan materi pemasaran dengan bantuan AI.','ai'],
-    ['store','Toolkit usaha','Temukan perangkat, layanan, dan akses digital untuk operasional bisnis.','katalog']
-  ];
-  return hero+'<section class="section-gap">'+title('Ekosistem yang menyatu','KENALI NGULIK DIGITAL',
-    'Pilih kebutuhan saat ini; sisanya bisa diikuti bertahap.')+
-    '<div class="grid-3">'+feature.map(f=>'<article class="surface"><div class="surface-icon">'+icon(f[0])+'</div><h3>'+f[1]+'</h3><p class="card-desc">'+f[2]+'</p><div style="margin-top:20px"><button class="btn btn-ghost btn-sm" data-route="'+f[3]+'">Lihat ruang '+icon('arrow')+'</button></div></article>').join('')+'</div></section>'+
-    '<section class="section-gap">'+title('Perkembangan dalam satu layar','AKTIVITAS MEMBER','Pantau aktivitas belajar dan penggunaan platform.')+
-    '<div class="surface">'+stats+'</div></section>';
+    '<div class="hero-art" aria-hidden="true"><div class="art-orbit"><div class="art-card"><span class="art-emoji">✦</span><strong>Belajar.<br>Praktik. Tumbuh.</strong><small>Ngulik Digital / UMKM</small></div></div><i class="art-spark spark-a"></i><i class="art-spark spark-b"></i></div></section>';
+  return hero+'<section class="section-gap">'+title('Mulai dari kebutuhan Anda','RUANG NGULIK DIGITAL','Tiga layanan utama untuk membantu usaha berkembang.')+
+    '<div class="grid-3">'+[
+      ['book','Materi belajar','Modul singkat dan praktis untuk UMKM.','belajar'],
+      ['spark','Studio AI','Bantuan membuat konten dan materi pemasaran.','ai'],
+      ['store','Toolkit usaha','Produk dan layanan digital pendukung bisnis.','katalog']
+    ].map(x=>'<article class="surface"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3>'+
+    '<p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" style="margin-top:18px" data-route="'+x[3]+'">Jelajahi '+icon('arrow')+'</button></article>').join('')+'</div></section>';
 }
 function viewCatalog(){
   const list=state.catalog;
@@ -344,6 +393,11 @@ by('account-button').addEventListener('click',()=>go('akun'));
 window.addEventListener('hashchange',()=>go(location.hash.slice(1)||'beranda'));
 async function init(){
   state.route=screens[location.hash.slice(1)]?location.hash.slice(1):'beranda';
+  if(!isConnected()){
+    state.catalog=PREVIEW_CATALOG;
+    state.info={kuota:50,sisa:50,disclosure:'Pratinjau program affiliate; tidak ada komisi nyata.'};
+    activatePreview();
+  }
   render();
   await Promise.all([refreshPublic(),restoreSession()]);
   loadRoute(state.route);
