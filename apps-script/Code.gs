@@ -449,6 +449,90 @@ function newReferralCode_() {
   throw ngdError_('CONFLICT','Kode referral belum bisa dibuat. Coba lagi.');
 }
 function memberCount_() {return findRows_('members',function(r){return r.role==='MEMBER'&&r.status==='AKTIF';}).length;}
+// Aturan antrean murni: tidak mengakses Sheets dan bisa diuji dengan data simulasi.
+function memberQueue_(members) {
+  return members.filter(function(m){return m.role==='MEMBER'&&m.status==='WAITING_LIST';})
+    .sort(function(a,b){
+      var at=new Date(a.joined_at).getTime(),bt=new Date(b.joined_at).getTime();
+      at=Number.isFinite(at)?at:0;bt=Number.isFinite(bt)?bt:0;
+      return at-bt||(Number(a._row||0)-Number(b._row||0));
+    });
+}
+function memberAdmissionDecision_(members,quota,memberId) {
+  var active=members.filter(function(m){return m.role==='MEMBER'&&m.status==='AKTIF';}).length;
+  var queue=memberQueue_(members),target=members.filter(function(m){return m.member_id===memberId;})[0];
+  var reason=!Number.isInteger(quota)||quota<1?'INVALID_QUOTA':
+    !target||target.role!=='MEMBER'?'MEMBER_NOT_FOUND':
+    target.status!=='WAITING_LIST'?'NOT_WAITING_LIST':
+    active>=quota?'QUOTA_FULL':
+    !queue.length||queue[0].member_id!==memberId?'QUEUE_ORDER':'OK';
+  return {eligible:reason==='OK',reason:reason,active:active,quota:quota,
+    position:queue.findIndex(function(m){return m.member_id===memberId;})+1,
+    head:queue.length?queue[0].member_id:null,waiting:queue.length};
+}
+function memberWaitlist_() {
+  return memberQueue_(readAll_('members')).map(function(m,i){
+    return {member_id:m.member_id,nama:m.nama,wa:m.wa,nama_usaha:m.nama_usaha,
+      joined_at:m.joined_at instanceof Date?isoWib_(m.joined_at):m.joined_at,posisi:i+1};
+  });
+}
+// Promosi dilakukan satu per satu oleh ADMIN; tidak membuat sesi atau mengirim PIN.
+function adminPromoteWaitlist_(admin,p) {
+  return withLock_(function(){
+    var memberId=String(p.member_id||''),members=readAll_('members');
+    var quota=Number(setting_('kuota_gelombang',50));
+    var result=memberAdmissionDecision_(members,quota,memberId);
+    require_(result.eligible,'CONFLICT','Promosi ditolak: '+result.reason);
+    var target=members.filter(function(m){return m.member_id===memberId;})[0];
+    // Kredit didahulukan dan idempoten: jika gagal sebelum status berubah,
+    // retry tidak menambah grant kedua.
+    var initial=Number(setting_('kredit_awal',10));
+    require_(Number.isInteger(initial)&&initial>=0&&initial<=1000,'VALIDATION','Kredit awal tidak valid.');
+    if(initial>0)grantInitialCredit_(memberId,initial);
+    updateRow_('members',target._row,{status:'AKTIF'});
+    var full=result.active+1>=quota;
+    if(full&&setting_('mode_pendaftaran','TERBUKA')==='TERBUKA')
+      updateSetting_('mode_pendaftaran','WAITING_LIST');
+    logAudit_(admin.member_id,'ADMIN','WAITLIST_PROMOTED','members',memberId,'WAITING_LIST','AKTIF',{posisi_sebelumnya:result.position});
+    return {member_id:memberId,status:'AKTIF',active:result.active+1,quota:quota,
+      initial_credit_applied:initial>0};
+  });
+}
+// Penangguhan menonaktifkan sesi, tetapi tidak menghapus transaksi dan saldo.
+function adminSuspendMember_(admin,p) {
+  return withLock_(function(){
+    var target=byId_('members','member_id',String(p.member_id||''));
+    require_(target&&target.role==='MEMBER','NOT_FOUND','Member tidak ditemukan.');
+    require_(target.status==='AKTIF','CONFLICT','Hanya member aktif dapat ditangguhkan.');
+    var reason=safeText_(p.alasan,300);
+    require_(reason.length>=5,'VALIDATION','Alasan penangguhan wajib diisi.');
+    updateRow_('members',target._row,{status:'SUSPENDED'});
+    var sessions=findRows_('sessions',function(s){return s.member_id===target.member_id;});
+    sessions.reverse().forEach(function(s){tbl_('sessions').sheet.deleteRow(s._row);});
+    logAudit_(admin.member_id,'ADMIN','MEMBER_SUSPENDED','members',target.member_id,'AKTIF','SUSPENDED',
+      {reason:reason,sessions_revoked:sessions.length});
+    return {member_id:target.member_id,status:'SUSPENDED',sessions_revoked:sessions.length};
+  });
+}
+// Aktivasi ulang tidak boleh menyelak antrean atau melewati kuota.
+function adminReactivateMember_(admin,p) {
+  return withLock_(function(){
+    var members=readAll_('members');
+    var target=members.filter(function(m){return m.member_id===String(p.member_id||'');})[0];
+    require_(target&&target.role==='MEMBER','NOT_FOUND','Member tidak ditemukan.');
+    require_(target.status==='SUSPENDED','CONFLICT','Hanya member ditangguhkan yang dapat diaktifkan ulang.');
+    var quota=Number(setting_('kuota_gelombang',50));
+    var active=members.filter(function(m){return m.role==='MEMBER'&&m.status==='AKTIF';}).length;
+    require_(active<quota,'QUOTA_FULL','Kuota penuh; aktivasi ulang ditolak.');
+    require_(memberQueue_(members).length===0,'CONFLICT','Masih ada waiting list; proses antrean dahulu.');
+    var reason=safeText_(p.alasan,300);
+    require_(reason.length>=5,'VALIDATION','Alasan aktivasi ulang wajib diisi.');
+    updateRow_('members',target._row,{status:'AKTIF'});
+    logAudit_(admin.member_id,'ADMIN','MEMBER_REACTIVATED','members',target.member_id,'SUSPENDED','AKTIF',{reason:reason});
+    return {member_id:target.member_id,status:'AKTIF',active:active+1,quota:quota};
+  });
+}
+
 // Pure validator: accepts only safe, documented system-setting values.
 function validatedAdminSetting_(key,value) {
   var enums={mode_pendaftaran:['TERBUKA','WAITING_LIST','TERTUTUP']};
@@ -485,7 +569,7 @@ function authRegister_(p) {
     require_(!byId_('members','wa',wa),'CONFLICT','Nomor WhatsApp sudah terdaftar.');
     var s=settings_(),mode=String(s.mode_pendaftaran||'TERBUKA');
     require_(mode!=='TERTUTUP','QUOTA_FULL','Pendaftaran sementara ditutup.');
-    var active=memberCount_(),wait=mode==='WAITING_LIST'||active>=Number(s.kuota_gelombang||50);
+    var active=memberCount_(),wait=mode==='WAITING_LIST'||active>=Number(s.kuota_gelombang||50)||memberWaitlist_().length>0;
     var ref=String(p.ref||'').toUpperCase(),referrer=ref?byId_('members','kode_referral',ref):null;
     if(referrer&&referrer.wa===wa)referrer=null;
     if(referrer&&(referrer.status!=='AKTIF'||referrer.role!=='MEMBER'))referrer=null;
@@ -533,7 +617,7 @@ function authChangePin_(m,p) {
 function publicInfo_(p) {
   var s=settings_(),quota=Number(s.kuota_gelombang||50),used=memberCount_();
   var ref=String(p.ref||'').toUpperCase(),referer=ref?byId_('members','kode_referral',ref):null;
-  return {nama_brand:s.nama_brand,wa_admin:s.wa_admin,kuota:quota,terpakai:used,sisa:Math.max(0,quota-used),mode:used>=quota?'WAITING_LIST':s.mode_pendaftaran,disclosure:s.teks_disclosure_affiliate,referrer:referer&&referer.status==='AKTIF'?String(referer.nama).split(' ')[0]:null};
+  return {nama_brand:s.nama_brand,wa_admin:s.wa_admin,kuota:quota,terpakai:used,sisa:Math.max(0,quota-used),mode:(used>=quota||memberWaitlist_().length>0)?'WAITING_LIST':s.mode_pendaftaran,disclosure:s.teks_disclosure_affiliate,referrer:referer&&referer.status==='AKTIF'?String(referer.nama).split(' ')[0]:null};
 }
 function modules_() {return readAll_('modul_belajar').filter(function(r){return r.aktif===true;}).sort(function(a,b){return a.urut-b.urut;});}
 function creditWarning_(id) {
@@ -882,6 +966,10 @@ function apiRouter_(action,token,p,requestId) {
     case 'adminFulfillOrder':return approveFulfillment_(admin,p);
     case 'adminRefundOrder':return refundOrder_(admin,p);
     case 'adminListMembers':return readAll_('members').filter(function(r){return r.role==='MEMBER';}).map(publicMember_);
+    case 'adminListWaitingList':return memberWaitlist_();
+    case 'adminPromoteWaitlist':return adminPromoteWaitlist_(admin,p);
+    case 'adminSuspendMember':return adminSuspendMember_(admin,p);
+    case 'adminReactivateMember':return adminReactivateMember_(admin,p);
     case 'adminListCommissions':return readAll_('affiliate_commissions');
     case 'adminGetSettings':return settings_();
     case 'adminUpdateSetting':
@@ -915,7 +1003,7 @@ function doPost(e) {
     require_(payload&&typeof payload==='object'&&!Array.isArray(payload),'BAD_REQUEST','Payload tidak valid.');
     // Pembatasan payload dan request_id sebelum mengambil kunci mutasi.
     var id=String(body.request_id||'');
-    var reads=['getPublicInfo','getMe','getBeranda','getKatalog','getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase','getAffiliateDashboard','adminGetDashboard','adminListOrders','adminListMembers','adminListCommissions','adminGetSettings','adminGetReconciliation'];
+    var reads=['getPublicInfo','getMe','getBeranda','getKatalog','getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase','getAffiliateDashboard','adminGetDashboard','adminListOrders','adminListMembers','adminListWaitingList','adminListCommissions','adminGetSettings','adminGetReconciliation'];
     if(reads.indexOf(action)<0)require_(/^[a-zA-Z0-9_-]{16,80}$/.test(id),'VALIDATION','ID permintaan tidak valid.');
     var result=apiRouter_(action,String(body.token||''),payload,id);
     return apiOutput_({ok:true,data:result,server_time:isoWib_(now_())});
