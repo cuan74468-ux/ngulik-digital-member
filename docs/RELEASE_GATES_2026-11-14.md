@@ -27,7 +27,7 @@
 
 ## 3. Masalah P0 yang masih terbuka
 
-1. **Transport lintas-origin:** Google Apps Script ContentService mengalihkan JSON ke `script.googleusercontent.com`; belum ada bukti POST/GET `fetch` dari domain GitHub Pages berhasil dalam browser nyata. Dokumen resmi: https://developers.google.com/apps-script/reference/content/content-service . Uji tanpa data sensitif via `tests/transport-probe.html` setelah URL staging tersedia. Jangan mengakali CORS dengan `no-cors`, JSONP login, atau mengekspos token di URL.
+1. **Transport lintas-origin:** Google Apps Script ContentService mengalihkan JSON ke `script.googleusercontent.com`; belum ada bukti POST/GET `fetch` dari domain GitHub Pages berhasil dalam browser nyata. Dokumen resmi: https://developers.google.com/apps-script/reference/content/content-service . Uji GET **dan POST baca-saja** tanpa data sensitif melalui `tests/transport-probe.html` setelah URL staging tersedia. Jangan mengakali CORS dengan `no-cors`, JSONP login, atau mengekspos token di URL. Jika salah satu jenis request gagal, pertimbangkan arsitektur transport lain (misalnya hosting HTMLService atau gateway tepercaya) sebagai keputusan proyek tersendiri, bukan patch rahasia di frontend.
 2. **Transaksi multi-sheet bukan atomik:** status order, kredit, fulfillment, referral dan audit terpisah. Bila satu tulis gagal, rekonsiliasi diperlukan. Jangan auto-retry fulfillment langganan tanpa penanda idempoten persisten.
 3. **Login PIN 6 digit:** masih memakai salted SHA-256 serta throttle CacheService yang perlu audit brute-force, kebocoran hash, konkurensi, dan rotasi PIN pada staging. Pertimbangkan penguatan KDF yang migrasi-kompatibel sebelum produksi.
 4. **Dana & komisi:** QRIS statis tidak mengonfirmasi penerimaan dana otomatis. Verifikasi bank/merchant dan bukti transfer harus manual; pengembalian uang tidak terjadi otomatis dari aplikasi. Jangan nyalakan penandaan PAID/REFUNDED tanpa SOP.
@@ -48,7 +48,7 @@
 - Android dan Windows: layout login, bottom navigation, scroll horizontal, keyboard, target sentuh, status loading dan error.
 - Preview offline: `?preview=member` menampilkan contoh lokal, tanpa autentikasi atau transaksi.
 - Cek keyboard-only, zoom 200%, fokus, label form, error yang mudah dipahami, dan `prefers-reduced-motion`.
-- Uji transport GET dan POST baca-saja melalui GitHub Pages staging; pastikan respons JSON bisa dibaca tanpa CORS error, redirect 404, atau timeout. Keberhasilan GET **tidak otomatis** berarti POST berhasil.
+- Uji transport GET dan POST baca-saja melalui GitHub Pages staging; pastikan respons JSON bisa dibaca tanpa CORS error, redirect 404, atau timeout. Keberhasilan GET **tidak otomatis** berarti POST berhasil. Jangan mengirim PIN, token, atau data pribadi selama uji awal.
 - Pastikan QRIS merchant, syarat program, kebijakan privasi, dan tautan belajar sungguhan disetujui pemilik.
 
 ## 6. Rollback dan respons insiden
