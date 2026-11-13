@@ -401,10 +401,9 @@ function healthCheck() {
   return report;
 }
 function onOpen() {
+  // Safe operator menu: no setup, reset, triggers, or blocking alert.
   SpreadsheetApp.getUi().createMenu('Ngulik Digital')
     .addItem('Periksa database (baca-saja)','inspectDatabaseSetup')
-    // Unsafe mutation utilities intentionally hidden from the casual menu.
-    .addItem('Health check','healthCheck')
     .addToUi();
 }
 
