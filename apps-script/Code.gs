@@ -717,7 +717,9 @@ function transitionOrder_(m,id,type,p) {
         try{
           logAudit_(m.member_id,m.role,'FULFILLMENT_NEEDS_REVIEW','orders',id,'PAID','PAID',{reason:String(err&&err.message||'unknown').slice(0,180)});
         }catch(logErr){console.error('FULFILLMENT_AUDIT_FAILED order_id='+id);}
-        return {order_id:id,status:'PAID',needs_review:true,message:'Pembayaran dicatat; pemenuhan produk perlu diperiksa admin.'};
+        var current=byId_('orders','order_id',id);
+        return {order_id:id,status:current?current.status:'PAID',
+          needs_review:true,message:'Pembayaran dicatat; pemenuhan produk dan komisi memerlukan pemeriksaan admin.'};
       }
     }
     return orderView_(byId_('orders','order_id',id),m);
