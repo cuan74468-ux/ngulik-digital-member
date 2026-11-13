@@ -994,9 +994,38 @@ function apiRouter_(action,token,p,requestId) {
         return {success:true};
       });
     case 'adminAdjustCredit':
-      return withLock_(function(){var member=byId_('members','member_id',p.member_id);require_(member,'NOT_FOUND','Member tidak ditemukan.');var amount=Number(p.jumlah);require_(Number.isFinite(amount)&&amount!==0&&Math.abs(amount)<=100000,'VALIDATION','Nilai koreksi tidak valid.');require_(safeText_(p.alasan,300).length>=5,'VALIDATION','Alasan wajib diisi.');grantCredits_(member.member_id,amount,'ADMIN:'+admin.member_id,'ADJUST');return {saldo:creditBalance_(member.member_id)};});
+      return withLock_(function(){
+        var member=byId_('members','member_id',p.member_id);
+        require_(member&&member.role==='MEMBER','NOT_FOUND','Member tidak ditemukan.');
+        var amount=Number(p.jumlah);
+        require_(Number.isInteger(amount)&&amount!==0&&Math.abs(amount)<=100000,
+          'VALIDATION','Koreksi kredit harus bilangan bulat dalam batas yang diizinkan.');
+        var reason=safeText_(p.alasan,300);
+        require_(reason.length>=5,'VALIDATION','Alasan koreksi wajib diisi.');
+        require_(creditBalance_(member.member_id)+amount>=0,'CONFLICT',
+          'Koreksi tidak boleh menghasilkan saldo kredit negatif.');
+        var reference='ADMIN:'+admin.member_id+':'+recordId_('ADJ');
+        grantCredits_(member.member_id,amount,reference,'ADJUST');
+        logAudit_(admin.member_id,'ADMIN','CREDIT_ADMIN_ADJUST','credits_ledger',reference,'','POSTED',
+          {member_id:member.member_id,amount:amount,reason:reason});
+        return {saldo:creditBalance_(member.member_id)};
+      });
     case 'adminMarkCommissionPaid':
-      return withLock_(function(){var c=byId_('affiliate_commissions','komisi_id',p.komisi_id);require_(c&&c.status==='APPROVED'&&c.payout_requested_at,'CONFLICT','Komisi belum diajukan atau disetujui.');require_(safeText_(p.catatan,300).length>=5,'VALIDATION','Catatan pencairan diperlukan.');updateRow_('affiliate_commissions',c._row,{status:'PAID',paid_at:now_(),payout_note:p.catatan});logAudit_(admin.member_id,'ADMIN','COMMISSION_PAID','affiliate_commissions',c.komisi_id,'APPROVED','PAID',{});return {success:true};});
+      return withLock_(function(){
+        var c=byId_('affiliate_commissions','komisi_id',p.komisi_id);
+        require_(c&&c.status==='APPROVED'&&c.payout_requested_at,
+          'CONFLICT','Komisi belum diajukan atau disetujui.');
+        require_(p.dana_sudah_ditransfer===true&&p.penerima_terverifikasi===true,
+          'RECONCILIATION_REQUIRED','Transfer dan penerima harus diverifikasi sebelum dicatat lunas.');
+        var reference=safeText_(p.referensi_transfer,120),note=safeText_(p.catatan,300);
+        require_(reference.length>=5,'VALIDATION','Bukti atau referensi transfer diperlukan.');
+        require_(note.length>=5,'VALIDATION','Catatan pencairan diperlukan.');
+        updateRow_('affiliate_commissions',c._row,{status:'PAID',paid_at:now_(),
+          payout_note:'Ref: '+reference+' | '+note});
+        logAudit_(admin.member_id,'ADMIN','COMMISSION_PAID','affiliate_commissions',c.komisi_id,
+          'APPROVED','PAID',{reference:reference,recipient_verified:true});
+        return {success:true,komisi_id:c.komisi_id};
+      });
   }
   throw ngdError_('BAD_REQUEST','Aksi tidak dikenal.');
 }
