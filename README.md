@@ -4,7 +4,33 @@ Platform membership & LMS UMKM — Google Sheets + Google Apps Script + GitHub P
 
 ## Status pembangunan (13 November 2026)
 
-**BATCH 1 sudah tersimpan di branch `main`.** Backend ini masih dalam pembangunan, **belum aman untuk deploy publik**. Belum tersedia endpoint transaksi, handler API, trigger, dan frontend; semuanya merupakan tahapan berikutnya.
+**BATCH 1 + implementasi awal BATCH 2 tersimpan di `main`.** API order, login, pendaftaran, kredit, affiliate, dan beberapa handler admin sudah ditambahkan tetapi **belum lulus pengujian eksekusi maupun keamanan**. Sejumlah action dalam master prompt masih belum lengkap; frontend belum dibuat. **DILARANG deploy publik atau menggunakan transaksi nyata** sebelum audit dan checklist lulus.
+
+
+## Checkpoint diagnostik yang sudah terverifikasi
+
+- `diagnosticPing` berhasil.
+- `diagnosticDatabase` berhasil: 14 tab, waktu akses 335 ms.
+- `diagnosticSchema` berhasil: 14 tab terbaca, durasi 5934 ms.
+- Akun ADMIN telah tercatat pada `members` dan log `ADMIN_CREATED`, tetapi PIN awal belum diketahui pemilik.
+- `setupDatabase` sebelumnya terhenti; **jangan jalankan ulang** saat ini.
+
+## Langkah operator setelah pembaruan BATCH 2
+
+1. Buka Apps Script yang terikat ke spreadsheet Ngulik Digital DB.
+2. Ganti **seluruh isi** `Code.gs` dengan berkas terbaru dari repo; simpan.
+3. Jangan jalankan `setupDatabase`, `installTriggers`, atau `resetAdminPin` dahulu.
+4. Jalankan diagnostik baca-saja `diagnosticPing`, `diagnosticDatabase`, dan `diagnosticSchema` dari file `Diagnostics.gs` yang sudah dipasang.
+5. Jangan deploy Web App sebelum pemeriksaan sintaks dan QA penuh selesai.
+
+## Belum lengkap / belum diuji
+
+- Idempotensi persisten lintas seluruh aksi tulis (baru sebagian diperbaiki di order).
+- Action admin: manajemen member/waiting list/etalase, follow-up, dan beberapa alur payout.
+- Kredit AI RESERVE–CONFIRM–REFUND, validasi endpoint SobatAgent, dan audit AI.
+- Notifikasi email, fungsi orphan-credit cleanup, serta pengujian race condition dan rollback transaksi.
+- Pengujian end-to-end setiap status order/komisi/refund dan integrasi frontend.
+- Validasi autentikasi dan kebijakan privasi sebelum produksi.
 
 ## Database resmi proyek
 
@@ -22,7 +48,7 @@ Spreadsheet tersebut memuat 14 tab, 27 pengaturan, 6 produk, 4 AI tools, 6 modul
 6. Simpan PIN admin yang tampil pada dialog **satu kali** di tempat privat. Jangan simpan dalam repository atau lembar publik.
 7. Jalankan `healthCheck` untuk melihat status struktur dan komponen yang belum tersedia.
 
-**Penting:** `installTriggers` belum tersedia sampai BATCH 2. Jangan deploy Web App atau aktifkan GitHub Pages hingga seluruh batch selesai dan checklist keamanan lolos.
+**Penting:** `installTriggers` sudah ditambahkan tetapi belum teruji; jangan jalankan dahulu. Jangan deploy Web App atau aktifkan GitHub Pages hingga seluruh batch selesai dan checklist keamanan lolos.
 
 ## Struktur target
 
