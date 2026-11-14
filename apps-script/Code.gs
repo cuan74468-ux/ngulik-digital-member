@@ -1,6 +1,6 @@
 /**
  * Ngulik Digital Member — Apps Script backend (development).
- * Skema 17 tab (14 inti + 3 support), autentikasi, API member/admin, pembayaran manual, kredit,
+ * Skema 25 tab (14 inti + 3 support + 7 LMS + 1 notifikasi), autentikasi, API member/admin, pembayaran manual, kredit,
  * waiting list, dan rekonsiliasi. Belum lolos QA end-to-end.
  * Jangan deploy sebagai layanan publik atau mengaktifkan transaksi nyata.
  */
@@ -13,6 +13,7 @@ const NGD = Object.freeze({
   TZ: 'Asia/Jakarta',
   SESSION_DAYS: 7,
   LOCK_MINUTES: 15,
+  ADMIN_LOCK_MINUTES: 60, // akun ADMIN dikunci lebih lama: nomornya tampil di getPublicInfo
   MAX_LOGIN_FAILURES: 5,
   HEADERS: {
     members: 'member_id,role,nama,wa,nama_usaha,pin_hash,pin_salt,kode_referral,referred_by,status,joined_at,jenis_usaha,kota,deskripsi_usaha,instagram,onboarding_at,trial_mulai,trial_berakhir,akses_3in1_sampai,sumber_akses_3in1,url_halaman_bisnis,status_pos,pos_lisensi_kode,status_canva,canva_email,canva_mulai,canva_berakhir,last_active_at,d14_active,d30_active,saldo_kredit,retensi_14,retensi_30',
@@ -73,11 +74,35 @@ function normalizeWa_(raw) {
   var w = String(raw || '').replace(/[\s()-]/g, '');
   if (w.slice(0, 1) === '+') w = w.slice(1);
   if (w.slice(0, 1) === '0') w = '62' + w.slice(1);
-  if (!/^62\d{8,13}$/.test(w)) throw new Error('Nomor WhatsApp tidak valid.');
+  if (!/^62\d{8,13}$/.test(w)) throw ngdError_('VALIDATION','Nomor WhatsApp tidak valid.');
   return w;
 }
 function checkPin_(pin) {
-  if (!/^\d{6}$/.test(String(pin || ''))) throw new Error('PIN harus enam angka.');
+  if (!/^\d{6}$/.test(String(pin || ''))) throw ngdError_('VALIDATION','PIN harus enam angka.');
+}
+// PIN baru (daftar / ganti PIN) tidak boleh mudah ditebak. Login lama tetap memakai
+// checkPin_ saja, supaya akun dengan PIN lama masih bisa masuk lalu menggantinya.
+function isWeakPin_(pin,wa) {
+  var p=String(pin||'');
+  if(!/^\d{6}$/.test(p))return true;
+  if(/^(\d)\1{5}$/.test(p))return true;                       // 000000, 111111
+  if(/^(\d\d)\1\1$/.test(p)||/^(\d{3})\1$/.test(p))return true;   // 121212, 123123
+  if(/^(\d)\1(\d)\2(\d)\3$/.test(p))return true;              // 112233
+  if('01234567890123456789'.indexOf(p)>=0)return true;          // 123456, 456789
+  if('98765432109876543210'.indexOf(p)>=0)return true;          // 654321
+  if(p.slice(3)===p.slice(0,3).split('').reverse().join(''))return true; // 123321
+  if(['102030','123654','159753','147258','258369','789456','456123','520520','131313','696969','121314','123789','111222','000111','010203'].indexOf(p)>=0)return true;
+  if(wa&&String(wa).slice(-6)===p)return true;                  // 6 digit terakhir nomor WA
+  return false;
+}
+function checkNewPin_(pin,wa) {
+  checkPin_(pin);
+  if(isWeakPin_(pin,wa))throw ngdError_('VALIDATION',
+    'PIN terlalu mudah ditebak. Hindari angka berurutan atau berulang dan 6 digit terakhir nomor WA.');
+}
+function randomStrongPin_() {
+  for(var i=0;i<50;i++){var pin=randomPin_();if(!isWeakPin_(pin))return pin;}
+  return randomPin_();
 }
 function withLock_(fn) {
   var lock = LockService.getScriptLock();
@@ -90,7 +115,7 @@ function isoWib_(date) {
 }
 function safeText_(s, max) {
   var text = String(s == null ? '' : s).trim();
-  if (text.length > max) throw new Error('Teks terlalu panjang.');
+  if (text.length > max) throw ngdError_('VALIDATION','Teks terlalu panjang.');
   return text;
 }
 function num_(v, fallback) {
@@ -241,7 +266,8 @@ function loginGuard_(wa) {
     expires_at:Math.max(Number(stored.expires_at)||0,Number(cached.expires_at)||0)};
   if(!state.expires_at||state.expires_at<=now)state.expires_at=until;
   if(state.attempts>=NGD.MAX_LOGIN_FAILURES)
-    throw new Error('Terlalu banyak percobaan. Coba lagi dalam 15 menit.');
+    throw ngdError_('RATE_LIMITED','Terlalu banyak percobaan. Coba lagi dalam '+
+      Math.max(1,Math.ceil((state.expires_at-now)/60000))+' menit.');
   return state;
 }
 function noteLoginFailure_(wa,persist) {
@@ -253,6 +279,19 @@ function noteLoginFailure_(wa,persist) {
   cache.put(key,JSON.stringify(state),ttl);
   if(persist===true)
     PropertiesService.getScriptProperties().setProperty(loginFailureStoreKey_(wa),JSON.stringify(state));
+}
+// Nomor WA admin tampil di getPublicInfo, jadi setelah gagal berulang akun ADMIN
+// dikunci lebih lama daripada member (mengurangi peluang tebak PIN per hari).
+function extendAdminLock_(wa) {
+  var now=Date.now(),cache=CacheService.getScriptCache(),key=loginFailureKey_(wa),state=null;
+  try {var raw=cache.get(key);if(raw)state=JSON.parse(raw);} catch(e) {state=null;}
+  if(!state||Number(state.attempts)<NGD.MAX_LOGIN_FAILURES)return false;
+  var until=now+NGD.ADMIN_LOCK_MINUTES*60000;
+  if(Number(state.expires_at)>=until)return false;
+  state.expires_at=until;
+  cache.put(key,JSON.stringify(state),Math.min(21600,NGD.ADMIN_LOCK_MINUTES*60));
+  PropertiesService.getScriptProperties().setProperty(loginFailureStoreKey_(wa),JSON.stringify(state));
+  return true;
 }
 function clearLoginFailures_(wa) {
   CacheService.getScriptCache().remove(loginFailureKey_(wa));
@@ -394,10 +433,10 @@ function ensureAdmin_() {
   if (existing.length) return {created:false,pin:null,wa:null};
   var wa=normalizeWa_(setting_('wa_admin',''));
   if (findRows_('members',function(r){return r.wa===wa;}).length) throw new Error('Nomor WA admin sudah dipakai member.');
-  var pin=randomPin_(), salt=newSalt_();
+  var pin=randomStrongPin_(), salt=newSalt_();
   var adminId='M-0001';
   if (findRows_('members',function(r){return r.member_id===adminId;}).length) throw new Error('ID admin sudah digunakan.');
-  appendRow_('members',{member_id:adminId,role:'ADMIN',nama:'Admin Ngulik Digital',wa:wa,nama_usaha:'Ngulik Digital',pin_hash:pinHash_(pin,salt),pin_salt:salt,kode_referral:uuid_().slice(0,8),referred_by:'',status:'AKTIF',joined_at:now_(),last_active_at:now_(),d14_active:false,d30_active:false,status_pos:'BELUM',status_canva:'BELUM'});
+  appendRow_('members',{member_id:adminId,role:'ADMIN',nama:'Admin Ngulik Digital',wa:wa,nama_usaha:'Ngulik Digital',pin_hash:pinHash_(pin,salt),pin_salt:salt,kode_referral:'R'+uuid_().slice(0,7),referred_by:'',status:'AKTIF',joined_at:now_(),last_active_at:now_(),d14_active:false,d30_active:false,status_pos:'BELUM',status_canva:'BELUM'});
   logAudit_(adminId,'ADMIN','ADMIN_CREATED','members',adminId,'','AKTIF',{});
   // Dialog harus di luar lock; jangan pernah mencatat PIN di Logger.
   return {created:true,pin:pin,wa:wa};
@@ -465,8 +504,9 @@ function resetAdminPin() {
   var result=withLock_(function(){
     var admin=findRows_('members',function(r){return r.role==='ADMIN';})[0];
     if(!admin) throw new Error('Jalankan setupDatabase lebih dahulu.');
-    var pin=randomPin_(),salt=newSalt_();
+    var pin=randomStrongPin_(),salt=newSalt_();
     updateRow_('members',admin._row,{pin_salt:salt,pin_hash:pinHash_(pin,salt)});
+    clearLoginFailures_(String(admin.wa)); // buka kunci login admin yang sedang berjalan
     findRows_('sessions',function(r){return r.member_id===admin.member_id;}).reverse().forEach(function(r){tbl_('sessions').sheet.deleteRow(r._row);});
     logAudit_(admin.member_id,'ADMIN','ADMIN_PIN_RESET','members',admin.member_id,'','',{});
     SpreadsheetApp.flush();
@@ -530,7 +570,7 @@ function nextMemberId_() {
 }
 function newReferralCode_() {
   var used={};readAll_('members').forEach(function(m){used[m.kode_referral]=true;});
-  for(var i=0;i<50;i++){var v=uuid_().slice(0,8);if(!used[v])return v;}
+  for(var i=0;i<50;i++){var v='R'+uuid_().slice(0,7);if(!used[v])return v;}
   throw ngdError_('CONFLICT','Kode referral belum bisa dibuat. Coba lagi.');
 }
 function memberCount_() {return findRows_('members',function(r){return r.role==='MEMBER'&&r.status==='AKTIF';}).length;}
@@ -681,7 +721,7 @@ function updateMyProfile_(member,p) {
 }
 function authRegister_(p) {
   return withLock_(function(){
-    var wa=normalizeWa_(p.wa), pin=String(p.pin||'');checkPin_(pin);
+    var wa=normalizeWa_(p.wa), pin=String(p.pin||'');checkNewPin_(pin,wa);
     require_(safeText_(p.nama,80).length>=2,'VALIDATION','Nama minimal dua karakter.');
     require_(safeText_(p.nama_usaha,100).length>=2,'VALIDATION','Nama usaha minimal dua karakter.');
     require_(p.setuju_kebijakan===true,'VALIDATION','Persetujuan kebijakan diperlukan.');
@@ -713,6 +753,7 @@ function authLogin_(p) {
     var m=byId_('members','wa',wa);
     if(!m || pinHash_(pin,m.pin_salt)!==m.pin_hash){
       noteLoginFailure_(wa,Boolean(m));
+      if(m&&m.role==='ADMIN')extendAdminLock_(wa);
       throw ngdError_('UNAUTHORIZED','Nomor WhatsApp atau PIN salah.');
     }
     require_(m.status==='AKTIF','FORBIDDEN','Akun belum aktif.');
@@ -727,7 +768,7 @@ function authLogout_(token) {
   return {success:true};
 }
 function authChangePin_(m,p) {
-  checkPin_(p.pin_lama);checkPin_(p.pin_baru);
+  checkPin_(p.pin_lama);checkNewPin_(p.pin_baru,m.wa);
   require_(String(p.pin_lama)!==String(p.pin_baru),'VALIDATION','PIN baru harus berbeda.');
   return withLock_(function(){
     // Baca ulang agar perubahan PIN dari sesi lain tidak menimpa PIN terbaru.
@@ -1052,10 +1093,9 @@ function refundOrder_(admin,p) {
     // The original TOPUP ledger amount is authoritative, not the mutable
     // product catalog value. There is no automatic external money transfer.
     var before=o.status;
-    updateRow_('orders',o._row,{status:'REFUNDED',refunded_at:now_(),
-      catatan_admin:reason+' | Refund ref: '+reference});
-    if(decision.creditAdjustment!==0)
-      grantCredits_(m.member_id,decision.creditAdjustment,o.order_id,'ADJUST_REFUND');
+    // Urutan sengaja: langkah yang idempoten dulu (balik komisi, tarik kredit), status order TERAKHIR.
+    // Bila gagal di tengah, order tetap PAID/FULFILLED sehingga muncul di rekonsiliasi, bukan
+    // berstatus REFUNDED padahal kredit member belum ditarik.
     commissions.forEach(function(k){
       if(k.status==='REVERSED')return;
       updateRow_('affiliate_commissions',k._row,{status:'REVERSED',
@@ -1063,6 +1103,17 @@ function refundOrder_(admin,p) {
       logAudit_(admin.member_id,'ADMIN','COMMISSION_REVERSED','affiliate_commissions',
         k.komisi_id,k.status,'REVERSED',{});
     });
+    if(decision.creditAdjustment!==0)
+      grantCredits_(m.member_id,decision.creditAdjustment,o.order_id,'ADJUST_REFUND');
+    try{
+      updateRow_('orders',o._row,{status:'REFUNDED',refunded_at:now_(),
+        catatan_admin:reason+' | Refund ref: '+reference});
+    }catch(err){
+      try{logAudit_(admin.member_id,'ADMIN','REFUND_NEEDS_REVIEW','orders',o.order_id,before,before,
+        {reason:String(err&&err.message||'unknown').slice(0,180)});}catch(logErr){}
+      throw ngdError_('RECONCILIATION_REQUIRED',
+        'Kredit sudah ditarik tetapi status order belum tersimpan. Jangan ulangi refund; perbarui status order secara manual.');
+    }
     logAudit_(admin.member_id,'ADMIN','ORDER_REFUNDED','orders',o.order_id,before,
       'REFUNDED',{reason:reason,refund_reference:reference,real_funds_returned:true});
     return orderView_(byId_('orders','order_id',o.order_id),admin);
@@ -1119,6 +1170,35 @@ function requestPayout_(m) {
     return {total:total,jumlah_komisi:all.length};
   });
 }
+function purgeExpiredSessions_() {
+  var now=Date.now(),count=0;
+  // Hapus dari baris paling bawah agar nomor baris yang tersisa tetap benar.
+  findRows_('sessions',function(s){return new Date(s.expires_at).getTime()<=now;})
+    .reverse().forEach(function(s){tbl_('sessions').sheet.deleteRow(s._row);count++;});
+  return count;
+}
+// Bisa dipakai tanpa saklar keuangan (mis. pilot belajar saja). Tidak terpanggil dari API.
+function cleanupExpiredSessions() {
+  requireMutationsEnabled_();
+  return withLock_(function(){return {sessions:purgeExpiredSessions_()};});
+}
+function installSessionCleanupTrigger() {
+  requireMutationsEnabled_();
+  ScriptApp.getProjectTriggers().forEach(function(t){
+    if(t.getHandlerFunction()==='cleanupExpiredSessions')ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('cleanupExpiredSessions').timeBased().everyDays(1).atHour(2).create();
+  console.log('SESSION_CLEANUP_TRIGGER_OK');
+  return 'SESSION_CLEANUP_TRIGGER_OK';
+}
+// Baca-saja: tandai kode referral lama yang berisiko diubah Sheets menjadi angka.
+function auditReferralCodes() {
+  var risky=readAll_('members').filter(function(m){
+    return typeof m.kode_referral!=='string'||!/^[A-Za-z]/.test(m.kode_referral);
+  }).map(function(m){return m.member_id;});
+  console.log('REFERRAL_AUDIT risky='+JSON.stringify(risky));
+  return {risky:risky};
+}
 function maintenance_() {
   return withLock_(function(){
     var now=Date.now(),changed={expired:0,commissions:0,credits:0,canva:0,sessions:0};
@@ -1134,8 +1214,7 @@ function maintenance_() {
         updateRow_('members',m._row,{status_canva:'BERAKHIR'});logAudit_('SYSTEM','SYSTEM','CANVA_EXPIRED','members',m.member_id,m.status_canva,'BERAKHIR',{});changed.canva++;
       }
     });
-    var sessions=findRows_('sessions',function(s){return new Date(s.expires_at).getTime()<=now;});
-    sessions.reverse().forEach(function(s){tbl_('sessions').sheet.deleteRow(s._row);changed.sessions++;});
+    changed.sessions=purgeExpiredSessions_();
     return changed;
   });
 }
