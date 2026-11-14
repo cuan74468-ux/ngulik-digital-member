@@ -3,6 +3,14 @@
 Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliate.
 **Arsitektur:** GitHub Pages (HTML/CSS/ES Modules tanpa build) → Google Apps Script Web App → Google Sheets (14 tab sumber; 25 tab staging privat: 14 inti + 3 support + 7 LMS + 1 notifikasi).
 
+## Staging admin katalog & release gate — 14 November 2026
+
+- Panel **Kelola Katalog** `?preview=admin#produk` sudah ada pada UI, dengan daftar 8 produk dan form editor yang terkunci di demo publik. Member biasa tidak dapat membuka editor katalog.
+- `apps-script/Catalog.gs` menyediakan ADMIN CRUD terbatas: create nonaktif secara default, update dengan revision token, soft archive/reactivate, audit log, dan idempoten pada retry create. **Tidak ada hard delete** untuk produk/riwayat order.
+- Endpoint `adminListCatalog` (ADMIN read-only), `adminCreateCatalogItem`, `adminUpdateCatalogItem`, `adminSetCatalogActive` (ADMIN write). Mutasi mensyaratkan `NGD_MUTATIONS_ENABLED=true` **dan** `NGD_CATALOG_ENABLED=true` pada GAS staging; `config.catalogEnabled:false` di GitHub Pages.
+- Seed instalasi baru sekarang 8 produk; urutan katalog publik mengikuti kolom `urut`; diagnostik tidak lagi mengasumsikan 6 produk. Izin manifest Apps Script untuk mengirim email dan permintaan eksternal yang belum digunakan telah dihapus.
+- **Panduan operasi pilot dan syarat rilis:** [Pilot 50 — Go-Live Gate & Runbook](docs/PILOT_50_GO_LIVE_GATE_2026-11-14.md). Backend GAS aktual belum disinkronkan/dideploy; belum siap menerima pendaftaran atau pembayaran nyata.
+
 ## Ngulik Digital Hub — pembaruan UI/UX & katalog 14 November 2026
 
 Beranda publik kini menampilkan empat kebutuhan UMKM: belajar & praktik, aplikasi usaha, Studio AI & kredit, serta jasa kreatif. Katalog memiliki filter interaktif enam kategori, dan pratinjau delapan produk mengikuti pembaruan database Google Drive. Tab `katalog_produk` **STAGING QA** juga sudah diselaraskan ke delapan produk tanpa mengubah database utama. Tipe jasa dan eBook belum mendukung checkout: ditampilkan sebagai informasi tetapi ditolak oleh backend sebelum order dibuat. UI baru memakai identitas Ngulik Digital Hub dengan gaya Slate & Ink yang konsisten di mobile/desktop. **Semua mode pembayaran, pendaftaran, API, LMS live, support live, dan notifikasi live tetap dinonaktifkan.**
