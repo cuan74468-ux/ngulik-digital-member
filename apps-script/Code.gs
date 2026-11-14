@@ -297,11 +297,13 @@ function seedSettings_() {
 function seedCatalog_() {
   var rows = [
     ['P-3IN1','Paket 3-in-1: Bio Link + Profil Bisnis + Katalog Checkout Kurir','Akses Bio Link, profil usaha, dan katalog selama 30 hari.','LANGGANAN_30H',99000,0,30,false,true,true,1],
-    ['P-POS','Aplikasi POS Kasir Sederhana (lisensi sekali bayar)','Lisensi sekali bayar; aktivasi diverifikasi admin.','LISENSI_SEKALI',149000,0,0,true,true,true,2],
-    ['P-CANVA','Seat Canva Pro (30 hari)','Undangan seat 30 hari diproses admin.','SEAT_30H',35000,0,30,true,true,true,3],
+    ['P-POS','Aplikasi POS Kasir Sederhana / Linggau POS Lite','Lisensi sekali bayar; aktivasi diverifikasi admin.','LISENSI_SEKALI',149000,0,0,true,true,true,2],
+    ['P-CANVA','Seat Canva Pro 30 Hari','Undangan seat 30 hari diproses admin.','SEAT_30H',35000,0,30,true,true,true,3],
     ['P-KREDIT-50','Top-Up 50 Kredit AI','Tambahan 50 kredit AI.','TOPUP_KREDIT',25000,50,0,false,false,true,4],
     ['P-KREDIT-150','Top-Up 150 Kredit AI','Tambahan 150 kredit AI.','TOPUP_KREDIT',60000,150,0,false,false,true,5],
-    ['P-KREDIT-400','Top-Up 400 Kredit AI','Tambahan 400 kredit AI.','TOPUP_KREDIT',140000,400,0,false,false,true,6]
+    ['P-KREDIT-400','Top-Up 400 Kredit AI','Tambahan 400 kredit AI.','TOPUP_KREDIT',140000,400,0,false,false,true,6],
+    ['P-VIDEO-AI','Jasa Video Iklan AI - Paket Hemat','Jasa pembuatan video iklan/promosi AI untuk produk & usaha; aktivasi diproses admin.','JASA_SEKALI',50000,0,0,true,true,true,7],
+    ['P-EBOOK','Bundel Ebook Vibe Coder & Template Siap Pakai','Ebook panduan praktis Vibe Coder, bundel template siap pakai, dan bonus 10 kredit AI.','PRODUK_DIGITAL',49000,10,0,false,true,true,8]
   ];
   return seedIfEmpty_('katalog_produk', rows.map(function(r) {
     var names = NGD.HEADERS.katalog_produk.split(','), o={};
@@ -1058,7 +1060,7 @@ function advanceTrial_(m,p) {
     return {trial_berakhir:isoWib_(trialEnd),paid_access_preserved:paidActive};
   });
 }
-function publicCatalog_() {return readAll_('katalog_produk').filter(function(r){return r.aktif===true;}).map(function(r){return {product_id:r.product_id,nama:r.nama,deskripsi:r.deskripsi,tipe:r.tipe,harga:r.harga,kredit_diberikan:r.kredit_diberikan,durasi_hari:r.durasi_hari};});}
+function publicCatalog_() {return readAll_('katalog_produk').filter(function(r){return r.aktif===true;}).sort(function(a,b){return Number(a.urut||0)-Number(b.urut||0);}).map(function(r){return {product_id:r.product_id,nama:r.nama,deskripsi:r.deskripsi,tipe:r.tipe,harga:r.harga,kredit_diberikan:r.kredit_diberikan,durasi_hari:r.durasi_hari};});}
 function dashboard_(m) {
   var modules=modules_(),done=findRows_('progress_member',function(r){return r.member_id===m.member_id;});
   var next=modules.filter(function(x){return !done.some(function(y){return x.modul_id===y.modul_id;});})[0]||null;
