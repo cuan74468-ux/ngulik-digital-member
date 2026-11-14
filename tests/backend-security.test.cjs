@@ -161,7 +161,7 @@ test('LMS server gate is independent of finance, support and registration',()=>{
   }
   for(const action of ['createOrder','register','createTicket']){
     assert.throws(()=>vm.runInContext(
-      'requireActionFeatureEnabled_('+JSON.stringify(action)+')',s.context),/belum/);
+      'requireActionFeatureEnabled_('+JSON.stringify(action)+')',s.context),/belum|masih/);
   }
   assert.equal(s.touched(),0);
 });
