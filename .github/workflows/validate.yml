@@ -76,6 +76,7 @@ jobs:
           grep -q 'data-catalog-filter="jasa"' /tmp/ngd-catalog.html
           grep -q 'Belum tersedia untuk pemesanan' /tmp/ngd-catalog.html
           grep -q 'Pembayaran belum diaktifkan' /tmp/ngd-catalog.html
+          echo 'CATALOG_LAYOUT_PROBE'; grep -o 'LAYOUT_CHECK[^<]*' /tmp/ngd-catalog.html | head -c 1100; echo
           grep -q 'data-overflow="false"' /tmp/ngd-catalog.html
           grep -q 'data-buys-disabled="true"' /tmp/ngd-catalog.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
