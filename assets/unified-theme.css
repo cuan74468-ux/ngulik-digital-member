@@ -528,6 +528,29 @@ body:not(#ngd) .admin-runtime-note{
   body:not(#ngd) .admin-runtime-flag{padding:13px}
 }
 
+/* Shared finishing controls: avoid legacy green accents leaking into
+   profile, course progress, dashboard, customer support or admin settings. */
+body:not(#ngd) .progress-track{height:8px;background:var(--brand-soft);border-radius:99px;overflow:hidden}
+body:not(#ngd) .progress-track span{display:block;height:100%;background:var(--brand-blue);border-radius:99px}
+body:not(#ngd) .quick-actions{display:grid;gap:0}
+body:not(#ngd) .quick-action{
+  display:flex;align-items:center;gap:12px;min-height:50px;padding:12px 3px;
+  background:transparent;border:0;border-bottom:1px solid var(--line);
+  color:var(--ink);text-align:left;font-size:.9rem;font-weight:600;
+}
+body:not(#ngd) .quick-action:last-child{border-bottom:0}
+body:not(#ngd) .quick-action svg{flex:none;color:var(--brand-blue)}
+body:not(#ngd) .quick-action svg:last-child{margin-left:auto;color:var(--muted)}
+body:not(#ngd) .quick-action:hover{color:var(--brand-blue)}
+body:not(#ngd) .support-impact-summary{
+  border-color:var(--line);border-radius:var(--r-md);background:var(--subtle);
+}
+body:not(#ngd) .support-search-grid .field,
+body:not(#ngd) .member-search-grid .field{min-width:0}
+body:not(#ngd) .admin-account-actions{display:grid;gap:0;margin:16px 0 20px}
+body:not(#ngd) .admin-account-actions .quick-action{width:100%}
+body[data-app-role="admin"] .admin-account-actions .btn{justify-self:start}
+
 /* 13 — Belajar (LMS), bantuan, sukses */
 body:not(#ngd) .learn-path-list{display:grid;gap:10px}
 body:not(#ngd) .learn-path-item{display:flex;align-items:center;gap:14px;padding:16px}
