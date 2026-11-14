@@ -78,7 +78,7 @@ test('service brief does not accept role/status/price injection or invalid refer
     {...brief(),referensi_url:'javascript:alert(1)'},
     {...brief(),anggaran:-1}, {...brief(),brief:'too short'},
     {...brief(),jenis_layanan:'VIDEO_AI',product_id:''}
-  ])assert.throws(()=>h.run('submitServiceBrief','M1',payload),/(tidak valid|tidak diizinkan|terlalu|belum tersedia|tidak cocok|minimal|dikenal)/);
+  ])assert.throws(()=>h.run('submitServiceBrief','M1',payload),/(tidak valid|tidak diizinkan|terlalu|belum tersedia|tidak cocok|minimal|dikenal|HTTPS yang valid)/);
   assert.equal(h.store.service_requests.length,0);
 });
 test('video AI briefs require a valid active service catalog product',()=>{
