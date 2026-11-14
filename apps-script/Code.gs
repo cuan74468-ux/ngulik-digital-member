@@ -682,11 +682,14 @@ function newOrder_(m,p,requestId) {
   });
 }
 function getOrder_(m,id) {
-  return withLock_(function(){
-    var o=byId_('orders','order_id',id);require_(o,'NOT_FOUND','Pesanan tidak ditemukan.');
-    require_(m.role==='ADMIN'||o.member_id===m.member_id,'FORBIDDEN','Pesanan tidak ditemukan.');
-    return orderView_(expireOrder_(o),m);
-  });
+  // Strictly read-only. Expiration writes belong to maintenance/transition
+  // actions, which require the server mutation release gate.
+  var o=byId_('orders','order_id',id);
+  require_(o,'NOT_FOUND','Pesanan tidak ditemukan.');
+  require_(m.role==='ADMIN'||o.member_id===m.member_id,'FORBIDDEN','Pesanan tidak ditemukan.');
+  var view=orderView_(o,m);
+  view.past_due=o.status==='PENDING'&&new Date(o.expires_at).getTime()<=Date.now();
+  return view;
 }
 function transitionOrder_(m,id,type,p) {
   return withLock_(function(){
