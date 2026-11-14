@@ -815,10 +815,15 @@ function transitionOrder_(m,id,type,p) {
 function grantCredits_(id,amount,ref,kind) {
   amount=Number(amount);
   require_(Number.isFinite(amount)&&Number.isInteger(amount)&&amount!==0,'VALIDATION','Jumlah kredit tidak valid.');
-  // Topup dan pembatalannya harus dapat diulang dengan aman tanpa saldo ganda.
-  if(ref&&['TOPUP','ADJUST_REFUND'].indexOf(kind)>=0){
-    var prior=findRows_('credits_ledger',function(r){return r.member_id===id&&r.ref_id===ref&&r.tipe===kind;});
-    if(prior.length)return {alreadyApplied:true,balance:creditBalance_(id)};
+  // Every order/admin reference identifies exactly one posting.
+  // Cross-member or different-amount replay must be rejected, not duplicated.
+  if(ref&&['TOPUP','ADJUST_REFUND','ADJUST'].indexOf(kind)>=0){
+    var prior=findRows_('credits_ledger',function(r){return r.ref_id===ref&&r.tipe===kind;});
+    if(prior.length){
+      require_(prior.length===1&&prior[0].member_id===id&&Number(prior[0].jumlah)===amount,
+        'CONFLICT','Referensi kredit sudah digunakan untuk posting berbeda.');
+      return {alreadyApplied:true,balance:creditBalance_(id)};
+    }
   }
   var balance=creditBalance_(id),final=balance+amount;
   appendRow_('credits_ledger',{entry_id:recordId_('L'),member_id:id,created_at:now_(),tipe:kind||'ADJUST',jumlah:amount,status:'POSTED',ref_id:ref||'',keterangan:'Transaksi '+(ref||''),saldo_setelah:final});
@@ -1188,11 +1193,14 @@ function apiRouter_(action,token,p,requestId) {
         require_(reason.length>=5,'VALIDATION','Alasan koreksi wajib diisi.');
         require_(creditBalance_(member.member_id)+amount>=0,'CONFLICT',
           'Koreksi tidak boleh menghasilkan saldo kredit negatif.');
-        var reference='ADMIN:'+admin.member_id+':'+recordId_('ADJ');
-        grantCredits_(member.member_id,amount,reference,'ADJUST');
-        logAudit_(admin.member_id,'ADMIN','CREDIT_ADMIN_ADJUST','credits_ledger',reference,'','POSTED',
-          {member_id:member.member_id,amount:amount,reason:reason});
-        return {saldo:creditBalance_(member.member_id)};
+        require_(/^[A-Za-z0-9_-]{16,80}$/.test(String(requestId||'')),
+          'VALIDATION','ID permintaan koreksi tidak valid.');
+        var reference='ADMIN_ADJUST:'+requestId;
+        var posting=grantCredits_(member.member_id,amount,reference,'ADJUST');
+        if(!posting.alreadyApplied)
+          logAudit_(admin.member_id,'ADMIN','CREDIT_ADMIN_ADJUST','credits_ledger',reference,
+            '','POSTED',{member_id:member.member_id,amount:amount,reason:reason});
+        return {saldo:posting.balance,already_applied:posting.alreadyApplied};
       });
     case 'adminMarkCommissionPaid':
       return withLock_(function(){
