@@ -473,6 +473,14 @@ function lmsComplete_(member,p,requestId){
         r.status==='ACTIVE';
     });
     require_(enroll.length===1,'CONFLICT','Ikuti kursus terlebih dahulu.');
+    var reused=findRows_('lms_progress',function(r){return r.request_id===requestId;});
+    require_(reused.length<=1,'RECONCILIATION_REQUIRED',
+      'Referensi progres duplikat.');
+    if(reused.length)
+      require_(reused[0].member_id===member.member_id&&
+        reused[0].lesson_id===l.lesson_id&&
+        Number(reused[0].lesson_version)===Number(l.published_version),
+        'CONFLICT','ID progres sudah digunakan untuk versi materi berbeda.');
     var old=findRows_('lms_progress',function(r){
       return r.member_id===member.member_id&&r.lesson_id===l.lesson_id&&
         Number(r.lesson_version)===Number(l.published_version);
