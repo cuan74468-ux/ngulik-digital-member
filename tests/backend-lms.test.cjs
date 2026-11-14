@@ -183,7 +183,7 @@ test('paid course is inaccessible to non-subscribers',()=>{
   const locked=f.act('getLMSCourse','other',{course_id:c.course_id});
   assert.equal(locked.access_granted,false);
   assert.equal(locked.lessons.length,0);
-  assert.throws(()=>f.act('enrollLMSCourse','other',{course_id:c.course_id}),/tidak tersedia/);
+  assert.throws(()=>f.act('enrollLMSCourse','other',{course_id:c.course_id}),/belum tersedia/);
 });
 test('free member enrollment and lesson completion are idempotent',()=>{
   const f=fixture(),c=f.course(),l=f.lesson(c.course_id);
@@ -211,7 +211,7 @@ test('cannot complete lesson without enrolling',()=>{
 });
 test('member cannot complete draft lesson or a course without published status',()=>{
   const f=fixture(),c=f.course(),l=f.lesson(c.course_id);
-  assert.throws(()=>f.act('completeLMSLesson','member',{lesson_id:l.lesson_id}),/tidak tersedia/);
+  assert.throws(()=>f.act('completeLMSLesson','member',{lesson_id:l.lesson_id}),/belum tersedia/);
   assert.equal(f.tables.lms_progress.length,0);
 });
 test('soft archive is intentional and keeps history, hiding course from new learners',()=>{
@@ -223,7 +223,7 @@ test('soft archive is intentional and keeps history, hiding course from new lear
   f.act('adminArchiveLMSCourse','admin',{course_id:c.course_id,confirm_archive:true});
   assert.equal(f.tables.lms_courses.length,1);
   assert.equal(f.act('getLMSCatalog','member').length,0);
-  assert.throws(()=>f.act('enrollLMSCourse','member',{course_id:c.course_id}),/tidak tersedia/);
+  assert.throws(()=>f.act('enrollLMSCourse','member',{course_id:c.course_id}),/belum tersedia/);
 });
 test('preparing AI job creates human-readable prompt without calling provider',()=>{
   const f=fixture(),c=f.course();
