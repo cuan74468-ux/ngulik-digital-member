@@ -91,3 +91,38 @@ Perubahan kode yang **disimpan di GitHub**, bukan pada Apps Script aktif:
 **Tidak dilakukan:** pembaruan Google Sheets, penggantian kode di Apps Script terikat, pengubahan Script Properties aktif, deployment GitHub Pages, transaksi nyata, perubahan QRIS, maupun reset database.
 
 **Langkah wajib sebelum sinkronisasi Apps Script:** pilih spreadsheet staging, set `NGD_DB_ID` melalui Project Settings untuk konteks Web App, biarkan mutasi tetap OFF, validasi browser POST/GET tanpa kredensial, baru lakukan uji integrasi secara bertahap. Jangan otomatis mengaktifkan flag sebagai respons atas tes gagal.
+
+## Addendum pengembangan — pengujian dan integritas data lanjutan
+
+**Tanggal:** 14 November 2026. **Lingkungan:** repository GitHub `main`, bukan Apps Script aktif.
+
+### Perubahan kode
+
+1. **Input ke Google Sheets aman dari formula injection**: `sheetLiteral_` mengubah teks berawalan karakter formula menjadi nilai literal pada `appendRow_` dan `updateRow_`.
+2. **Pembaharuan beberapa kolom dalam satu baris**: `updateRow_` memvalidasi seluruh nama kolom lebih dahulu, lalu menulis satu rentang dengan `setValues` sambil mempertahankan rumus dalam rentang yang tidak diubah. Ini mengurangi kegagalan parsial per baris, tetapi tidak memberikan transaksi atomik antar-tab.
+3. **Kredit sambutan**: pengaturan awal 0 diakui sebagai 0, bukan kembali menjadi 10; validasi dilakukan sebelum menambah member; `saldo_setelah` dihitung dari saldo ledger sebenarnya.
+4. **Ledger idempoten**: topup, refund kredit, dan `adminAdjustCredit` menggunakan referensi yang diperiksa terhadap member, jumlah, dan jenis posting. Admin menggunakan `request_id` stabil. Retry negatif yang identik tidak mendebit ulang; debit baru tidak boleh membuat saldo negatif.
+5. **Aktivasi produk**: pembelian lisensi POS sekali bayar yang sudah aktif/menunggu ditolak, tetapi retry order yang sama tetap diperbolehkan. Pembelian perpanjangan Canva tidak merubah status layanan yang sudah aktif menjadi `DIAJUKAN`.
+6. **Rekonsiliasi affiliate**: komisi yang diharapkan tetapi tidak tercatat akibat kegagalan parsial ditandai `COMMISSION_MISSING`, sambil menghormati aturan satu komisi pertama dan produk yang eligible.
+7. **Keamanan frontend**: URL materi harus `https://classroom.google.com`, tidak menerima domain tiruan, HTTP, atau URL berisi kredensial.
+8. **Saklar rilis terpisah**: `NGD_MUTATIONS_ENABLED` untuk mutasi dasar, `NGD_REGISTRATION_ENABLED` untuk pendaftaran, dan `NGD_FINANCE_ENABLED` untuk pembayaran, refund, payout, dan koreksi kredit. `NGD_CLICK_TRACKING_ENABLED` tetap saklar tersendiri. Semuanya default OFF di source.
+
+### Verifikasi yang benar-benar telah dieksekusi
+
+- 44/44 pemeriksaan bisnis murni lulus: antrean 12, rekonsiliasi keuangan 17, pengaturan admin 15.
+- Simulasi replay ledger: topup identik, penyesuaian negatif identik, nominal konflik, member konflik, serta debit melebihi saldo menghasilkan hasil yang diharapkan.
+- Simulasi `updateRow_`: satu tulis rentang dan rumus yang tidak diubah tetap dipertahankan.
+- Simulasi saklar rilis: ketika mutasi dasar aktif sementara registrasi dan keuangan tidak, 11 aksi terlarang tetap menghasilkan `MAINTENANCE` dan tidak memanggil Google Sheets.
+- Pemeriksaan source: 18 file JS/GS/CJS lolos parser; seluruh 16 nama action frontend literal terdaftar dalam router backend; 13 file tes Node tercantum di workflow CI.
+- **Bukan hasil CI Node sebenarnya.** GitHub Actions tidak berhasil diverifikasi lewat akses yang tersedia.
+
+### Risiko tersisa dan syarat rilis
+
+- Sinkronisasi kode terbaru ke Apps Script **belum dilakukan**. Jangan menimpa source GAS terikat database aktif.
+- Pengujian browser di GitHub Pages terhadap Apps Script GET/POST + redirect ContentService dan CORS masih belum terbukti. Jangan mengirim PIN/token sampai transport aman dan tervalidasi.
+- Database staging harus terisolasi sebelum uji registrasi/login, member 50 orang, order, komisi, refund dan failure injection.
+- Keamanan PIN enam digit dan kepemilikan nomor WA, batas kuota pendaftaran anonim, SOP verifikasi QRIS, privasi, legal, dan akses admin harus ditinjau.
+- Fulfillment dan refund lintas banyak tab belum memiliki rollback atomik. Penanda anti-retry serta rekonsiliasi mengurangi risiko tetapi tetap memerlukan SOP operator.
+- Integrasi AI SobatAgent belum boleh diaktifkan tanpa dokumentasi endpoint yang valid. UI admin dan QA visual Android/Windows masih belum selesai.
+
+**Keputusan:** jangan menjalankan `setupDatabase`, mengaktifkan pembayaran, membuka Google Sheets publik, atau mengaktifkan Script Properties pada database aktif tanpa pengujian staging dan persetujuan produksi terpisah.
