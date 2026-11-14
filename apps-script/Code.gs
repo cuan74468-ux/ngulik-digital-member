@@ -634,7 +634,19 @@ function creditWarning_(id) {
 }
 function orderView_(order,m) {
   require_(m.role==='ADMIN'||order.member_id===m.member_id,'FORBIDDEN','Pesanan tidak ditemukan.');
-  var o={};Object.keys(order).forEach(function(k){if(k!=='_row')o[k]=order[k] instanceof Date?isoWib_(order[k]):order[k];});return o;
+  // Member must never receive admin notes, payment request_id, verification
+  // actor, referral identifiers or internal row metadata.
+  var fields=m.role==='ADMIN'
+    ? ['order_id','member_id','product_id','nama_produk','harga_dasar','kode_unik',
+       'total_bayar','status','metode','created_at','expires_at',
+       'konfirmasi_bayar_at','paid_at','verified_by','fulfilled_at','cancelled_at',
+       'refunded_at','ref_member_id','catatan_admin','request_id']
+    : ['order_id','member_id','product_id','nama_produk','harga_dasar','kode_unik',
+       'total_bayar','status','metode','created_at','expires_at',
+       'konfirmasi_bayar_at','paid_at','fulfilled_at','cancelled_at','refunded_at'];
+  var o={};fields.forEach(function(k){
+    o[k]=order[k] instanceof Date?isoWib_(order[k]):order[k];
+  });return o;
 }
 function expireOrder_(o) {
   if(o.status==='PENDING'&&new Date(o.expires_at).getTime()<=Date.now()) {
@@ -658,9 +670,12 @@ function newOrder_(m,p,requestId) {
     require_(Number.isInteger(min)&&Number.isInteger(max)&&min>=100&&max<=999&&min<=max,'VALIDATION','Rentang kode unik tidak valid.');
     var open=readAll_('orders').filter(function(o){return ['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;});
     var taken={};open.forEach(function(o){taken[Number(o.total_bayar)]=true;});
-    var code=null;for(var k=0;k<25;k++){var n=min+Math.floor(Math.random()*(max-min+1));if(!taken[price+n]){code=n;break;}}
-    require_(code!==null,'CONFLICT','Sistem sedang ramai. Coba lagi.');
-    var created=now_(),id='NGD-'+Utilities.formatDate(created,NGD.TZ,'yyMMdd')+'-'+uuid_().slice(0,4);
+    // Scan the entire unique-code range from a random starting point.
+    // Unlike 25 random trials, this only fails when every amount is occupied.
+    var range=max-min+1,start=Math.floor(Math.random()*range),code=null;
+    for(var k=0;k<range;k++){var n=min+(start+k)%range;if(!taken[price+n]){code=n;break;}}
+    require_(code!==null,'CONFLICT','Kode pembayaran sedang penuh. Coba lagi nanti.');
+    var created=now_(),id='NGD-'+Utilities.formatDate(created,NGD.TZ,'yyMMdd')+'-'+uuid_().slice(0,12);
     var o={order_id:id,member_id:m.member_id,product_id:product.product_id,nama_produk:product.nama,harga_dasar:price,kode_unik:code,total_bayar:price+code,status:'PENDING',metode:'QRIS_STATIS',created_at:created,expires_at:new Date(created.getTime()+Number(s.order_expiry_menit||15)*60000),ref_member_id:m.referred_by||'',request_id:requestId};
     appendRow_('orders',o);logAudit_(m.member_id,m.role,'ORDER_CREATED','orders',id,'','PENDING',{product_id:product.product_id});
     return orderView_(o,m);
