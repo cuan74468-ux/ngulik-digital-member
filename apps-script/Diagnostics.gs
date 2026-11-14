@@ -341,6 +341,23 @@ function diagnosticFinanceScenarios() {
     'Aktivasi POS baru dibayar tidak dianggap gagal');
   assert_(financeFindings_([overdueManual],[],[],manualProducts).findings[0].issues.indexOf('ADMIN_FULFILLMENT_OVERDUE')>=0,
     'Aktivasi POS yang terlambat 72 jam terdeteksi');
+  var eligible=[{product_id:'SIM-AFF',tipe:'LISENSI_SEKALI',bisa_komisi:true}];
+  var refOrder={order_id:'AFF-NEW',member_id:'SIM-BUYER',product_id:'SIM-AFF',
+    ref_member_id:'SIM-SPONSOR',status:'FULFILLED'};
+  var once={komisi_hanya_order_pertama:true,komisi_persen:25};
+  var all={komisi_hanya_order_pertama:false,komisi_persen:25};
+  var oldCommission={order_id:'AFF-OLD',referred_member_id:'SIM-BUYER',status:'PAID'};
+  var ownCommission={order_id:'AFF-NEW',referred_member_id:'SIM-BUYER',status:'PENDING'};
+  assert_(financeFindings_([refOrder],[],[],eligible,once).findings[0].issues.indexOf('COMMISSION_MISSING')>=0,
+    'Komisi order referral yang hilang terdeteksi');
+  assert_(financeFindings_([refOrder],[],[ownCommission],eligible,once).needs_review===0,
+    'Order referral dengan komisi tercatat tidak diperingatkan');
+  assert_(financeFindings_([refOrder],[],[oldCommission],eligible,once).needs_review===0,
+    'Komisi order pertama yang pernah dibuat menutup kelayakan berikutnya');
+  assert_(financeFindings_([refOrder],[],[oldCommission],eligible,all).findings[0].issues.indexOf('COMMISSION_MISSING')>=0,
+    'Komisi hilang terdeteksi saat program mengizinkan tiap order');
+  assert_(financeFindings_([refOrder],[],[],[{product_id:'SIM-AFF',tipe:'LISENSI_SEKALI',bisa_komisi:false}],once).needs_review===0,
+    'Produk tanpa komisi tidak memunculkan peringatan');
   console.log('FINANCE_SCENARIOS_OK | cases='+pass+' | mode=MEMORY_ONLY');
   return 'FINANCE_SCENARIOS_OK';
 }
