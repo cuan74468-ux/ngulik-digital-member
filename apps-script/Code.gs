@@ -797,24 +797,60 @@ function onPaid_(o,actor) {
 }
 function approveFulfillment_(admin,p) {
   return withLock_(function(){
-    var o=byId_('orders','order_id',p.order_id);require_(o&&o.status==='PAID','CONFLICT','Pesanan belum siap dipenuhi.');
-    var product=byId_('katalog_produk','product_id',o.product_id),m=byId_('members','member_id',o.member_id);
-    var now=now_();
-    if(product.tipe==='LISENSI_SEKALI')updateRow_('members',m._row,{status_pos:'AKTIF',pos_lisensi_kode:'POS-'+uuid_().slice(0,4)+'-'+uuid_().slice(0,4)});
-    else if(product.tipe==='SEAT_30H'){
-      var mail=String(p.canva_email||'').trim();
-      require_(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail),'VALIDATION','Email undangan Canva tidak valid.');
-      var past=m.canva_berakhir?new Date(m.canva_berakhir).getTime():0;
-      var wasActive=['AKTIF_BULAN_1','AKTIF_BULAN_2'].indexOf(m.status_canva)>=0;
-      updateRow_('members',m._row,{status_canva:wasActive?'AKTIF_BULAN_2':'AKTIF_BULAN_1',canva_email:mail,canva_mulai:now,canva_berakhir:new Date(Math.max(now.getTime(),past)+Number(product.durasi_hari||30)*86400000)});
-    }else throw ngdError_('CONFLICT','Produk tidak memerlukan persetujuan.');
+    var o=byId_('orders','order_id',p.order_id);
+    require_(o&&o.status==='PAID','CONFLICT','Pesanan belum siap dipenuhi.');
+    // A persisted attempt marker prevents blind retries when a prior call
+    // updated member access but failed before finalizing the order.
+    var marker='[ADMIN_FULFILLMENT_ATTEMPT]';
+    require_(String(o.catatan_admin||'').indexOf(marker)<0,'RECONCILIATION_REQUIRED',
+      'Aktivasi pernah dicoba. Periksa akses member sebelum mengulang.');
+    var product=byId_('katalog_produk','product_id',o.product_id);
+    var m=byId_('members','member_id',o.member_id);
+    require_(product&&m,'CONFLICT','Data produk atau member tidak tersedia.');
+    require_(['LISENSI_SEKALI','SEAT_30H'].indexOf(product.tipe)>=0,
+      'CONFLICT','Produk tidak memerlukan aktivasi admin.');
+    require_(p.aktivasi_terverifikasi===true,'RECONCILIATION_REQUIRED',
+      'Aktivasi/undangan harus diverifikasi oleh admin.');
+    var proof=safeText_(p.referensi_aktivasi,120);
+    require_(proof.length>=5,'VALIDATION','Referensi aktivasi wajib diisi.');
+    var mail='',past=0,wasActive=false,days=0,now=now_();
+    if(product.tipe==='LISENSI_SEKALI'){
+      require_(m.status_pos!=='AKTIF'&&!m.pos_lisensi_kode,'RECONCILIATION_REQUIRED',
+        'Lisensi sudah aktif. Periksa riwayat sebelum menerbitkan lagi.');
+    } else {
+      mail=String(p.canva_email||'').trim();
+      require_(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(mail),
+        'VALIDATION','Email undangan Canva tidak valid.');
+      days=Number(product.durasi_hari);
+      require_(Number.isInteger(days)&&days>=1&&days<=365,
+        'VALIDATION','Durasi seat tidak valid.');
+      past=m.canva_berakhir?new Date(m.canva_berakhir).getTime():0;
+      require_(Number.isFinite(past),'CONFLICT','Tanggal masa aktif Canva tidak valid.');
+      wasActive=['AKTIF_BULAN_1','AKTIF_BULAN_2'].indexOf(m.status_canva)>=0;
+    }
+    // This write happens BEFORE member entitlements; if a later write fails,
+    // a retry must go through explicit manual reconciliation.
+    updateRow_('orders',o._row,{
+      catatan_admin:safeText_(String(o.catatan_admin||'')+' | '+marker+' | '+proof,700)
+    });
+    if(product.tipe==='LISENSI_SEKALI'){
+      updateRow_('members',m._row,{
+        status_pos:'AKTIF',
+        pos_lisensi_kode:'POS-'+uuid_().slice(0,8)+'-'+uuid_().slice(0,8)
+      });
+    } else {
+      updateRow_('members',m._row,{
+        status_canva:wasActive?'AKTIF_BULAN_2':'AKTIF_BULAN_1',
+        canva_email:mail,canva_mulai:now,
+        canva_berakhir:new Date(Math.max(now.getTime(),past)+days*86400000)
+      });
+    }
     updateRow_('orders',o._row,{status:'FULFILLED',fulfilled_at:now});
-    logAudit_(admin.member_id,'ADMIN','ORDER_FULFILLED','orders',o.order_id,'PAID','FULFILLED',{});
+    logAudit_(admin.member_id,'ADMIN','ORDER_FULFILLED','orders',o.order_id,
+      'PAID','FULFILLED',{fulfillment_reference:proof});
     return orderView_(byId_('orders','order_id',o.order_id),admin);
   });
 }
-// Pure, non-mutating refund policy to fail closed on ambiguous fulfillment.
-// Automatic refund ledger bookkeeping is ONLY supported for TOPUP_KREDIT.
 function refundDecision_(order,product,memberLedger,commissions) {
   if(!order||['PAID','FULFILLED'].indexOf(order.status)<0)
     return {allowed:false,reason:'ORDER_STATUS_INVALID'};
