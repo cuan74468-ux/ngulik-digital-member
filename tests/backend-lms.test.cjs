@@ -211,7 +211,7 @@ test('cannot complete lesson without enrolling',()=>{
 });
 test('member cannot complete draft lesson or a course without published status',()=>{
   const f=fixture(),c=f.course(),l=f.lesson(c.course_id);
-  assert.throws(()=>f.act('completeLMSLesson','member',{lesson_id:l.lesson_id}),/belum tersedia/);
+  assert.throws(()=>f.act('completeLMSLesson','member',{lesson_id:l.lesson_id}),/tidak tersedia/);
   assert.equal(f.tables.lms_progress.length,0);
 });
 test('soft archive is intentional and keeps history, hiding course from new learners',()=>{
