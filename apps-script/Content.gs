@@ -173,3 +173,51 @@ function contentSetStatus_(admin,p) {
     return {item:contentAdminView_(old),updated:true};
   });
 }
+
+/**
+ * Forward-only content schema migration (manual staging task).
+ * Never called by a public request or setupDatabase().
+ * Requires all 26 existing tables to be correct, environment=STAGING and
+ * exact target-ID acknowledgment. Adds only the new content table.
+ */
+function installContentSchemaStaging() {
+  var props=PropertiesService.getScriptProperties();
+  var id=String(props.getProperty('NGD_DB_ID')||'').trim();
+  require_(props.getProperty('NGD_ENVIRONMENT')==='STAGING'&&
+    props.getProperty('NGD_CONTENT_MIGRATION_ENABLED')==='true'&&
+    id&&id===String(props.getProperty('NGD_CONTENT_MIGRATION_TARGET_ID')||''),
+    'MAINTENANCE','Migrasi konten dibatasi ke staging yang dikonfirmasi eksplisit.');
+  return withLock_(function(){
+    // Never use SpreadsheetApp.getActiveSpreadsheet() for schema migration.
+    var ss=SpreadsheetApp.openById(id);
+    Object.keys(NGD.HEADERS).filter(function(n){return n!=='site_content';})
+      .forEach(function(name){
+        var sheet=ss.getSheetByName(name);
+        require_(!!sheet,'SCHEMA_MISMATCH','Tab dasar hilang: '+name);
+        var expected=NGD.HEADERS[name].split(',');
+        var colCount=sheet.getLastColumn();
+        var actual=colCount>0?sheet.getRange(1,1,1,colCount).getValues()[0].map(String):[];
+        require_(actual.join('|')===expected.join('|'),
+          'SCHEMA_MISMATCH','Header dasar berbeda: '+name);
+      });
+    var expected=NGD.HEADERS.site_content.split(',');
+    var existing=ss.getSheetByName('site_content');
+    if(existing){
+      var last=existing.getLastColumn();
+      var actual=last>0?existing.getRange(1,1,1,last).getValues()[0].map(String):[];
+      require_(actual.join('|')===expected.join('|'),
+        'SCHEMA_MISMATCH','Header site_content berbeda. Tidak ada perubahan.');
+      return {created:false,tabs_checked:Object.keys(NGD.HEADERS).length,
+        message:'Tab site_content sudah sesuai. Tidak ada perubahan.'};
+    }
+    var sheet=ss.insertSheet('site_content');
+    if(sheet.getMaxColumns()<expected.length)
+      sheet.insertColumnsAfter(sheet.getMaxColumns(),expected.length-sheet.getMaxColumns());
+    sheet.getRange(1,1,1,expected.length).setValues([expected]);
+    sheet.setFrozenRows(1);
+    SpreadsheetApp.flush();
+    console.log('CONTENT_SCHEMA_STAGING_OK (new table only)');
+    return {created:true,tabs_checked:Object.keys(NGD.HEADERS).length,
+      message:'Tab site_content ditambahkan tanpa mengubah tabel lain.'};
+  });
+}
