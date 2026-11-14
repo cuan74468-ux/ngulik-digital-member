@@ -1190,6 +1190,7 @@ function apiRouter_(action,token,p,requestId) {
   switch(action){
     case 'adminSearchMembers':return supportSearchMembers_(p);
     case 'adminGetMember360':return supportGetMember360_(p.member_id);
+    case 'adminGetProductImpact':return supportProductImpact_(p);
     case 'adminGetSupportOverview':return supportOverview_();
     case 'adminListTickets':return supportListAdmin_(p);
     case 'adminGetTicket':return supportGetTicket_(admin,p.ticket_id);
@@ -1314,7 +1315,7 @@ function apiReadActions_() {
     'adminListWaitingList','adminListCommissions','adminGetSettings',
     'adminGetReconciliation',
     'getMyProducts','getMyTickets','getTicket','getMyProductReleases',
-    'adminSearchMembers','adminGetMember360','adminGetSupportOverview',
+    'adminSearchMembers','adminGetMember360','adminGetProductImpact','adminGetSupportOverview',
     'adminListTickets','adminGetTicket','adminListProductReleases'];
 }
 function doPost(e) {
