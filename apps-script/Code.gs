@@ -1,13 +1,13 @@
 /**
  * Ngulik Digital Member — Apps Script backend (development).
- * Skema 25 tab (14 inti + 3 support + 7 LMS + 1 notifikasi), autentikasi, API member/admin, pembayaran manual, kredit,
+ * Skema 26 tab (14 inti + 3 support + 7 LMS + 1 notifikasi + 1 jasa), autentikasi, API member/admin, pembayaran manual, kredit,
  * waiting list, dan rekonsiliasi. Belum lolos QA end-to-end.
  * Jangan deploy sebagai layanan publik atau mengaktifkan transaksi nyata.
  */
 
 // ===== KONSTANTA =====
 const NGD = Object.freeze({
-  VERSION: '1.0.0',
+  VERSION: '1.0.1',
   // Spreadsheet ID is read from Script Properties, not committed in source.
   DB_ID: '',
   TZ: 'Asia/Jakarta',
@@ -1288,6 +1288,39 @@ function adminReconciliation_(admin) {
     {komisi_hanya_order_pertama:s.komisi_hanya_order_pertama===true,
      komisi_persen:Number(s.komisi_persen||0)});
 }
+// Admin-only operational visibility. Read-only: never exposes DB IDs, keys,
+ // credentials, member records or the values of Script Properties.
+function adminRuntimeStatus_() {
+  var props=PropertiesService.getScriptProperties(),ss=db_();
+  var missing=[],mismatched=[],expected=Object.keys(NGD.HEADERS);
+  expected.forEach(function(name){
+    var sheet=ss.getSheetByName(name);
+    if(!sheet){missing.push(name);return;}
+    var width=sheet.getLastColumn();
+    var actual=width>0?sheet.getRange(1,1,1,width).getValues()[0].map(String):[];
+    if(actual.join('|')!==NGD.HEADERS[name].split(',').join('|'))
+      mismatched.push(name);
+  });
+  var enabled=function(key){return props.getProperty(key)==='true';};
+  return {
+    version:NGD.VERSION,
+    schema:{expected:expected.length,ready:expected.length-missing.length-mismatched.length,
+      missing:missing,mismatched:mismatched},
+    feature_flags:{
+      mutations:mutationsEnabled_(),
+      registration:enabled('NGD_REGISTRATION_ENABLED'),
+      finance:financeEnabled_(),
+      catalog:enabled('NGD_CATALOG_ENABLED'),
+      services:enabled('NGD_SERVICE_ENABLED'),
+      support:enabled('NGD_SUPPORT_ENABLED'),
+      lms:enabled('NGD_LMS_ENABLED'),
+      notifications:enabled('NGD_NOTIFICATIONS_ENABLED')
+    },
+    // This field deliberately does not say that payments, privacy or auth are GO.
+    checks_read_only:true
+  };
+}
+
 function apiRouter_(action,token,p,requestId) {
   var m=null, admin=null;
   switch(action) {
@@ -1384,6 +1417,7 @@ function apiRouter_(action,token,p,requestId) {
     case 'adminListProductReleases':return supportAdminReleases_();
     case 'adminCreateProductRelease':return supportCreateRelease_(admin,p,requestId);
     case 'adminPublishProductRelease':return supportPublishRelease_(admin,p);
+    case 'adminGetRuntimeStatus':return adminRuntimeStatus_();
     case 'adminGetDashboard':return {ringkasan:readAll_('ringkasan').map(function(r){return {metrik:r.metrik,nilai:r.nilai};}),followup:[]};
     case 'adminListOrders':return readAll_('orders').filter(function(r){return !p.status||r.status===p.status;}).slice(-100).reverse().map(function(r){return orderView_(r,admin);});
     case 'adminGetReconciliation':return adminReconciliation_(admin);
@@ -1514,7 +1548,7 @@ function apiReadActions_() {
   return ['getPublicInfo','getMe','getBeranda','getModulBelajar','getKatalog',
     'getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase',
     'getAffiliateDashboard','getMyNotifications','getMyServiceRequests',
-    'adminListServiceRequests','adminGetDashboard','adminListOrders','adminListMembers',
+    'adminListServiceRequests','adminGetDashboard','adminGetRuntimeStatus','adminListOrders','adminListMembers',
     'adminListWaitingList','adminListCommissions','adminGetSettings','adminListCatalog',
     'adminGetReconciliation',
     'getMyProducts','getMyTickets','getTicket','getMyProductReleases',
