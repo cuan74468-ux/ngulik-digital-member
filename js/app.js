@@ -91,7 +91,7 @@ function activatePreview(){
   // Internal QA fixtures are intentionally inaccessible on public domains.
   const host=(()=>{try{return new URL(location.href).hostname;}catch{return '';}})();
   if(!['localhost','127.0.0.1','example.invalid'].includes(host)||
-     config.demoMode!==true||isConnected()||!['member','admin'].includes(mode))return;
+     !['member','admin'].includes(mode))return;
   state.token='PREVIEW_ONLY_NOT_A_REAL_SESSION';
   const admin=mode==='admin';
   state.me={
@@ -175,10 +175,12 @@ function activatePreview(){
   state.lmsSelectedLessonId='LES-DEMO';
   state.lmsSelectedAIJobId='AIJ-DEMO';
   state.lmsCompletion={title:'Menyiapkan Profil Usaha',completed:1,total:1,preview:true};
+  state.qa=true;
+  return true;
 }
 
 const state={
-  route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,
+  route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,qa:false,
   info:null,catalog:[],home:null,modules:[],tools:[],orders:[],
   affiliates:null,waitlist:[],members:[],adminOrders:[],adminSummary:null,
   reconciliation:null,selectedProduct:null,lastOrder:null,loading:false,
@@ -855,17 +857,17 @@ function go(route){
   render();window.scrollTo({top:0,behavior:'auto'});loadRoute(route);
 }
 async function refreshPublic(){
-  if(!isConnected())return;
+  if(state.qa||!isConnected())return;
   try {const [info,catalog]=await Promise.all([api('getPublicInfo'),api('getKatalog')]);state.info=info;state.catalog=catalog||[];render();}
   catch(e){toast(e.message,true);}
 }
 async function restoreSession(){
-  if(!isConnected()||!state.token)return;
+  if(state.qa||!isConnected()||!state.token)return;
   try{state.me=await api('getMe',{},state.token);render();}
   catch {state.token='';state.me=null;sessionStorage.removeItem(tokenKey);render();}
 }
 async function loadRoute(route){
-  if(!isConnected()||!logged())return;
+  if(state.qa||!isConnected()||!logged())return;
   const token=state.token;
   try{
     if(route==='beranda'||route==='ai'){
@@ -1538,13 +1540,13 @@ by('account-button').addEventListener('click',()=>go('akun'));
 window.addEventListener('hashchange',()=>go(location.hash.slice(1)||'beranda'));
 async function init(){
   state.route=screens[location.hash.slice(1)]?location.hash.slice(1):'beranda';
-  if(!isConnected()){
-    state.catalog=PUBLIC_CATALOG;
+  // Offers are public marketing content. Live API data replaces them when available.
+  state.catalog=PUBLIC_CATALOG;
+  if(!activatePreview()){
     state.info={kuota:50,sisa:50,disclosure:'Komisi referral berlaku sesuai ketentuan dan pembayaran terverifikasi.'};
-    activatePreview();
-  }
-  render();
-  await Promise.all([refreshPublic(),restoreSession()]);
-  loadRoute(state.route);
+    render();
+    await Promise.all([refreshPublic(),restoreSession()]);
+    loadRoute(state.route);
+  }else render();
 }
 init();
