@@ -76,10 +76,10 @@ const screens={
   admin:['Admin','grid'],konten:['Konten Visual','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
   antrean:['Antrean','clock'],dukungan:['Bantuan','shield'],
   tiket:['Detail tiket','shield'],member360:['Member 360°','users'],
-  rilis:['Rilis Produk','check'],login:['Masuk','user'],['admin-login']:['Masuk Admin','shield'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
+  rilis:['Rilis Produk','check'],pengaturan:['Pengaturan','shield'],login:['Masuk','user'],['admin-login']:['Masuk Admin','shield'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
 const memberNav=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','akun'];
-const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','akun'];
+const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
 const adminContextRoute=(route)=>({
   'lms-editor':'lms','lms-lesson':'lms','lms-ai':'lms',
   'member360':'member',tiket:'dukungan'
@@ -206,7 +206,7 @@ const state={
   lmsSelectedLessonId:null,lmsJobs:[],lmsSelectedAIJobId:null,
   lmsCompletion:null,notifications:{enabled:false,items:[],unread:0},catalogFilter:'semua',
   adminCatalog:[],catalogEditId:'',catalogRequestId:null,
-  adminRuntime:null,adminRuntimeError:'',
+  adminRuntime:null,adminRuntimeError:'',adminSettings:null,adminSettingsError:'',
   services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
@@ -593,6 +593,7 @@ function viewAdmin(){
       ['store','Katalog produk','Periksa harga, ketersediaan dan penawaran yang tampil di publik.','produk'],
       ['clipboard','Permintaan jasa','Tinjau brief pelanggan dan siapkan penawaran.','layanan'],
       ['clock','Waiting list','Tinjau antrean dan kuota gelombang.','antrean'],
+      ['shield','Pengaturan sistem','Lihat konfigurasi resmi dan kesiapan fitur backend.','pengaturan'],
       ['book','Studio LMS','Kelola kurikulum, pelajaran, workspace otomatis dan draft AI.','lms'],
       ['clipboard','Tiket support','Kelola bug, pertanyaan, dan permintaan fitur.','dukungan'],
       ['grid','Product releases','Catat versi, perbaikan, dan pembaruan produk.','rilis']
@@ -602,6 +603,46 @@ function viewAdmin(){
     (details.length?'<div class="grid-3">'+details.slice(0,12).map(x=>'<div class="stat"><div class="stat-value">'+esc(x.nilai)+'</div><div class="stat-label">'+esc(x.metrik)+'</div></div>').join('')+'</div>':
     empty('Ringkasan belum dimuat','Periksa koneksi dan hak akses admin.'))+'</section>';
 }
+// Read-only configuration viewer: never enables mutations and never reveals
+// operator emails, private WhatsApp numbers or Script Properties.
+function viewAdminSettings(){
+  if(!isAdmin())return needLogin('pengaturan administrator');
+  const settings=state.adminSettings;
+  const groups=[
+    ['Identitas dan keanggotaan',[
+      ['nama_brand','Nama brand'],['mode_pendaftaran','Mode pendaftaran'],
+      ['gelombang_aktif','Gelombang aktif'],['kuota_gelombang','Kuota member'],
+      ['trial_hari','Durasi trial (hari)'],['link_classroom','Link Classroom']]],
+    ['Program dan komisi',[
+      ['kredit_awal','Kredit awal'],['kredit_peringatan_persen','Ambang peringatan kredit (%)'],
+      ['komisi_persen','Komisi afiliasi (%)'],
+      ['masa_tahan_hari','Masa tahan komisi (hari)'],
+      ['min_payout','Minimum pencairan (Rp)']]],
+    ['Informasi publik',[
+      ['teks_disclosure_affiliate','Keterangan afiliasi']]]
+  ];
+  const cell=(key,label)=>{
+    const value=settings?.[key];
+    const printable=value===true?'Ya':value===false?'Tidak':
+      value===undefined||value===null||value===''?'Belum diatur':String(value);
+    return '<div class="surface"><p class="card-kicker">'+esc(label)+'</p>'+
+      '<p class="card-desc" style="overflow-wrap:anywhere;margin-top:8px">'+esc(printable)+'</p></div>';
+  };
+  const body=settings?
+    groups.map(([heading,fields])=>
+      '<section class="section-gap">'+title(heading,'KONFIGURASI TERCATAT','Data dibaca dari pengaturan_sistem.')+
+      '<div class="grid-3">'+fields.map(([key,label])=>cell(key,label)).join('')+'</div></section>').join(''):
+    empty('Pengaturan belum terbaca',state.adminSettingsError||
+      'Sesi atau koneksi ke backend belum selesai dimuat.');
+  const status=isWriteEnabled()?
+    'Gerbang perubahan data umum aktif. Perubahan pengaturan tetap memerlukan validasi backend dan pemeriksaan operasional.':
+    'Mode baca-saja: penyimpanan pengaturan belum dibuka untuk database produksi. Jangan aktifkan seluruh mutasi hanya untuk membuka formulir.';
+  return '<section class="section-head"><div><p class="eyebrow">ADMIN / PENGATURAN SISTEM</p>'+
+    '<h2>Konfigurasi Ngulik Digital</h2><p>Periksa nilai resmi, bukan contoh. Hanya data konfigurasi nonrahasia yang ditampilkan.</p></div></section>'+
+    '<div class="banner warning"><div><h3>Kontrol perubahan</h3><p>'+esc(status)+'</p></div></div>'+
+    body+viewAdminRuntime();
+}
+
 const catalogWriteEnabled=()=>isWriteEnabled()&&config.catalogEnabled===true;
 function adminCatalogItems(){
   if(state.adminCatalog.length||(isConnected()&&!state.qa))return state.adminCatalog;
@@ -1016,7 +1057,7 @@ function render(){
     akun:viewAccount,login:()=>viewLogin(false),['admin-login']:()=>viewLogin(false,true),daftar:()=>viewLogin(true),
     pesanan:()=>isAdmin()?viewAdminOrders():viewMyOrders(),
     checkout:viewCheckout,admin:viewAdmin,konten:viewAdminContent,produk:viewAdminCatalog,jasa:viewServiceRequests,layanan:viewAdminServices,member:()=>viewMembers(false),antrean:()=>viewMembers(true),
-    dukungan:viewSupport,tiket:viewTicketDetail,member360:viewMember360,rilis:viewReleases
+    dukungan:viewSupport,tiket:viewTicketDetail,member360:viewMember360,rilis:viewReleases,pengaturan:viewAdminSettings
   };
   const screen=(routes[state.route]||viewHome)();
   by('screen').innerHTML=(!logged()&&['belajar','katalog','jasa','ai','affiliate','dukungan'].includes(state.route)?
@@ -1122,6 +1163,23 @@ async function loadRoute(route){
       }
       if(dashboard.status==='rejected'&&overview.status==='rejected')
         throw dashboard.reason;
+    }
+    if(route==='pengaturan'&&isAdmin()){
+      const [settings,runtime]=await Promise.allSettled([
+        api('adminGetSettings',{},token),api('adminGetRuntimeStatus',{},token)
+      ]);
+      if(settings.status==='fulfilled'){
+        state.adminSettings=settings.value;state.adminSettingsError='';
+      }else{
+        state.adminSettings=null;
+        state.adminSettingsError=settings.reason?.message||'Pengaturan belum bisa dibaca.';
+      }
+      if(runtime.status==='fulfilled'){
+        state.adminRuntime=runtime.value;state.adminRuntimeError='';
+      }else{
+        state.adminRuntime=null;
+        state.adminRuntimeError=runtime.reason?.message||'Status backend belum tersedia.';
+      }
     }
     if(route==='member'&&isAdmin())state.members=await api('adminListMembers',{},token);
     if(route==='antrean'&&isAdmin())state.waitlist=await api('adminListWaitingList',{},token);
