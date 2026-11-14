@@ -119,4 +119,16 @@ jobs:
             "http://127.0.0.1:8765/?preview=admin#lms" > /tmp/ngd-admin-unchanged.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-member-theme="false"' /tmp/ngd-admin-unchanged.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-unchanged.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/?preview=member#akun" > /tmp/ngd-member-account.html 2>>/tmp/ngd-chrome.log
+          grep -q 'id="profile-form"' /tmp/ngd-member-account.html
+          grep -q 'Pusat notifikasi member' /tmp/ngd-member-account.html
+          grep -q 'Perubahan profil dinonaktifkan' /tmp/ngd-member-account.html
+          grep -q 'data-overflow="false"' /tmp/ngd-member-account.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/?preview=admin#akun" > /tmp/ngd-admin-account.html 2>>/tmp/ngd-chrome.log
+          if grep -q 'id="profile-form"' /tmp/ngd-admin-account.html; then
+            echo 'ERROR: admin was shown member profile editor' >&2
+            exit 1
+          fi
           echo 'BROWSER_PREVIEW_OK: member native mobile, LMS completion, help, unchanged admin'
