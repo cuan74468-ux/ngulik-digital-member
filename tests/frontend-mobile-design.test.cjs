@@ -116,3 +116,14 @@ test('admin mobile workspace exposes every operational module with a consistent 
   const guest=preview('','beranda');
   assert.equal(guest.nodes['notice-slot'].innerHTML,'');
 });
+
+test('administrator account has operational controls without member-only affiliate profile',()=>{
+  const h=preview('admin','akun');
+  const screen=h.nodes.screen.innerHTML;
+  assert.match(screen,/Akun administrator/);
+  assert.match(screen,/IDENTITAS ADMIN/);
+  assert.match(screen,/Buka dasbor operasional/);
+  assert.match(screen,/Kelola kelas dan materi/);
+  assert.match(screen,/data-action="logout"/);
+  assert.doesNotMatch(screen,/Lihat referral saya|Simpan perubahan profil/);
+});
