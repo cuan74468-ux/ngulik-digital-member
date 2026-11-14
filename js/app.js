@@ -80,6 +80,10 @@ const screens={
 };
 const memberNav=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','akun'];
 const adminNav=['admin','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','akun'];
+const adminContextRoute=(route)=>({
+  'lms-editor':'lms','lms-lesson':'lms','lms-ai':'lms',
+  'member360':'member',tiket:'dukungan'
+})[route]||route;
 const tokenKey='ngd_member_session';
 // Public catalogue is marketing content only. Order pricing always comes from the server.
 const PUBLIC_CATALOG=[
@@ -213,16 +217,26 @@ function toast(message,error=false){
   const root=by('toast-root');const el=document.createElement('div');el.className='toast'+(error?' error':'');el.textContent=message;
   root.append(el);setTimeout(()=>el.remove(),5000);
 }
-function notice(){return '';}
+function notice(){
+  if(!isAdmin())return '';
+  const current=adminContextRoute(state.route);
+  return '<nav class="admin-commandbar" aria-label="Navigasi seluruh modul admin">'+
+    adminNav.map(route=>'<button type="button" class="admin-command" data-route="'+route+
+      '" '+(current===route?'aria-current="page"':'')+'>'+
+      icon(screens[route][1])+'<span>'+esc(screens[route][0])+'</span></button>').join('')+
+    '</nav>';
+}
 const mobileNavRoute=(route)=>({
   'lms-course':'belajar','lms-complete':'belajar',
-  tiket:'dukungan',checkout:'katalog'
+  tiket:'dukungan',checkout:'katalog',
+  'lms-editor':'lms','lms-lesson':'lms','lms-ai':'lms',
+  member360:'member'
 })[route]||route;
 function renderNav(){
   const items=isAdmin()?adminNav:memberNav;
   const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+icon(screens[route][1])+'<span>'+esc(screens[route][0])+'</span></button>';
   by('desktop-nav').innerHTML=items.map(button).join('');
-  const mobileItems=isAdmin()?['admin','produk','layanan','member','akun']:['beranda','katalog','jasa','belajar','akun'];
+  const mobileItems=isAdmin()?['admin','produk','pesanan','lms','akun']:['beranda','katalog','jasa','belajar','akun'];
   const selectedMobile=mobileNavRoute(state.route);
   by('mobile-nav').innerHTML=mobileItems.map(route=>
     '<button type="button" class="nav-item" data-route="'+route+'" '+
@@ -499,7 +513,7 @@ function viewAdmin(){
   if(!isAdmin())return needLogin('panel admin');
   const details=state.adminSummary?.ringkasan||[];
   return '<section class="admin-operations-intro"><p class="eyebrow">PUSAT OPERASIONAL</p><h1>Kelola ekosistem dengan lebih terarah.</h1><p>Awasi keanggotaan, aktivitas belajar, katalog yang terverifikasi, serta layanan bantuan. Data finansial tetap memerlukan pembuktian transaksi nyata.</p><span class="chip">Pilot maksimal 50 pengguna · sesuai rencana</span></section>'+
-    '<div class="grid-3">'+[
+    '<div class="admin-module-grid">'+[
       ['clipboard','Pesanan','Periksa pembayaran manual dan status fulfillment.','pesanan'],
       ['users','Kelola member','Lihat data member dan status keanggotaan.','member'],
       ['store','Katalog produk','Periksa harga, ketersediaan dan penawaran yang tampil di publik.','produk'],
@@ -508,7 +522,7 @@ function viewAdmin(){
       ['book','Studio LMS','Kelola kurikulum, pelajaran, workspace otomatis dan draft AI.','lms'],
       ['clipboard','Tiket support','Kelola bug, pertanyaan, dan permintaan fitur.','dukungan'],
       ['grid','Product releases','Catat versi, perbaikan, dan pembaruan produk.','rilis']
-    ].map(x=>'<article class="surface"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" style="margin-top:18px" data-route="'+x[3]+'">Buka '+icon('arrow')+'</button></article>').join('')+'</div>'+
+    ].map(x=>'<article class="surface admin-module-card"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" data-route="'+x[3]+'">Buka modul '+icon('arrow')+'</button></article>').join('')+'</div>'+
     '<section class="section-gap">'+title('Ringkasan data','METRIK SISTEM','Nilai berasal dari rumus Google Sheets.')+
     (details.length?'<div class="grid-3">'+details.slice(0,12).map(x=>'<div class="stat"><div class="stat-value">'+esc(x.nilai)+'</div><div class="stat-label">'+esc(x.metrik)+'</div></div>').join('')+'</div>':
     empty('Ringkasan belum dimuat','Periksa koneksi dan hak akses admin.'))+'</section>';
@@ -813,6 +827,7 @@ function render(){
   // Scoped mobile visual system: preserve the admin desktop appearance.
   document.body?.classList?.toggle('member-experience',!isAdmin());
   document.body?.setAttribute?.('data-member-route',state.route);
+  document.body?.setAttribute?.('data-app-role',isAdmin()?'admin':logged()?'member':'guest');
   renderNav();
   by('notice-slot').innerHTML=notice();
   const routes={
@@ -851,13 +866,29 @@ function go(route){
 }
 async function refreshPublic(){
   if(state.qa||!isConnected())return;
-  try {const [info,catalog]=await Promise.all([api('getPublicInfo'),api('getKatalog')]);state.info=info;state.catalog=catalog||[];render();}
-  catch(e){toast(e.message,true);}
+  // Independent public reads must not discard a valid catalogue when the
+  // metadata service is briefly unavailable (or vice versa).
+  const [info,catalog]=await Promise.allSettled([api('getPublicInfo'),api('getKatalog')]);
+  if(info.status==='fulfilled'&&info.value&&typeof info.value==='object')state.info=info.value;
+  if(catalog.status==='fulfilled'&&Array.isArray(catalog.value))state.catalog=catalog.value;
+  render();
+  if(info.status==='rejected'&&catalog.status==='rejected')
+    toast('Informasi terbaru belum dapat dimuat. Coba muat ulang halaman.',true);
 }
 async function restoreSession(){
   if(state.qa||!isConnected()||!state.token)return;
-  try{state.me=await api('getMe',{},state.token);render();}
-  catch {state.token='';state.me=null;sessionStorage.removeItem(tokenKey);render();}
+  try{
+    state.me=await api('getMe',{},state.token);
+    render();
+  }catch(e){
+    // Network errors are not evidence that the server revoked the session.
+    if(e?.code==='UNAUTHORIZED'||e?.code==='FORBIDDEN'){
+      state.token='';state.me=null;sessionStorage.removeItem(tokenKey);
+    }
+    render();
+    if(e?.code!=='UNAUTHORIZED'&&e?.code!=='FORBIDDEN')
+      toast('Sesi belum dapat diperiksa. Periksa koneksi lalu muat ulang.',true);
+  }
 }
 async function loadRoute(route){
   if(state.qa||!isConnected()||!logged())return;
