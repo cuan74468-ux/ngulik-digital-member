@@ -11,7 +11,7 @@ test('HTML entry uses versioned local files and language metadata',()=>{
   assert.match(html,/<html lang="id">/);
   assert.match(html,/name="viewport"/);
   assert.match(html,/src="\.\/config\.js"/);
-  assert.match(html,/type="module" src="\.\/js\/app\.js\?v=20261114-native2"/);
+  assert.match(html,/type="module" src="\.\/js\/app\.js\?v=20261114-admin3"/);
   assert.match(html,/href="\.\/assets\/app\.css"/);
   assert.match(html,/Content-Security-Policy/);
   for(const file of ['config.js','js/app.js','js/api.js','assets/app.css','assets/favicon.svg']){
