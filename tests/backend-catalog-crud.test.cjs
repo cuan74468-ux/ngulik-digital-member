@@ -99,7 +99,7 @@ test('invalid price, duration, booleans and injected fields reject before writes
     {...sample('TOPUP_KREDIT'),kredit_diberikan:0},
     {...sample('JASA_SEKALI'),perlu_approval_admin:false},
   ];
-  for(const v of invalid)assert.throws(()=>h.create(v),Error);
+  for(const v of invalid)assert.throws(()=>h.create(v),/(tidak valid|tidak diizinkan|terlalu pendek|memerlukan persetujuan|tanpa durasi|belum lengkap|kredit positif)/);
   assert.equal(h.rows.length,0);
   assert.equal(h.writes,0);
 });
