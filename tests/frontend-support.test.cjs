@@ -72,6 +72,7 @@ test('admin preview displays support queue and Member 360 search',()=>{
 test('admin release form is disabled while support gate is off',()=>{
   const h=preview('admin','rilis');
   assert.match(h.nodes.screen.innerHTML,/id="release-create-form"/);
+  assert.match(h.nodes.screen.innerHTML,/data-impact-action="check"/);
   assert.match(h.nodes.screen.innerHTML,/disabled/);
   assert.equal(vm.runInContext('supportWriteEnabled()',h.context),false);
 });
