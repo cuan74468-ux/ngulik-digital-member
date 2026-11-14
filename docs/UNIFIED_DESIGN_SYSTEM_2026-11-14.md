@@ -80,3 +80,18 @@ Tombol tindakan utama dan navigasi terpilih **charcoal hitam**, bukan hijau atau
 - Desktop memakai lebar konten hingga 1240px; katalog `auto-fill`; beranda tamu dua kolom di ≥900px.
 - Judul sidebar dinamis (Panel admin / Ruang belajar / Menu); ikon navigasi admin dibedakan; logo "n." diperbaiki.
 - Tes `static-contract` disesuaikan dengan endpoint publik read-only yang memang ada di `config.js`.
+
+## Audit lanjutan: konsistensi panel admin dan pemeriksaan backend (14 November 2026)
+
+Implementasi pada branch `main`:
+
+- Navigasi admin mobile memiliki akses langsung ke dasbor, katalog, pesanan, LMS, dan akun; command bar horizontal menampilkan **seluruh** modul, termasuk permintaan jasa, member, support, rilis, dan waiting list. Rute detail tetap menandai induk menu aktif.
+- Dashboard admin, katalog, jasa, akun administrator, dan komponen bantuan memakai aturan kartu, form, tombol, tabel, jarak, dan warna Slate & Ink yang sama. Akun admin tidak lagi menampilkan tindakan affiliate member.
+- `refreshPublic()` menerapkan hasil metadata dan katalog secara independen; kegagalan satu endpoint tidak membuang data valid endpoint lain.
+- `restoreSession()` hanya menghapus sesi lokal ketika server menolak akses (UNAUTHORIZED/FORBIDDEN), bukan karena gangguan jaringan sementara.
+- Source Apps Script `NGD.VERSION=1.0.1` menambahkan `adminGetRuntimeStatus` (admin-only, read-only). Ringkasannya memeriksa 26 tab terhadap header yang diwajibkan dan status feature gates tanpa mengirim DB ID, secret, PIN, data member, atau token.
+- Dashboard hanya menampilkan hasil pemeriksaan bila deployment Apps Script mendukungnya; versi backend lama dilaporkan sebagai belum tersedia, **tidak** dianggap GO-LIVE.
+- `index.html` memakai query versi aset `20261114-admin4` untuk mencegah cache UI lama.
+- CI pada akhir penyempurnaan source: **261 tes Node lulus, 0 gagal**; smoke Chrome dan browser POST baca-saja berhasil. Verifikasi harus dilakukan ulang setelah setiap commit berikutnya.
+
+**Batas operasional:** Source Apps Script pada GitHub bukan deployment Web App yang aktif. Google Sheets produksi masih 14 tab dan staging telah diperiksa 26/26 header pada audit terkait; jangan mengaktifkan penulisan, pembayaran, atau migrasi produksi hanya berdasarkan hasil CI frontend. Deployment backend, pemeriksaan target `NGD_DB_ID`, migrasi forward-only dengan backup, pengujian login/CRUD sesungguhnya, dan verifikasi Mayar masih dibutuhkan.
