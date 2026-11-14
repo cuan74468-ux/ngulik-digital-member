@@ -45,6 +45,7 @@ function diagnosticSchema() {
 }
 
 function diagnosticBackend() {
+  diagnosticDb_(); // Do not silently fall back to the bound/production spreadsheet.
   var started = Date.now();
   Object.keys(NGD.HEADERS).forEach(function(name) {
     var expected = NGD.HEADERS[name].split(',');
@@ -82,6 +83,7 @@ function diagnosticAssert_(passed, label) {
 }
 
 function diagnosticApiPublic() {
+  diagnosticDb_(); // Do not silently fall back to the bound/production spreadsheet.
   var started = Date.now();
   console.log('Mulai pengujian API baca-saja.');
 
@@ -149,6 +151,7 @@ function diagnosticApiPublic() {
 // =====================================
 // Tidak menguji login nyata atau membuat sesi. Tidak pernah mencetak PIN/token.
 function diagnosticAuthReadOnly() {
+  diagnosticDb_(); // Do not silently fall back to the bound/production spreadsheet.
   var start=Date.now(), passed=0;
   function check(ok,name) {
     if (!ok) throw new Error('AUTH_TEST_FAILED: '+name);
@@ -215,6 +218,7 @@ function diagnosticAuthReadOnly() {
 // TEST 6 — AUDIT KEUANGAN BACA-SAJA
 // =====================================
 function diagnosticFinanceReadOnly() {
+  diagnosticDb_(); // Do not silently fall back to the bound/production spreadsheet.
   var started=Date.now(),errors=[],warnings=[];
   console.log('FINANCE_AUDIT_STARTED');
   var orders=readAll_('orders');
@@ -291,6 +295,7 @@ function diagnosticFinanceReadOnly() {
 // =====================================
 // Pemanggilan helper internal untuk inspeksi saja; tidak membuat sesi admin.
 function diagnosticReconciliationReadOnly() {
+  diagnosticDb_(); // Do not silently fall back to the bound/production spreadsheet.
   var started=Date.now();
   var result=adminReconciliation_({role:'ADMIN'});
   console.log('RECONCILIATION_SUMMARY '+JSON.stringify({
