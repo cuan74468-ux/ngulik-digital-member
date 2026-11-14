@@ -43,7 +43,10 @@ const icons = {
 };
 const icon=(name)=>'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||icons.grid)+'</svg>';
 const screens={
-  beranda:['Beranda','home'],belajar:['Belajar','book'],katalog:['Katalog','store'],
+  beranda:['Beranda','home'],belajar:['Belajar','book'],
+  lms:['Studio LMS','book'],['lms-editor']:['Workspace Materi','book'],
+  ['lms-lesson']:['Editor Pelajaran','book'],['lms-course']:['Ruang Kelas','book'],
+  ['lms-ai']:['Review Draft AI','spark'],katalog:['Katalog','store'],
   ai:['Studio AI','spark'],affiliate:['Affiliate','link'],akun:['Akun','user'],
   admin:['Admin','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
   antrean:['Antrean','clock'],dukungan:['Bantuan','clipboard'],
@@ -51,7 +54,7 @@ const screens={
   rilis:['Rilis Produk','grid'],login:['Masuk','user'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
 const memberNav=['beranda','belajar','katalog','ai','affiliate','dukungan','akun'];
-const adminNav=['admin','pesanan','member','dukungan','rilis','antrean','akun'];
+const adminNav=['admin','lms','pesanan','member','dukungan','rilis','antrean','akun'];
 const tokenKey='ngd_member_session';
 // Preview-only fixture data, never used for financial operations.
 const PREVIEW_CATALOG=[
@@ -127,7 +130,10 @@ const state={
   reconciliation:null,selectedProduct:null,lastOrder:null,loading:false,
   memberProducts:[],supportTickets:[],supportReleases:[],supportOverview:null,
   adminSupportTickets:[],ticketDetail:null,selectedTicketId:null,
-  memberSearch:null,member360:null,selectedMemberId:null
+  memberSearch:null,member360:null,selectedMemberId:null,
+  lmsCourses:[],lmsEnrollments:[],lmsAdminCourses:[],
+  lmsCourseDetail:null,lmsAdminCourse:null,lmsSelectedCourseId:null,
+  lmsSelectedLessonId:null,lmsJobs:[],lmsSelectedAIJobId:null
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true&&Boolean(config.qrisImageUrl)&&Boolean(config.qrisMerchant);
@@ -147,7 +153,7 @@ function renderNav(){
   const items=isAdmin()?adminNav:memberNav;
   const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+icon(screens[route][1])+'<span>'+esc(screens[route][0])+'</span></button>';
   by('desktop-nav').innerHTML=items.map(button).join('');
-  const mobileItems=isAdmin()?['admin','member','dukungan','rilis','akun']:['beranda','belajar','katalog','dukungan','akun'];
+  const mobileItems=isAdmin()?['admin','lms','member','dukungan','akun']:['beranda','belajar','katalog','dukungan','akun'];
   by('mobile-nav').innerHTML=mobileItems.map(button).join('');
   by('page-label').textContent=screens[state.route]?.[0]||'Beranda';
   by('account-avatar').textContent=logged()?
@@ -217,6 +223,8 @@ function viewCatalog(){
       '<button class="btn btn-primary btn-wide" data-buy="'+idSafe(p.product_id)+'" '+(!paymentEnabled()?'disabled title="Pembayaran belum diaktifkan"':'')+'>Pilih produk '+icon('arrow')+'</button></article>').join('')+'</div>';
 }
 function viewLearn(){
+  if(window.NGD_LMS_UI&&logged())
+    return window.NGD_LMS_UI.memberCatalog(state.lmsCourses,state.lmsEnrollments,state.modules);
   if(!logged())return title('Belajar lebih terarah','MODUL PRAKTIS','Belajar sesuai kebutuhan usaha Anda.')+needLogin('materi belajar');
   const modules=state.modules;
   return title('Perjalanan belajar Anda','KURIKULUM PRAKTIS','Modul tersedia sesuai program dan akses akun.')+
@@ -298,6 +306,7 @@ function viewAdmin(){
       ['clipboard','Pesanan','Periksa pembayaran manual dan status fulfillment.','pesanan'],
       ['users','Kelola member','Lihat data member dan status keanggotaan.','member'],
       ['clock','Waiting list','Tinjau antrean dan kuota gelombang.','antrean'],
+      ['book','Studio LMS','Kelola kurikulum, pelajaran, workspace otomatis dan draft AI.','lms'],
       ['clipboard','Tiket support','Kelola bug, pertanyaan, dan permintaan fitur.','dukungan'],
       ['grid','Product releases','Catat versi, perbaikan, dan pembaruan produk.','rilis']
     ].map(x=>'<article class="surface"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" style="margin-top:18px" data-route="'+x[3]+'">Buka '+icon('arrow')+'</button></article>').join('')+'</div>'+
@@ -500,11 +509,33 @@ function viewReleases(){
       empty('Belum ada rilis','Pembaruan produk akan tampil di sini setelah diterbitkan.'))+'</div>';
 }
 
+const lmsWriteEnabled=()=>isWriteEnabled()&&config.lmsEnabled===true;
+function lmsSelectedLesson_(){
+  return state.lmsAdminCourse?.lessons?.find(x=>x.lesson_id===state.lmsSelectedLessonId)||null;
+}
+function lmsSelectedAIJob_(){
+  return state.lmsJobs.find(x=>x.job_id===state.lmsSelectedAIJobId)||null;
+}
 function render(){
   renderNav();
   by('notice-slot').innerHTML=notice();
   const routes={
     beranda:viewHome,belajar:viewLearn,katalog:viewCatalog,ai:viewAI,affiliate:viewAffiliate,
+    lms:()=>isAdmin()&&window.NGD_LMS_UI?
+      window.NGD_LMS_UI.adminCatalog(state.lmsAdminCourses,lmsWriteEnabled(),state.catalog):
+      needLogin('studio LMS'),
+    'lms-editor':()=>isAdmin()&&window.NGD_LMS_UI?
+      window.NGD_LMS_UI.adminEditor(state.lmsAdminCourse,state.lmsJobs,lmsWriteEnabled(),state.catalog):
+      needLogin('workspace materi'),
+    'lms-lesson':()=>isAdmin()&&window.NGD_LMS_UI?
+      window.NGD_LMS_UI.lessonEditor(lmsSelectedLesson_(),lmsWriteEnabled()):
+      needLogin('editor pelajaran'),
+    'lms-ai':()=>isAdmin()&&window.NGD_LMS_UI?
+      window.NGD_LMS_UI.aiJob(lmsSelectedAIJob_(),lmsWriteEnabled()):
+      needLogin('draft AI'),
+    'lms-course':()=>logged()&&window.NGD_LMS_UI?
+      window.NGD_LMS_UI.memberCourse(state.lmsCourseDetail,state.lmsEnrollments,lmsWriteEnabled()):
+      needLogin('ruang kelas'),
     akun:viewAccount,login:()=>viewLogin(false),daftar:()=>viewLogin(true),
     pesanan:()=>isAdmin()?viewAdminOrders():viewMyOrders(),
     checkout:viewCheckout,admin:viewAdmin,member:()=>viewMembers(false),antrean:()=>viewMembers(true),
