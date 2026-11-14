@@ -16,10 +16,11 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Node.js for tests only — no build
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
+          package-manager-cache: false
       - name: Verify pure backend rules and frontend smoke
         run: node --test tests/*.test.cjs
