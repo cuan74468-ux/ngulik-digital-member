@@ -282,6 +282,144 @@ function viewMembers(waiting=false){
     rows.map((m,i)=>'<tr><td>'+esc(waiting?m.posisi||i+1:m.member_id)+'</td><td>'+esc(m.nama)+'<span class="sub">'+esc(m.nama_usaha)+'</span></td><td>'+(waiting?friendlyDate(m.joined_at):safeBadge(m.status))+'</td></tr>').join('')+'</tbody></table></div>')+
     '<p class="small muted" style="margin-top:14px">Aksi perubahan status member belum dibuka dalam antarmuka ini.</p>';
 }
+
+function supportStatusLabel(status){
+  return ({OPEN:'Baru',TRIAGE:'Ditinjau',IN_PROGRESS:'Ditangani',
+    WAITING_MEMBER:'Menunggu member',RESOLVED:'Selesai',CLOSED:'Ditutup'})[status]||status||'-';
+}
+const supportWriteEnabled=()=>isWriteEnabled()&&config.supportEnabled===true;
+function supportProductChoices(withEmpty=true){
+  return (withEmpty?'<option value="">Pertanyaan umum / tanpa produk</option>':'')+
+    state.memberProducts.map(p=>'<option value="'+esc(p.product_id)+'">'+esc(p.nama)+' — '+esc(p.akses_status)+'</option>').join('');
+}
+function supportTicketCard(t){
+  return '<article class="surface support-ticket"><div class="support-ticket-head"><span class="chip">'+esc(t.kategori||'BANTUAN')+'</span>'+safeBadge(t.status)+'</div>'+
+    '<h3>'+esc(t.judul)+'</h3><p class="card-desc">'+esc(t.ticket_id)+' · '+esc(t.product_id||'Akun umum')+
+    ' · '+friendlyDate(t.created_at)+'</p>'+
+    '<button type="button" class="btn btn-secondary btn-sm" style="margin-top:15px" data-ticket-id="'+esc(t.ticket_id)+'">Buka tiket '+icon('arrow')+'</button></article>';
+}
+function viewSupport(){
+  if(!logged())return title('Bantuan & Dukungan','PUSAT LAYANAN',
+    'Laporan bug, permintaan fitur, dan bantuan produk.')+needLogin('layanan dukungan');
+  if(isAdmin()){
+    const overview=state.supportOverview||{},stats=overview.by_status||{},tickets=state.adminSupportTickets||[];
+    return title('Pusat Layanan','ADMIN / SUPPORT','Tangani keluhan dan permintaan fitur berdasarkan data member.')+
+      '<div class="metric-grid">'+[
+        ['Tiket keseluruhan',overview.total??0],
+        ['Perlu triase',stats.OPEN??0],
+        ['Perlu perhatian',overview.needs_review??0]
+      ].map(([k,v])=>'<div class="metric-card static"><strong>'+esc(v)+'</strong><small>'+k+'</small></div>').join('')+'</div>'+
+      '<div class="section-gap">'+title('Antrean tiket','TIKET MASUK',
+        'Laporan terbaru. Setiap laporan terhubung dengan identitas member dan produk terkait.')+
+      (tickets.length?'<div class="grid-2">'+tickets.map(t=>
+        supportTicketCard(t).replace('<h3>','<p class="tiny muted">'+esc(t.nama_member||'')+'</p><h3>')).join('')+'</div>':
+        empty('Belum ada tiket','Belum ada laporan atau backend belum mengembalikan tiket.'))+'</div>'+
+      (overview.findings?.length?'<div class="banner warning section-gap"><div><h3>Kasus perlu pemeriksaan</h3><p>'+
+        esc(overview.findings.length)+' potensi masalah riwayat/triase terdeteksi.</p></div></div>':'');
+  }
+  const list=state.supportTickets||[],releases=state.supportReleases||[];
+  return title('Bantuan & Dukungan','RUANG MEMBER',
+    'Laporkan kendala produk, usulkan fitur baru, dan pantau progres penanganan.')+
+    '<div class="grid-2"><section class="surface"><p class="card-kicker">BUAT LAPORAN</p>'+
+    '<form id="support-create-form" class="stack" autocomplete="off">'+
+    '<div class="field"><label for="ticket-category">Jenis laporan</label><select id="ticket-category" class="input" name="kategori" required>'+
+    '<option value="PERTANYAAN">Pertanyaan / bantuan akun</option><option value="BUG">Laporan bug</option><option value="FITUR">Permintaan fitur</option></select></div>'+
+    '<div class="field"><label for="ticket-product">Produk terkait</label><select id="ticket-product" name="product_id" class="input">'+supportProductChoices()+'</select></div>'+
+    '<div class="field"><label for="ticket-title">Judul</label><input id="ticket-title" class="input" name="judul" required minlength="8" maxlength="120" placeholder="Contoh: Struk tidak tercetak"></div>'+
+    '<div class="field"><label for="ticket-detail">Penjelasan kejadian / kebutuhan</label><textarea id="ticket-detail" class="input" name="deskripsi" rows="5" required minlength="20" maxlength="2000" placeholder="Ceritakan apa yang terjadi, langkah reproduksi, dan hasil yang diharapkan. Jangan memasukkan PIN atau kata sandi."></textarea></div>'+
+    '<div class="grid-2"><div class="field"><label for="ticket-platform">Perangkat</label><select class="input" name="platform" id="ticket-platform"><option value="ANDROID">Android</option><option value="WINDOWS">Windows</option><option value="WEB">Browser web</option><option value="LAINNYA">Lainnya</option></select></div>'+
+    '<div class="field"><label for="ticket-version">Versi aplikasi (opsional)</label><input class="input" id="ticket-version" name="versi_aplikasi" placeholder="1.2.0" maxlength="32"></div></div>'+
+    '<button type="submit" class="btn btn-primary btn-wide" '+(!supportWriteEnabled()?'disabled title="Fitur support belum diaktifkan"':'')+'>Kirim laporan '+icon('arrow')+'</button>'+
+    '<p class="form-hint">Hanya data teks yang dikirim. Jangan sertakan PIN, token, atau informasi pembayaran rahasia.</p></form></section>'+
+    '<section><div class="surface"><p class="card-kicker">RIWAYAT LAPORAN SAYA</p>'+
+    (list.length?'<div class="stack">'+list.slice(0,8).map(supportTicketCard).join('')+'</div>':
+      empty('Belum ada laporan','Tiket yang Anda buat akan tampil di sini.'))+'</div>'+
+    '<div class="surface section-gap"><p class="card-kicker">UPDATE PRODUK SAYA</p>'+
+    (releases.length?'<div class="stack">'+releases.slice(0,5).map(item=>'<div class="step"><span class="step-no">'+icon('check')+'</span><div class="step-body"><h3>'+
+      esc(item.judul)+' · '+esc(item.versi)+'</h3><p>'+esc(item.ringkasan)+'</p><small class="muted">'+friendlyDate(item.published_at)+'</small></div></div>').join('')+'</div>':
+      '<p class="card-desc">Pembaruan yang diterbitkan untuk produk yang Anda miliki akan muncul di sini.</p>')+
+    '</div></section></div>';
+}
+function viewTicketDetail(){
+  if(!logged())return needLogin('detail tiket');
+  const d=state.ticketDetail;
+  if(!d||d.ticket?.ticket_id!==state.selectedTicketId)
+    return title('Detail tiket','SUPPORT','Riwayat percakapan dan penanganan.')+
+      empty('Pilih tiket dari daftar','Buka menu Bantuan dan pilih tiket yang ingin ditinjau.','dukungan','Lihat tiket');
+  const t=d.ticket,activities=d.activities||[];
+  const options={
+    OPEN:['TRIAGE','IN_PROGRESS'],TRIAGE:['IN_PROGRESS','WAITING_MEMBER'],
+    IN_PROGRESS:['WAITING_MEMBER','RESOLVED'],WAITING_MEMBER:['IN_PROGRESS','RESOLVED'],
+    RESOLVED:['CLOSED','IN_PROGRESS'],CLOSED:['OPEN']
+  }[t.status]||[];
+  return '<div class="section-head"><div><p class="eyebrow">TIKET '+esc(t.ticket_id)+'</p><h2>'+esc(t.judul)+'</h2>'+
+    '<p>'+esc(t.product_id||'Bantuan umum')+' · '+friendlyDate(t.created_at)+'</p></div>'+safeBadge(t.status)+'</div>'+
+    '<div class="two-col"><section class="surface"><p class="card-kicker">LAPORAN AWAL</p><p>'+esc(t.deskripsi)+'</p>'+
+    '<p class="small muted">Perangkat: '+esc(t.platform)+' · Versi: '+esc(t.versi_aplikasi||'Tidak diketahui')+
+    ' · Prioritas '+esc(t.prioritas)+'</p><div class="divider"></div><h3>Aktivitas tiket</h3>'+
+    '<div class="support-timeline">'+activities.map(a=>'<div class="step"><span class="step-no">'+icon(a.jenis==='BALASAN'?'user':'clock')+'</span>'+
+    '<div class="step-body"><h3>'+esc(a.actor_role==='ADMIN'?'Tim dukungan':'Member')+' · '+
+      esc(a.jenis)+'</h3><p>'+esc(a.pesan||supportStatusLabel(a.ke_status))+'</p>'+
+      '<small class="muted">'+friendlyDate(a.created_at)+'</small></div></div>').join('')+'</div>'+
+    (t.status!=='CLOSED'?'<div class="divider"></div><form id="ticket-reply-form" class="stack">'+
+      '<div class="field"><label for="ticket-reply">Balas tiket</label><textarea class="input" id="ticket-reply" name="pesan" rows="3" maxlength="1500" minlength="2" required placeholder="Tulis informasi terbaru atau tanggapan Anda."></textarea></div>'+
+      '<button class="btn btn-primary" type="submit" '+(!supportWriteEnabled()?'disabled':'')+'>Kirim balasan</button></form>':'<p class="muted small">Tiket telah ditutup. Buat tiket baru jika terjadi masalah lain.</p>')+
+    '</section><aside class="surface"><p class="card-kicker">STATUS PENANGANAN</p><h3>'+esc(supportStatusLabel(t.status))+'</h3>'+
+    '<p class="card-desc">Setiap perubahan disimpan sebagai aktivitas terpisah agar dapat ditelusuri.</p>'+
+    (isAdmin()?'<div class="divider"></div><form id="ticket-status-form" class="stack">'+
+      '<div class="field"><label for="ticket-next">Ubah status</label><select id="ticket-next" class="input" name="status" required>'+options.map(s=>'<option value="'+s+'">'+esc(supportStatusLabel(s))+'</option>').join('')+'</select></div>'+
+      '<div class="field"><label for="ticket-note">Catatan penanganan</label><textarea id="ticket-note" name="catatan" class="input" minlength="8" maxlength="1000" rows="3" required></textarea></div>'+
+      '<button class="btn btn-secondary" type="submit" '+(!supportWriteEnabled()||options.length===0?'disabled':'')+'>Simpan status</button></form>':'')+
+    '<button class="btn btn-ghost" data-route="dukungan" style="margin-top:20px">Kembali ke bantuan</button></aside></div>';
+}
+function viewMember360(){
+  if(!isAdmin())return needLogin('profil layanan member');
+  const d=state.member360;
+  if(!d||d.profil?.member_id!==state.selectedMemberId)
+    return title('Member 360°','PUSAT LAYANAN','Riwayat produk dan laporan member.')+
+      empty('Belum ada profil dipilih','Cari member pada menu Member untuk membuka profil 360°.','member','Cari member');
+  const m=d.profil,p=d.produk||[],orders=d.pesanan||[],tickets=d.tiket||[];
+  return '<div class="section-head"><div><p class="eyebrow">MEMBER 360° · '+esc(m.member_id)+'</p><h2>'+esc(m.nama)+'</h2>'+
+    '<p>'+esc(m.nama_usaha||'-')+' · '+esc(m.kota||'')+' · '+esc(m.wa||'')+'</p></div>'+safeBadge(m.status)+'</div>'+
+    '<div class="metric-grid">'+[
+      ['Produk terverifikasi',p.length],['Pesanan terbaru',orders.length],
+      ['Tiket layanan',tickets.length]
+    ].map(([label,value])=>'<div class="metric-card static"><strong>'+value+'</strong><small>'+label+'</small></div>').join('')+'</div>'+
+    '<div class="section-gap">'+title('Hak akses produk','PRODUK MEMBER','Dihitung dari order PAID/FULFILLED dan status layanan; bukan salinan ledger baru.')+
+    (p.length?'<div class="grid-2">'+p.map(x=>'<article class="surface"><p class="card-kicker">'+esc(x.tipe)+'</p><h3>'+esc(x.nama)+'</h3>'+
+      safeBadge(x.akses_status)+'<p class="card-desc" style="margin-top:14px">Order: '+esc(x.order_id)+
+      (x.berakhir_at?' · Berakhir '+friendlyDate(x.berakhir_at):'')+'</p></article>').join('')+'</div>':
+      empty('Belum ada pembelian terverifikasi','Member belum memiliki pembelian yang berstatus PAID atau FULFILLED.'))+'</div>'+
+    '<div class="grid-2 section-gap"><section>'+title('Riwayat tiket','CUSTOMER SUPPORT','')+
+    (tickets.length?'<div class="stack">'+tickets.map(supportTicketCard).join('')+'</div>':empty('Belum ada tiket','Tidak ada laporan dari member ini.'))+'</section>'+
+    '<section>'+title('Riwayat pesanan','PEMBELIAN','')+
+    (orders.length?'<div class="surface list-rows">'+orders.map(o=>'<div class="list-row"><div><strong>'+esc(o.nama_produk||o.product_id)+'</strong>'+
+      '<small>'+esc(o.order_id)+'</small></div>'+safeBadge(o.status)+'</div>').join('')+'</div>':
+    empty('Belum ada pesanan','Member belum memiliki catatan order.'))+'</section></div>';
+}
+function viewReleases(){
+  if(!logged())return needLogin('rilis produk');
+  const data=state.supportReleases||[];
+  return title('Riwayat Pembaruan Produk','PRODUCT RELEASES',
+    isAdmin()?'Catat versi dan perubahan; publikasi hanya untuk member yang memiliki produk.':'Pembaruan resmi untuk produk yang Anda miliki.')+
+    (isAdmin()?'<section class="surface" style="max-width:720px"><p class="card-kicker">CATAT RILIS</p>'+
+      '<form id="release-create-form" class="stack"><div class="grid-2">'+
+      '<div class="field"><label for="release-product">Produk</label><select class="input" name="product_id" id="release-product" required>'+state.catalog.map(p=>'<option value="'+esc(p.product_id)+'">'+esc(p.nama)+'</option>').join('')+'</select></div>'+
+      '<div class="field"><label for="release-version">Versi baru</label><input class="input" name="versi" id="release-version" placeholder="1.2.1" pattern="v?[0-9]+\\.[0-9]+(\\.[0-9]+)?" required></div></div>'+
+      '<div class="field"><label for="release-title">Judul rilis</label><input id="release-title" class="input" name="judul" required minlength="8" maxlength="120"></div>'+
+      '<div class="field"><label for="release-summary">Changelog</label><textarea id="release-summary" class="input" name="ringkasan" required minlength="20" maxlength="1500" rows="4"></textarea></div>'+
+      '<div class="field"><label for="release-type">Jenis pembaruan</label><select id="release-type" class="input" name="tipe_rilis"><option>PATCH</option><option>MINOR</option><option>MAJOR</option><option>NOTICE</option></select></div>'+
+      '<button class="btn btn-primary" type="submit" '+(!supportWriteEnabled()?'disabled':'')+'>Simpan draft rilis</button></form>'+
+      '<p class="form-hint">Draft tidak terlihat oleh member sampai admin mempublikasikannya. Publikasi tidak otomatis memperbarui aplikasi POS yang terpasang.</p></section>':'')+
+    '<div class="section-gap">'+title('Daftar versi','CHANGELOG','')+
+    (data.length?'<div class="stack">'+data.map(item=>'<article class="surface support-release"><div class="support-ticket-head"><span class="chip">'+esc(item.tipe_rilis)+'</span>'+safeBadge(item.status)+'</div>'+
+      '<h3>'+esc(item.judul)+' <span class="muted">'+esc(item.versi)+'</span></h3>'+
+      '<p class="card-desc">'+esc(item.ringkasan)+'</p><p class="tiny muted">'+esc(item.product_id)+' · '+friendlyDate(item.published_at||item.created_at)+'</p>'+
+      (isAdmin()&&item.status==='DRAFT'?'<button class="btn btn-secondary btn-sm" data-publish-release="'+esc(item.release_id)+'" '+(!supportWriteEnabled()?'disabled':'')+'>Publikasikan rilis</button>':'')+
+      '</article>').join('')+'</div>':
+      empty('Belum ada rilis','Pembaruan produk akan tampil di sini setelah diterbitkan.'))+'</div>';
+}
+
 function render(){
   renderNav();
   by('notice-slot').innerHTML=notice();
