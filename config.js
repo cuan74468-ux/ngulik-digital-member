@@ -5,6 +5,7 @@ window.NGD_CONFIG = Object.freeze({
   siteUrl: 'https://cuan74468-ux.github.io/ngulik-digital-member/',
   memberWritesEnabled: false, // Retain until authentication and data mutations pass verification.
   paymentsEnabled: false,
+  adminLoginEnabled: false, // Enable only after isolated GAS auth release and DB mapping are verified.
   contentEnabled: false, // Visual CMS writing requires separate GAS staging release.
   catalogEnabled: false, // Catalog editing is separately authorized on the server.
   serviceEnabled: false, // Service submissions and quotes require server authorization.
