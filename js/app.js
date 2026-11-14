@@ -503,6 +503,7 @@ function viewAccount(){
       '<form id="admin-pin-form" class="stack">'+
       '<div class="field"><label for="admin-pin-old">PIN saat ini</label><input class="input" type="password" id="admin-pin-old" name="pin_lama" pattern="[0-9]{6}" inputmode="numeric" autocomplete="current-password" maxlength="6" required></div>'+
       '<div class="field"><label for="admin-pin-new">PIN baru</label><input class="input" type="password" id="admin-pin-new" name="pin_baru" pattern="[0-9]{6}" inputmode="numeric" autocomplete="new-password" maxlength="6" required></div>'+
+      '<div class="field"><label for="admin-pin-confirm">Ulangi PIN baru</label><input class="input" type="password" id="admin-pin-confirm" name="pin_konfirmasi" pattern="[0-9]{6}" inputmode="numeric" autocomplete="new-password" maxlength="6" required></div>'+
       '<button type="submit" class="btn btn-primary" '+(!adminLoginEnabled()?'disabled':'')+'>Ganti PIN</button></form></section></div>';
   }
   const m=state.me;return title('Akun Anda','PROFIL MEMBER','Data akun berasal dari server.')+
@@ -1197,8 +1198,11 @@ async function changeAdminPin_(form){
   if(!isAdmin()||!adminLoginEnabled())return toast('Perubahan PIN belum tersedia.',true);
   const fd=new FormData(form);
   const oldPin=String(fd.get('pin_lama')||''),newPin=String(fd.get('pin_baru')||'');
+  const confirmation=String(fd.get('pin_konfirmasi')||'');
   if(!/^\d{6}$/.test(oldPin)||!/^\d{6}$/.test(newPin)||oldPin===newPin)
     return toast('Masukkan PIN lama dan PIN baru enam angka yang berbeda.',true);
+  if(newPin!==confirmation)
+    return toast('Konfirmasi PIN baru tidak sama.',true);
   const button=form.querySelector('[type=submit]');
   if(button)button.disabled=true;
   try{
