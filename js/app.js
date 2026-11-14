@@ -67,21 +67,57 @@ const PREVIEW_MODULES=[
   'Konten Cepat dengan Studio AI','Kasir POS Sederhana','Strategi Referral'
 ].map((judul,i)=>({modul_id:'MOD-0'+(i+1),urut:i+1,judul,deskripsi:'Contoh modul pratinjau — tautan materi belum tersedia.',url_classroom:''}));
 function activatePreview(){
-  const params=new URLSearchParams(location.search);
-  if(config.demoMode!==true||isConnected()||params.get('preview')!=='member')return;
+  const params=new URLSearchParams(location.search),mode=params.get('preview');
+  if(config.demoMode!==true||isConnected()||!['member','admin'].includes(mode))return;
   state.token='PREVIEW_ONLY_NOT_A_REAL_SESSION';
-  state.me={member_id:'PREVIEW',role:'MEMBER',nama:'Member Demo',nama_usaha:'Usaha Contoh',
-    status:'AKTIF',kode_referral:'CONTOH',saldo_kredit:10,wa:'—'};
+  const admin=mode==='admin';
+  state.me={
+    member_id:admin?'PREVIEW-ADMIN':'PREVIEW',role:admin?'ADMIN':'MEMBER',
+    nama:admin?'Admin Contoh':'Member Demo',nama_usaha:'Usaha Contoh',
+    status:'AKTIF',kode_referral:'CONTOH',saldo_kredit:10,wa:'—'
+  };
   state.home={saldo_kredit:10,modul_selesai:2,total_modul:6,modul_berikutnya:PREVIEW_MODULES[2],
     order_aktif:[],peringatan_kredit:false};
   state.modules=PREVIEW_MODULES;
   state.tools=[
     {tool_id:'T-CAPTION',nama:'Caption Instagram Produk',deskripsi:'Contoh alat bantu konten',kredit_biaya:1},
-    {tool_id:'T-DESKRIPSI',nama:'Deskripsi Produk Marketplace',deskripsi:'Contoh deskripsi produk',kredit_biaya:1},
-    {tool_id:'T-BALASAN',nama:'Balasan Chat Pelanggan',deskripsi:'Contoh balasan WhatsApp',kredit_biaya:1},
-    {tool_id:'T-KONTEN7',nama:'Ide Konten 7 Hari',deskripsi:'Contoh rencana konten',kredit_biaya:2}
+    {tool_id:'T-DESKRIPSI',nama:'Deskripsi Produk Marketplace',deskripsi:'Contoh deskripsi produk',kredit_biaya:1}
   ];
   state.affiliates={kode_referral:'CONTOH',pendaftar:0,konversi:0,saldo:{APPROVED:0}};
+  const example={
+    ticket_id:'SUP-CONTOH-001',member_id:'PREVIEW',product_id:'P-POS',
+    kategori:'BUG',judul:'Cetak struk gagal pada Android',
+    deskripsi:'Contoh laporan: printer tidak merespons saat transaksi dalam kondisi offline.',
+    platform:'ANDROID',versi_aplikasi:'1.2.0',status:'IN_PROGRESS',prioritas:'P2',
+    created_at:'2026-11-14T01:00:00Z'
+  };
+  state.memberProducts=[{product_id:'P-POS',nama:'POS Kasir Sederhana',
+    tipe:'LISENSI_SEKALI',akses_status:'AKTIF',order_id:'ORDER-CONTOH'}];
+  state.supportTickets=[example];
+  state.adminSupportTickets=[{...example,nama_member:'Member Demo'}];
+  state.supportOverview={total:1,by_status:{IN_PROGRESS:1},needs_review:0,findings:[]};
+  state.supportReleases=[{
+    release_id:'REL-CONTOH',product_id:'P-POS',versi:'1.2.1',
+    judul:'Perbaikan stabilitas cetak',ringkasan:'Contoh changelog untuk tampilan pratinjau.',
+    tipe_rilis:'PATCH',status:'PUBLISHED',published_at:'2026-11-14T02:00:00Z'
+  }];
+  state.memberSearch={total:1,items:[{
+    member_id:'PREVIEW',nama:'Member Demo',nama_usaha:'Usaha Contoh',
+    status:'AKTIF',wa_akhir:'0000',produk:['P-POS']
+  }]};
+  state.member360={
+    profil:{member_id:'PREVIEW',nama:'Member Demo',nama_usaha:'Usaha Contoh',
+      wa:'Nomor contoh',status:'AKTIF',status_pos:'AKTIF',kota:'Contoh'},
+    produk:state.memberProducts,
+    pesanan:[{order_id:'ORDER-CONTOH',product_id:'P-POS',nama_produk:'POS Kasir Sederhana',
+      status:'FULFILLED'}],tiket:[example]
+  };
+  state.selectedMemberId='PREVIEW';
+  state.ticketDetail={ticket:example,activities:[
+    {activity_id:'EV-CONTOH',jenis:'DIBUAT',actor_role:'MEMBER',
+      pesan:'Laporan dibuat.',created_at:'2026-11-14T01:00:00Z'}
+  ]};
+  state.selectedTicketId=example.ticket_id;
 }
 
 const state={
