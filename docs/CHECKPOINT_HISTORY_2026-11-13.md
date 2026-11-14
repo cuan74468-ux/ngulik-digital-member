@@ -34,7 +34,7 @@ Platform membership & LMS UMKM — Google Sheets + Google Apps Script + GitHub P
 
 ## Database resmi proyek
 
-[Ngulik Digital DB](https://docs.google.com/spreadsheets/ (buka database privat melalui Google Drive pemilik))
+Ngulik Digital DB: database privat tersedia di Google Drive akun pemilik; ID dan tautannya tidak disertakan pada repository.
 
 Spreadsheet tersebut memuat 14 tab, 27 pengaturan, 6 produk, 4 AI tools, 6 modul, dan dashboard awal. Jangan menyalin data member produksi ke database pengembangan.
 
