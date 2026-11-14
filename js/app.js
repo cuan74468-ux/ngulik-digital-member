@@ -370,7 +370,14 @@ function viewSupport(){
         ['Prioritas tinggi',overview.urgent??0]
       ].map(([k,v])=>'<div class="metric-card static"><strong>'+esc(v)+'</strong><small>'+k+'</small></div>').join('')+'</div>'+
       '<div class="section-gap">'+title('Antrean tiket','TIKET MASUK',
-        'Laporan terbaru. Setiap laporan terhubung dengan identitas member dan produk terkait.')+
+        'Filter menurut status, jenis laporan dan produk terkait.')+
+      '<form id="support-filter-form" class="surface" style="margin-bottom:18px"><div class="support-search-grid">'+
+      '<div class="field"><label for="support-filter-status">Status tiket</label><select id="support-filter-status" class="input" name="status"><option value="">Semua status</option>'+
+      ['OPEN','TRIAGE','IN_PROGRESS','WAITING_MEMBER','RESOLVED','CLOSED'].map(s=>'<option value="'+s+'">'+esc(supportStatusLabel(s))+'</option>').join('')+'</select></div>'+
+      '<div class="field"><label for="support-filter-category">Kategori</label><select id="support-filter-category" class="input" name="kategori"><option value="">Semua kategori</option><option>BUG</option><option>FITUR</option><option>PERTANYAAN</option></select></div>'+
+      '<div class="field"><label for="support-filter-product">Produk</label><select id="support-filter-product" class="input" name="product_id"><option value="">Semua produk</option>'+
+      state.catalog.map(p=>'<option value="'+esc(p.product_id)+'">'+esc(p.nama)+'</option>').join('')+'</select></div>'+
+      '<button type="submit" class="btn btn-primary">Terapkan filter</button></div></form>'+
       (tickets.length?'<div class="grid-2">'+tickets.map(t=>
         supportTicketCard(t).replace('<h3>','<p class="tiny muted">'+esc(t.nama_member||'')+'</p><h3>')).join('')+'</div>':
         empty('Belum ada tiket','Belum ada laporan atau backend belum mengembalikan tiket.'))+'</div>'+
@@ -692,6 +699,23 @@ async function submitReleaseCreate(form){
     form.reset();await loadRoute('rilis');
   });
 }
+async function submitSupportFilter(form){
+  if(!isAdmin()||!isConnected()){
+    toast('Filter layanan nyata memerlukan backend staging.',true);return;
+  }
+  const data=new FormData(form),payload={
+    status:String(data.get('status')||''),
+    kategori:String(data.get('kategori')||''),
+    product_id:String(data.get('product_id')||'')
+  };
+  const button=form.querySelector('[type="submit"]');
+  if(button)button.disabled=true;
+  try{
+    state.adminSupportTickets=await api('adminListTickets',payload,state.token);
+    if(state.route==='dukungan')render();
+  }catch(e){toast(e.message,true);}
+  finally{if(button)button.disabled=false;}
+}
 async function submitMemberSearch(form){
   if(!isAdmin())return;
   const data=new FormData(form),p={
@@ -751,7 +775,7 @@ document.addEventListener('click',async(e)=>{
 document.addEventListener('submit',(e)=>{
   const id=e.target.id;
   if(!['auth-form','support-create-form','ticket-reply-form',
-    'ticket-status-form','ticket-priority-form','release-create-form','member-search-form'].includes(id))return;
+    'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form'].includes(id))return;
   e.preventDefault();
   if(id==='auth-form')processLogin(e.target,e.target.dataset.mode==='register');
   if(id==='support-create-form')submitTicketCreate(e.target);
@@ -760,6 +784,7 @@ document.addEventListener('submit',(e)=>{
   if(id==='ticket-priority-form')submitTicketPriority(e.target);
   if(id==='release-create-form')submitReleaseCreate(e.target);
   if(id==='member-search-form')submitMemberSearch(e.target);
+  if(id==='support-filter-form')submitSupportFilter(e.target);
 });
 by('account-button').addEventListener('click',()=>go('akun'));
 window.addEventListener('hashchange',()=>go(location.hash.slice(1)||'beranda'));
