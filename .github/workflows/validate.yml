@@ -71,4 +71,14 @@ jobs:
           grep -q 'Pembayaran belum diaktifkan' /tmp/ngd-catalog.html
           grep -q 'data-overflow="false"' /tmp/ngd-catalog.html
           grep -q 'data-buys-disabled="true"' /tmp/ngd-catalog.html
-          echo 'BROWSER_PREVIEW_OK: guest, member mobile, catalog desktop'
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/?preview=member#dukungan" > /tmp/ngd-support-member.html 2>>/tmp/ngd-chrome.log
+          grep -q 'id="support-create-form"' /tmp/ngd-support-member.html
+          grep -q 'Fitur support belum diaktifkan' /tmp/ngd-support-member.html
+          grep -q 'data-overflow="false"' /tmp/ngd-support-member.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
+            "http://127.0.0.1:8765/?preview=admin#member" > /tmp/ngd-support-admin.html 2>>/tmp/ngd-chrome.log
+          grep -q 'id="member-search-form"' /tmp/ngd-support-admin.html
+          grep -q 'Buka Member 360°' /tmp/ngd-support-admin.html
+          grep -q 'data-overflow="false"' /tmp/ngd-support-admin.html
+          echo 'BROWSER_PREVIEW_OK: guest, member mobile, catalog desktop, member support and admin Member360'
