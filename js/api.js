@@ -19,11 +19,11 @@ export class ApiError extends Error {
   }
 }
 export async function api(action, payload = {}, token = '', options = {}) {
-  if (!isConnected()) throw new ApiError('Backend belum terhubung. Konfigurasi Web App belum diaktifkan.', 'NOT_CONFIGURED');
+  if (!isConnected()) throw new ApiError('Sistem akun sedang tidak dapat diakses. Silakan coba kembali.', 'NOT_CONFIGURED');
   const {write = false, timeoutMs = 24000, requestId = null} = options;
   if (requestId !== null && !/^[A-Za-z0-9_-]{16,80}$/.test(String(requestId)))
     throw new ApiError('ID permintaan tidak valid.', 'VALIDATION');
-  if (write && !isWriteEnabled()) throw new ApiError('Mode pratinjau: perubahan data dinonaktifkan.', 'PREVIEW_ONLY');
+  if (write && !isWriteEnabled()) throw new ApiError('Penyimpanan data sedang tidak tersedia.', 'PREVIEW_ONLY');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -37,15 +37,15 @@ export async function api(action, payload = {}, token = '', options = {}) {
       signal: controller.signal,
       credentials: 'omit'
     });
-    if (!response.ok) throw new ApiError('Backend merespons HTTP ' + response.status);
+    if (!response.ok) throw new ApiError('Layanan merespons kode ' + response.status);
     const data = await response.json();
-    if (!data || typeof data.ok !== 'boolean') throw new ApiError('Format respons backend tidak sesuai.');
+    if (!data || typeof data.ok !== 'boolean') throw new ApiError('Layanan belum dapat memproses permintaan Anda.');
     if (!data.ok) throw new ApiError(data.error?.message || 'Permintaan gagal.', data.error?.code || 'API_ERROR');
     return data.data;
   } catch (error) {
     if (error?.name === 'AbortError') throw new ApiError('Permintaan terlalu lama. Periksa koneksi lalu coba lagi.');
     if (error instanceof ApiError) throw error;
-    throw new ApiError('Tidak dapat menghubungi backend. Periksa deployment atau kebijakan akses Apps Script.');
+    throw new ApiError('Koneksi layanan terganggu. Periksa internet Anda lalu coba kembali.');
   } finally {
     clearTimeout(timer);
   }
