@@ -1,13 +1,13 @@
 /**
  * Ngulik Digital Member — Apps Script backend (development).
- * Skema 26 tab (14 inti + 3 support + 7 LMS + 1 notifikasi + 1 jasa), autentikasi, API member/admin, pembayaran manual, kredit,
+ * Skema 27 tab (14 inti + 3 support + 7 LMS + 1 notifikasi + 1 jasa + 1 konten), autentikasi, API member/admin, pembayaran manual, kredit,
  * waiting list, dan rekonsiliasi. Belum lolos QA end-to-end.
  * Jangan deploy sebagai layanan publik atau mengaktifkan transaksi nyata.
  */
 
 // ===== KONSTANTA =====
 const NGD = Object.freeze({
-  VERSION: '1.0.1',
+  VERSION: '1.0.2',
   // Spreadsheet ID is read from Script Properties, not committed in source.
   DB_ID: '',
   TZ: 'Asia/Jakarta',
@@ -41,7 +41,8 @@ const NGD = Object.freeze({
     lms_ai_jobs: 'job_id,workspace_id,course_id,lesson_id,task_type,brief,prompt,result_draft,status,created_at,updated_at,requested_by,reviewed_by,request_id',
     lms_revisions: 'revision_id,entity,entity_id,version,title,body,media_url,metadata_json,published_at,actor_id,request_id',
     notifications: 'notification_id,member_id,source,source_id,jenis,judul,pesan,status,created_at,read_at,request_id',
-    service_requests: 'service_id,member_id,product_id,jenis_layanan,judul,brief,referensi_url,anggaran,status,penawaran_harga,penawaran_pesan,catatan_internal,created_at,updated_at,closed_at,request_id,revision'
+    service_requests: 'service_id,member_id,product_id,jenis_layanan,judul,brief,referensi_url,anggaran,status,penawaran_harga,penawaran_pesan,catatan_internal,created_at,updated_at,closed_at,request_id,revision',
+    site_content: 'content_id,kind,placement,title,description,image_path,cta_label,cta_route,sort_order,start_date,end_date,status,created_at,updated_at,created_by,revision,request_id'
   }
 });
 
@@ -1311,6 +1312,7 @@ function adminRuntimeStatus_() {
       registration:enabled('NGD_REGISTRATION_ENABLED'),
       finance:financeEnabled_(),
       catalog:enabled('NGD_CATALOG_ENABLED'),
+      content:enabled('NGD_CONTENT_ENABLED'),
       services:enabled('NGD_SERVICE_ENABLED'),
       support:enabled('NGD_SUPPORT_ENABLED'),
       lms:enabled('NGD_LMS_ENABLED'),
@@ -1326,6 +1328,7 @@ function apiRouter_(action,token,p,requestId) {
   switch(action) {
     case 'getPublicInfo':return publicInfo_(p);
     case 'getKatalog':return publicCatalog_();
+    case 'getPublicContent':return contentPublicList_();
     case 'register':return authRegister_(p);
     case 'login':return authLogin_(p);
     case 'trackClick':
@@ -1382,6 +1385,10 @@ function apiRouter_(action,token,p,requestId) {
   }
   admin=admin_(token);
   switch(action){
+    case 'adminListContent':return contentAdminList_();
+    case 'adminCreateContent':return contentCreate_(admin,p,requestId);
+    case 'adminUpdateContent':return contentUpdate_(admin,p);
+    case 'adminSetContentStatus':return contentSetStatus_(admin,p);
     case 'adminListCatalog':return catalogAdminList_();
     case 'adminListServiceRequests':return serviceListAdmin_(p);
     case 'adminUpdateServiceQuote':return serviceQuote_(admin,p);
@@ -1520,6 +1527,9 @@ function requireActionFeatureEnabled_(action) {
       'adminReviewLMSAIJob'].indexOf(action)>=0)
     require_(settings.getProperty('NGD_LMS_ENABLED')==='true',
       'MAINTENANCE','Pengelolaan LMS masih dalam tahap pengujian.');
+  if(['adminCreateContent','adminUpdateContent','adminSetContentStatus'].indexOf(action)>=0)
+    require_(settings.getProperty('NGD_CONTENT_ENABLED')==='true',
+      'MAINTENANCE','Pengelolaan konten belum diaktifkan pada backend.');
   if(['adminCreateCatalogItem','adminUpdateCatalogItem','adminSetCatalogActive'].indexOf(action)>=0)
     require_(settings.getProperty('NGD_CATALOG_ENABLED')==='true',
       'MAINTENANCE','Perubahan katalog masih dalam tahap staging.');
@@ -1545,11 +1555,11 @@ function requirePublicTrackingEnabled_() {
     'MAINTENANCE','Pencatatan klik belum diaktifkan.');
 }
 function apiReadActions_() {
-  return ['getPublicInfo','getMe','getBeranda','getModulBelajar','getKatalog',
+  return ['getPublicInfo','getPublicContent','getMe','getBeranda','getModulBelajar','getKatalog',
     'getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase',
     'getAffiliateDashboard','getMyNotifications','getMyServiceRequests',
     'adminListServiceRequests','adminGetDashboard','adminGetRuntimeStatus','adminListOrders','adminListMembers',
-    'adminListWaitingList','adminListCommissions','adminGetSettings','adminListCatalog',
+    'adminListWaitingList','adminListCommissions','adminGetSettings','adminListCatalog','adminListContent',
     'adminGetReconciliation',
     'getMyProducts','getMyTickets','getTicket','getMyProductReleases',
     'adminSearchMembers','adminGetMember360','adminGetProductImpact','adminGetSupportOverview',
