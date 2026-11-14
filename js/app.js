@@ -886,6 +886,87 @@ function lmsSelectedLesson_(){
 function lmsSelectedAIJob_(){
   return state.lmsJobs.find(x=>x.job_id===state.lmsSelectedAIJobId)||null;
 }
+let heroTimer_=null;
+let heroFocused_=false;
+function showHeroSlide_(index){
+  if(typeof document.querySelector!=='function')return;
+  const root=document.querySelector('[data-hero-carousel]');
+  if(!root)return;
+  const panels=Array.from(root.querySelectorAll('[data-hero-panel]'));
+  if(!panels.length)return;
+  const next=((Number(index)||0)%panels.length+panels.length)%panels.length;
+  state.heroIndex=next;
+  panels.forEach((panel,i)=>{
+    panel.hidden=i!==next;
+    panel.setAttribute('aria-hidden',String(i!==next));
+  });
+  root.querySelectorAll('[data-hero-index]').forEach((button,i)=>{
+    button.setAttribute('aria-current',String(i===next));
+  });
+}
+function syncHeroRotation_(){
+  if(heroTimer_!==null){clearTimeout(heroTimer_);heroTimer_=null;}
+  if(typeof document.querySelector!=='function')return;
+  showHeroSlide_(state.heroIndex);
+  if(state.qa||state.route!=='beranda'||isAdmin()||state.heroPaused||
+     heroFocused_||document.hidden||typeof setTimeout!=='function')return;
+  const root=document.querySelector('[data-hero-carousel]');
+  if(!root||root.querySelectorAll('[data-hero-panel]').length<2)return;
+  if(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return;
+  heroTimer_=setTimeout(()=>{
+    heroTimer_=null;
+    if(state.route==='beranda'&&!state.heroPaused&&!heroFocused_&&!document.hidden){
+      showHeroSlide_(state.heroIndex+1);
+    }
+    syncHeroRotation_();
+  },6500);
+}
+async function submitContentForm_(form){
+  if(!isAdmin()||!contentWriteEnabled())return toast('Editor konten belum diaktifkan.',true);
+  const fd=new FormData(form),id=String(form.dataset.contentId||'');
+  const payload={};
+  for(const key of ['kind','placement','title','description','image_path',
+    'cta_label','cta_route','sort_order','start_date','end_date']){
+    payload[key]=String(fd.get(key)||'').trim();
+  }
+  payload.sort_order=Number(payload.sort_order);
+  const old=id?state.adminContent.find(x=>x.content_id===id):null;
+  if(id&&!old)return toast('Konten telah berubah. Muat ulang terlebih dahulu.',true);
+  if(old){payload.content_id=id;payload.revision=old.revision;}
+  if(!window.NGD_CONTENT_UI?.mediaPath(payload.image_path))
+    return toast('Gunakan path gambar PNG/JPG/WebP/AVIF di assets/media/.',true);
+  const btn=form.querySelector('[type=submit]');
+  if(btn?.disabled)return;
+  if(btn)btn.disabled=true;
+  const requestId=state.contentRequestId||createRequestId();
+  state.contentRequestId=requestId;
+  try{
+    const result=await api(id?'adminUpdateContent':'adminCreateContent',payload,state.token,{write:true,requestId});
+    state.contentRequestId=null;
+    if(result?.item?.content_id)state.contentEditId=result.item.content_id;
+    state.adminContent=await api('adminListContent',{},state.token);
+    render();toast('Konten tersimpan. Publikasikan setelah file gambar tersedia.');
+  }catch(e){
+    toast(e.message,true);
+    // Unknown network outcome: keep request ID for safe create replay.
+    if(e.code!=='NETWORK_ERROR'&&e.code!=='INTERNAL')state.contentRequestId=null;
+    if(btn)btn.disabled=false;
+  }
+}
+async function changeContentStatus_(id,nextStatus){
+  if(!isAdmin()||!contentWriteEnabled())return;
+  const old=state.adminContent.find(x=>x.content_id===id);
+  if(!old)return toast('Konten tidak ditemukan.',true);
+  if(nextStatus==='PUBLISHED'&&!confirm('Pastikan gambar telah diunggah dan link gambarnya terbuka. Terbitkan konten ini?'))return;
+  try{
+    await api('adminSetContentStatus',{
+      content_id:id,status:nextStatus,revision:old.revision
+    },state.token,{write:true});
+    state.adminContent=await api('adminListContent',{},state.token);
+    render();toast(nextStatus==='PUBLISHED'?'Konten telah diterbitkan.':'Status konten diperbarui.');
+  }catch(e){toast(e.message,true);}
+}
+
 function render(){
   // Scoped mobile visual system: preserve the admin desktop appearance.
   document.body?.classList?.toggle('member-experience',!isAdmin());
@@ -1535,10 +1616,34 @@ document.addEventListener('input',(e)=>{
   });
   const none=by('nh-empty');if(none)none.hidden=shown>0;
 });
+document.addEventListener('visibilitychange',syncHeroRotation_);
+document.addEventListener('focusin',e=>{
+  if(e.target.closest?.('[data-hero-carousel]')){heroFocused_=true;syncHeroRotation_();}
+});
+document.addEventListener('focusout',e=>{
+  if(e.target.closest?.('[data-hero-carousel]')){heroFocused_=false;syncHeroRotation_();}
+});
 document.addEventListener('click',async(e)=>{
-  const target=e.target.closest('[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action]');
+  const target=e.target.closest('[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action]');
   if(!target)return;
-  if(target.hasAttribute('data-service-id')){
+  if(target.hasAttribute('data-hero-step')){
+    showHeroSlide_(state.heroIndex+Number(target.dataset.heroStep||1));syncHeroRotation_();
+  }else if(target.hasAttribute('data-hero-index')){
+    showHeroSlide_(Number(target.dataset.heroIndex));syncHeroRotation_();
+  }else if(target.hasAttribute('data-hero-pause')){
+    state.heroPaused=!state.heroPaused;
+    target.setAttribute('aria-pressed',String(state.heroPaused));
+    target.textContent=state.heroPaused?'Lanjutkan':'Jeda';syncHeroRotation_();
+  }else if(target.hasAttribute('data-content-new')){
+    if(!isAdmin())return;
+    state.contentEditId='';state.contentRequestId=null;render();
+  }else if(target.hasAttribute('data-content-edit')){
+    if(!isAdmin())return;
+    state.contentEditId=target.dataset.contentEdit;state.contentRequestId=null;render();
+    document.getElementById('content-editor-form')?.scrollIntoView?.({block:'nearest'});
+  }else if(target.hasAttribute('data-content-status')){
+    await changeContentStatus_(target.dataset.contentId,target.dataset.contentStatus);
+  }else if(target.hasAttribute('data-service-id')){
     if(!isAdmin())return;
     state.selectedServiceId=target.dataset.serviceId;
     render();
@@ -1618,10 +1723,11 @@ async function submitProfileForm(form){
 }
 document.addEventListener('submit',(e)=>{
   const id=e.target.id;
-  if(!['service-brief-form','service-quote-form','admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
+  if(!['content-editor-form','service-brief-form','service-quote-form','admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
     'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form',
     'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form'].includes(id))return;
   e.preventDefault();
+  if(id==='content-editor-form')submitContentForm_(e.target);
   if(id==='service-brief-form')submitServiceBrief(e.target);
   if(id==='service-quote-form')submitServiceQuote(e.target);
   if(id==='admin-catalog-form')submitCatalogForm(e.target);
