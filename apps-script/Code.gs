@@ -8,7 +8,8 @@
 // ===== KONSTANTA =====
 const NGD = Object.freeze({
   VERSION: '1.0.0',
-  DB_ID: '19lJS-Re7TLfINjoo-wKoDkG_ikeEWNgGe9yf5Rywvm8',
+  // Spreadsheet ID is read from Script Properties, not committed in source.
+  DB_ID: '',
   TZ: 'Asia/Jakarta',
   SESSION_DAYS: 7,
   LOCK_MINUTES: 15,
@@ -33,7 +34,18 @@ const NGD = Object.freeze({
 
 // ===== UTIL =====
 var NGD_DB_CACHE_ = null;
-function db_() { return NGD_DB_CACHE_ || (NGD_DB_CACHE_ = SpreadsheetApp.openById(NGD.DB_ID)); }
+function db_() {
+  if(NGD_DB_CACHE_)return NGD_DB_CACHE_;
+  var id=String(PropertiesService.getScriptProperties().getProperty('NGD_DB_ID')||'').trim();
+  if(id){
+    NGD_DB_CACHE_=SpreadsheetApp.openById(id);
+    return NGD_DB_CACHE_;
+  }
+  // Bound editor/menu calls may resolve their containing spreadsheet.
+  var active=SpreadsheetApp.getActiveSpreadsheet();
+  if(active){NGD_DB_CACHE_=active;return active;}
+  throw new Error('NGD_DB_ID belum diisi pada Script Properties untuk konteks ini.');
+}
 function now_() { return new Date(); }
 function uuid_() { return Utilities.getUuid().replace(/-/g, '').toUpperCase(); }
 function hex_(bytes) { return bytes.map(function(n) { return ('0' + ((n + 256) % 256).toString(16)).slice(-2); }).join(''); }
@@ -208,7 +220,7 @@ function seedSettings_() {
   var entries = [
     ['nama_brand','Ngulik Digital','TEXT'], ['gelombang_aktif',1,'NUMBER'],
     ['kuota_gelombang',50,'NUMBER'], ['mode_pendaftaran','TERBUKA','TEXT'],
-    ['wa_admin','6289509016792','TEXT'], ['email_admin',Session.getEffectiveUser().getEmail(),'TEXT'],
+    ['wa_admin',PropertiesService.getScriptProperties().getProperty('NGD_ADMIN_WA')||'','TEXT'], ['email_admin',Session.getEffectiveUser().getEmail(),'TEXT'],
     ['link_classroom','https://classroom.google.com','TEXT'],
     ['qris_gambar_path','assets/qris.png','TEXT'], ['qris_atas_nama','','TEXT'],
     ['order_expiry_menit',15,'NUMBER'], ['kode_unik_min',100,'NUMBER'], ['kode_unik_max',999,'NUMBER'],
