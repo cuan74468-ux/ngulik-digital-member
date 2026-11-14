@@ -68,7 +68,7 @@ test('mobile bottom navigation preserves Belajar active in detail and success sc
 test('success screen is explicitly labeled preview, not a real stored completion',()=>{
   const h=preview('member','lms-complete'),display=h.nodes.screen.innerHTML;
   assert.match(display,/Pelajaran selesai!/);
-  assert.match(display,/contoh layar konfirmasi/i);
+  assert.match(display,/progres belajar belum tercatat/i);
   assert.match(display,/CONTOH/);
   assert.match(display,/Kembali ke kelas/);
   assert.match(display,/Jelajahi kelas lain/);
@@ -97,6 +97,6 @@ test('read-only preview locks writes even when visual calls to action exist',()=
   const h=preview('member','lms-course');
   assert.equal(vm.runInContext('lmsWriteEnabled()',h.ctx),false);
   assert.equal(vm.runInContext('supportWriteEnabled()',h.ctx),false);
-  assert.match(h.nodes.screen.innerHTML,/disabled title="LMS masih dalam mode pratinjau"/);
+  assert.match(h.nodes.screen.innerHTML,/disabled title="Penyuntingan materi belum tersedia"/);
   assert.equal(h.apiCalls(),0);
 });
