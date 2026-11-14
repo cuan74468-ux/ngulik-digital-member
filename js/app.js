@@ -5,7 +5,20 @@ const by = (id) => document.getElementById(id);
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g,
   (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const idSafe = (v) => esc(String(v == null ? '' : v));
-const rupiah = (v) => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(v)||0);
+// Data provider may return a number, "99000", or "Rp99.000".
+const moneyValue=(v)=>{
+  if(typeof v==='number')return Number.isFinite(v)&&v>=0?v:null;
+  const raw=String(v??'').trim().replace(/^Rp\s*/i,'').replace(/\s/g,'');
+  if(/^\d+$/.test(raw))return Number(raw);
+  if(/^\d{1,3}(\.\d{3})+(,\d{1,2})?$/.test(raw))
+    return Number(raw.replace(/\./g,'').replace(',','.'));
+  return null;
+};
+const rupiah=(v)=>{
+  const amount=moneyValue(v);
+  return amount===null?'Harga belum tersedia':
+    new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(amount);
+};
 const friendlyDate = (v) => {
   const d=new Date(v);return Number.isNaN(d.getTime())?'-':
     new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeZone:'Asia/Jakarta'}).format(d);
@@ -64,7 +77,9 @@ const PREVIEW_CATALOG=[
   {product_id:'P-CANVA',nama:'Seat Canva 30 Hari',deskripsi:'Undangan seat memerlukan aktivasi admin.',tipe:'SEAT_30H',harga:35000},
   {product_id:'P-KREDIT-50',nama:'Top-up 50 Kredit AI',deskripsi:'Tambahan kredit penggunaan Studio AI.',tipe:'TOPUP_KREDIT',harga:25000},
   {product_id:'P-KREDIT-150',nama:'Top-up 150 Kredit AI',deskripsi:'Paket kredit AI tambahan.',tipe:'TOPUP_KREDIT',harga:60000},
-  {product_id:'P-KREDIT-400',nama:'Top-up 400 Kredit AI',deskripsi:'Paket kredit AI untuk kebutuhan lebih besar.',tipe:'TOPUP_KREDIT',harga:140000}
+  {product_id:'P-KREDIT-400',nama:'Top-up 400 Kredit AI',deskripsi:'Paket kredit AI untuk kebutuhan lebih besar.',tipe:'TOPUP_KREDIT',harga:140000},
+  {product_id:'P-VIDEO-AI',nama:'Jasa Video Iklan AI - Paket Hemat',deskripsi:'Video iklan AI untuk produk dan usaha, diproses setelah konsultasi serta aktivasi admin.',tipe:'JASA_SEKALI',harga:50000},
+  {product_id:'P-EBOOK',nama:'Bundel Ebook Vibe Coder & Template Siap Pakai',deskripsi:'Panduan praktis Vibe Coding, bundel template, dan bonus kredit AI.',tipe:'PRODUK_DIGITAL',harga:49000}
 ];
 const PREVIEW_MODULES=[
   'Orientasi dan Setup Akun','Bio Link dan Profil Bisnis','Katalog dan Checkout Kurir',
@@ -169,7 +184,7 @@ const state={
   lmsCourses:[],lmsEnrollments:[],lmsAdminCourses:[],
   lmsCourseDetail:null,lmsAdminCourse:null,lmsSelectedCourseId:null,
   lmsSelectedLessonId:null,lmsJobs:[],lmsSelectedAIJobId:null,
-  lmsCompletion:null,notifications:{enabled:false,items:[],unread:0}
+  lmsCompletion:null,notifications:{enabled:false,items:[],unread:0},catalogFilter:'semua'
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true&&Boolean(config.qrisImageUrl)&&Boolean(config.qrisMerchant);
@@ -247,36 +262,128 @@ function viewHome(){
       '</div></section></div>'+
       (d.peringatan_kredit?'<div class="banner warning section-gap"><div><h3>Saldo kredit menipis</h3><p>Periksa penggunaan kredit sebelum memakai tools AI.</p></div><button class="btn btn-secondary" data-route="ai">Lihat saldo</button></div>':'');
   }
-  const hero='<section class="hero"><div class="hero-copy"><p class="eyebrow">NGULIK DIGITAL UNTUK UMKM</p>'+
-    '<h1>Belajar digital.<br><span class="accent">Terapkan langsung.</span></h1>'+
-    '<p class="lead">Materi praktis, alat bantu AI, dan toolkit usaha dalam satu ruang digital untuk pelaku UMKM.</p>'+
-    '<div class="actions"><button class="btn btn-primary" data-route="daftar">Daftar member '+icon('arrow')+'</button>'+
-    '<button class="btn btn-secondary" data-route="katalog">Lihat katalog</button></div></div>'+
-    '<div class="hero-art" aria-hidden="true"><div class="art-orbit"><div class="art-card"><span class="art-emoji">✦</span><strong>Belajar.<br>Praktik. Tumbuh.</strong><small>Ngulik Digital / UMKM</small></div></div><i class="art-spark spark-a"></i><i class="art-spark spark-b"></i></div></section>';
-  return hero+'<section class="section-gap">'+title('Mulai dari kebutuhan Anda','RUANG NGULIK DIGITAL','Tiga layanan utama untuk membantu usaha berkembang.')+
-    '<div class="grid-3">'+[
-      ['book','Materi belajar','Modul singkat dan praktis untuk UMKM.','belajar'],
-      ['spark','Studio AI','Bantuan membuat konten dan materi pemasaran.','ai'],
-      ['store','Toolkit usaha','Produk dan layanan digital pendukung bisnis.','katalog']
-    ].map(x=>'<article class="surface"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3>'+
-    '<p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" style="margin-top:18px" data-route="'+x[3]+'">Jelajahi '+icon('arrow')+'</button></article>').join('')+'</div></section>';
+  const hero='<section class="hub-hero" aria-labelledby="hub-title">'+
+    '<div class="hub-hero-copy"><p class="hub-kicker">NGULIK DIGITAL / LINGGAU AI STUDIO</p>'+
+    '<h1 id="hub-title">Dari belajar digital<br><span class="accent">sampai usaha berjalan lebih baik.</span></h1>'+
+    '<p class="hub-lead">Satu tempat untuk mempelajari keterampilan baru, menemukan alat usaha, dan menjelajahi layanan kreatif yang relevan untuk UMKM.</p>'+
+    '<div class="actions"><button class="btn btn-primary" data-route="katalog">Jelajahi solusi '+icon('arrow')+'</button>'+
+    '<button class="btn btn-secondary" data-route="belajar">Kenali kelas gratis</button></div>'+
+    '<div class="hub-hero-caption"><span class="hub-caption-dot"></span><span>Program pilot direncanakan untuk maksimal 50 peserta. Fitur transaksi belum dibuka.</span></div></div>'+
+    '<div class="hub-journey" aria-label="Alur sederhana ekosistem Ngulik Digital">'+
+    '<div class="hub-journey-top"><span class="hub-journey-mark">'+icon('spark')+'</span>'+
+    '<div><strong>Mulai dari kebutuhan usaha</strong><small>Belajar, mencoba, lalu berkembang</small></div><span class="hub-tag">PILOT</span></div>'+
+    '<ol class="hub-journey-list">'+[
+      ['01','Kenali kemampuan digital','Kelas dan panduan praktik sederhana'],
+      ['02','Tentukan alat yang dibutuhkan','POS, katalog, template, dan AI'],
+      ['03','Kembangkan pemasaran usaha','Konten kreatif dan layanan digital']
+    ].map((x,i)=>'<li><span class="hub-journey-number">'+x[0]+'</span><div><strong>'+x[1]+'</strong><small>'+x[2]+'</small></div>'+
+      '<span class="hub-journey-check">'+icon(i===2?'arrow':'check')+'</span></li>').join('')+'</ol>'+
+    '<div class="hub-journey-foot"><span>EKOSISTEM UMKM</span><span>01 / 03</span></div></div></section>';
+  const paths=[
+    ['book','Belajar & praktik','Materi ringkas yang bisa langsung dicoba melalui HP.','belajar','Buka ruang belajar'],
+    ['store','Aplikasi usaha','POS, bio link, profil bisnis, dan katalog online.','aplikasi','Jelajahi aplikasi'],
+    ['spark','Studio AI & kredit','Bantu menulis promosi dan merencanakan konten.','ai','Kenali Studio AI'],
+    ['clipboard','Jasa kreatif','Video promosi, aset digital, dan layanan custom.','jasa','Lihat penawaran']
+  ];
+  const solution='<section class="section-gap" aria-labelledby="hub-path-title">'+
+    '<div class="hub-section-intro"><div><p class="eyebrow">UNTUK KEGIATAN USAHA NYATA</p>'+
+    '<h2 id="hub-path-title">Apa yang ingin Anda kerjakan?</h2>'+
+    '<p>Mulai dari satu kebutuhan. Tidak perlu mengambil semua layanan sekaligus.</p></div></div>'+
+    '<div class="hub-path-grid">'+paths.map((x,i)=>'<article class="hub-path-card">'+
+      '<span class="hub-path-icon hub-path-icon-'+(i+1)+'">'+icon(x[0])+'</span>'+
+      '<span class="hub-path-index">0'+(i+1)+'</span><h3>'+x[1]+'</h3>'+
+      '<p>'+x[2]+'</p><button class="hub-text-link" type="button" '+
+      (['aplikasi','jasa'].includes(x[3])?'data-catalog-go="'+x[3]+'"':'data-route="'+x[3]+'"')+
+      '>'+x[4]+' '+icon('arrow')+'</button></article>').join('')+'</div></section>';
+  const featureIds=['P-3IN1','P-POS','P-VIDEO-AI'];
+  const chosen=featureIds.map(id=>state.catalog.find(p=>p.product_id===id)).filter(Boolean);
+  const feature=chosen.length?'<section class="section-gap" aria-label="Pilihan produk dan layanan">'+
+    '<div class="hub-section-intro"><div><p class="eyebrow">DARI KATALOG</p><h2>Penawaran yang bisa Anda kenali</h2>'+
+    '<p>Informasi produk untuk membantu memilih. Pemesanan masih ditutup pada pratinjau.</p></div>'+
+    '<button class="hub-text-link" type="button" data-route="katalog">Lihat seluruh katalog '+icon('arrow')+'</button></div>'+
+    '<div class="hub-feature-grid">'+chosen.map(p=>
+      '<article class="hub-feature-item"><div class="hub-feature-symbol">'+icon(p.tipe==='JASA_SEKALI'?'spark':'store')+'</div>'+
+      '<div><span class="hub-feature-type">'+esc(offerCategoryLabel(p))+'</span><h3>'+esc(p.nama)+'</h3>'+
+      '<p>'+esc(p.deskripsi||'')+'</p><strong>'+rupiah(p.harga)+'</strong></div></article>').join('')+'</div></section>':'';
+  const note='<section class="hub-availability section-gap" aria-label="Informasi peluncuran">'+
+    '<div><p class="eyebrow">PELUNCURAN BERTAHAP</p><h2>Belajar dulu. Pilih layanan saat sudah dibutuhkan.</h2>'+
+    '<p>Ngulik Digital memisahkan materi pengantar dari layanan berbayar. Integrasi pembayaran dan akun nyata hanya dibuka setelah pengujian.</p></div>'+
+    '<button class="btn btn-secondary" type="button" data-route="belajar">Lihat jalur belajar '+icon('arrow')+'</button></section>';
+  return hero+solution+feature+note;
 }
+const offerCategories=[
+  ['semua','Semua'],['aplikasi','Aplikasi usaha'],['ai','Kredit AI'],
+  ['jasa','Jasa kreatif'],['belajar','Materi & aset'],['fasilitas','Fasilitas']
+];
+const supportedSaleTypes=new Set(['LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_KREDIT']);
+function offerCategory(p){
+  switch(String(p.tipe||'')){
+    case 'LANGGANAN_30H':case 'LISENSI_SEKALI':return 'aplikasi';
+    case 'TOPUP_KREDIT':return 'ai';
+    case 'JASA_SEKALI':return 'jasa';
+    case 'PRODUK_DIGITAL':return 'belajar';
+    case 'SEAT_30H':return 'fasilitas';
+    default:return 'lainnya';
+  }
+}
+const offerCategoryLabel=p=>{
+  const category=offerCategory(p);
+  return offerCategories.find(x=>x[0]===category)?.[1]||'Produk digital';
+};
 function viewCatalog(){
-  const list=state.catalog;
-  if(!list.length)return title('Katalog digital','PERANGKAT PENDUKUNG','Layanan pendukung untuk usaha Anda.')+
-    empty('Katalog belum dimuat',isConnected()?'Belum ada produk aktif atau respons katalog belum tersedia.':'Hubungkan API terverifikasi untuk menampilkan produk dan harga aktual.');
-  return title('Katalog digital','PERANGKAT PENDUKUNG','Layanan digital dan kredit AI. Harga berasal dari backend.')+
-    '<div class="grid-3">'+list.map((p,i)=>'<article class="surface">'+
-      '<div class="surface-icon '+(i%3===1?'orange':'')+'">'+icon(p.tipe==='TOPUP_KREDIT'?'spark':p.tipe==='SEAT_30H'?'users':'store')+'</div>'+
-      '<p class="card-kicker">'+esc(p.tipe||'Produk digital')+'</p><h3>'+esc(p.nama)+'</h3>'+
-      '<p class="card-desc">'+esc(p.deskripsi||'')+'</p>'+
-      '<div class="product-price">'+rupiah(p.harga)+'</div>'+
-      '<button class="btn btn-primary btn-wide" data-buy="'+idSafe(p.product_id)+'" '+(!paymentEnabled()?'disabled title="Pembayaran belum diaktifkan"':'')+'>Pilih produk '+icon('arrow')+'</button></article>').join('')+'</div>';
+  const list=Array.isArray(state.catalog)?state.catalog:[];
+  if(!list.length)return title('Katalog produk & layanan','SOLUSI UNTUK UMKM',
+    'Penawaran digital dikelompokkan sesuai kebutuhan usaha.')+
+    empty('Katalog belum tersedia',isConnected()?
+      'Belum ada produk yang dapat ditampilkan dari backend.':
+      'Data produk pratinjau belum dimuat.');
+  const current=state.catalogFilter||'semua';
+  const shown=current==='semua'?list:list.filter(p=>offerCategory(p)===current);
+  const filters='<div class="catalog-filters" role="group" aria-label="Filter jenis penawaran">'+
+    offerCategories.map(([id,label])=>'<button class="catalog-filter" type="button" data-catalog-filter="'+id+
+      '" aria-pressed="'+(id===current?'true':'false')+'">'+label+'</button>').join('')+'</div>';
+  const header='<div class="catalog-intro"><div><p class="eyebrow">PILIH YANG SESUAI, BUKAN YANG TERBANYAK</p>'+
+    '<h1>Katalog untuk kebutuhan usaha Anda.</h1>'+
+    '<p>Jelajahi aplikasi, alat AI, materi, dan jasa digital. Informasi ini bukan bukti layanan sudah aktif.</p></div>'+
+    '<div class="catalog-summary"><strong>'+list.length+'</strong><span>penawaran tercatat'+
+    (!isConnected()?' · pratinjau':'')+'</span></div></div>';
+  const cards=shown.length?'<div class="catalog-grid">'+shown.map(p=>{
+    const kind=offerCategory(p),safeSale=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
+    const allowed=safeSale&&paymentEnabled();
+    const label=allowed?'Pilih produk':safeSale?'Pembayaran belum diaktifkan':'Belum tersedia untuk pemesanan';
+    const tooltip=safeSale?'Pembayaran belum diaktifkan':'Produk memerlukan proses layanan atau fulfillment yang belum diaktifkan';
+    return '<article class="catalog-card"><div class="catalog-card-top">'+
+      '<span class="catalog-card-icon">'+icon(kind==='ai'||kind==='jasa'?'spark':kind==='belajar'?'book':kind==='fasilitas'?'users':'store')+'</span>'+
+      '<span class="catalog-card-type">'+esc(offerCategoryLabel(p))+'</span></div>'+
+      '<div class="catalog-card-copy"><h3>'+esc(p.nama)+'</h3><p>'+esc(p.deskripsi||'')+'</p></div>'+
+      '<div class="catalog-card-bottom"><div><small>Harga penawaran</small><strong>'+rupiah(p.harga)+'</strong></div>'+
+      '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'" '+
+      (allowed?'':'disabled title="'+esc(tooltip)+'"')+'>'+label+' '+icon('arrow')+'</button></div></article>';
+  }).join('')+'</div>':
+    '<div class="catalog-empty">'+empty('Belum ada penawaran di kategori ini','Pilih kategori lain untuk melihat pilihan tersedia.')+'</div>';
+  return header+filters+'<p class="catalog-result-count" aria-live="polite">Menampilkan '+shown.length+
+    ' dari '+list.length+' penawaran</p>'+cards+
+    '<section class="catalog-guidance section-gap"><div><span class="card-kicker">CATATAN</span>'+
+    '<h3>Butuh layanan khusus?</h3><p>Jasa pembuatan web atau sistem custom direncanakan berdasarkan kebutuhan. Belum tersedia pemesanan otomatis.</p></div>'+
+    '<span class="chip">Konsultasi akan dibuka</span></section>';
 }
 function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
     return window.NGD_LMS_UI.memberCatalog(state.lmsCourses,state.lmsEnrollments,state.modules);
-  if(!logged())return title('Belajar lebih terarah','MODUL PRAKTIS','Belajar sesuai kebutuhan usaha Anda.')+needLogin('materi belajar');
+  if(!logged())return title('Belajar lebih terarah','CHAPTER 1 / PENGANTAR GRATIS',
+    'Materi praktis untuk pelaku UMKM. Ini pengenalan program, bukan akses kelas aktif.')+
+    '<section class="learn-guest-intro"><div><p class="card-kicker">JALUR PENGENALAN</p>'+
+    '<h3>Pelajari satu hal, praktikkan di usaha sendiri.</h3>'+
+    '<p>Chapter 1 mengenalkan Google Profil Bisnis, Gemini, Canva, WhatsApp Business, dan pencatatan promosi sederhana. Materi detail mengikuti ruang belajar resmi saat program dibuka.</p></div>'+
+    '<span class="chip">KELAS PENGANTAR</span></section>'+
+    '<div class="learn-path-list">'+[
+      ['01','Siapkan identitas digital','Kenali profil usaha dan titik lokasi di Google.'],
+      ['02','Buat konten promosi','Gunakan AI dan Canva untuk kegiatan pemasaran.'],
+      ['03','Atur komunikasi pelanggan','Rapikan katalog dan balasan cepat WhatsApp Business.'],
+      ['04','Catat dan evaluasi','Mulai kalender promosi serta tracking sederhana.']
+    ].map(x=>'<article class="learn-path-item"><span>'+x[0]+'</span><div><h3>'+x[1]+'</h3><p>'+x[2]+'</p></div></article>').join('')+'</div>'+
+    '<div class="learn-guest-note"><strong>Ruang member belum dibuka untuk publik.</strong>'+
+    '<p>Pendaftaran, akses modul terkunci, dan progres belajar memerlukan akun aktif setelah integrasi selesai.</p></div>';
   const modules=state.modules;
   return title('Perjalanan belajar Anda','KURIKULUM PRAKTIS','Modul tersedia sesuai program dan akses akun.')+
     (modules.length?'<div class="stack">'+modules.map((m,i)=>'<article class="surface list-row"><div class="left" style="display:flex;gap:15px;align-items:center"><span class="step-no">'+esc(m.urut||i+1)+'</span><div><strong>'+esc(m.judul)+'</strong><small>'+esc(m.deskripsi||'')+'</small></div></div>'+
@@ -392,7 +499,7 @@ function viewCheckout(){
 function viewAdmin(){
   if(!isAdmin())return needLogin('panel admin');
   const details=state.adminSummary?.ringkasan||[];
-  return title('Kendali program','ADMIN WORKSPACE','Monitor program dan verifikasi secara terkontrol.')+
+  return '<section class="admin-operations-intro"><p class="eyebrow">PUSAT OPERASIONAL</p><h1>Kelola ekosistem dengan lebih terarah.</h1><p>Awasi keanggotaan, aktivitas belajar, katalog yang terverifikasi, serta layanan bantuan. Data finansial tetap memerlukan pembuktian transaksi nyata.</p><span class="chip">Pilot maksimal 50 pengguna · sesuai rencana</span></section>'+
     '<div class="grid-3">'+[
       ['clipboard','Pesanan','Periksa pembayaran manual dan status fulfillment.','pesanan'],
       ['users','Kelola member','Lihat data member dan status keanggotaan.','member'],
@@ -1098,9 +1205,18 @@ async function lmsButtonAction(button){
 }
 
 document.addEventListener('click',async(e)=>{
-  const target=e.target.closest('[data-route],[data-buy],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action]');
+  const target=e.target.closest('[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action]');
   if(!target)return;
   if(target.hasAttribute('data-lms-action'))await lmsButtonAction(target);
+  else if(target.hasAttribute('data-catalog-go')){
+    state.catalogFilter=target.dataset.catalogGo;
+    go('katalog');
+  }
+  else if(target.hasAttribute('data-catalog-filter')){
+    if(!offerCategories.some(([id])=>id===target.dataset.catalogFilter))return;
+    state.catalogFilter=target.dataset.catalogFilter;
+    if(state.route!=='katalog')go('katalog');else render();
+  }
   else if(target.hasAttribute('data-route'))go(target.dataset.route);
   else if(target.hasAttribute('data-ticket-id')){
     state.selectedTicketId=target.dataset.ticketId;
