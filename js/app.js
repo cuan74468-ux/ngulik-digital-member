@@ -1405,7 +1405,7 @@ async function submitServiceQuote(form){
   const fd=new FormData(form);
   const payload={
     service_id:current.service_id,
-    expected_updated_at:current.updated_at,
+    expected_revision:current.revision,
     status:String(fd.get('status')||''),
     penawaran_harga:Number(fd.get('penawaran_harga')),
     penawaran_pesan:String(fd.get('penawaran_pesan')||''),
