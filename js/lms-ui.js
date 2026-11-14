@@ -12,7 +12,7 @@ function tag(v){return '<span class="chip">'+label(v)+'</span>';}
 function btn(action,labelText,disabled,attr,cls){
   return '<button type="button" class="btn '+(cls||'btn-secondary')+
     ' btn-sm" data-lms-action="'+e(action)+'" '+(attr||'')+
-    (disabled?' disabled title="LMS masih dalam mode pratinjau"':'')+
+    (disabled?' disabled title="Penyuntingan materi belum tersedia"':'')+
     '>'+e(labelText)+'</button>';
 }
 function field(name,title,value,type,extra){
@@ -108,11 +108,11 @@ function memberSuccess(record){
     '<p class="eyebrow">SATU LANGKAH BERHASIL</p>'+
     '<h2 id="success-title">Pelajaran selesai!</h2>'+
     '<p class="member-success-lead">'+
-      (record.preview?'Ini contoh layar konfirmasi; progres tidak disimpan.':
+      (record.preview?'Progres belajar belum tercatat.':
         'Progres belajar kamu sudah tercatat. Teruskan langkah baik ini!')+
     '</p>'+
     '<div class="member-success-receipt"><div class="member-success-receipt-head">'+
-      '<span>AKTIVITAS BELAJAR</span>'+tag(record.preview?'CONTOH':'TERCATAT')+'</div>'+
+      '<span>AKTIVITAS BELAJAR</span>'+tag(record.preview?'BELUM TERCATAT':'TERCATAT')+'</div>'+
       '<strong>'+e(record.title)+'</strong>'+
       '<div class="member-success-result"><span>Pelajaran selesai</span><strong>'+
         e(completed)+' / '+e(total)+'</strong></div></div>'+
@@ -135,7 +135,7 @@ function adminCatalog(courses,canWrite,products){
       courseForm(null,canWrite,products)+'</section>'+
     '<section class="section-gap"><h3>Daftar kursus</h3>'+
       (list.length?'<div class="lms-course-grid">'+list.map(function(c){return courseTile(c,true);}).join('')+'</div>':
-      '<div class="surface lms-empty">Belum ada kursus. Formulir di atas siap dipakai ketika backend LMS staging diaktifkan.</div>')+'</section>';
+      '<div class="surface lms-empty">Belum ada kursus yang diterbitkan.</div>')+'</section>';
 }
 function courseForm(c,canWrite,products){
   var r=c||{},items=[['','Tidak memakai produk']].concat((products||[]).map(function(p){
@@ -148,7 +148,7 @@ function courseForm(c,canWrite,products){
     select('access_type','Jenis akses',[['MEMBER','Semua member'],['PRODUCT','Pemilik produk']],r.access_type||'MEMBER')+
     select('product_id','Produk terkait',items,r.product_id||'')+
     field('sort_order','Urutan',r.sort_order||100,'number','min="1" max="9999" required')+'</div>'+
-    '<button class="btn btn-primary" type="submit" '+(!canWrite?'disabled title="CRUD LMS belum diaktifkan"':'')+'>'+
+    '<button class="btn btn-primary" type="submit" '+(!canWrite?'disabled title="Penyuntingan kursus belum tersedia"':'')+'>'+
       (c?'Simpan perubahan draft':'Buat kursus &amp; workspace')+'</button></form>';
 }
 function lessonForm(lesson,canWrite,courseId){
@@ -197,7 +197,7 @@ function adminEditor(detail,jobs,canWrite,products){
     '<aside class="lms-aside-column"><section class="surface lms-editor-section">'+
       '<p class="card-kicker">WORKSPACE OTOMATIS</p><h3>'+e(w.name||'Ruang penulisan')+'</h3>'+
       '<p class="card-desc">Dibuat bersama kursus, mengelola revisi dan pekerjaan AI. Tidak ada panggilan model berbayar.</p>'+
-      '<div class="lms-meta">'+tag(w.workspace_status||'ACTIVE')+tag('Tanpa API key')+'</div></section>'+
+      '<div class="lms-meta">'+tag(w.workspace_status||'ACTIVE')+tag('Ruang materi')+'</div></section>'+
     '<section class="surface lms-editor-section"><p class="card-kicker">ANTRIAN AI (BELUM DIEKSEKUSI)</p>'+
       '<h3>Brief untuk LLM</h3>'+
       '<p class="card-desc">Siapkan instruksi untuk model AI masa depan. Hasilnya wajib ditinjau, tidak langsung masuk pelajaran.</p>'+
