@@ -7,7 +7,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const src=fs.readFileSync(path.join(__dirname,'../apps-script/Code.gs'),'utf8');
-function boot(enabled=false,registration=false,finance=false,support=false){
+function boot(enabled=false,registration=false,finance=false,support=false,lms=false){
   let touched=0;
   const forbidden=new Proxy({}, {get(){touched++;throw new Error('UNEXPECTED_GOOGLE_IO');}});
   const context=vm.createContext({
@@ -18,6 +18,7 @@ function boot(enabled=false,registration=false,finance=false,support=false){
         if(key==='NGD_REGISTRATION_ENABLED')return registration?'true':null;
         if(key==='NGD_FINANCE_ENABLED')return finance?'true':null;
         if(key==='NGD_SUPPORT_ENABLED')return support?'true':null;
+        if(key==='NGD_LMS_ENABLED')return lms?'true':null;
         if(key==='NGD_CLICK_TRACKING_ENABLED')return null;
         throw new Error('UNEXPECTED_SCRIPT_PROPERTY: '+key);
       }};
@@ -134,5 +135,33 @@ test('independent support switch grants only support eligibility, not finance',(
     /Transaksi/);
   assert.throws(()=>vm.runInContext("requireActionFeatureEnabled_('register')",s.context),
     /Pendaftaran/);
+  assert.equal(s.touched(),0);
+});
+
+test('LMS enrollment, CRUD, publishing and AI drafting stay locked by default',()=>{
+  const s=boot(true,true,true,true,false);
+  const actions=['enrollLMSCourse','completeLMSLesson','adminCreateLMSCourse',
+    'adminUpdateLMSCourse','adminArchiveLMSCourse','adminRestoreLMSCourse',
+    'adminPublishLMSCourse','adminCreateLMSLesson','adminUpdateLMSLesson',
+    'adminArchiveLMSLesson','adminRestoreLMSLesson','adminPublishLMSLesson',
+    'adminPrepareLMSAIJob','adminImportLMSAIResult','adminReviewLMSAIJob'];
+  for(const action of actions){
+    const result=s.request(action);
+    assert.equal(result.ok,false,action);
+    assert.equal(result.error.code,'MAINTENANCE',action);
+  }
+  assert.equal(s.touched(),0);
+});
+test('LMS server gate is independent of finance, support and registration',()=>{
+  const s=boot(true,false,false,false,true);
+  for(const action of ['enrollLMSCourse','completeLMSLesson','adminCreateLMSCourse',
+    'adminRestoreLMSLesson','adminPrepareLMSAIJob']){
+    assert.doesNotThrow(()=>vm.runInContext(
+      'requireActionFeatureEnabled_('+JSON.stringify(action)+')',s.context));
+  }
+  for(const action of ['createOrder','register','createTicket']){
+    assert.throws(()=>vm.runInContext(
+      'requireActionFeatureEnabled_('+JSON.stringify(action)+')',s.context),/belum/);
+  }
   assert.equal(s.touched(),0);
 });
