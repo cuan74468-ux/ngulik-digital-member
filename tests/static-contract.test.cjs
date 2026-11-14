@@ -22,7 +22,7 @@ test('do not embed secrets or open financial features in config',()=>{
   const config=read('config.js');
   // A public GAS web-app endpoint is not a secret. Production-facing
   // catalog reads must stay wired, while all mutations remain gated.
-  assert.match(config,/apiUrl:\s*'https:\/\/script\\.google\\.com\/macros\/s\/[^']+\/exec'/);
+  assert.match(config,/apiUrl:\s*'https:\/\/script\.google\.com\/macros\/s\/[^']+\/exec'/);
   assert.doesNotMatch(config,/demoMode/);
   assert.match(config,/memberWritesEnabled:\s*false/);
   assert.match(config,/paymentsEnabled:\s*false/);
