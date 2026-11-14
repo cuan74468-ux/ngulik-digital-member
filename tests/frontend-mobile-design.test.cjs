@@ -100,3 +100,19 @@ test('read-only preview locks writes even when visual calls to action exist',()=
   assert.match(h.nodes.screen.innerHTML,/disabled title="Penyuntingan materi belum tersedia"/);
   assert.equal(h.apiCalls(),0);
 });
+
+test('admin mobile workspace exposes every operational module with a consistent active route',()=>{
+  const h=preview('admin','lms-editor');
+  assert.equal(h.attributes['data-app-role'],'admin');
+  const bar=h.nodes['notice-slot'].innerHTML;
+  assert.match(bar,/aria-label="Navigasi seluruh modul admin"/);
+  for(const route of ['admin','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','akun'])
+    assert.ok(bar.includes('data-route="'+route+'"'),'Admin route missing: '+route);
+  assert.match(bar,/data-route="lms" aria-current="page"/);
+  for(const route of ['admin','produk','pesanan','lms','akun'])
+    assert.ok(h.nodes['mobile-nav'].innerHTML.includes('data-route="'+route+'"'),route);
+  h.go('member360');
+  assert.match(h.nodes['notice-slot'].innerHTML,/data-route="member" aria-current="page"/);
+  const guest=preview('','beranda');
+  assert.equal(guest.nodes['notice-slot'].innerHTML,'');
+});
