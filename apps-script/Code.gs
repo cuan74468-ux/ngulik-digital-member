@@ -357,6 +357,8 @@ function setupDatabase() {
   if(!inspection.schemaOk || inspection.adminCount>1){
     throw new Error('SETUP_BLOCKED: Struktur tidak lengkap/berbeda atau akun ADMIN ganda. Jangan ulangi setup; audit manual diperlukan.');
   }
+  // First-time setup is a mutation and requires explicit QA release.
+  requireMutationsEnabled_();
   // Jangan letakkan UI alert di callback lock: alert menangguhkan eksekusi Apps Script.
   var result=withLock_(function(){
     ensureSheets_();
@@ -386,6 +388,7 @@ function setupDatabase() {
   return {tabs:result.tabs,seed:result.seed,adminCreated:result.admin.created};
 }
 function resetAdminPin() {
+  requireMutationsEnabled_();
   // PIN hanya dibawa di memori hingga dialog tampil; jangan dikirim ke log.
   var result=withLock_(function(){
     var admin=findRows_('members',function(r){return r.role==='ADMIN';})[0];
