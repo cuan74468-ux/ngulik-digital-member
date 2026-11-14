@@ -62,8 +62,11 @@ function lmsViewCourse_(row,admin){
   var o={course_id:row.course_id,workspace_id:row.workspace_id,
     title:admin?row.title:row.published_title,
     summary:admin?row.summary:row.published_summary,
-    category:row.category,level:row.level,access_type:row.access_type,
-    product_id:row.product_id,sort_order:Number(row.sort_order)||100,
+    category:admin?row.category:row.published_category,
+    level:admin?row.level:row.published_level,
+    access_type:admin?row.access_type:row.published_access_type,
+    product_id:admin?row.product_id:row.published_product_id,
+    sort_order:Number(admin?row.sort_order:row.published_sort_order)||100,
     status:row.status,version:Number(row.version)||1,
     published_at:row.published_at||''};
   if(admin){
@@ -71,7 +74,10 @@ function lmsViewCourse_(row,admin){
     o.published_title=row.published_title||'';o.published_summary=row.published_summary||'';
     o.updated_at=row.updated_at||'';
     o.unpublished_changes=row.title!==row.published_title||
-      row.summary!==row.published_summary;
+      row.summary!==row.published_summary||row.category!==row.published_category||
+      row.level!==row.published_level||row.access_type!==row.published_access_type||
+      row.product_id!==row.published_product_id||
+      Number(row.sort_order)!==Number(row.published_sort_order);
   }
   return o;
 }
@@ -80,19 +86,27 @@ function lmsViewLesson_(r,admin){
     title:admin?r.title:r.published_title,
     body:admin?r.body:r.published_body,
     media_url:admin?r.media_url:r.published_media_url,
-    kind:r.kind,sort_order:Number(r.sort_order)||100,
-    duration_minutes:Number(r.duration_minutes)||10,
+    kind:admin?r.kind:r.published_kind,
+    sort_order:Number(admin?r.sort_order:r.published_sort_order)||100,
+    duration_minutes:Number(admin?r.duration_minutes:r.published_duration_minutes)||10,
     status:r.status,version:Number(r.version)||1,
     published_at:r.published_at||''};
   if(admin){
     result.draft_title=r.title;result.draft_body=r.body;
     result.unpublished_changes=r.title!==r.published_title||
-      r.body!==r.published_body||r.media_url!==r.published_media_url;
+      r.body!==r.published_body||r.media_url!==r.published_media_url||
+      r.kind!==r.published_kind||
+      Number(r.sort_order)!==Number(r.published_sort_order)||
+      Number(r.duration_minutes)!==Number(r.published_duration_minutes);
   }
   return result;
 }
 function lmsOrder_(a,b){
   return Number(a.sort_order||100)-Number(b.sort_order||100)||
+    String(a.created_at||'').localeCompare(String(b.created_at||''));
+}
+function lmsPublishedOrder_(a,b){
+  return Number(a.published_sort_order||100)-Number(b.published_sort_order||100)||
     String(a.created_at||'').localeCompare(String(b.created_at||''));
 }
 function lmsCourse_(id){
@@ -117,7 +131,7 @@ function lmsAdminCatalog_(p){
 }
 function lmsPublishedCatalog_(member){
   return readAll_('lms_courses').filter(function(r){return r.status==='PUBLISHED';})
-    .sort(lmsOrder_).map(function(r){
+    .sort(lmsPublishedOrder_).map(function(r){
       var v=lmsViewCourse_(r,false);
       v.access_granted=lmsCanAccess_(member,r);
       return v;
@@ -125,11 +139,12 @@ function lmsPublishedCatalog_(member){
 }
 function lmsCanAccess_(member,course){
   if(member.role==='ADMIN')return true;
-  if(course.access_type==='MEMBER')return true;
-  var p=byId_('katalog_produk','product_id',course.product_id);
+  if(course.published_access_type==='MEMBER')return true;
+  if(course.published_access_type!=='PRODUCT')return false;
+  var p=byId_('katalog_produk','product_id',course.published_product_id);
   if(!p)return false;
   var related=findRows_('orders',function(o){
-    return o.member_id===member.member_id&&o.product_id===course.product_id&&
+    return o.member_id===member.member_id&&o.product_id===course.published_product_id&&
       ['PAID','FULFILLED'].indexOf(o.status)>=0;
   });
   if(!related.length)return false;
@@ -179,7 +194,9 @@ function lmsCreateCourse_(admin,p,requestId){
     }
     var t=now_(),course={course_id:recordId_('CRS'),
       workspace_id:recordId_('WS'),title:input.title,summary:input.summary,
-      published_title:'',published_summary:'',category:input.category,
+      published_title:'',published_summary:'',published_category:'',
+      published_level:'',published_access_type:'',published_product_id:'',
+      published_sort_order:'',category:input.category,
       level:input.level,access_type:input.access_type,product_id:input.product_id,
       sort_order:input.sort_order,status:'DRAFT',version:1,
       created_at:t,updated_at:t,published_at:'',archived_at:'',
@@ -228,6 +245,7 @@ function lmsCreateLesson_(admin,p,requestId){
     var t=now_(),lesson={lesson_id:recordId_('LES'),course_id:course.course_id,
       title:input.title,body:input.body,media_url:input.media_url,
       published_title:'',published_body:'',published_media_url:'',
+      published_kind:'',published_sort_order:'',published_duration_minutes:'',
       kind:input.kind,sort_order:input.sort_order,
       duration_minutes:input.duration_minutes,status:'DRAFT',version:1,
       created_at:t,updated_at:t,published_at:'',created_by:admin.member_id,
@@ -269,6 +287,11 @@ function lmsRevision_(entity,row,admin,requestId){
     version:Number(row.version),title:row.title,
     body:entity==='COURSE'?row.summary:row.body,
     media_url:entity==='LESSON'?row.media_url:'',
+    metadata_json:JSON.stringify(entity==='COURSE'?
+      {category:row.category,level:row.level,access_type:row.access_type,
+       product_id:row.product_id,sort_order:row.sort_order}:
+      {kind:row.kind,sort_order:row.sort_order,
+       duration_minutes:row.duration_minutes}),
     published_at:now_(),actor_id:admin.member_id,request_id:requestId};
   appendRow_('lms_revisions',record);
   return record;
@@ -280,12 +303,16 @@ function lmsPublishLesson_(admin,p,requestId){
       'CONFLICT','Materi diarsipkan.');
     var isCurrent=r.status==='PUBLISHED'&&
       r.title===r.published_title&&r.body===r.published_body&&
-      r.media_url===r.published_media_url;
+      r.media_url===r.published_media_url&&r.kind===r.published_kind&&
+      Number(r.sort_order)===Number(r.published_sort_order)&&
+      Number(r.duration_minutes)===Number(r.published_duration_minutes);
     if(isCurrent)return lmsViewLesson_(r,true);
     lmsRevision_('LESSON',r,admin,requestId);
     updateRow_('lms_lessons',r._row,{
       status:'PUBLISHED',published_title:r.title,published_body:r.body,
-      published_media_url:r.media_url,published_at:now_(),
+      published_media_url:r.media_url,published_kind:r.kind,
+      published_sort_order:r.sort_order,
+      published_duration_minutes:r.duration_minutes,published_at:now_(),
       updated_at:now_()
     });
     logAudit_(admin.member_id,'ADMIN','LMS_LESSON_PUBLISHED','lms_lessons',
@@ -303,10 +330,18 @@ function lmsPublishCourse_(admin,p,requestId){
     require_(lessons.length>0,'CONFLICT',
       'Terbitkan minimal satu pelajaran sebelum kursus.');
     if(r.status==='PUBLISHED'&&r.title===r.published_title&&
-       r.summary===r.published_summary)return lmsViewCourse_(r,true);
+       r.summary===r.published_summary&&r.category===r.published_category&&
+       r.level===r.published_level&&
+       r.access_type===r.published_access_type&&
+       r.product_id===r.published_product_id&&
+       Number(r.sort_order)===Number(r.published_sort_order))
+      return lmsViewCourse_(r,true);
     lmsRevision_('COURSE',r,admin,requestId);
     updateRow_('lms_courses',r._row,{
       status:'PUBLISHED',published_title:r.title,published_summary:r.summary,
+      published_category:r.category,published_level:r.level,
+      published_access_type:r.access_type,published_product_id:r.product_id,
+      published_sort_order:r.sort_order,
       published_at:now_(),updated_at:now_()});
     logAudit_(admin.member_id,'ADMIN','LMS_COURSE_PUBLISHED','lms_courses',
       r.course_id,r.status,'PUBLISHED',{version:r.version,lessons:lessons.length});
@@ -359,7 +394,7 @@ function lmsMemberDetail_(member,p){
   require_(course.status==='PUBLISHED','NOT_FOUND','Kursus belum tersedia.');
   var access=lmsCanAccess_(member,course),lessons=findRows_('lms_lessons',function(r){
     return r.course_id===course.course_id&&r.status==='PUBLISHED';
-  }).sort(lmsOrder_);
+  }).sort(lmsPublishedOrder_);
   var progress=findRows_('lms_progress',function(r){
     return r.member_id===member.member_id&&r.course_id===course.course_id;
   });
