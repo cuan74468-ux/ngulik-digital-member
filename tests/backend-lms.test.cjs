@@ -269,3 +269,59 @@ test('LMS read models omit internal request IDs and actor secrets',()=>{
   assert.equal(Object.hasOwn(visible.lessons[0],'created_by'),false);
   assert.equal(Object.hasOwn(visible.lessons[0],'published_body'),false);
 });
+
+test('draft metadata never changes published paid entitlement before republish',()=>{
+  const f=fixture(),course=f.course(),lesson=f.lesson(course.course_id);
+  f.act('adminPublishLMSLesson','admin',{lesson_id:lesson.lesson_id});
+  f.act('adminPublishLMSCourse','admin',{course_id:course.course_id});
+  assert.equal(f.act('getLMSCourse','other',{course_id:course.course_id}).access_granted,true);
+  f.act('adminUpdateLMSCourse','admin',{
+    course_id:course.course_id,expected_version:1,
+    title:'Kursus Berbayar, Masih Draft',summary:'Perubahan model akses masih draft dan belum disetujui untuk diterbitkan.',
+    category:'Premium',level:'LANJUTAN',access_type:'PRODUCT',product_id:'P1',sort_order:50
+  });
+  const live=f.act('getLMSCourse','other',{course_id:course.course_id});
+  assert.equal(live.access_granted,true);
+  assert.equal(live.course.access_type,'MEMBER');
+  assert.equal(live.course.category,'Operasional');
+  assert.equal(live.course.level,'PEMULA');
+  assert.equal(live.course.sort_order,1);
+  f.act('adminPublishLMSCourse','admin',{course_id:course.course_id});
+  const after=f.act('getLMSCourse','other',{course_id:course.course_id});
+  assert.equal(after.access_granted,false);
+  assert.equal(after.lessons.length,0);
+  assert.equal(after.course.access_type,'PRODUCT');
+});
+test('draft lesson media, kind and duration remain unchanged for members until publication',()=>{
+  const f=fixture(),course=f.course(),lesson=f.lesson(course.course_id);
+  f.act('adminPublishLMSLesson','admin',{lesson_id:lesson.lesson_id});
+  f.act('adminPublishLMSCourse','admin',{course_id:course.course_id});
+  f.act('adminUpdateLMSLesson','admin',{
+    lesson_id:lesson.lesson_id,expected_version:1,
+    title:'Tutorial Penggunaan Printer',body:'Pelajaran video baru mengenai penggunaan printer untuk usaha.',
+    media_url:'https://youtu.be/video123',kind:'VIDEO',sort_order:80,duration_minutes:60
+  });
+  const before=f.act('getLMSCourse','member',{course_id:course.course_id}).lessons[0];
+  assert.equal(before.kind,'ARTICLE');
+  assert.equal(before.media_url,'');
+  assert.equal(before.duration_minutes,15);
+  assert.equal(before.sort_order,1);
+  f.act('adminPublishLMSLesson','admin',{lesson_id:lesson.lesson_id});
+  const after=f.act('getLMSCourse','member',{course_id:course.course_id}).lessons[0];
+  assert.equal(after.kind,'VIDEO');
+  assert.equal(after.duration_minutes,60);
+  assert.equal(after.sort_order,80);
+  assert.equal(after.media_url,'https://youtu.be/video123');
+});
+test('revision history retains metadata needed for later manual rollback planning',()=>{
+  const f=fixture(),c=f.course(),l=f.lesson(c.course_id);
+  f.act('adminPublishLMSLesson','admin',{lesson_id:l.lesson_id});
+  f.act('adminPublishLMSCourse','admin',{course_id:c.course_id});
+  const a=f.act('adminListLMSRevisions','admin',{entity:'LESSON',entity_id:l.lesson_id});
+  const b=f.act('adminListLMSRevisions','admin',{entity:'COURSE',entity_id:c.course_id});
+  assert.equal(a.length,1);assert.equal(b.length,1);
+  assert.equal(JSON.parse(a[0].metadata_json).duration_minutes,15);
+  assert.equal(JSON.parse(b[0].metadata_json).access_type,'MEMBER');
+  assert.throws(()=>f.act('adminListLMSRevisions','member',
+    {entity:'LESSON',entity_id:l.lesson_id}),/Akses tidak diizinkan/);
+});
