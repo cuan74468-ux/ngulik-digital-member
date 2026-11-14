@@ -819,7 +819,7 @@ function approveFulfillment_(admin,p) {
         'Lisensi sudah aktif. Periksa riwayat sebelum menerbitkan lagi.');
     } else {
       mail=String(p.canva_email||'').trim();
-      require_(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(mail),
+      require_(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail),
         'VALIDATION','Email undangan Canva tidak valid.');
       days=Number(product.durasi_hari);
       require_(Number.isInteger(days)&&days>=1&&days<=365,
