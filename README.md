@@ -7,7 +7,9 @@ Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliat
 
 **Status: DALAM PENGEMBANGAN — belum siap dipakai publik atau transaksi nyata.**
 
-**Checkpoint QA terbaru:** GitHub Actions run #102 **89/89 tes Node.js lulus**, dan Chrome headless memuat beranda tamu, pratinjau member pada viewport mobile, serta katalog desktop. Referensi: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43539730560
+**Checkpoint QA terbaru:** GitHub Actions run #106 **89/89 tes Node.js lulus**. Chrome headless menguji beranda, dashboard mobile 390×844 (navigasi terlihat, tidak overflow), dan katalog desktop 1280×800 (checkout terkunci, tidak overflow). Bukti: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43540518931
+
+**Bukti dan rinciannya:** [QA Evidence & Staging Checkpoint](docs/QA_EVIDENCE_2026-11-14.md).
 
 **Database staging privat sudah dibuat:** salinan Google Sheet memiliki ID berbeda dari sumber, 14/14 tab dan 149 header cocok dengan backend, data identitas/sesi/order/ledger/komisi/log dibersihkan, serta pendaftaran diatur `TERTUTUP`. URL staging sengaja tidak dipublikasikan dalam repository. Database sumber tidak diubah. Staging baru berupa **spreadsheet**; backend GAS staging dan eksekusi integrasi belum terverifikasi.
 
