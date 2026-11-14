@@ -11,7 +11,7 @@ test('HTML entry uses versioned local files and language metadata',()=>{
   assert.match(html,/<html lang="id">/);
   assert.match(html,/name="viewport"/);
   assert.match(html,/src="\.\/config\.js"/);
-  assert.match(html,/type="module" src="\.\/js\/app\.js\?v=20261114-service1"/);
+  assert.match(html,/type="module" src="\.\/js\/app\.js\?v=20261114-real1"/);
   assert.match(html,/href="\.\/assets\/app\.css"/);
   assert.match(html,/Content-Security-Policy/);
   for(const file of ['config.js','js/app.js','js/api.js','assets/app.css','assets/favicon.svg']){
@@ -31,7 +31,7 @@ test('public UI strips unsafe HTML and restricts payments',()=>{
   assert.match(app,/const esc\s*=/);
   assert.match(app,/const paymentEnabled\s*=/);
   assert.match(app,/data-buy=/);
-  assert.match(app,/PREVIEW_CATALOG/);
+  assert.match(app,/PUBLIC_CATALOG/);
   const api=read('js/api.js');
   assert.match(api,/credentials:\s*'omit'/);
   assert.doesNotMatch(api,/mode:\s*'no-cors'/);
