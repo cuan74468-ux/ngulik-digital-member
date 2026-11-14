@@ -41,7 +41,7 @@ const NGD = Object.freeze({
     lms_ai_jobs: 'job_id,workspace_id,course_id,lesson_id,task_type,brief,prompt,result_draft,status,created_at,updated_at,requested_by,reviewed_by,request_id',
     lms_revisions: 'revision_id,entity,entity_id,version,title,body,media_url,metadata_json,published_at,actor_id,request_id',
     notifications: 'notification_id,member_id,source,source_id,jenis,judul,pesan,status,created_at,read_at,request_id',
-    service_requests: 'service_id,member_id,product_id,jenis_layanan,judul,brief,referensi_url,anggaran,status,penawaran_harga,penawaran_pesan,catatan_internal,created_at,updated_at,closed_at,request_id'
+    service_requests: 'service_id,member_id,product_id,jenis_layanan,judul,brief,referensi_url,anggaran,status,penawaran_harga,penawaran_pesan,catatan_internal,created_at,updated_at,closed_at,request_id,revision'
   }
 });
 
