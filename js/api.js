@@ -20,10 +20,14 @@ export class ApiError extends Error {
 }
 export async function api(action, payload = {}, token = '', options = {}) {
   if (!isConnected()) throw new ApiError('Sistem akun sedang tidak dapat diakses. Silakan coba kembali.', 'NOT_CONFIGURED');
-  const {write = false, timeoutMs = 24000, requestId = null} = options;
+  const {write = false, adminAuth = false, timeoutMs = 24000, requestId = null} = options;
+  if(adminAuth && (!write ||
+      !['adminLogin','adminLogout','adminChangePin'].includes(action)))
+    throw new ApiError('Aksi autentikasi admin tidak diizinkan.', 'FORBIDDEN');
   if (requestId !== null && !/^[A-Za-z0-9_-]{16,80}$/.test(String(requestId)))
     throw new ApiError('ID permintaan tidak valid.', 'VALIDATION');
-  if (write && !isWriteEnabled()) throw new ApiError('Penyimpanan data sedang tidak tersedia.', 'SERVICE_UNAVAILABLE');
+  if (write && !isWriteEnabled() && !(adminAuth && config.adminLoginEnabled === true))
+    throw new ApiError('Penyimpanan data sedang tidak tersedia.', 'SERVICE_UNAVAILABLE');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
