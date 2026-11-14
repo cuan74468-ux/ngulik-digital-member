@@ -31,7 +31,14 @@ const NGD = Object.freeze({
     ringkasan: 'metrik,nilai',
     support_tickets: 'ticket_id,member_id,product_id,order_id,kategori,judul,deskripsi,platform,versi_aplikasi,status,prioritas,assigned_to,created_at,updated_at,resolved_at,closed_at,request_id',
     ticket_activities: 'activity_id,ticket_id,actor_id,actor_role,jenis,dari_status,ke_status,pesan,created_at,request_id',
-    product_releases: 'release_id,product_id,versi,judul,ringkasan,tipe_rilis,status,created_at,published_at,created_by,request_id'
+    product_releases: 'release_id,product_id,versi,judul,ringkasan,tipe_rilis,status,created_at,published_at,created_by,request_id',
+    lms_courses: 'course_id,workspace_id,title,summary,published_title,published_summary,category,level,access_type,product_id,sort_order,status,version,created_at,updated_at,published_at,archived_at,created_by,request_id',
+    lms_lessons: 'lesson_id,course_id,title,body,media_url,published_title,published_body,published_media_url,kind,sort_order,duration_minutes,status,version,created_at,updated_at,published_at,created_by,request_id',
+    lms_enrollments: 'enrollment_id,member_id,course_id,status,enrolled_at,last_access_at,completed_at,request_id',
+    lms_progress: 'progress_id,member_id,course_id,lesson_id,status,started_at,completed_at,request_id',
+    lms_workspaces: 'workspace_id,course_id,name,workspace_status,created_at,updated_at,created_by,auto_created,request_id',
+    lms_ai_jobs: 'job_id,workspace_id,course_id,lesson_id,task_type,brief,prompt,result_draft,status,created_at,updated_at,requested_by,reviewed_by,request_id',
+    lms_revisions: 'revision_id,entity,entity_id,version,title,body,media_url,published_at,actor_id,request_id'
   }
 });
 
@@ -1159,6 +1166,11 @@ function apiRouter_(action,token,p,requestId) {
   m=activeMember_(token);
   switch(action) {
     case 'getMe':return publicMember_(m);
+    case 'getLMSCatalog':return lmsPublishedCatalog_(m);
+    case 'getLMSCourse':return lmsMemberDetail_(m,p);
+    case 'getMyLMSEnrollments':return lmsMyEnrollments_(m);
+    case 'enrollLMSCourse':return lmsEnroll_(m,p,requestId);
+    case 'completeLMSLesson':return lmsComplete_(m,p,requestId);
     case 'getMyProducts':return supportMemberProducts_(m,readAll_('orders'),readAll_('katalog_produk'));
     case 'getMyTickets':return supportListMine_(m);
     case 'getTicket':return supportGetTicket_(m,p.ticket_id);
@@ -1188,6 +1200,21 @@ function apiRouter_(action,token,p,requestId) {
   }
   admin=admin_(token);
   switch(action){
+    case 'adminListLMSCourses':return lmsAdminCatalog_(p);
+    case 'adminGetLMSCourse':return lmsAdminLessons_(p);
+    case 'adminListLMSRevisions':return lmsAdminRevisions_(p);
+    case 'adminListLMSAIJobs':return lmsListAIJobs_(p);
+    case 'adminCreateLMSCourse':return lmsCreateCourse_(admin,p,requestId);
+    case 'adminUpdateLMSCourse':return lmsUpdateCourse_(admin,p);
+    case 'adminArchiveLMSCourse':return lmsArchive_(admin,p,'COURSE');
+    case 'adminPublishLMSCourse':return lmsPublishCourse_(admin,p,requestId);
+    case 'adminCreateLMSLesson':return lmsCreateLesson_(admin,p,requestId);
+    case 'adminUpdateLMSLesson':return lmsUpdateLesson_(admin,p);
+    case 'adminArchiveLMSLesson':return lmsArchive_(admin,p,'LESSON');
+    case 'adminPublishLMSLesson':return lmsPublishLesson_(admin,p,requestId);
+    case 'adminPrepareLMSAIJob':return lmsPrepareAIJob_(admin,p,requestId);
+    case 'adminImportLMSAIResult':return lmsImportAIResult_(admin,p);
+    case 'adminReviewLMSAIJob':return lmsCloseAIJob_(admin,p);
     case 'adminSearchMembers':return supportSearchMembers_(p);
     case 'adminGetMember360':return supportGetMember360_(p.member_id);
     case 'adminGetProductImpact':return supportProductImpact_(p);
@@ -1293,6 +1320,13 @@ function requireActionFeatureEnabled_(action) {
   if(action==='register')
     require_(settings.getProperty('NGD_REGISTRATION_ENABLED')==='true',
       'MAINTENANCE','Pendaftaran belum dibuka.');
+  if(['enrollLMSCourse','completeLMSLesson','adminCreateLMSCourse',
+      'adminUpdateLMSCourse','adminArchiveLMSCourse','adminPublishLMSCourse',
+      'adminCreateLMSLesson','adminUpdateLMSLesson','adminArchiveLMSLesson',
+      'adminPublishLMSLesson','adminPrepareLMSAIJob','adminImportLMSAIResult',
+      'adminReviewLMSAIJob'].indexOf(action)>=0)
+    require_(settings.getProperty('NGD_LMS_ENABLED')==='true',
+      'MAINTENANCE','Pengelolaan LMS masih dalam tahap pengujian.');
   if(['createTicket','replyTicket','adminChangeTicketStatus','adminSetTicketPriority','adminReplyTicket',
       'adminCreateProductRelease','adminPublishProductRelease'].indexOf(action)>=0)
     require_(settings.getProperty('NGD_SUPPORT_ENABLED')==='true',
@@ -1316,7 +1350,10 @@ function apiReadActions_() {
     'adminGetReconciliation',
     'getMyProducts','getMyTickets','getTicket','getMyProductReleases',
     'adminSearchMembers','adminGetMember360','adminGetProductImpact','adminGetSupportOverview',
-    'adminListTickets','adminGetTicket','adminListProductReleases'];
+    'adminListTickets','adminGetTicket','adminListProductReleases',
+    'getLMSCatalog','getLMSCourse','getMyLMSEnrollments',
+    'adminListLMSCourses','adminGetLMSCourse','adminListLMSRevisions',
+    'adminListLMSAIJobs'];
 }
 function doPost(e) {
   try {
