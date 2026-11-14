@@ -997,8 +997,10 @@ async function lmsButtonAction(button){
   const map={
     'publish-course':['adminPublishLMSCourse',{course_id:courseId}],
     'archive-course':['adminArchiveLMSCourse',{course_id:courseId,confirm_archive:true}],
+    'restore-course':['adminRestoreLMSCourse',{course_id:courseId,confirm_restore:true}],
     'publish-lesson':['adminPublishLMSLesson',{lesson_id:lessonId}],
     'archive-lesson':['adminArchiveLMSLesson',{lesson_id:lessonId,confirm_archive:true}],
+    'restore-lesson':['adminRestoreLMSLesson',{lesson_id:lessonId,confirm_restore:true}],
     'enroll':['enrollLMSCourse',{course_id:courseId}],
     'complete':['completeLMSLesson',{lesson_id:lessonId}],
     'approve-ai':['adminReviewLMSAIJob',{job_id:state.lmsSelectedAIJobId,decision:'APPROVED'}],
@@ -1006,7 +1008,8 @@ async function lmsButtonAction(button){
   };
   const x=map[action];
   if(!x)return;
-  if(['archive-course','archive-lesson','publish-course'].includes(action)&&
+  if(['archive-course','archive-lesson','restore-course','restore-lesson',
+      'publish-course'].includes(action)&&
      !confirm('Lanjutkan tindakan '+action+'? Riwayat peserta tidak dihapus.'))return;
   await submitLMSWrite(x[0],x[1],async()=>{
     if(action==='enroll'||action==='complete'){
