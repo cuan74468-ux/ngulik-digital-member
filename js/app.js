@@ -569,7 +569,7 @@ function lmsSelectedAIJob_(){
 }
 function render(){
   // Scoped mobile visual system: preserve the admin desktop appearance.
-  document.body?.classList?.toggle('member-experience',logged()&&!isAdmin());
+  document.body?.classList?.toggle('member-experience',!isAdmin());
   document.body?.setAttribute?.('data-member-route',state.route);
   renderNav();
   by('notice-slot').innerHTML=notice();
