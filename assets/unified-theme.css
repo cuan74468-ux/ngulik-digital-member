@@ -394,3 +394,67 @@ body:not(#ngd) .eyebrow,body:not(#ngd) .card-kicker,body:not(#ngd) .hub-kicker,b
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
+
+
+/* 14 — Membership commercial service request layout (Indigo Studio). */
+body:not(#ngd) .service-heading{max-width:940px;margin:5px 0 26px}
+body:not(#ngd) .service-heading h1{
+  font-size:clamp(1.9rem,3vw,3.2rem);line-height:1.1;
+  letter-spacing:-.045em;margin:0 0 12px;color:var(--ink)
+}
+body:not(#ngd) .service-heading p:not(.eyebrow){font-size:.88rem;line-height:1.7;color:var(--muted)}
+body:not(#ngd) .service-columns{
+  display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);
+  align-items:start;gap:20px;min-width:0
+}
+body:not(#ngd) .service-form-shell,body:not(#ngd) .service-admin-detail{
+  min-width:0;background:var(--paper);border:1px solid var(--line);
+  border-radius:var(--radius);padding:clamp(20px,2.4vw,30px);box-shadow:var(--shadow)
+}
+body:not(#ngd) .service-form-shell h2,body:not(#ngd) .service-history h2{
+  font-size:clamp(1.35rem,2vw,1.8rem);margin:0 0 13px
+}
+body:not(#ngd) .service-form-shell .card-desc{font-size:.84rem;color:var(--muted);line-height:1.7}
+body:not(#ngd) .service-form-shell textarea,
+body:not(#ngd) .service-admin-detail textarea{min-width:0;resize:vertical;line-height:1.6}
+body:not(#ngd) .service-history{display:grid;gap:13px;min-width:0}
+body:not(#ngd) .service-entry{
+  min-width:0;background:var(--paper);border:1px solid var(--line);
+  border-radius:20px;padding:20px;box-shadow:var(--shadow)
+}
+body:not(#ngd) .service-entry-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+body:not(#ngd) .service-entry-top strong{font-size:.9rem;overflow-wrap:anywhere}
+body:not(#ngd) .service-entry p{
+  margin:8px 0;font-size:.8rem;line-height:1.6;
+  color:var(--muted);overflow-wrap:anywhere
+}
+body:not(#ngd) .service-admin-list{display:grid;gap:10px;min-width:0}
+body:not(#ngd) .service-admin-item{
+  display:grid;gap:8px;justify-items:start;text-align:left;
+  width:100%;min-width:0;border:1px solid var(--line);
+  border-radius:18px;background:var(--paper);
+  color:var(--text);padding:17px 20px;cursor:pointer
+}
+body:not(#ngd) .service-admin-item[aria-current=true]{
+  border-color:var(--brand-blue);box-shadow:0 7px 20px rgba(67,97,238,.08)
+}
+body:not(#ngd) .service-admin-item strong{font-size:.85rem;overflow-wrap:anywhere}
+body:not(#ngd) .service-admin-item small{color:var(--muted);font-size:.75rem}
+body:not(#ngd) .service-admin-detail>p{overflow-wrap:anywhere;white-space:pre-wrap}
+body:not(#ngd) .service-cta{
+  display:inline-flex;align-items:center;gap:8px;max-width:100%;
+  padding:10px 0;border:0;background:none;color:var(--brand-blue);
+  font-weight:700;font-size:.79rem;cursor:pointer;text-align:left
+}
+body:not(#ngd) .service-cta svg{width:17px;height:17px;flex-shrink:0}
+body:not(#ngd) .service-cta:hover{text-decoration:underline}
+@media(max-width:1050px){
+  body:not(#ngd) .service-columns{grid-template-columns:1fr}
+  body:not(#ngd) .service-admin-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  body:not(#ngd) .service-heading h1{font-size:clamp(1.85rem,8vw,2.5rem)}
+  body:not(#ngd) .service-columns,body:not(#ngd) .service-admin-list{grid-template-columns:1fr;gap:13px}
+  body:not(#ngd) .service-form-shell,body:not(#ngd) .service-admin-detail{padding:20px 17px}
+  body:not(#ngd) .service-entry{padding:17px}
+}
