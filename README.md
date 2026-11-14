@@ -14,10 +14,14 @@ Perubahan checkpoint 14 November (termasuk hardening lanjutan):
 - Komisi tidak dapat dicairkan bila order asal dibatalkan/direfund.
 - Aktivasi lisensi/seat memakai penanda anti-retry setelah upaya fulfillment.
 - Click tracking publik memiliki saklar tambahan yang default nonaktif.
-- Pengujian aturan bisnis terisolasi sekarang 39/39; test finance, payout, fulfillment, privacy, dan payment evidence masuk workflow, tetapi hasil GitHub Actions masih perlu diverifikasi.
+- Pengujian aturan bisnis terisolasi sekarang 44/44; test finance, payout, fulfillment, privacy, dan payment evidence masuk workflow, tetapi hasil GitHub Actions masih perlu diverifikasi.
 
 Perubahan checkpoint 14 November:
-- Backend mutasi sekarang memerlukan Script Property `NGD_MUTATIONS_ENABLED=true`. Properti ini **belum disetel**; bawaan menolak login/registrasi/order/aksi tulis dengan `MAINTENANCE`.
+- Semua mutasi tetap memerlukan `NGD_MUTATIONS_ENABLED=true`. Pendaftaran memerlukan **saklar kedua** `NGD_REGISTRATION_ENABLED=true`; pembayaran/refund/payout/koreksi kredit memerlukan **saklar ketiga** `NGD_FINANCE_ENABLED=true`. Semua default **OFF**; pengujian login tidak otomatis membuka transaksi.
+- Setiap input teks yang ditulis ke Sheets melewati pelindung karakter formula, dan pembaruan multi-kolom per baris memakai satu `setValues` sambil mempertahankan rumus yang ada.
+- Koreksi kredit admin menggunakan `request_id` yang idempoten. Retry berulang tidak menambah saldo, penggunaan ulang ID dengan nominal/member berbeda ditolak, dan debit baru tidak bisa membuat saldo negatif.
+- Pembelian ulang lisensi POS ditahan, tetapi retry order yang sama tetap idempoten. Perpanjangan seat Canva tidak menurunkan status layanan aktif menjadi `DIAJUKAN`.
+- Laporan rekonsiliasi juga mendeteksi komisi referral yang hilang setelah kegagalan fulfillment. Tautan modul hanya boleh dibuka jika domainnya `classroom.google.com` melalui HTTPS.
 - Login diserialkan di dalam lock untuk mengurangi bypass throttle PIN akibat request paralel.
 - Komisi `PAID` memerlukan bukti transfer dan verifikasi penerima; koreksi kredit admin harus integer, tidak boleh membuat saldo negatif.
 - Beranda member menjadi dashboard tugas/aktivitas, disertai katalog dan opsi `?preview=member` untuk **data contoh lokal** tanpa login/transaksi.
@@ -33,7 +37,7 @@ Perubahan checkpoint 14 November:
 | `diagnosticAuthReadOnly` | Lulus 16/16 pemeriksaan dasar |
 | `diagnosticFinanceReadOnly` | Lulus dengan **0 order / 0 ledger / 0 komisi** |
 | `diagnosticReconciliationReadOnly` | Lulus dengan **0 order** |
-| Skenario murni antrean, keuangan, pengaturan admin | 39/39 assertions lulus di V8 terisolasi |
+| Skenario murni antrean, keuangan, pengaturan admin | 44/44 assertions lulus di V8 terisolasi |
 | Frontend awal (SPA tanpa build) | **Source dibuat**; guest/member preview telah diuji pada mock browser; belum diuji di browser sungguhan |
 | Login nyata, pembayaran, refund, affiliate, AI | **Belum lulus uji integrasi/keamanan** |
 | Google Apps Script terbaru vs GitHub | **Belum disinkronkan sejak perubahan lanjutan** |
