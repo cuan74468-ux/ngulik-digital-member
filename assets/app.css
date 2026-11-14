@@ -132,3 +132,12 @@ select.input{appearance:auto}
 @media(max-width:760px){
   .support-search-grid.member-search-grid{grid-template-columns:1fr}
 }
+
+/* Verified product impact: quiet, scannable metrics without extra UI dependencies */
+.support-impact-summary{border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:10px}
+.support-impact-summary h3{margin:0 0 12px}
+.support-impact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.support-impact-grid .stat{min-width:0}
+.support-impact-grid .stat strong{display:block;font-size:1.35rem;line-height:1.25}
+.support-impact-grid .stat small{font-size:.8rem;color:var(--muted)}
+@media(max-width:480px){.support-impact-grid{grid-template-columns:1fr}}
