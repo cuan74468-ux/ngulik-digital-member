@@ -471,6 +471,25 @@ function viewProfileEditor(){
 function viewAccount(){
   if(!logged())return title('Akun member','PROFIL & KEAMANAN','Kelola akses ke ruang belajar.')+
     '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk dengan nomor WhatsApp dan PIN Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk</button><button class="btn btn-secondary" data-route="daftar">Daftar</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
+  if(isAdmin()){
+    const m=state.me;
+    return title('Akun administrator','PENGATURAN AKSES','Informasi pengelola dan jalur operasional akun.')+
+      '<div class="grid-2"><section class="surface"><p class="card-kicker">IDENTITAS ADMIN</p>'+
+      '<div class="list-rows">'+[
+        ['Nama',m.nama],['WhatsApp login',m.wa],['Peran','Administrator'],
+        ['Status',m.status],['Bergabung',friendlyDate(m.joined_at)]
+      ].map(([label,value])=>'<div class="list-row"><div class="left"><small>'+esc(label)+'</small>'+
+        '<strong>'+esc(value||'-')+'</strong></div></div>').join('')+'</div></section>'+
+      '<section class="surface"><p class="card-kicker">KEAMANAN & OPERASIONAL</p>'+
+      '<h3>Akses panel pengelola</h3><p class="card-desc">Jangan bagikan PIN atau token sesi. Perubahan sistem, saldo, dan pembayaran tetap diverifikasi dari backend.</p>'+
+      '<div class="admin-account-actions">'+[
+        ['admin','Buka dasbor operasional'],['lms','Kelola kelas dan materi'],
+        ['pesanan','Tinjau pesanan'],['dukungan','Buka layanan bantuan']
+      ].map(([route,label])=>'<button type="button" class="quick-action" data-route="'+route+'">'+
+        '<span>'+esc(label)+'</span>'+icon('arrow')+'</button>').join('')+'</div>'+
+      '<button type="button" class="btn btn-secondary" data-action="logout">'+icon('logout')+
+      ' Keluar dari akun</button></section></div>';
+  }
   const m=state.me;return title('Akun Anda','PROFIL MEMBER','Data akun berasal dari server.')+
     '<div class="grid-2"><div class="surface"><p class="card-kicker">INFORMASI AKUN</p>'+
     '<div class="list-rows">'+[
