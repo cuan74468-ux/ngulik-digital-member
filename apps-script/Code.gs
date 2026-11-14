@@ -1194,6 +1194,7 @@ function apiRouter_(action,token,p,requestId) {
     case 'adminListTickets':return supportListAdmin_(p);
     case 'adminGetTicket':return supportGetTicket_(admin,p.ticket_id);
     case 'adminChangeTicketStatus':return supportChangeStatus_(admin,p,requestId);
+    case 'adminSetTicketPriority':return supportSetPriority_(admin,p,requestId);
     case 'adminReplyTicket':return supportReply_(admin,p,requestId);
     case 'adminListProductReleases':return supportAdminReleases_();
     case 'adminCreateProductRelease':return supportCreateRelease_(admin,p,requestId);
@@ -1291,7 +1292,7 @@ function requireActionFeatureEnabled_(action) {
   if(action==='register')
     require_(settings.getProperty('NGD_REGISTRATION_ENABLED')==='true',
       'MAINTENANCE','Pendaftaran belum dibuka.');
-  if(['createTicket','replyTicket','adminChangeTicketStatus','adminReplyTicket',
+  if(['createTicket','replyTicket','adminChangeTicketStatus','adminSetTicketPriority','adminReplyTicket',
       'adminCreateProductRelease','adminPublishProductRelease'].indexOf(action)>=0)
     require_(settings.getProperty('NGD_SUPPORT_ENABLED')==='true',
       'MAINTENANCE','Layanan tiket dan rilis masih dalam tahap pengujian.');
