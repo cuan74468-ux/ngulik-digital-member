@@ -122,7 +122,8 @@ test('frontend admin login switch remains disabled until independently deployed'
  assert.match(conf,/adminLoginEnabled:\s*false/);
  assert.match(client,/adminAuth = false/);
  assert.match(client,/adminLogin','adminLogout','adminChangePin/);
- assert.match(app,/data-mode="'+\(adminMode\?'admin'/);
+ assert.match(app,/data-mode/);
+ assert.match(app,/adminMode\?'admin':register/);
  assert.match(app,/adminMode\?'adminLogin'/);
  assert.match(app,/adminLoginEnabled\(\)/);
  assert.match(app,/adminChangePin/);
