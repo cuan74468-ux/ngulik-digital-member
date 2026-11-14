@@ -2,8 +2,24 @@ name: Validate backend and frontend (no deploy)
 on:
   push:
     branches: [main]
+    paths:
+      - 'apps-script/**'
+      - 'js/**'
+      - 'assets/**'
+      - 'tests/**'
+      - 'index.html'
+      - 'config.js'
+      - '.github/workflows/validate.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'apps-script/**'
+      - 'js/**'
+      - 'assets/**'
+      - 'tests/**'
+      - 'index.html'
+      - 'config.js'
+      - '.github/workflows/validate.yml'
   workflow_dispatch:
 permissions:
   contents: read
