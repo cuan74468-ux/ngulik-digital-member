@@ -119,7 +119,7 @@ function courseForm(c,canWrite,products){
     select('product_id','Produk terkait',items,r.product_id||'')+
     field('sort_order','Urutan',r.sort_order||100,'number','min="1" max="9999" required')+'</div>'+
     '<button class="btn btn-primary" type="submit" '+(!canWrite?'disabled title="CRUD LMS belum diaktifkan"':'')+'>'+
-      (c?'Simpan perubahan draft':'Buat kursus & workspace')+'</button></form>';
+      (c?'Simpan perubahan draft':'Buat kursus &amp; workspace')+'</button></form>';
 }
 function lessonForm(lesson,canWrite,courseId){
   var l=lesson||{};
