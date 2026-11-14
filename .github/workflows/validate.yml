@@ -166,4 +166,23 @@ jobs:
           grep -q 'data-ink-navigation="true"' /tmp/ngd-admin-mobile.html
           grep -q 'data-floating-nav="true"' /tmp/ngd-admin-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-mobile.html
+          # New catalogue admin CRUD must render safely and stay locked on demo.
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/?preview=admin#produk" > /tmp/ngd-admin-catalog-mobile.html 2>>/tmp/ngd-chrome.log
+          grep -q 'id="admin-catalog-form"' /tmp/ngd-admin-catalog-mobile.html
+          grep -q '8 produk tercatat' /tmp/ngd-admin-catalog-mobile.html
+          grep -q 'Pengelolaan katalog belum diaktifkan' /tmp/ngd-admin-catalog-mobile.html
+          grep -q 'data-overflow="false"' /tmp/ngd-admin-catalog-mobile.html
+          grep -q 'data-ink-navigation="true"' /tmp/ngd-admin-catalog-mobile.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
+            "http://127.0.0.1:8765/?preview=admin#produk" > /tmp/ngd-admin-catalog-desktop.html 2>>/tmp/ngd-chrome.log
+          grep -q 'id="admin-catalog-form"' /tmp/ngd-admin-catalog-desktop.html
+          grep -q 'data-overflow="false"' /tmp/ngd-admin-catalog-desktop.html
+          grep -q 'data-unified-theme="true"' /tmp/ngd-admin-catalog-desktop.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/#produk" > /tmp/ngd-public-no-admin.html 2>>/tmp/ngd-chrome.log
+          if grep -q 'id="admin-catalog-form"' /tmp/ngd-public-no-admin.html; then
+            echo 'ERROR: catalogue editor visible to public' >&2
+            exit 1
+          fi
           echo 'BROWSER_PREVIEW_OK: slate/ink unified guest, member, LMS and admin'
