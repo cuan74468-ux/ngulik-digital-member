@@ -713,15 +713,15 @@ function newOrder_(m,p,requestId) {
     require_(m.role==='MEMBER','FORBIDDEN','Hanya member dapat membeli.');
     var product=byId_('katalog_produk','product_id',String(p.product_id||''));
     require_(product&&product.aktif===true,'NOT_FOUND','Produk tidak tersedia.');
-    if(product.tipe==='LISENSI_SEKALI')
-      require_(['AKTIF','DIAJUKAN'].indexOf(m.status_pos)<0,
-        'CONFLICT','Lisensi POS sudah aktif atau sedang menunggu aktivasi.');
     var retry=byId_('orders','request_id',requestId);
     if(retry){
       require_(retry.member_id===m.member_id&&retry.product_id===product.product_id,
         'CONFLICT','ID permintaan sudah dipakai untuk pesanan lain.');
       return orderView_(retry,m);
     }
+    if(product.tipe==='LISENSI_SEKALI')
+      require_(['AKTIF','DIAJUKAN'].indexOf(m.status_pos)<0,
+        'CONFLICT','Lisensi POS sudah aktif atau sedang menunggu aktivasi.');
     var mine=findRows_('orders',function(o){return o.member_id===m.member_id&&o.product_id===product.product_id&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;});
     if(mine.length){var existing=expireOrder_(mine[0]);if(existing.status!=='EXPIRED')return orderView_(existing,m);}
     var s=settings_(),min=Number(s.kode_unik_min||100),max=Number(s.kode_unik_max||999),price=Number(product.harga);
