@@ -55,8 +55,10 @@ test('catalogue preview mirrors 8 current Drive product identities and hides pay
   const html=h.nodes.screen.innerHTML;
   const IDs=['P-3IN1','P-POS','P-CANVA','P-KREDIT-50','P-KREDIT-150',
     'P-KREDIT-400','P-VIDEO-AI','P-EBOOK'];
-  assert.equal((html.match(/data-buy="/g)||[]).length,8);
-  for(const id of IDs)assert.ok(html.includes('data-buy="'+id+'"'),id);
+  assert.equal((html.match(/class="catalog-card"/g)||[]).length,8);
+  // A storefront must not expose fake checkout while payment is gated.
+  assert.doesNotMatch(html,/data-buy="/);
+  for(const id of IDs)assert.ok(app.includes("'"+id+"'"),id);
   assert.match(html,/8<\/strong><span>penawaran tercatat/);
   assert.match(html,/Jasa Video Iklan AI/);
   assert.match(html,/Bundel Ebook Vibe Coder/);
@@ -64,6 +66,18 @@ test('catalogue preview mirrors 8 current Drive product identities and hides pay
   assert.doesNotMatch(html,/data-buy="P-VIDEO-AI"[^>]*>Pilih produk/);
   assert.doesNotMatch(html,/data-buy="P-EBOOK"[^>]*>Pilih produk/);
   assert.equal(h.apiCalls.length,0);
+});
+test('public catalog offers WhatsApp consultation only for a valid official contact',()=>{
+  const h=preview();
+  vm.runInContext("state.info={wa_admin:'081234567890'};go('katalog')",h.ctx);
+  const html=h.nodes.screen.innerHTML;
+  assert.match(html,/href="https:\/\/wa\.me\/6281234567890\?text=/);
+  assert.match(html,/Tanya pemesanan/);
+  assert.match(html,/rel="noopener noreferrer"/);
+  assert.doesNotMatch(html,/data-buy="/);
+  vm.runInContext("state.info={wa_admin:'https://evil.example'};render()",h.ctx);
+  assert.doesNotMatch(h.nodes.screen.innerHTML,/href="https:\/\/wa\.me\//);
+  assert.match(h.nodes.screen.innerHTML,/disabled title="Pembayaran belum diaktifkan"/);
 });
 test('category filtering isolates services and does not invent sale actions',()=>{
   const h=preview();
