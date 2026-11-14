@@ -84,7 +84,7 @@ body.member-experience :where(button,a,input,textarea,select):focus-visible{
 .sidebar .nav-item svg{width:19px;height:19px;stroke-width:1.8}
 .sidebar .nav-item:hover{background:rgba(255,255,255,.66);color:#171b22}
 .sidebar .nav-item[aria-current=page]{
-  background:#151a22;color:#fff;
+  background:#171b22;color:#fff;
   box-shadow:0 7px 16px rgba(22,29,41,.11)
 }
 .sidebar-footer{padding:19px 12px 6px}
