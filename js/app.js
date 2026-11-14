@@ -239,7 +239,7 @@ function renderNav(){
   const navIcon=(route)=>window.NGD_CONTENT_UI?.media(state.siteContent,'NAV_ICON',route,'nav-custom-icon','')||icon(screens[route][1]);
   const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+navIcon(route)+'<span>'+esc(screens[route][0])+'</span></button>';
   by('desktop-nav').innerHTML=items.map(button).join('');
-  const mobileItems=isAdmin()?['admin','konten','produk','pesanan','akun']:['beranda','katalog','jasa','belajar','akun'];
+  const mobileItems=isAdmin()?['admin','produk','pesanan','lms','akun']:['beranda','katalog','jasa','belajar','akun'];
   const selectedMobile=mobileNavRoute(state.route);
   by('mobile-nav').innerHTML=mobileItems.map(route=>
     '<button type="button" class="nav-item" data-route="'+route+'" '+
