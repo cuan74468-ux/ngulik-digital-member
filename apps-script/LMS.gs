@@ -90,6 +90,7 @@ function lmsViewLesson_(r,admin){
     sort_order:Number(admin?r.sort_order:r.published_sort_order)||100,
     duration_minutes:Number(admin?r.duration_minutes:r.published_duration_minutes)||10,
     status:r.status,version:Number(r.version)||1,
+    published_version:Number(r.published_version)||0,
     published_at:r.published_at||''};
   if(admin){
     result.draft_title=r.title;result.draft_body=r.body;
@@ -246,7 +247,7 @@ function lmsCreateLesson_(admin,p,requestId){
       title:input.title,body:input.body,media_url:input.media_url,
       published_title:'',published_body:'',published_media_url:'',
       published_kind:'',published_sort_order:'',published_duration_minutes:'',
-      kind:input.kind,sort_order:input.sort_order,
+      published_version:0,kind:input.kind,sort_order:input.sort_order,
       duration_minutes:input.duration_minutes,status:'DRAFT',version:1,
       created_at:t,updated_at:t,published_at:'',created_by:admin.member_id,
       request_id:requestId};
@@ -312,7 +313,8 @@ function lmsPublishLesson_(admin,p,requestId){
       status:'PUBLISHED',published_title:r.title,published_body:r.body,
       published_media_url:r.media_url,published_kind:r.kind,
       published_sort_order:r.sort_order,
-      published_duration_minutes:r.duration_minutes,published_at:now_(),
+      published_duration_minutes:r.duration_minutes,published_version:r.version,
+      published_at:now_(),
       updated_at:now_()
     });
     logAudit_(admin.member_id,'ADMIN','LMS_LESSON_PUBLISHED','lms_lessons',
@@ -425,11 +427,16 @@ function lmsMemberDetail_(member,p){
     lessons:access?lessons.map(function(r){
       var v=lmsViewLesson_(r,false);
       v.completed=progress.some(function(pr){
-        return pr.lesson_id===r.lesson_id&&pr.status==='COMPLETED';
+        return pr.lesson_id===r.lesson_id&&
+          Number(pr.lesson_version)===Number(r.published_version)&&
+          pr.status==='COMPLETED';
       });
       return v;
     }):[],completed:access?progress.filter(function(pr){
-      return pr.status==='COMPLETED'&&lessons.some(function(l){return l.lesson_id===pr.lesson_id;});
+      return pr.status==='COMPLETED'&&lessons.some(function(l){
+        return l.lesson_id===pr.lesson_id&&
+          Number(pr.lesson_version)===Number(l.published_version);
+      });
     }).length:0,total:lessons.length};
 }
 function lmsEnroll_(member,p,requestId){
@@ -467,14 +474,16 @@ function lmsComplete_(member,p,requestId){
     });
     require_(enroll.length===1,'CONFLICT','Ikuti kursus terlebih dahulu.');
     var old=findRows_('lms_progress',function(r){
-      return r.member_id===member.member_id&&r.lesson_id===l.lesson_id;
+      return r.member_id===member.member_id&&r.lesson_id===l.lesson_id&&
+        Number(r.lesson_version)===Number(l.published_version);
     });
-    require_(old.length<=1,'RECONCILIATION_REQUIRED','Progres duplikat.');
+    require_(old.length<=1,'RECONCILIATION_REQUIRED','Progres versi ini duplikat.');
     if(old.length)return {lesson_id:l.lesson_id,status:'COMPLETED',already_completed:true};
     appendRow_('lms_progress',{
       progress_id:recordId_('PRG'),member_id:member.member_id,
       course_id:c.course_id,lesson_id:l.lesson_id,status:'COMPLETED',
-      started_at:now_(),completed_at:now_(),request_id:requestId
+      started_at:now_(),completed_at:now_(),request_id:requestId,
+      lesson_version:l.published_version
     });
     return {lesson_id:l.lesson_id,status:'COMPLETED',already_completed:false};
   });
