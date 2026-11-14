@@ -7,7 +7,7 @@
 
 // ===== KONSTANTA =====
 const NGD = Object.freeze({
-  VERSION: '1.0.2',
+  VERSION: '1.0.3',
   // Spreadsheet ID is read from Script Properties, not committed in source.
   DB_ID: '',
   TZ: 'Asia/Jakarta',
@@ -746,14 +746,18 @@ function authRegister_(p) {
     return {status:status,sesi:newSessionMember_(m)};
   });
 }
-function authLogin_(p) {
+function authLogin_(p,adminOnly,expectedAdminId) {
   var wa=normalizeWa_(p.wa),pin=String(p.pin||'');checkPin_(pin);
   // Guard + counter + session issuance must be serialized to prevent
   // parallel wrong-PIN requests bypassing the per-account throttle.
   return withLock_(function(){
     loginGuard_(wa);
     var m=byId_('members','wa',wa);
-    if(!m || pinHash_(pin,m.pin_salt)!==m.pin_hash){
+    // Admin-only entry must reject ordinary member credentials BEFORE issuing
+    // any session; keep the same generic error to prevent account enumeration.
+    if(!m || (adminOnly===true&&(m.role!=='ADMIN'||
+        String(m.member_id)!==String(expectedAdminId||''))) ||
+        pinHash_(pin,m.pin_salt)!==m.pin_hash){
       noteLoginFailure_(wa,Boolean(m));
       if(m&&m.role==='ADMIN')extendAdminLock_(wa);
       throw ngdError_('UNAUTHORIZED','Nomor WhatsApp atau PIN salah.');
@@ -1331,6 +1335,7 @@ function apiRouter_(action,token,p,requestId) {
     case 'getPublicContent':return contentPublicList_();
     case 'register':return authRegister_(p);
     case 'login':return authLogin_(p);
+    case 'adminLogin':return adminPortalLogin_(p);
     case 'trackClick':
       requirePublicTrackingEnabled_();
       return withLock_(function(){
@@ -1346,6 +1351,8 @@ function apiRouter_(action,token,p,requestId) {
   m=activeMember_(token);
   switch(action) {
     case 'getMe':return publicMember_(m);
+    case 'adminLogout':return adminPortalLogout_(token);
+    case 'adminChangePin':return adminPortalChangePin_(token,p);
     case 'updateMyProfile':return updateMyProfile_(m,p);
     case 'getMyNotifications':return notificationInbox_(m);
     case 'getMyServiceRequests':return serviceListMine_(m);
@@ -1578,8 +1585,14 @@ function doPost(e) {
     // Pembatasan payload dan request_id sebelum mengambil kunci mutasi.
     var id=String(body.request_id||'');
     var reads=apiReadActions_();
-    if(reads.indexOf(action)<0){
-      // Before any spreadsheet or account access, require a deliberate server-side release.
+    var isolatedAdmin=['adminLogin','adminLogout','adminChangePin'];
+    if(isolatedAdmin.indexOf(action)>=0){
+      // Authentication is released independently of registration, payments,
+      // refunds, catalogue and content writes. Never add generic admin
+      // mutation actions to this list.
+      requireAdminPortalEnabled_();
+      require_(/^[a-zA-Z0-9_-]{16,80}$/.test(id),'VALIDATION','ID permintaan tidak valid.');
+    }else if(reads.indexOf(action)<0){
       requireMutationsEnabled_();
       requireActionFeatureEnabled_(action);
       require_(/^[a-zA-Z0-9_-]{16,80}$/.test(id),'VALIDATION','ID permintaan tidak valid.');
