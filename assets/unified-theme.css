@@ -431,6 +431,73 @@ body:not(#ngd) .catalog-check{display:flex;align-items:center;gap:12px;min-heigh
 body:not(#ngd) .catalog-check input{flex:none;width:20px;height:20px;margin:0;accent-color:var(--ink)}
 body:not(#ngd) .catalog-admin-form-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
 
+/* Admin workspace — a single visual grammar for dashboard, CRM, orders,
+   catalogue, support, LMS and service quotations. No separate admin skin. */
+body:not(#ngd) .admin-commandbar{display:none}
+body:not(#ngd) .admin-module-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;
+}
+body:not(#ngd) .admin-module-card{
+  display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:16px;
+  row-gap:8px;align-content:start;align-items:start;padding:22px;
+}
+body:not(#ngd) .admin-module-card .surface-icon{grid-column:1;grid-row:1/span 3;margin:0}
+body:not(#ngd) .admin-module-card h3{grid-column:2;grid-row:1;margin:0;font-size:1.02rem}
+body:not(#ngd) .admin-module-card .card-desc{grid-column:2;grid-row:2;max-width:54ch}
+body:not(#ngd) .admin-module-card .btn{
+  grid-column:2;grid-row:3;justify-self:start;min-height:38px;margin:2px 0 0;
+}
+body[data-app-role="admin"] .section-head h2{font-size:clamp(1.35rem,2.6vw,1.8rem)}
+body[data-app-role="admin"] .section-head{align-items:flex-end;flex-wrap:wrap}
+body[data-app-role="admin"] .section-head>div{min-width:0}
+body[data-app-role="admin"] .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+body[data-app-role="admin"] .surface,
+body[data-app-role="admin"] .catalog-admin-editor{overflow-wrap:anywhere}
+body[data-app-role="admin"] .table-wrap{max-width:100%;scrollbar-gutter:stable}
+body[data-app-role="admin"] .table th,
+body[data-app-role="admin"] .table td{font-size:.86rem;line-height:1.5;vertical-align:middle}
+body[data-app-role="admin"] .table td:first-child{color:var(--ink)}
+body[data-app-role="admin"] .support-ticket,
+body[data-app-role="admin"] .support-release{border-radius:var(--radius)}
+@media(max-width:1120px){
+  body:not(#ngd) .admin-module-grid{grid-template-columns:minmax(0,1fr)}
+  body[data-app-role="admin"] .grid-3{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  body[data-app-role="admin"] .main-content{padding-top:0}
+  body[data-app-role="admin"] .admin-commandbar{
+    display:flex;align-items:stretch;gap:7px;max-width:calc(100vw - 12px);
+    overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:none;
+    position:sticky;top:calc(58px + var(--safe-t));z-index:25;
+    background:rgba(242,244,248,.96);backdrop-filter:blur(12px);
+    padding:12px 16px;margin:0 -16px 18px;
+    border-bottom:1px solid var(--line);scroll-snap-type:x proximity;
+  }
+  body[data-app-role="admin"] .admin-commandbar::-webkit-scrollbar{display:none}
+  body[data-app-role="admin"] .admin-command{
+    display:flex;align-items:center;gap:7px;flex:none;scroll-snap-align:start;
+    border:1px solid var(--line);border-radius:14px;
+    background:#fff;color:var(--muted);min-height:43px;padding:9px 13px;
+    font:700 .79rem/1.2 var(--font-body);white-space:nowrap;
+  }
+  body[data-app-role="admin"] .admin-command svg{width:17px;height:17px;flex:none}
+  body[data-app-role="admin"] .admin-command[aria-current=page]{
+    background:var(--ink);border-color:var(--ink);color:#fff;
+  }
+  body[data-app-role="admin"] .admin-module-grid{grid-template-columns:minmax(0,1fr);gap:11px}
+  body[data-app-role="admin"] .admin-module-card{padding:17px;column-gap:12px}
+  body[data-app-role="admin"] .grid-3{grid-template-columns:minmax(0,1fr)}
+  body[data-app-role="admin"] .catalog-admin-layout,
+  body[data-app-role="admin"] .service-columns,
+  body[data-app-role="admin"] .lms-workspace-layout{grid-template-columns:minmax(0,1fr)}
+  body[data-app-role="admin"] .table-wrap{overflow-x:auto}
+  body[data-app-role="admin"] .table{min-width:520px}
+  body[data-app-role="admin"]:is(
+    [data-member-route="lms-editor"],[data-member-route="lms-lesson"],
+    [data-member-route="lms-ai"],[data-member-route="tiket"],
+    [data-member-route="member360"]) .mobile-back{display:inline-flex;align-items:center;justify-content:center}
+}
+
 /* 13 — Belajar (LMS), bantuan, sukses */
 body:not(#ngd) .learn-path-list{display:grid;gap:10px}
 body:not(#ngd) .learn-path-item{display:flex;align-items:center;gap:14px;padding:16px}
