@@ -230,10 +230,23 @@ function updateActivity_(member) {
   updateRow_('members', member._row, patch);
 }
 function grantInitialCredit_(memberId, amount) {
-  var existing = findRows_('credits_ledger', function(r) { return r.member_id === memberId && r.tipe === 'GRANT'; });
-  if (existing.length) return;
-  appendRow_('credits_ledger', {entry_id:recordId_('L'),member_id:memberId,created_at:now_(),tipe:'GRANT',jumlah:amount,status:'POSTED',ref_id:'',tool_id:'',keterangan:'Kredit sambutan member',saldo_setelah:amount});
-  logAudit_(memberId, 'MEMBER', 'CREDIT_GRANT', 'credits_ledger', memberId, '', 'POSTED', {amount:amount});
+  amount=Number(amount);
+  require_(Number.isInteger(amount)&&amount>=0&&amount<=1000,'VALIDATION',
+    'Kredit sambutan tidak valid.');
+  if(amount===0)return {granted:false,balance:creditBalance_(memberId)};
+  var existing=findRows_('credits_ledger',function(r){
+    return r.member_id===memberId&&r.tipe==='GRANT';
+  });
+  if(existing.length)return {granted:false,balance:creditBalance_(memberId)};
+  var balance=creditBalance_(memberId)+amount;
+  appendRow_('credits_ledger',{
+    entry_id:recordId_('L'),member_id:memberId,created_at:now_(),tipe:'GRANT',
+    jumlah:amount,status:'POSTED',ref_id:'',tool_id:'',
+    keterangan:'Kredit sambutan member',saldo_setelah:balance
+  });
+  logAudit_(memberId,'MEMBER','CREDIT_GRANT','credits_ledger',
+    memberId,'','POSTED',{amount:amount});
+  return {granted:true,balance:balance};
 }
 
 // ===== SEED =====
@@ -614,7 +627,10 @@ function authRegister_(p) {
     var m={member_id:id,role:'MEMBER',nama:safeText_(p.nama,80),wa:wa,nama_usaha:safeText_(p.nama_usaha,100),pin_hash:pinHash_(pin,salt),pin_salt:salt,kode_referral:newReferralCode_(),referred_by:referrer?referrer.member_id:'',status:status,joined_at:joined,last_active_at:joined,status_pos:'BELUM',status_canva:'BELUM',d14_active:false,d30_active:false};
     appendRow_('members',m);logAudit_(id,'MEMBER','REGISTER','members',id,'',status,{});
     if(wait){return {status:status,posisi:findRows_('members',function(r){return r.status==='WAITING_LIST';}).length};}
-    grantInitialCredit_(id,Number(s.kredit_awal||10));
+    var initial=Number(s.kredit_awal===undefined||s.kredit_awal===''?10:s.kredit_awal);
+    require_(Number.isInteger(initial)&&initial>=0&&initial<=1000,'VALIDATION',
+      'Pengaturan kredit awal tidak valid.');
+    if(initial>0)grantInitialCredit_(id,initial);
     if(active+1>=Number(s.kuota_gelombang||50)){updateSetting_('mode_pendaftaran','WAITING_LIST');logAudit_('SYSTEM','SYSTEM','REGISTRATION_FULL','pengaturan_sistem','mode_pendaftaran','TERBUKA','WAITING_LIST',{});}
     return {status:status,sesi:newSessionMember_(m)};
   });
