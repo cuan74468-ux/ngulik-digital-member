@@ -60,6 +60,10 @@ function recoverAdminPinOwnerOnly(){
   try{ui=SpreadsheetApp.getUi();}
   catch(e){throw ngdError_('MAINTENANCE',
     'Pemulihan PIN harus dijalankan dari editor Apps Script yang terikat ke Google Sheets.');}
+  var confirmation=ui.alert('Konfirmasi reset PIN',
+    'PIN administrator yang ada akan diganti dan semua sesi admin dicabut. Lanjutkan?',
+    ui.ButtonSet.YES_NO);
+  require_(confirmation===ui.Button.YES,'CANCELLED','Pemulihan PIN dibatalkan.');
   var result=withLock_(function(){
     var matches=findRows_('members',function(row){return row.role==='ADMIN';});
     require_(matches.length===1&&String(matches[0].member_id)===accountId,
@@ -101,6 +105,10 @@ function bootstrapStagingAdminOwnerOnly(){
   catch(e){throw ngdError_('MAINTENANCE',
     'Pembuatan admin harus dari editor Apps Script yang terikat ke Google Sheets.');}
   var wa=normalizeWa_(props.getProperty('NGD_ADMIN_WA'));
+  var confirmation=ui.alert('Konfirmasi admin staging',
+    'Buat satu akun admin khusus STAGING? Ini tidak mengubah database produksi.',
+    ui.ButtonSet.YES_NO);
+  require_(confirmation===ui.Button.YES,'CANCELLED','Bootstrap staging dibatalkan.');
   var result=withLock_(function(){
     require_(!findRows_('members',function(m){return m.role==='ADMIN';}).length,
       'CONFLICT','Akun administrator sudah ada. Jangan membuat akun ganda.');
@@ -149,4 +157,25 @@ function inspectAdminAccessOwnerOnly(){
     finance_enabled:financeEnabled_(),
     needs_full_schema_migration:false
   };
+}
+
+function showAdminAccessStatus(){
+  var props=PropertiesService.getScriptProperties();
+  var operator=String(props.getProperty('NGD_ADMIN_RECOVERY_OPERATOR_EMAIL')||'').trim().toLowerCase();
+  var actor=String(Session.getEffectiveUser().getEmail()||'').trim().toLowerCase();
+  require_(!!operator&&actor===operator,'FORBIDDEN',
+    'Pemeriksaan admin hanya untuk operator yang terverifikasi.');
+  var state=inspectAdminAccessOwnerOnly();
+  SpreadsheetApp.getUi().alert(
+    'PEMERIKSAAN AKUN ADMIN NGULIK DIGITAL\n'+
+    'Jumlah akun admin: '+state.admin_count+'\n'+
+    'Akun yang dituju ditemukan: '+(state.expected_admin_present?'YA':'TIDAK')+'\n'+
+    'Akun aktif: '+(state.expected_admin_active?'YA':'TIDAK')+'\n'+
+    'Hash & salt PIN tersedia: '+(state.admin_pin_hash_present?'YA':'TIDAK')+'\n'+
+    'Kolom autentikasi lengkap: '+(state.member_auth_columns&&state.session_columns&&state.audit_columns?'YA':'TIDAK')+'\n'+
+    'Gerbang login khusus admin siap: '+(state.isolated_auth_gate_ready?'YA':'TIDAK')+'\n'+
+    'Mutasi umum aktif: '+(state.global_mutations_enabled?'YA':'TIDAK')+'\n'+
+    'Keuangan aktif: '+(state.finance_enabled?'YA':'TIDAK')+'\n\n'+
+    'Tidak ada perubahan data selama pemeriksaan ini.');
+  return {checked:true};
 }
