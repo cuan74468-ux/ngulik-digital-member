@@ -71,3 +71,14 @@ Rilis memerlukan bukti tertulis bahwa: CI lulus; Apps Script staging lulus; tran
 - Admin fulfillment membutuhkan `aktivasi_terverifikasi:true`, `referensi_aktivasi`, dan email untuk Canva. Penanda percobaan pada order melindungi dari retry ganda setelah kegagalan.
 - Daftar anomali rekonsiliasi membedakan produk yang memang menunggu aktivasi manual dari kasus yang melewati 48 jam.
 - Semua perubahan ini belum disinkronkan ke Apps Script aktif; lakukan uji staging terlebih dahulu.
+
+## Konfigurasi database dan admin yang tidak masuk GitHub
+
+Source terbaru tidak lagi memuat ID Google Sheets ataupun nomor WhatsApp admin dalam nilai bawaan. Sebelum menjalankan backend di Apps Script **staging** (bukan backend aktif), di **Project Settings → Script Properties**:
+
+- Isi `NGD_DB_ID` dengan ID spreadsheet **staging** yang benar. Untuk pemanggilan Web App tanpa spreadsheet aktif, properti ini wajib ada.
+- Untuk setup database staging baru, isi `NGD_ADMIN_WA` dengan nomor WhatsApp admin staging yang sah. Nilai seed ini hanya dipakai saat key pengaturan belum ada; pengaturan database aktif tidak ditimpa.
+- Biarkan `NGD_MUTATIONS_ENABLED` kosong / false dan `NGD_CLICK_TRACKING_ENABLED` kosong / false sampai tahap QA yang disetujui.
+- Jangan menambahkan ID spreadsheet, WA pribadi, PIN, API key, atau token ke `config.js` frontend dan GitHub.
+
+Sumber lama dan riwayat commit GitHub masih mungkin menyimpan identifier yang pernah ditulis dalam source. Redaksi pada file `main` **tidak menghapus riwayat Git**; pastikan spreadsheet bersifat privat melalui sharing Google Drive. Jangan melakukan rewrite riwayat Git tanpa rencana backup/koordinasi.
