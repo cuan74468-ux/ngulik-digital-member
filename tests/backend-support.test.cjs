@@ -284,3 +284,40 @@ test('failed priority write is repaired by identical retry',()=>{
   assert.equal(result.prioritas,'P0');
   assert.equal(h.store.ticket_activities.length,2);
 });
+
+test('filter distinguishes paid but unfulfilled from active and expired subscriptions',()=>{
+  const h=harness();
+  const pending=h.run('adminSearchMembers','adm',
+    {product_id:'P-OTHER',akses_status:'MENUNGGU_PEMENUHAN'});
+  assert.equal(pending.total,1);
+  assert.equal(pending.items[0].member_id,'M2');
+  assert.equal(pending.items[0].akses_status,'MENUNGGU_PEMENUHAN');
+  assert.equal(h.run('adminSearchMembers','adm',
+    {product_id:'P-OTHER',akses_status:'AKTIF'}).total,0);
+  h.members[1].akses_3in1_sampai='2030-01-01T00:00:00Z';
+  assert.equal(h.run('adminSearchMembers','adm',
+    {product_id:'P-OTHER',akses_status:'AKTIF'}).total,1);
+  h.members[1].akses_3in1_sampai='2020-01-01T00:00:00Z';
+  assert.equal(h.run('adminSearchMembers','adm',
+    {product_id:'P-OTHER',akses_status:'BERAKHIR'}).total,1);
+});
+test('seat purchaser awaiting activation is not incorrectly marked expired',()=>{
+  const h=harness();
+  h.orders.push({order_id:'ORDER-CANVA',member_id:'M1',
+    product_id:'P-SEAT',status:'PAID',paid_at:new Date('2026-11-14T00:00:00Z')});
+  assert.equal(h.run('adminSearchMembers','adm',
+    {product_id:'P-SEAT',akses_status:'MENUNGGU_AKTIVASI'}).total,1);
+  assert.equal(h.run('adminSearchMembers','adm',
+    {product_id:'P-SEAT',akses_status:'BERAKHIR'}).total,0);
+  h.members[0].status_canva='AKTIF_BULAN_1';
+  h.members[0].canva_berakhir='2030-01-01T00:00:00Z';
+  assert.equal(h.run('adminSearchMembers','adm',
+    {product_id:'P-SEAT',akses_status:'AKTIF'}).total,1);
+});
+test('product access filter requires product and rejects invented classifications',()=>{
+  const h=harness();
+  assert.throws(()=>h.run('adminSearchMembers','adm',{akses_status:'AKTIF'}),
+    /Pilih produk/);
+  assert.throws(()=>h.run('adminSearchMembers','adm',
+    {product_id:'P-POS',akses_status:'SEUMUR_HIDUP'}),/Status akses produk tidak dikenal/);
+});
