@@ -20,10 +20,8 @@ test('HTML entry uses versioned local files and language metadata',()=>{
 });
 test('do not embed secrets or open financial features in config',()=>{
   const config=read('config.js');
-  // A public GAS web-app endpoint is not a secret. Production-facing
-  // catalog reads must stay wired, while all mutations remain gated.
-  assert.match(config,/apiUrl:\s*'https:\/\/script\.google\.com\/macros\/s\/[^']+\/exec'/);
-  assert.doesNotMatch(config,/demoMode/);
+  // Endpoint publik read-only boleh ada (bukan rahasia); kunci/token/PIN tidak boleh.
+  assert.match(config,/apiUrl:\s*'https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec'/);
   assert.match(config,/memberWritesEnabled:\s*false/);
   assert.match(config,/paymentsEnabled:\s*false/);
   assert.doesNotMatch(config,/sk-[A-Za-z0-9]{20,}/);

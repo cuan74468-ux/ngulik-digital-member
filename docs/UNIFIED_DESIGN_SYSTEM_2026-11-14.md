@@ -14,15 +14,15 @@ Tidak ada perubahan pada database, API, otorisasi, produk, harga, pembayaran, lo
 
 | Token | Nilai | Tujuan |
 | --- | --- | --- |
-| Canvas | `#E6ECF4` | Seluruh ruang aplikasi, mobile dan desktop |
+| Canvas | `#F2F4F8` | Seluruh ruang aplikasi, mobile dan desktop |
 | Surface | `rgba(255,255,255,.88)` | Kartu, panel, formulir, LMS, admin |
-| Ink | `#171B22` | Tipografi utama, tombol primer, navigasi aktif |
-| Muted | `#626E7E` | Penjelasan, label sekunder |
-| Blue | `#2D5EAA` | Progres, state informatif dan visualisasi |
-| Blue soft | `#DCE8FA` | Ikon dan pendamping data |
+| Ink | `#0E1320` | Tipografi utama, tombol primer, navigasi aktif |
+| Muted | `#6B7385` | Penjelasan, label sekunder |
+| Blue | `#4361EE` | Progres, state informatif dan visualisasi |
+| Blue soft | `#E8ECFF` | Ikon dan pendamping data |
 | Red | `#E2505E` | Indikator peringatan/aksen kecil |
-| Line | `#DCE4ED` | Pemisah ringan dan form outlines |
-| Radius | `22px` | Kartu utama |
+| Line | `#E4E8F0` | Pemisah ringan dan form outlines |
+| Radius | `24px` | Kartu utama |
 | Font | `DM Sans` + `Plus Jakarta Sans` | Body dan heading |
 
 Tombol tindakan utama dan navigasi terpilih **charcoal hitam**, bukan hijau atau ungu. Biru digunakan sebagai aksen data/progres, bukan mengubah makna data dari backend.
@@ -57,8 +57,8 @@ Tombol tindakan utama dan navigasi terpilih **charcoal hitam**, bukan hijau atau
 ## Kriteria penerimaan / QA
 
 - Tidak ada lagi kombinasi tema **hijau desktop + ungu mobile**.
-- CSS terakhir termuat di seluruh rute; browser membaca `--bg=#e6ecf4`, `--green=#171b22` (token kompatibilitas lama kini mengacu ke charcoal).
-- Item navigasi aktif computed `rgb(23,27,34)` pada desktop dan mobile.
+- CSS terakhir termuat di seluruh rute; browser membaca `--bg=#f2f4f8`, `--green=#0e1320` (token kompatibilitas lama kini mengacu ke charcoal).
+- Item navigasi aktif computed `rgb(14,19,32)` pada desktop dan mobile.
 - Mobile navigation tetap berada di dalam layar dengan ruang tepi cukup; menu memiliki accessible name.
 - Tidak ada horizontal overflow pada 375px, 390px dan desktop 1280px.
 - Demo/preview: login, pendaftaran, pembayaran, mutasi LMS, notifikasi tetap tidak aktif; tidak ada pemanggilan backend dalam mode offline preview.
@@ -70,3 +70,13 @@ Tombol tindakan utama dan navigasi terpilih **charcoal hitam**, bukan hijau atau
 - Jika warna lama terlihat setelah update GitHub Pages, lakukan refresh paksa agar `unified-theme.css?v=20261114` termuat.
 - Rollback visual: cabut link stylesheet `assets/unified-theme.css` dari `index.html` dan pulihkan metadata theme-color; tidak perlu rollback database.
 - Kode dan style dapat dianggap **selesai pada source** setelah CI SHA terbaru sukses, tetapi status publikasi GitHub Pages dan pengujian perangkat nyata tetap harus dicek terpisah.
+
+
+## Pembaruan 14 Nov 2026 (rapikan konsistensi)
+
+- `assets/unified-theme.css` ditulis ulang: satu palet, satu pola kepala halaman, satu rupa kartu/tombol. Tambalan "native-app" lama (palet indigo/ungu kedua, `display:none` pada teks deskripsi, batas lebar desktop 760px) dihapus.
+- `assets/member-mobile.css` kini hanya struktural (tanpa warna) sehingga tidak lagi menimpa tema dengan ungu.
+- Kelas yang dipakai JS tetapi sebelumnya tanpa gaya kini ditata: `catalog-admin-*`, `catalog-check(s)`, `service-*`, `service-cta`.
+- Desktop memakai lebar konten hingga 1240px; katalog `auto-fill`; beranda tamu dua kolom di ≥900px.
+- Judul sidebar dinamis (Panel admin / Ruang belajar / Menu); ikon navigasi admin dibedakan; logo "n." diperbaiki.
+- Tes `static-contract` disesuaikan dengan endpoint publik read-only yang memang ada di `config.js`.

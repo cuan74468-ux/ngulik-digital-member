@@ -29,16 +29,6 @@ const urlSafe = (raw) => {
     return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';
   }catch{return '';}
 };
-// Public business contact enables consultation, never an unverified payment.
-const consultationUrl = (product) => {
-  let number=String(state.info?.wa_admin||'').replace(/\D/g,'');
-  if(number.startsWith('0'))number='62'+number.slice(1);
-  if(!/^62\d{8,13}$/.test(number))return '';
-  const name=String(product?.nama||'layanan digital').slice(0,140);
-  return 'https://wa.me/'+number+'?text='+encodeURIComponent(
-    'Halo Ngulik Digital, saya ingin berkonsultasi tentang '+name+'. Mohon informasi ketersediaan dan cara pemesanan resmi.'
-  );
-};
 const classroomUrlSafe = (raw) => {
   const normalized=urlSafe(raw);
   if(!normalized)return '';
@@ -72,11 +62,11 @@ const screens={
   ['lms-ai']:['Review Draft AI','spark'],
   ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Katalog','store'],
   ai:['Studio AI','spark'],affiliate:['Affiliate','link'],akun:['Akun','user'],
-  produk:['Kelola Katalog','store'],jasa:['Pesan Jasa','spark'],layanan:['Permintaan Jasa','clipboard'],
+  produk:['Kelola Katalog','store'],jasa:['Pesan Jasa','gift'],layanan:['Permintaan Jasa','gift'],
   admin:['Admin','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
-  antrean:['Antrean','clock'],dukungan:['Bantuan','clipboard'],
-  tiket:['Detail tiket','clipboard'],member360:['Member 360°','users'],
-  rilis:['Rilis Produk','grid'],login:['Masuk','user'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
+  antrean:['Antrean','clock'],dukungan:['Bantuan','shield'],
+  tiket:['Detail tiket','shield'],member360:['Member 360°','users'],
+  rilis:['Rilis Produk','check'],login:['Masuk','user'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
 const memberNav=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','akun'];
 const adminNav=['admin','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','akun'];
@@ -227,11 +217,13 @@ function renderNav(){
   by('mobile-nav').innerHTML=mobileItems.map(route=>
     '<button type="button" class="nav-item" data-route="'+route+'" '+
     (route===selectedMobile?'aria-current="page"':'')+' aria-label="'+esc(screens[route][0])+'">'+
-    icon(screens[route][1])+'<span>'+esc(screens[route][0])+'</span></button>').join('');
+    icon(screens[route][1])+'<span>'+esc(({produk:'Katalog',layanan:'Jasa'})[route]||screens[route][0])+'</span></button>').join('');
   by('page-label').textContent=screens[state.route]?.[0]||'Beranda';
   by('account-avatar').textContent=logged()?
     String(state.me.nama||'M').split(' ').map(v=>v[0]).join('').slice(0,2).toUpperCase():'ND';
   by('mode-indicator').textContent=isAdmin()?'ADMIN':logged()?'MEMBER':'NGULIK DIGITAL';
+  const caption=by('sidebar-caption');
+  if(caption)caption.textContent=isAdmin()?'Panel admin':logged()?'Ruang belajar':'Menu';
 }
 const empty=(heading,message,action='',label='Masuk')=>
   '<div class="empty"><span class="symbol">◌</span><h3>'+esc(heading)+'</h3><p>'+esc(message)+'</p>'+
@@ -286,6 +278,8 @@ function viewHome(){
   const hero='<section class="nh-hero" aria-label="Ngulik Digital">'+
     '<span class="nh-orb nh-orb-a"></span><span class="nh-orb nh-orb-b"></span><span class="nh-orb nh-orb-c"></span>'+
     '<div class="nh-hero-brand"><span class="nh-hero-mark">n<i>.</i></span><strong>Ngulik Digital</strong></div>'+
+    '<div class="nh-hero-copy"><h1>Belajar dan solusi digital untuk usaha Anda.</h1>'+
+    '<p class="nh-hero-lead">Aplikasi UMKM, Studio AI, produk digital, dan jasa kreatif dalam satu tempat.</p></div>'+
     '<div class="nh-hero-icons" aria-hidden="true">'+['book','store','spark','clipboard'].map(n=>'<span>'+icon(n)+'</span>').join('')+'</div>'+
     '<button type="button" class="nh-hero-cta" data-route="katalog">Jelajahi '+icon('arrow')+'</button></section>';
   const search='<label class="nh-search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'+
@@ -338,20 +332,15 @@ function viewCatalog(){
   const cards=shown.length?'<div class="catalog-grid">'+shown.map(p=>{
     const kind=offerCategory(p),safeSale=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
     const allowed=safeSale&&paymentEnabled();
-    const consult=allowed?'':consultationUrl(p);
     const label=allowed?'Pilih produk':safeSale?'Pembayaran belum diaktifkan':'Belum tersedia untuk pemesanan';
     const tooltip=safeSale?'Pembayaran belum diaktifkan':'Produk memerlukan proses layanan atau fulfillment yang belum diaktifkan';
-    const action=allowed?
-      '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'">Pilih produk '+icon('arrow')+'</button>':
-      consult?
-        '<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi pemesanan '+esc(p.nama)+' melalui WhatsApp">Tanya pemesanan '+icon('arrow')+'</a>':
-        '<button class="btn btn-primary" type="button" disabled title="'+esc(tooltip)+'">'+label+' '+icon('arrow')+'</button>';
     return '<article class="catalog-card"><div class="catalog-card-top">'+
       '<span class="catalog-card-icon">'+icon(kind==='ai'||kind==='jasa'?'spark':kind==='belajar'?'book':kind==='fasilitas'?'users':'store')+'</span>'+
       '<span class="catalog-card-type">'+esc(offerCategoryLabel(p))+'</span></div>'+
       '<div class="catalog-card-copy"><h3>'+esc(p.nama)+'</h3><p>'+esc(p.deskripsi||'')+'</p></div>'+
       '<div class="catalog-card-bottom"><div><small>Harga penawaran</small><strong>'+rupiah(p.harga)+'</strong></div>'+
-      action+'</div>'+
+      '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'" '+
+      (allowed?'':'disabled title="'+esc(tooltip)+'"')+'>'+label+' '+icon('arrow')+'</button></div>'+
       (kind==='jasa'?'<button type="button" class="service-cta" data-service-go>Ajukan brief jasa '+icon('arrow')+'</button>':'')+
       '</article>';
   }).join('')+'</div>':
@@ -359,7 +348,7 @@ function viewCatalog(){
   return header+filters+'<p class="catalog-result-count" aria-live="polite">Menampilkan '+shown.length+
     ' dari '+list.length+' penawaran</p>'+cards+
     '<section class="catalog-guidance section-gap"><div><span class="card-kicker">CATATAN</span>'+
-    '<h3>Butuh layanan khusus?</h3><p>Ajukan brief melalui ruang member atau konsultasikan kebutuhan melalui tautan pada produk. Konfirmasi pemesanan dan pembayaran hanya melalui kanal resmi.</p></div>'+
+    '<h3>Butuh layanan khusus?</h3><p>Konsultasikan kebutuhan website, aplikasi internal, atau video promosi melalui formulir brief member. Penawaran terpisah dari pembayaran.</p></div>'+
     '<button type="button" class="btn btn-secondary" data-route="jasa">Ajukan brief</button></section>';
 }
 function viewLearn(){

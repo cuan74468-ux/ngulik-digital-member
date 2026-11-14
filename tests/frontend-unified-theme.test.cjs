@@ -9,7 +9,7 @@ const css=read('assets/unified-theme.css');
 const app=read('js/app.js');
 test('one shared stylesheet is loaded last for guests members and admins',()=>{
   const main=html.indexOf('href="./assets/app.css"');
-  const mobile=html.indexOf('href="./assets/member-mobile.css"');
+  const mobile=html.indexOf('href="./assets/member-mobile.css');
   const unified=html.indexOf('href="./assets/unified-theme.css');
   assert.ok(main>=0&&mobile>main&&unified>mobile);
   assert.match(html,/name="theme-color" content="#f2f4f8"/);
