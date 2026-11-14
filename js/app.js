@@ -71,8 +71,8 @@ const screens={
 const memberNav=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','akun'];
 const adminNav=['admin','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','akun'];
 const tokenKey='ngd_member_session';
-// Preview-only fixture data, never used for financial operations.
-const PREVIEW_CATALOG=[
+// Public catalogue is marketing content only. Order pricing always comes from the server.
+const PUBLIC_CATALOG=[
   {product_id:'P-3IN1',nama:'Paket 3-in-1',deskripsi:'Bio link, profil bisnis, dan katalog checkout selama 30 hari.',tipe:'LANGGANAN_30H',harga:99000},
   {product_id:'P-POS',nama:'POS Kasir Sederhana',deskripsi:'Lisensi aplikasi kasir satu kali pembayaran.',tipe:'LISENSI_SEKALI',harga:149000},
   {product_id:'P-CANVA',nama:'Seat Canva 30 Hari',deskripsi:'Undangan seat memerlukan aktivasi admin.',tipe:'SEAT_30H',harga:35000},
@@ -88,7 +88,10 @@ const PREVIEW_MODULES=[
 ].map((judul,i)=>({modul_id:'MOD-0'+(i+1),urut:i+1,judul,deskripsi:'Contoh modul pratinjau — tautan materi belum tersedia.',url_classroom:''}));
 function activatePreview(){
   const params=new URLSearchParams(location.search),mode=params.get('preview');
-  if(config.demoMode!==true||isConnected()||!['member','admin'].includes(mode))return;
+  // Internal QA fixtures are intentionally inaccessible on public domains.
+  const host=(()=>{try{return new URL(location.href).hostname;}catch{return '';}})();
+  if(!['localhost','127.0.0.1','example.invalid'].includes(host)||
+     config.demoMode!==true||isConnected()||!['member','admin'].includes(mode))return;
   state.token='PREVIEW_ONLY_NOT_A_REAL_SESSION';
   const admin=mode==='admin';
   state.me={
@@ -198,11 +201,7 @@ function toast(message,error=false){
   const root=by('toast-root');const el=document.createElement('div');el.className='toast'+(error?' error':'');el.textContent=message;
   root.append(el);setTimeout(()=>el.remove(),5000);
 }
-function notice(){
-  if(!isConnected())return '<div class="banner warning"><div><h3>Pratinjau — bukan data transaksi</h3><p>Seluruh data yang tampil adalah contoh lokal. Login, pendaftaran, kredit AI, dan pembayaran tidak aktif.</p></div><span class="chip orange">DEMO LOKAL</span></div>';
-  if(!isWriteEnabled())return '<div class="banner warning"><div><h3>Mode aman aktif</h3><p>API tersedia, tetapi semua operasi penulisan dinonaktifkan sampai pengujian selesai.</p></div><span class="chip orange">Baca-saja</span></div>';
-  return '';
-}
+function notice(){return '';}
 const mobileNavRoute=(route)=>({
   'lms-course':'belajar','lms-complete':'belajar',
   tiket:'dukungan',checkout:'katalog'
@@ -220,7 +219,7 @@ function renderNav(){
   by('page-label').textContent=screens[state.route]?.[0]||'Beranda';
   by('account-avatar').textContent=logged()?
     String(state.me.nama||'M').split(' ').map(v=>v[0]).join('').slice(0,2).toUpperCase():'ND';
-  by('mode-indicator').textContent=isWriteEnabled()?'TERHUBUNG':'PRATINJAU';
+  by('mode-indicator').textContent=isAdmin()?'ADMIN':logged()?'MEMBER':'NGULIK DIGITAL';
 }
 const empty=(heading,message,action='',label='Masuk')=>
   '<div class="empty"><span class="symbol">◌</span><h3>'+esc(heading)+'</h3><p>'+esc(message)+'</p>'+
@@ -271,10 +270,10 @@ function viewHome(){
     '<p class="hub-lead">Satu tempat untuk mempelajari keterampilan baru, menemukan alat usaha, dan menjelajahi layanan kreatif yang relevan untuk UMKM.</p>'+
     '<div class="actions"><button class="btn btn-primary" data-route="katalog">Jelajahi solusi '+icon('arrow')+'</button>'+
     '<button class="btn btn-secondary" data-route="belajar">Kenali kelas gratis</button></div>'+
-    '<div class="hub-hero-caption"><span class="hub-caption-dot"></span><span>Program pilot direncanakan untuk maksimal 50 peserta. Fitur transaksi belum dibuka.</span></div></div>'+
+    '<div class="hub-hero-caption"><span class="hub-caption-dot"></span><span>Komunitas dan layanan digital untuk pelaku UMKM. Gelombang pertama hingga 50 anggota.</span></div></div>'+
     '<div class="hub-journey" aria-label="Alur sederhana ekosistem Ngulik Digital">'+
     '<div class="hub-journey-top"><span class="hub-journey-mark">'+icon('spark')+'</span>'+
-    '<div><strong>Mulai dari kebutuhan usaha</strong><small>Belajar, mencoba, lalu berkembang</small></div><span class="hub-tag">PILOT</span></div>'+
+    '<div><strong>Mulai dari kebutuhan usaha</strong><small>Belajar, mencoba, lalu berkembang</small></div><span class="hub-tag">MEMBER AREA</span></div>'+
     '<ol class="hub-journey-list">'+[
       ['01','Kenali kemampuan digital','Kelas dan panduan praktik sederhana'],
       ['02','Tentukan alat yang dibutuhkan','POS, katalog, template, dan AI'],
@@ -301,16 +300,16 @@ function viewHome(){
   const featureIds=['P-3IN1','P-POS','P-VIDEO-AI'];
   const chosen=featureIds.map(id=>state.catalog.find(p=>p.product_id===id)).filter(Boolean);
   const feature=chosen.length?'<section class="section-gap" aria-label="Pilihan produk dan layanan">'+
-    '<div class="hub-section-intro"><div><p class="eyebrow">DARI KATALOG</p><h2>Penawaran yang bisa Anda kenali</h2>'+
-    '<p>Informasi produk untuk membantu memilih. Pemesanan masih ditutup pada pratinjau.</p></div>'+
+    '<div class="hub-section-intro"><div><p class="eyebrow">DARI KATALOG</p><h2>Pilihan produk untuk Anda</h2>'+
+    '<p>Jelajahi aplikasi, produk digital, dan layanan kreatif sesuai kebutuhan usaha Anda.</p></div>'+
     '<button class="hub-text-link" type="button" data-route="katalog">Lihat seluruh katalog '+icon('arrow')+'</button></div>'+
     '<div class="hub-feature-grid">'+chosen.map(p=>
       '<article class="hub-feature-item"><div class="hub-feature-symbol">'+icon(p.tipe==='JASA_SEKALI'?'spark':'store')+'</div>'+
       '<div><span class="hub-feature-type">'+esc(offerCategoryLabel(p))+'</span><h3>'+esc(p.nama)+'</h3>'+
       '<p>'+esc(p.deskripsi||'')+'</p><strong>'+rupiah(p.harga)+'</strong></div></article>').join('')+'</div></section>':'';
   const note='<section class="hub-availability section-gap" aria-label="Informasi peluncuran">'+
-    '<div><p class="eyebrow">PELUNCURAN BERTAHAP</p><h2>Belajar dulu. Pilih layanan saat sudah dibutuhkan.</h2>'+
-    '<p>Ngulik Digital memisahkan materi pengantar dari layanan berbayar. Integrasi pembayaran dan akun nyata hanya dibuka setelah pengujian.</p></div>'+
+    '<div><p class="eyebrow">MEMBERSHIP NGULIK DIGITAL</p><h2>Belajar dulu. Pilih layanan saat sudah dibutuhkan.</h2>'+
+    '<p>Satu akun untuk belajar, menemukan solusi usaha, memesan jasa, serta memantau produk dan aktivitas Anda.</p></div>'+
     '<button class="btn btn-secondary" type="button" data-route="belajar">Lihat jalur belajar '+icon('arrow')+'</button></section>';
   return hero+solution+feature+note;
 }
@@ -338,8 +337,8 @@ function viewCatalog(){
   if(!list.length)return title('Katalog produk & layanan','SOLUSI UNTUK UMKM',
     'Penawaran digital dikelompokkan sesuai kebutuhan usaha.')+
     empty('Katalog belum tersedia',isConnected()?
-      'Belum ada produk yang dapat ditampilkan dari backend.':
-      'Data produk pratinjau belum dimuat.');
+      'Belum ada produk yang tersedia dalam katalog.':
+      'Silakan kunjungi kembali untuk melihat pilihan terbaru.');
   const current=state.catalogFilter||'semua';
   const shown=current==='semua'?list:list.filter(p=>offerCategory(p)===current);
   const filters='<div class="catalog-filters" role="group" aria-label="Filter jenis penawaran">'+
@@ -347,9 +346,9 @@ function viewCatalog(){
       '" aria-pressed="'+(id===current?'true':'false')+'">'+label+'</button>').join('')+'</div>';
   const header='<div class="catalog-intro"><div><p class="eyebrow">PILIH YANG SESUAI, BUKAN YANG TERBANYAK</p>'+
     '<h1>Katalog untuk kebutuhan usaha Anda.</h1>'+
-    '<p>Jelajahi aplikasi, alat AI, materi, dan jasa digital. Informasi ini bukan bukti layanan sudah aktif.</p></div>'+
+    '<p>Jelajahi aplikasi, alat AI, materi, dan jasa digital. Pilih produk dan jasa digital yang paling sesuai dengan kebutuhan Anda.</p></div>'+
     '<div class="catalog-summary"><strong>'+list.length+'</strong><span>penawaran tercatat'+
-    (!isConnected()?' · pratinjau':'')+'</span></div></div>';
+    ''+'</span></div></div>';
   const cards=shown.length?'<div class="catalog-grid">'+shown.map(p=>{
     const kind=offerCategory(p),safeSale=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
     const allowed=safeSale&&paymentEnabled();
@@ -425,7 +424,7 @@ function viewNotificationCenter(){
   const inbox=state.notifications||{items:[],unread:0};
   const items=Array.isArray(inbox.items)?inbox.items:[];
   const body=!enabled?
-    '<p class="card-desc">Notifikasi internal masih dalam tahap staging. Tidak ada email atau WhatsApp otomatis yang dikirim.</p>':
+    '<p class="card-desc">Belum ada pembaruan akun untuk ditampilkan.</p>':
     !items.length?'<p class="card-desc">Belum ada pembaruan untuk akun Anda.</p>':
     '<div class="list-rows">'+items.map(n=>'<div class="list-row"><div class="left">'+
       '<small>'+esc(friendlyDate(n.created_at))+'</small><strong>'+esc(n.judul||'Pembaruan')+'</strong>'+
@@ -457,7 +456,7 @@ function viewProfileEditor(){
     esc(m.deskripsi_usaha||'')+'</textarea></div>'+
     '<button type="submit" class="btn btn-primary" '+(!isWriteEnabled()?'disabled':'')+
     '>Simpan perubahan</button>'+
-    (!isWriteEnabled()?'<p class="form-hint">Perubahan profil dinonaktifkan dalam mode pratinjau.</p>':'')+'</form>';
+    (!isWriteEnabled()?'<p class="form-hint">Penyimpanan perubahan profil saat ini belum tersedia.</p>':'')+'</form>';
 }
 function viewAccount(){
   if(!logged())return title('Akun member','PROFIL & KEAMANAN','Kelola akses ke ruang belajar.')+
@@ -481,7 +480,7 @@ function viewLogin(register=false){
     '<div class="field"><label for="pin">PIN 6 angka</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>'+
     (register?'<div class="field"><label><input type="checkbox" name="setuju_kebijakan" required> Saya menyetujui ketentuan program dan kebijakan privasi.</label></div>':'')+
     '<button class="btn btn-primary btn-wide" type="submit" '+(!isWriteEnabled()?'disabled':'')+'>'+(register?'Buat akun':'Masuk')+' '+icon('arrow')+'</button>'+
-    '<p class="form-hint" style="margin:13px 0 0">'+(isWriteEnabled()?'Jaga kerahasiaan PIN Anda.':'Pendaftaran dan login dinonaktifkan selama mode pratinjau.')+'</p></form>'+
+    '<p class="form-hint" style="margin:13px 0 0">'+(isWriteEnabled()?'Jaga kerahasiaan PIN Anda.':'Pendaftaran dan akses akun sedang dipersiapkan.')+'</p></form>'+
     '<p class="small" style="text-align:center;margin-top:17px">'+(register?'Sudah punya akun?':'Belum memiliki akun?')+' <button class="btn btn-ghost btn-sm" data-route="'+(register?'login':'daftar')+'">'+(register?'Masuk':'Daftar member')+'</button></p></div>';
 }
 function viewMyOrders(){
@@ -557,7 +556,7 @@ function viewAdminCatalog(){
     '<span class="chip">'+items.length+' produk tercatat</span></div>'+
     '<div class="banner warning"><div><h3>Perubahan katalog dikendalikan secara terpisah</h3>'+
     '<p>Pembayaran tidak mengikuti aktivasi produk. Jasa dan eBook memerlukan proses pemenuhan sebelum dapat dipesan.</p></div>'+
-    '<span class="chip orange">'+(canWrite?'EDITOR STAGING':'HANYA PRATINJAU')+'</span></div>';
+    '<span class="chip orange">'+(canWrite?'EDITOR PRODUK':'TIDAK DAPAT DIEDIT')+'</span></div>';
   const entries='<section class="catalog-admin-list" aria-label="Daftar penawaran">'+
     items.map(p=>'<article class="catalog-admin-row">'+
       '<div class="catalog-admin-badge">'+icon(p.tipe==='TOPUP_KREDIT'?'spark':'store')+'</div>'+
@@ -596,7 +595,7 @@ function viewAdminCatalog(){
     '<div class="catalog-admin-form-actions">'+
     '<button class="btn btn-primary" type="submit" '+(!canWrite?'disabled title="Pengelolaan katalog belum diaktifkan"':'')+'>'+
     (selected?'Simpan perubahan':'Buat produk (nonaktif)')+' '+icon('arrow')+'</button>'+
-    (!canWrite?'<span class="form-hint">Perubahan baru tersedia setelah backend staging lulus uji.</span>':'')+
+    (!canWrite?'<span class="form-hint">Penyuntingan produk belum dapat dilakukan saat ini.</span>':'')+
     '</div></form></section>';
   return intro+'<div class="catalog-admin-layout"><div>'+entries+'</div>'+form+'</div>';
 }
@@ -605,13 +604,13 @@ function viewServiceRequests(){
   return window.NGD_SERVICES_UI?
     window.NGD_SERVICES_UI.member({logged:logged()&&!isAdmin(),
       items:state.services,enabled:serviceWriteEnabled(),kind:state.serviceKind}):
-    empty('Layanan belum tersedia','Modul permintaan jasa belum dapat dimuat.');
+    empty('Layanan belum tersedia','Halaman layanan tidak dapat ditampilkan saat ini.');
 }
 function viewAdminServices(){
   return window.NGD_SERVICES_UI?
     window.NGD_SERVICES_UI.admin({authorized:isAdmin(),items:state.services,
       enabled:serviceWriteEnabled(),selectedId:state.selectedServiceId}):
-    empty('Layanan belum tersedia','Modul antrean jasa belum dapat dimuat.');
+    empty('Layanan belum tersedia','Daftar permintaan jasa tidak dapat ditampilkan saat ini.');
 }
 function viewAdminOrders(){
   if(!isAdmin())return needLogin('pesanan admin');
@@ -622,7 +621,7 @@ function viewAdminOrders(){
     (!rows.length?empty('Belum ada order','Order dari member akan tercatat di sini.'):
     '<div class="table-wrap"><table class="table"><thead><tr><th>Order</th><th>Produk</th><th>Total</th><th>Status</th></tr></thead><tbody>'+
     rows.map(o=>'<tr><td>'+esc(o.order_id)+'</td><td>'+esc(o.nama_produk)+'</td><td>'+rupiah(o.total_bayar)+'</td><td>'+safeBadge(o.status)+'</td></tr>').join('')+'</tbody></table></div>')+
-    '<p class="small muted" style="margin-top:14px">Pengaturan pembayaran dan refund melalui UI belum diaktifkan sampai uji integrasi selesai.</p>';
+    '<p class="small muted" style="margin-top:14px">Pengembalian dana hanya diproses setelah verifikasi tim administrasi.</p>';
 }
 function viewMembers(waiting=false){
   if(!isAdmin())return needLogin('data member admin');
@@ -691,7 +690,7 @@ function viewSupport(){
       '<button type="submit" class="btn btn-primary">Terapkan filter</button></div></form>'+
       (tickets.length?'<div class="grid-2">'+tickets.map(t=>
         supportTicketCard(t).replace('<h3>','<p class="tiny muted">'+esc(t.nama_member||'')+'</p><h3>')).join('')+'</div>':
-        empty('Belum ada tiket','Belum ada laporan atau backend belum mengembalikan tiket.'))+'</div>'+
+        empty('Belum ada tiket','Belum ada laporan dukungan.'))+'</div>'+
       (overview.findings?.length?'<div class="banner warning section-gap"><div><h3>Kasus perlu pemeriksaan</h3><p>'+
         esc(overview.findings.length)+' potensi masalah riwayat/triase terdeteksi.</p></div></div>':'');
   }
@@ -796,7 +795,7 @@ function viewReleases(){
       '<button class="btn btn-primary" type="submit" '+(!supportWriteEnabled()?'disabled':'')+'>Simpan draft rilis</button></form>'+
       '<div class="divider"></div><p class="card-kicker">ANALISIS DAMPAK PRODUK</p>'+
       '<p class="card-desc">Hitung pembeli dan status layanan sebelum mempublikasikan changelog. Analisis ini tidak mengirim pesan.</p>'+
-      '<button type="button" class="btn btn-secondary" data-impact-action="check" '+(!isConnected()?'disabled title="Memerlukan API staging"':'')+'>Periksa member terdampak</button>'+
+      '<button type="button" class="btn btn-secondary" data-impact-action="check" '+(!isConnected()?'disabled title="Fitur ini belum tersedia"':'')+'>Periksa member terdampak</button>'+
       '<div id="release-impact-slot" style="margin-top:16px" aria-live="polite"></div>'+
       '<p class="form-hint">Draft tidak terlihat oleh member sampai admin mempublikasikannya. Publikasi tidak otomatis memperbarui aplikasi POS yang terpasang.</p></section>':'')+
     '<div class="section-gap">'+title('Daftar versi','CHANGELOG','')+
@@ -951,7 +950,7 @@ async function loadRoute(route){
   }catch(e){toast(e.message,true);}
 }
 async function processLogin(form,register){
-  if(!isWriteEnabled())return toast('Masih dalam mode pratinjau.',true);
+  if(!isWriteEnabled())return toast('Layanan akun sedang tidak tersedia. Silakan coba kembali.',true);
   const fd=new FormData(form);
   const payload={wa:String(fd.get('wa')||''),pin:String(fd.get('pin')||'')};
   if(register){
@@ -1006,7 +1005,7 @@ async function confirmPayment(){
 const pendingSupportRequests = new Map();
 async function submitSupportAction(form,action,payload,after){
   if(!supportWriteEnabled()){
-    toast('Layanan tiket masih dalam mode pratinjau.',true);return;
+    toast('Layanan bantuan sementara belum tersedia.',true);return;
   }
   const button=form.querySelector('[type="submit"]');
   if(button?.disabled)return;
@@ -1091,7 +1090,7 @@ async function submitReleaseCreate(form){
 }
 async function submitSupportFilter(form){
   if(!isAdmin()||!isConnected()){
-    toast('Filter layanan nyata memerlukan backend staging.',true);return;
+    toast('Penyaringan data belum tersedia.',true);return;
   }
   const data=new FormData(form),payload={
     status:String(data.get('status')||''),
@@ -1121,7 +1120,7 @@ async function submitMemberSearch(form){
     toast('Pilih produk untuk menggunakan filter status layanan.',true);return;
   }
   if(!isConnected()){
-    toast('Pencarian nyata memerlukan API staging. Ini hanya data contoh.',true);
+    toast('Pencarian data belum tersedia.',true);
     return;
   }
   const button=form.querySelector('[type="submit"]');
@@ -1165,7 +1164,7 @@ async function publishRelease(id){
 }
 
 async function submitLMSWrite(action,payload,after,form){
-  if(!lmsWriteEnabled())return toast('LMS masih dalam mode pratinjau. Penulisan belum diaktifkan.',true);
+  if(!lmsWriteEnabled())return toast('Perubahan materi belum dapat disimpan.',true);
   const button=form?.querySelector('[type="submit"]');
   if(button?.disabled)return;
   if(button)button.disabled=true;
@@ -1540,8 +1539,8 @@ window.addEventListener('hashchange',()=>go(location.hash.slice(1)||'beranda'));
 async function init(){
   state.route=screens[location.hash.slice(1)]?location.hash.slice(1):'beranda';
   if(!isConnected()){
-    state.catalog=PREVIEW_CATALOG;
-    state.info={kuota:50,sisa:50,disclosure:'Pratinjau program affiliate; tidak ada komisi nyata.'};
+    state.catalog=PUBLIC_CATALOG;
+    state.info={kuota:50,sisa:50,disclosure:'Komisi referral berlaku sesuai ketentuan dan pembayaran terverifikasi.'};
     activatePreview();
   }
   render();
