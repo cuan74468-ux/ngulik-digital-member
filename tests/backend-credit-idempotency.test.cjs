@@ -23,7 +23,7 @@ function fixture(){
   ctx.recordId_=()=> 'ENTRY-'+(ledger.length+1);
   ctx.logAudit_=(...args)=>audits.push(args);
   const grant=(id,amount,ref,kind)=>vm.runInContext(
-    'grantCredits_('+[id,amount,ref,kind].map(JSON.stringify).join(',')+')',
+    'grantCredits_('+[id,amount,ref,kind].map(v=>JSON.stringify(v)).join(',')+')',
     ctx,{timeout:1000});
   return {grant,ledger,audits};
 }
