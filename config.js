@@ -6,6 +6,7 @@ window.NGD_CONFIG = Object.freeze({
   demoMode: true,
   paymentsEnabled: false,
   supportEnabled: false,
+  notificationsEnabled: false, // In-app inbox only; no email or WhatsApp delivery.
   lmsEnabled: false, // LMS mutations OFF until staging integration passes. // Only activate after authenticated staging support QA. // Requires verified QRIS and a separate transaction QA checkpoint.
   qrisImageUrl: '', // Example: assets/qris.png (upload owner-approved image only)
   qrisMerchant: ''
