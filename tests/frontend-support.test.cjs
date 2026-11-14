@@ -46,7 +46,8 @@ test('member preview renders ticket form and locks all write actions',()=>{
   assert.match(h.nodes.screen.innerHTML,/Cetak struk gagal pada Android/);
   assert.match(h.nodes.screen.innerHTML,/disabled title="Fitur support belum diaktifkan"/);
   assert.equal(vm.runInContext('supportWriteEnabled()',h.context),false);
-  assert.match(h.nodes['mobile-nav'].innerHTML,/Bantuan/);
+  assert.match(h.nodes['mobile-nav'].innerHTML,/Pesan Jasa/);
+  assert.match(h.nodes['desktop-nav'].innerHTML,/Bantuan/);
 });
 test('member can inspect synthetic ticket history and update list',()=>{
   const h=preview('member');
