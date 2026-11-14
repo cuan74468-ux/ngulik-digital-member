@@ -29,6 +29,16 @@ const urlSafe = (raw) => {
     return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';
   }catch{return '';}
 };
+// Public business contact enables consultation, never an unverified payment.
+const consultationUrl = (product) => {
+  let number=String(state.info?.wa_admin||'').replace(/\D/g,'');
+  if(number.startsWith('0'))number='62'+number.slice(1);
+  if(!/^62\d{8,13}$/.test(number))return '';
+  const name=String(product?.nama||'layanan digital').slice(0,140);
+  return 'https://wa.me/'+number+'?text='+encodeURIComponent(
+    'Halo Ngulik Digital, saya ingin berkonsultasi tentang '+name+'. Mohon informasi ketersediaan dan cara pemesanan resmi.'
+  );
+};
 const classroomUrlSafe = (raw) => {
   const normalized=urlSafe(raw);
   if(!normalized)return '';
@@ -328,15 +338,20 @@ function viewCatalog(){
   const cards=shown.length?'<div class="catalog-grid">'+shown.map(p=>{
     const kind=offerCategory(p),safeSale=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
     const allowed=safeSale&&paymentEnabled();
+    const consult=allowed?'':consultationUrl(p);
     const label=allowed?'Pilih produk':safeSale?'Pembayaran belum diaktifkan':'Belum tersedia untuk pemesanan';
     const tooltip=safeSale?'Pembayaran belum diaktifkan':'Produk memerlukan proses layanan atau fulfillment yang belum diaktifkan';
+    const action=allowed?
+      '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'">Pilih produk '+icon('arrow')+'</button>':
+      consult?
+        '<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi pemesanan '+esc(p.nama)+' melalui WhatsApp">Tanya pemesanan '+icon('arrow')+'</a>':
+        '<button class="btn btn-primary" type="button" disabled title="'+esc(tooltip)+'">'+label+' '+icon('arrow')+'</button>';
     return '<article class="catalog-card"><div class="catalog-card-top">'+
       '<span class="catalog-card-icon">'+icon(kind==='ai'||kind==='jasa'?'spark':kind==='belajar'?'book':kind==='fasilitas'?'users':'store')+'</span>'+
       '<span class="catalog-card-type">'+esc(offerCategoryLabel(p))+'</span></div>'+
       '<div class="catalog-card-copy"><h3>'+esc(p.nama)+'</h3><p>'+esc(p.deskripsi||'')+'</p></div>'+
       '<div class="catalog-card-bottom"><div><small>Harga penawaran</small><strong>'+rupiah(p.harga)+'</strong></div>'+
-      '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'" '+
-      (allowed?'':'disabled title="'+esc(tooltip)+'"')+'>'+label+' '+icon('arrow')+'</button></div>'+
+      action+'</div>'+
       (kind==='jasa'?'<button type="button" class="service-cta" data-service-go>Ajukan brief jasa '+icon('arrow')+'</button>':'')+
       '</article>';
   }).join('')+'</div>':
@@ -344,7 +359,7 @@ function viewCatalog(){
   return header+filters+'<p class="catalog-result-count" aria-live="polite">Menampilkan '+shown.length+
     ' dari '+list.length+' penawaran</p>'+cards+
     '<section class="catalog-guidance section-gap"><div><span class="card-kicker">CATATAN</span>'+
-    '<h3>Butuh layanan khusus?</h3><p>Konsultasikan kebutuhan website, aplikasi internal, atau video promosi melalui formulir brief member. Penawaran terpisah dari pembayaran.</p></div>'+
+    '<h3>Butuh layanan khusus?</h3><p>Ajukan brief melalui ruang member atau konsultasikan kebutuhan melalui tautan pada produk. Konfirmasi pemesanan dan pembayaran hanya melalui kanal resmi.</p></div>'+
     '<button type="button" class="btn btn-secondary" data-route="jasa">Ajukan brief</button></section>';
 }
 function viewLearn(){
