@@ -32,7 +32,7 @@
       '<div class="grid-2"><div class="field"><label for="srv-reference">Tautan referensi (opsional)</label><input id="srv-reference" class="input" type="url" name="referensi_url" maxlength="300" pattern="https://.*" placeholder="https://..."></div>'+
       '<div class="field"><label for="srv-budget">Perkiraan anggaran (Rp)</label><input id="srv-budget" class="input" type="number" name="anggaran" min="0" max="50000000" step="1" value="0" required></div></div>'+
       '<button type="submit" class="btn btn-primary" '+(!ctx.enabled?'disabled':'')+'>Kirim brief untuk ditinjau</button>'+
-      (!ctx.enabled?'<p class="form-hint">Penerimaan brief baru dibuka setelah backend operasional diverifikasi.</p>':'')+
+      (!ctx.enabled?'<p class="form-hint">Pengiriman permintaan jasa saat ini belum tersedia.</p>':'')+
       '</form></section>';
     const history='<section class="service-history"><h2>Riwayat permintaan</h2>'+
       (items.length?items.map(x=>'<article class="service-entry"><div class="service-entry-top">'+
