@@ -64,6 +64,7 @@ jobs:
           grep -q 'RUANG BELAJAR PRIBADI' /tmp/ngd-member.html
           grep -q 'Kredit AI tersisa' /tmp/ngd-member.html
           grep -q 'data-overflow="false"' /tmp/ngd-member.html
+          grep -q 'data-floating-nav="true"' /tmp/ngd-member.html
           grep -q 'data-mobile-nav="true"' /tmp/ngd-member.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#katalog" > /tmp/ngd-catalog.html 2>>/tmp/ngd-chrome.log
@@ -86,6 +87,7 @@ jobs:
           grep -q 'Kelas dan perjalanan belajar' /tmp/ngd-lms-member.html
           grep -q 'Fondasi Digital untuk UMKM' /tmp/ngd-lms-member.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-member.html
+          grep -q 'data-floating-nav="true"' /tmp/ngd-lms-member.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#lms-course" > /tmp/ngd-lms-reader.html 2>>/tmp/ngd-chrome.log
           grep -q 'Menyiapkan Profil Usaha' /tmp/ngd-lms-reader.html
@@ -101,24 +103,26 @@ jobs:
           grep -q 'Ruang Materi' /tmp/ngd-lms-workspace.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-workspace.html
           grep -q 'data-member-theme="true"' /tmp/ngd-lms-member.html
-          grep -q 'data-member-violet="true"' /tmp/ngd-lms-member.html
-          grep -q 'data-member-violet="true"' /tmp/ngd-lms-reader.html
+          grep -q 'data-unified-theme="true"' /tmp/ngd-lms-member.html
+          grep -q 'data-unified-theme="true"' /tmp/ngd-lms-reader.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#lms-complete" > /tmp/ngd-lms-success.html 2>>/tmp/ngd-chrome.log
           grep -q 'Pelajaran selesai!' /tmp/ngd-lms-success.html
           grep -q 'contoh layar konfirmasi' /tmp/ngd-lms-success.html
           grep -q 'member-success-receipt' /tmp/ngd-lms-success.html
-          grep -q 'data-member-violet="true"' /tmp/ngd-lms-success.html
+          grep -q 'data-unified-theme="true"' /tmp/ngd-lms-success.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-success.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3750 --window-size=375,812 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#dukungan" > /tmp/ngd-support-375.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="support-create-form"' /tmp/ngd-support-375.html
-          grep -q 'data-member-violet="true"' /tmp/ngd-support-375.html
+          grep -q 'data-unified-theme="true"' /tmp/ngd-support-375.html
           grep -q 'data-overflow="false"' /tmp/ngd-support-375.html
+          grep -q 'data-unified-theme="true"' /tmp/ngd-support-375.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#lms" > /tmp/ngd-admin-unchanged.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-member-theme="false"' /tmp/ngd-admin-unchanged.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-unchanged.html
+          grep -q 'data-floating-nav="true"' /tmp/ngd-admin-unchanged.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#akun" > /tmp/ngd-member-account.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="profile-form"' /tmp/ngd-member-account.html
@@ -131,4 +135,27 @@ jobs:
             echo 'ERROR: admin was shown member profile editor' >&2
             exit 1
           fi
-          echo 'BROWSER_PREVIEW_OK: member native mobile, LMS completion, help, unchanged admin'
+          # Desktop/member/admin share exact color tokens and dark active nav.
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
+            "http://127.0.0.1:8765/?preview=member#beranda" > /tmp/ngd-member-desktop.html 2>>/tmp/ngd-chrome.log
+          grep -q 'data-unified-theme="true"' /tmp/ngd-member-desktop.html
+          grep -q 'data-ink-navigation="true"' /tmp/ngd-member-desktop.html
+          grep -q 'data-overflow="false"' /tmp/ngd-member-desktop.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
+            "http://127.0.0.1:8765/?preview=admin#admin" > /tmp/ngd-admin-desktop.html 2>>/tmp/ngd-chrome.log
+          grep -q 'data-unified-theme="true"' /tmp/ngd-admin-desktop.html
+          grep -q 'data-ink-navigation="true"' /tmp/ngd-admin-desktop.html
+          grep -q 'data-overflow="false"' /tmp/ngd-admin-desktop.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/#beranda" > /tmp/ngd-guest-mobile.html 2>>/tmp/ngd-chrome.log
+          grep -q 'data-unified-theme="true"' /tmp/ngd-guest-mobile.html
+          grep -q 'data-ink-navigation="true"' /tmp/ngd-guest-mobile.html
+          grep -q 'data-floating-nav="true"' /tmp/ngd-guest-mobile.html
+          grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/?preview=admin#admin" > /tmp/ngd-admin-mobile.html 2>>/tmp/ngd-chrome.log
+          grep -q 'data-unified-theme="true"' /tmp/ngd-admin-mobile.html
+          grep -q 'data-ink-navigation="true"' /tmp/ngd-admin-mobile.html
+          grep -q 'data-floating-nav="true"' /tmp/ngd-admin-mobile.html
+          grep -q 'data-overflow="false"' /tmp/ngd-admin-mobile.html
+          echo 'BROWSER_PREVIEW_OK: slate/ink unified guest, member, LMS and admin'
