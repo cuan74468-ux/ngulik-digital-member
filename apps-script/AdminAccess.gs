@@ -1,94 +1,180 @@
 /**
- * Ngulik Digital — isolated admin authentication and operator recovery.
+ * NGULIK DIGITAL — akses administrator dan pemulihan PIN operator.
  *
- * These endpoints NEVER enable registration, checkout, payments, credit edits,
- * catalogue writes, or any other mutation gate. Auth uses the existing
- * members/sessions/audit_logs tables, regardless of the LMS/content schema.
+ * File ini digunakan bersama Kode.gs, bukan sebagai penggantinya.
+ * Pemulihan berjalan lewat dialog Google Sheets, BUKAN deployment publik.
+ * PIN pilihan pemilik tidak dicatat di log dan tidak dikirim ke klien lain.
+ * Jangan aktifkan login, mutasi umum, atau keuangan selama validasi.
  */
-function adminPortalEnabled_(){
-  var props=PropertiesService.getScriptProperties();
-  var dbId=String(props.getProperty('NGD_DB_ID')||'').trim();
-  var target=String(props.getProperty('NGD_ADMIN_LOGIN_DB_ID')||'').trim();
-  var owner=String(props.getProperty('NGD_ADMIN_LOGIN_ACCOUNT_ID')||'').trim();
-  return props.getProperty('NGD_ADMIN_LOGIN_ENABLED')==='true'&&
-    (props.getProperty('NGD_ENVIRONMENT')==='STAGING'||
-      props.getProperty('NGD_ENVIRONMENT')==='PRODUCTION')&&
-    !!dbId&&target===dbId&&/^M-\d{4,12}$/.test(owner);
+function adminPortalEnabled_() {
+  var props = PropertiesService.getScriptProperties();
+  var dbId = String(props.getProperty('NGD_DB_ID') || '').trim();
+  var target = String(props.getProperty('NGD_ADMIN_LOGIN_DB_ID') || '').trim();
+  var owner = String(props.getProperty('NGD_ADMIN_LOGIN_ACCOUNT_ID') || '').trim();
+  return props.getProperty('NGD_ADMIN_LOGIN_ENABLED') === 'true' &&
+    (props.getProperty('NGD_ENVIRONMENT') === 'STAGING' ||
+      props.getProperty('NGD_ENVIRONMENT') === 'PRODUCTION') &&
+    !!dbId && target === dbId && /^M-\d{4,12}$/.test(owner);
 }
-function requireAdminPortalEnabled_(){
-  require_(adminPortalEnabled_(),'MAINTENANCE','Akses administrator belum diaktifkan.');
+function requireAdminPortalEnabled_() {
+  require_(adminPortalEnabled_(), 'MAINTENANCE', 'Akses administrator belum diaktifkan.');
 }
-function adminPortalLogin_(p){
+function adminPortalLogin_(p) {
   requireAdminPortalEnabled_();
-  var expected=PropertiesService.getScriptProperties().getProperty('NGD_ADMIN_LOGIN_ACCOUNT_ID');
-  return authLogin_(p,true,expected);
+  var expected = PropertiesService.getScriptProperties().getProperty('NGD_ADMIN_LOGIN_ACCOUNT_ID');
+  return authLogin_(p, true, expected);
 }
-function adminPortalLogout_(token){
+function adminPortalLogout_(token) {
   requireAdminPortalEnabled_();
   admin_(token);
   return authLogout_(token);
 }
-function adminPortalChangePin_(token,p){
+function adminPortalChangePin_(token, p) {
   requireAdminPortalEnabled_();
-  var actor=admin_(token);
-  require_(actor.member_id===PropertiesService.getScriptProperties()
-    .getProperty('NGD_ADMIN_LOGIN_ACCOUNT_ID'),'FORBIDDEN','Akses administrator ditolak.');
-  return authChangePin_(actor,p);
+  var actor = admin_(token);
+  require_(actor.member_id === PropertiesService.getScriptProperties()
+    .getProperty('NGD_ADMIN_LOGIN_ACCOUNT_ID'), 'FORBIDDEN', 'Akses administrator ditolak.');
+  return authChangePin_(actor, p);
 }
+
 /**
- * Recovery is an editor-invoked, owner-only procedure, never a web API.
- * NO PIN is logged, returned to web clients or written in plaintext to Sheets.
- * Refuse to mutate unless a bound spreadsheet UI is available to display the
- * new PIN exactly once after it is generated.
+ * Verify operator, database, and existing ADMIN. Read-only when allowDisabled=true.
+ * This guard MUST also be called by the server-side PIN update function.
  */
-function recoverAdminPinOwnerOnly(){
-  var props=PropertiesService.getScriptProperties();
-  var dbId=String(props.getProperty('NGD_DB_ID')||'').trim();
-  var targetDb=String(props.getProperty('NGD_ADMIN_RECOVERY_DB_ID')||'').trim();
-  var accountId=String(props.getProperty('NGD_ADMIN_RECOVERY_ACCOUNT_ID')||'').trim();
-  var operator=String(props.getProperty('NGD_ADMIN_RECOVERY_OPERATOR_EMAIL')||'').trim().toLowerCase();
-  var actor=String(Session.getEffectiveUser().getEmail()||'').trim().toLowerCase();
-  require_(props.getProperty('NGD_ADMIN_RECOVERY_ENABLED')==='true'&&
-    ['STAGING','PRODUCTION'].indexOf(props.getProperty('NGD_ENVIRONMENT'))>=0&&
-    !!dbId&&targetDb===dbId&&
-    /^M-\d{4,12}$/.test(accountId)&&
-    !!operator&&actor===operator,
-    'MAINTENANCE','Pemulihan PIN tidak diizinkan untuk operator ini.');
-  // Preflight UI BEFORE touching credentials: standalone GAS cannot safely
-  // reveal a one-time PIN with SpreadsheetApp.getUi().
-  var ui;
-  try{ui=SpreadsheetApp.getUi();}
-  catch(e){throw ngdError_('MAINTENANCE',
-    'Pemulihan PIN harus dijalankan dari editor Apps Script yang terikat ke Google Sheets.');}
-  var confirmation=ui.alert('Konfirmasi reset PIN',
-    'PIN administrator yang ada akan diganti dan semua sesi admin dicabut. Lanjutkan?',
-    ui.ButtonSet.YES_NO);
-  require_(confirmation===ui.Button.YES,'CANCELLED','Pemulihan PIN dibatalkan.');
-  var result=withLock_(function(){
-    var matches=findRows_('members',function(row){return row.role==='ADMIN';});
-    require_(matches.length===1&&String(matches[0].member_id)===accountId,
-      'CONFLICT','Identitas akun admin tidak sesuai. Tidak ada perubahan.');
-    var admin=matches[0];
-    require_(admin.status==='AKTIF','FORBIDDEN','Akun admin tidak aktif.');
-    var pin=randomStrongPin_(),salt=newSalt_();
-    // Existing sessions are revoked. No login token is created.
-    updateRow_('members',admin._row,{pin_hash:pinHash_(pin,salt),pin_salt:salt});
-    var revoked=findRows_('sessions',function(r){return r.member_id===admin.member_id;});
-    revoked.reverse().forEach(function(r){tbl_('sessions').sheet.deleteRow(r._row);});
-    clearLoginFailures_(String(admin.wa));
-    logAudit_(admin.member_id,'ADMIN','ADMIN_PIN_RECOVERED_OWNER','members',
-      admin.member_id,'','',{revoked_sessions:revoked.length});
-    return {pin:pin,account_id:accountId};
-  });
-  props.setProperty('NGD_ADMIN_RECOVERY_ENABLED','false');
-  ui.alert('PIN admin baru (hanya tampil sekali): '+result.pin+
-    '\nCatat secara privat. Semua sesi lama telah dicabut.');
-  // Return no plaintext PIN into the execution record.
-  return {success:true,account_id:result.account_id};
+function adminRecoveryPreflight_(allowDisabled) {
+  var props = PropertiesService.getScriptProperties();
+  var dbId = String(props.getProperty('NGD_DB_ID') || '').trim();
+  var targetDb = String(props.getProperty('NGD_ADMIN_RECOVERY_DB_ID') || '').trim();
+  var targetAccount = String(props.getProperty('NGD_ADMIN_RECOVERY_ACCOUNT_ID') || '').trim();
+  var loginAccount = String(props.getProperty('NGD_ADMIN_LOGIN_ACCOUNT_ID') || '').trim();
+  var operator = String(props.getProperty('NGD_ADMIN_RECOVERY_OPERATOR_EMAIL') || '').trim().toLowerCase();
+  var actor = String(Session.getEffectiveUser().getEmail() || '').trim().toLowerCase();
+  var enabled = props.getProperty('NGD_ADMIN_RECOVERY_ENABLED') === 'true';
+  require_((allowDisabled === true || enabled) &&
+    ['STAGING', 'PRODUCTION'].indexOf(props.getProperty('NGD_ENVIRONMENT')) >= 0 &&
+    !!dbId && targetDb === dbId &&
+    /^M-\d{4,12}$/.test(targetAccount) && targetAccount === loginAccount &&
+    !!operator && actor === operator,
+    'MAINTENANCE', 'Konfigurasi atau kewenangan pemulihan PIN tidak valid.');
+  var matches = findRows_('members', function (row) { return row.role === 'ADMIN'; });
+  require_(matches.length === 1 && String(matches[0].member_id) === targetAccount &&
+    matches[0].status === 'AKTIF' && !!matches[0].pin_hash && !!matches[0].pin_salt,
+    'CONFLICT', 'Akun admin produksi tidak cocok atau tidak aktif.');
+  return {accountId: targetAccount, enabled: enabled};
 }
+
 /**
- * Non-destructive STAGING-only bootstrap. Production already has an admin:
- * this helper refuses to write on PRODUCTION or if an admin exists.
+ * Menu existing in Kode.gs calls this function.
+ * Opening the form NEVER changes PIN or member data.
+ * When NGD_ADMIN_RECOVERY_ENABLED=false, this is preview-only.
+ */
+function recoverAdminPinOwnerOnly() {
+  var check = adminRecoveryPreflight_(true);
+  var html = `<!doctype html>
+<html><head><base target="_top"><meta charset="utf-8">
+<style>
+  body{font:14px Arial,sans-serif;color:#27313c;margin:0;padding:22px;background:#fff}
+  h2{font-size:19px;margin:0 0 10px} p{line-height:1.55;color:#596573}
+  label{display:block;font-weight:600;margin:16px 0 6px}
+  input{box-sizing:border-box;width:100%;font-size:18px;padding:12px;border:1px solid #cbd3dc;border-radius:8px}
+  button{margin-top:18px;background:#21446a;color:white;border:0;padding:12px 18px;border-radius:8px;font-size:14px;cursor:pointer}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  #status{margin-top:14px;line-height:1.6;white-space:pre-wrap}
+  .note{padding:12px;background:#f4f6f8;border-radius:8px;color:#394858}
+</style></head><body>
+<h2>Pemulihan PIN Administrator</h2>
+<p>Anda menentukan PIN baru sendiri. PIN tidak akan ditampilkan ulang atau dicatat ke log.</p>
+<div class="note" id="note"></div>
+<form id="form" autocomplete="off">
+<label for="pin">PIN baru (6 angka)</label>
+<input id="pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="new-password" required>
+<label for="confirm">Ulangi PIN baru</label>
+<input id="confirm" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="new-password" required>
+<button id="submit" type="submit">Simpan PIN baru</button>
+</form><div id="status" role="status" aria-live="polite"></div>
+<script>
+  const enabled = ${check.enabled ? 'true' : 'false'};
+  const button = document.getElementById('submit');
+  const status = document.getElementById('status');
+  const note = document.getElementById('note');
+  note.textContent = enabled
+    ? 'Pemulihan diizinkan untuk satu kali penggunaan. Semua sesi admin lama akan dicabut.'
+    : 'MODE PEMERIKSAAN: pemulihan masih NONAKTIF. Tidak ada PIN yang akan diubah.';
+  if (!enabled) button.disabled = true;
+  document.getElementById('form').addEventListener('submit', function(e){
+    e.preventDefault();
+    if (!enabled) return;
+    const one = document.getElementById('pin').value;
+    const two = document.getElementById('confirm').value;
+    if (!/^[0-9]{6}$/.test(one) || one !== two) {
+      status.textContent = 'Kedua PIN harus sama dan berisi enam angka.';
+      return;
+    }
+    button.disabled = true;
+    status.textContent = 'Menyimpan PIN...';
+    google.script.run
+      .withSuccessHandler(function(response){
+        document.getElementById('pin').value = '';
+        document.getElementById('confirm').value = '';
+        if (response && response.success === true) {
+          status.textContent = 'BERHASIL. PIN baru telah disimpan. Catat PIN pilihan Anda secara pribadi. Semua sesi admin lama dicabut.';
+        } else {
+          status.textContent = 'Status tidak dapat dipastikan. Jangan mengulang pemulihan sebelum pemeriksaan.';
+        }
+      })
+      .withFailureHandler(function(err){
+        document.getElementById('pin').value = '';
+        document.getElementById('confirm').value = '';
+        status.textContent = 'GAGAL atau status belum dapat dipastikan: ' +
+          (err && err.message ? err.message : 'Kesalahan tidak diketahui') +
+          '. Jangan mengulang pemulihan sebelum pemeriksaan.';
+      })
+      .submitAdminPinRecoveryOwnerOnly(one, two);
+  });
+</script></body></html>`;
+  SpreadsheetApp.getUi().showModalDialog(
+    HtmlService.createHtmlOutput(html).setWidth(470).setHeight(520),
+    'Ngulik Digital — Pemulihan PIN');
+  return {formOpened: true, recoveryEnabled: check.enabled, dataChanged: false};
+}
+
+/**
+ * Server-only form callback. Requires owner email + matching production DB,
+ * a single active admin, two identical strong PINs, and enabled one-time gate.
+ * This method is intentionally NOT exposed by the public doPost API router.
+ */
+function submitAdminPinRecoveryOwnerOnly(newPin, repeatedPin) {
+  var check = adminRecoveryPreflight_(false);
+  require_(typeof newPin === 'string' && newPin === repeatedPin,
+    'VALIDATION', 'PIN konfirmasi tidak cocok.');
+  var result = withLock_(function () {
+    // Re-verify target after obtaining the lock.
+    var state = adminRecoveryPreflight_(false);
+    require_(state.accountId === check.accountId, 'CONFLICT', 'Akun administrator berubah.');
+    var admin = findRows_('members', function (row) {return row.role === 'ADMIN';})[0];
+    checkNewPin_(newPin, admin.wa);
+    require_(pinHash_(newPin, admin.pin_salt) !== admin.pin_hash,
+      'VALIDATION', 'PIN baru harus berbeda dengan PIN yang lama.');
+    var salt = newSalt_();
+    updateRow_('members', admin._row, {
+      pin_salt: salt,
+      pin_hash: pinHash_(newPin, salt)
+    });
+    var revoked = findRows_('sessions', function (s) {return s.member_id === admin.member_id;});
+    revoked.reverse().forEach(function (s) {tbl_('sessions').sheet.deleteRow(s._row);});
+    clearLoginFailures_(String(admin.wa));
+    // Only status and the revoked-session COUNT are logged; never log newPin.
+    logAudit_(admin.member_id, 'ADMIN', 'ADMIN_PIN_RECOVERED_OWNER',
+      'members', admin.member_id, '', '', {revoked_sessions: revoked.length});
+    PropertiesService.getScriptProperties().setProperty('NGD_ADMIN_RECOVERY_ENABLED', 'false');
+    return {success: true, login_required: true};
+  });
+  return result;
+}
+
+/**
+ * STAGING-only bootstrap preserved for backward compatibility.
+ * It is NOT used for existing production admin account.
  */
 function bootstrapStagingAdminOwnerOnly(){
   var props=PropertiesService.getScriptProperties();
@@ -127,11 +213,7 @@ function bootstrapStagingAdminOwnerOnly(){
   return {created:true,account_id:result.id};
 }
 
-/**
- * Read-only operator preflight. Does not return phone, salt, PIN, token,
- * spreadsheet IDs or any Script Property value.
- * Use from Apps Script editor BEFORE changing authentication release switches.
- */
+/** Read-only operator preflight. */
 function inspectAdminAccessOwnerOnly(){
   var props=PropertiesService.getScriptProperties();
   var expectedId=String(props.getProperty('NGD_ADMIN_LOGIN_ACCOUNT_ID')||'');
@@ -158,7 +240,6 @@ function inspectAdminAccessOwnerOnly(){
     needs_full_schema_migration:false
   };
 }
-
 function showAdminAccessStatus(){
   var props=PropertiesService.getScriptProperties();
   var operator=String(props.getProperty('NGD_ADMIN_RECOVERY_OPERATOR_EMAIL')||'').trim().toLowerCase();
