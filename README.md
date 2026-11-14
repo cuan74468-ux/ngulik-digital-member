@@ -69,12 +69,12 @@ Arsip progres sebelumnya: [13 November 2026](docs/CHECKPOINT_HISTORY_2026-11-13.
 
 **Sudah di source GitHub dan staging, belum di-deploy ke Apps Script aktual:**
 
-- Diagnostik tidak lagi menggunakan ID Google Sheet yang ditulis permanen; semua pembacaan diagnostik berdata mewajibkan Script Property \`NGD_DB_ID\` yang eksplisit.
-- Database staging 25 tab diverifikasi cocok dengan \`NGD.HEADERS\`; sumber 14 tab **tidak disentuh**.
-- \`apps-script/Notifications.gs\` memberi inbox notifikasi internal personal, status dibaca, dan materialisasi idempoten dari aktivitas support oleh admin. Ini bukan sistem pengiriman WhatsApp/email. Materializer \`buildSupportNotifications()\` harus dipicu secara eksplisit pada runtime staging, bukan pada database utama.
-- API member \`getMyNotifications\`, \`markNotificationRead\`, serta \`updateMyProfile\` ditambahkan; update profil hanya mengizinkan enam kolom informasi usaha, bukan WA login, peran, membership atau saldo.
-- \`config.notificationsEnabled:false\` dan server \`NGD_NOTIFICATIONS_ENABLED\` default OFF; kontrol publik lain tetap OFF. Tidak ada pengiriman eksternal, perubahan Script Properties, atau aktivasi finansial.
-- Tes baru: \`tests/backend-diagnostics-isolation.test.cjs\`, \`tests/backend-notifications.test.cjs\`, \`tests/backend-member-profile.test.cjs\`.
+- Diagnostik tidak lagi menggunakan ID Google Sheet yang ditulis permanen; semua pembacaan diagnostik berdata mewajibkan Script Property `NGD_DB_ID` yang eksplisit.
+- Database staging 25 tab diverifikasi cocok dengan `NGD.HEADERS`; sumber 14 tab **tidak disentuh**.
+- `apps-script/Notifications.gs` memberi inbox notifikasi internal personal, status dibaca, dan materialisasi idempoten dari aktivitas support oleh admin. Ini bukan sistem pengiriman WhatsApp/email. Materializer `buildSupportNotifications()` harus dipicu secara eksplisit pada runtime staging, bukan pada database utama.
+- API member `getMyNotifications`, `markNotificationRead`, serta `updateMyProfile` ditambahkan; update profil hanya mengizinkan enam kolom informasi usaha, bukan WA login, peran, membership atau saldo.
+- `config.notificationsEnabled:false` dan server `NGD_NOTIFICATIONS_ENABLED` default OFF; kontrol publik lain tetap OFF. Tidak ada pengiriman eksternal, perubahan Script Properties, atau aktivasi finansial.
+- Tes baru: `tests/backend-diagnostics-isolation.test.cjs`, `tests/backend-notifications.test.cjs`, `tests/backend-member-profile.test.cjs`.
 
 Rincian implementasi, batasan, dan urutan QA: [Userbase Core Runbook](docs/USERBASE_CORE_IMPLEMENTATION_2026-11-14.md).
 
