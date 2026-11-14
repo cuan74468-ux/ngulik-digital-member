@@ -1240,6 +1240,10 @@ function apiRouter_(action,token,p,requestId) {
   }
   admin=admin_(token);
   switch(action){
+    case 'adminListCatalog':return catalogAdminList_();
+    case 'adminCreateCatalogItem':return catalogCreate_(admin,p,requestId);
+    case 'adminUpdateCatalogItem':return catalogUpdate_(admin,p);
+    case 'adminSetCatalogActive':return catalogSetActive_(admin,p);
     case 'adminListLMSCourses':return lmsAdminCatalog_(p);
     case 'adminGetLMSCourse':return lmsAdminLessons_(p);
     case 'adminListLMSRevisions':return lmsAdminRevisions_(p);
@@ -1371,6 +1375,9 @@ function requireActionFeatureEnabled_(action) {
       'adminReviewLMSAIJob'].indexOf(action)>=0)
     require_(settings.getProperty('NGD_LMS_ENABLED')==='true',
       'MAINTENANCE','Pengelolaan LMS masih dalam tahap pengujian.');
+  if(['adminCreateCatalogItem','adminUpdateCatalogItem','adminSetCatalogActive'].indexOf(action)>=0)
+    require_(settings.getProperty('NGD_CATALOG_ENABLED')==='true',
+      'MAINTENANCE','Perubahan katalog masih dalam tahap staging.');
   if(action==='markNotificationRead')
     require_(settings.getProperty('NGD_NOTIFICATIONS_ENABLED')==='true',
       'MAINTENANCE','Pusat notifikasi belum diaktifkan.');
@@ -1393,7 +1400,7 @@ function apiReadActions_() {
   return ['getPublicInfo','getMe','getBeranda','getModulBelajar','getKatalog',
     'getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase',
     'getAffiliateDashboard','getMyNotifications','adminGetDashboard','adminListOrders','adminListMembers',
-    'adminListWaitingList','adminListCommissions','adminGetSettings',
+    'adminListWaitingList','adminListCommissions','adminGetSettings','adminListCatalog',
     'adminGetReconciliation',
     'getMyProducts','getMyTickets','getTicket','getMyProductReleases',
     'adminSearchMembers','adminGetMember360','adminGetProductImpact','adminGetSupportOverview',
