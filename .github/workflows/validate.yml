@@ -43,7 +43,7 @@ jobs:
       - name: Smoke-test static UI in real headless Chrome (no deployment)
         shell: bash
         run: |
-          set -euxo pipefail
+          set -euo pipefail
           # Add a CI-only probe; repository index.html itself remains unchanged.
           sed -i 's#</body>#<script src="./tests/layout-probe.js" defer></script><script src="./tests/browser-readonly-api.js" defer></script></body>#' index.html
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/ngd-http.log 2>&1 &
@@ -57,9 +57,9 @@ jobs:
           test -n "$CHROME"
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --dump-dom \
             "http://127.0.0.1:8765/" > /tmp/ngd-guest.html 2>/tmp/ngd-chrome.log
-          grep -q 'Dari belajar digital' /tmp/ngd-guest.html
-          grep -q 'hub-journey' /tmp/ngd-guest.html
-          grep -q 'NGULIK DIGITAL / LINGGAU AI STUDIO' /tmp/ngd-guest.html
+          grep -q 'class="nh-hero"' /tmp/ngd-guest.html
+          grep -q 'class="nh-grid"' /tmp/ngd-guest.html
+          grep -q 'Ngulik Digital' /tmp/ngd-guest.html
           if grep -q 'DEMO LOKAL\|Pratinjau — bukan data transaksi' /tmp/ngd-guest.html; then
             echo 'ERROR: internal development banner leaked to public page' >&2
             exit 1
@@ -117,7 +117,7 @@ jobs:
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#lms-complete" > /tmp/ngd-lms-success.html 2>>/tmp/ngd-chrome.log
           grep -q 'Pelajaran selesai!' /tmp/ngd-lms-success.html
-          grep -q 'contoh layar konfirmasi' /tmp/ngd-lms-success.html
+          grep -q 'Progres belajar belum tercatat' /tmp/ngd-lms-success.html
           grep -q 'member-success-receipt' /tmp/ngd-lms-success.html
           grep -q 'data-unified-theme="true"' /tmp/ngd-lms-success.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-success.html
@@ -162,7 +162,7 @@ jobs:
           grep -q 'data-floating-nav="true"' /tmp/ngd-guest-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
-          grep -q 'hub-path-grid' /tmp/ngd-guest-mobile.html
+          grep -q 'class="nh-grid"' /tmp/ngd-guest-mobile.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#admin" > /tmp/ngd-admin-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-unified-theme="true"' /tmp/ngd-admin-mobile.html
@@ -216,4 +216,4 @@ jobs:
             echo 'BROWSER_API_TRANSPORT_UNVERIFIED: inspect browser CORS/redirect/network before enabling login or payments'
             grep -o 'API_BROWSER_[A-Z_]*' /tmp/ngd-browser-api.html | tail -1 || true
           fi
-          echo 'BROWSER_UI_OK: slate/ink public, member, admin, catalog and service flows'
+          echo 'BROWSER_UI_OK: membership public, member, admin, catalog and service flows'

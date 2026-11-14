@@ -5,7 +5,7 @@ export function isConnected() {
   return /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:\?.*)?$/.test(API_URL);
 }
 export function isWriteEnabled() {
-  return isConnected() && config.demoMode === false;
+  return isConnected() && config.memberWritesEnabled === true;
 }
 export function createRequestId() {
   if (globalThis.crypto && crypto.randomUUID) return crypto.randomUUID().replaceAll('-', '') + 'aa';
@@ -23,7 +23,7 @@ export async function api(action, payload = {}, token = '', options = {}) {
   const {write = false, timeoutMs = 24000, requestId = null} = options;
   if (requestId !== null && !/^[A-Za-z0-9_-]{16,80}$/.test(String(requestId)))
     throw new ApiError('ID permintaan tidak valid.', 'VALIDATION');
-  if (write && !isWriteEnabled()) throw new ApiError('Penyimpanan data sedang tidak tersedia.', 'PREVIEW_ONLY');
+  if (write && !isWriteEnabled()) throw new ApiError('Penyimpanan data sedang tidak tersedia.', 'SERVICE_UNAVAILABLE');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
