@@ -367,7 +367,7 @@ function viewSupport(){
       '<div class="metric-grid">'+[
         ['Tiket keseluruhan',overview.total??0],
         ['Perlu triase',stats.OPEN??0],
-        ['Perlu perhatian',overview.needs_review??0]
+        ['Prioritas tinggi',overview.urgent??0]
       ].map(([k,v])=>'<div class="metric-card static"><strong>'+esc(v)+'</strong><small>'+k+'</small></div>').join('')+'</div>'+
       '<div class="section-gap">'+title('Antrean tiket','TIKET MASUK',
         'Laporan terbaru. Setiap laporan terhubung dengan identitas member dan produk terkait.')+
@@ -429,7 +429,13 @@ function viewTicketDetail(){
     (isAdmin()?'<div class="divider"></div><form id="ticket-status-form" class="stack">'+
       '<div class="field"><label for="ticket-next">Ubah status</label><select id="ticket-next" class="input" name="status" required>'+options.map(s=>'<option value="'+s+'">'+esc(supportStatusLabel(s))+'</option>').join('')+'</select></div>'+
       '<div class="field"><label for="ticket-note">Catatan penanganan</label><textarea id="ticket-note" name="catatan" class="input" minlength="8" maxlength="1000" rows="3" required></textarea></div>'+
-      '<button class="btn btn-secondary" type="submit" '+(!supportWriteEnabled()||options.length===0?'disabled':'')+'>Simpan status</button></form>':'')+
+      '<button class="btn btn-secondary" type="submit" '+(!supportWriteEnabled()||options.length===0?'disabled':'')+'>Simpan status</button></form>'+
+      '<div class="divider"></div><form id="ticket-priority-form" class="stack">'+
+      '<div class="field"><label for="ticket-priority">Prioritas bug / layanan</label><select id="ticket-priority" class="input" name="prioritas" required>'+
+      ['P0','P1','P2','P3'].filter(p=>p!==t.prioritas).map(p=>'<option value="'+p+'">'+p+' — '+
+        ({P0:'Kritis',P1:'Tinggi',P2:'Normal',P3:'Rendah'})[p]+'</option>').join('')+'</select></div>'+
+      '<div class="field"><label for="priority-note">Alasan prioritas</label><textarea class="input" name="catatan" id="priority-note" minlength="8" maxlength="1000" rows="2" required></textarea></div>'+
+      '<button class="btn btn-secondary" type="submit" '+(!supportWriteEnabled()||t.status==='CLOSED'?'disabled':'')+'>Simpan prioritas</button></form>':'')+
     '<button class="btn btn-ghost" data-route="dukungan" style="margin-top:20px">Kembali ke bantuan</button></aside></div>';
 }
 function viewMember360(){
@@ -663,6 +669,15 @@ async function submitTicketStatus(form){
     catatan:String(data.get('catatan')||'')
   },async()=>{await loadRoute('tiket');});
 }
+async function submitTicketPriority(form){
+  if(!isAdmin()||!state.selectedTicketId)return;
+  const data=new FormData(form);
+  await submitSupportAction(form,'adminSetTicketPriority',{
+    ticket_id:state.selectedTicketId,
+    prioritas:String(data.get('prioritas')||''),
+    catatan:String(data.get('catatan')||'')
+  },async()=>{await loadRoute('tiket');});
+}
 async function submitReleaseCreate(form){
   if(!isAdmin())return;
   const data=new FormData(form);
@@ -736,12 +751,13 @@ document.addEventListener('click',async(e)=>{
 document.addEventListener('submit',(e)=>{
   const id=e.target.id;
   if(!['auth-form','support-create-form','ticket-reply-form',
-    'ticket-status-form','release-create-form','member-search-form'].includes(id))return;
+    'ticket-status-form','ticket-priority-form','release-create-form','member-search-form'].includes(id))return;
   e.preventDefault();
   if(id==='auth-form')processLogin(e.target,e.target.dataset.mode==='register');
   if(id==='support-create-form')submitTicketCreate(e.target);
   if(id==='ticket-reply-form')submitTicketReply(e.target);
   if(id==='ticket-status-form')submitTicketStatus(e.target);
+  if(id==='ticket-priority-form')submitTicketPriority(e.target);
   if(id==='release-create-form')submitReleaseCreate(e.target);
   if(id==='member-search-form')submitMemberSearch(e.target);
 });
