@@ -43,7 +43,7 @@ jobs:
       - name: Smoke-test static UI in real headless Chrome (no deployment)
         shell: bash
         run: |
-          set -euxo pipefail
+          set -euo pipefail
           # Add a CI-only probe; repository index.html itself remains unchanged.
           sed -i 's#</body>#<script src="./tests/layout-probe.js" defer></script></body>#' index.html
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/ngd-http.log 2>&1 &
@@ -76,7 +76,6 @@ jobs:
           grep -q 'data-catalog-filter="jasa"' /tmp/ngd-catalog.html
           grep -q 'Belum tersedia untuk pemesanan' /tmp/ngd-catalog.html
           grep -q 'Pembayaran belum diaktifkan' /tmp/ngd-catalog.html
-          echo 'CATALOG_LAYOUT_PROBE'; grep -o 'LAYOUT_CHECK[^<]*' /tmp/ngd-catalog.html | head -c 1100; echo
           grep -q 'data-overflow="false"' /tmp/ngd-catalog.html
           grep -q 'data-buys-disabled="true"' /tmp/ngd-catalog.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
@@ -186,4 +185,22 @@ jobs:
             echo 'ERROR: catalogue editor visible to public' >&2
             exit 1
           fi
-          echo 'BROWSER_PREVIEW_OK: slate/ink unified guest, member, LMS and admin'
+          # Production-oriented service request UI is safe and responsive in both roles.
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/?preview=member#jasa" > /tmp/ngd-member-services.html 2>>/tmp/ngd-chrome.log
+          grep -q 'id="service-brief-form"' /tmp/ngd-member-services.html
+          grep -q 'Penerimaan brief baru dibuka setelah backend' /tmp/ngd-member-services.html
+          grep -q 'data-overflow="false"' /tmp/ngd-member-services.html
+          grep -q 'data-floating-nav="true"' /tmp/ngd-member-services.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/?preview=admin#layanan" > /tmp/ngd-admin-services.html 2>>/tmp/ngd-chrome.log
+          grep -q 'Permintaan jasa dan penawaran' /tmp/ngd-admin-services.html
+          grep -q 'Antrean kosong' /tmp/ngd-admin-services.html
+          grep -q 'data-overflow="false"' /tmp/ngd-admin-services.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/#layanan" > /tmp/ngd-guest-services.html 2>>/tmp/ngd-chrome.log
+          if grep -q 'id="service-quote-form"' /tmp/ngd-guest-services.html; then
+            echo 'ERROR: service quote editor visible to visitor' >&2
+            exit 1
+          fi
+          echo 'BROWSER_PREVIEW_OK: slate/ink public, member, admin, catalog and service flows'
