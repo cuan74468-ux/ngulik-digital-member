@@ -13,6 +13,7 @@
 | [#98](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43539426119) | **89/89 PASS** | Ditambah akses ADMIN/member, akun suspended, perlindungan profil/privasi order |
 | [#101](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43539577480) | **89/89 PASS** | Rekonsiliasi percobaan aktivasi yang gagal di tengah jalan |
 | [#102](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43539730560) | **89/89 PASS** | Chromium headless: guest, member preview mobile, catalog desktop |
+| [#106](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43540518931) | **89/89 PASS** | Browser viewport QA: tidak overflow horizontal, navigasi mobile terlihat, checkout terkunci |
 
 Catatan: smoke test Chrome sungguhan membuktikan halaman dirender dan konten penting tampil. Itu **bukan** audit visual interaktif Android/Windows ataupun tes pengiriman POST Apps Script lintas-origin.
 
@@ -37,6 +38,8 @@ File Google Sheets privat bernama **Ngulik Digital DB - STAGING QA - 2026-11-14*
 | Database sumber | Tetap memiliki header, rumus dan baris asal; tidak dimodifikasi |
 
 Staging ini adalah **database saja**. Belum terhubung secara terverifikasi ke backend Apps Script staging dan belum dijalankan skenario integrasi yang melakukan mutasi.
+
+**Rumus setelah sanitasi:** tiga rumus di `members`, satu rumus klik etalase, dan tiga belas rumus pada `ringkasan` terdeteksi tetap ada. Pembacaan rentang tersebut tidak melaporkan error formula. Ini bukan audit seluruh 1.000 baris kosong.
 
 **Penting:** Jika salinan Google Sheets menyertakan Apps Script terikat, kode, Script Properties, dan target spreadsheet pada salinan **belum diverifikasi**. Jangan menjalankan setup, diagnostik mutasi, atau trigger pada salinan sampai target `NGD_DB_ID` dipastikan menunjuk staging, bukan database sumber.
 
@@ -65,3 +68,13 @@ Staging ini adalah **database saja**. Belum terhubung secara terverifikasi ke ba
 - Jangan memberi tautan staging sebagai aplikasi publik; file QA privat bukan produk siap digunakan.
 
 **Checkpoint operasional:** kode terus dikembangkan dan diuji di GitHub; spreadsheet staging privat telah siap untuk integrasi lebih lanjut, tetapi backend GAS staging belum disinkronkan atau dieksekusi.
+
+## 6. QA tampilan responsif yang baru
+
+CI browser menambahkan `tests/layout-probe.js` **hanya pada salinan index.html di runner**, sehingga source frontend untuk pengguna tidak menambahkan script QA. Hasil dari [run #106](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43540518931):
+
+- Pratinjau member `390 × 844`: tidak ditemukan overflow horizontal, navigasi mobile tampil.
+- Katalog `1280 × 800`: tidak ditemukan overflow horizontal dan semua tombol pembelian dalam mode demo berstatus `disabled`.
+- Beranda tamu, dashboard, dan katalog masih dapat dirender; **89/89 tes Node.js PASS**.
+
+Batas cakupan: ukuran emulasi browser headless bukan bukti touchscreen fisik Android/Windows dan tidak menguji endpoint Apps Script. Kontrol release, privasi, dan integritas data tetap berlaku.
