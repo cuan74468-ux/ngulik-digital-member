@@ -39,9 +39,9 @@ function fixture(configuredId = '') {
 }
 
 test('diagnostics never embed the live spreadsheet id or a default fallback', () => {
-  assert.doesNotMatch(diagnostics, /DIAG_DB_ID|const\\s+DIAG_DB_ID/);
+  assert.doesNotMatch(diagnostics, /DIAG_DB_ID/);
   assert.match(diagnostics, /NGD_DB_ID/);
-  assert.match(diagnostics, /function diagnosticDb_\\(\\)/);
+  assert.ok(diagnostics.includes('function diagnosticDb_()'));
 });
 
 test('missing explicit DB property fails closed without opening any spreadsheet', () => {
