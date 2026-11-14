@@ -212,3 +212,47 @@ test('release must be drafted and published, and only buyers can see it',()=>{
   assert.throws(()=>h.run('adminCreateProductRelease','adm',p,'NEW_RELEASE_123456789'),
     /Versi produk ini/);
 });
+
+test('limit support spam to five new tickets per member per 24 hours',()=>{
+  const h=harness();
+  for(let i=1;i<=5;i++)
+    h.run('createTicket','m1',{...valid,judul:'Cetak struk gagal '+i},'SUPPORT_DAILY_'+String(i).padStart(16,'0'));
+  assert.equal(h.store.support_tickets.length,5);
+  assert.throws(()=>h.run('createTicket','m1',
+    {...valid,judul:'Cetak struk gagal enam'},'SUPPORT_DAILY_0000000000000006'),
+    /Maksimal lima tiket/);
+  // A replay must still succeed after the limit is reached.
+  const retry=h.run('createTicket','m1',
+    {...valid,judul:'Cetak struk gagal 1'},'SUPPORT_DAILY_0000000000000001');
+  assert.equal(retry.ticket_id,h.store.support_tickets[0].ticket_id);
+});
+test('reply retry repairs interrupted reopening without duplicate event',()=>{
+  const h=harness(),ticket=h.run('createTicket','m1',valid,'SUPPORT_REOPEN_INITIAL');
+  h.store.support_tickets[0].status='RESOLVED';
+  const p={ticket_id:ticket.ticket_id,pesan:'Masalah muncul lagi setelah saya mencoba ulang.'};
+  h.failNextUpdate();
+  assert.throws(()=>h.run('replyTicket','m1',p,'SUPPORT_REPLY_REOPEN'),
+    /SIMULATED_FAILURE/);
+  assert.equal(h.store.support_tickets[0].status,'RESOLVED');
+  assert.equal(h.store.ticket_activities.length,2);
+  const outcome=h.run('replyTicket','m1',p,'SUPPORT_REPLY_REOPEN');
+  assert.equal(outcome.ticket.status,'OPEN');
+  assert.equal(h.store.ticket_activities.length,2);
+});
+test('support overview flags ticket/event status divergence',()=>{
+  const h=harness();
+  h.run('createTicket','m1',valid,'SUPPORT_DIVERGENCE');
+  h.store.support_tickets[0].status='RESOLVED';
+  const overview=h.run('adminGetSupportOverview','adm');
+  assert.equal(overview.needs_review,1);
+  assert.equal(overview.findings[0].reason,'STATUS_ACTIVITY_DIVERGENCE');
+});
+test('release duplicate request id refuses changed content',()=>{
+  const h=harness(),p={product_id:'P-POS',versi:'1.2.1',judul:'Perbaikan cetak struk',
+    ringkasan:'Memperbaiki kegagalan cetak pada Android setelah penggunaan offline.',
+    tipe_rilis:'PATCH'};
+  h.run('adminCreateProductRelease','adm',p,'RELEASE-REPLAY-000001');
+  assert.throws(()=>h.run('adminCreateProductRelease','adm',
+    {...p,judul:'Judul yang berbeda'},'RELEASE-REPLAY-000001'),/ID permintaan/);
+  assert.equal(h.store.product_releases.length,1);
+});
