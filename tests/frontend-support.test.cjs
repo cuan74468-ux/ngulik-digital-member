@@ -59,6 +59,7 @@ test('member can inspect synthetic ticket history and update list',()=>{
 test('admin preview displays support queue and Member 360 search',()=>{
   const h=preview('admin','dukungan');
   assert.match(h.nodes.screen.innerHTML,/Antrean tiket/);
+  assert.match(h.nodes.screen.innerHTML,/id="support-filter-form"/);
   assert.match(h.nodes.screen.innerHTML,/Cetak struk gagal pada Android/);
   h.go('member');
   assert.match(h.nodes.screen.innerHTML,/id="member-search-form"/);
