@@ -108,3 +108,54 @@ test('CMS endpoints are admin-only with separate release switch; no external req
   assert.ok(read('config.js').includes('contentEnabled: false'));
   assert.doesNotMatch(content,/UrlFetchApp|MailApp|GmailApp|DriveApp/);
 });
+
+test('schema migration is staging-only, id-confirmed, forward-only, and idempotent',()=>{
+  const h=fixture();
+  const properties={
+    NGD_DB_ID:'STAGING-1234',NGD_ENVIRONMENT:'PRODUCTION',
+    NGD_CONTENT_MIGRATION_ENABLED:'true',NGD_CONTENT_MIGRATION_TARGET_ID:'STAGING-1234'
+  };
+  h.ctx.PropertiesService={getScriptProperties(){return {
+    getProperty:key=>properties[key]||''
+  };}};
+  const headers=Object.fromEntries(Object.entries(vm.runInContext('NGD.HEADERS',h.ctx)));
+  const tables={};
+  for(const [name,csv] of Object.entries(headers)){
+    if(name==='site_content')continue;
+    tables[name]={getLastColumn(){return csv.split(',').length;},
+      getRange(){return {getValues(){return [csv.split(',')];}};}};
+  }
+  let created=0,reads=0;
+  h.ctx.SpreadsheetApp={
+    openById(id){
+      reads++;
+      assert.equal(id,'STAGING-1234');
+      return {
+        getSheetByName(name){return tables[name]||null;},
+        insertSheet(name){
+          created++;
+          const rec={columns:26,rows:[],getMaxColumns(){return this.columns;},
+            insertColumnsAfter(_at,n){this.columns+=n;},
+            getLastColumn(){return this.rows.length?this.rows[0].length:0;},
+            getRange(){return {setValues:vals=>{rec.rows=vals;},getValues:()=>rec.rows};},
+            setFrozenRows(){}};
+          tables[name]=rec;return rec;
+        }
+      };
+    },flush(){}
+  };
+  assert.throws(()=>h.ctx.installContentSchemaStaging(),/dibatasi ke staging/);
+  assert.equal(reads,0);
+  properties.NGD_ENVIRONMENT='STAGING';
+  properties.NGD_CONTENT_MIGRATION_TARGET_ID='OTHER-ID';
+  assert.throws(()=>h.ctx.installContentSchemaStaging(),/dibatasi ke staging/);
+  properties.NGD_CONTENT_MIGRATION_TARGET_ID='STAGING-1234';
+  const first=h.ctx.installContentSchemaStaging();
+  assert.equal(first.created,true);
+  assert.equal(first.tabs_checked,27);
+  assert.equal(created,1);
+  const second=h.ctx.installContentSchemaStaging();
+  assert.equal(second.created,false);
+  assert.equal(created,1);
+  assert.equal(tables.site_content.rows[0].join(','),headers.site_content);
+});
