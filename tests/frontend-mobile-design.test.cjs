@@ -69,7 +69,7 @@ test('success screen is explicitly labeled preview, not a real stored completion
   const h=preview('member','lms-complete'),display=h.nodes.screen.innerHTML;
   assert.match(display,/Pelajaran selesai!/);
   assert.match(display,/progres belajar belum tercatat/i);
-  assert.match(display,/CONTOH/);
+  assert.match(display,/BELUM TERCATAT/);
   assert.match(display,/Kembali ke kelas/);
   assert.match(display,/Jelajahi kelas lain/);
   assert.equal(h.apiCalls(),0);
