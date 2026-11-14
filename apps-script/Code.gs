@@ -449,9 +449,23 @@ function inspectDatabaseSetup() {
   Object.keys(NGD.HEADERS).forEach(function(name){
     var sh=ss.getSheetByName(name),expected=NGD.HEADERS[name].split(',');
     if(!sh){checks.push(name+':MISSING');ready=false;return;}
-    var actual=sh.getRange(1,1,1,expected.length).getValues()[0].map(String);
-    if(actual.join('|')!==expected.join('|')){checks.push(name+':MISMATCH');ready=false;}
-    else checks.push(name+':OK');
+    // The live database has legitimate extension columns. Verify required
+    // names and uniqueness instead of demanding identical column positions.
+    var width=sh.getLastColumn();
+    var actual=width>0?sh.getRange(1,1,1,width).getValues()[0].map(String):[];
+    var missingRequired=expected.filter(function(h){return actual.indexOf(h)<0;});
+    var seen={},duplicate=[];
+    actual.forEach(function(h){
+      if(!h)return;
+      if(seen[h])duplicate.push(h);
+      else seen[h]=true;
+    });
+    if(missingRequired.length||duplicate.length){
+      checks.push(name+':MISMATCH');ready=false;
+    }else{
+      var extended=actual.some(function(h){return !!h&&expected.indexOf(h)<0;});
+      checks.push(name+(extended?':OK_EXTENDED':':OK'));
+    }
   });
   var admins=[];
   if(ready)admins=findRows_('members',function(r){return r.role==='ADMIN';});
