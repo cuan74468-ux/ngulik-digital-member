@@ -83,3 +83,41 @@ h1,h2,h3,h4,p{margin-top:0}h1,h2,h3,h4{font-family:'Plus Jakarta Sans',sans-seri
   .metric-icon svg{width:17px;height:17px}
 }
 @media(max-width:365px){.metric-grid{gap:5px}.metric-card{padding:12px 8px}.metric-card small{font-size:9px}}
+
+/* Customer Support, Member 360, Product Release Management */
+.support-ticket{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-height:176px}
+.support-ticket .btn{margin-top:auto}
+.support-ticket-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;width:100%}
+.support-ticket h3{margin:5px 0 2px;line-height:1.45}
+.support-ticket .card-desc{overflow-wrap:anywhere}
+.support-ticket .tiny{margin:0}
+.support-release{display:grid;gap:12px}
+.support-release h3{margin:0}
+.support-release .card-desc{overflow-wrap:anywhere}
+.support-release .btn{justify-self:start}
+.support-search-grid{display:grid;grid-template-columns:minmax(170px,2fr) minmax(140px,1.2fr) minmax(130px,1fr) auto;gap:12px;align-items:end}
+.support-search-grid .field{min-width:0;margin:0}
+.support-search-grid .btn{min-width:132px}
+.support-member-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px}
+.support-member-row .support-ticket-head{width:auto}
+.support-member-row h3{margin:0 0 8px}
+.support-member-row .tiny{margin:8px 0 0}
+.support-timeline{display:grid;gap:12px;padding:8px 0}
+.support-timeline .step{margin:0}
+.support-timeline .step-body p{overflow-wrap:anywhere;white-space:pre-wrap}
+.metric-card.static{cursor:default}
+.metric-card.static:hover{transform:none;border-color:var(--line)}
+textarea.input{resize:vertical;min-height:90px}
+select.input{appearance:auto}
+@media(max-width:1100px){
+  .support-search-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .support-search-grid .btn{align-self:end}
+}
+@media(max-width:760px){
+  .support-search-grid{grid-template-columns:1fr;gap:15px}
+  .support-search-grid .btn{width:100%}
+  .support-member-row{display:grid;gap:15px}
+  .support-member-row .support-ticket-head{width:100%;justify-content:space-between}
+  .support-ticket{min-height:0}
+  .support-release .btn{width:100%}
+}
