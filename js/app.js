@@ -604,7 +604,29 @@ async function loadRoute(route){
         state.tools=data.tools||[];
       }
     }
-    if(route==='belajar')state.modules=await api('getModulBelajar',{},token);
+    if(route==='belajar'){
+      // Legacy modules remain usable while the new GAS LMS backend is staged.
+      const responses=await Promise.allSettled([
+        api('getModulBelajar',{},token),api('getLMSCatalog',{},token),
+        api('getMyLMSEnrollments',{},token)
+      ]);
+      if(responses[0].status==='fulfilled')state.modules=responses[0].value||[];
+      if(responses[1].status==='fulfilled')state.lmsCourses=responses[1].value||[];
+      if(responses[2].status==='fulfilled')state.lmsEnrollments=responses[2].value||[];
+    }
+    if(route==='lms'&&isAdmin())
+      state.lmsAdminCourses=await api('adminListLMSCourses',{},token);
+    if(route==='lms-editor'&&isAdmin()&&state.lmsSelectedCourseId){
+      const [detail,jobs]=await Promise.all([
+        api('adminGetLMSCourse',{course_id:state.lmsSelectedCourseId},token),
+        api('adminListLMSAIJobs',{course_id:state.lmsSelectedCourseId},token)
+      ]);
+      state.lmsAdminCourse=detail;
+      state.lmsJobs=jobs||[];
+    }
+    if(route==='lms-course'&&state.lmsSelectedCourseId)
+      state.lmsCourseDetail=await api('getLMSCourse',
+        {course_id:state.lmsSelectedCourseId},token);
     if(route==='affiliate')state.affiliates=await api('getAffiliateDashboard',{},token);
     if(route==='pesanan'){
       if(isAdmin()){
