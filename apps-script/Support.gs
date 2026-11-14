@@ -45,15 +45,19 @@ function supportMemberProducts_(member,orders,products) {
     var p=index[id],o=owned[id],expires='',state='TERVERIFIKASI';
     if(p.tipe==='LANGGANAN_30H'){
       expires=member.akses_3in1_sampai;
-      state=expires&&(new Date(expires).getTime()>Date.now())?'AKTIF':'BERAKHIR';
+      state=expires?(new Date(expires).getTime()>Date.now()?'AKTIF':'BERAKHIR'):
+        'MENUNGGU_PEMENUHAN';
     } else if(p.tipe==='SEAT_30H'){
       expires=member.canva_berakhir;
-      state=expires&&(new Date(expires).getTime()>Date.now())&&
-        ['AKTIF_BULAN_1','AKTIF_BULAN_2'].indexOf(member.status_canva)>=0?
-        'AKTIF':'BERAKHIR';
+      var isActive=['AKTIF_BULAN_1','AKTIF_BULAN_2'].indexOf(member.status_canva)>=0;
+      if(isActive&&expires&&new Date(expires).getTime()>Date.now())state='AKTIF';
+      else if(isActive&&expires)state='BERAKHIR';
+      else state='MENUNGGU_AKTIVASI';
     } else if(p.tipe==='LISENSI_SEKALI'){
-      state=member.status_pos==='AKTIF'?'AKTIF':'MENUNGGU_AKTIVASI';
-    } else if(p.tipe==='TOPUP_KREDIT')state='KREDIT_TERCATAT';
+      state=member.status_pos==='AKTIF'?'AKTIF':
+        o.status==='FULFILLED'?'PERLU_REKONSILIASI':'MENUNGGU_AKTIVASI';
+    } else if(p.tipe==='TOPUP_KREDIT')
+      state=o.status==='FULFILLED'?'KREDIT_TERCATAT':'MENUNGGU_PEMENUHAN';
     return {product_id:id,nama:p.nama,tipe:p.tipe,order_id:o.order_id,
       order_status:o.status,paid_at:supportDate_(o.paid_at),
       akses_status:state,berakhir_at:supportDate_(expires)};
@@ -314,10 +318,17 @@ function supportOverview_() {
 function supportSearchMembers_(p) {
   var query=safeText_(p.query,100).toLowerCase(),
     productId=safeText_(p.product_id,80),
-    status=String(p.status||'').toUpperCase();
+    status=String(p.status||'').toUpperCase(),
+    access=String(p.akses_status||'').toUpperCase();
+  var allowedAccess=['AKTIF','BERAKHIR','MENUNGGU_AKTIVASI',
+    'MENUNGGU_PEMENUHAN','PERLU_REKONSILIASI','KREDIT_TERCATAT','TERVERIFIKASI'];
   require_(!query||query.length>=2,'VALIDATION','Pencarian minimal 2 karakter.');
   require_(!status||['AKTIF','WAITING_LIST','SUSPENDED'].indexOf(status)>=0,
     'VALIDATION','Status pencarian tidak dikenal.');
+  require_(!access||allowedAccess.indexOf(access)>=0,'VALIDATION',
+    'Status akses produk tidak dikenal.');
+  require_(!access||productId,'VALIDATION',
+    'Pilih produk sebelum memfilter status akses.');
   require_(query||productId||status,'VALIDATION','Isi kata kunci atau filter.');
   var orders=readAll_('orders'),products=readAll_('katalog_produk');
   if(productId)require_(products.some(function(x){return x.product_id===productId;}),
@@ -326,15 +337,18 @@ function supportSearchMembers_(p) {
     if(m.role!=='MEMBER'||status&&m.status!==status)return false;
     var text=[m.member_id,m.nama,m.nama_usaha,m.wa].join(' ').toLowerCase();
     if(query&&text.indexOf(query)<0)return false;
-    return !productId||orders.some(function(o){
-      return o.member_id===m.member_id&&o.product_id===productId&&
-        ['PAID','FULFILLED'].indexOf(o.status)>=0;
+    if(!productId)return true;
+    var entries=supportMemberProducts_(m,orders,products);
+    return entries.some(function(a){
+      return a.product_id===productId&&(!access||a.akses_status===access);
     });
   });
   return {total:results.length,items:results.slice(0,50).map(function(m){
     var productsOwned=supportMemberProducts_(m,orders,products);
+    var selected=productId?productsOwned.filter(function(o){return o.product_id===productId;})[0]:null;
     return {member_id:m.member_id,nama:m.nama,nama_usaha:m.nama_usaha,
       status:m.status,wa_akhir:String(m.wa||'').slice(-4),
+      akses_status:selected?selected.akses_status:'',
       produk:productsOwned.map(function(o){return o.product_id;})};
   })};
 }
