@@ -28,7 +28,10 @@ const NGD = Object.freeze({
     ai_tools: 'tool_id,nama,deskripsi,placeholder_input,prompt_template,kredit_biaya,aktif,urut',
     modul_belajar: 'modul_id,urut,judul,deskripsi,url_classroom,aktif',
     progress_member: 'member_id,modul_id,selesai_at',
-    ringkasan: 'metrik,nilai'
+    ringkasan: 'metrik,nilai',
+    support_tickets: 'ticket_id,member_id,product_id,order_id,kategori,judul,deskripsi,platform,versi_aplikasi,status,prioritas,assigned_to,created_at,updated_at,resolved_at,closed_at,request_id',
+    ticket_activities: 'activity_id,ticket_id,actor_id,actor_role,jenis,dari_status,ke_status,pesan,created_at,request_id',
+    product_releases: 'release_id,product_id,versi,judul,ringkasan,tipe_rilis,status,created_at,published_at,created_by,request_id'
   }
 });
 
@@ -1156,6 +1159,11 @@ function apiRouter_(action,token,p,requestId) {
   m=activeMember_(token);
   switch(action) {
     case 'getMe':return publicMember_(m);
+    case 'getMyTickets':return supportListMine_(m);
+    case 'getTicket':return supportGetTicket_(m,p.ticket_id);
+    case 'getMyProductReleases':return supportReleasesForMember_(m,p);
+    case 'createTicket':return supportOpenTicket_(m,p,requestId);
+    case 'replyTicket':return supportReply_(m,p,requestId);
     case 'logout':return authLogout_(token);
     case 'changePin':return authChangePin_(m,p);
     case 'getBeranda':return dashboard_(m);
@@ -1179,6 +1187,16 @@ function apiRouter_(action,token,p,requestId) {
   }
   admin=admin_(token);
   switch(action){
+    case 'adminSearchMembers':return supportSearchMembers_(p);
+    case 'adminGetMember360':return supportGetMember360_(p.member_id);
+    case 'adminGetSupportOverview':return supportOverview_();
+    case 'adminListTickets':return supportListAdmin_(p);
+    case 'adminGetTicket':return supportGetTicket_(admin,p.ticket_id);
+    case 'adminChangeTicketStatus':return supportChangeStatus_(admin,p,requestId);
+    case 'adminReplyTicket':return supportReply_(admin,p,requestId);
+    case 'adminListProductReleases':return supportAdminReleases_();
+    case 'adminCreateProductRelease':return supportCreateRelease_(admin,p,requestId);
+    case 'adminPublishProductRelease':return supportPublishRelease_(admin,p);
     case 'adminGetDashboard':return {ringkasan:readAll_('ringkasan').map(function(r){return {metrik:r.metrik,nilai:r.nilai};}),followup:[]};
     case 'adminListOrders':return readAll_('orders').filter(function(r){return !p.status||r.status===p.status;}).slice(-100).reverse().map(function(r){return orderView_(r,admin);});
     case 'adminGetReconciliation':return adminReconciliation_(admin);
@@ -1272,6 +1290,10 @@ function requireActionFeatureEnabled_(action) {
   if(action==='register')
     require_(settings.getProperty('NGD_REGISTRATION_ENABLED')==='true',
       'MAINTENANCE','Pendaftaran belum dibuka.');
+  if(['createTicket','replyTicket','adminChangeTicketStatus','adminReplyTicket',
+      'adminCreateProductRelease','adminPublishProductRelease'].indexOf(action)>=0)
+    require_(settings.getProperty('NGD_SUPPORT_ENABLED')==='true',
+      'MAINTENANCE','Layanan tiket dan rilis masih dalam tahap pengujian.');
   if(['createOrder','confirmPayment','cancelOrder','adminVerifyOrder',
       'adminFulfillOrder','adminRefundOrder','adminAdjustCredit',
       'adminMarkCommissionPaid','requestPayout','generateAI'].indexOf(action)>=0)
@@ -1288,7 +1310,10 @@ function apiReadActions_() {
     'getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase',
     'getAffiliateDashboard','adminGetDashboard','adminListOrders','adminListMembers',
     'adminListWaitingList','adminListCommissions','adminGetSettings',
-    'adminGetReconciliation'];
+    'adminGetReconciliation',
+    'getMyTickets','getTicket','getMyProductReleases',
+    'adminSearchMembers','adminGetMember360','adminGetSupportOverview',
+    'adminListTickets','adminGetTicket','adminListProductReleases'];
 }
 function doPost(e) {
   try {
