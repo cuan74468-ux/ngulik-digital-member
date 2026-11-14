@@ -37,7 +37,7 @@ test('public hub explains four real pillars without fabricated dashboards',()=>{
     assert.ok(html.includes(phrase),phrase);
   }
   assert.match(html,/hub-journey/);
-  assert.match(html,/maksimal 50 peserta/);
+  assert.match(html,/hingga 50 anggota/);
   assert.doesNotMatch(html,/Daftar member/);
   assert.doesNotMatch(html,/Netflix|Spotify|Subscription/);
   assert.equal(h.apiCalls.length,0);
