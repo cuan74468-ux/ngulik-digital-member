@@ -220,19 +220,44 @@ function requireAdmin_(token) {
   if (member.role !== 'ADMIN') throw new Error('Akses ditolak.');
   return member;
 }
+// A cache eviction must not reset the PIN throttle of a registered account.
+// Registered-account counters are also stored in private Script Properties;
+// arbitrary unknown numbers are kept in cache only to prevent storage flooding.
+function loginFailureKey_(wa) {return 'ngd_login_' + sha256_(wa);}
+function loginFailureStoreKey_(wa) {return 'NGD_LOGIN_GUARD_' + sha256_(wa);}
 function loginGuard_(wa) {
-  var c = CacheService.getScriptCache(), raw = c.get('ngd_login_' + sha256_(wa));
-  var state = raw ? JSON.parse(raw) : {attempts:0};
-  if (state.attempts >= NGD.MAX_LOGIN_FAILURES) throw new Error('Terlalu banyak percobaan. Coba lagi dalam 15 menit.');
+  var now=Date.now(),until=now+NGD.LOCK_MINUTES*60000;
+  var cache=CacheService.getScriptCache(),key=loginFailureKey_(wa);
+  var raw=cache.get(key),cached={attempts:0};
+  try {if(raw)cached=JSON.parse(raw)||cached;}catch(e){cached={attempts:0};}
+  var props=PropertiesService.getScriptProperties(),storeKey=loginFailureStoreKey_(wa);
+  var stored={attempts:0},saved=props.getProperty(storeKey);
+  try {if(saved)stored=JSON.parse(saved)||stored;}catch(e){stored={attempts:0};}
+  if(stored.expires_at&&Number(stored.expires_at)<=now){
+    props.deleteProperty(storeKey);stored={attempts:0};
+  }
+  if(cached.expires_at&&Number(cached.expires_at)<=now)cached={attempts:0};
+  var state={attempts:Math.max(Number(cached.attempts)||0,Number(stored.attempts)||0),
+    expires_at:Math.max(Number(stored.expires_at)||0,Number(cached.expires_at)||0)};
+  if(!state.expires_at||state.expires_at<=now)state.expires_at=until;
+  if(state.attempts>=NGD.MAX_LOGIN_FAILURES)
+    throw new Error('Terlalu banyak percobaan. Coba lagi dalam 15 menit.');
   return state;
 }
-function noteLoginFailure_(wa) {
-  var cache = CacheService.getScriptCache(), key = 'ngd_login_' + sha256_(wa);
-  var state = loginGuard_(wa);
+function noteLoginFailure_(wa,persist) {
+  var cache=CacheService.getScriptCache(),key=loginFailureKey_(wa);
+  var state=loginGuard_(wa),now=Date.now();
   state.attempts++;
-  cache.put(key, JSON.stringify(state), NGD.LOCK_MINUTES * 60);
+  state.expires_at=Math.max(now+1000,Number(state.expires_at)||now+NGD.LOCK_MINUTES*60000);
+  var ttl=Math.max(1,Math.min(21600,Math.ceil((state.expires_at-now)/1000)));
+  cache.put(key,JSON.stringify(state),ttl);
+  if(persist===true)
+    PropertiesService.getScriptProperties().setProperty(loginFailureStoreKey_(wa),JSON.stringify(state));
 }
-function clearLoginFailures_(wa) { CacheService.getScriptCache().remove('ngd_login_' + sha256_(wa)); }
+function clearLoginFailures_(wa) {
+  CacheService.getScriptCache().remove(loginFailureKey_(wa));
+  PropertiesService.getScriptProperties().deleteProperty(loginFailureStoreKey_(wa));
+}
 function updateActivity_(member) {
   var elapsed = Date.now() - new Date(member.joined_at).getTime();
   var patch = {last_active_at: now_()};
@@ -687,7 +712,7 @@ function authLogin_(p) {
     loginGuard_(wa);
     var m=byId_('members','wa',wa);
     if(!m || pinHash_(pin,m.pin_salt)!==m.pin_hash){
-      noteLoginFailure_(wa);
+      noteLoginFailure_(wa,Boolean(m));
       throw ngdError_('UNAUTHORIZED','Nomor WhatsApp atau PIN salah.');
     }
     require_(m.status==='AKTIF','FORBIDDEN','Akun belum aktif.');
