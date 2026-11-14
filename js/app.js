@@ -325,6 +325,28 @@ function viewNotificationCenter(){
     '<p class="card-kicker">AKTIVITAS MEMBER</p><h3>Notifikasi'+
     (enabled?' · '+esc(inbox.unread||0)+' baru':'')+'</h3>'+body+'</section>';
 }
+function viewProfileEditor(){
+  if(!logged()||isAdmin())return '';
+  const m=state.me;
+  const fields=[
+    ['Nama lengkap','nama',80],['Nama usaha','nama_usaha',100],
+    ['Jenis usaha','jenis_usaha',80],['Kota','kota',80],
+    ['Instagram','instagram',80]
+  ];
+  return '<form id="profile-form" class="surface section-gap">'+
+    '<p class="card-kicker">PROFIL USAHA</p><h3>Perbarui informasi</h3>'+
+    '<p class="card-desc">Nomor WhatsApp login, peran, saldo kredit, dan status membership tidak dapat diubah di sini.</p>'+
+    '<div class="grid-2">'+fields.map(([label,name,max])=>
+      '<div class="field"><label for="profile-'+name+'">'+esc(label)+'</label>'+
+      '<input class="input" id="profile-'+name+'" name="'+name+'" value="'+esc(m[name]||'')+
+      '" maxlength="'+max+'" '+(['nama','nama_usaha'].includes(name)?'required minlength="2"':'')+'></div>').join('')+
+    '</div><div class="field"><label for="profile-deskripsi">Deskripsi usaha</label>'+
+    '<textarea class="input" id="profile-deskripsi" name="deskripsi_usaha" maxlength="500" rows="3">'+
+    esc(m.deskripsi_usaha||'')+'</textarea></div>'+
+    '<button type="submit" class="btn btn-primary" '+(!isWriteEnabled()?'disabled':'')+
+    '>Simpan perubahan</button>'+
+    (!isWriteEnabled()?'<p class="form-hint">Perubahan profil dinonaktifkan dalam mode pratinjau.</p>':'')+'</form>';
+}
 function viewAccount(){
   if(!logged())return title('Akun member','PROFIL & KEAMANAN','Kelola akses ke ruang belajar.')+
     '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk dengan nomor WhatsApp dan PIN Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk</button><button class="btn btn-secondary" data-route="daftar">Daftar</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
@@ -335,7 +357,7 @@ function viewAccount(){
     ].map(([k,v])=>'<div class="list-row"><div class="left"><small>'+esc(k)+'</small><strong>'+esc(v||'-')+'</strong></div></div>').join('')+'</div></div>'+
     '<div class="surface"><p class="card-kicker">AKSES & KEAMANAN</p><h3>Keamanan akun</h3><p class="card-desc">Sesi disimpan hanya di tab browser ini. Keluar untuk mengakhiri akses lokal.</p><div class="actions" style="margin-top:24px"><button class="btn btn-secondary" data-action="logout">'+icon('logout')+' Keluar dari akun</button></div>'+
     '<div class="divider"></div><h3>Pesanan saya</h3><button class="btn btn-ghost" data-route="pesanan">Lihat riwayat pesanan '+icon('arrow')+'</button><div class="divider"></div><h3>Program affiliate</h3><button class="btn btn-ghost" data-route="affiliate">Lihat referral saya '+icon('arrow')+'</button>'+
-    '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan bug atau usulkan fitur '+icon('arrow')+'</button></div></div>'+viewNotificationCenter();
+    '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan bug atau usulkan fitur '+icon('arrow')+'</button></div></div>'+viewNotificationCenter()+viewProfileEditor();
 }
 function viewLogin(register=false){
   return '<div class="login-shell"><p class="eyebrow">'+(register?'MEMULAI PERJALANAN':'SELAMAT DATANG KEMBALI')+'</p><h1 style="font-size:2.25rem">'+(register?'Buat akun member.':'Masuk ke ruang Anda.')+'</h1>'+
@@ -1110,12 +1132,29 @@ document.addEventListener('click',async(e)=>{
     catch{toast('Gagal menyalin. Silakan gunakan browser HTTPS.',true);}
   }
 });
+async function submitProfileForm(form){
+  if(!logged()||isAdmin()||!isWriteEnabled())return toast('Perubahan profil belum diaktifkan.',true);
+  const fd=new FormData(form),payload={};
+  ['nama','nama_usaha','jenis_usaha','kota','deskripsi_usaha','instagram'].forEach(k=>{
+    payload[k]=String(fd.get(k)||'');
+  });
+  const btn=form.querySelector('[type=submit]');
+  btn.disabled=true;
+  try{
+    const response=await api('updateMyProfile',payload,state.token,{write:true});
+    if(!response||!response.profil)throw new ApiError('Respons profil tidak lengkap.');
+    state.me=response.profil;
+    render();
+    toast(response.updated?'Profil berhasil diperbarui.':'Tidak ada perubahan profil.');
+  }catch(error){btn.disabled=false;toast(error.message,true);}
+}
 document.addEventListener('submit',(e)=>{
   const id=e.target.id;
-  if(!['auth-form','support-create-form','ticket-reply-form',
+  if(!['profile-form','auth-form','support-create-form','ticket-reply-form',
     'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form',
     'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form'].includes(id))return;
   e.preventDefault();
+  if(id==='profile-form')submitProfileForm(e.target);
   if(id==='auth-form')processLogin(e.target,e.target.dataset.mode==='register');
   if(id==='support-create-form')submitTicketCreate(e.target);
   if(id==='ticket-reply-form')submitTicketReply(e.target);
