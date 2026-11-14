@@ -7,6 +7,15 @@ Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliat
 
 **Status: DALAM PENGEMBANGAN — belum siap dipakai publik atau transaksi nyata.**
 
+Perubahan checkpoint 14 November (termasuk hardening lanjutan):
+
+- `getOrder` hanya baca; data internal order tidak lagi terlihat oleh member.
+- Persetujuan pembayaran wajib bukti penerimaan dana. Refund top-up berdasarkan saldo ledger; refund layanan lain butuh rekonsiliasi manual.
+- Komisi tidak dapat dicairkan bila order asal dibatalkan/direfund.
+- Aktivasi lisensi/seat memakai penanda anti-retry setelah upaya fulfillment.
+- Click tracking publik memiliki saklar tambahan yang default nonaktif.
+- Pengujian aturan bisnis terisolasi sekarang 39/39; test finance, payout, fulfillment, privacy, dan payment evidence masuk workflow, tetapi hasil GitHub Actions masih perlu diverifikasi.
+
 Perubahan checkpoint 14 November:
 - Backend mutasi sekarang memerlukan Script Property `NGD_MUTATIONS_ENABLED=true`. Properti ini **belum disetel**; bawaan menolak login/registrasi/order/aksi tulis dengan `MAINTENANCE`.
 - Login diserialkan di dalam lock untuk mengurangi bypass throttle PIN akibat request paralel.
@@ -24,7 +33,7 @@ Perubahan checkpoint 14 November:
 | `diagnosticAuthReadOnly` | Lulus 16/16 pemeriksaan dasar |
 | `diagnosticFinanceReadOnly` | Lulus dengan **0 order / 0 ledger / 0 komisi** |
 | `diagnosticReconciliationReadOnly` | Lulus dengan **0 order** |
-| Skenario murni antrean, keuangan, pengaturan admin | 37/37 assertions lulus di V8 terisolasi |
+| Skenario murni antrean, keuangan, pengaturan admin | 39/39 assertions lulus di V8 terisolasi |
 | Frontend awal (SPA tanpa build) | **Source dibuat**; guest/member preview telah diuji pada mock browser; belum diuji di browser sungguhan |
 | Login nyata, pembayaran, refund, affiliate, AI | **Belum lulus uji integrasi/keamanan** |
 | Google Apps Script terbaru vs GitHub | **Belum disinkronkan sejak perubahan lanjutan** |
@@ -65,7 +74,7 @@ tests/frontend-smoke.test.cjs
 Saat bekerja dalam repository yang memiliki Node.js 20+, jalankan:
 
 ```bash
-node --test tests/backend-pure.test.cjs tests/backend-security.test.cjs tests/frontend-smoke.test.cjs tests/static-contract.test.cjs
+node --test tests/*.test.cjs
 ```
 
 Workflow `validate.yml` juga menjalankan perintah itu pada push/PR, **tidak melakukan deployment**. Hasil workflow harus diperiksa sebelum menyatakan CI lulus. Pengujian murni tidak menggantikan uji nyata Apps Script, browser, pembayaran, atau concurrency.
