@@ -61,7 +61,7 @@ jobs:
           grep -q 'DEMO LOKAL' /tmp/ngd-guest.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member" > /tmp/ngd-member.html 2>>/tmp/ngd-chrome.log
-          grep -q 'DASHBOARD MEMBER' /tmp/ngd-member.html
+          grep -q 'RUANG BELAJAR PRIBADI' /tmp/ngd-member.html
           grep -q 'Kredit AI tersisa' /tmp/ngd-member.html
           grep -q 'data-overflow="false"' /tmp/ngd-member.html
           grep -q 'data-mobile-nav="true"' /tmp/ngd-member.html
