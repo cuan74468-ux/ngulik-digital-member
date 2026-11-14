@@ -552,7 +552,7 @@ function viewAdminRuntime(){
   const flags=data?.feature_flags;
   const names=[
     ['mutations','Perubahan data'],['registration','Pendaftaran'],
-    ['finance','Keuangan'],['catalog','Katalog'],['services','Pemesanan jasa'],
+    ['finance','Keuangan'],['catalog','Katalog'],['content','Konten visual'],['services','Pemesanan jasa'],
     ['support','Bantuan'],['lms','Studio LMS'],['notifications','Notifikasi']
   ];
   return '<section class="admin-runtime section-gap" aria-label="Kondisi sistem backend">'+
