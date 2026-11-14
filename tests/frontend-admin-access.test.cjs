@@ -44,6 +44,13 @@ test('member login stays independent and fails closed',()=>{
  assert.match(html,/data-route="admin-login"/);
  assert.match(html,/type="submit" disabled/);
 });
+test('administrator PIN change verifies confirmation locally before making a request',()=>{
+ const app=read('js/app.js');
+ assert.match(app,/name="pin_konfirmasi"/);
+ assert.match(app,/newPin!==confirmation/);
+ assert.match(app,/adminChangePin/);
+ assert.match(app,/login_required/);
+});
 test('client transport only permits auth channel for three exact administrator actions',async()=>{
  const calls=[];
  const win={NGD_CONFIG:{
