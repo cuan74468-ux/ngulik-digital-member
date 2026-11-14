@@ -57,7 +57,9 @@ jobs:
           test -n "$CHROME"
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --dump-dom \
             "http://127.0.0.1:8765/" > /tmp/ngd-guest.html 2>/tmp/ngd-chrome.log
-          grep -q 'Belajar digital' /tmp/ngd-guest.html
+          grep -q 'Dari belajar digital' /tmp/ngd-guest.html
+          grep -q 'hub-journey' /tmp/ngd-guest.html
+          grep -q 'NGULIK DIGITAL / LINGGAU AI STUDIO' /tmp/ngd-guest.html
           grep -q 'DEMO LOKAL' /tmp/ngd-guest.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member" > /tmp/ngd-member.html 2>>/tmp/ngd-chrome.log
@@ -69,6 +71,10 @@ jobs:
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#katalog" > /tmp/ngd-catalog.html 2>>/tmp/ngd-chrome.log
           grep -q 'Paket 3-in-1' /tmp/ngd-catalog.html
+          grep -q 'Jasa Video Iklan AI' /tmp/ngd-catalog.html
+          grep -q 'Bundel Ebook Vibe Coder' /tmp/ngd-catalog.html
+          grep -q 'data-catalog-filter="jasa"' /tmp/ngd-catalog.html
+          grep -q 'Belum tersedia untuk pemesanan' /tmp/ngd-catalog.html
           grep -q 'Pembayaran belum diaktifkan' /tmp/ngd-catalog.html
           grep -q 'data-overflow="false"' /tmp/ngd-catalog.html
           grep -q 'data-buys-disabled="true"' /tmp/ngd-catalog.html
@@ -152,6 +158,8 @@ jobs:
           grep -q 'data-ink-navigation="true"' /tmp/ngd-guest-mobile.html
           grep -q 'data-floating-nav="true"' /tmp/ngd-guest-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
+          grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
+          grep -q 'hub-path-grid' /tmp/ngd-guest-mobile.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#admin" > /tmp/ngd-admin-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-unified-theme="true"' /tmp/ngd-admin-mobile.html
