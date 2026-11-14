@@ -14,7 +14,7 @@
         .getPropertyValue('--green').trim();
       // Must match on desktop, mobile, public/member and ADMIN.
       var bg=getComputedStyle(document.body).getPropertyValue('--bg').trim().toLowerCase();
-      var sharedTheme=bg==='#cdeef9'&&primaryColor.toLowerCase()==='#0f2c45';
+      var sharedTheme=bg==='#f2f4f8'&&primaryColor.toLowerCase()==='#0e1320';
       var themeLinked=!!document.querySelector('link[href*="unified-theme.css"]');
       var main=document.getElementById('screen');
       var navRect=nav?nav.getBoundingClientRect():null;
@@ -25,7 +25,7 @@
         window.innerWidth<=760?'.mobile-nav .nav-item[aria-current="page"]':
           '.sidebar .nav-item[aria-current="page"]');
       var inkNav=!!activeNav&&
-        getComputedStyle(activeNav).backgroundColor==='rgb(15, 44, 69)';
+        getComputedStyle(activeNav).backgroundColor==='rgb(14, 19, 32)';
       var activeSurface=main?main.querySelector('.surface,.metric-card,.member-focus'):null;
       var surfaceReady=!!activeSurface&&
         getComputedStyle(activeSurface).backgroundColor!=='rgba(0, 0, 0, 0)';
