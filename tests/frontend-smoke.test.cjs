@@ -39,17 +39,16 @@ test('frontend modules parse without build tools',()=>{
 test('public config locks mutation and payment by default',()=>{
   const sandbox={window:{}};
   vm.runInNewContext(config,sandbox,{timeout:1000});
-  assert.match(sandbox.window.NGD_CONFIG.apiUrl,/^https:\/\/script\.google\.com\/macros\/s\//);
-  assert.equal(sandbox.window.NGD_CONFIG.memberWritesEnabled,false);
+  assert.equal(sandbox.window.NGD_CONFIG.apiUrl,'');
+  assert.equal(sandbox.window.NGD_CONFIG.demoMode,true);
   assert.equal(sandbox.window.NGD_CONFIG.paymentsEnabled,false);
   assert.equal(sandbox.window.NGD_CONFIG.qrisImageUrl,'');
 });
 test('guest homepage renders and shows offline preview warning',()=>{
   const {nodes,document}=renderPreview();
-  assert.match(nodes.screen.innerHTML,/Dari belajar digital/);
-  assert.match(nodes.screen.innerHTML,/hub-journey/);
-  assert.match(nodes.screen.innerHTML,/LINGGAU AI STUDIO/);
-  assert.match(nodes.screen.innerHTML,/Jelajahi solusi/);
+  assert.match(nodes.screen.innerHTML,/nh-hero/);
+  assert.match(nodes.screen.innerHTML,/nh-search/);
+  assert.match(nodes.screen.innerHTML,/nh-grid/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.match(nodes['desktop-nav'].innerHTML,/Katalog/);
   assert.equal(document.title,'Beranda — Ngulik Digital');

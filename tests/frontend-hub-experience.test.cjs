@@ -29,17 +29,17 @@ function preview(query=''){
   vm.runInContext(app,ctx,{timeout:5000});
   return {ctx,nodes,listeners,apiCalls,go:r=>vm.runInContext('go('+JSON.stringify(r)+')',ctx)};
 }
-test('public hub explains four real pillars without fabricated dashboards',()=>{
+test('public hub is a native-style home: hero, search bar, feature grid',()=>{
   const h=preview();
   const html=h.nodes.screen.innerHTML;
-  for(const phrase of ['LINGGAU AI STUDIO','Belajar & praktik','Aplikasi usaha',
-    'Studio AI & kredit','Jasa kreatif']){
-    assert.ok(html.includes(phrase),phrase);
+  for(const cls of ['nh-hero','nh-search','nh-grid','nh-rail']){
+    assert.ok(html.includes(cls),cls);
   }
-  assert.match(html,/hub-journey/);
-  assert.match(html,/hingga 50 anggota/);
+  for(const label of ['Belajar','Aplikasi','Studio AI','Jasa','Katalog']){
+    assert.ok(html.includes('>'+label+'<'),label);
+  }
+  assert.doesNotMatch(html,/hub-journey|hub-lead|class="eyebrow"/);
   assert.doesNotMatch(html,/Daftar member/);
-  assert.doesNotMatch(html,/Netflix|Spotify|Subscription/);
   assert.equal(h.apiCalls.length,0);
 });
 test('guest learning page explains Chapter 1 while leaving real LMS locked',()=>{

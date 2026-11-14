@@ -14,7 +14,7 @@ const submitSource=appSource.slice(supportStart,supportEnd);
 function apiHarness(){
   const sent=[];
   const ctx=vm.createContext({
-    window:{NGD_CONFIG:{apiUrl:'https://script.google.com/macros/s/QA/exec',memberWritesEnabled:true}},
+    window:{NGD_CONFIG:{apiUrl:'https://script.google.com/macros/s/QA/exec',demoMode:false}},
     crypto:{randomUUID:()=> '12345678-1234-1234-1234-123456789abc'},
     AbortController,setTimeout,clearTimeout,
     fetch:async(_url,opts)=>{

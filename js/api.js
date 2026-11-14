@@ -5,7 +5,7 @@ export function isConnected() {
   return /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:\?.*)?$/.test(API_URL);
 }
 export function isWriteEnabled() {
-  return isConnected() && config.memberWritesEnabled === true;
+  return isConnected() && config.demoMode === false;
 }
 export function createRequestId() {
   if (globalThis.crypto && crypto.randomUUID) return crypto.randomUUID().replaceAll('-', '') + 'aa';

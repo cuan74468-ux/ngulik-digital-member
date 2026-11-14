@@ -112,7 +112,7 @@ test('catalogue modification requires independent server-side staging gate',()=>
   assert.match(backend,/'adminListCatalog'/);
   const config=read('config.js');
   assert.match(config,/catalogEnabled:\s*false/);
-  assert.match(config,/memberWritesEnabled:\s*false/);
+  assert.match(config,/demoMode:\s*true/);
   assert.match(config,/paymentsEnabled:\s*false/);
   assert.doesNotMatch(catalog,/\bMailApp\b|\bUrlFetchApp\b|\bGmailApp\b/);
 });
