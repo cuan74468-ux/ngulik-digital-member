@@ -1,0 +1,159 @@
+/**
+ * Ngulik Digital — ADMIN catalog management (opt-in staging).
+ * Product rows are soft-archived, never deleted. Type and product ID are
+ * immutable after creation, because orders and fulfillment depend on them.
+ *
+ * Writes require BOTH NGD_MUTATIONS_ENABLED=true AND NGD_CATALOG_ENABLED=true,
+ * and a valid ADMIN session. Default server state: OFF.
+ * No payments, balance changes, fulfillment, emails or external API calls.
+ */
+var NGD_CATALOG_TYPES_=[
+  'LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_KREDIT',
+  'JASA_SEKALI','PRODUK_DIGITAL'
+];
+var NGD_CATALOG_EDIT_FIELDS_=[
+  'nama','deskripsi','tipe','harga','kredit_diberikan','durasi_hari',
+  'perlu_approval_admin','bisa_komisi','urut'
+];
+function catalogRevision_(row) {
+  var values=NGD_CATALOG_EDIT_FIELDS_.map(function(k){return row[k];});
+  values.push(row.aktif===true);
+  return sha256_(JSON.stringify(values));
+}
+function catalogAdminView_(row) {
+  var out={product_id:row.product_id,revision:catalogRevision_(row)};
+  NGD_CATALOG_EDIT_FIELDS_.forEach(function(k){out[k]=row[k];});
+  out.aktif=row.aktif===true;
+  out.checkout_supported=['LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_KREDIT']
+    .indexOf(row.tipe)>=0;
+  return out;
+}
+function catalogAdminList_() {
+  return readAll_('katalog_produk').sort(function(a,b){
+    return Number(a.urut||0)-Number(b.urut||0);
+  }).map(catalogAdminView_);
+}
+function catalogInt_(p,name,min,max) {
+  var value=p[name],n=Number(value);
+  require_(value!==undefined&&value!==null&&String(value).trim()!==''&&
+    Number.isSafeInteger(n)&&n>=min&&n<=max,
+    'VALIDATION','Nilai '+name+' tidak valid.');
+  return n;
+}
+function catalogPayload_(p,existing) {
+  require_(p&&typeof p==='object'&&!Array.isArray(p),
+    'VALIDATION','Isi produk tidak valid.');
+  var keys=NGD_CATALOG_EDIT_FIELDS_.concat(
+    existing?['product_id','revision']:[]);
+  require_(Object.keys(p).every(function(k){return keys.indexOf(k)>=0;}),
+    'VALIDATION','Kolom katalog tidak diizinkan.');
+  require_(NGD_CATALOG_EDIT_FIELDS_.every(function(k){
+    return Object.prototype.hasOwnProperty.call(p,k);
+  }),'VALIDATION','Formulir produk belum lengkap.');
+  require_(typeof p.nama==='string'&&typeof p.deskripsi==='string',
+    'VALIDATION','Nama dan deskripsi harus teks.');
+  var patch={
+    nama:safeText_(p.nama,120),
+    deskripsi:safeText_(p.deskripsi,350),
+    tipe:String(p.tipe||''),
+    harga:catalogInt_(p,'harga',1,50000000),
+    kredit_diberikan:catalogInt_(p,'kredit_diberikan',0,100000),
+    durasi_hari:catalogInt_(p,'durasi_hari',0,365),
+    urut:catalogInt_(p,'urut',1,10000)
+  };
+  require_(patch.nama.length>=3&&patch.deskripsi.length>=10,
+    'VALIDATION','Nama atau deskripsi terlalu pendek.');
+  require_(NGD_CATALOG_TYPES_.indexOf(patch.tipe)>=0,
+    'VALIDATION','Tipe katalog tidak tersedia.');
+  ['perlu_approval_admin','bisa_komisi'].forEach(function(k){
+    require_(typeof p[k]==='boolean','VALIDATION','Pilihan '+k+' tidak valid.');
+    patch[k]=p[k];
+  });
+  if(existing)
+    require_(patch.tipe===existing.tipe,
+      'CONFLICT','Tipe produk tidak dapat diubah setelah dibuat.');
+  if(patch.tipe==='TOPUP_KREDIT')
+    require_(patch.kredit_diberikan>0&&patch.durasi_hari===0,
+      'VALIDATION','Produk top-up memerlukan kredit positif tanpa durasi.');
+  if(['LANGGANAN_30H','SEAT_30H'].indexOf(patch.tipe)>=0)
+    require_(patch.durasi_hari===30,
+      'VALIDATION','Produk langganan atau seat harus berdurasi 30 hari.');
+  if(['LISENSI_SEKALI','JASA_SEKALI','PRODUK_DIGITAL'].indexOf(patch.tipe)>=0)
+    require_(patch.durasi_hari===0,'VALIDATION','Jenis produk ini tidak memiliki durasi.');
+  if(patch.tipe==='JASA_SEKALI'||patch.tipe==='LISENSI_SEKALI'||patch.tipe==='SEAT_30H')
+    require_(patch.perlu_approval_admin===true,
+      'VALIDATION','Produk ini memerlukan persetujuan admin.');
+  return patch;
+}
+function catalogSame_(a,b) {
+  return NGD_CATALOG_EDIT_FIELDS_.every(function(k){
+    return String(a[k])===String(b[k]);
+  });
+}
+function catalogCreate_(admin,p,requestId) {
+  require_(/^[A-Za-z0-9_-]{16,80}$/.test(String(requestId||'')),
+    'VALIDATION','ID permintaan tidak valid.');
+  var patch=catalogPayload_(p,null);
+  // Stable synthetic product ID makes a network-unknown create retry safe.
+  var id='P-'+sha256_(admin.member_id+':CATALOG:'+requestId)
+    .slice(0,12).toUpperCase();
+  return withLock_(function(){
+    var existing=byId_('katalog_produk','product_id',id);
+    if(existing){
+      require_(catalogSame_(existing,patch),
+        'CONFLICT','Permintaan pembuatan produk digunakan untuk isi yang berbeda.');
+      return {item:catalogAdminView_(existing),already_created:true};
+    }
+    var record={product_id:id,aktif:false};
+    NGD_CATALOG_EDIT_FIELDS_.forEach(function(k){record[k]=patch[k];});
+    appendRow_('katalog_produk',record);
+    logAudit_(admin.member_id,'ADMIN','CATALOG_CREATED','katalog_produk',
+      id,'','INACTIVE',{product_id:id,tipe:patch.tipe});
+    return {item:catalogAdminView_(record),already_created:false};
+  });
+}
+function catalogUpdate_(admin,p) {
+  return withLock_(function(){
+    var id=String(p.product_id||'');
+    require_(/^P-[A-Za-z0-9-]{3,60}$/.test(id),
+      'VALIDATION','ID produk tidak valid.');
+    var old=byId_('katalog_produk','product_id',id);
+    require_(old,'NOT_FOUND','Produk tidak ditemukan.');
+    var patch=catalogPayload_(p,old);
+    if(catalogSame_(old,patch))
+      return {item:catalogAdminView_(old),updated:false};
+    require_(String(p.revision||'')===catalogRevision_(old),
+      'CONFLICT','Produk telah berubah. Muat ulang sebelum menyimpan.');
+    // Existing orders retain their snapshot amounts. Price changes affect
+    // only new orders and require a separate audit event.
+    updateRow_('katalog_produk',old._row,patch);
+    logAudit_(admin.member_id,'ADMIN','CATALOG_UPDATED','katalog_produk',
+      id,'','UPDATED',{fields:NGD_CATALOG_EDIT_FIELDS_.filter(function(k){
+        return String(old[k])!==String(patch[k]);
+      })});
+    NGD_CATALOG_EDIT_FIELDS_.forEach(function(k){old[k]=patch[k];});
+    return {item:catalogAdminView_(old),updated:true};
+  });
+}
+function catalogSetActive_(admin,p) {
+  return withLock_(function(){
+    var id=String(p.product_id||'');
+    require_(/^P-[A-Za-z0-9-]{3,60}$/.test(id),
+      'VALIDATION','ID produk tidak valid.');
+    require_(typeof p.aktif==='boolean','VALIDATION','Status produk tidak valid.');
+    require_(Object.keys(p||{}).every(function(k){
+      return ['product_id','aktif','revision'].indexOf(k)>=0;
+    }),'VALIDATION','Kolom status katalog tidak diizinkan.');
+    var old=byId_('katalog_produk','product_id',id);
+    require_(old,'NOT_FOUND','Produk tidak ditemukan.');
+    if((old.aktif===true)===p.aktif)
+      return {item:catalogAdminView_(old),updated:false};
+    require_(String(p.revision||'')===catalogRevision_(old),
+      'CONFLICT','Produk telah berubah. Muat ulang sebelum mengubah status.');
+    updateRow_('katalog_produk',old._row,{aktif:p.aktif});
+    logAudit_(admin.member_id,'ADMIN','CATALOG_STATUS','katalog_produk',
+      id,old.aktif===true?'ACTIVE':'INACTIVE',p.aktif?'ACTIVE':'INACTIVE',{});
+    old.aktif=p.aktif;
+    return {item:catalogAdminView_(old),updated:true};
+  });
+}
