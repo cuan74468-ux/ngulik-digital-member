@@ -46,7 +46,10 @@ test('public config locks mutation and payment by default',()=>{
 });
 test('guest homepage renders and shows offline preview warning',()=>{
   const {nodes,document}=renderPreview();
-  assert.match(nodes.screen.innerHTML,/Belajar digital/);
+  assert.match(nodes.screen.innerHTML,/Dari belajar digital/);
+  assert.match(nodes.screen.innerHTML,/hub-journey/);
+  assert.match(nodes.screen.innerHTML,/LINGGAU AI STUDIO/);
+  assert.match(nodes.screen.innerHTML,/Jelajahi solusi/);
   assert.match(nodes['notice-slot'].innerHTML,/Pratinjau/);
   assert.match(nodes['desktop-nav'].innerHTML,/Katalog/);
   assert.equal(document.title,'Beranda — Ngulik Digital');
@@ -64,6 +67,10 @@ test('preview catalog uses sample products with disabled buy buttons',()=>{
   vm.runInContext("go('katalog')",context,{timeout:2000});
   assert.match(nodes.screen.innerHTML,/Paket 3-in-1/);
   assert.match(nodes.screen.innerHTML,/Top-up 400 Kredit AI/);
+  assert.match(nodes.screen.innerHTML,/Jasa Video Iklan AI/);
+  assert.match(nodes.screen.innerHTML,/Bundel Ebook Vibe Coder/);
+  assert.match(nodes.screen.innerHTML,/data-catalog-filter="aplikasi"/);
+  assert.match(nodes.screen.innerHTML,/data-catalog-filter="jasa"/);
   assert.match(nodes.screen.innerHTML,/disabled title="Pembayaran belum diaktifkan"/);
 });
 test('catalog escapes untrusted product names, and external URLs are restricted',()=>{
