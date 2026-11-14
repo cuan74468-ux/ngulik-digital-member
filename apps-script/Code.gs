@@ -533,6 +533,10 @@ function onOpen() {
   // Safe operator menu: no setup, reset, triggers, or blocking alert.
   SpreadsheetApp.getUi().createMenu('Ngulik Digital')
     .addItem('Periksa database (baca-saja)','inspectDatabaseSetup')
+    .addItem('Periksa akses admin (baca-saja)','showAdminAccessStatus')
+    .addSeparator()
+    .addItem('Pulihkan PIN admin (izin pemilik)','recoverAdminPinOwnerOnly')
+    .addItem('Buat admin staging (izin pemilik)','bootstrapStagingAdminOwnerOnly')
     .addToUi();
 }
 
