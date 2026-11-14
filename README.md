@@ -7,9 +7,11 @@ Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliat
 
 **Status: DALAM PENGEMBANGAN — belum siap dipakai publik atau transaksi nyata.**
 
-**Checkpoint QA terbaru:** GitHub Actions run #134 **115/115 tes Node.js lulus**. Chrome headless menguji beranda, dashboard mobile 390×844 (navigasi terlihat, tidak overflow), dan katalog desktop 1280×800 (checkout terkunci, tidak overflow). Bukti: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43543129765
+**Checkpoint QA terbaru:** GitHub Actions run #152 **133/133 tes Node.js lulus**. Chrome headless menguji beranda, dashboard mobile 390×844 (navigasi terlihat, tidak overflow), dan katalog desktop 1280×800 (checkout terkunci, tidak overflow). Bukti: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43545610897
 
 **Bukti dan rinciannya:** [QA Evidence & Staging Checkpoint](docs/QA_EVIDENCE_2026-11-14.md).
+
+**Audit lanjutan:** pengiriman ulang tiket kini mempertahankan `request_id` setelah kegagalan jaringan, dan backend mencegah laporan identik dalam 15 menit meski browser dimuat ulang. Pencarian admin membedakan status akun dengan status langganan; halaman rilis memiliki analisis dampak produk (jumlah pembeli aktif/berakhir/menunggu, serta bug terbuka) yang hanya dapat dibaca admin.
 
 **Member 360° & Support Ticketing telah dibangun dalam source:** pencarian member menurut nama/WA/produk, tiket bug/fitur/pertanyaan, penanganan status dan prioritas P0–P3, riwayat aktivitas, serta draft/publikasi changelog. Tiga tab support ditambahkan hanya ke staging privat (17/17 header sesuai). Semua penulisan support tetap **OFF** melalui `NGD_SUPPORT_ENABLED` dan `config.supportEnabled:false`. Lihat [handoff Member 360 & Support](docs/MEMBER360_SUPPORT_HANDOFF_2026-11-14.md).
 
@@ -25,7 +27,7 @@ Perubahan checkpoint 14 November (termasuk hardening lanjutan):
 - Komisi tidak dapat dicairkan bila order asal dibatalkan/direfund.
 - Aktivasi lisensi/seat memakai penanda anti-retry setelah upaya fulfillment.
 - Click tracking publik memiliki saklar tambahan yang default nonaktif.
-- Pengujian aturan bisnis murni 45/45; keseluruhan CI Node.js 115/115 serta browser smoke test sudah terverifikasi pada run #131. Ini bukan pengujian Apps Script nyata.
+- Pengujian aturan bisnis murni 45/45; keseluruhan CI Node.js 133/133 serta browser smoke test sudah terverifikasi pada run #152. Ini bukan pengujian Apps Script nyata.
 
 Perubahan checkpoint 14 November:
 - Semua mutasi tetap memerlukan `NGD_MUTATIONS_ENABLED=true`. Pendaftaran memerlukan **saklar kedua** `NGD_REGISTRATION_ENABLED=true`; pembayaran/refund/payout/koreksi kredit memerlukan **saklar ketiga** `NGD_FINANCE_ENABLED=true`. Semua default **OFF**; pengujian login tidak otomatis membuka transaksi.
