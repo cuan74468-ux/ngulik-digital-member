@@ -46,10 +46,12 @@ const screens={
   beranda:['Beranda','home'],belajar:['Belajar','book'],katalog:['Katalog','store'],
   ai:['Studio AI','spark'],affiliate:['Affiliate','link'],akun:['Akun','user'],
   admin:['Admin','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
-  antrean:['Antrean','clock'],login:['Masuk','user'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
+  antrean:['Antrean','clock'],dukungan:['Bantuan','clipboard'],
+  tiket:['Detail tiket','clipboard'],member360:['Member 360°','users'],
+  rilis:['Rilis Produk','grid'],login:['Masuk','user'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
-const memberNav=['beranda','belajar','katalog','ai','affiliate','akun'];
-const adminNav=['admin','pesanan','member','antrean','akun'];
+const memberNav=['beranda','belajar','katalog','ai','affiliate','dukungan','akun'];
+const adminNav=['admin','pesanan','member','dukungan','rilis','antrean','akun'];
 const tokenKey='ngd_member_session';
 // Preview-only fixture data, never used for financial operations.
 const PREVIEW_CATALOG=[
@@ -86,7 +88,10 @@ const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,
   info:null,catalog:[],home:null,modules:[],tools:[],orders:[],
   affiliates:null,waitlist:[],members:[],adminOrders:[],adminSummary:null,
-  reconciliation:null,selectedProduct:null,lastOrder:null,loading:false
+  reconciliation:null,selectedProduct:null,lastOrder:null,loading:false,
+  memberProducts:[],supportTickets:[],supportReleases:[],supportOverview:null,
+  adminSupportTickets:[],ticketDetail:null,selectedTicketId:null,
+  memberSearch:null,member360:null,selectedMemberId:null
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true&&Boolean(config.qrisImageUrl)&&Boolean(config.qrisMerchant);
@@ -106,7 +111,7 @@ function renderNav(){
   const items=isAdmin()?adminNav:memberNav;
   const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+icon(screens[route][1])+'<span>'+esc(screens[route][0])+'</span></button>';
   by('desktop-nav').innerHTML=items.map(button).join('');
-  const mobileItems=isAdmin()?['admin','pesanan','member','antrean','akun']:['beranda','belajar','katalog','ai','akun'];
+  const mobileItems=isAdmin()?['admin','member','dukungan','rilis','akun']:['beranda','belajar','katalog','dukungan','akun'];
   by('mobile-nav').innerHTML=mobileItems.map(button).join('');
   by('page-label').textContent=screens[state.route]?.[0]||'Beranda';
   by('account-avatar').textContent=logged()?
@@ -216,7 +221,8 @@ function viewAccount(){
       ['Nama',m.nama],['Nama usaha',m.nama_usaha],['WhatsApp',m.wa],['Status',m.status],['Kode referral',m.kode_referral],['Bergabung',friendlyDate(m.joined_at)]
     ].map(([k,v])=>'<div class="list-row"><div class="left"><small>'+esc(k)+'</small><strong>'+esc(v||'-')+'</strong></div></div>').join('')+'</div></div>'+
     '<div class="surface"><p class="card-kicker">AKSES & KEAMANAN</p><h3>Keamanan akun</h3><p class="card-desc">Sesi disimpan hanya di tab browser ini. Keluar untuk mengakhiri akses lokal.</p><div class="actions" style="margin-top:24px"><button class="btn btn-secondary" data-action="logout">'+icon('logout')+' Keluar dari akun</button></div>'+
-    '<div class="divider"></div><h3>Pesanan saya</h3><button class="btn btn-ghost" data-route="pesanan">Lihat riwayat pesanan '+icon('arrow')+'</button><div class="divider"></div><h3>Program affiliate</h3><button class="btn btn-ghost" data-route="affiliate">Lihat referral saya '+icon('arrow')+'</button></div></div>';
+    '<div class="divider"></div><h3>Pesanan saya</h3><button class="btn btn-ghost" data-route="pesanan">Lihat riwayat pesanan '+icon('arrow')+'</button><div class="divider"></div><h3>Program affiliate</h3><button class="btn btn-ghost" data-route="affiliate">Lihat referral saya '+icon('arrow')+'</button>'+
+    '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan bug atau usulkan fitur '+icon('arrow')+'</button></div></div>';
 }
 function viewLogin(register=false){
   return '<div class="login-shell"><p class="eyebrow">'+(register?'MEMULAI PERJALANAN':'SELAMAT DATANG KEMBALI')+'</p><h1 style="font-size:2.25rem">'+(register?'Buat akun member.':'Masuk ke ruang Anda.')+'</h1>'+
@@ -255,7 +261,9 @@ function viewAdmin(){
     '<div class="grid-3">'+[
       ['clipboard','Pesanan','Periksa pembayaran manual dan status fulfillment.','pesanan'],
       ['users','Kelola member','Lihat data member dan status keanggotaan.','member'],
-      ['clock','Waiting list','Tinjau antrean dan kuota gelombang.','antrean']
+      ['clock','Waiting list','Tinjau antrean dan kuota gelombang.','antrean'],
+      ['clipboard','Tiket support','Kelola bug, pertanyaan, dan permintaan fitur.','dukungan'],
+      ['grid','Product releases','Catat versi, perbaikan, dan pembaruan produk.','rilis']
     ].map(x=>'<article class="surface"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" style="margin-top:18px" data-route="'+x[3]+'">Buka '+icon('arrow')+'</button></article>').join('')+'</div>'+
     '<section class="section-gap">'+title('Ringkasan data','METRIK SISTEM','Nilai berasal dari rumus Google Sheets.')+
     (details.length?'<div class="grid-3">'+details.slice(0,12).map(x=>'<div class="stat"><div class="stat-value">'+esc(x.nilai)+'</div><div class="stat-label">'+esc(x.metrik)+'</div></div>').join('')+'</div>':
@@ -427,7 +435,8 @@ function render(){
     beranda:viewHome,belajar:viewLearn,katalog:viewCatalog,ai:viewAI,affiliate:viewAffiliate,
     akun:viewAccount,login:()=>viewLogin(false),daftar:()=>viewLogin(true),
     pesanan:()=>isAdmin()?viewAdminOrders():viewMyOrders(),
-    checkout:viewCheckout,admin:viewAdmin,member:()=>viewMembers(false),antrean:()=>viewMembers(true)
+    checkout:viewCheckout,admin:viewAdmin,member:()=>viewMembers(false),antrean:()=>viewMembers(true),
+    dukungan:viewSupport,tiket:viewTicketDetail,member360:viewMember360,rilis:viewReleases
   };
   by('screen').innerHTML=(routes[state.route]||viewHome)();
   document.title=(screens[state.route]?.[0]||'Beranda')+' — Ngulik Digital';
