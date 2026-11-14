@@ -1042,3 +1042,107 @@ body.member-experience .member-focus-ring-core{
   .catalog-summary{align-self:flex-start;align-items:flex-start;flex-direction:row;gap:10px;border-left:0;padding:0}
   .catalog-summary span{max-width:none}
 }
+
+
+/* 14 — Admin catalogue workspace. Same restrained slate/ink visual system. */
+.catalog-admin-intro{
+  display:flex;justify-content:space-between;align-items:end;gap:18px;
+  padding:7px 0 26px
+}
+.catalog-admin-intro h1{
+  font-size:clamp(1.9rem,3.2vw,3.25rem);
+  line-height:1.13;letter-spacing:-.06em;margin:0 0 12px
+}
+.catalog-admin-intro p:not(.eyebrow){
+  color:#657388;max-width:630px;font-size:13px;margin:0
+}
+.catalog-admin-intro>.chip{flex:0 0 auto}
+.catalog-admin-layout{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.86fr);
+  align-items:start;gap:19px
+}
+.catalog-admin-list{
+  display:grid;gap:10px;min-width:0
+}
+.catalog-admin-row{
+  display:flex;align-items:center;gap:13px;padding:17px 18px;
+  background:rgba(255,255,255,.88);border:1px solid #fff;
+  border-radius:18px;min-width:0
+}
+.catalog-admin-badge{
+  flex:0 0 39px;width:39px;height:39px;display:grid;
+  place-items:center;border-radius:13px;
+  background:#e7eef8;color:#3569a6
+}
+.catalog-admin-row-info{flex:1;min-width:0}
+.catalog-admin-row-info h3{
+  font-size:13px;letter-spacing:-.03em;
+  line-height:1.42;margin:0 0 5px
+}
+.catalog-admin-row-info p{
+  font-size:10.5px;color:#738092;
+  margin:0;line-height:1.6;overflow-wrap:anywhere
+}
+.catalog-admin-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.catalog-admin-controls .btn{font-size:11px;min-height:37px;padding:8px 11px}
+.catalog-admin-controls .btn-ghost{color:#495f7d}
+.catalog-admin-editor{
+  background:rgba(255,255,255,.9);border:1px solid #fff;
+  border-radius:24px;padding:clamp(20px,2vw,29px);
+  box-shadow:0 10px 28px rgba(36,56,83,.045)
+}
+.catalog-admin-editor-head{
+  display:flex;justify-content:space-between;
+  align-items:start;gap:12px;margin-bottom:23px
+}
+.catalog-admin-editor-head h2{
+  font-size:clamp(1.4rem,2vw,1.8rem);
+  margin:0 0 7px
+}
+.catalog-admin-editor-head .card-desc{max-width:370px}
+.catalog-form-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px 14px
+}
+.catalog-admin-form .field label{font-size:11px}
+.catalog-admin-form .input{min-width:0;width:100%;font-size:12px}
+.catalog-checks{
+  display:grid;gap:10px;padding:5px 0 21px;
+}
+.catalog-check{
+  display:flex;align-items:center;gap:11px;
+  font-size:12px;font-weight:650;color:#485769;
+  cursor:pointer
+}
+.catalog-check input{
+  width:17px;height:17px;accent-color:#2c5eaa;flex:0 0 auto
+}
+.catalog-admin-form-actions{
+  display:flex;align-items:center;flex-wrap:wrap;gap:12px
+}
+.catalog-admin-form-actions .form-hint{max-width:270px;margin:0}
+@media(max-width:1190px){
+  .catalog-admin-layout{grid-template-columns:1fr}
+  .catalog-admin-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .catalog-admin-row{align-items:flex-start}
+  .catalog-admin-controls{justify-content:flex-start}
+  .catalog-admin-editor{max-width:900px}
+}
+@media(max-width:760px){
+  .catalog-admin-intro{flex-direction:column;align-items:flex-start;gap:15px}
+  .catalog-admin-intro h1{font-size:2rem}
+  .catalog-admin-intro p:not(.eyebrow){font-size:12px}
+  .catalog-admin-layout{grid-template-columns:1fr;gap:16px}
+  .catalog-admin-list{grid-template-columns:1fr;gap:9px}
+  .catalog-admin-row{padding:15px 13px;flex-wrap:wrap}
+  .catalog-admin-row-info{flex-basis:calc(100% - 59px)}
+  .catalog-admin-controls{width:100%;padding-left:51px}
+  .catalog-admin-editor{padding:20px 16px;border-radius:21px}
+  .catalog-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 11px}
+  .catalog-form-grid .field{min-width:0}
+  .catalog-admin-form .input{font-size:12px}
+  .catalog-admin-form-actions .btn{width:100%}
+}
+@media(max-width:360px){
+  .catalog-form-grid{grid-template-columns:1fr}
+  .catalog-admin-editor-head{flex-direction:column}
+}
