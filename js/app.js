@@ -73,13 +73,13 @@ const screens={
   ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Katalog','store'],
   ai:['Studio AI','spark'],affiliate:['Affiliate','link'],akun:['Akun','user'],
   produk:['Kelola Katalog','store'],jasa:['Pesan Jasa','gift'],layanan:['Permintaan Jasa','gift'],
-  admin:['Admin','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
+  admin:['Admin','grid'],konten:['Konten Visual','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
   antrean:['Antrean','clock'],dukungan:['Bantuan','shield'],
   tiket:['Detail tiket','shield'],member360:['Member 360°','users'],
   rilis:['Rilis Produk','check'],login:['Masuk','user'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
 const memberNav=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','akun'];
-const adminNav=['admin','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','akun'];
+const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','akun'];
 const adminContextRoute=(route)=>({
   'lms-editor':'lms','lms-lesson':'lms','lms-ai':'lms',
   'member360':'member',tiket:'dukungan'
@@ -195,7 +195,7 @@ function activatePreview(){
 
 const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,qa:false,
-  info:null,catalog:[],home:null,modules:[],tools:[],orders:[],
+  info:null,catalog:[],siteContent:[],adminContent:[],contentEditId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],orders:[],
   affiliates:null,waitlist:[],members:[],adminOrders:[],adminSummary:null,
   reconciliation:null,selectedProduct:null,lastOrder:null,loading:false,
   memberProducts:[],supportTickets:[],supportReleases:[],supportOverview:null,
@@ -224,7 +224,8 @@ function notice(){
   return '<nav class="admin-commandbar" aria-label="Navigasi seluruh modul admin">'+
     adminNav.map(route=>'<button type="button" class="admin-command" data-route="'+route+
       '" '+(current===route?'aria-current="page"':'')+'>'+
-      icon(screens[route][1])+'<span>'+esc(screens[route][0])+'</span></button>').join('')+
+      (window.NGD_CONTENT_UI?.media(state.siteContent,'NAV_ICON',route,'nav-custom-icon','')||icon(screens[route][1]))+
+      '<span>'+esc(screens[route][0])+'</span></button>').join('')+
     '</nav>';
 }
 const mobileNavRoute=(route)=>({
@@ -235,18 +236,21 @@ const mobileNavRoute=(route)=>({
 })[route]||route;
 function renderNav(){
   const items=isAdmin()?adminNav:memberNav;
-  const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+icon(screens[route][1])+'<span>'+esc(screens[route][0])+'</span></button>';
+  const navIcon=(route)=>window.NGD_CONTENT_UI?.media(state.siteContent,'NAV_ICON',route,'nav-custom-icon','')||icon(screens[route][1]);
+  const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+navIcon(route)+'<span>'+esc(screens[route][0])+'</span></button>';
   by('desktop-nav').innerHTML=items.map(button).join('');
-  const mobileItems=isAdmin()?['admin','produk','pesanan','lms','akun']:['beranda','katalog','jasa','belajar','akun'];
+  const mobileItems=isAdmin()?['admin','konten','produk','pesanan','akun']:['beranda','katalog','jasa','belajar','akun'];
   const selectedMobile=mobileNavRoute(state.route);
   by('mobile-nav').innerHTML=mobileItems.map(route=>
     '<button type="button" class="nav-item" data-route="'+route+'" '+
     (route===selectedMobile?'aria-current="page"':'')+' aria-label="'+esc(screens[route][0])+'">'+
-    icon(screens[route][1])+'<span>'+esc(({produk:'Katalog',layanan:'Jasa'})[route]||screens[route][0])+'</span></button>').join('');
+    navIcon(route)+'<span>'+esc(({produk:'Katalog',layanan:'Jasa',konten:'Konten'})[route]||screens[route][0])+'</span></button>').join('');
   by('page-label').textContent=screens[state.route]?.[0]||'Beranda';
   by('account-avatar').textContent=logged()?
     String(state.me.nama||'M').split(' ').map(v=>v[0]).join('').slice(0,2).toUpperCase():'ND';
   by('mode-indicator').textContent=isAdmin()?'ADMIN':logged()?'MEMBER':'NGULIK DIGITAL';
+  const mark=by('brand-mark');
+  if(mark)mark.innerHTML=window.NGD_CONTENT_UI?.media(state.siteContent,'BRAND_LOGO','brand','brand-custom-image','')||'n<span>.</span>';
   const caption=by('sidebar-caption');
   if(caption)caption.textContent=isAdmin()?'Panel admin':logged()?'Ruang belajar':'Menu';
 }
