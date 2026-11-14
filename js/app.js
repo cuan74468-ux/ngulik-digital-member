@@ -85,17 +85,8 @@ const adminContextRoute=(route)=>({
   'member360':'member',tiket:'dukungan'
 })[route]||route;
 const tokenKey='ngd_member_session';
-// Public catalogue is marketing content only. Order pricing always comes from the server.
-const PUBLIC_CATALOG=[
-  {product_id:'P-3IN1',nama:'Paket 3-in-1',deskripsi:'Bio link, profil bisnis, dan katalog checkout selama 30 hari.',tipe:'LANGGANAN_30H',harga:99000},
-  {product_id:'P-POS',nama:'POS Kasir Sederhana',deskripsi:'Lisensi aplikasi kasir satu kali pembayaran.',tipe:'LISENSI_SEKALI',harga:149000},
-  {product_id:'P-CANVA',nama:'Seat Canva 30 Hari',deskripsi:'Undangan seat memerlukan aktivasi admin.',tipe:'SEAT_30H',harga:35000},
-  {product_id:'P-KREDIT-50',nama:'Top-up 50 Kredit AI',deskripsi:'Tambahan kredit penggunaan Studio AI.',tipe:'TOPUP_KREDIT',harga:25000},
-  {product_id:'P-KREDIT-150',nama:'Top-up 150 Kredit AI',deskripsi:'Paket kredit AI tambahan.',tipe:'TOPUP_KREDIT',harga:60000},
-  {product_id:'P-KREDIT-400',nama:'Top-up 400 Kredit AI',deskripsi:'Paket kredit AI untuk kebutuhan lebih besar.',tipe:'TOPUP_KREDIT',harga:140000},
-  {product_id:'P-VIDEO-AI',nama:'Jasa Video Iklan AI - Paket Hemat',deskripsi:'Video iklan AI untuk produk dan usaha, diproses setelah konsultasi serta aktivasi admin.',tipe:'JASA_SEKALI',harga:50000},
-  {product_id:'P-EBOOK',nama:'Bundel Ebook Vibe Coder & Template Siap Pakai',deskripsi:'Panduan praktis Vibe Coding, bundel template, dan bonus kredit AI.',tipe:'PRODUK_DIGITAL',harga:49000}
-];
+// Production catalogue must come from getKatalog; never invent product prices
+// when the API is temporarily unavailable.
 const PREVIEW_MODULES=[
   'Orientasi dan Setup Akun','Bio Link dan Profil Bisnis','Katalog dan Checkout Kurir',
   'Konten Cepat dengan Studio AI','Kasir POS Sederhana','Strategi Referral'
@@ -585,7 +576,7 @@ function viewAdminRuntime(){
 function viewAdmin(){
   if(!isAdmin())return empty('Akses administrator','Gunakan akun administrator terdaftar untuk membuka pengelolaan Ngulik Digital.','admin-login','Masuk admin');
   const details=state.adminSummary?.ringkasan||[];
-  return '<section class="admin-operations-intro"><p class="eyebrow">PUSAT OPERASIONAL</p><h1>Kelola ekosistem dengan lebih terarah.</h1><p>Awasi keanggotaan, aktivitas belajar, katalog yang terverifikasi, serta layanan bantuan. Data finansial tetap memerlukan pembuktian transaksi nyata.</p><span class="chip">Pilot maksimal 50 pengguna · sesuai rencana</span></section>'+
+  return '<section class="admin-operations-intro"><p class="eyebrow">PUSAT OPERASIONAL</p><h1>Kelola ekosistem dengan lebih terarah.</h1><p>Awasi keanggotaan, aktivitas belajar, katalog yang terverifikasi, serta layanan bantuan. Data finansial tetap memerlukan pembuktian transaksi nyata.</p><span class="chip">Data operasional terhubung</span></section>'+
     '<div class="admin-module-grid">'+[
       ['grid','Konten visual','Atur banner otomatis, gambar produk, ikon dan jadwal terbit.','konten'],
       ['clipboard','Pesanan','Periksa pembayaran manual dan status fulfillment.','pesanan'],
@@ -1866,9 +1857,9 @@ by('account-button').addEventListener('click',()=>go('akun'));
 window.addEventListener('hashchange',()=>go(location.hash.slice(1)||'beranda'));
 async function init(){
   state.route=screens[location.hash.slice(1)]?location.hash.slice(1):'beranda';
-  state.catalog=PUBLIC_CATALOG;
+  state.catalog=[];
   if(!activatePreview()){
-    state.info={kuota:50,sisa:50,disclosure:'Komisi referral berlaku sesuai ketentuan dan pembayaran terverifikasi.'};
+    state.info=null;
     render();
     await Promise.all([refreshPublic(),restoreSession()]);
     loadRoute(state.route);
