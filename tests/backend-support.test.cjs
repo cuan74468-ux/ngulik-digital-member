@@ -256,3 +256,31 @@ test('release duplicate request id refuses changed content',()=>{
     {...p,judul:'Judul yang berbeda'},'RELEASE-REPLAY-000001'),/ID permintaan/);
   assert.equal(h.store.product_releases.length,1);
 });
+
+test('only ADMIN can set ticket priority; repeated request does not duplicate activity',()=>{
+  const h=harness(),ticket=h.run('createTicket','m1',valid,'SUPPORT_PRIORITY_INIT');
+  const p={ticket_id:ticket.ticket_id,prioritas:'P1',
+    catatan:'Menghentikan proses kasir saat jam operasional'};
+  assert.throws(()=>h.run('adminSetTicketPriority','m1',p,'SUPPORT_PRIORITY_ADMIN'),
+    /Akses tidak diizinkan/);
+  const result=h.run('adminSetTicketPriority','adm',p,'SUPPORT_PRIORITY_ADMIN');
+  assert.equal(result.prioritas,'P1');
+  h.run('adminSetTicketPriority','adm',p,'SUPPORT_PRIORITY_ADMIN');
+  assert.equal(h.store.ticket_activities.length,2);
+  const summary=h.run('adminGetSupportOverview','adm');
+  assert.equal(summary.urgent,1);
+  assert.equal(summary.needs_review,0);
+});
+test('failed priority write is repaired by identical retry',()=>{
+  const h=harness(),ticket=h.run('createTicket','m1',valid,'SUPPORT_PRIORITY_CRASH');
+  const p={ticket_id:ticket.ticket_id,prioritas:'P0',
+    catatan:'Seluruh transaksi toko tidak bisa berlangsung'};
+  h.failNextUpdate();
+  assert.throws(()=>h.run('adminSetTicketPriority','adm',p,'SUPPORT_PRIORITY_REPLAY'),
+    /SIMULATED_FAILURE/);
+  assert.equal(h.store.support_tickets[0].prioritas,'P3');
+  assert.equal(h.store.ticket_activities.length,2);
+  const result=h.run('adminSetTicketPriority','adm',p,'SUPPORT_PRIORITY_REPLAY');
+  assert.equal(result.prioritas,'P0');
+  assert.equal(h.store.ticket_activities.length,2);
+});
