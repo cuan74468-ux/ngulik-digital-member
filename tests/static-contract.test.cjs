@@ -46,3 +46,11 @@ test('browser probe permits only credential-free public reads',()=>{
   assert.doesNotMatch(probe,/action:'register'/);
   assert.doesNotMatch(probe,/action:'login'/);
 });
+
+test('every literal frontend API action is handled by Apps Script router',()=>{
+  const frontend=read('js/app.js'),backend=read('apps-script/Code.gs');
+  const actions=[...frontend.matchAll(/\bapi\(\s*['"]([^'"]+)['"]/g)].map(m=>m[1]);
+  const handled=new Set([...backend.matchAll(/\bcase\s+['"]([^'"]+)['"]\s*:/g)].map(m=>m[1]));
+  assert.ok(actions.length>=10);
+  for(const action of actions)assert.equal(handled.has(action),true,'Missing backend action: '+action);
+});
