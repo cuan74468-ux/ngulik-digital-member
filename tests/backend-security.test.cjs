@@ -58,9 +58,10 @@ test('registration, login, order, refund and admin changes fail closed without S
   }
   assert.equal(s.touched(),0);
 });
-test('manual triggers cannot be installed while release flag is off',()=>{
+test('manual triggers and admin PIN reset cannot run while release flag is off',()=>{
   const s=boot();
   assert.throws(()=>vm.runInContext('installTriggers()',s.context),/Perubahan data belum diaktifkan/);
+  assert.throws(()=>vm.runInContext('resetAdminPin()',s.context),/Perubahan data belum diaktifkan/);
   assert.equal(s.touched(),0);
 });
 test('only exact string true enables mutations',()=>{
