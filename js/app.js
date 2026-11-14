@@ -1366,10 +1366,74 @@ async function toggleCatalogItem(id){
     render();
   }catch(error){toast(error.message,true);}
 }
+async function submitServiceBrief(form){
+  if(!logged()||isAdmin()||!serviceWriteEnabled())
+    return toast('Penerimaan brief belum diaktifkan.',true);
+  const fd=new FormData(form);
+  const kind=String(fd.get('jenis_layanan')||'');
+  const payload={
+    jenis_layanan:kind,
+    product_id:kind==='VIDEO_AI'?'P-VIDEO-AI':'',
+    judul:String(fd.get('judul')||''),
+    brief:String(fd.get('brief')||''),
+    referensi_url:String(fd.get('referensi_url')||''),
+    anggaran:Number(fd.get('anggaran'))
+  };
+  if(!Number.isSafeInteger(payload.anggaran)||payload.anggaran<0)
+    return toast('Anggaran harus berupa bilangan bulat positif atau 0.',true);
+  const requestId=state.serviceRequestId||createRequestId();
+  state.serviceRequestId=requestId;
+  const button=form.querySelector('[type=submit]');
+  button.disabled=true;
+  let saved;
+  try{
+    saved=await api('submitServiceBrief',payload,state.token,{write:true,requestId});
+    if(!saved?.item?.service_id)throw new ApiError('Respons layanan tidak lengkap.');
+  }catch(error){button.disabled=false;toast(error.message,true);return;}
+  state.serviceRequestId=null;
+  toast(saved.already_submitted?'Permintaan sudah tercatat.':'Brief berhasil dikirim untuk ditinjau.');
+  try{state.services=await api('getMyServiceRequests',{},state.token);}
+  catch(error){toast('Brief tersimpan, tetapi riwayat belum dapat dimuat.',true);}
+  render();
+}
+async function submitServiceQuote(form){
+  if(!isAdmin()||!serviceWriteEnabled())return toast('Penawaran belum diaktifkan.',true);
+  const current=state.services.find(x=>x.service_id===form.dataset.serviceId);
+  if(!current)return toast('Permintaan tidak ditemukan. Muat ulang halaman.',true);
+  const fd=new FormData(form);
+  const payload={
+    service_id:current.service_id,
+    expected_updated_at:current.updated_at,
+    status:String(fd.get('status')||''),
+    penawaran_harga:Number(fd.get('penawaran_harga')),
+    penawaran_pesan:String(fd.get('penawaran_pesan')||''),
+    catatan_internal:String(fd.get('catatan_internal')||'')
+  };
+  const button=form.querySelector('[type=submit]');
+  button.disabled=true;
+  let response;
+  try{
+    response=await api('adminUpdateServiceQuote',payload,state.token,{write:true});
+    if(!response?.item?.service_id)throw new ApiError('Respons penawaran tidak lengkap.');
+  }catch(error){button.disabled=false;toast(error.message,true);return;}
+  toast(response.updated?'Penawaran berhasil disimpan.':'Tidak ada perubahan.');
+  try{state.services=await api('adminListServiceRequests',{},state.token);}
+  catch(error){toast('Perubahan tersimpan, tetapi antrean gagal dimuat.',true);}
+  render();
+}
 document.addEventListener('click',async(e)=>{
-  const target=e.target.closest('[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action]');
+  const target=e.target.closest('[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action]');
   if(!target)return;
-  if(target.hasAttribute('data-catalog-edit')){
+  if(target.hasAttribute('data-service-id')){
+    if(!isAdmin())return;
+    state.selectedServiceId=target.dataset.serviceId;
+    render();
+  }
+  else if(target.hasAttribute('data-service-go')){
+    state.serviceKind='VIDEO_AI';
+    go('jasa');
+  }
+  else if(target.hasAttribute('data-catalog-edit')){
     if(!isAdmin())return;
     state.catalogEditId=target.dataset.catalogEdit;
     state.catalogRequestId=null;
@@ -1440,10 +1504,12 @@ async function submitProfileForm(form){
 }
 document.addEventListener('submit',(e)=>{
   const id=e.target.id;
-  if(!['admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
+  if(!['service-brief-form','service-quote-form','admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
     'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form',
     'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form'].includes(id))return;
   e.preventDefault();
+  if(id==='service-brief-form')submitServiceBrief(e.target);
+  if(id==='service-quote-form')submitServiceQuote(e.target);
   if(id==='admin-catalog-form')submitCatalogForm(e.target);
   if(id==='profile-form')submitProfileForm(e.target);
   if(id==='auth-form')processLogin(e.target,e.target.dataset.mode==='register');
