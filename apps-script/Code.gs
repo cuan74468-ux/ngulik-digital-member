@@ -761,6 +761,11 @@ function newOrder_(m,p,requestId) {
         'CONFLICT','ID permintaan sudah dipakai untuk pesanan lain.');
       return orderView_(retry,m);
     }
+    // The public catalog can display exploratory offers, but the legacy
+    // QRIS order + fulfillment flow supports only these four product types.
+    // Service/ebook offers must never produce an unfulfillable order.
+    require_(['TOPUP_KREDIT','LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H'].indexOf(product.tipe)>=0,
+      'NOT_AVAILABLE','Produk ini belum dapat dipesan melalui checkout saat ini.');
     if(product.tipe==='LISENSI_SEKALI')
       require_(['AKTIF','DIAJUKAN'].indexOf(m.status_pos)<0,
         'CONFLICT','Lisensi POS sudah aktif atau sedang menunggu aktivasi.');
