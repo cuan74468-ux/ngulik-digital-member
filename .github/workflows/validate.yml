@@ -24,3 +24,29 @@ jobs:
           package-manager-cache: false
       - name: Verify pure backend rules and frontend smoke
         run: node --test tests/*.test.cjs
+      - name: Smoke-test static UI in real headless Chrome (no deployment)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/ngd-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            if curl -fsS -o /dev/null http://127.0.0.1:8765/; then break; fi
+            sleep 0.5
+          done
+          CHROME="$(command -v google-chrome || command -v chromium || true)"
+          test -n "$CHROME"
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --dump-dom \
+            "http://127.0.0.1:8765/" > /tmp/ngd-guest.html 2>/tmp/ngd-chrome.log
+          grep -q 'Belajar digital' /tmp/ngd-guest.html
+          grep -q 'DEMO LOKAL' /tmp/ngd-guest.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/?preview=member" > /tmp/ngd-member.html 2>>/tmp/ngd-chrome.log
+          grep -q 'DASHBOARD MEMBER' /tmp/ngd-member.html
+          grep -q 'Kredit AI tersisa' /tmp/ngd-member.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
+            "http://127.0.0.1:8765/?preview=member#katalog" > /tmp/ngd-catalog.html 2>>/tmp/ngd-chrome.log
+          grep -q 'Paket 3-in-1' /tmp/ngd-catalog.html
+          grep -q 'Pembayaran belum diaktifkan' /tmp/ngd-catalog.html
+          echo 'BROWSER_PREVIEW_OK: guest, member mobile, catalog desktop'
