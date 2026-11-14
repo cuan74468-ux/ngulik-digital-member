@@ -11,7 +11,16 @@ const friendlyDate = (v) => {
     new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeZone:'Asia/Jakarta'}).format(d);
 };
 const urlSafe = (raw) => {
-  try {const u=new URL(String(raw||''));return u.protocol==='https:'?u.href:'';}catch{return '';}
+  try {
+    const u=new URL(String(raw||''));
+    return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';
+  }catch{return '';}
+};
+const classroomUrlSafe = (raw) => {
+  const normalized=urlSafe(raw);
+  if(!normalized)return '';
+  const u=new URL(normalized);
+  return u.hostname==='classroom.google.com'?normalized:'';
 };
 const icons = {
   home:'<path d="m3 10 9-7 9 7v10H3z"/><path d="M9 20v-7h6v7"/>',
@@ -171,7 +180,7 @@ function viewLearn(){
   const modules=state.modules;
   return title('Perjalanan belajar Anda','KURIKULUM PRAKTIS','Modul tersedia sesuai program dan akses akun.')+
     (modules.length?'<div class="stack">'+modules.map((m,i)=>'<article class="surface list-row"><div class="left" style="display:flex;gap:15px;align-items:center"><span class="step-no">'+esc(m.urut||i+1)+'</span><div><strong>'+esc(m.judul)+'</strong><small>'+esc(m.deskripsi||'')+'</small></div></div>'+
-    (urlSafe(m.url_classroom)?'<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href="'+esc(urlSafe(m.url_classroom))+'">Buka modul '+icon('arrow')+'</a>':
+    (classroomUrlSafe(m.url_classroom)?'<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href="'+esc(classroomUrlSafe(m.url_classroom))+'">Buka modul '+icon('arrow')+'</a>':
     '<span class="chip">Materi menyusul</span>')+'</article>').join('')+'</div>':
     empty('Materi belum tersedia','Admin belum menerbitkan modul atau backend belum terhubung.'));
 }
