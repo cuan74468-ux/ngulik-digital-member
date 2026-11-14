@@ -907,11 +907,23 @@ function affiliateDashboard_(m) {
 }
 function requestPayout_(m) {
   return withLock_(function(){
-    var all=findRows_('affiliate_commissions',function(r){return r.referrer_id===m.member_id&&r.status==='APPROVED'&&!r.payout_requested_at;});
+    require_(m.role==='MEMBER','FORBIDDEN','Hanya member dapat mengajukan komisi.');
+    var all=findRows_('affiliate_commissions',function(r){
+      return r.referrer_id===m.member_id&&r.status==='APPROVED'&&!r.payout_requested_at;
+    });
+    require_(all.length>0,'CONFLICT','Tidak ada komisi siap dicairkan.');
+    all.forEach(function(r){
+      var order=byId_('orders','order_id',r.order_id);
+      require_(order&&['PAID','FULFILLED'].indexOf(order.status)>=0,
+        'RECONCILIATION_REQUIRED','Ada komisi untuk order yang belum valid. Hubungi admin.');
+    });
     var total=all.reduce(function(s,r){return s+Number(r.nominal||0);},0);
-    require_(total>=Number(setting_('min_payout',50000)),'CONFLICT','Komisi belum mencapai minimum pencairan.');
+    require_(Number.isInteger(total)&&total>0,'CONFLICT','Nominal komisi tidak valid.');
+    require_(total>=Number(setting_('min_payout',50000)),'CONFLICT',
+      'Komisi belum mencapai minimum pencairan.');
     all.forEach(function(r){updateRow_('affiliate_commissions',r._row,{payout_requested_at:now_()});});
-    logAudit_(m.member_id,m.role,'PAYOUT_REQUEST','affiliate_commissions',m.member_id,'','REQUESTED',{amount:total});
+    logAudit_(m.member_id,m.role,'PAYOUT_REQUEST','affiliate_commissions',
+      m.member_id,'','REQUESTED',{amount:total,count:all.length});
     return {total:total,jumlah_komisi:all.length};
   });
 }
@@ -1066,6 +1078,9 @@ function apiRouter_(action,token,p,requestId) {
         var c=byId_('affiliate_commissions','komisi_id',p.komisi_id);
         require_(c&&c.status==='APPROVED'&&c.payout_requested_at,
           'CONFLICT','Komisi belum diajukan atau disetujui.');
+        var linkedOrder=byId_('orders','order_id',c.order_id);
+        require_(linkedOrder&&['PAID','FULFILLED'].indexOf(linkedOrder.status)>=0,
+          'RECONCILIATION_REQUIRED','Order asal komisi belum valid untuk pencairan.');
         require_(p.dana_sudah_ditransfer===true&&p.penerima_terverifikasi===true,
           'RECONCILIATION_REQUIRED','Transfer dan penerima harus diverifikasi sebelum dicatat lunas.');
         var reference=safeText_(p.referensi_transfer,120),note=safeText_(p.catatan,300);
