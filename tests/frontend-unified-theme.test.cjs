@@ -54,3 +54,13 @@ test('color is not selected by role or desktop-only breakpoints',()=>{
   assert.ok(css.includes('.member-success'));
   assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
 });
+
+test('operational admin uses one mobile and desktop design system',()=>{
+  for(const selector of ['.admin-commandbar','.admin-module-card','.admin-runtime-summary',
+    '.admin-runtime-flags','.admin-runtime-flag']){
+    assert.ok(css.includes(selector),selector);
+  }
+  assert.ok(css.includes('body[data-app-role="admin"]'));
+  assert.ok(app.includes("data-app-role',isAdmin()?'admin'"));
+  assert.ok(app.includes('viewAdminRuntime()'));
+});
