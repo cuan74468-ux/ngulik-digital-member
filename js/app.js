@@ -618,11 +618,114 @@ async function confirmPayment(){
     state.lastOrder=r;toast('Konfirmasi diterima. Menunggu pemeriksaan admin.');go('pesanan');
   }catch(e){toast(e.message,true);}
 }
+async function submitSupportAction(form,action,payload,after){
+  if(!supportWriteEnabled()){
+    toast('Layanan tiket masih dalam mode pratinjau.',true);return;
+  }
+  const button=form.querySelector('[type="submit"]');
+  if(button?.disabled)return;
+  if(button)button.disabled=true;
+  try{
+    const result=await api(action,payload,state.token,{write:true});
+    toast('Permintaan berhasil dicatat.');
+    if(after)await after(result);
+  }catch(e){toast(e.message,true);}
+  finally{if(button)button.disabled=false;}
+}
+async function submitTicketCreate(form){
+  const data=new FormData(form),payload={
+    kategori:String(data.get('kategori')||''),
+    product_id:String(data.get('product_id')||''),
+    judul:String(data.get('judul')||''),
+    deskripsi:String(data.get('deskripsi')||''),
+    platform:String(data.get('platform')||''),
+    versi_aplikasi:String(data.get('versi_aplikasi')||'')
+  };
+  await submitSupportAction(form,'createTicket',payload,async result=>{
+    state.selectedTicketId=result.ticket_id;
+    state.ticketDetail=null;
+    go('tiket');
+  });
+}
+async function submitTicketReply(form){
+  if(!state.selectedTicketId)return;
+  const data=new FormData(form);
+  await submitSupportAction(form,isAdmin()?'adminReplyTicket':'replyTicket',
+    {ticket_id:state.selectedTicketId,pesan:String(data.get('pesan')||'')},
+    async()=>{await loadRoute('tiket');});
+}
+async function submitTicketStatus(form){
+  if(!isAdmin()||!state.selectedTicketId)return;
+  const data=new FormData(form);
+  await submitSupportAction(form,'adminChangeTicketStatus',{
+    ticket_id:state.selectedTicketId,
+    status:String(data.get('status')||''),
+    catatan:String(data.get('catatan')||'')
+  },async()=>{await loadRoute('tiket');});
+}
+async function submitReleaseCreate(form){
+  if(!isAdmin())return;
+  const data=new FormData(form);
+  const payload={
+    product_id:String(data.get('product_id')||''),
+    versi:String(data.get('versi')||''),
+    judul:String(data.get('judul')||''),
+    ringkasan:String(data.get('ringkasan')||''),
+    tipe_rilis:String(data.get('tipe_rilis')||'')
+  };
+  await submitSupportAction(form,'adminCreateProductRelease',payload,async()=>{
+    form.reset();await loadRoute('rilis');
+  });
+}
+async function submitMemberSearch(form){
+  if(!isAdmin())return;
+  const data=new FormData(form),p={
+    query:String(data.get('query')||'').trim(),
+    product_id:String(data.get('product_id')||''),
+    status:String(data.get('status')||'')
+  };
+  if(!p.query&&!p.product_id&&!p.status){
+    toast('Isi pencarian atau pilih salah satu filter.',true);return;
+  }
+  if(!isConnected()){
+    toast('Pencarian nyata memerlukan API staging. Ini hanya data contoh.',true);
+    return;
+  }
+  const button=form.querySelector('[type="submit"]');
+  if(button)button.disabled=true;
+  try{
+    state.memberSearch=await api('adminSearchMembers',p,state.token);
+    if(state.route==='member')render();
+  }catch(e){toast(e.message,true);}
+  finally{if(button)button.disabled=false;}
+}
+async function publishRelease(id){
+  if(!isAdmin()||!supportWriteEnabled())
+    return toast('Publikasi rilis belum diaktifkan.',true);
+  if(!confirm('Publikasikan changelog ini kepada member pemilik produk terkait?'))return;
+  try{
+    await api('adminPublishProductRelease',{release_id:id},state.token,{write:true});
+    toast('Rilis dipublikasikan.');
+    await loadRoute('rilis');
+  }catch(e){toast(e.message,true);}
+}
+
 document.addEventListener('click',async(e)=>{
-  const target=e.target.closest('[data-route],[data-buy],[data-action],[data-copy]');
+  const target=e.target.closest('[data-route],[data-buy],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release]');
   if(!target)return;
   if(target.hasAttribute('data-route'))go(target.dataset.route);
-  else if(target.hasAttribute('data-buy'))await buy(target.dataset.buy);
+  else if(target.hasAttribute('data-ticket-id')){
+    state.selectedTicketId=target.dataset.ticketId;
+    state.ticketDetail=null;
+    go('tiket');
+  }else if(target.hasAttribute('data-member-id')){
+    if(!isAdmin())return;
+    state.selectedMemberId=target.dataset.memberId;
+    state.member360=null;
+    go('member360');
+  }else if(target.hasAttribute('data-publish-release')){
+    await publishRelease(target.dataset.publishRelease);
+  }else if(target.hasAttribute('data-buy'))await buy(target.dataset.buy);
   else if(target.dataset.action==='logout')await logout();
   else if(target.dataset.action==='confirm-payment')await confirmPayment();
   else if(target.dataset.copy){
@@ -631,7 +734,16 @@ document.addEventListener('click',async(e)=>{
   }
 });
 document.addEventListener('submit',(e)=>{
-  if(e.target.id==='auth-form'){e.preventDefault();processLogin(e.target,e.target.dataset.mode==='register');}
+  const id=e.target.id;
+  if(!['auth-form','support-create-form','ticket-reply-form',
+    'ticket-status-form','release-create-form','member-search-form'].includes(id))return;
+  e.preventDefault();
+  if(id==='auth-form')processLogin(e.target,e.target.dataset.mode==='register');
+  if(id==='support-create-form')submitTicketCreate(e.target);
+  if(id==='ticket-reply-form')submitTicketReply(e.target);
+  if(id==='ticket-status-form')submitTicketStatus(e.target);
+  if(id==='release-create-form')submitReleaseCreate(e.target);
+  if(id==='member-search-form')submitMemberSearch(e.target);
 });
 by('account-button').addEventListener('click',()=>go('akun'));
 window.addEventListener('hashchange',()=>go(location.hash.slice(1)||'beranda'));
