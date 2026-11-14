@@ -110,8 +110,8 @@ function diagnosticApiPublic() {
   var katalog = diagnosticCallApi_('getKatalog');
   diagnosticAssert_(katalog.ok === true, 'getKatalog berhasil');
   diagnosticAssert_(
-    Array.isArray(katalog.data) && katalog.data.length === 6,
-    'Katalog memiliki 6 produk awal'
+    Array.isArray(katalog.data) && katalog.data.length === readAll_('katalog_produk').filter(function(p){return p.aktif===true;}).length,
+    'Jumlah katalog publik cocok dengan produk aktif yang tersimpan'
   );
   diagnosticAssert_(
     katalog.data.every(function(item) {
