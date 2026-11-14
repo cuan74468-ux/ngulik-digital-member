@@ -91,7 +91,7 @@ Workflow `validate.yml` juga menjalankan perintah itu pada push/PR, **tidak mela
 
 ## Akses referensi
 
-- [Ngulik Digital DB (Google Sheets)](https://docs.google.com/spreadsheets/d/19lJS-Re7TLfINjoo-wKoDkG_ikeEWNgGe9yf5Rywvm8/edit)
+- [Ngulik Digital DB (Google Sheets)](https://docs.google.com/spreadsheets/ (buka database privat melalui Google Drive pemilik))
 - [Apps Script backend](apps-script/Code.gs)
 - [Frontend utama](js/app.js)
 
