@@ -356,10 +356,32 @@ function lmsArchive_(admin,p,kind){
         row=kind==='COURSE'?lmsCourse_(p.course_id):lmsLesson_(p.lesson_id),
         id=kind==='COURSE'?row.course_id:row.lesson_id;
     if(row.status==='ARCHIVED')return {success:true,already_archived:true,id:id};
-    updateRow_(t,row._row,{status:'ARCHIVED',updated_at:now_()});
+    var patch={status:'ARCHIVED',updated_at:now_()};
+    if(kind==='COURSE')patch.archived_at=now_();
+    updateRow_(t,row._row,patch);
     logAudit_(admin.member_id,'ADMIN','LMS_'+kind+'_ARCHIVED',t,id,
       row.status,'ARCHIVED',{non_destructive:true});
     return {success:true,id:id};
+  });
+}
+function lmsRestore_(admin,p,kind){
+  return withLock_(function(){
+    require_(p.confirm_restore===true,'VALIDATION',
+      'Konfirmasi pemulihan diperlukan.');
+    var t=kind==='COURSE'?'lms_courses':'lms_lessons',
+      row=kind==='COURSE'?lmsCourse_(p.course_id):lmsLesson_(p.lesson_id),
+      id=kind==='COURSE'?row.course_id:row.lesson_id;
+    if(row.status!=='ARCHIVED')
+      return {success:true,already_active:true,id:id};
+    if(kind==='LESSON')
+      require_(lmsCourse_(row.course_id).status!=='ARCHIVED',
+        'CONFLICT','Pulihkan kursus induk terlebih dahulu.');
+    var patch={status:'DRAFT',version:Number(row.version)+1,updated_at:now_()};
+    if(kind==='COURSE')patch.archived_at='';
+    updateRow_(t,row._row,patch);
+    logAudit_(admin.member_id,'ADMIN','LMS_'+kind+'_RESTORED',t,id,
+      'ARCHIVED','DRAFT',{requires_republish:true});
+    return {success:true,id:id,status:'DRAFT'};
   });
 }
 function lmsAdminLessons_(p){
