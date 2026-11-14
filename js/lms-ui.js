@@ -69,7 +69,7 @@ function memberCourse(detail,enrollments,canWrite){
   var c=detail.course||{},access=detail.access_granted!==false;
   var enrolled=(enrollments||[]).some(function(x){return x.course_id===c.course_id&&x.status==='ACTIVE';});
   var lessons=detail.lessons||[];
-  return '<button type="button" class="btn btn-ghost btn-sm" data-route="belajar">Kembali ke kelas</button>'+
+  return '<button type="button" class="btn btn-ghost btn-sm lms-back-link" data-route="belajar">Kembali ke daftar kelas</button>'+
     '<section class="lms-heading"><p class="eyebrow">RUANG BELAJAR MEMBER</p><h2>'+e(c.title)+'</h2>'+
     '<p class="lead">'+e(c.summary)+'</p><div class="lms-course-top">'+tag(c.level)+' '+tag(c.category)+'</div></section>'+
     (!access?'<section class="surface lms-empty"><h3>Materi memerlukan akses produk</h3>'+
@@ -90,6 +90,36 @@ function memberCourse(detail,enrollments,canWrite){
           (!l.completed?btn('complete','Tandai selesai',!canWrite||!enrolled,
             ' data-lesson-id="'+e(l.lesson_id)+'"','btn-primary'):'')+'</article>';
       }).join('')+'</div>');
+}
+function memberSuccess(record){
+  if(!record)return '<section class="surface lms-empty"><h3>Belum ada pelajaran yang baru diselesaikan</h3>'+
+    '<p>Mulai dari kelas yang tersedia untuk melihat perjalanan belajar Anda.</p>'+
+    '<button type="button" class="btn btn-primary" data-route="belajar">Lihat semua kelas</button></section>';
+  var completed=Math.max(0,Number(record.completed)||0),
+    total=Math.max(0,Number(record.total)||0);
+  return '<section class="member-success" aria-labelledby="success-title">'+
+    '<div class="member-success-art" aria-hidden="true">'+
+      '<span class="success-spark success-spark-a">✦</span>'+
+      '<span class="success-spark success-spark-b">✳</span>'+
+      '<span class="success-spark success-spark-c">✦</span>'+
+      '<span class="success-spark success-spark-d">✷</span>'+
+      '<div class="member-success-mark"><svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="currentColor" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg></div>'+
+    '</div>'+
+    '<p class="eyebrow">SATU LANGKAH BERHASIL</p>'+
+    '<h2 id="success-title">Pelajaran selesai!</h2>'+
+    '<p class="member-success-lead">'+
+      (record.preview?'Ini contoh layar konfirmasi; progres tidak disimpan.':
+        'Progres belajar kamu sudah tercatat. Teruskan langkah baik ini!')+
+    '</p>'+
+    '<div class="member-success-receipt"><div class="member-success-receipt-head">'+
+      '<span>AKTIVITAS BELAJAR</span>'+tag(record.preview?'CONTOH':'TERCATAT')+'</div>'+
+      '<strong>'+e(record.title)+'</strong>'+
+      '<div class="member-success-result"><span>Pelajaran selesai</span><strong>'+
+        e(completed)+' / '+e(total)+'</strong></div></div>'+
+    '<div class="member-success-actions">'+
+      '<button type="button" class="btn btn-primary" data-route="lms-course">Kembali ke kelas <span aria-hidden="true">↗</span></button>'+
+      '<button type="button" class="btn btn-secondary" data-route="belajar">Jelajahi kelas lain</button>'+
+    '</div></section>';
 }
 function adminCatalog(courses,canWrite,products){
   var list=Array.isArray(courses)?courses:[];
@@ -207,7 +237,7 @@ function aiJob(job,canWrite){
       '<p class="small muted">Disetujui hanya berarti siap disalin/diedit manusia; tidak ada perubahan otomatis ke pelajaran atau rilis.</p></section>';
 }
 root.NGD_LMS_UI=Object.freeze({
-  memberCatalog:memberCatalog,memberCourse:memberCourse,
+  memberCatalog:memberCatalog,memberCourse:memberCourse,memberSuccess:memberSuccess,
   adminCatalog:adminCatalog,adminEditor:adminEditor,
   lessonEditor:lessonEditor,aiJob:aiJob
 });
