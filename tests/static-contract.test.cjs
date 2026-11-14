@@ -20,8 +20,11 @@ test('HTML entry uses versioned local files and language metadata',()=>{
 });
 test('do not embed secrets or open financial features in config',()=>{
   const config=read('config.js');
-  assert.match(config,/apiUrl:\s*''/);
-  assert.match(config,/demoMode:\s*true/);
+  // A public GAS web-app endpoint is not a secret. Production-facing
+  // catalog reads must stay wired, while all mutations remain gated.
+  assert.match(config,/apiUrl:\s*'https:\/\/script\\.google\\.com\/macros\/s\/[^']+\/exec'/);
+  assert.doesNotMatch(config,/demoMode/);
+  assert.match(config,/memberWritesEnabled:\s*false/);
   assert.match(config,/paymentsEnabled:\s*false/);
   assert.doesNotMatch(config,/sk-[A-Za-z0-9]{20,}/);
   assert.doesNotMatch(config,/BEGIN PRIVATE KEY/);
