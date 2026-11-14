@@ -7,7 +7,7 @@ export function isConnected() {
 export function isWriteEnabled() {
   return isConnected() && config.demoMode === false;
 }
-function newRequestId() {
+export function createRequestId() {
   if (globalThis.crypto && crypto.randomUUID) return crypto.randomUUID().replaceAll('-', '') + 'aa';
   return 'rq_' + String(Date.now()) + '_' + Math.random().toString(36).slice(2, 14);
 }
@@ -20,7 +20,9 @@ export class ApiError extends Error {
 }
 export async function api(action, payload = {}, token = '', options = {}) {
   if (!isConnected()) throw new ApiError('Backend belum terhubung. Konfigurasi Web App belum diaktifkan.', 'NOT_CONFIGURED');
-  const {write = false, timeoutMs = 24000} = options;
+  const {write = false, timeoutMs = 24000, requestId = null} = options;
+  if (requestId !== null && !/^[A-Za-z0-9_-]{16,80}$/.test(String(requestId)))
+    throw new ApiError('ID permintaan tidak valid.', 'VALIDATION');
   if (write && !isWriteEnabled()) throw new ApiError('Mode pratinjau: perubahan data dinonaktifkan.', 'PREVIEW_ONLY');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -30,7 +32,7 @@ export async function api(action, payload = {}, token = '', options = {}) {
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify({action, payload, token, request_id: newRequestId()}),
+      body: JSON.stringify({action, payload, token, request_id: requestId === null ? createRequestId() : String(requestId)}),
       redirect: 'follow',
       signal: controller.signal,
       credentials: 'omit'
