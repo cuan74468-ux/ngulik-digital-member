@@ -27,7 +27,7 @@ vm.runInContext(diagnostics, context, {filename: 'Diagnostics.gs', timeout: 1000
 
 const suites = [
   ['waiting list and capacity (12 cases)', 'diagnosticMemberQueueScenarios()', 'MEMBER_QUEUE_SCENARIOS_OK'],
-  ['finance reconciliation (17 cases)', 'diagnosticFinanceScenarios()', 'FINANCE_SCENARIOS_OK'],
+  ['finance reconciliation (18 cases)', 'diagnosticFinanceScenarios()', 'FINANCE_SCENARIOS_OK'],
   ['admin settings (15 cases)', 'diagnosticAdminSettingsScenarios()', 'ADMIN_SETTINGS_SCENARIOS_OK']
 ];
 for (const [label, expression, expected] of suites) {
@@ -36,7 +36,7 @@ for (const [label, expression, expected] of suites) {
     assert.equal(response, expected, 'Diagnostic suite failed; see logs');
   });
 }
-test('44 individual scenario assertions executed', () => {
+test('45 individual scenario assertions executed', () => {
   const passes = log.filter(x => x.startsWith('PASS:')).length;
-  assert.equal(passes, 44);
+  assert.equal(passes, 45);
 });
