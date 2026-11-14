@@ -1,6 +1,6 @@
 /**
  * Ngulik Digital Member — Apps Script backend (development).
- * Skema 14 tab, autentikasi, API member/admin, pembayaran manual, kredit,
+ * Skema 17 tab (14 inti + 3 support), autentikasi, API member/admin, pembayaran manual, kredit,
  * waiting list, dan rekonsiliasi. Belum lolos QA end-to-end.
  * Jangan deploy sebagai layanan publik atau mengaktifkan transaksi nyata.
  */
