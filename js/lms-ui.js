@@ -146,7 +146,8 @@ function adminEditor(detail,jobs,canWrite,products){
     '<div class="lms-workspace-layout"><div class="lms-main-column">'+
     '<section class="surface lms-editor-section"><div class="lms-section-heading"><h3>Pengaturan kursus</h3>'+
       '<div class="lms-actions">'+btn('publish-course','Terbitkan kursus',!canWrite||c.status==='ARCHIVED','','btn-secondary')+
-      btn('archive-course','Arsipkan',!canWrite||c.status==='ARCHIVED')+'</div></div>'+
+      (c.status==='ARCHIVED'?btn('restore-course','Pulihkan draft',!canWrite):
+        btn('archive-course','Arsipkan',!canWrite))+'</div></div>'+
       courseForm(c,canWrite&&c.status!=='ARCHIVED',products)+'</section>'+
     '<section class="surface lms-editor-section"><div class="lms-section-heading"><h3>Pelajaran & urutan</h3>'+
       '<p class="small muted">'+lessons.length+' pelajaran</p></div>'+
@@ -157,8 +158,10 @@ function adminEditor(detail,jobs,canWrite,products){
         btn('edit-lesson','Edit',false,' data-lesson-id="'+e(l.lesson_id)+'"')+
         btn('publish-lesson','Terbitkan',!canWrite||l.status==='ARCHIVED',
           ' data-lesson-id="'+e(l.lesson_id)+'"')+
-        btn('archive-lesson','Arsip',!canWrite||l.status==='ARCHIVED',
-          ' data-lesson-id="'+e(l.lesson_id)+'"')+'</div>';
+        (l.status==='ARCHIVED'?btn('restore-lesson','Pulihkan',!canWrite,
+          ' data-lesson-id="'+e(l.lesson_id)+'"'):
+          btn('archive-lesson','Arsip',!canWrite,
+          ' data-lesson-id="'+e(l.lesson_id)+'"'))+'</div>';
       }).join('')+'</div>'+
       '<h4>Tambah pelajaran baru</h4>'+lessonForm(null,canWrite&&c.status!=='ARCHIVED',c.course_id)+'</section></div>'+
     '<aside class="lms-aside-column"><section class="surface lms-editor-section">'+
