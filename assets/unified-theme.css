@@ -498,6 +498,36 @@ body[data-app-role="admin"] .support-release{border-radius:var(--radius)}
     [data-member-route="member360"]) .mobile-back{display:inline-flex;align-items:center;justify-content:center}
 }
 
+/* Admin diagnostics: quiet, scannable, read-only service health. */
+body:not(#ngd) .admin-runtime-summary{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
+  padding:20px 22px;background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;
+}
+body:not(#ngd) .admin-runtime-summary>div{display:grid;gap:3px}
+body:not(#ngd) .admin-runtime-summary small{color:var(--muted);font-size:.82rem}
+body:not(#ngd) .admin-runtime-summary strong{font:800 1.5rem var(--font-head);color:var(--ink)}
+body:not(#ngd) .admin-runtime-flags{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;
+}
+body:not(#ngd) .admin-runtime-flag{
+  min-width:0;display:grid;gap:5px;padding:15px 16px;background:#fff;
+  border:1px solid var(--line);border-radius:var(--r-md);font-size:.85rem;
+}
+body:not(#ngd) .admin-runtime-flag span{color:var(--muted)}
+body:not(#ngd) .admin-runtime-flag strong{color:var(--ink)}
+body:not(#ngd) .admin-runtime-note{
+  padding:12px 16px;border-radius:var(--r-sm);background:var(--sun-soft);
+  color:var(--sun-ink);overflow-wrap:anywhere;font-size:.85rem;
+}
+@media(max-width:1120px){
+  body:not(#ngd) .admin-runtime-flags{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  body:not(#ngd) .admin-runtime-summary{padding:16px}
+  body:not(#ngd) .admin-runtime-flag{padding:13px}
+}
+
 /* 13 — Belajar (LMS), bantuan, sukses */
 body:not(#ngd) .learn-path-list{display:grid;gap:10px}
 body:not(#ngd) .learn-path-item{display:flex;align-items:center;gap:14px;padding:16px}
