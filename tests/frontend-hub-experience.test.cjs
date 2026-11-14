@@ -78,7 +78,8 @@ test('category filtering isolates services and does not invent sale actions',()=
 });
 test('money formatting handles Indonesian Sheets format without inventing Rp0',()=>{
   const h=preview();
-  const money=x=>vm.runInContext('rupiah('+JSON.stringify(x)+')',h.ctx);
+  const money=x=>vm.runInContext('rupiah('+JSON.stringify(x)+')',h.ctx)
+    .replace(/[\u00a0\u202f]/g,''); // Intl IDR uses a non-breaking space after Rp.
   assert.equal(money('Rp99.000'),'Rp99.000');
   assert.equal(money('49.000'),'Rp49.000');
   assert.equal(money(149000),'Rp149.000');
