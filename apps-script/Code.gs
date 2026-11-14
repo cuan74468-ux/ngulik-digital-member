@@ -104,8 +104,17 @@ function readAll_(name) {
     return item;
   });
 }
+// Treat external text as literal spreadsheet data, never an executable formula.
+// Central protection applies to registration, notes, payouts and audit events.
+function sheetLiteral_(value) {
+  if(typeof value==='string'&&/^\s*[=+\-@]/.test(value))
+    return "'"+value;
+  return value;
+}
 function appendRow_(name, obj) {
-  var t = tbl_(name), row = t.headers.map(function(h) { return Object.prototype.hasOwnProperty.call(obj, h) ? obj[h] : ''; });
+  var t = tbl_(name), row = t.headers.map(function(h) {
+    return Object.prototype.hasOwnProperty.call(obj,h)?sheetLiteral_(obj[h]):'';
+  });
   t.sheet.appendRow(row);
   return t.sheet.getLastRow();
 }
@@ -115,7 +124,7 @@ function updateRow_(name, rowNumber, patch) {
   Object.keys(patch).forEach(function(key) {
     var col = t.headers.indexOf(key) + 1;
     if (!col) throw new Error('Kolom tidak dikenal: ' + key);
-    t.sheet.getRange(rowNumber, col).setValue(patch[key]);
+    t.sheet.getRange(rowNumber, col).setValue(sheetLiteral_(patch[key]));
   });
 }
 function findRows_(name, predicate) { return readAll_(name).filter(predicate); }
