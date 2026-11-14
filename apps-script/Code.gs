@@ -985,6 +985,7 @@ function apiRouter_(action,token,p,requestId) {
     case 'register':return authRegister_(p);
     case 'login':return authLogin_(p);
     case 'trackClick':
+      requirePublicTrackingEnabled_();
       return withLock_(function(){
         var type=p.tipe==='ETALASE_LUAR'?'ETALASE_LUAR':'REFERRAL',visitor=safeText_(p.visitor_id,120);
         require_(visitor.length>=8,'VALIDATION','Pengunjung tidak valid.');
@@ -1013,7 +1014,8 @@ function apiRouter_(action,token,p,requestId) {
     case 'markModulSelesai':
       return withLock_(function(){var module=byId_('modul_belajar','modul_id',p.modul_id);require_(module&&module.aktif===true,'NOT_FOUND','Modul tidak tersedia.');if(!findRows_('progress_member',function(r){return r.member_id===m.member_id&&r.modul_id===p.modul_id;}).length)appendRow_('progress_member',{member_id:m.member_id,modul_id:p.modul_id,selesai_at:now_()});return {success:true};});
     case 'getEtalase':return readAll_('etalase_affiliate_luar').filter(function(r){return r.aktif===true;}).map(function(r){return {item_id:r.item_id,judul:r.judul,kategori:r.kategori,deskripsi_singkat:r.deskripsi_singkat,alasan_rekomendasi:r.alasan_rekomendasi,harga_info:r.harga_info,link_affiliate:r.link_affiliate,gambar_url:r.gambar_url};});
-    case 'trackOutbound':return apiRouter_('trackClick',token,{tipe:'ETALASE_LUAR',visitor_id:p.visitor_id,item_id:p.item_id},requestId);
+    case 'trackOutbound':return apiRouter_('trackClick',token,{tipe:'ETALASE_LUAR',
+      visitor_id:p.visitor_id,item_id:p.item_id},requestId);
     case 'getAffiliateDashboard':return affiliateDashboard_(m);
     case 'requestPayout':return requestPayout_(m);
     case 'generateAI':throw ngdError_('AI_FAILED','Layanan AI belum diaktifkan admin. Kredit tidak dipotong.');
@@ -1093,6 +1095,12 @@ function mutationsEnabled_() {
 function requireMutationsEnabled_() {
   require_(mutationsEnabled_(),'MAINTENANCE',
     'Perubahan data belum diaktifkan. Sistem masih dalam pengujian.');
+}
+// Public visitor click logging is independently disabled until abuse controls
+// and an explicit privacy/retention policy have been approved.
+function requirePublicTrackingEnabled_() {
+  require_(PropertiesService.getScriptProperties().getProperty('NGD_CLICK_TRACKING_ENABLED')==='true',
+    'MAINTENANCE','Pencatatan klik belum diaktifkan.');
 }
 function apiReadActions_() {
   return ['getPublicInfo','getMe','getBeranda','getModulBelajar','getKatalog',
