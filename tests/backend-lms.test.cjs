@@ -325,3 +325,34 @@ test('revision history retains metadata needed for later manual rollback plannin
   assert.throws(()=>f.act('adminListLMSRevisions','member',
     {entity:'LESSON',entity_id:l.lesson_id}),/Akses tidak diizinkan/);
 });
+
+test('archive can be restored to DRAFT without deleting data or exposing it',()=>{
+  const f=fixture(),course=f.course(),lesson=f.lesson(course.course_id);
+  f.act('adminPublishLMSLesson','admin',{lesson_id:lesson.lesson_id});
+  f.act('adminPublishLMSCourse','admin',{course_id:course.course_id});
+  f.act('adminArchiveLMSCourse','admin',{course_id:course.course_id,confirm_archive:true});
+  assert.ok(f.tables.lms_courses[0].archived_at);
+  assert.equal(f.act('getLMSCatalog','member').length,0);
+  const restored=f.act('adminRestoreLMSCourse','admin',
+    {course_id:course.course_id,confirm_restore:true});
+  assert.equal(restored.status,'DRAFT');
+  assert.equal(f.tables.lms_courses[0].archived_at,'');
+  assert.equal(f.act('getLMSCatalog','member').length,0);
+  f.act('adminPublishLMSCourse','admin',{course_id:course.course_id});
+  assert.equal(f.act('getLMSCatalog','member').length,1);
+});
+test('archived lesson restore is blocked until course is restored',()=>{
+  const f=fixture(),course=f.course(),lesson=f.lesson(course.course_id);
+  f.act('adminArchiveLMSLesson','admin',
+    {lesson_id:lesson.lesson_id,confirm_archive:true});
+  f.act('adminArchiveLMSCourse','admin',
+    {course_id:course.course_id,confirm_archive:true});
+  assert.throws(()=>f.act('adminRestoreLMSLesson','admin',
+    {lesson_id:lesson.lesson_id,confirm_restore:true}),/kursus induk/);
+  f.act('adminRestoreLMSCourse','admin',
+    {course_id:course.course_id,confirm_restore:true});
+  const result=f.act('adminRestoreLMSLesson','admin',
+    {lesson_id:lesson.lesson_id,confirm_restore:true});
+  assert.equal(result.status,'DRAFT');
+  assert.equal(f.tables.lms_lessons.length,1);
+});
