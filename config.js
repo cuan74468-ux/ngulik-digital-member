@@ -6,6 +6,7 @@ window.NGD_CONFIG = Object.freeze({
   demoMode: true,
   paymentsEnabled: false,
   catalogEnabled: false, // Admin catalogue mutations require an independent GAS staging gate.
+  serviceEnabled: false, // Service briefs/quotes enabled only after verified live backend.
   supportEnabled: false,
   notificationsEnabled: false, // In-app inbox only; no email or WhatsApp delivery.
   lmsEnabled: false, // LMS mutations OFF until staging integration passes. // Only activate after authenticated staging support QA. // Requires verified QRIS and a separate transaction QA checkpoint.
