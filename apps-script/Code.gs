@@ -621,6 +621,37 @@ function updateSetting_(key,value) {
   updateRow_('pengaturan_sistem',r._row,{value:value});
 }
 function newSessionMember_(m) {return {token:issueSession_(m),profil:publicMember_(m)};}
+// Reusable member-profile update. Identity, roles, entitlements and financial
+// balances are not editable through this endpoint.
+function updateMyProfile_(member,p) {
+  require_(member.role==='MEMBER','FORBIDDEN','Hanya member dapat mengubah profil.');
+  p=p||{};
+  var allowed=['nama','nama_usaha','jenis_usaha','kota','deskripsi_usaha','instagram'];
+  require_(Object.keys(p).every(function(k){return allowed.indexOf(k)>=0;}),
+    'VALIDATION','Kolom profil tidak diizinkan.');
+  require_(allowed.every(function(k){return Object.prototype.hasOwnProperty.call(p,k);}),
+    'VALIDATION','Formulir profil belum lengkap.');
+  var patch={
+    nama:safeText_(p.nama,80),nama_usaha:safeText_(p.nama_usaha,100),
+    jenis_usaha:safeText_(p.jenis_usaha,80),kota:safeText_(p.kota,80),
+    deskripsi_usaha:safeText_(p.deskripsi_usaha,500),
+    instagram:safeText_(p.instagram,80)
+  };
+  require_(patch.nama.length>=2&&patch.nama_usaha.length>=2,
+    'VALIDATION','Nama dan nama usaha minimal dua karakter.');
+  return withLock_(function(){
+    var current=byId_('members','member_id',member.member_id);
+    require_(current&&current.role==='MEMBER'&&current.status==='AKTIF',
+      'FORBIDDEN','Akun tidak dapat memperbarui profil.');
+    var changed=allowed.filter(function(k){return String(current[k]||'')!==patch[k];});
+    if(!changed.length)return {profil:publicMember_(current),updated:false};
+    updateRow_('members',current._row,patch);
+    // Audit names of modified fields only, avoiding duplication of member PII.
+    logAudit_(member.member_id,'MEMBER','PROFILE_UPDATED','members',
+      member.member_id,'','UPDATED',{fields:changed});
+    return {profil:publicMember_(byId_('members','member_id',member.member_id)),updated:true};
+  });
+}
 function authRegister_(p) {
   return withLock_(function(){
     var wa=normalizeWa_(p.wa), pin=String(p.pin||'');checkPin_(pin);
@@ -1167,6 +1198,7 @@ function apiRouter_(action,token,p,requestId) {
   m=activeMember_(token);
   switch(action) {
     case 'getMe':return publicMember_(m);
+    case 'updateMyProfile':return updateMyProfile_(m,p);
     case 'getMyNotifications':return notificationInbox_(m);
     case 'markNotificationRead':return notificationMarkRead_(m,p);
     case 'getLMSCatalog':return lmsPublishedCatalog_(m);
