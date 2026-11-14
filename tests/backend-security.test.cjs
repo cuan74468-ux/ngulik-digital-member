@@ -14,8 +14,9 @@ function boot(enabled=false){
     console:{log(){},warn(){},error(){}},
     PropertiesService:{getScriptProperties(){
       return {getProperty(key){
-        assert.equal(key,'NGD_MUTATIONS_ENABLED');
-        return enabled?'true':null;
+        if(key==='NGD_MUTATIONS_ENABLED')return enabled?'true':null;
+        if(key==='NGD_CLICK_TRACKING_ENABLED')return null;
+        throw new Error('UNEXPECTED_SCRIPT_PROPERTY: '+key);
       }};
     }},
     ContentService:{
@@ -67,5 +68,13 @@ test('only exact string true enables mutations',()=>{
   assert.equal(vm.runInContext('mutationsEnabled_()',s.context),true);
   const health=JSON.parse(vm.runInContext('doGet({}).getContent()',s.context));
   assert.equal(health.data.writes_enabled,true);
+  assert.equal(s.touched(),0);
+});
+
+test('anonymous click tracking stays disabled after other writes are enabled',()=>{
+  const s=boot(true);
+  const result=s.request('trackClick',{visitor_id:'safe-test-visitor-123',tipe:'REFERRAL'});
+  assert.equal(result.ok,false);
+  assert.equal(result.error.code,'MAINTENANCE');
   assert.equal(s.touched(),0);
 });
