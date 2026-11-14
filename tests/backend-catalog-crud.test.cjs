@@ -125,3 +125,25 @@ test('an ordinary member is denied catalogue admin read and mutation routes',()=
     {product_id:'P-X',aktif:true},'1234567890123456'),/Akses tidak diizinkan/);
   assert.equal(h.writes,0);
 });
+
+test('new install seeds exactly the eight current offers, including service and ebook',()=>{
+  const ids=[...backend.matchAll(/\['(P-(?:3IN1|POS|CANVA|KREDIT-50|KREDIT-150|KREDIT-400|VIDEO-AI|EBOOK))','/g)]
+    .map(m=>m[1]);
+  assert.equal(ids.length,8);
+  assert.equal(new Set(ids).size,8);
+  assert.match(backend,/function publicCatalog_\(\) \{return readAll_\('katalog_produk'\)[\s\S]*?\.sort\(/);
+  const diagnostics=read('apps-script/Diagnostics.gs');
+  assert.match(diagnostics,/katalog\.data\.length === readAll_\('katalog_produk'\)/);
+  assert.doesNotMatch(diagnostics,/katalog\.data\.length === 6/);
+});
+test('Apps Script manifest requests only scopes actually exercised by current code',()=>{
+  const manifest=JSON.parse(read('apps-script/appsscript.json'));
+  assert.equal(manifest.webapp.executeAs,'USER_DEPLOYING');
+  assert.equal(manifest.webapp.access,'ANYONE_ANONYMOUS');
+  for(const scope of ['https://www.googleapis.com/auth/script.external_request',
+    'https://www.googleapis.com/auth/script.send_mail']){
+    assert.equal(manifest.oauthScopes.includes(scope),false);
+  }
+  assert.equal(manifest.oauthScopes.includes('https://www.googleapis.com/auth/spreadsheets'),true);
+  assert.equal(manifest.oauthScopes.includes('https://www.googleapis.com/auth/script.scriptapp'),true);
+});
