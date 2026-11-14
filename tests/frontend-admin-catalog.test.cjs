@@ -27,7 +27,7 @@ function makePreview(mode='admin',route='produk'){
 }
 test('preview admin catalogue shows all eight staged product examples',()=>{
   const h=makePreview();
-  assert.match(h.nodes.screen.innerHTML,/Katalog &amp; penawaran/);
+  assert.match(h.nodes.screen.innerHTML,/Katalog & penawaran/);
   assert.match(h.nodes.screen.innerHTML,/Jasa Video Iklan AI/);
   assert.match(h.nodes.screen.innerHTML,/Bundel Ebook/);
   assert.match(h.nodes.screen.innerHTML,/8 produk tercatat/);
