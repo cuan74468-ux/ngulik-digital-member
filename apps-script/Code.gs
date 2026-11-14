@@ -1302,19 +1302,35 @@ function adminReconciliation_(admin) {
 function adminRuntimeStatus_() {
   var props=PropertiesService.getScriptProperties(),ss=db_();
   var missing=[],mismatched=[],expected=Object.keys(NGD.HEADERS);
+  var missingColumns={},duplicateColumns={},extraColumns={};
   expected.forEach(function(name){
     var sheet=ss.getSheetByName(name);
     if(!sheet){missing.push(name);return;}
     var width=sheet.getLastColumn();
     var actual=width>0?sheet.getRange(1,1,1,width).getValues()[0].map(String):[];
-    if(actual.join('|')!==NGD.HEADERS[name].split(',').join('|'))
-      mismatched.push(name);
+    var required=NGD.HEADERS[name].split(',');
+    // All application queries use named columns. Preserve pre-existing
+    // additional columns such as WA verification or gateway metadata.
+    var absent=required.filter(function(h){return actual.indexOf(h)<0;});
+    var seen={},duplicates=[];
+    actual.forEach(function(h){
+      if(!h)return;
+      if(seen[h])duplicates.push(h);
+      else seen[h]=true;
+    });
+    var extras=actual.filter(function(h){return !!h&&required.indexOf(h)<0;});
+    if(absent.length)missingColumns[name]=absent;
+    if(duplicates.length)duplicateColumns[name]=duplicates;
+    if(extras.length)extraColumns[name]=extras;
+    if(absent.length||duplicates.length)mismatched.push(name);
   });
   var enabled=function(key){return props.getProperty(key)==='true';};
   return {
     version:NGD.VERSION,
     schema:{expected:expected.length,ready:expected.length-missing.length-mismatched.length,
-      missing:missing,mismatched:mismatched},
+      missing:missing,mismatched:mismatched,
+      missing_columns:missingColumns,duplicate_columns:duplicateColumns,
+      extra_columns:extraColumns},
     feature_flags:{
       mutations:mutationsEnabled_(),
       registration:enabled('NGD_REGISTRATION_ENABLED'),
