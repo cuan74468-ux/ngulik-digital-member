@@ -15,7 +15,7 @@ function serviceView_(r,admin){
     status:r.status,penawaran_harga:r.penawaran_harga,
     penawaran_pesan:r.penawaran_pesan,
     created_at:serviceDate_(r.created_at),updated_at:serviceDate_(r.updated_at),
-    closed_at:serviceDate_(r.closed_at)
+    closed_at:serviceDate_(r.closed_at),revision:Number(r.revision||1)
   };
   if(admin){out.member_id=r.member_id;out.catatan_internal=r.catatan_internal;}
   return out;
@@ -79,7 +79,7 @@ function serviceSubmit_(member,p,requestId){
       judul:data.judul,brief:data.brief,referensi_url:data.referensi_url,
       anggaran:data.anggaran,status:'BARU',penawaran_harga:0,
       penawaran_pesan:'',catatan_internal:'',
-      created_at:now,updated_at:now,closed_at:'',request_id:requestId
+      created_at:now,updated_at:now,closed_at:'',request_id:requestId,revision:1
     };
     appendRow_('service_requests',record);
     // Request_id enables replay after a partial failure in audit logging.
@@ -104,7 +104,7 @@ function serviceQuote_(admin,p){
   p=p||{};
   require_(Object.keys(p).every(function(k){return [
     'service_id','status','penawaran_harga','penawaran_pesan',
-    'catatan_internal','expected_updated_at'
+    'catatan_internal','expected_revision'
   ].indexOf(k)>=0;}),'VALIDATION','Kolom penawaran tidak diizinkan.');
   var id=String(p.service_id||''),status=String(p.status||'');
   require_(/^SRV-[a-zA-Z0-9]{12}$/.test(id),'VALIDATION','ID layanan tidak valid.');
@@ -120,8 +120,8 @@ function serviceQuote_(admin,p){
   return withLock_(function(){
     var current=byId_('service_requests','service_id',id);
     require_(current,'NOT_FOUND','Brief jasa tidak ditemukan.');
-    var before=serviceDate_(current.updated_at);
-    require_(String(p.expected_updated_at||'')===before,'CONFLICT',
+    var currentVersion=Number(current.revision||1);
+    require_(Number(p.expected_revision)===currentVersion,'CONFLICT',
       'Permintaan telah diubah admin lain. Muat ulang.');
     if(current.status==='DITOLAK'||current.status==='SELESAI')
       throw ngdError_('CONFLICT','Permintaan yang sudah ditutup tidak dapat diubah.');
@@ -130,6 +130,7 @@ function serviceQuote_(admin,p){
     var same=Object.keys(patch).every(function(k){return String(current[k]||'')===String(patch[k]||'');});
     if(same)return {item:serviceView_(current,true),updated:false};
     patch.updated_at=now_();
+    patch.revision=currentVersion+1;
     if(status==='DITOLAK'||status==='SELESAI')patch.closed_at=patch.updated_at;
     updateRow_('service_requests',current._row,patch);
     logAudit_(admin.member_id,'ADMIN','SERVICE_BRIEF_UPDATED','service_requests',
