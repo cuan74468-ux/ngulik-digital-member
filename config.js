@@ -5,7 +5,8 @@ window.NGD_CONFIG = Object.freeze({
   siteUrl: 'https://cuan74468-ux.github.io/ngulik-digital-member/',
   demoMode: true,
   paymentsEnabled: false,
-  supportEnabled: false, // Only activate after authenticated staging support QA. // Requires verified QRIS and a separate transaction QA checkpoint.
+  supportEnabled: false,
+  lmsEnabled: false, // LMS mutations OFF until staging integration passes. // Only activate after authenticated staging support QA. // Requires verified QRIS and a separate transaction QA checkpoint.
   qrisImageUrl: '', // Example: assets/qris.png (upload owner-approved image only)
   qrisMerchant: ''
 });
