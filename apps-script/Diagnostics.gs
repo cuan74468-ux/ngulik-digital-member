@@ -334,6 +334,13 @@ function diagnosticFinanceScenarios() {
   assert_(issues(run({order_id:'SIM-1',product_id:'SIM-CREDIT',status:'PAID'},[credit])).indexOf('PAID_PENDING_FULFILLMENT_REVIEW')>=0,'PAID butuh review');
   assert_(issues(run(paid,[credit],[{order_id:'SIM-1'},{order_id:'SIM-1'}])).indexOf('COMMISSION_DUPLICATE')>=0,'Komisi ganda terdeteksi');
   assert_(issues(run(refunded,[credit,reversed],[{order_id:'SIM-1',status:'PAID'}])).indexOf('PAID_COMMISSION_ON_REFUNDED_ORDER')>=0,'Refund dengan komisi tercairkan terdeteksi');
+  var manualProducts=products.concat([{product_id:'SIM-POS',tipe:'LISENSI_SEKALI'}]);
+  var normalManual={order_id:'SIM-2',product_id:'SIM-POS',status:'PAID',paid_at:new Date(Date.now()-3600000)};
+  var overdueManual={order_id:'SIM-3',product_id:'SIM-POS',status:'PAID',paid_at:new Date(Date.now()-72*3600000)};
+  assert_(financeFindings_([normalManual],[],[],manualProducts).needs_review===0,
+    'Aktivasi POS baru dibayar tidak dianggap gagal');
+  assert_(financeFindings_([overdueManual],[],[],manualProducts).findings[0].issues.indexOf('ADMIN_FULFILLMENT_OVERDUE')>=0,
+    'Aktivasi POS yang terlambat 72 jam terdeteksi');
   console.log('FINANCE_SCENARIOS_OK | cases='+pass+' | mode=MEMORY_ONLY');
   return 'FINANCE_SCENARIOS_OK';
 }
