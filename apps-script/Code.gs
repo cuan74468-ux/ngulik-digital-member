@@ -119,13 +119,25 @@ function appendRow_(name, obj) {
   return t.sheet.getLastRow();
 }
 function updateRow_(name, rowNumber, patch) {
-  var t = tbl_(name);
-  if (!Number.isInteger(rowNumber) || rowNumber < 2 || rowNumber > t.sheet.getLastRow()) throw new Error('Baris tidak valid.');
-  Object.keys(patch).forEach(function(key) {
-    var col = t.headers.indexOf(key) + 1;
-    if (!col) throw new Error('Kolom tidak dikenal: ' + key);
-    t.sheet.getRange(rowNumber, col).setValue(sheetLiteral_(patch[key]));
+  var t=tbl_(name);
+  if(!Number.isInteger(rowNumber)||rowNumber<2||rowNumber>t.sheet.getLastRow())
+    throw new Error('Baris tidak valid.');
+  var keys=Object.keys(patch||{});
+  if(!keys.length)return;
+  // Validate all columns before the first write. Single range write minimizes
+  // partial status/evidence updates; it does not provide multi-sheet ACID.
+  var cols=keys.map(function(key){
+    var col=t.headers.indexOf(key)+1;
+    if(!col)throw new Error('Kolom tidak dikenal: '+key);
+    return col;
   });
+  var first=Math.min.apply(null,cols),last=Math.max.apply(null,cols);
+  var range=t.sheet.getRange(rowNumber,first,1,last-first+1);
+  var current=range.getValues()[0],formulas=range.getFormulas()[0];
+  // Preserve formulas within the span (e.g., member saldo/retensi cells).
+  var values=current.map(function(v,i){return formulas[i]||v;});
+  keys.forEach(function(key,i){values[cols[i]-first]=sheetLiteral_(patch[key]);});
+  range.setValues([values]);
 }
 function findRows_(name, predicate) { return readAll_(name).filter(predicate); }
 function colLetter_(name, header) {
