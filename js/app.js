@@ -62,14 +62,14 @@ const screens={
   ['lms-ai']:['Review Draft AI','spark'],
   ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Katalog','store'],
   ai:['Studio AI','spark'],affiliate:['Affiliate','link'],akun:['Akun','user'],
-  produk:['Kelola Katalog','store'],
+  produk:['Kelola Katalog','store'],jasa:['Pesan Jasa','spark'],layanan:['Permintaan Jasa','clipboard'],
   admin:['Admin','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
   antrean:['Antrean','clock'],dukungan:['Bantuan','clipboard'],
   tiket:['Detail tiket','clipboard'],member360:['Member 360°','users'],
   rilis:['Rilis Produk','grid'],login:['Masuk','user'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
-const memberNav=['beranda','belajar','katalog','ai','affiliate','dukungan','akun'];
-const adminNav=['admin','produk','lms','pesanan','member','dukungan','rilis','antrean','akun'];
+const memberNav=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','akun'];
+const adminNav=['admin','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','akun'];
 const tokenKey='ngd_member_session';
 // Preview-only fixture data, never used for financial operations.
 const PREVIEW_CATALOG=[
@@ -186,7 +186,8 @@ const state={
   lmsCourseDetail:null,lmsAdminCourse:null,lmsSelectedCourseId:null,
   lmsSelectedLessonId:null,lmsJobs:[],lmsSelectedAIJobId:null,
   lmsCompletion:null,notifications:{enabled:false,items:[],unread:0},catalogFilter:'semua',
-  adminCatalog:[],catalogEditId:'',catalogRequestId:null
+  adminCatalog:[],catalogEditId:'',catalogRequestId:null,
+  services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true&&Boolean(config.qrisImageUrl)&&Boolean(config.qrisMerchant);
@@ -210,7 +211,7 @@ function renderNav(){
   const items=isAdmin()?adminNav:memberNav;
   const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+icon(screens[route][1])+'<span>'+esc(screens[route][0])+'</span></button>';
   by('desktop-nav').innerHTML=items.map(button).join('');
-  const mobileItems=isAdmin()?['admin','produk','member','dukungan','akun']:['beranda','belajar','katalog','dukungan','akun'];
+  const mobileItems=isAdmin()?['admin','produk','layanan','member','akun']:['beranda','katalog','jasa','belajar','akun'];
   const selectedMobile=mobileNavRoute(state.route);
   by('mobile-nav').innerHTML=mobileItems.map(route=>
     '<button type="button" class="nav-item" data-route="'+route+'" '+
@@ -506,6 +507,7 @@ function viewAdmin(){
       ['clipboard','Pesanan','Periksa pembayaran manual dan status fulfillment.','pesanan'],
       ['users','Kelola member','Lihat data member dan status keanggotaan.','member'],
       ['store','Katalog produk','Periksa harga, ketersediaan dan penawaran yang tampil di publik.','produk'],
+      ['clipboard','Permintaan jasa','Tinjau brief pelanggan dan siapkan penawaran.','layanan'],
       ['clock','Waiting list','Tinjau antrean dan kuota gelombang.','antrean'],
       ['book','Studio LMS','Kelola kurikulum, pelajaran, workspace otomatis dan draft AI.','lms'],
       ['clipboard','Tiket support','Kelola bug, pertanyaan, dan permintaan fitur.','dukungan'],
@@ -595,6 +597,19 @@ function viewAdminCatalog(){
     (!canWrite?'<span class="form-hint">Perubahan baru tersedia setelah backend staging lulus uji.</span>':'')+
     '</div></form></section>';
   return intro+'<div class="catalog-admin-layout"><div>'+entries+'</div>'+form+'</div>';
+}
+const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
+function viewServiceRequests(){
+  return window.NGD_SERVICES_UI?
+    window.NGD_SERVICES_UI.member({logged:logged()&&!isAdmin(),
+      items:state.services,enabled:serviceWriteEnabled(),kind:state.serviceKind}):
+    empty('Layanan belum tersedia','Modul permintaan jasa belum dapat dimuat.');
+}
+function viewAdminServices(){
+  return window.NGD_SERVICES_UI?
+    window.NGD_SERVICES_UI.admin({authorized:isAdmin(),items:state.services,
+      enabled:serviceWriteEnabled(),selectedId:state.selectedServiceId}):
+    empty('Layanan belum tersedia','Modul antrean jasa belum dapat dimuat.');
 }
 function viewAdminOrders(){
   if(!isAdmin())return needLogin('pesanan admin');
@@ -826,7 +841,7 @@ function render(){
       needLogin('hasil pembelajaran'),
     akun:viewAccount,login:()=>viewLogin(false),daftar:()=>viewLogin(true),
     pesanan:()=>isAdmin()?viewAdminOrders():viewMyOrders(),
-    checkout:viewCheckout,admin:viewAdmin,produk:viewAdminCatalog,member:()=>viewMembers(false),antrean:()=>viewMembers(true),
+    checkout:viewCheckout,admin:viewAdmin,produk:viewAdminCatalog,jasa:viewServiceRequests,layanan:viewAdminServices,member:()=>viewMembers(false),antrean:()=>viewMembers(true),
     dukungan:viewSupport,tiket:viewTicketDetail,member360:viewMember360,rilis:viewReleases
   };
   by('screen').innerHTML=(routes[state.route]||viewHome)();
@@ -870,6 +885,8 @@ async function loadRoute(route){
       if(responses[2].status==='fulfilled')state.lmsEnrollments=responses[2].value||[];
     }
     if(route==='produk'&&isAdmin())state.adminCatalog=await api('adminListCatalog',{},token);
+    if(route==='jasa'&&!isAdmin())state.services=await api('getMyServiceRequests',{},token);
+    if(route==='layanan'&&isAdmin())state.services=await api('adminListServiceRequests',{},token);
     if(route==='lms'&&isAdmin())
       state.lmsAdminCourses=await api('adminListLMSCourses',{},token);
     if(route==='lms-editor'&&isAdmin()&&state.lmsSelectedCourseId){
