@@ -197,7 +197,7 @@ function renderNav(){
   const selectedMobile=mobileNavRoute(state.route);
   by('mobile-nav').innerHTML=mobileItems.map(route=>
     '<button type="button" class="nav-item" data-route="'+route+'" '+
-    (route===selectedMobile?'aria-current="page"':'')+'>'+
+    (route===selectedMobile?'aria-current="page"':'')+' aria-label="'+esc(screens[route][0])+'">'+
     icon(screens[route][1])+'<span>'+esc(screens[route][0])+'</span></button>').join('');
   by('page-label').textContent=screens[state.route]?.[0]||'Beranda';
   by('account-avatar').textContent=logged()?
