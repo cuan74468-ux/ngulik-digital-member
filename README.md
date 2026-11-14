@@ -3,6 +3,12 @@
 Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliate.
 **Arsitektur:** GitHub Pages (HTML/CSS/ES Modules tanpa build) → Google Apps Script Web App → Google Sheets (14 tab sumber; 25 tab staging privat: 14 inti + 3 support + 7 LMS + 1 notifikasi).
 
+## Ngulik Digital Hub — pembaruan UI/UX & katalog 14 November 2026
+
+Beranda publik kini menampilkan empat kebutuhan UMKM: belajar & praktik, aplikasi usaha, Studio AI & kredit, serta jasa kreatif. Katalog memiliki filter interaktif enam kategori, dan pratinjau delapan produk mengikuti pembaruan database Google Drive. Tab `katalog_produk` **STAGING QA** juga sudah diselaraskan ke delapan produk tanpa mengubah database utama. Tipe jasa dan eBook belum mendukung checkout: ditampilkan sebagai informasi tetapi ditolak oleh backend sebelum order dibuat. UI baru memakai identitas Ngulik Digital Hub dengan gaya Slate & Ink yang konsisten di mobile/desktop. **Semua mode pembayaran, pendaftaran, API, LMS live, support live, dan notifikasi live tetap dinonaktifkan.**
+
+Bukti: [Ngulik Hub UX & Katalog Checkpoint](docs/NGULIK_HUB_UX_CATALOG_CHECKPOINT_2026-11-14.md) — CI **206/206 tes Node.js lulus dan smoke Chrome berhasil** pada [run GitHub Actions](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43572668843). Pengujian ini belum membuktikan Apps Script nyata atau kesiapan transaksi.
+
 ## Status aktual — 14 November 2026
 
 **Status: DALAM PENGEMBANGAN — belum siap dipakai publik atau transaksi nyata.**
