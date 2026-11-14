@@ -49,6 +49,7 @@ function recoverAdminPinOwnerOnly(){
   var operator=String(props.getProperty('NGD_ADMIN_RECOVERY_OPERATOR_EMAIL')||'').trim().toLowerCase();
   var actor=String(Session.getEffectiveUser().getEmail()||'').trim().toLowerCase();
   require_(props.getProperty('NGD_ADMIN_RECOVERY_ENABLED')==='true'&&
+    ['STAGING','PRODUCTION'].indexOf(props.getProperty('NGD_ENVIRONMENT'))>=0&&
     !!dbId&&targetDb===dbId&&
     /^M-\d{4,12}$/.test(accountId)&&
     !!operator&&actor===operator,
@@ -75,6 +76,7 @@ function recoverAdminPinOwnerOnly(){
       admin.member_id,'','',{revoked_sessions:revoked.length});
     return {pin:pin,account_id:accountId};
   });
+  props.setProperty('NGD_ADMIN_RECOVERY_ENABLED','false');
   ui.alert('PIN admin baru (hanya tampil sekali): '+result.pin+
     '\nCatat secara privat. Semua sesi lama telah dicabut.');
   // Return no plaintext PIN into the execution record.
@@ -111,7 +113,40 @@ function bootstrapStagingAdminOwnerOnly(){
     logAudit_(id,'ADMIN','STAGING_ADMIN_CREATED','members',id,'','AKTIF',{});
     return {id:id,pin:pin};
   });
+  props.setProperty('NGD_STAGING_BOOTSTRAP_ENABLED','false');
   ui.alert('Akun ADMIN staging dibuat. PIN sekali tampil: '+result.pin+
     '\nJangan gunakan PIN staging di layanan produksi.');
   return {created:true,account_id:result.id};
+}
+
+/**
+ * Read-only operator preflight. Does not return phone, salt, PIN, token,
+ * spreadsheet IDs or any Script Property value.
+ * Use from Apps Script editor BEFORE changing authentication release switches.
+ */
+function inspectAdminAccessOwnerOnly(){
+  var props=PropertiesService.getScriptProperties();
+  var expectedId=String(props.getProperty('NGD_ADMIN_LOGIN_ACCOUNT_ID')||'');
+  var adminRecords=findRows_('members',function(row){return row.role==='ADMIN';});
+  var expected=adminRecords.filter(function(row){return row.member_id===expectedId;});
+  var checkHeaders=function(name,columns){
+    var t=tbl_(name);
+    return columns.every(function(column){return t.headers.indexOf(column)>=0;});
+  };
+  return {
+    admin_count:adminRecords.length,
+    expected_admin_present:expected.length===1,
+    expected_admin_active:expected.length===1&&expected[0].status==='AKTIF',
+    admin_pin_hash_present:expected.length===1&&!!expected[0].pin_hash&&!!expected[0].pin_salt,
+    member_auth_columns:checkHeaders('members',
+      ['member_id','role','wa','pin_hash','pin_salt','status','last_active_at']),
+    session_columns:checkHeaders('sessions',
+      ['token_hash','member_id','role','created_at','expires_at','last_seen_at']),
+    audit_columns:checkHeaders('audit_logs',
+      ['log_id','timestamp','actor_id','actor_role','action','entity','entity_id','detail_json']),
+    isolated_auth_gate_ready:adminPortalEnabled_(),
+    global_mutations_enabled:mutationsEnabled_(),
+    finance_enabled:financeEnabled_(),
+    needs_full_schema_migration:false
+  };
 }
