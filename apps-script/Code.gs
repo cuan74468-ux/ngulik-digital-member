@@ -1045,10 +1045,11 @@ function maintenance_() {
     return changed;
   });
 }
-function expireOrders() {requireMutationsEnabled_();return withLock_(function(){var count=0;readAll_('orders').forEach(function(o){if(o.status==='PENDING'&&new Date(o.expires_at).getTime()<=Date.now()){expireOrder_(o);count++;}});return count;});}
-function dailyMaintenance() {requireMutationsEnabled_();return maintenance_();}
+function expireOrders() {requireMutationsEnabled_();requireFinanceEnabled_();return withLock_(function(){var count=0;readAll_('orders').forEach(function(o){if(o.status==='PENDING'&&new Date(o.expires_at).getTime()<=Date.now()){expireOrder_(o);count++;}});return count;});}
+function dailyMaintenance() {requireMutationsEnabled_();requireFinanceEnabled_();return maintenance_();}
 function installTriggers() {
   requireMutationsEnabled_();
+  requireFinanceEnabled_();
   ScriptApp.getProjectTriggers().forEach(function(t){if(['expireOrders','dailyMaintenance'].indexOf(t.getHandlerFunction())>=0)ScriptApp.deleteTrigger(t);});
   ScriptApp.newTrigger('expireOrders').timeBased().everyMinutes(5).create();
   ScriptApp.newTrigger('dailyMaintenance').timeBased().everyDays(1).atHour(1).create();
@@ -1220,7 +1221,8 @@ function apiOutput_(value) {
 }
 function doGet(e) {
   return apiOutput_({ok:true,data:{app:'Ngulik Digital API',version:NGD.VERSION,
-    writes_enabled:mutationsEnabled_(),time:isoWib_(now_())},server_time:isoWib_(now_())});
+    writes_enabled:mutationsEnabled_(),payments_enabled:financeEnabled_(),
+    time:isoWib_(now_())},server_time:isoWib_(now_())});
 }
 // Hard fail-closed release gate. Frontend demoMode is NOT a security boundary.
 // Enable only after QA, by setting NGD_MUTATIONS_ENABLED=true in Script Properties.
@@ -1230,6 +1232,25 @@ function mutationsEnabled_() {
 function requireMutationsEnabled_() {
   require_(mutationsEnabled_(),'MAINTENANCE',
     'Perubahan data belum diaktifkan. Sistem masih dalam pengujian.');
+}
+// Independent server-side release switches: testing login must not silently
+// enable public registration, checkout, refunds, payouts or settlement.
+function financeEnabled_() {
+  return PropertiesService.getScriptProperties().getProperty('NGD_FINANCE_ENABLED')==='true';
+}
+function requireFinanceEnabled_() {
+  require_(financeEnabled_(),'MAINTENANCE',
+    'Transaksi, kredit berbayar, dan pencairan belum diaktifkan.');
+}
+function requireActionFeatureEnabled_(action) {
+  var settings=PropertiesService.getScriptProperties();
+  if(action==='register')
+    require_(settings.getProperty('NGD_REGISTRATION_ENABLED')==='true',
+      'MAINTENANCE','Pendaftaran belum dibuka.');
+  if(['createOrder','confirmPayment','cancelOrder','adminVerifyOrder',
+      'adminFulfillOrder','adminRefundOrder','adminAdjustCredit',
+      'adminMarkCommissionPaid','requestPayout','generateAI'].indexOf(action)>=0)
+    requireFinanceEnabled_();
 }
 // Public visitor click logging is independently disabled until abuse controls
 // and an explicit privacy/retention policy have been approved.
@@ -1257,6 +1278,7 @@ function doPost(e) {
     if(reads.indexOf(action)<0){
       // Before any spreadsheet or account access, require a deliberate server-side release.
       requireMutationsEnabled_();
+      requireActionFeatureEnabled_(action);
       require_(/^[a-zA-Z0-9_-]{16,80}$/.test(id),'VALIDATION','ID permintaan tidak valid.');
     }
     var result=apiRouter_(action,String(body.token||''),payload,id);
