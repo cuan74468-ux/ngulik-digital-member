@@ -312,7 +312,7 @@ body:not(#ngd) .catalog-admin-row{display:flex;justify-content:space-between;gap
 @media(min-width:1120px){
   body:not(#ngd) .hub-path-grid,body:not(#ngd) .grid-3{grid-template-columns:repeat(4,1fr)}
   body:not(#ngd) .grid-3{grid-template-columns:repeat(3,1fr)}
-  body:not(#ngd) .catalog-grid,body:not(#ngd) .hub-feature-grid{grid-template-columns:repeat(3,1fr)}
+  body:not(#ngd) .catalog-grid,body:not(#ngd) .hub-feature-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 
 /* 12 — Mobile ≤760px: rasa aplikasi native */
@@ -440,3 +440,12 @@ body:not(#ngd) .mobile-nav{
 }
 .service-cta:hover{text-decoration:underline}
 .service-cta svg{height:16px;width:16px}
+
+
+/* Prevent three-column catalogue min-content expansion near 1280px. */
+body:not(#ngd) .catalog-grid{min-width:0}
+body:not(#ngd) .catalog-card{min-width:0;overflow-wrap:anywhere}
+body:not(#ngd) .catalog-card-bottom{min-width:0;flex-wrap:wrap}
+body:not(#ngd) .catalog-card-bottom>div{min-width:0}
+body:not(#ngd) .catalog-card-bottom .btn{min-width:0;white-space:normal}
+body:not(#ngd) .service-cta{max-width:100%;min-width:0;white-space:normal}
