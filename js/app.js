@@ -76,7 +76,7 @@ const screens={
   admin:['Admin','grid'],konten:['Konten Visual','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
   antrean:['Antrean','clock'],dukungan:['Bantuan','shield'],
   tiket:['Detail tiket','shield'],member360:['Member 360°','users'],
-  rilis:['Rilis Produk','check'],login:['Masuk','user'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
+  rilis:['Rilis Produk','check'],login:['Masuk','user'],['admin-login']:['Masuk Admin','shield'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
 const memberNav=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','akun'];
 const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','akun'];
@@ -210,6 +210,7 @@ const state={
   services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
+const adminLoginEnabled=()=>isConnected()&&config.adminLoginEnabled===true;
 const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true&&Boolean(config.qrisImageUrl)&&Boolean(config.qrisMerchant);
 const qrisUrl=()=>{try{const u=new URL(String(config.qrisImageUrl||''),location.href);return u.origin===location.origin&&u.protocol==='https:'?u.href:'';}catch{return '';}};
 const logged=()=>Boolean(state.me&&state.token);
@@ -478,7 +479,7 @@ function viewProfileEditor(){
 }
 function viewAccount(){
   if(!logged())return title('Akun member','PROFIL & KEAMANAN','Kelola akses ke ruang belajar.')+
-    '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk dengan nomor WhatsApp dan PIN Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk</button><button class="btn btn-secondary" data-route="daftar">Daftar</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
+    '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk dengan nomor WhatsApp dan PIN Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk member</button><button class="btn btn-secondary" data-route="admin-login">Masuk admin</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
   if(isAdmin()){
     const m=state.me;
     return title('Akun administrator','PENGATURAN AKSES','Informasi pengelola dan jalur operasional akun.')+
@@ -496,7 +497,13 @@ function viewAccount(){
       ].map(([route,label])=>'<button type="button" class="quick-action" data-route="'+route+'">'+
         '<span>'+esc(label)+'</span>'+icon('arrow')+'</button>').join('')+'</div>'+
       '<button type="button" class="btn btn-secondary" data-action="logout">'+icon('logout')+
-      ' Keluar dari akun</button></section></div>';
+      ' Keluar dari akun</button></section>'+
+      '<section class="surface admin-password-panel"><p class="card-kicker">GANTI PIN ADMIN</p>'+
+      '<h3>Perbarui PIN keamanan</h3><p class="card-desc">PIN baru akan mengakhiri semua sesi admin termasuk perangkat ini.</p>'+
+      '<form id="admin-pin-form" class="stack">'+
+      '<div class="field"><label for="admin-pin-old">PIN saat ini</label><input class="input" type="password" id="admin-pin-old" name="pin_lama" pattern="[0-9]{6}" inputmode="numeric" autocomplete="current-password" maxlength="6" required></div>'+
+      '<div class="field"><label for="admin-pin-new">PIN baru</label><input class="input" type="password" id="admin-pin-new" name="pin_baru" pattern="[0-9]{6}" inputmode="numeric" autocomplete="new-password" maxlength="6" required></div>'+
+      '<button type="submit" class="btn btn-primary" '+(!adminLoginEnabled()?'disabled':'')+'>Ganti PIN</button></form></section></div>';
   }
   const m=state.me;return title('Akun Anda','PROFIL MEMBER','Data akun berasal dari server.')+
     '<div class="grid-2"><div class="surface"><p class="card-kicker">INFORMASI AKUN</p>'+
@@ -564,7 +571,7 @@ function viewAdminRuntime(){
       '</p></div>')+'</section>';
 }
 function viewAdmin(){
-  if(!isAdmin())return needLogin('panel admin');
+  if(!isAdmin())return empty('Akses administrator','Gunakan akun administrator terdaftar untuk membuka pengelolaan Ngulik Digital.','admin-login','Masuk admin');
   const details=state.adminSummary?.ringkasan||[];
   return '<section class="admin-operations-intro"><p class="eyebrow">PUSAT OPERASIONAL</p><h1>Kelola ekosistem dengan lebih terarah.</h1><p>Awasi keanggotaan, aktivitas belajar, katalog yang terverifikasi, serta layanan bantuan. Data finansial tetap memerlukan pembuktian transaksi nyata.</p><span class="chip">Pilot maksimal 50 pengguna · sesuai rencana</span></section>'+
     '<div class="admin-module-grid">'+[
@@ -994,7 +1001,7 @@ function render(){
     'lms-complete':()=>logged()&&!isAdmin()&&window.NGD_LMS_UI?
       window.NGD_LMS_UI.memberSuccess(state.lmsCompletion):
       needLogin('hasil pembelajaran'),
-    akun:viewAccount,login:()=>viewLogin(false),daftar:()=>viewLogin(true),
+    akun:viewAccount,login:()=>viewLogin(false),['admin-login']:()=>viewLogin(false,true),daftar:()=>viewLogin(true),
     pesanan:()=>isAdmin()?viewAdminOrders():viewMyOrders(),
     checkout:viewCheckout,admin:viewAdmin,konten:viewAdminContent,produk:viewAdminCatalog,jasa:viewServiceRequests,layanan:viewAdminServices,member:()=>viewMembers(false),antrean:()=>viewMembers(true),
     dukungan:viewSupport,tiket:viewTicketDetail,member360:viewMember360,rilis:viewReleases
