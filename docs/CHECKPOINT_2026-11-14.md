@@ -70,3 +70,24 @@ Perubahan kode yang **disimpan di GitHub**, bukan pada Apps Script aktif:
 **Bukti pengujian V8 terisolasi pada sesi ini:** 39 dari 39 pemeriksaan aturan bisnis murni (12 antrean, 12 keuangan, 15 pengaturan); 9 skenario dasar refund/privasi; 3 skenario verifikasi penerimaan dana; 7 skenario pengajuan komisi; 5 skenario penanda aktivasi/penolakan retry. Pengujian ini **bukan** bukti eksekusi Node.js CI atau Apps Script staging. Skrip Node test sudah ditambah dan workflow mengikutsertakannya, tetapi status run CI belum diverifikasi.
 
 **Risiko tetap terbuka:** tidak ada rollback atomik lintas tab Sheets, pemulihan manual dari partial failure membutuhkan SOP dan bukti transaksi, keamanan PIN harus ditinjau, belum ada pengujian koneksi CORS/lintas-origin nyata, UI admin belum sepenuhnya operasional, dan pengujian Android/Windows belum selesai.
+
+## Addendum final — verifikasi hardening dan privasi source
+
+**Pekerjaan baru di repository `main`**:
+- `orderView_` member menyaring catatan admin, ID permintaan, identitas verifikator, dan data referral internal.
+- `getOrder_` read-only; kedaluwarsa hanya disajikan sebagai `past_due` sampai diproses jalur mutasi yang sah.
+- Persetujuan pembayaran perlu konfirmasi dana diterima dan bukti settlement.
+- Refund otomatis ditahan untuk layanan non-topup; topup menggunakan jumlah ledger original, dengan pemeriksaan saldo belum terpakai.
+- Komisi affiliate diperiksa terhadap status order asal sebelum payout.
+- Aktivasi lisensi POS/seat Canva menulis penanda percobaan lebih dulu, lalu mengubah akses; retry pascakegagalan diblokir untuk rekonsiliasi manual.
+- Pelacakan klik publik menggunakan saklar kedua default mati.
+- Fungsi reset PIN admin dan setup awal dilindungi saklar mutasi.
+- ID spreadsheet dan nomor admin tidak lagi di-hardcode dalam source terkini; `db_()` memakai Script Property `NGD_DB_ID` atau spreadsheet terikat bila tersedia. Seed WA admin menggunakan `NGD_ADMIN_WA`. Nilai lama masih mungkin tercantum dalam riwayat commit, sehingga pengaturan sharing Google Sheets tetap penting.
+
+**Pengujian yang dieksekusi pada sesi ini:** sintaks 14 file JS/GS/CJS berhasil diparse; aturan bisnis murni 39/39; 11 jenis aksi mutasi ditolak oleh simulasi server saat saklar mati (nol akses database); reset PIN admin juga ditolak; simulasi pengamanan refund, verifikasi dana, payout, dan kegagalan aktivasi menunjukkan hasil yang diharapkan.
+
+**Pengujian yang belum terbukti:** GitHub Actions/Node test suite lengkap (API status commit belum memberikan hasil check), Apps Script staging, CORS browser nyata, pembayaran riil/QRIS, QA visual Android/Windows. Tes Node dan workflow sudah disimpan di repo, tetapi **jangan menyebut semua tes otomatis lulus** tanpa bukti run.
+
+**Tidak dilakukan:** pembaruan Google Sheets, penggantian kode di Apps Script terikat, pengubahan Script Properties aktif, deployment GitHub Pages, transaksi nyata, perubahan QRIS, maupun reset database.
+
+**Langkah wajib sebelum sinkronisasi Apps Script:** pilih spreadsheet staging, set `NGD_DB_ID` melalui Project Settings untuk konteks Web App, biarkan mutasi tetap OFF, validasi browser POST/GET tanpa kredensial, baru lakukan uji integrasi secara bertahap. Jangan otomatis mengaktifkan flag sebagai respons atas tes gagal.
