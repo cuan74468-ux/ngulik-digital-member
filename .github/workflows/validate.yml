@@ -43,7 +43,7 @@ jobs:
       - name: Smoke-test static UI in real headless Chrome (no deployment)
         shell: bash
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           # Add a CI-only probe; repository index.html itself remains unchanged.
           sed -i 's#</body>#<script src="./tests/layout-probe.js" defer></script></body>#' index.html
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/ngd-http.log 2>&1 &
