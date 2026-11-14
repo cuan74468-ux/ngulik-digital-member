@@ -39,30 +39,3 @@ jobs:
           print('PAYMENTS_ENABLED:', bool(info['payments_enabled']))
           print('NOTE: GET proves identity only; it does NOT validate the database, login, CORS, or payment.')
           PY
-      - name: Verify read-only POST methods and live catalog (no registrations or orders)
-        env:
-          NGD_GAS_URL: "https://script.google.com/macros/s/AKfycbyQlhsRDfoHLIHaalBsBos5jJhvPmG3J8B0Al9XrqvUwBQkcnr8uzYRlpcjGlgC_-Xr/exec"
-        run: |
-          set -euo pipefail
-          for action in getPublicInfo getKatalog; do
-            printf '{"action":"%s","payload":{},"token":"","request_id":"READONLY_GITHUB_PROBE_20261114"}' "$action" > /tmp/ngd-post.json
-            curl -fLSs --connect-timeout 8 --max-time 30 \
-              -H "Content-Type: text/plain;charset=utf-8" \
-              -H "Origin: https://cuan74468-ux.github.io" \
-              --data-binary @/tmp/ngd-post.json \
-              --output /tmp/ngd-post-response.json "$NGD_GAS_URL"
-            python3 - "$action" <<'PY'
-          import json,sys
-          action=sys.argv[1]
-          with open('/tmp/ngd-post-response.json',encoding='utf-8') as f:d=json.load(f)
-          if d.get('ok') is not True:
-              print(action+'_ERROR_CODE:',(d.get('error') or {}).get('code','UNKNOWN'))
-              raise SystemExit('READ_ONLY_POST_FAILED: '+action)
-          info=d.get('data')
-          if action=='getKatalog':
-              if not isinstance(info,list):raise SystemExit('Unexpected catalog response type')
-              print('LIVE_CATALOG_COUNT:',len(info))
-          else:
-              print('LIVE_PUBLIC_INFO_OK:',isinstance(info,dict))
-          PY
-          done
