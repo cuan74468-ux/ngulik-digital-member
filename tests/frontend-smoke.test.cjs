@@ -53,7 +53,8 @@ test('guest homepage renders and shows offline preview warning',()=>{
 });
 test('local member preview renders native-like dashboard without login',()=>{
   const {nodes,context}=renderPreview('?preview=member');
-  assert.match(nodes.screen.innerHTML,/DASHBOARD MEMBER/);
+  assert.match(nodes.screen.innerHTML,/RUANG BELAJAR PRIBADI/);
+  assert.match(nodes.screen.innerHTML,/member-focus-ring/);
   assert.match(nodes.screen.innerHTML,/Kredit AI tersisa/);
   assert.match(nodes['notice-slot'].innerHTML,/DEMO LOKAL/);
   assert.equal(vm.runInContext('isWriteEnabled()',context),false);
