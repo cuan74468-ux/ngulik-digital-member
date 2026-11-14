@@ -887,10 +887,143 @@ async function publishRelease(id){
   }catch(e){toast(e.message,true);}
 }
 
+async function submitLMSWrite(action,payload,after,form){
+  if(!lmsWriteEnabled())return toast('LMS masih dalam mode pratinjau. Penulisan belum diaktifkan.',true);
+  const button=form?.querySelector('[type="submit"]');
+  if(button?.disabled)return;
+  if(button)button.disabled=true;
+  const key=JSON.stringify([action,payload]);
+  const requestId=pendingSupportRequests.get(key)||createRequestId();
+  pendingSupportRequests.set(key,requestId);
+  let result;
+  try{
+    result=await api(action,payload,state.token,{write:true,requestId});
+    pendingSupportRequests.delete(key);
+  }catch(err){
+    toast(err.message,true);
+    if(err.code!=='NETWORK_ERROR'&&err.code!=='INTERNAL')
+      pendingSupportRequests.delete(key);
+    else toast('Status penyimpanan belum pasti. Coba ulang dengan isi yang sama atau periksa data dahulu.',true);
+    if(button)button.disabled=false;
+    return;
+  }
+  if(button)button.disabled=false;
+  toast('Perubahan LMS tersimpan.');
+  if(after)try{await after(result);}catch(err){toast('Perubahan tersimpan, tetapi tampilan perlu dimuat ulang.',true);}
+}
+function lmsFormData(form){
+  const d=new FormData(form);
+  return Object.fromEntries([...d.entries()].map(([k,v])=>[k,String(v)]));
+}
+async function submitLMSCourseForm(form){
+  if(!isAdmin())return;
+  const isEdit=form.dataset.editMode==='edit';
+  const data=lmsFormData(form),course=state.lmsAdminCourse?.course;
+  const payload={...data};
+  if(isEdit){
+    if(!course)return toast('Muat ulang workspace sebelum menyunting.',true);
+    payload.course_id=course.course_id;
+    payload.expected_version=course.version;
+  }
+  await submitLMSWrite(isEdit?'adminUpdateLMSCourse':'adminCreateLMSCourse',payload,
+    async r=>{
+      if(!isEdit)state.lmsSelectedCourseId=r.course_id;
+      state.lmsAdminCourse=null;
+      go('lms-editor');
+    },form);
+}
+async function submitLMSLessonForm(form){
+  if(!isAdmin())return;
+  const isEdit=form.dataset.editMode==='edit';
+  const data=lmsFormData(form),current=lmsSelectedLesson_();
+  const payload={...data};
+  if(isEdit){
+    if(!current)return toast('Pilih pelajaran yang akan disunting.',true);
+    payload.lesson_id=current.lesson_id;
+    payload.expected_version=current.version;
+  }else payload.course_id=state.lmsSelectedCourseId;
+  await submitLMSWrite(isEdit?'adminUpdateLMSLesson':'adminCreateLMSLesson',
+    payload,async()=>{
+      state.lmsSelectedLessonId=null;
+      go('lms-editor');
+    },form);
+}
+async function submitLMSAIForm(form){
+  if(!isAdmin()||!state.lmsSelectedCourseId)return;
+  await submitLMSWrite('adminPrepareLMSAIJob',{
+    ...lmsFormData(form),course_id:state.lmsSelectedCourseId
+  },async()=>{form.reset();await loadRoute('lms-editor');},form);
+}
+async function submitLMSAIResult(form){
+  if(!isAdmin()||!state.lmsSelectedAIJobId)return;
+  const data=lmsFormData(form);
+  await submitLMSWrite('adminImportLMSAIResult',{
+    job_id:state.lmsSelectedAIJobId,result_draft:data.result_draft
+  },async()=>{await loadRoute('lms-editor');go('lms-ai');},form);
+}
+async function lmsButtonAction(button){
+  const action=button.dataset.lmsAction;
+  const courseId=button.dataset.courseId||state.lmsSelectedCourseId;
+  const lessonId=button.dataset.lessonId||state.lmsSelectedLessonId;
+  if(action==='open-course'){
+    state.lmsSelectedCourseId=courseId;
+    if(isAdmin()){
+      if(isConnected())state.lmsAdminCourse=null;
+      go('lms-editor');
+    }else{
+      if(isConnected())state.lmsCourseDetail=null;
+      go('lms-course');
+    }
+    return;
+  }
+  if(action==='edit-lesson'){
+    if(!isAdmin())return;
+    state.lmsSelectedLessonId=lessonId;
+    go('lms-lesson');return;
+  }
+  if(action==='open-job'){
+    if(!isAdmin())return;
+    state.lmsSelectedAIJobId=button.dataset.jobId;
+    go('lms-ai');return;
+  }
+  if(action==='copy-ai-prompt'){
+    const prompt=lmsSelectedAIJob_()?.prompt||'';
+    if(!prompt)return;
+    try{await navigator.clipboard.writeText(prompt);toast('Prompt tersalin. Jangan sertakan data pribadi saat digunakan.');}
+    catch{toast('Gagal menyalin. Periksa izin clipboard browser.',true);}
+    return;
+  }
+  if(!lmsWriteEnabled())return toast('Fitur LMS belum aktif untuk penulisan.',true);
+  const map={
+    'publish-course':['adminPublishLMSCourse',{course_id:courseId}],
+    'archive-course':['adminArchiveLMSCourse',{course_id:courseId,confirm_archive:true}],
+    'publish-lesson':['adminPublishLMSLesson',{lesson_id:lessonId}],
+    'archive-lesson':['adminArchiveLMSLesson',{lesson_id:lessonId,confirm_archive:true}],
+    'enroll':['enrollLMSCourse',{course_id:courseId}],
+    'complete':['completeLMSLesson',{lesson_id:lessonId}],
+    'approve-ai':['adminReviewLMSAIJob',{job_id:state.lmsSelectedAIJobId,decision:'APPROVED'}],
+    'reject-ai':['adminReviewLMSAIJob',{job_id:state.lmsSelectedAIJobId,decision:'REJECTED'}]
+  };
+  const x=map[action];
+  if(!x)return;
+  if(['archive-course','archive-lesson','publish-course'].includes(action)&&
+     !confirm('Lanjutkan tindakan '+action+'? Riwayat peserta tidak dihapus.'))return;
+  await submitLMSWrite(x[0],x[1],async()=>{
+    if(action==='enroll'||action==='complete'){
+      if(action==='enroll')
+        state.lmsEnrollments=await api('getMyLMSEnrollments',{},state.token);
+      await loadRoute('lms-course');
+    }else if(action==='approve-ai'||action==='reject-ai'){
+      await loadRoute('lms-editor');go('lms-ai');
+    }else await loadRoute('lms-editor');
+  });
+}
+
 document.addEventListener('click',async(e)=>{
-  const target=e.target.closest('[data-route],[data-buy],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action]');
+  const target=e.target.closest('[data-route],[data-buy],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action]');
   if(!target)return;
-  if(target.hasAttribute('data-route'))go(target.dataset.route);
+  if(target.hasAttribute('data-lms-action'))await lmsButtonAction(target);
+  else if(target.hasAttribute('data-route'))go(target.dataset.route);
   else if(target.hasAttribute('data-ticket-id')){
     state.selectedTicketId=target.dataset.ticketId;
     if(isConnected())state.ticketDetail=null;
@@ -915,7 +1048,8 @@ document.addEventListener('click',async(e)=>{
 document.addEventListener('submit',(e)=>{
   const id=e.target.id;
   if(!['auth-form','support-create-form','ticket-reply-form',
-    'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form'].includes(id))return;
+    'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form',
+    'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form'].includes(id))return;
   e.preventDefault();
   if(id==='auth-form')processLogin(e.target,e.target.dataset.mode==='register');
   if(id==='support-create-form')submitTicketCreate(e.target);
@@ -925,6 +1059,10 @@ document.addEventListener('submit',(e)=>{
   if(id==='release-create-form')submitReleaseCreate(e.target);
   if(id==='member-search-form')submitMemberSearch(e.target);
   if(id==='support-filter-form')submitSupportFilter(e.target);
+  if(id==='lms-course-form')submitLMSCourseForm(e.target);
+  if(id==='lms-lesson-form')submitLMSLessonForm(e.target);
+  if(id==='lms-ai-form')submitLMSAIForm(e.target);
+  if(id==='lms-ai-result-form')submitLMSAIResult(e.target);
 });
 by('account-button').addEventListener('click',()=>go('akun'));
 window.addEventListener('hashchange',()=>go(location.hash.slice(1)||'beranda'));
