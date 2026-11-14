@@ -716,12 +716,12 @@ document.addEventListener('click',async(e)=>{
   if(target.hasAttribute('data-route'))go(target.dataset.route);
   else if(target.hasAttribute('data-ticket-id')){
     state.selectedTicketId=target.dataset.ticketId;
-    state.ticketDetail=null;
+    if(isConnected())state.ticketDetail=null;
     go('tiket');
   }else if(target.hasAttribute('data-member-id')){
     if(!isAdmin())return;
     state.selectedMemberId=target.dataset.memberId;
-    state.member360=null;
+    if(isConnected())state.member360=null;
     go('member360');
   }else if(target.hasAttribute('data-publish-release')){
     await publishRelease(target.dataset.publishRelease);
