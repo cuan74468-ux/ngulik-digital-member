@@ -826,6 +826,8 @@ function grantCredits_(id,amount,ref,kind) {
     }
   }
   var balance=creditBalance_(id),final=balance+amount;
+  require_(Number.isFinite(final)&&Number.isInteger(final)&&final>=0,
+    'CONFLICT','Posting kredit tidak boleh menyebabkan saldo negatif atau tidak valid.');
   appendRow_('credits_ledger',{entry_id:recordId_('L'),member_id:id,created_at:now_(),tipe:kind||'ADJUST',jumlah:amount,status:'POSTED',ref_id:ref||'',keterangan:'Transaksi '+(ref||''),saldo_setelah:final});
   logAudit_('SYSTEM','SYSTEM','CREDIT_'+(kind||'ADJUST'),'credits_ledger',ref||id,'','POSTED',{jumlah:amount});
   return {alreadyApplied:false,balance:final};
@@ -1191,8 +1193,6 @@ function apiRouter_(action,token,p,requestId) {
           'VALIDATION','Koreksi kredit harus bilangan bulat dalam batas yang diizinkan.');
         var reason=safeText_(p.alasan,300);
         require_(reason.length>=5,'VALIDATION','Alasan koreksi wajib diisi.');
-        require_(creditBalance_(member.member_id)+amount>=0,'CONFLICT',
-          'Koreksi tidak boleh menghasilkan saldo kredit negatif.');
         require_(/^[A-Za-z0-9_-]{16,80}$/.test(String(requestId||'')),
           'VALIDATION','ID permintaan koreksi tidak valid.');
         var reference='ADMIN_ADJUST:'+requestId;
