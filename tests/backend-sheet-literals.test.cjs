@@ -10,11 +10,20 @@ function harness(){
   vm.runInContext(code,ctx,{timeout:10000});
   const rows=[],updates=[];
   const headers=['member_id','nama','saldo_kredit','joined_at'];
+  const formulas=[null,null,'=SUM(A2:A2)',null];
   const sheet={
     appendRow(values){rows.push(values);},
     getLastRow(){return rows.length+1;},
-    getRange(row,col){
-      return {setValue(value){updates.push({row,col,value});}};
+    getRange(row,col,count,columns){
+      const first=col-1,size=columns||1;
+      return {
+        getValues(){return [(rows[row-2]||[]).slice(first,first+size)];},
+        getFormulas(){return [formulas.slice(first,first+size).map(f=>f||'')];},
+        setValues(input){
+          updates.push({row,col,values:input[0]});
+          input[0].forEach((v,i)=>{rows[row-2][first+i]=v;});
+        }
+      };
     }
   };
   ctx.tbl_=()=>({sheet,headers});
@@ -42,12 +51,21 @@ test('appendRow sanitizes user-supplied cells without changing numeric types',()
   assert.equal(h.rows[0][1],"'=SUM(1,2)");
   assert.equal(h.rows[0][2],10);
 });
-test('updateRow sanitizes every patched string cell',()=>{
+test('updateRow sanitizes strings and writes a single range',()=>{
   const h=harness();
   h.rows.push(['M-1','Normal',0,'']);
   vm.runInContext("updateRow_('members',2,{nama:'=1+2',saldo_kredit:5})",h.ctx);
-  assert.equal(h.updates[0].value,"'=1+2");
-  assert.equal(h.updates[1].value,5);
+  assert.equal(h.updates.length,1);
+  assert.equal(h.updates[0].col,2);
+  assert.equal(h.updates[0].values[0],"'=1+2");
+  assert.equal(h.updates[0].values[1],5);
+});
+test('updateRow retains formulas between modified columns',()=>{
+  const h=harness();
+  h.rows.push(['M-1','Normal',42,'']);
+  vm.runInContext("updateRow_('members',2,{nama:'Aman',joined_at:'2026-11-14'})",h.ctx);
+  assert.equal(h.updates.length,1);
+  assert.equal(h.rows[0][2],'=SUM(A2:A2)');
 });
 test('updateRow does not write when requested column is unknown',()=>{
   const h=harness();
