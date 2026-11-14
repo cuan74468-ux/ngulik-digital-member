@@ -7,7 +7,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const src=fs.readFileSync(path.join(__dirname,'../apps-script/Code.gs'),'utf8');
-function boot(enabled=false){
+function boot(enabled=false,registration=false,finance=false){
   let touched=0;
   const forbidden=new Proxy({}, {get(){touched++;throw new Error('UNEXPECTED_GOOGLE_IO');}});
   const context=vm.createContext({
@@ -15,6 +15,8 @@ function boot(enabled=false){
     PropertiesService:{getScriptProperties(){
       return {getProperty(key){
         if(key==='NGD_MUTATIONS_ENABLED')return enabled?'true':null;
+        if(key==='NGD_REGISTRATION_ENABLED')return registration?'true':null;
+        if(key==='NGD_FINANCE_ENABLED')return finance?'true':null;
         if(key==='NGD_CLICK_TRACKING_ENABLED')return null;
         throw new Error('UNEXPECTED_SCRIPT_PROPERTY: '+key);
       }};
@@ -77,5 +79,33 @@ test('anonymous click tracking stays disabled after other writes are enabled',()
   const result=s.request('trackClick',{visitor_id:'safe-test-visitor-123',tipe:'REFERRAL'});
   assert.equal(result.ok,false);
   assert.equal(result.error.code,'MAINTENANCE');
+  assert.equal(s.touched(),0);
+});
+
+test('registration and financial actions stay blocked when only base writes are enabled',()=>{
+  const s=boot(true,false,false);
+  for(const action of ['register','createOrder','confirmPayment','cancelOrder',
+    'adminVerifyOrder','adminFulfillOrder','adminRefundOrder',
+    'adminAdjustCredit','adminMarkCommissionPaid','requestPayout','generateAI']){
+    const response=s.request(action);
+    assert.equal(response.ok,false,action);
+    assert.equal(response.error.code,'MAINTENANCE',action);
+  }
+  assert.equal(s.touched(),0);
+  const health=JSON.parse(vm.runInContext('doGet({}).getContent()',s.context));
+  assert.equal(health.data.payments_enabled,false);
+});
+test('registration is independently gated after enabling global writes',()=>{
+  const s=boot(true,false,false);
+  assert.throws(()=>vm.runInContext("requireActionFeatureEnabled_('register')",s.context),/Pendaftaran belum dibuka/);
+  const enabled=boot(true,true,false);
+  assert.doesNotThrow(()=>vm.runInContext("requireActionFeatureEnabled_('register')",enabled.context));
+  assert.throws(()=>vm.runInContext("requireActionFeatureEnabled_('createOrder')",enabled.context),/Transaksi/);
+  assert.equal(enabled.touched(),0);
+});
+test('finance switch cannot be enabled by only opening the frontend',()=>{
+  const s=boot(true,true,false);
+  assert.equal(vm.runInContext('financeEnabled_()',s.context),false);
+  assert.throws(()=>vm.runInContext('installTriggers()',s.context),/Transaksi/);
   assert.equal(s.touched(),0);
 });
