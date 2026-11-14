@@ -32,7 +32,7 @@ test('preview admin catalogue shows all eight staged product examples',()=>{
   assert.match(h.nodes.screen.innerHTML,/Bundel Ebook/);
   assert.match(h.nodes.screen.innerHTML,/8 produk tercatat/);
   assert.match(h.nodes.screen.innerHTML,/id="admin-catalog-form"/);
-  assert.match(h.nodes.screen.innerHTML,/HANYA PRATINJAU/);
+  assert.match(h.nodes.screen.innerHTML,/TIDAK DAPAT DIEDIT/);
   assert.match(h.nodes.screen.innerHTML,/disabled title="Pengelolaan katalog belum diaktifkan"/);
   assert.equal(h.apiCalls.length,0);
 });
