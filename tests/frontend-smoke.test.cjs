@@ -74,3 +74,16 @@ test('catalog escapes untrusted product names, and external URLs are restricted'
   assert.equal(vm.runInContext("urlSafe('javascript:alert(1)')",context),'');
   assert.equal(vm.runInContext("urlSafe('https://example.org/')",context),'https://example.org/');
 });
+
+test('learning links require official HTTPS Google Classroom host',()=>{
+  const {context}=renderPreview('?preview=member');
+  const call=url=>vm.runInContext('classroomUrlSafe('+JSON.stringify(url)+')',context);
+  assert.equal(call('https://classroom.google.com/c/123'),'https://classroom.google.com/c/123');
+  for(const candidate of [
+    'https://classroom.google.com.evil.test/c/123',
+    'https://evil.test/classroom.google.com/',
+    'http://classroom.google.com/c/123',
+    'javascript:alert(1)',
+    'https://user:pass@classroom.google.com/c/123'
+  ])assert.equal(call(candidate),'');
+});
