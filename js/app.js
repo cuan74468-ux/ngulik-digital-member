@@ -1,4 +1,4 @@
-import {api, ApiError, isConnected, isWriteEnabled, createRequestId} from './api.js';
+import {api, ApiError, isConnected, isWriteEnabled, createRequestId} from './api.js?v=20261114-adminauth1';
 
 const config = window.NGD_CONFIG || {};
 const by = (id) => document.getElementById(id);
