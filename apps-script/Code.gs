@@ -38,7 +38,8 @@ const NGD = Object.freeze({
     lms_progress: 'progress_id,member_id,course_id,lesson_id,status,started_at,completed_at,request_id,lesson_version',
     lms_workspaces: 'workspace_id,course_id,name,workspace_status,created_at,updated_at,created_by,auto_created,request_id',
     lms_ai_jobs: 'job_id,workspace_id,course_id,lesson_id,task_type,brief,prompt,result_draft,status,created_at,updated_at,requested_by,reviewed_by,request_id',
-    lms_revisions: 'revision_id,entity,entity_id,version,title,body,media_url,metadata_json,published_at,actor_id,request_id'
+    lms_revisions: 'revision_id,entity,entity_id,version,title,body,media_url,metadata_json,published_at,actor_id,request_id',
+    notifications: 'notification_id,member_id,source,source_id,jenis,judul,pesan,status,created_at,read_at,request_id'
   }
 });
 
@@ -1166,6 +1167,8 @@ function apiRouter_(action,token,p,requestId) {
   m=activeMember_(token);
   switch(action) {
     case 'getMe':return publicMember_(m);
+    case 'getMyNotifications':return notificationInbox_(m);
+    case 'markNotificationRead':return notificationMarkRead_(m,p);
     case 'getLMSCatalog':return lmsPublishedCatalog_(m);
     case 'getLMSCourse':return lmsMemberDetail_(m,p);
     case 'getMyLMSEnrollments':return lmsMyEnrollments_(m);
@@ -1331,6 +1334,9 @@ function requireActionFeatureEnabled_(action) {
       'adminReviewLMSAIJob'].indexOf(action)>=0)
     require_(settings.getProperty('NGD_LMS_ENABLED')==='true',
       'MAINTENANCE','Pengelolaan LMS masih dalam tahap pengujian.');
+  if(action==='markNotificationRead')
+    require_(settings.getProperty('NGD_NOTIFICATIONS_ENABLED')==='true',
+      'MAINTENANCE','Pusat notifikasi belum diaktifkan.');
   if(['createTicket','replyTicket','adminChangeTicketStatus','adminSetTicketPriority','adminReplyTicket',
       'adminCreateProductRelease','adminPublishProductRelease'].indexOf(action)>=0)
     require_(settings.getProperty('NGD_SUPPORT_ENABLED')==='true',
@@ -1349,7 +1355,7 @@ function requirePublicTrackingEnabled_() {
 function apiReadActions_() {
   return ['getPublicInfo','getMe','getBeranda','getModulBelajar','getKatalog',
     'getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase',
-    'getAffiliateDashboard','adminGetDashboard','adminListOrders','adminListMembers',
+    'getAffiliateDashboard','getMyNotifications','adminGetDashboard','adminListOrders','adminListMembers',
     'adminListWaitingList','adminListCommissions','adminGetSettings',
     'adminGetReconciliation',
     'getMyProducts','getMyTickets','getTicket','getMyProductReleases',
