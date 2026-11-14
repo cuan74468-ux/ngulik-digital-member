@@ -20,6 +20,7 @@
 |---|---|---|
 | Backend mutasi umum | Script Properties: `NGD_MUTATIONS_ENABLED` | **Tidak ada / false** |
 | Pendaftaran publik | Script Properties: `NGD_REGISTRATION_ENABLED` | **Tidak ada / false** |
+| Support & rilis produk | Script Properties: `NGD_SUPPORT_ENABLED` | **Tidak ada / false** |
 | Order, kredit berbayar, refund, komisi & payout | Script Properties: `NGD_FINANCE_ENABLED` | **Tidak ada / false** |
 | Mode UI | `config.js`: `demoMode` | `true` |
 | Tombol bayar | `config.js`: `paymentsEnabled` | `false` |
@@ -96,3 +97,18 @@ Sumber lama dan riwayat commit GitHub masih mungkin menyimpan identifier yang pe
 - Seluruh kontrol rilis **default OFF** pada kode sumber baru. Jangan mengasumsikan Script Properties di proyek Apps Script aktif telah disetel atau sinkron dengan GitHub.
 
 **Catatan penting:** HTTP GET/POST berbasis `ContentService` tetap memiliki risiko CORS lintas-origin dari GitHub Pages; jangan menambahkan `no-cors` atau proxy tidak tepercaya untuk PIN/token.
+
+## Modul Member 360° dan Support Ticketing
+
+**Staging privat sekarang 17 tab.** Tiga tab tambahan adalah `support_tickets`, `ticket_activities`, dan `product_releases`. Database sumber tetap 14 tab; jangan menambahkan tab pada sumber tanpa migrasi produksi yang sudah disetujui.
+
+- Backend support terpisah pada `apps-script/Support.gs`. File ini harus tersedia bersama `Code.gs` saat penyelarasan ke Apps Script staging.
+- `NGD_SUPPORT_ENABLED` default **OFF**. Penulisan tiket/rilis memerlukan flag ini sekaligus `NGD_MUTATIONS_ENABLED`; tes login tidak otomatis membuka support.
+- Laporan BUG/FITUR mensyaratkan riwayat order PAID/FULFILLED untuk produk terkait. Permintaan bantuan umum tidak wajib membeli produk.
+- Admin dapat mencari status member, menetapkan prioritas P0–P3, menangani tiket, dan mempublikasikan changelog.
+- Belum ada lampiran, notifikasi WhatsApp otomatis, ataupun instalasi update POS dari tombol rilis.
+- Jangan meminta PIN, token sesi, data bank, atau rahasia lain dalam formulir tiket.
+- Data tiket dan riwayat aktivitas adalah data pribadi. Tetapkan retensi dan batas akses petugas sebelum membuka support secara publik.
+- Uji nyata di Apps Script staging masih wajib, terutama simulasi gangguan setelah aktivitas berhasil ditulis.
+
+Rujukan: [Member 360° Support Handoff](MEMBER360_SUPPORT_HANDOFF_2026-11-14.md).
