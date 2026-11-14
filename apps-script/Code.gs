@@ -620,6 +620,9 @@ function authRegister_(p) {
     var s=settings_(),mode=String(s.mode_pendaftaran||'TERBUKA');
     require_(mode!=='TERTUTUP','QUOTA_FULL','Pendaftaran sementara ditutup.');
     var active=memberCount_(),wait=mode==='WAITING_LIST'||active>=Number(s.kuota_gelombang||50)||memberWaitlist_().length>0;
+    var initial=Number(s.kredit_awal===undefined||s.kredit_awal===''?10:s.kredit_awal);
+    require_(Number.isInteger(initial)&&initial>=0&&initial<=1000,'VALIDATION',
+      'Pengaturan kredit awal tidak valid.');
     var ref=String(p.ref||'').toUpperCase(),referrer=ref?byId_('members','kode_referral',ref):null;
     if(referrer&&referrer.wa===wa)referrer=null;
     if(referrer&&(referrer.status!=='AKTIF'||referrer.role!=='MEMBER'))referrer=null;
@@ -627,9 +630,6 @@ function authRegister_(p) {
     var m={member_id:id,role:'MEMBER',nama:safeText_(p.nama,80),wa:wa,nama_usaha:safeText_(p.nama_usaha,100),pin_hash:pinHash_(pin,salt),pin_salt:salt,kode_referral:newReferralCode_(),referred_by:referrer?referrer.member_id:'',status:status,joined_at:joined,last_active_at:joined,status_pos:'BELUM',status_canva:'BELUM',d14_active:false,d30_active:false};
     appendRow_('members',m);logAudit_(id,'MEMBER','REGISTER','members',id,'',status,{});
     if(wait){return {status:status,posisi:findRows_('members',function(r){return r.status==='WAITING_LIST';}).length};}
-    var initial=Number(s.kredit_awal===undefined||s.kredit_awal===''?10:s.kredit_awal);
-    require_(Number.isInteger(initial)&&initial>=0&&initial<=1000,'VALIDATION',
-      'Pengaturan kredit awal tidak valid.');
     if(initial>0)grantInitialCredit_(id,initial);
     if(active+1>=Number(s.kuota_gelombang||50)){updateSetting_('mode_pendaftaran','WAITING_LIST');logAudit_('SYSTEM','SYSTEM','REGISTRATION_FULL','pengaturan_sistem','mode_pendaftaran','TERBUKA','WAITING_LIST',{});}
     return {status:status,sesi:newSessionMember_(m)};
