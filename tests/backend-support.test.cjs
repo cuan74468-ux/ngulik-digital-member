@@ -321,3 +321,30 @@ test('product access filter requires product and rejects invented classification
   assert.throws(()=>h.run('adminSearchMembers','adm',
     {product_id:'P-POS',akses_status:'SEUMUR_HIDUP'}),/Status akses produk tidak dikenal/);
 });
+
+test('a browser reload with a new request ID does not duplicate identical ticket',()=>{
+  const h=harness();
+  const first=h.run('createTicket','m1',valid,'SUPPORT_FIRST_RELOAD_01');
+  const second=h.run('createTicket','m1',valid,'SUPPORT_SECOND_RELOAD_02');
+  assert.equal(second.ticket_id,first.ticket_id);
+  assert.equal(h.store.support_tickets.length,1);
+  assert.equal(h.store.ticket_activities.length,1);
+});
+test('deduplication after reload repairs a missing initial activity',()=>{
+  const h=harness();
+  const first=h.run('createTicket','m1',valid,'SUPPORT_RELOAD_RECOVER_01');
+  h.store.ticket_activities.length=0;
+  const second=h.run('createTicket','m1',valid,'SUPPORT_RELOAD_RECOVER_02');
+  assert.equal(second.ticket_id,first.ticket_id);
+  assert.equal(h.store.ticket_activities.length,1);
+  assert.equal(h.store.ticket_activities[0].request_id,'SUPPORT_RELOAD_RECOVER_01');
+});
+test('an identical support issue may be reported again after 15 minutes',()=>{
+  const h=harness();
+  h.run('createTicket','m1',valid,'SUPPORT_RELOAD_AGAIN_01');
+  h.ctx.now_=()=>new Date('2026-11-14T00:16:00Z');
+  const next=h.run('createTicket','m1',valid,'SUPPORT_RELOAD_AGAIN_02');
+  assert.equal(h.store.support_tickets.length,2);
+  assert.equal(h.store.ticket_activities.length,2);
+  assert.notEqual(next.ticket_id,h.store.support_tickets[0].ticket_id);
+});
