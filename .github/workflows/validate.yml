@@ -100,4 +100,23 @@ jobs:
           grep -q 'id="lms-ai-form"' /tmp/ngd-lms-workspace.html
           grep -q 'Ruang Materi' /tmp/ngd-lms-workspace.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-workspace.html
-          echo 'BROWSER_PREVIEW_OK: guest, support, Member360, LMS member mobile and admin workspace'
+          grep -q 'data-member-theme="true"' /tmp/ngd-lms-member.html
+          grep -q 'data-member-violet="true"' /tmp/ngd-lms-member.html
+          grep -q 'data-member-violet="true"' /tmp/ngd-lms-reader.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/?preview=member#lms-complete" > /tmp/ngd-lms-success.html 2>>/tmp/ngd-chrome.log
+          grep -q 'Pelajaran selesai!' /tmp/ngd-lms-success.html
+          grep -q 'contoh layar konfirmasi' /tmp/ngd-lms-success.html
+          grep -q 'member-success-receipt' /tmp/ngd-lms-success.html
+          grep -q 'data-member-violet="true"' /tmp/ngd-lms-success.html
+          grep -q 'data-overflow="false"' /tmp/ngd-lms-success.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3750 --window-size=375,812 --dump-dom \
+            "http://127.0.0.1:8765/?preview=member#dukungan" > /tmp/ngd-support-375.html 2>>/tmp/ngd-chrome.log
+          grep -q 'id="support-create-form"' /tmp/ngd-support-375.html
+          grep -q 'data-member-violet="true"' /tmp/ngd-support-375.html
+          grep -q 'data-overflow="false"' /tmp/ngd-support-375.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/?preview=admin#lms" > /tmp/ngd-admin-unchanged.html 2>>/tmp/ngd-chrome.log
+          grep -q 'data-member-theme="false"' /tmp/ngd-admin-unchanged.html
+          grep -q 'data-overflow="false"' /tmp/ngd-admin-unchanged.html
+          echo 'BROWSER_PREVIEW_OK: member native mobile, LMS completion, help, unchanged admin'
