@@ -831,7 +831,7 @@ function approveFulfillment_(admin,p) {
     // This write happens BEFORE member entitlements; if a later write fails,
     // a retry must go through explicit manual reconciliation.
     updateRow_('orders',o._row,{
-      catatan_admin:safeText_(String(o.catatan_admin||'')+' | '+marker+' | '+proof,700)
+      catatan_admin:marker+' | '+proof+' | '+safeText_(o.catatan_admin,400)
     });
     if(product.tipe==='LISENSI_SEKALI'){
       updateRow_('members',m._row,{
