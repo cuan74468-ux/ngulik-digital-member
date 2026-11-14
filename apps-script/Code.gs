@@ -832,9 +832,18 @@ function grantCredits_(id,amount,ref,kind) {
   logAudit_('SYSTEM','SYSTEM','CREDIT_'+(kind||'ADJUST'),'credits_ledger',ref||id,'','POSTED',{jumlah:amount});
   return {alreadyApplied:false,balance:final};
 }
+function commissionRate_(settings) {
+  var raw=settings&&settings.komisi_persen;
+  var value=raw===undefined||raw===null||raw===''?25:Number(raw);
+  require_(Number.isInteger(value)&&value>=0&&value<=50,
+    'CONFLICT','Persentase komisi tidak valid.');
+  return value;
+}
 function onPaid_(o,actor) {
   var product=byId_('katalog_produk','product_id',o.product_id),member=byId_('members','member_id',o.member_id);
   require_(product&&member,'CONFLICT','Data produk atau member tidak tersedia.');
+  // Read and validate finance settings BEFORE any entitlement or ledger write.
+  var s=settings_(),percent=commissionRate_(s);
   var patch={},fulfilled=false,days=Number(product.durasi_hari||0),end;
   if(product.tipe==='TOPUP_KREDIT'){
     grantCredits_(member.member_id,Number(product.kredit_diberikan),o.order_id,'TOPUP');fulfilled=true;
@@ -849,17 +858,18 @@ function onPaid_(o,actor) {
       updateRow_('members',member._row,{status_canva:'DIAJUKAN'});
   }
   if(fulfilled){updateRow_('orders',o._row,{status:'FULFILLED',fulfilled_at:now_()});logAudit_(actor.member_id,actor.role,'ORDER_FULFILLED','orders',o.order_id,'PAID','FULFILLED',{});}
-  var s=settings_();
-  if(member.referred_by&&product.bisa_komisi===true) {
+  if(member.referred_by&&product.bisa_komisi===true&&percent>0) {
     // Komisi harus idempoten per order, termasuk setelah retry dari kegagalan parsial.
     var existingCommission=findRows_('affiliate_commissions',function(c){return c.order_id===o.order_id;});
     if(existingCommission.length)return;
     var any=findRows_('affiliate_commissions',function(c){return c.referred_member_id===member.member_id;});
     if(!s.komisi_hanya_order_pertama||!any.length){
-      var value=Math.floor(Number(o.harga_dasar)*Number(s.komisi_persen||25)/100);
+      var value=Math.floor(Number(o.harga_dasar)*percent/100);
+      require_(Number.isSafeInteger(value)&&value>0,'CONFLICT',
+        'Nominal komisi tidak valid.');
       var when=new Date(Date.now()+Number(s.masa_tahan_hari||14)*86400000);
       var cid=recordId_('K');
-      appendRow_('affiliate_commissions',{komisi_id:cid,referrer_id:member.referred_by,referred_member_id:member.member_id,order_id:o.order_id,dasar_komisi:o.harga_dasar,persen:s.komisi_persen,nominal:value,status:'PENDING',created_at:now_(),approve_after:when});
+      appendRow_('affiliate_commissions',{komisi_id:cid,referrer_id:member.referred_by,referred_member_id:member.member_id,order_id:o.order_id,dasar_komisi:o.harga_dasar,persen:percent,nominal:value,status:'PENDING',created_at:now_(),approve_after:when});
       logAudit_('SYSTEM','SYSTEM','COMMISSION_CREATED','affiliate_commissions',cid,'','PENDING',{amount:value});
     }
   }
