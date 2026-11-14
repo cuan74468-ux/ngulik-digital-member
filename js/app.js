@@ -515,6 +515,87 @@ function viewAdmin(){
     (details.length?'<div class="grid-3">'+details.slice(0,12).map(x=>'<div class="stat"><div class="stat-value">'+esc(x.nilai)+'</div><div class="stat-label">'+esc(x.metrik)+'</div></div>').join('')+'</div>':
     empty('Ringkasan belum dimuat','Periksa koneksi dan hak akses admin.'))+'</section>';
 }
+const catalogWriteEnabled=()=>isWriteEnabled()&&config.catalogEnabled===true;
+function adminCatalogItems(){
+  if(state.adminCatalog.length||isConnected())return state.adminCatalog;
+  return state.catalog.map((p,i)=>({
+    ...p,perlu_approval_admin:['LISENSI_SEKALI','SEAT_30H','JASA_SEKALI'].includes(p.tipe),
+    bisa_komisi:p.tipe!=='TOPUP_KREDIT',aktif:true,urut:i+1,
+    kredit_diberikan:p.kredit_diberikan??0,
+    durasi_hari:p.durasi_hari??(['LANGGANAN_30H','SEAT_30H'].includes(p.tipe)?30:0),
+    revision:''
+  }));
+}
+function viewAdminCatalog(){
+  if(!isAdmin())return needLogin('katalog admin');
+  const items=adminCatalogItems(),canWrite=catalogWriteEnabled();
+  const selected=items.find(p=>p.product_id===state.catalogEditId)||null;
+  const types=[
+    ['LANGGANAN_30H','Langganan 30 hari'],['LISENSI_SEKALI','Lisensi sekali bayar'],
+    ['SEAT_30H','Seat 30 hari'],['TOPUP_KREDIT','Top-up kredit'],
+    ['JASA_SEKALI','Jasa (manual)'],['PRODUK_DIGITAL','Produk digital']
+  ];
+  const draft=selected||{
+    nama:'',deskripsi:'',tipe:'PRODUK_DIGITAL',harga:'',
+    kredit_diberikan:0,durasi_hari:0,urut:items.length+1,
+    perlu_approval_admin:false,bisa_komisi:false
+  };
+  const input=(name,label,type,max)=>
+    '<div class="field"><label for="cat-'+name+'">'+label+'</label>'+
+    '<input class="input" id="cat-'+name+'" name="'+name+'" type="'+type+
+    '" '+(type==='number'?'min="'+(name==='harga'||name==='urut'?'1':'0')+'" step="1"':'maxlength="'+max+'"')+
+    ' value="'+esc(draft[name]??'')+'" required></div>';
+  const bool=(name,label)=>
+    '<label class="catalog-check"><input type="checkbox" name="'+name+'" '+
+    (draft[name]===true?'checked':'')+'/><span>'+label+'</span></label>';
+  const intro='<div class="catalog-admin-intro"><div><p class="eyebrow">ADMIN / OPERASIONAL PRODUK</p>'+
+    '<h1>Katalog & penawaran</h1><p>Atur penawaran yang terlihat di publik tanpa mengubah riwayat order yang sudah ada.</p></div>'+
+    '<span class="chip">'+items.length+' produk tercatat</span></div>'+
+    '<div class="banner warning"><div><h3>Perubahan katalog dikendalikan secara terpisah</h3>'+
+    '<p>Pembayaran tidak mengikuti aktivasi produk. Jasa dan eBook memerlukan proses pemenuhan sebelum dapat dipesan.</p></div>'+
+    '<span class="chip orange">'+(canWrite?'EDITOR STAGING':'HANYA PRATINJAU')+'</span></div>';
+  const entries='<section class="catalog-admin-list" aria-label="Daftar penawaran">'+
+    items.map(p=>'<article class="catalog-admin-row">'+
+      '<div class="catalog-admin-badge">'+icon(p.tipe==='TOPUP_KREDIT'?'spark':'store')+'</div>'+
+      '<div class="catalog-admin-row-info"><h3>'+esc(p.nama)+'</h3>'+
+      '<p>'+esc(offerCategoryLabel(p))+' · '+rupiah(p.harga)+' · '+
+      (p.aktif?'Tampil di publik':'Disembunyikan')+
+      (supportedSaleTypes.has(p.tipe)?'':' · Checkout belum didukung')+'</p></div>'+
+      '<div class="catalog-admin-controls"><button class="btn btn-secondary btn-sm" type="button" '+
+      'data-catalog-edit="'+esc(p.product_id)+'">Edit</button>'+
+      '<button class="btn btn-ghost btn-sm" type="button" data-catalog-active="'+esc(p.product_id)+'" '+
+      'aria-label="'+(p.aktif?'Nonaktifkan':'Aktifkan')+' '+esc(p.nama)+'" '+
+      (!canWrite?'disabled title="Pengelolaan katalog belum diaktifkan"':'')+'>'+
+      (p.aktif?'Nonaktifkan':'Aktifkan')+'</button></div></article>').join('')+
+    (!items.length?'<div class="empty"><h3>Belum ada produk</h3><p>Produk akan muncul ketika ditambahkan oleh admin.</p></div>':'')+
+    '</section>';
+  const form='<section class="catalog-admin-editor" aria-label="Editor katalog">'+
+    '<div class="catalog-admin-editor-head"><div><p class="card-kicker">EDITOR PRODUK</p><h2>'+
+    (selected?'Edit penawaran':'Tambah penawaran')+'</h2>'+
+    '<p class="card-desc">Produk baru selalu dibuat nonaktif. Aktifkan setelah meninjau isi dan harga.</p></div>'+
+    (selected?'<button type="button" class="btn btn-secondary btn-sm" data-action="catalog-new">Buat baru</button>':'')+'</div>'+
+    '<form id="admin-catalog-form" class="catalog-admin-form" data-product-id="'+esc(selected?.product_id||'')+'">'+
+    '<div class="catalog-form-grid">'+
+    input('nama','Nama produk','text',120)+input('harga','Harga (Rp)','number',0)+
+    '<div class="field"><label for="cat-tipe">Jenis penawaran</label>'+
+    '<select class="input" id="cat-tipe" name="tipe" '+(selected?'disabled':'')+'>'+
+    types.map(x=>'<option value="'+x[0]+'" '+(draft.tipe===x[0]?'selected':'')+'>'+x[1]+'</option>').join('')+
+    '</select></div>'+
+    input('urut','Urutan tampilan','number',0)+
+    input('kredit_diberikan','Kredit diberikan','number',0)+
+    input('durasi_hari','Durasi hari (0 atau 30)','number',0)+'</div>'+
+    '<div class="field"><label for="cat-deskripsi">Deskripsi (minimal 10 karakter)</label>'+
+    '<textarea class="input" id="cat-deskripsi" name="deskripsi" maxlength="350" minlength="10" rows="4" required>'+
+    esc(draft.deskripsi)+'</textarea></div>'+
+    '<div class="catalog-checks">'+bool('perlu_approval_admin','Memerlukan persetujuan admin')+
+    bool('bisa_komisi','Memenuhi syarat komisi affiliate')+'</div>'+
+    '<div class="catalog-admin-form-actions">'+
+    '<button class="btn btn-primary" type="submit" '+(!canWrite?'disabled title="Pengelolaan katalog belum diaktifkan"':'')+'>'+
+    (selected?'Simpan perubahan':'Buat produk (nonaktif)')+' '+icon('arrow')+'</button>'+
+    (!canWrite?'<span class="form-hint">Perubahan baru tersedia setelah backend staging lulus uji.</span>':'')+
+    '</div></form></section>';
+  return intro+'<div class="catalog-admin-layout"><div>'+entries+'</div>'+form+'</div>';
+}
 function viewAdminOrders(){
   if(!isAdmin())return needLogin('pesanan admin');
   const rows=state.adminOrders;
