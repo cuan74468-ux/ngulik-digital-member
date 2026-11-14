@@ -644,22 +644,25 @@ async function submitSupportAction(form,action,payload,after){
   const key=JSON.stringify([action,payload]);
   const requestId=pendingSupportRequests.get(key)||createRequestId();
   pendingSupportRequests.set(key,requestId);
+  let result;
   try{
-    const result=await api(action,payload,state.token,{write:true,requestId});
+    result=await api(action,payload,state.token,{write:true,requestId});
     pendingSupportRequests.delete(key);
-    toast('Permintaan berhasil dicatat.');
-    if(after)await after(result);
   }catch(e){
     toast(e.message,true);
     if(e.code==='NETWORK_ERROR'||e.code==='INTERNAL'){
       toast('Hasil permintaan belum dapat dipastikan. Periksa riwayat sebelum mengirim ulang.',true);
-    } else {
-      // Explicit application errors are not ambiguous. A later valid request
-      // with the same content may use a fresh ID.
+    }else{
       pendingSupportRequests.delete(key);
     }
+    return;
   }finally{
     if(button)button.disabled=false;
+  }
+  toast('Permintaan berhasil dicatat.');
+  if(after){
+    try{await after(result);}
+    catch(e){toast('Data tersimpan tetapi tampilan belum dapat diperbarui.',true);}
   }
 }
 async function submitTicketCreate(form){
