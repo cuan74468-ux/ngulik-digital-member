@@ -348,3 +348,36 @@ test('an identical support issue may be reported again after 15 minutes',()=>{
   assert.equal(h.store.ticket_activities.length,2);
   assert.notEqual(next.ticket_id,h.store.support_tickets[0].ticket_id);
 });
+
+test('admin product impact counts verified buyers and unresolved priority bugs',()=>{
+  const h=harness();
+  const before=h.run('adminGetProductImpact','adm',{product_id:'P-POS'});
+  assert.equal(before.total_pembeli,1);
+  assert.equal(before.berdasarkan_status.AKTIF,1);
+  assert.equal(before.tiket_terbuka,0);
+  const ticket=h.run('createTicket','m1',valid,'IMPACT_TICKET_12345678');
+  h.run('adminSetTicketPriority','adm',{
+    ticket_id:ticket.ticket_id,prioritas:'P1',
+    catatan:'Layanan utama toko tidak dapat mencetak struk'
+  },'IMPACT_PRIORITY_123456');
+  const after=h.run('adminGetProductImpact','adm',{product_id:'P-POS'});
+  assert.equal(after.tiket_terbuka,1);
+  assert.equal(after.bug_terbuka,1);
+  assert.equal(after.prioritas_tinggi,1);
+  assert.equal(Object.hasOwn(after,'wa'),false);
+  assert.equal(Object.hasOwn(after,'member_ids'),false);
+});
+test('impact summary classifies paid subscriptions awaiting fulfillment',()=>{
+  const h=harness();
+  const d=h.run('adminGetProductImpact','adm',{product_id:'P-OTHER'});
+  assert.equal(d.total_pembeli,1);
+  assert.equal(d.berdasarkan_status.MENUNGGU_PEMENUHAN,1);
+  assert.equal(d.berdasarkan_status.AKTIF,undefined);
+});
+test('product impact is ADMIN-only and rejects nonexistent product',()=>{
+  const h=harness();
+  assert.throws(()=>h.run('adminGetProductImpact','m1',{product_id:'P-POS'}),
+    /Akses tidak diizinkan/);
+  assert.throws(()=>h.run('adminGetProductImpact','adm',{product_id:'INVALID'}),
+    /Produk tidak ditemukan/);
+});
