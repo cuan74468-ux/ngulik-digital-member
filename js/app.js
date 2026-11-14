@@ -486,6 +486,10 @@ function viewReleases(){
       '<div class="field"><label for="release-summary">Changelog</label><textarea id="release-summary" class="input" name="ringkasan" required minlength="20" maxlength="1500" rows="4"></textarea></div>'+
       '<div class="field"><label for="release-type">Jenis pembaruan</label><select id="release-type" class="input" name="tipe_rilis"><option>PATCH</option><option>MINOR</option><option>MAJOR</option><option>NOTICE</option></select></div>'+
       '<button class="btn btn-primary" type="submit" '+(!supportWriteEnabled()?'disabled':'')+'>Simpan draft rilis</button></form>'+
+      '<div class="divider"></div><p class="card-kicker">ANALISIS DAMPAK PRODUK</p>'+
+      '<p class="card-desc">Hitung pembeli dan status layanan sebelum mempublikasikan changelog. Analisis ini tidak mengirim pesan.</p>'+
+      '<button type="button" class="btn btn-secondary" data-impact-action="check" '+(!isConnected()?'disabled title="Memerlukan API staging"':'')+'>Periksa member terdampak</button>'+
+      '<div id="release-impact-slot" style="margin-top:16px" aria-live="polite"></div>'+
       '<p class="form-hint">Draft tidak terlihat oleh member sampai admin mempublikasikannya. Publikasi tidak otomatis memperbarui aplikasi POS yang terpasang.</p></section>':'')+
     '<div class="section-gap">'+title('Daftar versi','CHANGELOG','')+
     (data.length?'<div class="stack">'+data.map(item=>'<article class="surface support-release"><div class="support-ticket-head"><span class="chip">'+esc(item.tipe_rilis)+'</span>'+safeBadge(item.status)+'</div>'+
@@ -765,6 +769,27 @@ async function submitMemberSearch(form){
   }catch(e){toast(e.message,true);}
   finally{if(button)button.disabled=false;}
 }
+async function checkProductImpact(){
+  if(!isAdmin()||!isConnected())return;
+  const productId=by('release-product')?.value||'';
+  const target=by('release-impact-slot');
+  if(!productId||!target)return toast('Pilih produk terlebih dahulu.',true);
+  target.textContent='Menghitung data pembeli dan tiket...';
+  try{
+    const result=await api('adminGetProductImpact',{product_id:productId},state.token);
+    const status=Object.entries(result.berdasarkan_status||{});
+    target.innerHTML='<div class="support-impact-summary"><h3>'+esc(result.nama)+'</h3>'+
+      '<div class="support-impact-grid">'+[
+        ['Pembeli terverifikasi',result.total_pembeli],
+        ['Tiket belum selesai',result.tiket_terbuka],
+        ['Bug terbuka',result.bug_terbuka],
+        ['Prioritas P0/P1',result.prioritas_tinggi]
+      ].map(([title,value])=>'<div class="stat"><strong>'+esc(value)+'</strong><small>'+esc(title)+'</small></div>').join('')+
+      '</div><p class="small muted">Status layanan: '+(status.length?status.map(([key,count])=>
+        esc(key)+' ('+esc(count)+')').join(' · '):'Belum ada pembeli terverifikasi')+'</p>'+
+      '<p class="small muted">Data berasal dari order dan status member pada saat pemeriksaan, bukan hitungan instalasi aplikasi aktual.</p></div>';
+  }catch(e){target.textContent='Analisis gagal: '+e.message;}
+}
 async function publishRelease(id){
   if(!isAdmin()||!supportWriteEnabled())
     return toast('Publikasi rilis belum diaktifkan.',true);
@@ -777,7 +802,7 @@ async function publishRelease(id){
 }
 
 document.addEventListener('click',async(e)=>{
-  const target=e.target.closest('[data-route],[data-buy],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release]');
+  const target=e.target.closest('[data-route],[data-buy],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action]');
   if(!target)return;
   if(target.hasAttribute('data-route'))go(target.dataset.route);
   else if(target.hasAttribute('data-ticket-id')){
@@ -791,6 +816,8 @@ document.addEventListener('click',async(e)=>{
     go('member360');
   }else if(target.hasAttribute('data-publish-release')){
     await publishRelease(target.dataset.publishRelease);
+  }else if(target.hasAttribute('data-impact-action')){
+    await checkProductImpact();
   }else if(target.hasAttribute('data-buy'))await buy(target.dataset.buy);
   else if(target.dataset.action==='logout')await logout();
   else if(target.dataset.action==='confirm-payment')await confirmPayment();
