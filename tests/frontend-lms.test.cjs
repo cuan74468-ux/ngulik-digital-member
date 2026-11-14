@@ -36,7 +36,7 @@ test('admin preview shows curriculum and automatic workspace create form',()=>{
   assert.match(h.nodes.screen.innerHTML,/Kelola kursus dan kurikulum/);
   assert.match(h.nodes.screen.innerHTML,/Buat kursus &amp; workspace/);
   assert.match(h.nodes.screen.innerHTML,/id="lms-course-form"/);
-  assert.match(h.nodes.screen.innerHTML,/disabled title="CRUD LMS belum diaktifkan"/);
+  assert.match(h.nodes.screen.innerHTML,/disabled title="Penyuntingan kursus belum tersedia"/);
   assert.equal(vm.runInContext('lmsWriteEnabled()',h.ctx),false);
 });
 test('admin workspace displays draft editing, lessons and AI queue',()=>{
@@ -46,7 +46,7 @@ test('admin workspace displays draft editing, lessons and AI queue',()=>{
   assert.match(html,/id="lms-lesson-form"/);
   assert.match(html,/id="lms-ai-form"/);
   assert.match(html,/COURSE_OUTLINE/);
-  assert.match(html,/Tanpa API key/);
+  assert.match(html,/Ruang materi/);
   assert.equal(h.requests(),0);
 });
 test('admin lesson draft editor and AI review are read-only in demo',()=>{
@@ -66,7 +66,7 @@ test('member preview shows published class and allows reading without AI or paym
   h.go('lms-course');
   assert.match(h.nodes.screen.innerHTML,/Menyiapkan Profil Usaha/);
   assert.match(h.nodes.screen.innerHTML,/Tujuan pembelajaran/);
-  assert.match(h.nodes.screen.innerHTML,/disabled title="LMS masih dalam mode pratinjau"/);
+  assert.match(h.nodes.screen.innerHTML,/disabled title="Penyuntingan materi belum tersedia"/);
 });
 test('member cannot open admin editor routes',()=>{
   const h=preview('member','lms');
