@@ -514,18 +514,29 @@ function viewAccount(){
     '<div class="divider"></div><h3>Pesanan saya</h3><button class="btn btn-ghost" data-route="pesanan">Lihat riwayat pesanan '+icon('arrow')+'</button><div class="divider"></div><h3>Program affiliate</h3><button class="btn btn-ghost" data-route="affiliate">Lihat referral saya '+icon('arrow')+'</button>'+
     '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan bug atau usulkan fitur '+icon('arrow')+'</button></div></div>'+viewNotificationCenter()+viewProfileEditor();
 }
-function viewLogin(register=false){
-  return '<div class="login-shell"><p class="eyebrow">'+(register?'MEMULAI PERJALANAN':'SELAMAT DATANG KEMBALI')+'</p><h1 style="font-size:2.25rem">'+(register?'Buat akun member.':'Masuk ke ruang Anda.')+'</h1>'+
-    '<p class="lead">'+(register?'Mulai belajar dan bergabung dengan ekosistem Ngulik Digital.':'Gunakan nomor WhatsApp dan PIN 6 angka yang terdaftar.')+'</p>'+
-    '<form id="auth-form" class="surface" data-mode="'+(register?'register':'login')+'">'+
+function viewLogin(register=false,adminMode=false){
+  const enabled=adminMode?adminLoginEnabled():isWriteEnabled();
+  return '<div class="login-shell"><p class="eyebrow">'+
+    (adminMode?'AKSES PENGELOLA':register?'BERGABUNG':'SELAMAT DATANG KEMBALI')+'</p>'+
+    '<h1 style="font-size:2.25rem">'+
+    (adminMode?'Masuk panel administrator.':register?'Buat akun member.':'Masuk ke ruang Anda.')+'</h1>'+
+    '<p class="lead">'+
+    (adminMode?'Gunakan nomor WhatsApp administrator yang sudah terdaftar dan PIN enam angka. Tidak perlu membuat akun baru.':register?'Mulai belajar dan bergabung dengan ekosistem Ngulik Digital.':'Gunakan nomor WhatsApp dan PIN enam angka yang terdaftar.')+'</p>'+
+    '<form id="auth-form" class="surface" data-mode="'+(adminMode?'admin':register?'register':'login')+'">'+
     (register?'<div class="field"><label for="nama">Nama lengkap</label><input class="input" id="nama" name="nama" autocomplete="name" required minlength="2" maxlength="80"></div>'+
       '<div class="field"><label for="usaha">Nama usaha</label><input class="input" id="usaha" name="nama_usaha" required minlength="2" maxlength="100"></div>':'')+
     '<div class="field"><label for="wa">Nomor WhatsApp</label><input class="input" id="wa" name="wa" required inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx"></div>'+
     '<div class="field"><label for="pin">PIN 6 angka</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>'+
     (register?'<div class="field"><label><input type="checkbox" name="setuju_kebijakan" required> Saya menyetujui ketentuan program dan kebijakan privasi.</label></div>':'')+
-    '<button class="btn btn-primary btn-wide" type="submit" '+(!isWriteEnabled()?'disabled':'')+'>'+(register?'Buat akun':'Masuk')+' '+icon('arrow')+'</button>'+
-    '<p class="form-hint" style="margin:13px 0 0">'+(isWriteEnabled()?'Jaga kerahasiaan PIN Anda.':'Pendaftaran dan akses akun sedang dipersiapkan.')+'</p></form>'+
-    '<p class="small" style="text-align:center;margin-top:17px">'+(register?'Sudah punya akun?':'Belum memiliki akun?')+' <button class="btn btn-ghost btn-sm" data-route="'+(register?'login':'daftar')+'">'+(register?'Masuk':'Daftar member')+'</button></p></div>';
+    '<button class="btn btn-primary btn-wide" type="submit" '+(!enabled?'disabled':'')+'>'+
+    (adminMode?'Masuk admin':register?'Buat akun':'Masuk')+' '+icon('arrow')+'</button>'+
+    '<p class="form-hint" style="margin:13px 0 0">'+
+    (enabled?'Jaga kerahasiaan PIN Anda.':adminMode?'Akses administrator belum diaktifkan pada backend. Akun yang sudah ada tetap aman.':'Pendaftaran dan akses member sedang dipersiapkan.')+'</p></form>'+
+    '<p class="small login-other-route">'+
+    (adminMode?'<button class="btn btn-ghost btn-sm" data-route="login">Kembali ke login member</button>':
+      register?'Sudah punya akun? <button class="btn btn-ghost btn-sm" data-route="login">Masuk</button>':
+      'Pengelola Ngulik Digital? <button class="btn btn-ghost btn-sm" data-route="admin-login">Masuk sebagai admin</button>')+
+    '</p></div>';
 }
 function viewMyOrders(){
   if(!logged())return title('Pesanan saya','RIWAYAT TRANSAKSI','Akses data pesanan pribadi.')+needLogin('pesanan');
