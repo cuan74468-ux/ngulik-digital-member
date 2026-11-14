@@ -1154,7 +1154,9 @@ async function loadRoute(route){
   }catch(e){toast(e.message,true);}
 }
 async function processLogin(form,register){
-  if(!isWriteEnabled())return toast('Layanan akun sedang tidak tersedia. Silakan coba kembali.',true);
+  const adminMode=form.dataset.mode==='admin';
+  if(!(adminMode?adminLoginEnabled():isWriteEnabled()))
+    return toast(adminMode?'Login administrator belum diaktifkan.':'Layanan akun sedang tidak tersedia.',true);
   const fd=new FormData(form);
   const payload={wa:String(fd.get('wa')||''),pin:String(fd.get('pin')||'')};
   if(register){
@@ -1166,8 +1168,11 @@ async function processLogin(form,register){
   }
   const btn=form.querySelector('[type=submit]');btn.disabled=true;
   try{
-    const response=await api(register?'register':'login',payload,'',{write:true});
+    const response=await api(adminMode?'adminLogin':register?'register':'login',
+      payload,'',{write:true,adminAuth:adminMode});
     const result=register?response.sesi:response;
+    if(adminMode&&result?.profil?.role!=='ADMIN')
+      throw new ApiError('Akses administrator ditolak.','FORBIDDEN');
     if(register&&response.status==='WAITING_LIST'){
       toast('Pendaftaran tercatat dalam waiting list.');go('beranda');return;
     }
@@ -1179,11 +1184,33 @@ async function processLogin(form,register){
   }catch(e){toast(e.message,true);}finally{btn.disabled=false;}
 }
 async function logout(){
-  const token=state.token;
+  const token=state.token,wasAdmin=isAdmin();
   state.token='';state.me=null;sessionStorage.removeItem(tokenKey);
   go('beranda');
-  if(token&&isConnected()){try{await api('logout',{},token,{write:true});}catch{}}
+  if(token&&isConnected()){
+    try{await api(wasAdmin?'adminLogout':'logout',{},token,
+      {write:true,adminAuth:wasAdmin});}catch{}
+  }
   toast('Anda telah keluar.');
+}
+async function changeAdminPin_(form){
+  if(!isAdmin()||!adminLoginEnabled())return toast('Perubahan PIN belum tersedia.',true);
+  const fd=new FormData(form);
+  const oldPin=String(fd.get('pin_lama')||''),newPin=String(fd.get('pin_baru')||'');
+  if(!/^\d{6}$/.test(oldPin)||!/^\d{6}$/.test(newPin)||oldPin===newPin)
+    return toast('Masukkan PIN lama dan PIN baru enam angka yang berbeda.',true);
+  const button=form.querySelector('[type=submit]');
+  if(button)button.disabled=true;
+  try{
+    const response=await api('adminChangePin',{pin_lama:oldPin,pin_baru:newPin},
+      state.token,{write:true,adminAuth:true});
+    if(!response?.success||!response?.login_required)
+      throw new ApiError('Konfirmasi perubahan PIN belum lengkap.');
+    // Backend revokes every session on PIN change, including this device.
+    state.token='';state.me=null;sessionStorage.removeItem(tokenKey);
+    go('admin-login');
+    toast('PIN telah diganti. Masuk lagi menggunakan PIN baru.');
+  }catch(error){toast(error.message,true);if(button)button.disabled=false;}
 }
 async function buy(productId){
   if(!logged()){go('login');toast('Masuk terlebih dahulu untuk memesan.',true);return;}
@@ -1741,10 +1768,11 @@ async function submitProfileForm(form){
 }
 document.addEventListener('submit',(e)=>{
   const id=e.target.id;
-  if(!['content-editor-form','service-brief-form','service-quote-form','admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
+  if(!['admin-pin-form','content-editor-form','service-brief-form','service-quote-form','admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
     'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form',
     'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form'].includes(id))return;
   e.preventDefault();
+  if(id==='admin-pin-form')changeAdminPin_(e.target);
   if(id==='content-editor-form')submitContentForm_(e.target);
   if(id==='service-brief-form')submitServiceBrief(e.target);
   if(id==='service-quote-form')submitServiceQuote(e.target);
