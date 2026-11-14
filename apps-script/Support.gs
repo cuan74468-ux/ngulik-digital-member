@@ -370,6 +370,34 @@ function supportSearchMembers_(p) {
       produk:productsOwned.map(function(o){return o.product_id;})};
   })};
 }
+function supportProductImpact_(p) {
+  var productId=safeText_(p.product_id,80),
+    product=byId_('katalog_produk','product_id',productId);
+  require_(product,'NOT_FOUND','Produk tidak ditemukan.');
+  var orders=readAll_('orders'),products=readAll_('katalog_produk'),
+    members=readAll_('members'),tickets=readAll_('support_tickets'),
+    counts={},owners=0;
+  members.forEach(function(m){
+    if(m.role!=='MEMBER')return;
+    var entitlement=supportMemberProducts_(m,orders,products).filter(function(a){
+      return a.product_id===productId;
+    })[0];
+    if(!entitlement)return;
+    owners++;
+    counts[entitlement.akses_status]=(counts[entitlement.akses_status]||0)+1;
+  });
+  var unresolved=tickets.filter(function(t){
+    return t.product_id===productId&&t.status!=='CLOSED'&&t.status!=='RESOLVED';
+  });
+  return {product_id:productId,nama:product.nama,
+    total_pembeli:owners,berdasarkan_status:counts,
+    tiket_terbuka:unresolved.length,
+    bug_terbuka:unresolved.filter(function(t){return t.kategori==='BUG';}).length,
+    prioritas_tinggi:unresolved.filter(function(t){
+      return t.prioritas==='P0'||t.prioritas==='P1';
+    }).length,
+    dihitung_at:isoWib_(now_())};
+}
 function supportGetMember360_(memberId) {
   var m=byId_('members','member_id',String(memberId||''));
   require_(m&&m.role==='MEMBER','NOT_FOUND','Member tidak ditemukan.');
