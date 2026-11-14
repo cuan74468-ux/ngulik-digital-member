@@ -361,14 +361,16 @@ function viewCatalog(){
       '<div class="catalog-card-copy"><h3>'+esc(p.nama)+'</h3><p>'+esc(p.deskripsi||'')+'</p></div>'+
       '<div class="catalog-card-bottom"><div><small>Harga penawaran</small><strong>'+rupiah(p.harga)+'</strong></div>'+
       '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'" '+
-      (allowed?'':'disabled title="'+esc(tooltip)+'"')+'>'+label+' '+icon('arrow')+'</button></div></article>';
+      (allowed?'':'disabled title="'+esc(tooltip)+'"')+'>'+label+' '+icon('arrow')+'</button></div>'+
+      (kind==='jasa'?'<button type="button" class="service-cta" data-service-go>Ajukan brief jasa '+icon('arrow')+'</button>':'')+
+      '</article>';
   }).join('')+'</div>':
     '<div class="catalog-empty">'+empty('Belum ada penawaran di kategori ini','Pilih kategori lain untuk melihat pilihan tersedia.')+'</div>';
   return header+filters+'<p class="catalog-result-count" aria-live="polite">Menampilkan '+shown.length+
     ' dari '+list.length+' penawaran</p>'+cards+
     '<section class="catalog-guidance section-gap"><div><span class="card-kicker">CATATAN</span>'+
-    '<h3>Butuh layanan khusus?</h3><p>Jasa pembuatan web atau sistem custom direncanakan berdasarkan kebutuhan. Belum tersedia pemesanan otomatis.</p></div>'+
-    '<span class="chip">Konsultasi akan dibuka</span></section>';
+    '<h3>Butuh layanan khusus?</h3><p>Konsultasikan kebutuhan website, aplikasi internal, atau video promosi melalui formulir brief member. Penawaran terpisah dari pembayaran.</p></div>'+
+    '<button type="button" class="btn btn-secondary" data-route="jasa">Ajukan brief</button></section>';
 }
 function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
