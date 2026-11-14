@@ -63,6 +63,7 @@ test('admin preview displays support queue and Member 360 search',()=>{
   assert.match(h.nodes.screen.innerHTML,/Cetak struk gagal pada Android/);
   h.go('member');
   assert.match(h.nodes.screen.innerHTML,/id="member-search-form"/);
+  assert.match(h.nodes.screen.innerHTML,/id="member-access-status"/);
   assert.match(h.nodes.screen.innerHTML,/Buka Member 360°/);
   h.go('member360');
   assert.match(h.nodes.screen.innerHTML,/Hak akses produk/);
