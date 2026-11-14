@@ -568,6 +568,56 @@ body:not(#ngd) .toast.error{background:var(--danger)}
   body:not(#ngd) .catalog-form-grid{grid-template-columns:1fr}
 }
 
+/* 16b — Mobile native: semua layar mengikuti pola beranda (judul besar, grup daftar, kartu datar, formulir terisi) */
+@media(max-width:760px){
+  /* Kepala halaman: tanpa eyebrow/paragraf promosi — judul besar saja */
+  body:not(#ngd) :is(.catalog-intro,.service-heading,.catalog-admin-intro,.admin-operations-intro,.lms-heading,.learn-guest-intro) :is(.eyebrow,.card-kicker,p){display:none}
+  body:not(#ngd) :is(.catalog-intro,.service-heading,.catalog-admin-intro,.admin-operations-intro,.lms-heading,.learn-guest-intro){margin:0 0 14px;gap:8px}
+  body:not(#ngd) :is(.catalog-intro,.service-heading,.catalog-admin-intro,.admin-operations-intro,.lms-heading,.learn-guest-intro) :is(h1,h2){font-size:1.5rem;line-height:1.15;margin:0}
+  body:not(#ngd) .main-content>section>.eyebrow,body:not(#ngd) #screen>.eyebrow{display:none}
+  /* Judul seksi = label grup daftar */
+  body:not(#ngd) .section-head{margin:22px 4px 10px}
+  body:not(#ngd) .section-head h2{font:700 .74rem var(--font-body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0}
+  body:not(#ngd) .section-head p{display:none}
+  /* Kartu datar ala daftar terkelompok */
+  body:not(#ngd) :is(.surface,.catalog-card,.lms-course-tile,.support-ticket,.support-release,.lms-lesson-card,.lms-editor-section,.service-entry,.service-admin-item,.catalog-admin-row,.catalog-admin-editor,.learn-path-item,.login-shell>form){
+    border:0;border-radius:20px;box-shadow:0 1px 2px rgba(14,19,32,.05),0 8px 20px -16px rgba(14,19,32,.18);
+  }
+  body:not(#ngd) :is(.surface,.catalog-admin-editor){padding:16px}
+  body:not(#ngd) .surface h2{font-size:1.15rem}
+  body:not(#ngd) .surface .card-desc,body:not(#ngd) .surface>p:not(.card-kicker){font-size:.86rem}
+  body:not(#ngd) .stack{gap:10px}
+  /* Formulir terisi, label kecil, tombol kirim penuh */
+  body:not(#ngd) .field{gap:6px;margin-bottom:12px}
+  body:not(#ngd) .field label{font:600 .78rem var(--font-body);color:var(--muted)}
+  body:not(#ngd) :is(.input,select.input,textarea.input,.field input:not([type=checkbox]),.field select,.field textarea){
+    min-height:52px;border-color:transparent;background:var(--surface-2);border-radius:14px;
+  }
+  body:not(#ngd) :is(.input,.field input,.field select,.field textarea):focus{background:#fff;border-color:var(--brand-blue)}
+  body:not(#ngd) form>.btn-primary,body:not(#ngd) form .catalog-admin-form-actions .btn{width:100%}
+  body:not(#ngd) form>.btn,body:not(#ngd) .lms-form .btn{min-height:52px}
+  /* Katalog: kartu ringkas, harga + aksi satu baris */
+  body:not(#ngd) .catalog-card{padding:16px;gap:12px}
+  body:not(#ngd) .catalog-card-copy h3{font-size:1.05rem}
+  body:not(#ngd) .catalog-card-copy p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.86rem}
+  body:not(#ngd) .catalog-card-bottom{grid-template-columns:minmax(0,auto) minmax(0,1fr);align-items:center;gap:12px;padding-top:12px}
+  body:not(#ngd) .catalog-card-bottom strong{font-size:1.2rem}
+  body:not(#ngd) .catalog-card-bottom .btn{width:auto;justify-self:end;min-height:44px;padding:8px 14px;font-size:.82rem}
+  body:not(#ngd) .catalog-result-count{display:none}
+  body:not(#ngd) .catalog-filter{min-height:38px;padding:0 16px;font-size:.84rem}
+  /* LMS & daftar */
+  body:not(#ngd) .lms-course-tile{padding:16px;gap:8px}
+  body:not(#ngd) .lms-course-tile .btn,body:not(#ngd) .support-ticket .btn{min-height:46px}
+  body:not(#ngd) .stat-grid,body:not(#ngd) .lms-stats{gap:8px}
+  body:not(#ngd) .stat,body:not(#ngd) .lms-stats>.surface{padding:14px}
+  body:not(#ngd) .list-row{padding:14px 0}
+  body:not(#ngd) .surface.list-row{padding:14px 16px}
+  body:not(#ngd) .empty{padding:28px 16px}
+  body:not(#ngd) .login-shell .eyebrow{display:block}
+  /* Umpan balik sentuh */
+  body:not(#ngd) :is(.surface,.catalog-card,.lms-course-tile,.list-row,.service-admin-item):active{transform:scale(.99)}
+}
+
 /* 17 — Preferensi gerak */
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
