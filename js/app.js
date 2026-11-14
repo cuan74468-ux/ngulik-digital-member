@@ -1,4 +1,4 @@
-import {api, ApiError, isConnected, isWriteEnabled} from './api.js';
+import {api, ApiError, isConnected, isWriteEnabled, createRequestId} from './api.js';
 
 const config = window.NGD_CONFIG || {};
 const by = (id) => document.getElementById(id);
@@ -631,6 +631,9 @@ async function confirmPayment(){
     state.lastOrder=r;toast('Konfirmasi diterima. Menunggu pemeriksaan admin.');go('pesanan');
   }catch(e){toast(e.message,true);}
 }
+// A write may succeed on Apps Script even when its response is lost.
+// Keep the same opaque request ID for an identical retry until confirmed.
+const pendingSupportRequests = new Map();
 async function submitSupportAction(form,action,payload,after){
   if(!supportWriteEnabled()){
     toast('Layanan tiket masih dalam mode pratinjau.',true);return;
@@ -638,12 +641,26 @@ async function submitSupportAction(form,action,payload,after){
   const button=form.querySelector('[type="submit"]');
   if(button?.disabled)return;
   if(button)button.disabled=true;
+  const key=JSON.stringify([action,payload]);
+  const requestId=pendingSupportRequests.get(key)||createRequestId();
+  pendingSupportRequests.set(key,requestId);
   try{
-    const result=await api(action,payload,state.token,{write:true});
+    const result=await api(action,payload,state.token,{write:true,requestId});
+    pendingSupportRequests.delete(key);
     toast('Permintaan berhasil dicatat.');
     if(after)await after(result);
-  }catch(e){toast(e.message,true);}
-  finally{if(button)button.disabled=false;}
+  }catch(e){
+    toast(e.message,true);
+    if(e.code==='NETWORK_ERROR'||e.code==='INTERNAL'){
+      toast('Hasil permintaan belum dapat dipastikan. Periksa riwayat sebelum mengirim ulang.',true);
+    } else {
+      // Explicit application errors are not ambiguous. A later valid request
+      // with the same content may use a fresh ID.
+      pendingSupportRequests.delete(key);
+    }
+  }finally{
+    if(button)button.disabled=false;
+  }
 }
 async function submitTicketCreate(form){
   const data=new FormData(form),payload={
