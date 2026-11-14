@@ -1289,10 +1289,82 @@ async function lmsButtonAction(button){
   });
 }
 
+async function submitCatalogForm(form){
+  if(!isAdmin()||!catalogWriteEnabled())return toast('Perubahan katalog belum diaktifkan.',true);
+  const current=adminCatalogItems().find(x=>x.product_id===form.dataset.productId)||null;
+  if(form.dataset.productId&&!current)return toast('Produk telah berubah. Muat ulang katalog.',true);
+  const fd=new FormData(form);
+  const payload={
+    nama:String(fd.get('nama')||''),
+    deskripsi:String(fd.get('deskripsi')||''),
+    tipe:current?current.tipe:String(fd.get('tipe')||''),
+    harga:Number(fd.get('harga')),
+    kredit_diberikan:Number(fd.get('kredit_diberikan')),
+    durasi_hari:Number(fd.get('durasi_hari')),
+    urut:Number(fd.get('urut')),
+    perlu_approval_admin:fd.has('perlu_approval_admin'),
+    bisa_komisi:fd.has('bisa_komisi')
+  };
+  if(current){payload.product_id=current.product_id;payload.revision=current.revision;}
+  const requestId=current?createRequestId():(state.catalogRequestId||createRequestId());
+  if(!current)state.catalogRequestId=requestId;
+  const btn=form.querySelector('[type=submit]');
+  btn.disabled=true;
+  let saved;
+  try{
+    saved=await api(current?'adminUpdateCatalogItem':'adminCreateCatalogItem',
+      payload,state.token,{write:true,requestId});
+    if(!saved?.item?.product_id)throw new ApiError('Respons katalog tidak lengkap.');
+  }catch(error){
+    btn.disabled=false;toast(error.message,true);return;
+  }
+  // A committed write must not be reported as failed just because refresh failed.
+  state.catalogRequestId=null;
+  state.catalogEditId=saved.item.product_id;
+  toast(current?'Penawaran diperbarui.':'Produk dibuat nonaktif. Periksa sebelum mengaktifkan.');
+  try{
+    state.adminCatalog=await api('adminListCatalog',{},state.token);
+    const catalog=await api('getKatalog');
+    state.catalog=catalog||[];
+  }catch(error){toast('Perubahan tersimpan, tetapi data terbaru belum termuat. Muat ulang halaman.',true);}
+  render();
+}
+async function toggleCatalogItem(id){
+  if(!isAdmin()||!catalogWriteEnabled())return;
+  const current=adminCatalogItems().find(x=>x.product_id===id);
+  if(!current)return toast('Produk tidak ditemukan.',true);
+  const next=!current.aktif;
+  if(typeof window.confirm==='function'&&!window.confirm(
+    (next?'Tampilkan ':'Sembunyikan ')+current.nama+' dalam katalog publik?'))return;
+  try{
+    const saved=await api('adminSetCatalogActive',{
+      product_id:current.product_id,aktif:next,revision:current.revision
+    },state.token,{write:true});
+    if(!saved?.item)throw new ApiError('Respons katalog tidak lengkap.');
+    toast(next?'Produk ditampilkan di katalog.':'Produk disembunyikan dari katalog.');
+    try{
+      state.adminCatalog=await api('adminListCatalog',{},state.token);
+      state.catalog=await api('getKatalog');
+    }catch(error){toast('Status tersimpan, tetapi pembaruan layar gagal. Muat ulang halaman.',true);}
+    render();
+  }catch(error){toast(error.message,true);}
+}
 document.addEventListener('click',async(e)=>{
-  const target=e.target.closest('[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action]');
+  const target=e.target.closest('[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action]');
   if(!target)return;
-  if(target.hasAttribute('data-lms-action'))await lmsButtonAction(target);
+  if(target.hasAttribute('data-catalog-edit')){
+    if(!isAdmin())return;
+    state.catalogEditId=target.dataset.catalogEdit;
+    state.catalogRequestId=null;
+    render();
+    document.getElementById('admin-catalog-form')?.scrollIntoView({block:'nearest'});
+  }
+  else if(target.hasAttribute('data-catalog-active'))await toggleCatalogItem(target.dataset.catalogActive);
+  else if(target.dataset.action==='catalog-new'){
+    if(!isAdmin())return;
+    state.catalogEditId='';state.catalogRequestId=null;render();
+  }
+  else if(target.hasAttribute('data-lms-action'))await lmsButtonAction(target);
   else if(target.hasAttribute('data-catalog-go')){
     state.catalogFilter=target.dataset.catalogGo;
     go('katalog');
@@ -1351,10 +1423,11 @@ async function submitProfileForm(form){
 }
 document.addEventListener('submit',(e)=>{
   const id=e.target.id;
-  if(!['profile-form','auth-form','support-create-form','ticket-reply-form',
+  if(!['admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
     'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form',
     'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form'].includes(id))return;
   e.preventDefault();
+  if(id==='admin-catalog-form')submitCatalogForm(e.target);
   if(id==='profile-form')submitProfileForm(e.target);
   if(id==='auth-form')processLogin(e.target,e.target.dataset.mode==='register');
   if(id==='support-create-form')submitTicketCreate(e.target);
