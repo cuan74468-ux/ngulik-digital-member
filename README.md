@@ -1,22 +1,28 @@
 # Ngulik Digital Member
 
 Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliate.
-**Arsitektur:** GitHub Pages (HTML/CSS/ES Modules tanpa build) → Google Apps Script Web App → Google Sheets (14 tab sumber, 17 tab pada staging support).
+**Arsitektur:** GitHub Pages (HTML/CSS/ES Modules tanpa build) → Google Apps Script Web App → Google Sheets (14 tab sumber; 24 tab pada staging privat setelah penambahan tabel support dan LMS).
 
 ## Status aktual — 14 November 2026
 
 **Status: DALAM PENGEMBANGAN — belum siap dipakai publik atau transaksi nyata.**
 
-**Checkpoint QA terbaru:** GitHub Actions run #152 **133/133 tes Node.js lulus**. Chrome headless menguji beranda, dashboard mobile 390×844 (navigasi terlihat, tidak overflow), dan katalog desktop 1280×800 (checkout terkunci, tidak overflow). Bukti: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43545610897
+**Checkpoint QA terbaru:** GitHub Actions run #193 **178/178 tes Node.js lulus**. Chrome headless menguji dashboard, kelas dan layar selesai, formulir bantuan pada ukuran 375–390 px, serta memastikan styling member violet aktif tanpa mengubah panel admin. Bukti: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43550180541
 
 **Bukti dan rinciannya:** [QA Evidence & Staging Checkpoint](docs/QA_EVIDENCE_2026-11-14.md).
+
+**Mobile member V2 sudah diterapkan di source:** desain putih–ungu native-inspired (berdasarkan referensi pengguna), fokus belajar dengan ring progres, kartu kursus, navigasi bawah, detail pelajaran, layar sukses, serta dukungan dan profil yang konsisten. Aturan berada di `assets/member-mobile.css`, terpisah dari tampilan admin. Lihat [panduan desain dan handoff mobile](docs/MOBILE_MEMBER_DESIGN_2026-11-14.md).
+
+**LMS V1 dalam tahap staging:** `apps-script/LMS.gs` menangani kursus, pelajaran, published snapshot, enrollment, progres, workspace otomatis, revisi, dan antrian AI draft. Staging privat memiliki **24 tab** (7 LMS baru di luar 17 tab sebelumnya), namun **sinkronisasi header baru untuk versi progres pelajaran masih perlu diperiksa** sebelum integrasi GAS. `NGD_LMS_ENABLED` dan `config.lmsEnabled` tetap OFF; API key LLM, pembayaran, notifikasi WhatsApp/email, dan update produksi belum diaktifkan.
+
+
 
 **Audit lanjutan:** pengiriman ulang tiket kini mempertahankan `request_id` setelah kegagalan jaringan, dan backend mencegah laporan identik dalam 15 menit meski browser dimuat ulang. Pencarian admin membedakan status akun dengan status langganan; halaman rilis memiliki analisis dampak produk (jumlah pembeli aktif/berakhir/menunggu, serta bug terbuka) yang hanya dapat dibaca admin.
 
 **Member 360° & Support Ticketing telah dibangun dalam source:** pencarian member menurut nama/WA/produk, tiket bug/fitur/pertanyaan, penanganan status dan prioritas P0–P3, riwayat aktivitas, serta draft/publikasi changelog. Tiga tab support ditambahkan hanya ke staging privat (17/17 header sesuai). Semua penulisan support tetap **OFF** melalui `NGD_SUPPORT_ENABLED` dan `config.supportEnabled:false`. Lihat [handoff Member 360 & Support](docs/MEMBER360_SUPPORT_HANDOFF_2026-11-14.md).
 
 
-**Database staging privat sudah dibuat:** salinan Google Sheet memiliki ID berbeda dari sumber, 17/17 tab dan 187 header cocok dengan backend terbaru (14/14 tab sumber tetap utuh), data identitas/sesi/order/ledger/komisi/log dibersihkan, serta pendaftaran diatur `TERTUTUP`. URL staging sengaja tidak dipublikasikan dalam repository. Database sumber tidak diubah. Staging berupa **spreadsheet 17 tab**; backend GAS staging dan eksekusi integrasi belum terverifikasi.
+**Database staging privat:** salinan Google Sheet memiliki ID berbeda dari sumber, dimulai dengan 14 tab inti, bertambah 3 tab support, lalu 7 tab LMS (sekarang **24 tab**, data LMS belum diisi). Database sumber tetap 14 tab. Kontrak seluruh header telah diperiksa sebelum perubahan versi progres LMS yang paling baru; **audit ulang header** wajib sebelum uji Apps Script. Backend GAS staging dan pengujian integrasi belum terverifikasi.
 
 **Perbaikan P0 baru:** pengaturan komisi `0%` sekarang benar-benar menghasilkan nol komisi (tidak jatuh ke default `25%`). Nilai komisi divalidasi sebelum hak akses produk diberikan. Autentikasi/otorisasi kini punya tes tambahan untuk isolasi member/admin, akun ditangguhkan, dan data pesanan pribadi.
 
@@ -120,7 +126,7 @@ Workflow `validate.yml` juga menjalankan perintah itu pada push/PR, **tidak mela
 ## Pratinjau aman dan langkah sesudah checkpoint
 
 - Pratinjau beranda tamu: buka URL GitHub Pages **setelah hosting staging mendapat persetujuan**. Beranda member contoh: tambahkan `?preview=member` pada URL halaman. Mode ini **tidak pernah membuat sesi atau transaksi nyata**.
-- Jika hanya melihat source GitHub, `index.html` bukan preview aplikasi interaktif; modul ES memerlukan server HTTPS. GitHub Pages belum dinyalakan melalui pekerjaan ini.
+- Pratinjau GitHub Pages telah dipakai pengguna; publikasi perubahan terakhir mengikuti proses deployment GitHub Pages. Untuk melihat contoh desain baru: `?preview=member#belajar` dan `?preview=member#lms-complete`.
 - Jangan mengganti `Code.gs` di Google Apps Script yang saat ini terikat database aktif; backend masih terus dikembangkan.
 - Untuk QA sebelum rilis, buka [Release Gates & QA](docs/RELEASE_GATES_2026-11-14.md). Jangan menyalakan `NGD_MUTATIONS_ENABLED` tanpa pengujian staging dan persetujuan terpisah.
 
