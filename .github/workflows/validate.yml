@@ -20,6 +20,6 @@ jobs:
       - name: Node.js for tests only — no build
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
       - name: Verify pure backend rules and frontend smoke
-        run: node --test tests/backend-pure.test.cjs tests/backend-security.test.cjs tests/backend-config.test.cjs tests/backend-sheet-literals.test.cjs tests/backend-welcome-credit.test.cjs tests/backend-credit-idempotency.test.cjs tests/backend-entitlements.test.cjs tests/backend-finance-safety.test.cjs tests/backend-payment-policy.test.cjs tests/backend-affiliate-safety.test.cjs tests/backend-fulfillment.test.cjs tests/frontend-smoke.test.cjs tests/static-contract.test.cjs
+        run: node --test tests/*.test.cjs
