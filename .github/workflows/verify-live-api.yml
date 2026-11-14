@@ -1,0 +1,41 @@
+name: Read-only check of connected membership API
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-live-api.yml"
+      - "config.js"
+permissions:
+  contents: read
+jobs:
+  verify_api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify public GAS endpoint identity (GET only, zero data writes)
+        env:
+          NGD_GAS_URL: "https://script.google.com/macros/s/AKfycbyQlhsRDfoHLIHaalBsBos5jJhvPmG3J8B0Al9XrqvUwBQkcnr8uzYRlpcjGlgC_-Xr/exec"
+        run: |
+          set -euo pipefail
+          curl -fLSs --connect-timeout 8 --max-time 25 \
+            -H "Accept: application/json" \
+            --output /tmp/ngd-api-check.json "$NGD_GAS_URL"
+          python3 - <<'PY'
+          import json
+          with open('/tmp/ngd-api-check.json',encoding='utf-8') as f:
+              d=json.load(f)
+          if d.get('ok') is not True:
+              raise SystemExit('API_CHECK_FAIL: Web app did not return a successful Ngulik Digital response.')
+          info=d.get('data') or {}
+          if info.get('app')!='Ngulik Digital API':
+              raise SystemExit('API_CHECK_FAIL: Web app identity differs from Ngulik Digital API.')
+          for field in ('version','writes_enabled','payments_enabled'):
+              if field not in info:
+                  raise SystemExit('API_CHECK_FAIL: Missing response field '+field)
+          print('API_GET_OK: Ngulik Digital API identity confirmed.')
+          print('API_VERSION:', str(info['version'])[:45])
+          print('MUTATIONS_ENABLED:', bool(info['writes_enabled']))
+          print('PAYMENTS_ENABLED:', bool(info['payments_enabled']))
+          print('NOTE: GET proves identity only; it does NOT validate the database, login, CORS, or payment.')
+          PY
