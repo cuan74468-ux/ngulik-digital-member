@@ -12,17 +12,17 @@ test('one shared stylesheet is loaded last for guests members and admins',()=>{
   const mobile=html.indexOf('href="./assets/member-mobile.css"');
   const unified=html.indexOf('href="./assets/unified-theme.css');
   assert.ok(main>=0&&mobile>main&&unified>mobile);
-  assert.match(html,/name="theme-color" content="#cdeef9"/);
+  assert.match(html,/name="theme-color" content="#f2f4f8"/);
   assert.ok(css.includes(':root,\nbody,\nbody.member-experience{'));
   assert.ok(css.includes('@media(max-width:760px)'));
 });
 test('desktop and mobile share identical slate canvas and charcoal control tokens',()=>{
-  for(const token of ['--bg:#cdeef9','--ink:#0f2c45','--green:#0f2c45',
-    '--brand-blue:#2b86b3','--radius:18px']){
+  for(const token of ['--bg:#f2f4f8','--ink:#0e1320','--green:#0e1320',
+    '--brand-blue:#4361ee','--radius:24px']){
     assert.ok(css.includes(token),token);
   }
-  assert.match(css,/\.sidebar \.nav-item\[aria-current=page\]\{\s*background:#0f2c45/);
-  assert.match(css,/\.mobile-nav \.nav-item\[aria-current=page\][\s\S]*?background:#0f2c45/);
+  assert.match(css,/\.sidebar \.nav-item\[aria-current=page\]\{\s*background:#0e1320/);
+  assert.match(css,/\.mobile-nav \.nav-item\[aria-current=page\][\s\S]*?background:#0e1320/);
   assert.ok(css.includes('body.member-experience .surface'));
   assert.ok(css.includes('body.member-experience .mobile-nav'));
 });
