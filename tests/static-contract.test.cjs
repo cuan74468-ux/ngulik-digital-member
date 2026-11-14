@@ -11,7 +11,7 @@ test('HTML entry uses versioned local files and language metadata',()=>{
   assert.match(html,/<html lang="id">/);
   assert.match(html,/name="viewport"/);
   assert.match(html,/src="\.\/config\.js"/);
-  assert.match(html,/type="module" src="\.\/js\/app\.js\?v=20261114-real2"/);
+  assert.match(html,/type="module" src="\.\/js\/app\.js\?v=20261114-native2"/);
   assert.match(html,/href="\.\/assets\/app\.css"/);
   assert.match(html,/Content-Security-Policy/);
   for(const file of ['config.js','js/app.js','js/api.js','assets/app.css','assets/favicon.svg']){
@@ -20,8 +20,8 @@ test('HTML entry uses versioned local files and language metadata',()=>{
 });
 test('do not embed secrets or open financial features in config',()=>{
   const config=read('config.js');
-  assert.match(config,/apiUrl:\s*'https:\/\/script\.google\.com\/macros\/s\//);
-  assert.match(config,/memberWritesEnabled:\s*false/);
+  assert.match(config,/apiUrl:\s*''/);
+  assert.match(config,/demoMode:\s*true/);
   assert.match(config,/paymentsEnabled:\s*false/);
   assert.doesNotMatch(config,/sk-[A-Za-z0-9]{20,}/);
   assert.doesNotMatch(config,/BEGIN PRIVATE KEY/);

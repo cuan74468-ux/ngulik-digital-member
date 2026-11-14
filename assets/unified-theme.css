@@ -436,3 +436,38 @@ body:not(#ngd) .eyebrow,body:not(#ngd) .card-kicker,body:not(#ngd) .hub-kicker,b
 /* Service request module layout */
 .service-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 @media(max-width:760px){.service-columns{grid-template-columns:1fr}}
+
+/* ===== Native-app screens: shared across every page (text-light, tap-first) ===== */
+body:not(#ngd) .main-content{padding-top:12px}
+body:not(#ngd) .main-content :is(.eyebrow,.lead,.card-desc,.card-kicker,.form-hint,.catalog-result-count,.member-success-lead,
+  .catalog-intro,.learn-guest-intro>p,.hub-section-intro>div>p,.catalog-admin-intro>div>p,.admin-operations-intro>div>p,
+  .lms-heading>p,.service-heading>p,.section-head>p){display:none}
+body:not(#ngd) .main-content :is(h1,h2){font-size:1.35rem;line-height:1.2;letter-spacing:-.01em;margin:0 0 4px}
+body:not(#ngd) .main-content h3{font-size:1rem;line-height:1.25}
+body:not(#ngd) .main-content .section-gap{margin-top:16px}
+/* cards -> native list surfaces */
+body:not(#ngd) .main-content :is(.surface,.catalog-card,.offer-card,.metric-card,.lms-course-tile,.lms-lesson-card,.quick-action,.empty){border-radius:22px;border:1px solid rgba(79,70,229,.10);box-shadow:0 4px 14px rgba(55,48,163,.06)}
+body:not(#ngd) .main-content :is(.two-col,.metric-grid,.service-columns,.catalog-grid,.lms-course-grid){display:grid;gap:12px}
+body:not(#ngd) .main-content .two-col{grid-template-columns:1fr}
+body:not(#ngd) .main-content .metric-grid{grid-template-columns:repeat(3,1fr)}
+body:not(#ngd) .main-content .metric-card{padding:14px 10px;text-align:center;align-items:center}
+/* tap feedback + comfortable targets */
+body:not(#ngd) .main-content :is(button,.btn,.chip[role=button],.quick-action){min-height:44px;-webkit-tap-highlight-color:transparent;transition:transform .12s}
+body:not(#ngd) .main-content :is(button,.btn):active{transform:scale(.97)}
+body:not(#ngd) .main-content .btn{border-radius:16px}
+body:not(#ngd) .main-content :is(input,select,textarea).input{border-radius:16px;min-height:50px;font-size:1rem}
+/* empty / login-needed states become compact icon cards */
+body:not(#ngd) .main-content .empty{padding:28px 18px;text-align:center}
+body:not(#ngd) .main-content .empty p{display:none}
+body:not(#ngd) .main-content .empty .symbol{font-size:2rem;color:#4f46e5}
+/* filter chips scroll like native segmented rail */
+body:not(#ngd) .main-content :is(.catalog-filters,.chip-row){display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0 6px}
+body:not(#ngd) .main-content :is(.catalog-filters,.chip-row)::-webkit-scrollbar{display:none}
+/* learning guest: path list reads as app rows */
+body:not(#ngd) .main-content .learn-guest-intro{margin-bottom:8px}
+/* member home: compact welcome */
+body:not(#ngd) .member-welcome{margin-bottom:12px}
+body:not(#ngd) .member-focus-content>p{display:none}
+@media (min-width:821px){body:not(#ngd) .main-content{max-width:760px;margin-inline:auto}body:not(#ngd) .main-content .metric-grid{grid-template-columns:repeat(3,1fr)}}
+body:not(#ngd) .main-content :is(.learn-guest-intro p,.learn-guest-note,.learn-path-item p,article>p:not(.product-meta):not(.small):not(.tiny)){display:none}
+body:not(#ngd) .main-content .learn-path-item{align-items:center}
