@@ -1,7 +1,10 @@
 # Ngulik Digital Member
 
-Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliate.
-**Arsitektur:** GitHub Pages (HTML/CSS/ES Modules tanpa build) → Google Apps Script Web App → Google Sheets (14 tab sumber; 25 tab staging privat: 14 inti + 3 support + 7 LMS + 1 notifikasi).
+**Produk utama: portal membership komersial Linggau AI Studio & Ngulik Digital**, untuk monetisasi kelas, POS/3-in-1, eBook, kredit AI, jasa video, dan proyek website/aplikasi custom. Mode demo hanya alat QA internal, bukan target layanan.
+**Arsitektur saat ini:** GitHub Pages statis (sementara) → Google Apps Script Web App (belum diverifikasi aktif) → Google Sheets (**14 tab database utama, 26 tab staging**). Target hosting komersial private Cloudflare Pages sesuai Master Blueprint Drive.
+
+**Checkpoint rencana produk dan go-live:** [Membership Komersial — Release 2026-11-14](docs/COMMERCIAL_MEMBERSHIP_RELEASE_2026-11-14.md). Source untuk intake brief layanan dan penawaran admin sudah dibuat, tetapi backend live, Mayar, dan pembayaran belum terverifikasi; status transaksi tetap NO-GO.
+
 
 ## Penguatan autentikasi — 14 November 2026
 
