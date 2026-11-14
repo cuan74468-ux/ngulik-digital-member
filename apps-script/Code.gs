@@ -40,7 +40,8 @@ const NGD = Object.freeze({
     lms_workspaces: 'workspace_id,course_id,name,workspace_status,created_at,updated_at,created_by,auto_created,request_id',
     lms_ai_jobs: 'job_id,workspace_id,course_id,lesson_id,task_type,brief,prompt,result_draft,status,created_at,updated_at,requested_by,reviewed_by,request_id',
     lms_revisions: 'revision_id,entity,entity_id,version,title,body,media_url,metadata_json,published_at,actor_id,request_id',
-    notifications: 'notification_id,member_id,source,source_id,jenis,judul,pesan,status,created_at,read_at,request_id'
+    notifications: 'notification_id,member_id,source,source_id,jenis,judul,pesan,status,created_at,read_at,request_id',
+    service_requests: 'service_id,member_id,product_id,jenis_layanan,judul,brief,referensi_url,anggaran,status,penawaran_harga,penawaran_pesan,catatan_internal,created_at,updated_at,closed_at,request_id'
   }
 });
 
@@ -1311,6 +1312,8 @@ function apiRouter_(action,token,p,requestId) {
     case 'getMe':return publicMember_(m);
     case 'updateMyProfile':return updateMyProfile_(m,p);
     case 'getMyNotifications':return notificationInbox_(m);
+    case 'getMyServiceRequests':return serviceListMine_(m);
+    case 'submitServiceBrief':return serviceSubmit_(m,p,requestId);
     case 'markNotificationRead':return notificationMarkRead_(m,p);
     case 'getLMSCatalog':return lmsPublishedCatalog_(m);
     case 'getLMSCourse':return lmsMemberDetail_(m,p);
@@ -1347,6 +1350,8 @@ function apiRouter_(action,token,p,requestId) {
   admin=admin_(token);
   switch(action){
     case 'adminListCatalog':return catalogAdminList_();
+    case 'adminListServiceRequests':return serviceListAdmin_(p);
+    case 'adminUpdateServiceQuote':return serviceQuote_(admin,p);
     case 'adminCreateCatalogItem':return catalogCreate_(admin,p,requestId);
     case 'adminUpdateCatalogItem':return catalogUpdate_(admin,p);
     case 'adminSetCatalogActive':return catalogSetActive_(admin,p);
@@ -1484,6 +1489,9 @@ function requireActionFeatureEnabled_(action) {
   if(['adminCreateCatalogItem','adminUpdateCatalogItem','adminSetCatalogActive'].indexOf(action)>=0)
     require_(settings.getProperty('NGD_CATALOG_ENABLED')==='true',
       'MAINTENANCE','Perubahan katalog masih dalam tahap staging.');
+  if(['submitServiceBrief','adminUpdateServiceQuote'].indexOf(action)>=0)
+    require_(settings.getProperty('NGD_SERVICE_ENABLED')==='true',
+      'MAINTENANCE','Pemesanan jasa belum diaktifkan pada backend ini.');
   if(action==='markNotificationRead')
     require_(settings.getProperty('NGD_NOTIFICATIONS_ENABLED')==='true',
       'MAINTENANCE','Pusat notifikasi belum diaktifkan.');
@@ -1505,7 +1513,8 @@ function requirePublicTrackingEnabled_() {
 function apiReadActions_() {
   return ['getPublicInfo','getMe','getBeranda','getModulBelajar','getKatalog',
     'getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase',
-    'getAffiliateDashboard','getMyNotifications','adminGetDashboard','adminListOrders','adminListMembers',
+    'getAffiliateDashboard','getMyNotifications','getMyServiceRequests',
+    'adminListServiceRequests','adminGetDashboard','adminListOrders','adminListMembers',
     'adminListWaitingList','adminListCommissions','adminGetSettings','adminListCatalog',
     'adminGetReconciliation',
     'getMyProducts','getMyTickets','getTicket','getMyProductReleases',
