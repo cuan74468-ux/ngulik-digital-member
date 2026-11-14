@@ -62,3 +62,19 @@ test('credit postings reject fractional and zero amounts',()=>{
   assert.throws(()=>h.grant('M-1',0,'REF-2','ADJUST'),/Jumlah kredit/);
   assert.equal(h.ledger.length,0);
 });
+
+test('negative admin debit replay succeeds after balance has fallen',()=>{
+  const h=fixture();
+  h.grant('M-1',50,'ORDER-1','TOPUP');
+  h.grant('M-1',-40,'ADMIN_ADJUST:REQ-000000000000001','ADJUST');
+  const r=h.grant('M-1',-40,'ADMIN_ADJUST:REQ-000000000000001','ADJUST');
+  assert.equal(r.alreadyApplied,true);
+  assert.equal(r.balance,10);
+  assert.equal(h.ledger.length,2);
+});
+test('a new debit larger than available balance is rejected',()=>{
+  const h=fixture();
+  h.grant('M-1',10,'ORDER-1','TOPUP');
+  assert.throws(()=>h.grant('M-1',-20,'ADMIN_ADJUST:REQ-000000000000002','ADJUST'),/saldo negatif/);
+  assert.equal(h.ledger.length,1);
+});
