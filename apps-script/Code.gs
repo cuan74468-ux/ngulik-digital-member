@@ -1049,9 +1049,9 @@ function installTriggers() {
 // Tidak menjalankan ulang pembayaran, fulfillment, atau mutasi ledger.
 // Engine rekonsiliasi murni. Bisa diuji menggunakan data simulasi
 // tanpa SpreadsheetApp, tanpa akses akun, dan tanpa mutasi database.
-function financeFindings_(orders,ledger,commissions,products) {
-  var findings=[],types={};
-  products.forEach(function(p){types[String(p.product_id)]=p.tipe;});
+function financeFindings_(orders,ledger,commissions,products,policy) {
+  var findings=[],types={},catalog={};
+  products.forEach(function(p){types[String(p.product_id)]=p.tipe;catalog[String(p.product_id)]=p;});
   orders.forEach(function(o){
     var reasons=[],entries=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='TOPUP';});
     var reversals=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='ADJUST_REFUND';});
@@ -1071,8 +1071,19 @@ function financeFindings_(orders,ledger,commissions,products) {
       reasons.push('TOPUP_REFUND_ADJUST_COUNT_'+reversals.length);
     if(isTopup&&o.status!=='REFUNDED'&&reversals.length>0)
       reasons.push('REFUND_ADJUST_WITHOUT_REFUNDED_STATUS');
-    if(commissions.filter(function(k){return k.order_id===o.order_id;}).length>1)
-      reasons.push('COMMISSION_DUPLICATE');
+    var orderCommissions=commissions.filter(function(k){return k.order_id===o.order_id;});
+    if(orderCommissions.length>1)reasons.push('COMMISSION_DUPLICATE');
+    // Only the admin's configured audit checks commission expectations.
+    // Previous commissions (including reversed) consume the once-only grant.
+    if(policy&&policy.komisi_persen>0&&['PAID','FULFILLED'].indexOf(o.status)>=0
+        &&String(o.ref_member_id||'')!==''
+        &&catalog[String(o.product_id)]&&catalog[String(o.product_id)].bisa_komisi===true
+        &&orderCommissions.length===0){
+      var prior=commissions.some(function(k){
+        return k.referred_member_id===o.member_id&&k.order_id!==o.order_id;
+      });
+      if(!policy.komisi_hanya_order_pertama||!prior)reasons.push('COMMISSION_MISSING');
+    }
     if(o.status==='REFUNDED'&&commissions.some(function(k){
       return k.order_id===o.order_id&&k.status==='PAID';
     }))reasons.push('PAID_COMMISSION_ON_REFUNDED_ORDER');
@@ -1082,8 +1093,11 @@ function financeFindings_(orders,ledger,commissions,products) {
 }
 function adminReconciliation_(admin) {
   require_(admin&&admin.role==='ADMIN','FORBIDDEN','Akses ditolak.');
+  var s=settings_();
   return financeFindings_(readAll_('orders'),readAll_('credits_ledger'),
-    readAll_('affiliate_commissions'),readAll_('katalog_produk'));
+    readAll_('affiliate_commissions'),readAll_('katalog_produk'),
+    {komisi_hanya_order_pertama:s.komisi_hanya_order_pertama===true,
+     komisi_persen:Number(s.komisi_persen||0)});
 }
 function apiRouter_(action,token,p,requestId) {
   var m=null, admin=null;
