@@ -206,6 +206,7 @@ const state={
   lmsSelectedLessonId:null,lmsJobs:[],lmsSelectedAIJobId:null,
   lmsCompletion:null,notifications:{enabled:false,items:[],unread:0},catalogFilter:'semua',
   adminCatalog:[],catalogEditId:'',catalogRequestId:null,
+  adminRuntime:null,adminRuntimeError:'',
   services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
@@ -509,6 +510,32 @@ function viewCheckout(){
     '<button class="btn btn-primary btn-wide" data-action="confirm-payment" '+(!paymentEnabled()?'disabled':'')+'>Saya sudah membayar</button></article>'+
     '<article class="surface"><h3>Instruksi pembayaran</h3><p class="card-desc">Pastikan nama merchant QRIS sesuai informasi resmi sebelum membayar.</p>'+ (paymentEnabled()&&qrisUrl()?'<div style="text-align:center;margin-top:20px"><img src="'+esc(qrisUrl())+'" alt="QRIS resmi '+esc(config.qrisMerchant)+'" width="220" height="220" style="max-width:100%;height:auto"><p class="small muted">Merchant: '+esc(config.qrisMerchant)+'</p></div>':'<div class="empty" style="margin-top:20px"><span class="symbol">▦</span><p>QRIS resmi belum dipasang atau disetujui.</p></div>')+'</article></div>';
 }
+function viewAdminRuntime(){
+  const data=state.adminRuntime, schema=data?.schema;
+  const flags=data?.feature_flags;
+  const names=[
+    ['mutations','Perubahan data'],['registration','Pendaftaran'],
+    ['finance','Keuangan'],['catalog','Katalog'],['services','Pemesanan jasa'],
+    ['support','Bantuan'],['lms','Studio LMS'],['notifications','Notifikasi']
+  ];
+  return '<section class="admin-runtime section-gap" aria-label="Kondisi sistem backend">'+
+    '<div class="section-head"><div><p class="eyebrow">STATUS TEKNIS / SERVER</p>'+
+    '<h2>Kesiapan operasional backend</h2>'+
+    '<p>Indikator berasal dari Apps Script dan tidak menggantikan audit pembayaran atau persetujuan go-live.</p></div></div>'+
+    (schema?'<div class="admin-runtime-summary"><div><small>Skema data terverifikasi</small>'+
+      '<strong>'+esc(schema.ready)+' / '+esc(schema.expected)+' tab</strong></div>'+
+      '<span class="chip '+(schema.ready===schema.expected?'green':'orange')+'">'+
+      (schema.ready===schema.expected?'STRUKTUR SESUAI':'PERLU PENYESUAIAN')+'</span></div>'+
+      ((schema.missing?.length||schema.mismatched?.length)?
+        '<p class="admin-runtime-note">Tab tidak tersedia: '+esc((schema.missing||[]).join(', ')||'—')+
+        '. Header berbeda: '+esc((schema.mismatched||[]).join(', ')||'—')+'.</p>':'')+
+      '<div class="admin-runtime-flags">'+names.map(([key,label])=>
+        '<div class="admin-runtime-flag"><span>'+esc(label)+'</span>'+
+        '<strong>'+((flags||{})[key]===true?'Aktif':'Nonaktif')+'</strong></div>').join('')+'</div>':
+      '<div class="surface"><p class="card-desc">'+
+      esc(state.adminRuntimeError||'Pemeriksaan backend belum dimuat. Data status belum dapat dinyatakan siap.')+
+      '</p></div>')+'</section>';
+}
 function viewAdmin(){
   if(!isAdmin())return needLogin('panel admin');
   const details=state.adminSummary?.ringkasan||[];
@@ -523,6 +550,7 @@ function viewAdmin(){
       ['clipboard','Tiket support','Kelola bug, pertanyaan, dan permintaan fitur.','dukungan'],
       ['grid','Product releases','Catat versi, perbaikan, dan pembaruan produk.','rilis']
     ].map(x=>'<article class="surface admin-module-card"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" data-route="'+x[3]+'">Buka modul '+icon('arrow')+'</button></article>').join('')+'</div>'+
+    viewAdminRuntime()+
     '<section class="section-gap">'+title('Ringkasan data','METRIK SISTEM','Nilai berasal dari rumus Google Sheets.')+
     (details.length?'<div class="grid-3">'+details.slice(0,12).map(x=>'<div class="stat"><div class="stat-value">'+esc(x.nilai)+'</div><div class="stat-label">'+esc(x.metrik)+'</div></div>').join('')+'</div>':
     empty('Ringkasan belum dimuat','Periksa koneksi dan hak akses admin.'))+'</section>';
@@ -939,10 +967,20 @@ async function loadRoute(route){
       }else state.orders=await api('listMyOrders',{},token);
     }
     if(route==='admin'&&isAdmin()){
-      const [dashboard,overview]=await Promise.all([
-        api('adminGetDashboard',{},token),api('adminGetSupportOverview',{},token)]);
-      state.adminSummary=dashboard;
-      state.supportOverview=overview;
+      // These three independent views should never hide each other's data.
+      const [dashboard,overview,runtime]=await Promise.allSettled([
+        api('adminGetDashboard',{},token),api('adminGetSupportOverview',{},token),
+        api('adminGetRuntimeStatus',{},token)]);
+      if(dashboard.status==='fulfilled')state.adminSummary=dashboard.value;
+      if(overview.status==='fulfilled')state.supportOverview=overview.value;
+      if(runtime.status==='fulfilled'){
+        state.adminRuntime=runtime.value;state.adminRuntimeError='';
+      }else{
+        state.adminRuntime=null;
+        state.adminRuntimeError='Status backend tidak tersedia pada deployment Apps Script yang sedang terhubung.';
+      }
+      if(dashboard.status==='rejected'&&overview.status==='rejected')
+        throw dashboard.reason;
     }
     if(route==='member'&&isAdmin())state.members=await api('adminListMembers',{},token);
     if(route==='antrean'&&isAdmin())state.waitlist=await api('adminListWaitingList',{},token);
@@ -1564,7 +1602,8 @@ by('mobile-back').addEventListener('click',()=>{
   const back={
     'lms-course':'belajar','lms-complete':'lms-course',
     tiket:'dukungan',checkout:'katalog',
-    'lms-editor':'lms','lms-lesson':'lms-editor','lms-ai':'lms-editor'
+    'lms-editor':'lms','lms-lesson':'lms-editor','lms-ai':'lms-editor',
+    member360:'member'
   };
   go(back[state.route]||'beranda');
 });
