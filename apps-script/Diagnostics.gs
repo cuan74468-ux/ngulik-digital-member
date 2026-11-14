@@ -3,7 +3,13 @@
  * Read-only: tidak menulis ke Sheets, membuat sesi, atau mengubah transaksi.
  * Jalankan diagnosticApiPublic untuk menguji API.
  */
-const DIAG_DB_ID = '19lJS-Re7TLfINjoo-wKoDkG_ikeEWNgGe9yf5Rywvm8';
+// Diagnostics must use an explicitly configured target, never a committed DB ID.
+// A bound spreadsheet fallback is intentionally forbidden for diagnostic QA.
+function diagnosticDb_() {
+  var id = String(PropertiesService.getScriptProperties().getProperty('NGD_DB_ID') || '').trim();
+  if (!id) throw new Error('DIAGNOSTIC_DB_NOT_CONFIGURED: atur NGD_DB_ID pada Script Properties.');
+  return SpreadsheetApp.openById(id);
+}
 
 function diagnosticPing() {
   console.log('PING_OK');
@@ -12,7 +18,7 @@ function diagnosticPing() {
 
 function diagnosticDatabase() {
   var started = Date.now();
-  var ss = SpreadsheetApp.openById(DIAG_DB_ID);
+  var ss = diagnosticDb_();
   console.log('DB_OK | Nama: ' + ss.getName() +
     ' | Tab: ' + ss.getSheets().length +
     ' | Durasi: ' + (Date.now() - started) + ' ms');
@@ -21,17 +27,16 @@ function diagnosticDatabase() {
 
 function diagnosticSchema() {
   var started = Date.now();
-  var names = [
-    'members','katalog_produk','etalase_affiliate_luar','orders',
-    'credits_ledger','affiliate_commissions','audit_logs',
-    'pengaturan_sistem','sessions','klik_log','ai_tools',
-    'modul_belajar','progress_member','ringkasan'
-  ];
-  var ss = SpreadsheetApp.openById(DIAG_DB_ID);
+  var names = Object.keys(NGD.HEADERS);
+  var ss = diagnosticDb_();
   names.forEach(function(name) {
     var sh = ss.getSheetByName(name);
     if (!sh) throw new Error('MISSING_TAB: ' + name);
-    var headers = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0];
+    var headers = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(String);
+    var expected = NGD.HEADERS[name].split(',');
+    if (headers.join('|') !== expected.join('|')) {
+      throw new Error('HEADER_MISMATCH: ' + name);
+    }
     console.log('OK: ' + name + ' | ' + headers.length + ' kolom');
   });
   console.log('SCHEMA_OK | Tab: ' + names.length +
