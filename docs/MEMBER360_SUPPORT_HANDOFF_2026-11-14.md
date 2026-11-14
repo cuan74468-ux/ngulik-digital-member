@@ -98,7 +98,7 @@ Mode pratinjau lokal hanya menampilkan data contoh, bukan akun atau transaksi ny
 - \`?preview=admin#rilis\` — formulir draft rilis (disabled).
 
 GitHub Actions Node.js menguji aturan API/otorisasi, idempotensi, pendaftaran tiket, pemulihan penulisan, anti-spam, status dan prioritas, pembeli rilis, dan HTML escaping. Chrome headless memeriksa render mobile support dan desktop Member 360° tanpa overflow. Bukti terakhir yang diverifikasi saat penyusunan dokumen:
-[run #131 — 115/115 PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43543129765).
+[run #134 — 115/115 PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43543592551).
 
 Tes tersebut menggunakan database tiruan dan pratinjau lokal; **belum ada tes end-to-end pada GAS staging**.
 
