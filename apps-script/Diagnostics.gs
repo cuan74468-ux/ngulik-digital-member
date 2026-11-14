@@ -34,8 +34,18 @@ function diagnosticSchema() {
     if (!sh) throw new Error('MISSING_TAB: ' + name);
     var headers = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(String);
     var expected = NGD.HEADERS[name].split(',');
-    if (headers.join('|') !== expected.join('|')) {
-      throw new Error('HEADER_MISMATCH: ' + name);
+    // Required columns are mapped by name; additive production columns
+    // (e.g. WA verification/payment gateway metadata) are compatible.
+    var absent=expected.filter(function(h){return headers.indexOf(h)<0;});
+    var seen={},duplicates=[];
+    headers.forEach(function(h){
+      if(!h)return;
+      if(seen[h])duplicates.push(h);
+      else seen[h]=true;
+    });
+    if(absent.length||duplicates.length){
+      throw new Error('HEADER_MISMATCH: '+name+
+        ' missing='+absent.join(',')+' duplicates='+duplicates.join(','));
     }
     console.log('OK: ' + name + ' | ' + headers.length + ' kolom');
   });
@@ -50,8 +60,16 @@ function diagnosticBackend() {
   Object.keys(NGD.HEADERS).forEach(function(name) {
     var expected = NGD.HEADERS[name].split(',');
     var actual = tbl_(name).headers;
-    if (expected.join('|') !== actual.join('|')) {
-      throw new Error('MISMATCH: ' + name);
+    var absent=expected.filter(function(h){return actual.indexOf(h)<0;});
+    var seen={},duplicates=[];
+    actual.forEach(function(h){
+      if(!h)return;
+      if(seen[h])duplicates.push(h);
+      else seen[h]=true;
+    });
+    if(absent.length||duplicates.length){
+      throw new Error('MISMATCH: '+name+
+        ' missing='+absent.join(',')+' duplicates='+duplicates.join(','));
     }
     console.log('OK: ' + name);
   });
