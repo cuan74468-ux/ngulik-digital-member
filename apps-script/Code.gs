@@ -713,6 +713,9 @@ function newOrder_(m,p,requestId) {
     require_(m.role==='MEMBER','FORBIDDEN','Hanya member dapat membeli.');
     var product=byId_('katalog_produk','product_id',String(p.product_id||''));
     require_(product&&product.aktif===true,'NOT_FOUND','Produk tidak tersedia.');
+    if(product.tipe==='LISENSI_SEKALI')
+      require_(['AKTIF','DIAJUKAN'].indexOf(m.status_pos)<0,
+        'CONFLICT','Lisensi POS sudah aktif atau sedang menunggu aktivasi.');
     var retry=byId_('orders','request_id',requestId);
     if(retry){
       require_(retry.member_id===m.member_id&&retry.product_id===product.product_id,
@@ -778,6 +781,9 @@ function transitionOrder_(m,id,type,p) {
       require_(linkedProduct&&linkedMember,'CONFLICT','Produk atau member tidak ditemukan.');
       require_(['TOPUP_KREDIT','LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H'].indexOf(linkedProduct.tipe)>=0,
         'CONFLICT','Tipe produk belum mendukung fulfillment.');
+      if(linkedProduct.tipe==='LISENSI_SEKALI')
+        require_(['AKTIF','DIAJUKAN'].indexOf(linkedMember.status_pos)<0,
+          'RECONCILIATION_REQUIRED','Lisensi POS sudah dipenuhi atau menunggu aktivasi lain.');
       if(linkedProduct.tipe==='TOPUP_KREDIT')
         require_(Number.isInteger(Number(linkedProduct.kredit_diberikan))&&Number(linkedProduct.kredit_diberikan)>0,
           'CONFLICT','Jumlah kredit produk belum valid.');
@@ -830,7 +836,11 @@ function onPaid_(o,actor) {
     end=new Date(Math.max(Date.now(),old)+days*86400000);
     updateRow_('members',member._row,{akses_3in1_sampai:end,sumber_akses_3in1:'BERBAYAR'});fulfilled=true;
   }else if(product.tipe==='LISENSI_SEKALI')updateRow_('members',member._row,{status_pos:'DIAJUKAN'});
-  else if(product.tipe==='SEAT_30H')updateRow_('members',member._row,{status_canva:'DIAJUKAN'});
+  else if(product.tipe==='SEAT_30H'){
+    // A renewal must not interrupt an already active Canva seat.
+    if(['AKTIF_BULAN_1','AKTIF_BULAN_2'].indexOf(member.status_canva)<0)
+      updateRow_('members',member._row,{status_canva:'DIAJUKAN'});
+  }
   if(fulfilled){updateRow_('orders',o._row,{status:'FULFILLED',fulfilled_at:now_()});logAudit_(actor.member_id,actor.role,'ORDER_FULFILLED','orders',o.order_id,'PAID','FULFILLED',{});}
   var s=settings_();
   if(member.referred_by&&product.bisa_komisi===true) {
