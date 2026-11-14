@@ -91,7 +91,7 @@ Workflow `validate.yml` juga menjalankan perintah itu pada push/PR, **tidak mela
 
 ## Akses referensi
 
-- [Ngulik Digital DB (Google Sheets)](https://docs.google.com/spreadsheets/ (buka database privat melalui Google Drive pemilik))
+- Ngulik Digital DB (Google Sheets): buka langsung dari Google Drive akun pemilik; tautan privat tidak dicantumkan di repository.
 - [Apps Script backend](apps-script/Code.gs)
 - [Frontend utama](js/app.js)
 
