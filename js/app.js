@@ -46,7 +46,8 @@ const screens={
   beranda:['Beranda','home'],belajar:['Belajar','book'],
   lms:['Studio LMS','book'],['lms-editor']:['Workspace Materi','book'],
   ['lms-lesson']:['Editor Pelajaran','book'],['lms-course']:['Ruang Kelas','book'],
-  ['lms-ai']:['Review Draft AI','spark'],katalog:['Katalog','store'],
+  ['lms-ai']:['Review Draft AI','spark'],
+  ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Katalog','store'],
   ai:['Studio AI','spark'],affiliate:['Affiliate','link'],akun:['Akun','user'],
   admin:['Admin','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
   antrean:['Antrean','clock'],dukungan:['Bantuan','clipboard'],
@@ -154,6 +155,7 @@ function activatePreview(){
   state.lmsSelectedCourseId='CRS-DEMO';
   state.lmsSelectedLessonId='LES-DEMO';
   state.lmsSelectedAIJobId='AIJ-DEMO';
+  state.lmsCompletion={title:'Menyiapkan Profil Usaha',completed:1,total:1,preview:true};
 }
 
 const state={
@@ -166,7 +168,8 @@ const state={
   memberSearch:null,member360:null,selectedMemberId:null,
   lmsCourses:[],lmsEnrollments:[],lmsAdminCourses:[],
   lmsCourseDetail:null,lmsAdminCourse:null,lmsSelectedCourseId:null,
-  lmsSelectedLessonId:null,lmsJobs:[],lmsSelectedAIJobId:null
+  lmsSelectedLessonId:null,lmsJobs:[],lmsSelectedAIJobId:null,
+  lmsCompletion:null
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true&&Boolean(config.qrisImageUrl)&&Boolean(config.qrisMerchant);
@@ -182,12 +185,20 @@ function notice(){
   if(!isWriteEnabled())return '<div class="banner warning"><div><h3>Mode aman aktif</h3><p>API tersedia, tetapi semua operasi penulisan dinonaktifkan sampai pengujian selesai.</p></div><span class="chip orange">Baca-saja</span></div>';
   return '';
 }
+const mobileNavRoute=(route)=>({
+  'lms-course':'belajar','lms-complete':'belajar',
+  tiket:'dukungan',checkout:'katalog'
+})[route]||route;
 function renderNav(){
   const items=isAdmin()?adminNav:memberNav;
   const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+icon(screens[route][1])+'<span>'+esc(screens[route][0])+'</span></button>';
   by('desktop-nav').innerHTML=items.map(button).join('');
   const mobileItems=isAdmin()?['admin','lms','member','dukungan','akun']:['beranda','belajar','katalog','dukungan','akun'];
-  by('mobile-nav').innerHTML=mobileItems.map(button).join('');
+  const selectedMobile=mobileNavRoute(state.route);
+  by('mobile-nav').innerHTML=mobileItems.map(route=>
+    '<button type="button" class="nav-item" data-route="'+route+'" '+
+    (route===selectedMobile?'aria-current="page"':'')+'>'+
+    icon(screens[route][1])+'<span>'+esc(screens[route][0])+'</span></button>').join('');
   by('page-label').textContent=screens[state.route]?.[0]||'Beranda';
   by('account-avatar').textContent=logged()?
     String(state.me.nama||'M').split(' ').map(v=>v[0]).join('').slice(0,2).toUpperCase():'ND';
@@ -207,10 +218,17 @@ function viewHome(){
     const progress=total?Math.max(0,Math.min(100,Math.round(done/total*100))):0;
     const orderCount=Array.isArray(d.order_aktif)?d.order_aktif.length:0;
     const next=d.modul_berikutnya;
-    return '<section class="member-welcome"><div><p class="eyebrow">DASHBOARD MEMBER</p>'+
+    return '<section class="member-welcome"><div><p class="eyebrow">RUANG BELAJAR PRIBADI</p>'+
       '<h1>Selamat datang, <span class="accent">'+esc(first)+'.</span></h1>'+
       '<p class="lead">Aktivitas belajar dan bisnis Anda, dalam satu tempat.</p></div>'+
       '<span class="chip green">'+esc(state.me.status||'AKTIF')+'</span></section>'+
+      '<section class="member-focus" aria-label="Ringkasan perjalanan belajar">'+
+        '<div class="member-focus-content"><span class="member-focus-kicker">BELAJAR • PRAKTIK • TUMBUH</span>'+
+        '<h2>Selangkah lebih dekat dengan tujuanmu.</h2>'+
+        '<p>Materi singkat dan tindakan praktis, kapan pun dibutuhkan.</p>'+
+        '<button type="button" class="btn btn-primary" data-route="belajar">Lanjutkan belajar '+icon('arrow')+'</button></div>'+
+        '<div class="member-focus-ring" style="--member-progress:'+progress+'%" role="img" aria-label="'+progress+' persen progres modul">'+
+        '<div class="member-focus-ring-core"><strong>'+progress+'%</strong><small>progres</small></div></div></section>'+
       '<div class="metric-grid">'+[
         [icon('spark'),esc(d.saldo_kredit??state.me.saldo_kredit??0),'Kredit AI tersisa','ai'],
         [icon('book'),esc(done)+' / '+esc(total),'Modul selesai','belajar'],
@@ -550,6 +568,9 @@ function lmsSelectedAIJob_(){
   return state.lmsJobs.find(x=>x.job_id===state.lmsSelectedAIJobId)||null;
 }
 function render(){
+  // Scoped mobile visual system: preserve the admin desktop appearance.
+  document.body?.classList?.toggle('member-experience',logged()&&!isAdmin());
+  document.body?.setAttribute?.('data-member-route',state.route);
   renderNav();
   by('notice-slot').innerHTML=notice();
   const routes={
@@ -569,6 +590,9 @@ function render(){
     'lms-course':()=>logged()&&window.NGD_LMS_UI?
       window.NGD_LMS_UI.memberCourse(state.lmsCourseDetail,state.lmsEnrollments,lmsWriteEnabled()):
       needLogin('ruang kelas'),
+    'lms-complete':()=>logged()&&!isAdmin()&&window.NGD_LMS_UI?
+      window.NGD_LMS_UI.memberSuccess(state.lmsCompletion):
+      needLogin('hasil pembelajaran'),
     akun:viewAccount,login:()=>viewLogin(false),daftar:()=>viewLogin(true),
     pesanan:()=>isAdmin()?viewAdminOrders():viewMyOrders(),
     checkout:viewCheckout,admin:viewAdmin,member:()=>viewMembers(false),antrean:()=>viewMembers(true),
@@ -1012,10 +1036,19 @@ async function lmsButtonAction(button){
       'publish-course'].includes(action)&&
      !confirm('Lanjutkan tindakan '+action+'? Riwayat peserta tidak dihapus.'))return;
   await submitLMSWrite(x[0],x[1],async()=>{
-    if(action==='enroll'||action==='complete'){
-      if(action==='enroll')
-        state.lmsEnrollments=await api('getMyLMSEnrollments',{},state.token);
+    if(action==='enroll'){
+      state.lmsEnrollments=await api('getMyLMSEnrollments',{},state.token);
       await loadRoute('lms-course');
+    }else if(action==='complete'){
+      const lesson=state.lmsCourseDetail?.lessons?.find(l=>l.lesson_id===lessonId);
+      await loadRoute('lms-course');
+      state.lmsCompletion={
+        title:lesson?.title||'Pelajaran',
+        completed:state.lmsCourseDetail?.completed??0,
+        total:state.lmsCourseDetail?.total??0,
+        preview:false
+      };
+      go('lms-complete');
     }else if(action==='approve-ai'||action==='reject-ai'){
       await loadRoute('lms-editor');go('lms-ai');
     }else await loadRoute('lms-editor');
@@ -1066,6 +1099,14 @@ document.addEventListener('submit',(e)=>{
   if(id==='lms-lesson-form')submitLMSLessonForm(e.target);
   if(id==='lms-ai-form')submitLMSAIForm(e.target);
   if(id==='lms-ai-result-form')submitLMSAIResult(e.target);
+});
+by('mobile-back').addEventListener('click',()=>{
+  const back={
+    'lms-course':'belajar','lms-complete':'lms-course',
+    tiket:'dukungan',checkout:'katalog',
+    'lms-editor':'lms','lms-lesson':'lms-editor','lms-ai':'lms-editor'
+  };
+  go(back[state.route]||'beranda');
 });
 by('account-button').addEventListener('click',()=>go('akun'));
 window.addEventListener('hashchange',()=>go(location.hash.slice(1)||'beranda'));
