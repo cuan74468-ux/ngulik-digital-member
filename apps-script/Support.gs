@@ -137,6 +137,24 @@ function supportOpenTicket_(member,p,requestId) {
       return t.member_id===member.member_id&&
         new Date(t.created_at).getTime()>now.getTime()-86400000;
     });
+    // Also deduplicate a submission lost across browser refresh or transport
+    // timeout when the client could not preserve its original request_id.
+    var duplicate=recent.filter(function(t){
+      return new Date(t.created_at).getTime()>now.getTime()-15*60000&&
+        t.product_id===input.product_id&&t.kategori===input.kategori&&
+        t.judul===input.judul&&t.deskripsi===input.deskripsi&&
+        t.platform===input.platform&&t.versi_aplikasi===input.versi_aplikasi&&
+        (!input.order_id||t.order_id===input.order_id);
+    })[0];
+    if(duplicate){
+      var initial=findRows_('ticket_activities',function(a){
+        return a.ticket_id===duplicate.ticket_id&&a.jenis==='DIBUAT';
+      });
+      if(!initial.length)
+        supportActivity_(duplicate,member,'DIBUAT','','OPEN',
+          'Laporan dibuat.',duplicate.request_id);
+      return supportTicketView_(duplicate);
+    }
     require_(recent.length<5,'RATE_LIMIT','Maksimal lima tiket baru per 24 jam.');
     var open=findRows_('support_tickets',function(t){
       return t.member_id===member.member_id&&t.status!=='CLOSED';
