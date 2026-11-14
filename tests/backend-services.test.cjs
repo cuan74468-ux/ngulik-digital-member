@@ -78,7 +78,7 @@ test('service brief does not accept role/status/price injection or invalid refer
     {...brief(),referensi_url:'javascript:alert(1)'},
     {...brief(),anggaran:-1}, {...brief(),brief:'too short'},
     {...brief(),jenis_layanan:'VIDEO_AI',product_id:''}
-  ])assert.throws(()=>h.run('submitServiceBrief','M1',payload),Error);
+  ])assert.throws(()=>h.run('submitServiceBrief','M1',payload),/(tidak valid|tidak diizinkan|terlalu|belum tersedia|tidak cocok|minimal|dikenal)/);
   assert.equal(h.store.service_requests.length,0);
 });
 test('video AI briefs require a valid active service catalog product',()=>{
@@ -94,7 +94,7 @@ test('video AI briefs require a valid active service catalog product',()=>{
 test('admin quote requires optimistic revision and valid price/message',()=>{
   const h=setup(),r=h.run('submitServiceBrief','M1',brief()).item;
   const original=h.run('adminListServiceRequests','ADMIN')[0];
-  const payload={service_id:r.service_id,expected_updated_at:original.updated_at,
+  const payload={service_id:r.service_id,expected_revision:original.revision,
     status:'PENAWARAN',penawaran_harga:1650000,
     penawaran_pesan:'Paket website responsif dengan katalog produk dan kontak WhatsApp.',
     catatan_internal:'Periksa kebutuhan hosting.'};
@@ -110,7 +110,7 @@ test('admin quote requires optimistic revision and valid price/message',()=>{
 });
 test('quotations never mark payments as paid or grant credit',()=>{
   const h=setup(),s=h.run('submitServiceBrief','M1',brief()).item;
-  const p={service_id:s.service_id,expected_updated_at:s.updated_at,
+  const p={service_id:s.service_id,expected_revision:s.revision,
     status:'PENAWARAN',penawaran_harga:500000,penawaran_pesan:'Harga ini hanya merupakan penawaran tertulis.',
     catatan_internal:''};
   h.run('adminUpdateServiceQuote','ADMIN',p);
