@@ -7,7 +7,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const src=fs.readFileSync(path.join(__dirname,'../apps-script/Code.gs'),'utf8');
-function boot(enabled=false,registration=false,finance=false){
+function boot(enabled=false,registration=false,finance=false,support=false){
   let touched=0;
   const forbidden=new Proxy({}, {get(){touched++;throw new Error('UNEXPECTED_GOOGLE_IO');}});
   const context=vm.createContext({
@@ -17,6 +17,7 @@ function boot(enabled=false,registration=false,finance=false){
         if(key==='NGD_MUTATIONS_ENABLED')return enabled?'true':null;
         if(key==='NGD_REGISTRATION_ENABLED')return registration?'true':null;
         if(key==='NGD_FINANCE_ENABLED')return finance?'true':null;
+        if(key==='NGD_SUPPORT_ENABLED')return support?'true':null;
         if(key==='NGD_CLICK_TRACKING_ENABLED')return null;
         throw new Error('UNEXPECTED_SCRIPT_PROPERTY: '+key);
       }};
@@ -107,5 +108,31 @@ test('finance switch cannot be enabled by only opening the frontend',()=>{
   const s=boot(true,true,false);
   assert.equal(vm.runInContext('financeEnabled_()',s.context),false);
   assert.throws(()=>vm.runInContext('installTriggers()',s.context),/Transaksi/);
+  assert.equal(s.touched(),0);
+});
+
+test('support mutations are disabled even when base writes and finance are on',()=>{
+  const s=boot(true,true,true,false);
+  const actions=['createTicket','replyTicket','adminChangeTicketStatus',
+    'adminSetTicketPriority','adminReplyTicket',
+    'adminCreateProductRelease','adminPublishProductRelease'];
+  for(const action of actions){
+    const result=s.request(action);
+    assert.equal(result.ok,false,action);
+    assert.equal(result.error.code,'MAINTENANCE',action);
+  }
+  assert.equal(s.touched(),0);
+});
+test('independent support switch grants only support eligibility, not finance',()=>{
+  const s=boot(true,false,false,true);
+  for(const action of ['createTicket','replyTicket','adminChangeTicketStatus',
+    'adminSetTicketPriority','adminCreateProductRelease','adminPublishProductRelease']){
+    assert.doesNotThrow(()=>vm.runInContext(
+      'requireActionFeatureEnabled_('+JSON.stringify(action)+')',s.context));
+  }
+  assert.throws(()=>vm.runInContext("requireActionFeatureEnabled_('createOrder')",s.context),
+    /Transaksi/);
+  assert.throws(()=>vm.runInContext("requireActionFeatureEnabled_('register')",s.context),
+    /Pendaftaran/);
   assert.equal(s.touched(),0);
 });
