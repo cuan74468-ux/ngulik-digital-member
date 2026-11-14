@@ -7,7 +7,7 @@ Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliat
 
 **Status: DALAM PENGEMBANGAN — belum siap dipakai publik atau transaksi nyata.**
 
-**Checkpoint QA terbaru:** GitHub Actions run #131 **115/115 tes Node.js lulus**. Chrome headless menguji beranda, dashboard mobile 390×844 (navigasi terlihat, tidak overflow), dan katalog desktop 1280×800 (checkout terkunci, tidak overflow). Bukti: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43543129765
+**Checkpoint QA terbaru:** GitHub Actions run #134 **115/115 tes Node.js lulus**. Chrome headless menguji beranda, dashboard mobile 390×844 (navigasi terlihat, tidak overflow), dan katalog desktop 1280×800 (checkout terkunci, tidak overflow). Bukti: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43543129765
 
 **Bukti dan rinciannya:** [QA Evidence & Staging Checkpoint](docs/QA_EVIDENCE_2026-11-14.md).
 
