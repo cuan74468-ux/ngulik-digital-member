@@ -71,3 +71,48 @@ test('mobile native and custom media theme is scoped to same shared design style
   assert.ok(html.indexOf('content-ui.js')<html.indexOf('js/app.js'));
   assert.ok(html.includes('id="brand-mark"'));
 });
+
+test('app integrates real image slots across guest home and catalogue and admin CMS route',()=>{
+  const app=read('js/app.js').replace(/^import .*?\n/gm,'');
+  function load(mode=''){
+    const nodes={},listeners={};
+    const el=id=>nodes[id]||(nodes[id]={innerHTML:'',textContent:'',append(){},
+      querySelector(){return {disabled:false};},
+      addEventListener(type,fn){listeners[id+':'+type]=fn;}});
+    const doc={body:{classList:{toggle(){}},setAttribute(){}},
+      getElementById:el,addEventListener(type,fn){listeners[type]=fn;},title:''};
+    const win={NGD_CONFIG:{apiUrl:'',contentEnabled:false,paymentsEnabled:false,
+      qrisImageUrl:'',qrisMerchant:''},addEventListener(){},scrollTo(){}};
+    const ctx=vm.createContext({window:win,document:doc,location:{
+      href:'https://example.invalid/',origin:'https://example.invalid',search:mode?'?preview='+mode:'',
+      hash:'#beranda'},
+      history:{replaceState(){}},sessionStorage:{getItem(){return null;},setItem(){},removeItem(){}},
+      api(){throw Error('NO_BACKEND_API_IN_UI_TEST');},isConnected:()=>false,
+      isWriteEnabled:()=>false,ApiError:class ApiError extends Error{},
+      URL,URLSearchParams,Intl,Date,Number,Map,setTimeout,clearTimeout});
+    vm.runInContext(source,ctx,{timeout:3000});
+    vm.runInContext(app,ctx,{timeout:5000});
+    return {ctx,nodes};
+  }
+  const guest=load();
+  vm.runInContext('state.siteContent='+JSON.stringify([
+    hero({content_id:'C-HERO-ONE'}),
+    hero({content_id:'C-HERO-TWO',title:'Banner kedua',image_path:'assets/media/banner-dua.webp'}),
+    hero({kind:'PRODUCT_IMAGE',placement:'P-POS',title:'POS Bakso Len',
+      image_path:'assets/media/produk-pos.webp'}),
+    hero({kind:'FEATURE_ICON',placement:'belajar',image_path:'assets/media/belajar.webp'}),
+    hero({kind:'PAGE_COVER',placement:'katalog',image_path:'assets/media/sampul-katalog.webp'})
+  ])+';render()',guest.ctx,{timeout:3000});
+  const home=guest.nodes.screen.innerHTML;
+  assert.equal((home.match(/class="nh-hero nh-hero-slide"/g)||[]).length,2);
+  assert.match(home,/assets\/media\/belajar.webp/);
+  assert.match(home,/assets\/media\/produk-pos.webp/);
+  vm.runInContext("go('katalog')",guest.ctx,{timeout:3000});
+  assert.match(guest.nodes.screen.innerHTML,/assets\/media\/sampul-katalog.webp/);
+  assert.match(guest.nodes.screen.innerHTML,/catalog-product-image/);
+  const admin=load('admin');
+  vm.runInContext("go('konten')",admin.ctx,{timeout:3000});
+  assert.match(admin.nodes.screen.innerHTML,/id="content-editor-form"/);
+  assert.match(admin.nodes['notice-slot'].innerHTML,/data-route="konten" aria-current="page"/);
+  assert.match(admin.nodes.screen.innerHTML,/Penyuntingan konten belum aktif/);
+});
