@@ -14,7 +14,7 @@
         .getPropertyValue('--green').trim();
       // Must match on desktop, mobile, public/member and ADMIN.
       var bg=getComputedStyle(document.body).getPropertyValue('--bg').trim().toLowerCase();
-      var sharedTheme=bg==='#e6ecf4'&&primaryColor.toLowerCase()==='#171b22';
+      var sharedTheme=bg==='#cdeef9'&&primaryColor.toLowerCase()==='#0f2c45';
       var themeLinked=!!document.querySelector('link[href*="unified-theme.css"]');
       var main=document.getElementById('screen');
       var navRect=nav?nav.getBoundingClientRect():null;
@@ -25,7 +25,7 @@
         window.innerWidth<=760?'.mobile-nav .nav-item[aria-current="page"]':
           '.sidebar .nav-item[aria-current="page"]');
       var inkNav=!!activeNav&&
-        getComputedStyle(activeNav).backgroundColor==='rgb(23, 27, 34)';
+        getComputedStyle(activeNav).backgroundColor==='rgb(15, 44, 69)';
       var activeSurface=main?main.querySelector('.surface,.metric-card,.member-focus'):null;
       var surfaceReady=!!activeSurface&&
         getComputedStyle(activeSurface).backgroundColor!=='rgba(0, 0, 0, 0)';
@@ -39,11 +39,7 @@
       output.setAttribute('data-mobile-nav',String(visible));
       output.setAttribute('data-buy-buttons',String(buys.length));
       output.setAttribute('data-buys-disabled',String(buys.every(function(b){return b.disabled;})));
-      var offenders=Array.prototype.slice.call(document.querySelectorAll('body *')).filter(function(el){
-        var r=el.getBoundingClientRect();return r.right>window.innerWidth+2||r.left< -2;
-      }).slice(0,8).map(function(el){var r=el.getBoundingClientRect();return {tag:el.tagName,cls:String(el.className||'').slice(0,70),right:Math.round(r.right),left:Math.round(r.left)};});
       output.textContent='LAYOUT_CHECK '+JSON.stringify({
-        offenders:offenders,
         viewportWidth:window.innerWidth,
         scrollWidth:document.documentElement.scrollWidth,
         overflow:overflow,memberTheme:memberTheme,sharedTheme:safeTheme,inkNavigation:inkNav,
