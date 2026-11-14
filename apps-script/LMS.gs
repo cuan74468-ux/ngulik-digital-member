@@ -386,6 +386,7 @@ function lmsAdminRevisions_(p){
   }).slice(-30).reverse().map(function(r){
     return {revision_id:r.revision_id,entity:r.entity,entity_id:r.entity_id,
       version:Number(r.version),title:r.title,body:r.body,media_url:r.media_url,
+      metadata_json:r.metadata_json,
       published_at:r.published_at,actor_id:r.actor_id};
   });
 }
