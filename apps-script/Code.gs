@@ -844,6 +844,11 @@ function onPaid_(o,actor) {
   require_(product&&member,'CONFLICT','Data produk atau member tidak tersedia.');
   // Read and validate finance settings BEFORE any entitlement or ledger write.
   var s=settings_(),percent=commissionRate_(s);
+  var commissionEligible=Boolean(member.referred_by&&product.bisa_komisi===true&&percent>0);
+  var commissionValue=commissionEligible?Math.floor(Number(o.harga_dasar)*percent/100):0;
+  if(commissionEligible)
+    require_(Number.isSafeInteger(commissionValue)&&commissionValue>0,'CONFLICT',
+      'Nominal komisi tidak valid.');
   var patch={},fulfilled=false,days=Number(product.durasi_hari||0),end;
   if(product.tipe==='TOPUP_KREDIT'){
     grantCredits_(member.member_id,Number(product.kredit_diberikan),o.order_id,'TOPUP');fulfilled=true;
@@ -858,15 +863,13 @@ function onPaid_(o,actor) {
       updateRow_('members',member._row,{status_canva:'DIAJUKAN'});
   }
   if(fulfilled){updateRow_('orders',o._row,{status:'FULFILLED',fulfilled_at:now_()});logAudit_(actor.member_id,actor.role,'ORDER_FULFILLED','orders',o.order_id,'PAID','FULFILLED',{});}
-  if(member.referred_by&&product.bisa_komisi===true&&percent>0) {
+  if(commissionEligible) {
     // Komisi harus idempoten per order, termasuk setelah retry dari kegagalan parsial.
     var existingCommission=findRows_('affiliate_commissions',function(c){return c.order_id===o.order_id;});
     if(existingCommission.length)return;
     var any=findRows_('affiliate_commissions',function(c){return c.referred_member_id===member.member_id;});
     if(!s.komisi_hanya_order_pertama||!any.length){
-      var value=Math.floor(Number(o.harga_dasar)*percent/100);
-      require_(Number.isSafeInteger(value)&&value>0,'CONFLICT',
-        'Nominal komisi tidak valid.');
+      var value=commissionValue;
       var when=new Date(Date.now()+Number(s.masa_tahan_hari||14)*86400000);
       var cid=recordId_('K');
       appendRow_('affiliate_commissions',{komisi_id:cid,referrer_id:member.referred_by,referred_member_id:member.member_id,order_id:o.order_id,dasar_komisi:o.harga_dasar,persen:percent,nominal:value,status:'PENDING',created_at:now_(),approve_after:when});
