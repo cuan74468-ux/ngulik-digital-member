@@ -7,6 +7,12 @@ Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliat
 
 **Status: DALAM PENGEMBANGAN — belum siap dipakai publik atau transaksi nyata.**
 
+**Checkpoint QA terbaru:** GitHub Actions run #102 **89/89 tes Node.js lulus**, dan Chrome headless memuat beranda tamu, pratinjau member pada viewport mobile, serta katalog desktop. Referensi: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43539730560
+
+**Database staging privat sudah dibuat:** salinan Google Sheet memiliki ID berbeda dari sumber, 14/14 tab dan 149 header cocok dengan backend, data identitas/sesi/order/ledger/komisi/log dibersihkan, serta pendaftaran diatur `TERTUTUP`. URL staging sengaja tidak dipublikasikan dalam repository. Database sumber tidak diubah. Staging baru berupa **spreadsheet**; backend GAS staging dan eksekusi integrasi belum terverifikasi.
+
+**Perbaikan P0 baru:** pengaturan komisi `0%` sekarang benar-benar menghasilkan nol komisi (tidak jatuh ke default `25%`). Nilai komisi divalidasi sebelum hak akses produk diberikan. Autentikasi/otorisasi kini punya tes tambahan untuk isolasi member/admin, akun ditangguhkan, dan data pesanan pribadi.
+
 Perubahan checkpoint 14 November (termasuk hardening lanjutan):
 
 - `getOrder` hanya baca; data internal order tidak lagi terlihat oleh member.
@@ -14,7 +20,7 @@ Perubahan checkpoint 14 November (termasuk hardening lanjutan):
 - Komisi tidak dapat dicairkan bila order asal dibatalkan/direfund.
 - Aktivasi lisensi/seat memakai penanda anti-retry setelah upaya fulfillment.
 - Click tracking publik memiliki saklar tambahan yang default nonaktif.
-- Pengujian aturan bisnis terisolasi sekarang 44/44; test finance, payout, fulfillment, privacy, dan payment evidence masuk workflow, tetapi hasil GitHub Actions masih perlu diverifikasi.
+- Pengujian aturan bisnis murni 45/45; keseluruhan CI Node.js 89/89 serta browser smoke test sudah terverifikasi pada run #102. Ini bukan pengujian Apps Script nyata.
 
 Perubahan checkpoint 14 November:
 - Semua mutasi tetap memerlukan `NGD_MUTATIONS_ENABLED=true`. Pendaftaran memerlukan **saklar kedua** `NGD_REGISTRATION_ENABLED=true`; pembayaran/refund/payout/koreksi kredit memerlukan **saklar ketiga** `NGD_FINANCE_ENABLED=true`. Semua default **OFF**; pengujian login tidak otomatis membuka transaksi.
