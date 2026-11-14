@@ -1,19 +1,19 @@
 # Ngulik Digital Member
 
 Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliate.
-**Arsitektur:** GitHub Pages (HTML/CSS/ES Modules tanpa build) → Google Apps Script Web App → Google Sheets (14 tab sumber; 24 tab pada staging privat setelah penambahan tabel support dan LMS).
+**Arsitektur:** GitHub Pages (HTML/CSS/ES Modules tanpa build) → Google Apps Script Web App → Google Sheets (14 tab sumber; 25 tab staging privat: 14 inti + 3 support + 7 LMS + 1 notifikasi).
 
 ## Status aktual — 14 November 2026
 
 **Status: DALAM PENGEMBANGAN — belum siap dipakai publik atau transaksi nyata.**
 
-**Checkpoint QA terbaru:** GitHub Actions run #193 **178/178 tes Node.js lulus**. Chrome headless menguji dashboard, kelas dan layar selesai, formulir bantuan pada ukuran 375–390 px, serta memastikan styling member violet aktif tanpa mengubah panel admin. Bukti: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43550180541
+**Checkpoint QA mobile sebelumnya:** GitHub Actions run #193 **178/178 tes Node.js lulus**. Chrome headless menguji dashboard, kelas dan layar selesai, formulir bantuan pada ukuran 375–390 px, serta memastikan styling member violet aktif tanpa mengubah panel admin. Bukti: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43550180541
 
 **Bukti dan rinciannya:** [QA Evidence & Staging Checkpoint](docs/QA_EVIDENCE_2026-11-14.md).
 
 **Mobile member V2 sudah diterapkan di source:** desain putih–ungu native-inspired (berdasarkan referensi pengguna), fokus belajar dengan ring progres, kartu kursus, navigasi bawah, detail pelajaran, layar sukses, serta dukungan dan profil yang konsisten. Aturan berada di `assets/member-mobile.css`, terpisah dari tampilan admin. Lihat [panduan desain dan handoff mobile](docs/MOBILE_MEMBER_DESIGN_2026-11-14.md).
 
-**LMS V1 dalam tahap staging:** `apps-script/LMS.gs` menangani kursus, pelajaran, published snapshot, enrollment, progres, workspace otomatis, revisi, dan antrian AI draft. Staging privat memiliki **24 tab** (7 LMS baru di luar 17 tab sebelumnya), namun **sinkronisasi header baru untuk versi progres pelajaran masih perlu diperiksa** sebelum integrasi GAS. `NGD_LMS_ENABLED` dan `config.lmsEnabled` tetap OFF; API key LLM, pembayaran, notifikasi WhatsApp/email, dan update produksi belum diaktifkan.
+**LMS V1 dalam tahap staging:** `apps-script/LMS.gs` menangani kursus, pelajaran, published snapshot, enrollment, progres, workspace otomatis, revisi, dan antrian AI draft. Staging privat memiliki **25 tab** (7 LMS dan 1 notifikasi setelah 17 tab sebelumnya). Dua header versi LMS (`lms_lessons.published_version`, `lms_progress.lesson_version`) telah diperbaiki dan dicocokkan terhadap 25 kontrak backend. `NGD_LMS_ENABLED` dan `config.lmsEnabled` tetap OFF; API key LLM, pembayaran, notifikasi WhatsApp/email, dan update produksi belum diaktifkan.
 
 
 
@@ -22,7 +22,7 @@ Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliat
 **Member 360° & Support Ticketing telah dibangun dalam source:** pencarian member menurut nama/WA/produk, tiket bug/fitur/pertanyaan, penanganan status dan prioritas P0–P3, riwayat aktivitas, serta draft/publikasi changelog. Tiga tab support ditambahkan hanya ke staging privat (17/17 header sesuai). Semua penulisan support tetap **OFF** melalui `NGD_SUPPORT_ENABLED` dan `config.supportEnabled:false`. Lihat [handoff Member 360 & Support](docs/MEMBER360_SUPPORT_HANDOFF_2026-11-14.md).
 
 
-**Database staging privat:** salinan Google Sheet memiliki ID berbeda dari sumber, dimulai dengan 14 tab inti, bertambah 3 tab support, lalu 7 tab LMS (sekarang **24 tab**, data LMS belum diisi). Database sumber tetap 14 tab. Kontrak seluruh header telah diperiksa sebelum perubahan versi progres LMS yang paling baru; **audit ulang header** wajib sebelum uji Apps Script. Backend GAS staging dan pengujian integrasi belum terverifikasi.
+**Database staging privat:** salinan Google Sheet memiliki ID berbeda dari sumber, dimulai dengan 14 tab inti, bertambah 3 tab support, lalu 7 tab LMS dan 1 tab notifikasi (**25 tab**, tanpa data nyata baru). Database sumber tetap 14 tab. Verifikasi ulang semua header terhadap source terbaru menunjukkan **25/25 cocok** pada 14 November; tetap audit ulang sebelum uji Apps Script. Backend GAS staging dan pengujian integrasi belum terverifikasi.
 
 **Perbaikan P0 baru:** pengaturan komisi `0%` sekarang benar-benar menghasilkan nol komisi (tidak jatuh ke default `25%`). Nilai komisi divalidasi sebelum hak akses produk diberikan. Autentikasi/otorisasi kini punya tes tambahan untuk isolasi member/admin, akun ditangguhkan, dan data pesanan pribadi.
 
@@ -65,6 +65,19 @@ Perubahan checkpoint 14 November:
 Checkpoint terbaru: [14 November 2026 — hasil dan pekerjaan tersisa](docs/CHECKPOINT_2026-11-14.md).  
 Arsip progres sebelumnya: [13 November 2026](docs/CHECKPOINT_HISTORY_2026-11-13.md).
 
+## Checkpoint tambahan — Userbase Core, 14 November 2026
+
+**Sudah di source GitHub dan staging, belum di-deploy ke Apps Script aktual:**
+
+- Diagnostik tidak lagi menggunakan ID Google Sheet yang ditulis permanen; semua pembacaan diagnostik berdata mewajibkan Script Property \`NGD_DB_ID\` yang eksplisit.
+- Database staging 25 tab diverifikasi cocok dengan \`NGD.HEADERS\`; sumber 14 tab **tidak disentuh**.
+- \`apps-script/Notifications.gs\` memberi inbox notifikasi internal personal, status dibaca, dan materialisasi idempoten dari aktivitas support oleh admin. Ini bukan sistem pengiriman WhatsApp/email. Materializer \`buildSupportNotifications()\` harus dipicu secara eksplisit pada runtime staging, bukan pada database utama.
+- API member \`getMyNotifications\`, \`markNotificationRead\`, serta \`updateMyProfile\` ditambahkan; update profil hanya mengizinkan enam kolom informasi usaha, bukan WA login, peran, membership atau saldo.
+- \`config.notificationsEnabled:false\` dan server \`NGD_NOTIFICATIONS_ENABLED\` default OFF; kontrol publik lain tetap OFF. Tidak ada pengiriman eksternal, perubahan Script Properties, atau aktivasi finansial.
+- Tes baru: \`tests/backend-diagnostics-isolation.test.cjs\`, \`tests/backend-notifications.test.cjs\`, \`tests/backend-member-profile.test.cjs\`.
+
+Rincian implementasi, batasan, dan urutan QA: [Userbase Core Runbook](docs/USERBASE_CORE_IMPLEMENTATION_2026-11-14.md).
+
 ## Struktur
 
 ```text
@@ -74,7 +87,7 @@ assets/app.css               # Desain mobile-first
 assets/favicon.svg
 js/api.js                    # Transport API Apps Script (text/plain)
 js/app.js                    # SPA beranda, login, katalog, belajar, AI, affiliate, admin
-apps-script/Code.gs          # Backend + action router (17-tab schema)
+apps-script/Code.gs          # Backend + action router (25-tab staging schema)
 apps-script/Support.gs       # Member360, tiket dan rilis produk
 apps-script/Diagnostics.gs   # Diagnostik read-only dan simulasi memori
 apps-script/appsscript.json  # Manifest; JANGAN deploy dahulu
