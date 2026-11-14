@@ -798,46 +798,66 @@ function approveFulfillment_(admin,p) {
     return orderView_(byId_('orders','order_id',o.order_id),admin);
   });
 }
+// Pure, non-mutating refund policy to fail closed on ambiguous fulfillment.
+// Automatic refund ledger bookkeeping is ONLY supported for TOPUP_KREDIT.
+function refundDecision_(order,product,memberLedger,commissions) {
+  if(!order||['PAID','FULFILLED'].indexOf(order.status)<0)
+    return {allowed:false,reason:'ORDER_STATUS_INVALID'};
+  if(!product||product.tipe!=='TOPUP_KREDIT')
+    return {allowed:false,reason:'MANUAL_RECONCILIATION_REQUIRED'};
+  if(commissions.some(function(k){return k.order_id===order.order_id&&k.status==='PAID';}))
+    return {allowed:false,reason:'COMMISSION_ALREADY_PAID'};
+  var topups=memberLedger.filter(function(x){return x.ref_id===order.order_id&&x.tipe==='TOPUP';});
+  var reversals=memberLedger.filter(function(x){return x.ref_id===order.order_id&&x.tipe==='ADJUST_REFUND';});
+  if(reversals.length>0)return {allowed:false,reason:'REFUND_ADJUST_ALREADY_EXISTS'};
+  if(order.status==='PAID'){
+    // PAID without fulfillment is only safe when no credit was posted.
+    return topups.length===0?{allowed:true,creditAdjustment:0}:
+      {allowed:false,reason:'TOPUP_POSTED_WITH_PAID_STATUS'};
+  }
+  if(topups.length!==1)return {allowed:false,reason:'TOPUP_LEDGER_COUNT_INVALID'};
+  var original=Number(topups[0].jumlah);
+  if(!Number.isInteger(original)||original<=0)
+    return {allowed:false,reason:'TOPUP_LEDGER_AMOUNT_INVALID'};
+  var balance=memberLedger.reduce(function(v,x){return v+Number(x.jumlah||0);},0);
+  if(!Number.isFinite(balance)||balance<original)
+    return {allowed:false,reason:'INSUFFICIENT_UNSPENT_CREDITS'};
+  return {allowed:true,creditAdjustment:-original};
+}
 function refundOrder_(admin,p) {
   return withLock_(function(){
     var o=byId_('orders','order_id',p.order_id);
-    require_(o&&['PAID','FULFILLED'].indexOf(o.status)>=0,'CONFLICT','Pesanan tidak dapat direfund.');
-    require_(safeText_(p.alasan,300).length>=5,'VALIDATION','Alasan refund wajib diisi.');
-    // QRIS statis tidak mengirim refund otomatis. Status REFUNDED hanya sah
-    // setelah admin telah memproses pengembalian uang di luar sistem.
+    require_(o&&['PAID','FULFILLED'].indexOf(o.status)>=0,'CONFLICT',
+      'Pesanan tidak dapat direfund.');
+    var reason=safeText_(p.alasan,300),reference=safeText_(p.referensi_refund,120);
+    require_(reason.length>=5,'VALIDATION','Alasan refund wajib diisi.');
     require_(p.dana_sudah_dikembalikan===true,'RECONCILIATION_REQUIRED',
-      'Konfirmasi pengembalian dana secara nyata diperlukan sebelum mencatat refund.');
-    require_(safeText_(p.referensi_refund,120).length>=5,'VALIDATION',
-      'Nomor referensi/bukti refund diperlukan.');
-    var m=byId_('members','member_id',o.member_id),product=byId_('katalog_produk','product_id',o.product_id),prev=o.status;
-    require_(m&&product,'CONFLICT','Data member atau produk tidak tersedia.');
-    // Refund uang adalah tindakan eksternal; jangan membalik hak akses yang telah
-    // bertumpuk atau komisi yang sudah dibayarkan secara otomatis.
-    var paidCommission=findRows_('affiliate_commissions',function(x){return x.order_id===o.order_id&&x.status==='PAID';});
-    require_(!paidCommission.length,'RECONCILIATION_REQUIRED','Komisi sudah dicairkan: refund memerlukan rekonsiliasi manual.');
-    if(product.tipe==='LANGGANAN_30H'&&prev==='FULFILLED'){
-      var otherActive=findRows_('orders',function(x){
-        return x.member_id===m.member_id&&x.order_id!==o.order_id&&x.product_id===o.product_id&&x.status==='FULFILLED';
-      });
-      require_(!otherActive.length,'RECONCILIATION_REQUIRED','Ada perpanjangan langganan lain: refund perlu rekonsiliasi manual.');
-    }
-    if(product.tipe==='TOPUP_KREDIT'&&prev==='FULFILLED'){
-      require_(findRows_('credits_ledger',function(x){return x.member_id===m.member_id&&x.ref_id===o.order_id&&x.tipe==='TOPUP';}).length===1,
-        'RECONCILIATION_REQUIRED','Pencatatan top-up belum sesuai; refund harus ditinjau manual.');
-    }
-    updateRow_('orders',o._row,{status:'REFUNDED',refunded_at:now_(),catatan_admin:p.alasan+' | Refund ref: '+safeText_(p.referensi_refund,120)});
-    if(product.tipe==='TOPUP_KREDIT'&&prev==='FULFILLED')grantCredits_(m.member_id,-Number(product.kredit_diberikan),o.order_id,'ADJUST_REFUND');
-    if(product.tipe==='LANGGANAN_30H'&&prev==='FULFILLED'){
-      var old=m.akses_3in1_sampai?new Date(m.akses_3in1_sampai).getTime():Date.now();
-      updateRow_('members',m._row,{akses_3in1_sampai:new Date(old-Number(product.durasi_hari||30)*86400000)});
-    }
-    if(product.tipe==='LISENSI_SEKALI')updateRow_('members',m._row,{status_pos:'DITOLAK',pos_lisensi_kode:''});
-    if(product.tipe==='SEAT_30H')updateRow_('members',m._row,{status_canva:'BERAKHIR'});
-    findRows_('affiliate_commissions',function(c){return c.order_id===o.order_id;}).forEach(function(c){
-      if(c.status!=='PAID'){updateRow_('affiliate_commissions',c._row,{status:'REVERSED',reversed_at:now_(),reversed_reason:p.alasan});logAudit_(admin.member_id,'ADMIN','COMMISSION_REVERSED','affiliate_commissions',c.komisi_id,c.status,'REVERSED',{});}
-      else logAudit_(admin.member_id,'ADMIN','COMMISSION_RECOVERY_REQUIRED','affiliate_commissions',c.komisi_id,'PAID','PAID',{});
+      'Konfirmasi pengembalian dana secara nyata diperlukan.');
+    require_(reference.length>=5,'VALIDATION','Referensi atau bukti refund diperlukan.');
+    var m=byId_('members','member_id',o.member_id);
+    var product=byId_('katalog_produk','product_id',o.product_id);
+    require_(m&&product,'CONFLICT','Member atau produk tidak tersedia.');
+    var memberLedger=findRows_('credits_ledger',function(x){return x.member_id===m.member_id;});
+    var commissions=findRows_('affiliate_commissions',function(x){return x.order_id===o.order_id;});
+    var decision=refundDecision_(o,product,memberLedger,commissions);
+    require_(decision.allowed,'RECONCILIATION_REQUIRED',
+      'Refund otomatis tidak aman: '+decision.reason+'. Lakukan rekonsiliasi manual.');
+    // The original TOPUP ledger amount is authoritative, not the mutable
+    // product catalog value. There is no automatic external money transfer.
+    var before=o.status;
+    updateRow_('orders',o._row,{status:'REFUNDED',refunded_at:now_(),
+      catatan_admin:reason+' | Refund ref: '+reference});
+    if(decision.creditAdjustment!==0)
+      grantCredits_(m.member_id,decision.creditAdjustment,o.order_id,'ADJUST_REFUND');
+    commissions.forEach(function(k){
+      if(k.status==='REVERSED')return;
+      updateRow_('affiliate_commissions',k._row,{status:'REVERSED',
+        reversed_at:now_(),reversed_reason:reason});
+      logAudit_(admin.member_id,'ADMIN','COMMISSION_REVERSED','affiliate_commissions',
+        k.komisi_id,k.status,'REVERSED',{});
     });
-    logAudit_(admin.member_id,'ADMIN','ORDER_REFUNDED','orders',o.order_id,prev,'REFUNDED',{alasan:p.alasan,referensi_refund:p.referensi_refund,dana_sudah_dikembalikan:true});
+    logAudit_(admin.member_id,'ADMIN','ORDER_REFUNDED','orders',o.order_id,before,
+      'REFUNDED',{reason:reason,refund_reference:reference,real_funds_returned:true});
     return orderView_(byId_('orders','order_id',o.order_id),admin);
   });
 }
