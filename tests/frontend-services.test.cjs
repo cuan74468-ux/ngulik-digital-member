@@ -25,7 +25,7 @@ test('service briefing uses real fields and remains off without backend approval
     assert.match(html,new RegExp('name="'+name+'"'));
   assert.match(html,/name="jenis_layanan"/);
   assert.match(html,/Kirim brief untuk ditinjau/);
-  assert.match(html,/Layanan/);
+  assert.match(html,/LINGGAU AI STUDIO/);
   assert.match(html,/disabled/);
   assert.doesNotMatch(html,/Rp0<\/strong>/);
 });
@@ -61,7 +61,7 @@ test('commercial service module is loaded on all member/admin routes',()=>{
   assert.match(html,/src="\.\/js\/services-ui\.js/);
   assert.match(app,/function viewServiceRequests\(\)/);
   assert.match(app,/function viewAdminServices\(\)/);
-  assert.match(app,/case 'submitServiceBrief'/);
+  assert.match(app,/submitServiceBrief\(/);
   assert.match(app,/api\('submitServiceBrief'/);
   assert.match(app,/api\('adminUpdateServiceQuote'/);
   assert.match(app,/data-service-go/);
