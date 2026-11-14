@@ -227,6 +227,37 @@ function supportChangeStatus_(admin,p,requestId) {
     return supportTicketView_(byId_('support_tickets','ticket_id',t.ticket_id));
   });
 }
+function supportSetPriority_(admin,p,requestId) {
+  return withLock_(function(){
+    var t=supportFindTicket_(admin,p.ticket_id);
+    var next=String(p.prioritas||''),note=safeText_(p.catatan,1000);
+    require_(['P0','P1','P2','P3'].indexOf(next)>=0,
+      'VALIDATION','Prioritas tiket tidak valid.');
+    require_(note.length>=8,'VALIDATION','Catatan prioritas minimal 8 karakter.');
+    require_(t.status!=='CLOSED','CONFLICT','Tiket ditutup. Buka kembali terlebih dahulu.');
+    var prior=findRows_('ticket_activities',function(a){return a.request_id===requestId;});
+    require_(prior.length<=1,'RECONCILIATION_REQUIRED','ID aktivitas prioritas tidak unik.');
+    if(prior.length){
+      var event=prior[0];
+      require_(event.ticket_id===t.ticket_id&&event.jenis==='PRIORITAS'&&
+        event.ke_status===next&&
+        event.pesan.indexOf(' | '+note)>=0,
+        'CONFLICT','ID permintaan sudah digunakan untuk prioritas berbeda.');
+      if(t.prioritas===event.dari_status)
+        updateRow_('support_tickets',t._row,{prioritas:next,
+          assigned_to:admin.member_id,updated_at:now_()});
+      else require_(t.prioritas===next,'RECONCILIATION_REQUIRED',
+        'Prioritas perlu rekonsiliasi dengan aktivitas.');
+      return supportTicketView_(byId_('support_tickets','ticket_id',t.ticket_id));
+    }
+    require_(t.prioritas!==next,'CONFLICT','Prioritas sudah sama.');
+    supportActivity_(t,admin,'PRIORITAS',t.prioritas,next,
+      'Prioritas '+t.prioritas+' → '+next+' | '+note,requestId);
+    updateRow_('support_tickets',t._row,{prioritas:next,
+      assigned_to:admin.member_id,updated_at:now_()});
+    return supportTicketView_(byId_('support_tickets','ticket_id',t.ticket_id));
+  });
+}
 function supportReply_(actor,p,requestId) {
   return withLock_(function(){
     var t=supportFindTicket_(actor,p.ticket_id),message=safeText_(p.pesan,1500);
@@ -267,7 +298,7 @@ function supportOverview_() {
   var acts=readAll_('ticket_activities'),counts={},lastStatus={};
   acts.forEach(function(a){
     counts[a.ticket_id]=(counts[a.ticket_id]||0)+1;
-    if(a.ke_status)lastStatus[a.ticket_id]=a.ke_status;
+    if(a.ke_status&&a.jenis!=='PRIORITAS')lastStatus[a.ticket_id]=a.ke_status;
   });
   data.forEach(function(t){
     if(!counts[t.ticket_id])issues.push({ticket_id:t.ticket_id,reason:'MISSING_ACTIVITY'});
@@ -276,8 +307,9 @@ function supportOverview_() {
     if(t.status==='OPEN'&&Date.now()-new Date(t.created_at).getTime()>48*3600000)
       issues.push({ticket_id:t.ticket_id,reason:'UNTRIAGED_48H'});
   });
-  return {total:data.length,by_status:byStatus,needs_review:issues.length,
-    findings:issues.slice(0,40)};
+  return {total:data.length,by_status:byStatus,
+    urgent:data.filter(function(t){return ['P0','P1'].indexOf(t.prioritas)>=0&&t.status!=='CLOSED';}).length,
+    needs_review:issues.length,findings:issues.slice(0,40)};
 }
 function supportSearchMembers_(p) {
   var query=safeText_(p.query,100).toLowerCase(),
