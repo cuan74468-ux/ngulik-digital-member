@@ -50,7 +50,7 @@ test('guest homepage renders and shows offline preview warning',()=>{
   assert.match(nodes.screen.innerHTML,/hub-journey/);
   assert.match(nodes.screen.innerHTML,/LINGGAU AI STUDIO/);
   assert.match(nodes.screen.innerHTML,/Jelajahi solusi/);
-  assert.match(nodes['notice-slot'].innerHTML,/Pratinjau/);
+  assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.match(nodes['desktop-nav'].innerHTML,/Katalog/);
   assert.equal(document.title,'Beranda — Ngulik Digital');
 });
@@ -59,7 +59,7 @@ test('local member preview renders native-like dashboard without login',()=>{
   assert.match(nodes.screen.innerHTML,/RUANG BELAJAR PRIBADI/);
   assert.match(nodes.screen.innerHTML,/member-focus-ring/);
   assert.match(nodes.screen.innerHTML,/Kredit AI tersisa/);
-  assert.match(nodes['notice-slot'].innerHTML,/DEMO LOKAL/);
+  assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.equal(vm.runInContext('isWriteEnabled()',context),false);
 });
 test('preview catalog uses sample products with disabled buy buttons',()=>{
