@@ -22,6 +22,7 @@ function makeHarness(){
   };
   ctx.expireOrder_=o=>o;
   ctx.now_=()=>new Date('2026-11-14T01:00:00Z');
+  ctx.isoWib_=(date)=>new Date(date).toISOString();
   ctx.updateRow_=(table,row,patch)=>{
     writes.push({table,row,patch});
     if(table==='orders')Object.assign(order,patch);
