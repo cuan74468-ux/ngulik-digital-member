@@ -169,7 +169,7 @@ const state={
   lmsCourses:[],lmsEnrollments:[],lmsAdminCourses:[],
   lmsCourseDetail:null,lmsAdminCourse:null,lmsSelectedCourseId:null,
   lmsSelectedLessonId:null,lmsJobs:[],lmsSelectedAIJobId:null,
-  lmsCompletion:null
+  lmsCompletion:null,notifications:{enabled:false,items:[],unread:0}
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true&&Boolean(config.qrisImageUrl)&&Boolean(config.qrisMerchant);
@@ -307,6 +307,24 @@ function viewAffiliate(){
     '<div class="section-gap">'+title('Transparansi program','KETENTUAN','Komisi mengikuti verifikasi pembayaran dan masa tunggu.')+
     '<div class="banner"><div><h3>Catatan affiliate</h3><p>'+esc(state.info?.disclosure||'Tautan affiliate dapat memberikan komisi kepada perekomendasi tanpa biaya tambahan untuk pembeli.')+'</p></div></div></div>';
 }
+function viewNotificationCenter(){
+  if(!logged()||isAdmin())return '';
+  const enabled=config.notificationsEnabled===true&&isConnected();
+  const inbox=state.notifications||{items:[],unread:0};
+  const items=Array.isArray(inbox.items)?inbox.items:[];
+  const body=!enabled?
+    '<p class="card-desc">Notifikasi internal masih dalam tahap staging. Tidak ada email atau WhatsApp otomatis yang dikirim.</p>':
+    !items.length?'<p class="card-desc">Belum ada pembaruan untuk akun Anda.</p>':
+    '<div class="list-rows">'+items.map(n=>'<div class="list-row"><div class="left">'+
+      '<small>'+esc(friendlyDate(n.created_at))+'</small><strong>'+esc(n.judul||'Pembaruan')+'</strong>'+
+      '<p class="card-desc">'+esc(n.pesan||'')+'</p></div>'+
+      (n.status==='UNREAD'&&isWriteEnabled()?
+        '<button type="button" class="btn btn-ghost btn-sm" data-action="notification-read" data-notification-id="'+
+        esc(n.notification_id)+'">Tandai dibaca</button>':'')+'</div>').join('')+'</div>';
+  return '<section class="surface section-gap" aria-label="Pusat notifikasi member">'+
+    '<p class="card-kicker">AKTIVITAS MEMBER</p><h3>Notifikasi'+
+    (enabled?' · '+esc(inbox.unread||0)+' baru':'')+'</h3>'+body+'</section>';
+}
 function viewAccount(){
   if(!logged())return title('Akun member','PROFIL & KEAMANAN','Kelola akses ke ruang belajar.')+
     '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk dengan nomor WhatsApp dan PIN Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk</button><button class="btn btn-secondary" data-route="daftar">Daftar</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
@@ -317,7 +335,7 @@ function viewAccount(){
     ].map(([k,v])=>'<div class="list-row"><div class="left"><small>'+esc(k)+'</small><strong>'+esc(v||'-')+'</strong></div></div>').join('')+'</div></div>'+
     '<div class="surface"><p class="card-kicker">AKSES & KEAMANAN</p><h3>Keamanan akun</h3><p class="card-desc">Sesi disimpan hanya di tab browser ini. Keluar untuk mengakhiri akses lokal.</p><div class="actions" style="margin-top:24px"><button class="btn btn-secondary" data-action="logout">'+icon('logout')+' Keluar dari akun</button></div>'+
     '<div class="divider"></div><h3>Pesanan saya</h3><button class="btn btn-ghost" data-route="pesanan">Lihat riwayat pesanan '+icon('arrow')+'</button><div class="divider"></div><h3>Program affiliate</h3><button class="btn btn-ghost" data-route="affiliate">Lihat referral saya '+icon('arrow')+'</button>'+
-    '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan bug atau usulkan fitur '+icon('arrow')+'</button></div></div>';
+    '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan bug atau usulkan fitur '+icon('arrow')+'</button></div></div>'+viewNotificationCenter();
 }
 function viewLogin(register=false){
   return '<div class="login-shell"><p class="eyebrow">'+(register?'MEMULAI PERJALANAN':'SELAMAT DATANG KEMBALI')+'</p><h1 style="font-size:2.25rem">'+(register?'Buat akun member.':'Masuk ke ruang Anda.')+'</h1>'+
@@ -651,6 +669,8 @@ async function loadRoute(route){
     if(route==='lms-course'&&state.lmsSelectedCourseId)
       state.lmsCourseDetail=await api('getLMSCourse',
         {course_id:state.lmsSelectedCourseId},token);
+    if(route==='akun'&&!isAdmin()&&config.notificationsEnabled===true)
+      state.notifications=await api('getMyNotifications',{},token);
     if(route==='affiliate')state.affiliates=await api('getAffiliateDashboard',{},token);
     if(route==='pesanan'){
       if(isAdmin()){
@@ -1074,6 +1094,15 @@ document.addEventListener('click',async(e)=>{
   }else if(target.hasAttribute('data-impact-action')){
     await checkProductImpact();
   }else if(target.hasAttribute('data-buy'))await buy(target.dataset.buy);
+  else if(target.dataset.action==='notification-read'){
+    if(!logged()||isAdmin()||config.notificationsEnabled!==true||!isWriteEnabled())return;
+    target.disabled=true;
+    try{
+      await api('markNotificationRead',{notification_id:target.dataset.notificationId},state.token,{write:true});
+      state.notifications=await api('getMyNotifications',{},state.token);
+      render();
+    }catch(error){toast(error.message,true);target.disabled=false;}
+  }
   else if(target.dataset.action==='logout')await logout();
   else if(target.dataset.action==='confirm-payment')await confirmPayment();
   else if(target.dataset.copy){
