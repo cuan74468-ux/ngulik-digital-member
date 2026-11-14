@@ -99,3 +99,12 @@ test('public referral does not reveal referred member full WhatsApp or PIN',()=>
   assert.equal(Object.hasOwn(result,'pin_hash'),false);
   assert.equal(JSON.stringify(result).includes('6281100000001'),false);
 });
+
+test('admin-only runtime status is not available to members or visitors',()=>{
+  const h=fixture();
+  h.ctx.adminRuntimeStatus_=()=>({schema:{expected:26,ready:26},feature_flags:{finance:false}});
+  assert.equal(h.action('adminGetRuntimeStatus','admin-token').schema.ready,26);
+  assert.throws(()=>h.action('adminGetRuntimeStatus','member-token'),/Akses tidak diizinkan/);
+  assert.throws(()=>h.action('adminGetRuntimeStatus','UNAUTHORIZED'),/Sesi tidak valid/);
+  assert.ok(vm.runInContext('apiReadActions_()',h.ctx).includes('adminGetRuntimeStatus'));
+});
