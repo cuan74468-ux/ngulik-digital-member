@@ -41,7 +41,7 @@ test('guest cannot access member ticket form or admin data',()=>{
 });
 test('member preview renders ticket form and locks all write actions',()=>{
   const h=preview('member','dukungan');
-  assert.match(h.nodes.screen.innerHTML,/Bantuan & Dukungan/);
+  assert.match(h.nodes.screen.innerHTML,/Bantuan &amp; Dukungan/);
   assert.match(h.nodes.screen.innerHTML,/id="support-create-form"/);
   assert.match(h.nodes.screen.innerHTML,/Cetak struk gagal pada Android/);
   assert.match(h.nodes.screen.innerHTML,/disabled title="Fitur support belum diaktifkan"/);
