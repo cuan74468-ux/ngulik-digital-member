@@ -3,6 +3,10 @@
 Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliate.
 **Arsitektur:** GitHub Pages (HTML/CSS/ES Modules tanpa build) → Google Apps Script Web App → Google Sheets (14 tab sumber; 25 tab staging privat: 14 inti + 3 support + 7 LMS + 1 notifikasi).
 
+## Penguatan autentikasi — 14 November 2026
+
+Untuk akun yang sudah terdaftar, penghitung kegagalan login PIN sekarang dicatat bukan hanya di `CacheService` tetapi juga di `ScriptProperties` dengan kunci hash nomor WA dan masa berlaku 15 menit. Ini mencegah hilangnya cache membatalkan lockout sementara. Nomor WA acak yang tidak terdaftar tidak disimpan ke Script Properties untuk mencegah penyalahgunaan kapasitas. Saat PIN benar, kedua penghitung dibersihkan. **Mekanisme tersebut belum menggantikan kebutuhan uji autentikasi end-to-end, pemulihan akun, persetujuan privasi, dan penerapan keamanan produksi.**
+
 ## Staging admin katalog & release gate — 14 November 2026
 
 - Panel **Kelola Katalog** `?preview=admin#produk` sudah ada pada UI, dengan daftar 8 produk dan form editor yang terkunci di demo publik. Member biasa tidak dapat membuka editor katalog.
