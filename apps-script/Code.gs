@@ -1159,6 +1159,7 @@ function apiRouter_(action,token,p,requestId) {
   m=activeMember_(token);
   switch(action) {
     case 'getMe':return publicMember_(m);
+    case 'getMyProducts':return supportMemberProducts_(m,readAll_('orders'),readAll_('katalog_produk'));
     case 'getMyTickets':return supportListMine_(m);
     case 'getTicket':return supportGetTicket_(m,p.ticket_id);
     case 'getMyProductReleases':return supportReleasesForMember_(m,p);
@@ -1311,7 +1312,7 @@ function apiReadActions_() {
     'getAffiliateDashboard','adminGetDashboard','adminListOrders','adminListMembers',
     'adminListWaitingList','adminListCommissions','adminGetSettings',
     'adminGetReconciliation',
-    'getMyTickets','getTicket','getMyProductReleases',
+    'getMyProducts','getMyTickets','getTicket','getMyProductReleases',
     'adminSearchMembers','adminGetMember360','adminGetSupportOverview',
     'adminListTickets','adminGetTicket','adminListProductReleases'];
 }
