@@ -1,17 +1,20 @@
 # Ngulik Digital Member
 
 Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliate.
-**Arsitektur:** GitHub Pages (HTML/CSS/ES Modules tanpa build) → Google Apps Script Web App → Google Sheets (14 tab).
+**Arsitektur:** GitHub Pages (HTML/CSS/ES Modules tanpa build) → Google Apps Script Web App → Google Sheets (14 tab sumber, 17 tab pada staging support).
 
 ## Status aktual — 14 November 2026
 
 **Status: DALAM PENGEMBANGAN — belum siap dipakai publik atau transaksi nyata.**
 
-**Checkpoint QA terbaru:** GitHub Actions run #106 **89/89 tes Node.js lulus**. Chrome headless menguji beranda, dashboard mobile 390×844 (navigasi terlihat, tidak overflow), dan katalog desktop 1280×800 (checkout terkunci, tidak overflow). Bukti: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43540518931
+**Checkpoint QA terbaru:** GitHub Actions run #131 **115/115 tes Node.js lulus**. Chrome headless menguji beranda, dashboard mobile 390×844 (navigasi terlihat, tidak overflow), dan katalog desktop 1280×800 (checkout terkunci, tidak overflow). Bukti: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43543129765
 
 **Bukti dan rinciannya:** [QA Evidence & Staging Checkpoint](docs/QA_EVIDENCE_2026-11-14.md).
 
-**Database staging privat sudah dibuat:** salinan Google Sheet memiliki ID berbeda dari sumber, 14/14 tab dan 149 header cocok dengan backend, data identitas/sesi/order/ledger/komisi/log dibersihkan, serta pendaftaran diatur `TERTUTUP`. URL staging sengaja tidak dipublikasikan dalam repository. Database sumber tidak diubah. Staging baru berupa **spreadsheet**; backend GAS staging dan eksekusi integrasi belum terverifikasi.
+**Member 360° & Support Ticketing telah dibangun dalam source:** pencarian member menurut nama/WA/produk, tiket bug/fitur/pertanyaan, penanganan status dan prioritas P0–P3, riwayat aktivitas, serta draft/publikasi changelog. Tiga tab support ditambahkan hanya ke staging privat (17/17 header sesuai). Semua penulisan support tetap **OFF** melalui `NGD_SUPPORT_ENABLED` dan `config.supportEnabled:false`. Lihat [handoff Member 360 & Support](docs/MEMBER360_SUPPORT_HANDOFF_2026-11-14.md).
+
+
+**Database staging privat sudah dibuat:** salinan Google Sheet memiliki ID berbeda dari sumber, 17/17 tab dan 187 header cocok dengan backend terbaru (14/14 tab sumber tetap utuh), data identitas/sesi/order/ledger/komisi/log dibersihkan, serta pendaftaran diatur `TERTUTUP`. URL staging sengaja tidak dipublikasikan dalam repository. Database sumber tidak diubah. Staging berupa **spreadsheet 17 tab**; backend GAS staging dan eksekusi integrasi belum terverifikasi.
 
 **Perbaikan P0 baru:** pengaturan komisi `0%` sekarang benar-benar menghasilkan nol komisi (tidak jatuh ke default `25%`). Nilai komisi divalidasi sebelum hak akses produk diberikan. Autentikasi/otorisasi kini punya tes tambahan untuk isolasi member/admin, akun ditangguhkan, dan data pesanan pribadi.
 
@@ -22,7 +25,7 @@ Perubahan checkpoint 14 November (termasuk hardening lanjutan):
 - Komisi tidak dapat dicairkan bila order asal dibatalkan/direfund.
 - Aktivasi lisensi/seat memakai penanda anti-retry setelah upaya fulfillment.
 - Click tracking publik memiliki saklar tambahan yang default nonaktif.
-- Pengujian aturan bisnis murni 45/45; keseluruhan CI Node.js 89/89 serta browser smoke test sudah terverifikasi pada run #102. Ini bukan pengujian Apps Script nyata.
+- Pengujian aturan bisnis murni 45/45; keseluruhan CI Node.js 115/115 serta browser smoke test sudah terverifikasi pada run #131. Ini bukan pengujian Apps Script nyata.
 
 Perubahan checkpoint 14 November:
 - Semua mutasi tetap memerlukan `NGD_MUTATIONS_ENABLED=true`. Pendaftaran memerlukan **saklar kedua** `NGD_REGISTRATION_ENABLED=true`; pembayaran/refund/payout/koreksi kredit memerlukan **saklar ketiga** `NGD_FINANCE_ENABLED=true`. Semua default **OFF**; pengujian login tidak otomatis membuka transaksi.
@@ -45,7 +48,7 @@ Perubahan checkpoint 14 November:
 | `diagnosticAuthReadOnly` | Lulus 16/16 pemeriksaan dasar |
 | `diagnosticFinanceReadOnly` | Lulus dengan **0 order / 0 ledger / 0 komisi** |
 | `diagnosticReconciliationReadOnly` | Lulus dengan **0 order** |
-| Skenario murni antrean, keuangan, pengaturan admin | 44/44 assertions lulus di V8 terisolasi |
+| Skenario murni antrean, keuangan, pengaturan admin | 45/45 assertions lulus di V8 terisolasi |
 | Frontend awal (SPA tanpa build) | **Source dibuat**; guest/member preview telah diuji pada mock browser; belum diuji di browser sungguhan |
 | Login nyata, pembayaran, refund, affiliate, AI | **Belum lulus uji integrasi/keamanan** |
 | Google Apps Script terbaru vs GitHub | **Belum disinkronkan sejak perubahan lanjutan** |
@@ -63,17 +66,20 @@ assets/app.css               # Desain mobile-first
 assets/favicon.svg
 js/api.js                    # Transport API Apps Script (text/plain)
 js/app.js                    # SPA beranda, login, katalog, belajar, AI, affiliate, admin
-apps-script/Code.gs          # Backend + action router
+apps-script/Code.gs          # Backend + action router (17-tab schema)
+apps-script/Support.gs       # Member360, tiket dan rilis produk
 apps-script/Diagnostics.gs   # Diagnostik read-only dan simulasi memori
 apps-script/appsscript.json  # Manifest; JANGAN deploy dahulu
 tests/backend-pure.test.cjs
 tests/frontend-smoke.test.cjs
+tests/backend-support.test.cjs
+tests/frontend-support.test.cjs
 .github/workflows/validate.yml
 ```
 
 ## Pagar keamanan sementara
 
-- `config.js` berisi `apiUrl: ''`, `demoMode: true`, dan `paymentsEnabled: false`. **Jangan ubah** sebelum audit dan konfirmasi deployment.
+- `config.js` berisi `apiUrl: ''`, `demoMode: true`, `paymentsEnabled: false`, dan `supportEnabled:false`. **Jangan ubah** sebelum audit dan konfirmasi deployment.
 - Tombol registrasi, login, dan transaksi yang menulis data dinonaktifkan ketika mode pratinjau. Checkout juga membutuhkan QRIS serta nama merchant yang diverifikasi.
 - QRIS asli tidak ada di repo. Jangan memakai kode QR atau rekening contoh untuk transaksi nyata.
 - Fitur `generateAI` belum diaktifkan; tidak ada pemotongan kredit sebelum API SobatAgent terverifikasi.
@@ -115,3 +121,9 @@ Workflow `validate.yml` juga menjalankan perintah itu pada push/PR, **tidak mela
 - Jika hanya melihat source GitHub, `index.html` bukan preview aplikasi interaktif; modul ES memerlukan server HTTPS. GitHub Pages belum dinyalakan melalui pekerjaan ini.
 - Jangan mengganti `Code.gs` di Google Apps Script yang saat ini terikat database aktif; backend masih terus dikembangkan.
 - Untuk QA sebelum rilis, buka [Release Gates & QA](docs/RELEASE_GATES_2026-11-14.md). Jangan menyalakan `NGD_MUTATIONS_ENABLED` tanpa pengujian staging dan persetujuan terpisah.
+
+## Mode pratinjau Support
+
+Untuk uji tampilan lokal tanpa backend (belum publik): `?preview=member#dukungan`, `?preview=member#tiket`, `?preview=admin#member`, `?preview=admin#dukungan`, dan `?preview=admin#rilis`. Semua data adalah contoh; form tiket, perubahan prioritas, dan publikasi tetap terkunci.
+
+Catatan: kode di GitHub belum disinkronkan ke Apps Script staging atau produksi. Jangan menjalankan `setupDatabase` pada sumber 14-tab. Lihat [handoff modul support](docs/MEMBER360_SUPPORT_HANDOFF_2026-11-14.md).
