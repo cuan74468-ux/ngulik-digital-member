@@ -24,6 +24,10 @@
 | Google Sheets | Staging 25 tab, termasuk 8 produk pada `katalog_produk` | Struktur staging sudah disiapkan, belum diuji runtime GAS terbaru |
 | Authentication | Login WA+PIN 6 digit, sesi tersimpan dan throttling cache | Membutuhkan audit autentikasi serta rencana pemulihan akun sebelum publik |
 
+### Hardening PIN tambahan di source
+
+`Code.gs` menyimpan sementara penghitung kegagalan login akun terdaftar dalam Script Properties, menggunakan identitas kunci hasil hash nomor WA (bukan nomor mentah) dan jendela 15 menit. Login sukses menghapus counter; angka WA tidak dikenal hanya memakai cache. Penguncian ini tetap berjalan jika cache terhapus, tetapi **belum terbukti aman dalam uji beban atau percobaan nyata**. Sistem masih memakai PIN 6 digit; pilihan OTP/pemulihan akun harus diputuskan sebelum pembukaan massal. Jangan simpan PIN di log, spreadsheet publik, atau chat.
+
 ## 2. Pemasangan staging yang aman — aksi pemilik di browser
 
 **Jangan bekerja pada Apps Script/database sumber 14 tab. Jangan menyalin nomor, PIN, API key atau token ke GitHub.**
