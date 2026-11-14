@@ -32,13 +32,13 @@ const NGD = Object.freeze({
     support_tickets: 'ticket_id,member_id,product_id,order_id,kategori,judul,deskripsi,platform,versi_aplikasi,status,prioritas,assigned_to,created_at,updated_at,resolved_at,closed_at,request_id',
     ticket_activities: 'activity_id,ticket_id,actor_id,actor_role,jenis,dari_status,ke_status,pesan,created_at,request_id',
     product_releases: 'release_id,product_id,versi,judul,ringkasan,tipe_rilis,status,created_at,published_at,created_by,request_id',
-    lms_courses: 'course_id,workspace_id,title,summary,published_title,published_summary,category,level,access_type,product_id,sort_order,status,version,created_at,updated_at,published_at,archived_at,created_by,request_id',
-    lms_lessons: 'lesson_id,course_id,title,body,media_url,published_title,published_body,published_media_url,kind,sort_order,duration_minutes,status,version,created_at,updated_at,published_at,created_by,request_id',
+    lms_courses: 'course_id,workspace_id,title,summary,published_title,published_summary,published_category,published_level,published_access_type,published_product_id,published_sort_order,category,level,access_type,product_id,sort_order,status,version,created_at,updated_at,published_at,archived_at,created_by,request_id',
+    lms_lessons: 'lesson_id,course_id,title,body,media_url,published_title,published_body,published_media_url,published_kind,published_sort_order,published_duration_minutes,kind,sort_order,duration_minutes,status,version,created_at,updated_at,published_at,created_by,request_id',
     lms_enrollments: 'enrollment_id,member_id,course_id,status,enrolled_at,last_access_at,completed_at,request_id',
     lms_progress: 'progress_id,member_id,course_id,lesson_id,status,started_at,completed_at,request_id',
     lms_workspaces: 'workspace_id,course_id,name,workspace_status,created_at,updated_at,created_by,auto_created,request_id',
     lms_ai_jobs: 'job_id,workspace_id,course_id,lesson_id,task_type,brief,prompt,result_draft,status,created_at,updated_at,requested_by,reviewed_by,request_id',
-    lms_revisions: 'revision_id,entity,entity_id,version,title,body,media_url,published_at,actor_id,request_id'
+    lms_revisions: 'revision_id,entity,entity_id,version,title,body,media_url,metadata_json,published_at,actor_id,request_id'
   }
 });
 
