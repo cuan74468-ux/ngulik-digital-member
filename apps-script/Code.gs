@@ -1207,10 +1207,12 @@ function apiRouter_(action,token,p,requestId) {
     case 'adminCreateLMSCourse':return lmsCreateCourse_(admin,p,requestId);
     case 'adminUpdateLMSCourse':return lmsUpdateCourse_(admin,p);
     case 'adminArchiveLMSCourse':return lmsArchive_(admin,p,'COURSE');
+    case 'adminRestoreLMSCourse':return lmsRestore_(admin,p,'COURSE');
     case 'adminPublishLMSCourse':return lmsPublishCourse_(admin,p,requestId);
     case 'adminCreateLMSLesson':return lmsCreateLesson_(admin,p,requestId);
     case 'adminUpdateLMSLesson':return lmsUpdateLesson_(admin,p);
     case 'adminArchiveLMSLesson':return lmsArchive_(admin,p,'LESSON');
+    case 'adminRestoreLMSLesson':return lmsRestore_(admin,p,'LESSON');
     case 'adminPublishLMSLesson':return lmsPublishLesson_(admin,p,requestId);
     case 'adminPrepareLMSAIJob':return lmsPrepareAIJob_(admin,p,requestId);
     case 'adminImportLMSAIResult':return lmsImportAIResult_(admin,p);
@@ -1321,8 +1323,10 @@ function requireActionFeatureEnabled_(action) {
     require_(settings.getProperty('NGD_REGISTRATION_ENABLED')==='true',
       'MAINTENANCE','Pendaftaran belum dibuka.');
   if(['enrollLMSCourse','completeLMSLesson','adminCreateLMSCourse',
-      'adminUpdateLMSCourse','adminArchiveLMSCourse','adminPublishLMSCourse',
+      'adminUpdateLMSCourse','adminArchiveLMSCourse','adminRestoreLMSCourse',
+      'adminPublishLMSCourse',
       'adminCreateLMSLesson','adminUpdateLMSLesson','adminArchiveLMSLesson',
+      'adminRestoreLMSLesson',
       'adminPublishLMSLesson','adminPrepareLMSAIJob','adminImportLMSAIResult',
       'adminReviewLMSAIJob'].indexOf(action)>=0)
     require_(settings.getProperty('NGD_LMS_ENABLED')==='true',
