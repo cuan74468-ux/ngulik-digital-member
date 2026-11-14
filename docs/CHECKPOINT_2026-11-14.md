@@ -52,3 +52,21 @@ Node.js hanya untuk menjalankan tes di CI, bukan untuk membangun frontend. Janga
 6. Hanya setelah itu ajukan persetujuan rilis dan satu kali sinkronisasi final Apps Script.
 
 **Keputusan permanen checkpoint:** tidak reset database aktif, tidak mengaktifkan pembayaran, tidak menyalin ulang `Code.gs` berkali-kali selama sumber masih dikembangkan.
+
+## Addendum — hardening transaksi & hak akses (14 November 2026)
+
+Perubahan kode yang **disimpan di GitHub**, bukan pada Apps Script aktif:
+
+- `getOrder` diubah menjadi baca-saja sepenuhnya. Order lewat tenggat menampilkan `past_due` virtual, sedangkan perpindahan status kedaluwarsa dijalankan lewat jalur mutasi yang dibatasi saklar server.
+- Respons order milik member menggunakan daftar kolom aman; `request_id`, `verified_by`, `ref_member_id`, `catatan_admin`, dan `_row` tidak ikut dikirim.
+- ID order baru menggunakan 12 karakter acak dari UUID, bukan empat. Kode unik pembayaran kini memeriksa seluruh rentang, bukan hanya 25 percobaan random. Retry request tidak dapat memilih produk berbeda menggunakan ID permintaan sama.
+- Admin tidak bisa menandai `PAID` tanpa `dana_diterima:true` dan `referensi_pembayaran` yang valid. Ini **bukan** integrasi otomatis bank; operator tetap wajib memeriksa penerimaan dana.
+- Refund otomatis **dibatasi hanya untuk TOPUP_KREDIT** setelah pembayaran benar-benar dikembalikan secara eksternal dan kredit awal masih tersedia untuk dibalik. Debit berdasarkan jumlah kredit di ledger original, bukan katalog yang dapat berubah. Refund layanan lain membutuhkan rekonsiliasi manual.
+- Pengajuan dan pencairan komisi memeriksa status order asal (`PAID` atau `FULFILLED`); komisi orphan, dibatalkan, atau direfund ditolak.
+- Pencatatan klik pengunjung anonim membutuhkan saklar terpisah `NGD_CLICK_TRACKING_ENABLED=true`; default **OFF** sampai kebijakan privasi dan anti-abuse disetujui.
+- Aktivasi lisensi POS dan seat Canva membutuhkan bukti admin serta penanda `[ADMIN_FULFILLMENT_ATTEMPT]` yang ditulis **sebelum** hak akses member diubah. Jika terjadi kegagalan sesudahnya, retry diblokir untuk rekonsiliasi manual.
+- Rekonsiliasi tidak lagi menganggap semua pesanan `PAID` untuk layanan manual sebagai kegagalan: aktivasi POS/Canva baru ditandai terlambat setelah 48 jam.
+
+**Bukti pengujian V8 terisolasi pada sesi ini:** 39 dari 39 pemeriksaan aturan bisnis murni (12 antrean, 12 keuangan, 15 pengaturan); 9 skenario dasar refund/privasi; 3 skenario verifikasi penerimaan dana; 7 skenario pengajuan komisi; 5 skenario penanda aktivasi/penolakan retry. Pengujian ini **bukan** bukti eksekusi Node.js CI atau Apps Script staging. Skrip Node test sudah ditambah dan workflow mengikutsertakannya, tetapi status run CI belum diverifikasi.
+
+**Risiko tetap terbuka:** tidak ada rollback atomik lintas tab Sheets, pemulihan manual dari partial failure membutuhkan SOP dan bukti transaksi, keamanan PIN harus ditinjau, belum ada pengujian koneksi CORS/lintas-origin nyata, UI admin belum sepenuhnya operasional, dan pengujian Android/Windows belum selesai.
