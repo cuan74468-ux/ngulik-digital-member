@@ -511,23 +511,59 @@ async function restoreSession(){
 }
 async function loadRoute(route){
   if(!isConnected()||!logged())return;
+  const token=state.token;
   try{
-    if(route==='beranda'||route==='ai') {
-      state.home=await api('getBeranda',{},state.token);
-      if(route==='ai'){const d=await api('getTools',{},state.token);state.tools=d.tools||[];}
+    if(route==='beranda'||route==='ai'){
+      state.home=await api('getBeranda',{},token);
+      if(route==='ai'){
+        const data=await api('getTools',{},token);
+        state.tools=data.tools||[];
+      }
     }
-    if(route==='belajar')state.modules=await api('getModulBelajar',{},state.token);
-    if(route==='affiliate')state.affiliates=await api('getAffiliateDashboard',{},state.token);
+    if(route==='belajar')state.modules=await api('getModulBelajar',{},token);
+    if(route==='affiliate')state.affiliates=await api('getAffiliateDashboard',{},token);
     if(route==='pesanan'){
       if(isAdmin()){
         const [orders,review]=await Promise.all([
-          api('adminListOrders',{},state.token),api('adminGetReconciliation',{},state.token)]);
-        state.adminOrders=orders||[];state.reconciliation=review;
-      }else state.orders=await api('listMyOrders',{},state.token);
+          api('adminListOrders',{},token),api('adminGetReconciliation',{},token)]);
+        state.adminOrders=orders||[];
+        state.reconciliation=review;
+      }else state.orders=await api('listMyOrders',{},token);
     }
-    if(route==='admin'&&isAdmin())state.adminSummary=await api('adminGetDashboard',{},state.token);
-    if(route==='member'&&isAdmin())state.members=await api('adminListMembers',{},state.token);
-    if(route==='antrean'&&isAdmin())state.waitlist=await api('adminListWaitingList',{},state.token);
+    if(route==='admin'&&isAdmin()){
+      const [dashboard,overview]=await Promise.all([
+        api('adminGetDashboard',{},token),api('adminGetSupportOverview',{},token)]);
+      state.adminSummary=dashboard;
+      state.supportOverview=overview;
+    }
+    if(route==='member'&&isAdmin())state.members=await api('adminListMembers',{},token);
+    if(route==='antrean'&&isAdmin())state.waitlist=await api('adminListWaitingList',{},token);
+    if(route==='dukungan'){
+      if(isAdmin()){
+        const [tickets,overview]=await Promise.all([
+          api('adminListTickets',{},token),api('adminGetSupportOverview',{},token)]);
+        state.adminSupportTickets=tickets||[];
+        state.supportOverview=overview;
+      }else{
+        const [tickets,products,releases]=await Promise.all([
+          api('getMyTickets',{},token),
+          api('getMyProducts',{},token),
+          api('getMyProductReleases',{},token)
+        ]);
+        state.supportTickets=tickets||[];
+        state.memberProducts=products||[];
+        state.supportReleases=releases||[];
+      }
+    }
+    if(route==='tiket'&&state.selectedTicketId)
+      state.ticketDetail=await api(isAdmin()?'adminGetTicket':'getTicket',
+        {ticket_id:state.selectedTicketId},token);
+    if(route==='member360'&&isAdmin()&&state.selectedMemberId)
+      state.member360=await api('adminGetMember360',
+        {member_id:state.selectedMemberId},token);
+    if(route==='rilis')
+      state.supportReleases=await api(isAdmin()?'adminListProductReleases':
+        'getMyProductReleases',{},token);
     if(route===state.route)render();
   }catch(e){toast(e.message,true);}
 }
