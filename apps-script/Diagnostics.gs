@@ -339,6 +339,12 @@ function diagnosticFinanceScenarios() {
   var overdueManual={order_id:'SIM-3',product_id:'SIM-POS',status:'PAID',paid_at:new Date(Date.now()-72*3600000)};
   assert_(financeFindings_([normalManual],[],[],manualProducts).needs_review===0,
     'Aktivasi POS baru dibayar tidak dianggap gagal');
+  var interruptedManual={order_id:'SIM-4',product_id:'SIM-POS',status:'PAID',
+    paid_at:new Date(Date.now()-60000),
+    catatan_admin:'[ADMIN_FULFILLMENT_ATTEMPT] | ACTIVATION-123'};
+  assert_(financeFindings_([interruptedManual],[],[],manualProducts)
+    .findings[0].issues.indexOf('MANUAL_FULFILLMENT_INCOMPLETE')>=0,
+    'Percobaan aktivasi yang terhenti terdeteksi segera');
   assert_(financeFindings_([overdueManual],[],[],manualProducts).findings[0].issues.indexOf('ADMIN_FULFILLMENT_OVERDUE')>=0,
     'Aktivasi POS yang terlambat 72 jam terdeteksi');
   var eligible=[{product_id:'SIM-AFF',tipe:'LISENSI_SEKALI',bisa_komisi:true}];
