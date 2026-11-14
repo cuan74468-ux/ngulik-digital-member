@@ -1156,20 +1156,19 @@ async function loadRoute(route){
         throw dashboard.reason;
     }
     if(route==='pengaturan'&&isAdmin()){
-      const [settings,runtime]=await Promise.allSettled([
-        api('adminGetSettings',{},token),api('adminGetRuntimeStatus',{},token)
-      ]);
-      if(settings.status==='fulfilled'){
-        state.adminSettings=settings.value;state.adminSettingsError='';
-      }else{
+      // API production v1.0.2 supports adminGetSettings as an authenticated
+      // READ, but does not implement adminGetRuntimeStatus. Do not call the
+      // unknown action: the fail-closed router would (correctly) deny it as
+      // an attempted mutation while NGD_MUTATIONS_ENABLED=false.
+      state.adminRuntime=null;
+      state.adminRuntimeError='Indikator kesiapan teknis memerlukan rilis backend berikutnya. Pengaturan yang tampil tetap dibaca langsung dari database.';
+      try{
+        const settings=await api('adminGetSettings',{},token);
+        state.adminSettings=settings;
+        state.adminSettingsError='';
+      }catch(error){
         state.adminSettings=null;
-        state.adminSettingsError=settings.reason?.message||'Pengaturan belum bisa dibaca.';
-      }
-      if(runtime.status==='fulfilled'){
-        state.adminRuntime=runtime.value;state.adminRuntimeError='';
-      }else{
-        state.adminRuntime=null;
-        state.adminRuntimeError=runtime.reason?.message||'Status backend belum tersedia.';
+        state.adminSettingsError=error?.message||'Pengaturan belum bisa dibaca.';
       }
     }
     if(route==='member'&&isAdmin())state.members=await api('adminListMembers',{},token);
