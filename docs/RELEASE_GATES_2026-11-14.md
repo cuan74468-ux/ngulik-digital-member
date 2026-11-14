@@ -18,12 +18,14 @@
 
 | Mekanisme | Lokasi | Nilai aman bawaan |
 |---|---|---|
-| Backend mutasi | Apps Script Script Properties: `NGD_MUTATIONS_ENABLED` | **Tidak ada / false** |
+| Backend mutasi umum | Script Properties: `NGD_MUTATIONS_ENABLED` | **Tidak ada / false** |
+| Pendaftaran publik | Script Properties: `NGD_REGISTRATION_ENABLED` | **Tidak ada / false** |
+| Order, kredit berbayar, refund, komisi & payout | Script Properties: `NGD_FINANCE_ENABLED` | **Tidak ada / false** |
 | Mode UI | `config.js`: `demoMode` | `true` |
 | Tombol bayar | `config.js`: `paymentsEnabled` | `false` |
 | QRIS resmi | `config.js`: `qrisImageUrl`, `qrisMerchant` | Kosong |
 
-**Jangan mengubah semua saklar sekaligus.** Validasi lapisan server, transport browser, dan transaksi staging secara berurutan. `NGD_MUTATIONS_ENABLED=true` mengizinkan semua aksi tulis API, termasuk pendaftaran, PIN, kredit dan verifikasi order: hanya set setelah persetujuan rilis yang terpisah.
+**Jangan mengubah semua saklar sekaligus.** Validasi lapisan server, transport browser, dan transaksi staging secara berurutan. `NGD_MUTATIONS_ENABLED=true` membuka mutasi dasar seperti login/PIN/progres, **bukan** pendaftaran atau transaksi. Untuk keduanya diperlukan saklar tambahan secara terpisah. Setiap saklar hanya diubah pada staging setelah pengujian dan persetujuan.
 
 ## 3. Masalah P0 yang masih terbuka
 
@@ -82,3 +84,15 @@ Source terbaru tidak lagi memuat ID Google Sheets ataupun nomor WhatsApp admin d
 - Jangan menambahkan ID spreadsheet, WA pribadi, PIN, API key, atau token ke `config.js` frontend dan GitHub.
 
 Sumber lama dan riwayat commit GitHub masih mungkin menyimpan identifier yang pernah ditulis dalam source. Redaksi pada file `main` **tidak menghapus riwayat Git**; pastikan spreadsheet bersifat privat melalui sharing Google Drive. Jangan melakukan rewrite riwayat Git tanpa rencana backup/koordinasi.
+
+## Pengamanan terperinci yang sudah ditulis di GitHub (belum uji Apps Script nyata)
+
+- Nilai dari pengguna yang terlihat seperti formula (`=`, `+`, `-`, `@`) ditulis ke Sheets sebagai **literal**, bukan rumus. Rumus resmi di sel lain tetap dipertahankan saat update kolom.
+- Pembaruan beberapa kolom pada baris yang sama menggunakan satu `setValues`; ini mengurangi kegagalan parsial **dalam satu baris**, bukan transaksi atomik lintas-tab.
+- `request_id` koreksi kredit admin disimpan sebagai referensi unik idempoten; retry identik aman. Referensi sama dengan nominal/member berbeda ditolak.
+- Transaksi baru memeriksa saldo akhir kredit nonnegatif. Pembelian lisensi POS sekali bayar tidak menggandakan lisensi; perpanjangan Canva mempertahankan status aktif hingga dipenuhi admin.
+- `adminGetReconciliation` memeriksa komisi yang seharusnya dibuat tetapi tidak tercatat, sesuai aturan komisi hanya untuk produk layak dan member referral.
+- `NGD_REGISTRATION_ENABLED` hanya membuka registrasi jika mutasi umum aktif; `NGD_FINANCE_ENABLED` mengendalikan pembayaran, refund, payout, koreksi kredit, dan pemeliharaan transaksi.
+- Seluruh kontrol rilis **default OFF** pada kode sumber baru. Jangan mengasumsikan Script Properties di proyek Apps Script aktif telah disetel atau sinkron dengan GitHub.
+
+**Catatan penting:** HTTP GET/POST berbasis `ContentService` tetap memiliki risiko CORS lintas-origin dari GitHub Pages; jangan menambahkan `no-cors` atau proxy tidak tepercaya untuk PIN/token.
