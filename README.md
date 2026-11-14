@@ -11,7 +11,7 @@ Platform membership, pembelajaran UMKM, katalog digital, kredit AI, dan affiliat
 
 **Bukti dan rinciannya:** [QA Evidence & Staging Checkpoint](docs/QA_EVIDENCE_2026-11-14.md).
 
-**Mobile member V2 sudah diterapkan di source:** desain putih–ungu native-inspired (berdasarkan referensi pengguna), fokus belajar dengan ring progres, kartu kursus, navigasi bawah, detail pelajaran, layar sukses, serta dukungan dan profil yang konsisten. Aturan berada di `assets/member-mobile.css`, terpisah dari tampilan admin. Lihat [panduan desain dan handoff mobile](docs/MOBILE_MEMBER_DESIGN_2026-11-14.md).
+**UI/UX unified — Slate & Ink (pembaruan):** beranda publik, desktop, mobile, member, LMS, akun, serta seluruh panel admin menggunakan satu desain biru-abu muda + kartu putih + tombol/nav aktif charcoal + aksen progres biru. `assets/unified-theme.css` dimuat paling akhir di seluruh tampilan. Isi LMS dan aturan bisnis tidak berubah. Tema ungu mobile pada checkpoint sebelumnya kini hanya legacy CSS dan ditimpa sistem global. Lihat [panduan sistem visual baru](docs/UNIFIED_DESIGN_SYSTEM_2026-11-14.md) dan [arsip handoff mobile](docs/MOBILE_MEMBER_DESIGN_2026-11-14.md).
 
 **LMS V1 dalam tahap staging:** `apps-script/LMS.gs` menangani kursus, pelajaran, published snapshot, enrollment, progres, workspace otomatis, revisi, dan antrian AI draft. Staging privat memiliki **25 tab** (7 LMS dan 1 notifikasi setelah 17 tab sebelumnya). Dua header versi LMS (`lms_lessons.published_version`, `lms_progress.lesson_version`) telah diperbaiki dan dicocokkan terhadap 25 kontrak backend. `NGD_LMS_ENABLED` dan `config.lmsEnabled` tetap OFF; API key LLM, pembayaran, notifikasi WhatsApp/email, dan update produksi belum diaktifkan.
 
@@ -77,6 +77,14 @@ Arsip progres sebelumnya: [13 November 2026](docs/CHECKPOINT_HISTORY_2026-11-13.
 - Tes baru: `tests/backend-diagnostics-isolation.test.cjs`, `tests/backend-notifications.test.cjs`, `tests/backend-member-profile.test.cjs`.
 
 Rincian implementasi, batasan, dan urutan QA: [Userbase Core Runbook](docs/USERBASE_CORE_IMPLEMENTATION_2026-11-14.md).
+
+## UI responsif terpadu — 14 November 2026
+
+- Referensi visual: mockup SubPilot yang diberikan pengguna, **gaya visual saja** (tanpa fitur subscription atau aset merek lain).
+- Satu palet untuk **desktop, mobile, admin, member, tamu, LMS, katalog, support, dan formulir**; tidak ada pemisahan hijau-desktop vs ungu-mobile.
+- CSS: `assets/app.css` (basis), `assets/member-mobile.css` (komponen lama), `assets/unified-theme.css` (skin final global).
+- GitHub Actions menguji computed token tema, navigasi gelap aktif, bilah navigasi mengambang di mobile, serta tidak ada horizontal overflow pada browser emulasi.
+- Detail, batasan, dan rollback: [Unified Design System](docs/UNIFIED_DESIGN_SYSTEM_2026-11-14.md).
 
 ## Struktur
 
