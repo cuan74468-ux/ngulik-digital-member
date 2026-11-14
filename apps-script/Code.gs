@@ -968,7 +968,15 @@ function financeFindings_(orders,ledger,commissions,products) {
     var reasons=[],entries=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='TOPUP';});
     var reversals=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='ADJUST_REFUND';});
     var isTopup=types[String(o.product_id)]==='TOPUP_KREDIT';
-    if(o.status==='PAID')reasons.push('PAID_PENDING_FULFILLMENT_REVIEW');
+    if(o.status==='PAID'){
+      var type=types[String(o.product_id)];
+      if(['LISENSI_SEKALI','SEAT_30H'].indexOf(type)>=0){
+        // Manual fulfillment is expected; only flag when overdue >48 hours.
+        var paidAt=new Date(o.paid_at||o.created_at).getTime();
+        if(!Number.isFinite(paidAt)||Date.now()-paidAt>48*3600000)
+          reasons.push('ADMIN_FULFILLMENT_OVERDUE');
+      }else reasons.push('PAID_PENDING_FULFILLMENT_REVIEW');
+    }
     if(isTopup&&['FULFILLED','REFUNDED'].indexOf(o.status)>=0&&entries.length!==1)
       reasons.push('TOPUP_LEDGER_COUNT_'+entries.length);
     if(isTopup&&o.status==='REFUNDED'&&reversals.length!==1)
