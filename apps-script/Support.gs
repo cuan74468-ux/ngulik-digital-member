@@ -115,7 +115,9 @@ function supportOpenTicket_(member,p,requestId) {
       var old=previous[0];
       require_(old.member_id===member.member_id&&old.product_id===input.product_id&&
         old.kategori===input.kategori&&old.judul===input.judul&&
-        old.deskripsi===input.deskripsi,'CONFLICT',
+        old.deskripsi===input.deskripsi&&old.platform===input.platform&&
+        old.versi_aplikasi===input.versi_aplikasi&&
+        (!input.order_id||old.order_id===input.order_id),'CONFLICT',
         'ID permintaan sudah digunakan untuk laporan berbeda.');
       // Recover one missing CREATED activity if the first request stopped
       // between writing the ticket and creating its initial event.
@@ -125,9 +127,19 @@ function supportOpenTicket_(member,p,requestId) {
       if(!found.length)supportActivity_(old,member,'DIBUAT','','OPEN','Laporan dibuat.',requestId);
       return supportTicketView_(old);
     }
+    var conflicts=findRows_('ticket_activities',function(a){return a.request_id===requestId;});
+    require_(!conflicts.length,'CONFLICT','ID permintaan sudah dipakai untuk aktivitas lain.');
+    var now=now_(),recent=findRows_('support_tickets',function(t){
+      return t.member_id===member.member_id&&
+        new Date(t.created_at).getTime()>now.getTime()-86400000;
+    });
+    require_(recent.length<5,'RATE_LIMIT','Maksimal lima tiket baru per 24 jam.');
+    var open=findRows_('support_tickets',function(t){
+      return t.member_id===member.member_id&&t.status!=='CLOSED';
+    });
+    require_(open.length<10,'RATE_LIMIT','Terlalu banyak tiket terbuka.');
     var ownership=supportCanReport_(member,input.product_id,input.kategori,
       input.order_id,readAll_('orders'),readAll_('katalog_produk'));
-    var now=now_();
     var ticket={ticket_id:recordId_('SUP'),member_id:member.member_id,
       product_id:input.product_id,order_id:ownership.order_id,
       kategori:input.kategori,judul:input.judul,deskripsi:input.deskripsi,
@@ -222,10 +234,19 @@ function supportReply_(actor,p,requestId) {
     var prior=findRows_('ticket_activities',function(a){return a.request_id===requestId;});
     require_(prior.length<=1,'RECONCILIATION_REQUIRED','ID balasan tidak unik.');
     if(prior.length){
-      require_(prior[0].ticket_id===t.ticket_id&&
-        prior[0].actor_id===actor.member_id&&prior[0].pesan===message&&
-        prior[0].jenis==='BALASAN','CONFLICT',
+      var event=prior[0];
+      require_(event.ticket_id===t.ticket_id&&
+        event.actor_id===actor.member_id&&event.pesan===message&&
+        event.jenis==='BALASAN','CONFLICT',
         'ID permintaan digunakan untuk balasan berbeda.');
+      if(t.status===event.dari_status&&event.ke_status!==event.dari_status){
+        // Recover a failed status write after the reply event was persisted.
+        updateRow_('support_tickets',t._row,{status:event.ke_status,
+          updated_at:now_(),resolved_at:event.ke_status==='OPEN'?'':t.resolved_at});
+        t=byId_('support_tickets','ticket_id',t.ticket_id);
+      }
+      require_(t.status===event.ke_status,'RECONCILIATION_REQUIRED',
+        'Status tiket perlu rekonsiliasi dengan riwayat balasan.');
       return supportGetTicket_(actor,t.ticket_id);
     }
     require_(t.status!=='CLOSED','CONFLICT','Tiket sudah ditutup. Buat laporan baru.');
@@ -243,10 +264,15 @@ function supportReply_(actor,p,requestId) {
 function supportOverview_() {
   var data=readAll_('support_tickets'),byStatus={},issues=[];
   data.forEach(function(t){byStatus[t.status]=(byStatus[t.status]||0)+1;});
-  var acts=readAll_('ticket_activities'),counts={};
-  acts.forEach(function(a){counts[a.ticket_id]=(counts[a.ticket_id]||0)+1;});
+  var acts=readAll_('ticket_activities'),counts={},lastStatus={};
+  acts.forEach(function(a){
+    counts[a.ticket_id]=(counts[a.ticket_id]||0)+1;
+    if(a.ke_status)lastStatus[a.ticket_id]=a.ke_status;
+  });
   data.forEach(function(t){
     if(!counts[t.ticket_id])issues.push({ticket_id:t.ticket_id,reason:'MISSING_ACTIVITY'});
+    else if(lastStatus[t.ticket_id]&&lastStatus[t.ticket_id]!==t.status)
+      issues.push({ticket_id:t.ticket_id,reason:'STATUS_ACTIVITY_DIVERGENCE'});
     if(t.status==='OPEN'&&Date.now()-new Date(t.created_at).getTime()>48*3600000)
       issues.push({ticket_id:t.ticket_id,reason:'UNTRIAGED_48H'});
   });
@@ -324,7 +350,8 @@ function supportCreateRelease_(admin,p,requestId) {
     if(previous.length){
       var old=previous[0];
       require_(old.product_id===input.product_id&&old.versi===input.versi&&
-        old.ringkasan===input.ringkasan,'CONFLICT',
+        old.ringkasan===input.ringkasan&&old.judul===input.judul&&
+        old.tipe_rilis===input.tipe_rilis,'CONFLICT',
         'ID permintaan sudah digunakan untuk rilis berbeda.');
       return supportReleaseView_(old);
     }
