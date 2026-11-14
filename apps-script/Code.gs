@@ -662,7 +662,11 @@ function newOrder_(m,p,requestId) {
     var product=byId_('katalog_produk','product_id',String(p.product_id||''));
     require_(product&&product.aktif===true,'NOT_FOUND','Produk tidak tersedia.');
     var retry=byId_('orders','request_id',requestId);
-    if(retry){require_(retry.member_id===m.member_id,'CONFLICT','ID permintaan sudah dipakai.');return orderView_(retry,m);}
+    if(retry){
+      require_(retry.member_id===m.member_id&&retry.product_id===product.product_id,
+        'CONFLICT','ID permintaan sudah dipakai untuk pesanan lain.');
+      return orderView_(retry,m);
+    }
     var mine=findRows_('orders',function(o){return o.member_id===m.member_id&&o.product_id===product.product_id&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;});
     if(mine.length){var existing=expireOrder_(mine[0]);if(existing.status!=='EXPIRED')return orderView_(existing,m);}
     var s=settings_(),min=Number(s.kode_unik_min||100),max=Number(s.kode_unik_max||999),price=Number(product.harga);
@@ -703,8 +707,15 @@ function transitionOrder_(m,id,type,p) {
     if(type==='confirm'&&!admin&&from==='PENDING'){to='MENUNGGU_VERIFIKASI';patch.konfirmasi_bayar_at=now_();}
     else if(type==='cancel'&&!admin&&from==='PENDING'){to='CANCELLED';patch.cancelled_at=now_();}
     else if(type==='approve'&&admin&&['MENUNGGU_VERIFIKASI','EXPIRED'].indexOf(from)>=0){
-      if(from==='EXPIRED')require_(safeText_(p.alasan,300).length>=5,'VALIDATION','Alasan pembayaran terlambat wajib diisi.');
-      to='PAID';patch.paid_at=now_();patch.verified_by=m.member_id;patch.catatan_admin=String(p.alasan||'');
+      require_(p.dana_diterima===true,'RECONCILIATION_REQUIRED',
+        'Dana harus diverifikasi benar-benar masuk sebelum order dibayar.');
+      var proof=safeText_(p.referensi_pembayaran,120);
+      require_(proof.length>=5,'VALIDATION','Referensi mutasi/settlement pembayaran wajib diisi.');
+      var note=safeText_(p.alasan,300);
+      if(from==='EXPIRED')require_(note.length>=5,'VALIDATION',
+        'Alasan pembayaran terlambat wajib diisi.');
+      to='PAID';patch.paid_at=now_();patch.verified_by=m.member_id;
+      patch.catatan_admin='Pembayaran ref: '+proof+(note?' | '+note:'');
     } else if(type==='reject'&&admin&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(from)>=0){
       require_(safeText_(p.alasan,300).length>=5,'VALIDATION','Alasan penolakan diperlukan.');to='CANCELLED';patch.cancelled_at=now_();patch.catatan_admin=p.alasan;
     } else throw ngdError_('CONFLICT','Status pesanan tidak mengizinkan tindakan ini.');
@@ -723,7 +734,8 @@ function transitionOrder_(m,id,type,p) {
           'CONFLICT','Durasi produk belum valid.');
     }
     patch.status=to;updateRow_('orders',o._row,patch);
-    logAudit_(m.member_id,m.role,'ORDER_'+type.toUpperCase(),'orders',id,from,to,{alasan:patch.catatan_admin||''});
+    logAudit_(m.member_id,m.role,'ORDER_'+type.toUpperCase(),'orders',id,from,to,
+      {note:patch.catatan_admin||'',payment_received:to==='PAID'});
     if(to==='PAID'){
       try{
         onPaid_(o,m);
