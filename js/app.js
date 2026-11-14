@@ -121,6 +121,39 @@ function activatePreview(){
       pesan:'Laporan dibuat.',created_at:'2026-11-14T01:00:00Z'}
   ]};
   state.selectedTicketId=example.ticket_id;
+  // Synthetic LMS fixture: no credentials, no runtime writes, no real member data.
+  const previewCourse={
+    course_id:'CRS-DEMO',workspace_id:'WS-DEMO',
+    title:'Fondasi Digital untuk UMKM',summary:'Kursus praktis tentang profil bisnis, pemasaran, dan operasional.',
+    category:'UMKM',level:'PEMULA',access_type:'MEMBER',
+    product_id:'',sort_order:1,status:'PUBLISHED',version:1,
+    published_title:'Fondasi Digital untuk UMKM',
+    published_summary:'Kursus praktis tentang profil bisnis, pemasaran, dan operasional.',
+    access_granted:true
+  };
+  const previewLesson={
+    lesson_id:'LES-DEMO',course_id:'CRS-DEMO',
+    title:'Menyiapkan Profil Usaha',body:'Tujuan pembelajaran:\n1. Mengidentifikasi pelanggan.\n2. Menulis deskripsi usaha.\n3. Menyiapkan profil digital.',
+    kind:'ARTICLE',media_url:'',sort_order:1,duration_minutes:15,
+    status:'PUBLISHED',version:1,completed:false
+  };
+  state.lmsCourses=[previewCourse];
+  state.lmsEnrollments=[{enrollment_id:'ENR-DEMO',course_id:'CRS-DEMO',status:'ACTIVE'}];
+  state.lmsCourseDetail={course:previewCourse,lessons:[previewLesson],
+    access_granted:true,completed:0,total:1};
+  state.lmsAdminCourses=[{...previewCourse,unpublished_changes:false}];
+  state.lmsAdminCourse={course:{...previewCourse,unpublished_changes:false},
+    lessons:[previewLesson],workspace:{workspace_id:'WS-DEMO',course_id:'CRS-DEMO',
+      name:'Ruang Materi — Fondasi Digital untuk UMKM',
+      workspace_status:'ACTIVE',auto_created:true}};
+  state.lmsJobs=[{job_id:'AIJ-DEMO',workspace_id:'WS-DEMO',
+    course_id:'CRS-DEMO',lesson_id:'',task_type:'COURSE_OUTLINE',
+    brief:'Susun kerangka belajar digital praktis untuk UMKM.',
+    prompt:'Contoh prompt untuk penyusunan materi. Tidak dikirim ke model.',
+    status:'READY_FOR_LLM',result_draft:''}];
+  state.lmsSelectedCourseId='CRS-DEMO';
+  state.lmsSelectedLessonId='LES-DEMO';
+  state.lmsSelectedAIJobId='AIJ-DEMO';
 }
 
 const state={
