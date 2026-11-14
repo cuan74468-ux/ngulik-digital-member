@@ -327,17 +327,20 @@ function viewMembers(waiting=false){
   }
   const results=state.memberSearch,rows=results?.items||[];
   return title('Cari Member','MEMBER 360°','Temukan member berdasarkan ID, WhatsApp, nama usaha, status, atau produk yang dibeli.')+
-    '<form id="member-search-form" class="surface"><div class="support-search-grid">'+
+    '<form id="member-search-form" class="surface"><div class="support-search-grid member-search-grid">'+
     '<div class="field"><label for="member-search-text">Kata kunci</label><input id="member-search-text" class="input" name="query" maxlength="100" placeholder="Nama, WA, atau ID"></div>'+
     '<div class="field"><label for="member-search-product">Produk</label><select id="member-search-product" class="input" name="product_id"><option value="">Semua produk</option>'+
       state.catalog.map(p=>'<option value="'+esc(p.product_id)+'">'+esc(p.nama)+'</option>').join('')+'</select></div>'+
     '<div class="field"><label for="member-search-status">Status akun</label><select id="member-search-status" class="input" name="status"><option value="">Semua</option><option value="AKTIF">Aktif</option><option value="WAITING_LIST">Waiting list</option><option value="SUSPENDED">Ditangguhkan</option></select></div>'+
+    '<div class="field"><label for="member-access-status">Status layanan</label><select id="member-access-status" class="input" name="akses_status"><option value="">Semua status akses</option>'+
+    '<option value="AKTIF">Aktif</option><option value="BERAKHIR">Berakhir</option><option value="MENUNGGU_AKTIVASI">Menunggu aktivasi</option><option value="MENUNGGU_PEMENUHAN">Menunggu pemenuhan</option><option value="PERLU_REKONSILIASI">Perlu rekonsiliasi</option><option value="KREDIT_TERCATAT">Kredit tercatat</option><option value="TERVERIFIKASI">Terverifikasi</option></select></div>'+
     '<button class="btn btn-primary" type="submit">Cari member '+icon('arrow')+'</button></div></form>'+
     '<div class="section-gap">'+title('Hasil pencarian','PROFIL MEMBER',
       results?'Menampilkan hingga 50 hasil dari '+results.total+' kecocokan.':'Masukkan kata kunci minimal dua karakter atau gunakan filter.')+
     (rows.length?'<div class="stack">'+rows.map(m=>'<article class="surface support-member-row">'+
       '<div><h3>'+esc(m.nama)+'</h3><p class="card-desc">'+esc(m.nama_usaha||'-')+' · '+esc(m.member_id)+' · WA •••'+esc(m.wa_akhir)+'</p>'+
-      '<p class="tiny muted">'+esc((m.produk||[]).join(', ')||'Belum ada pembelian terverifikasi')+'</p></div>'+
+      '<p class="tiny muted">'+esc((m.produk||[]).join(', ')||'Belum ada pembelian terverifikasi')+
+      (m.akses_status?' · '+esc(m.akses_status):'')+'</p></div>'+
       '<div class="support-ticket-head">'+safeBadge(m.status)+
       '<button class="btn btn-secondary btn-sm" data-member-id="'+esc(m.member_id)+'">Buka Member 360° '+icon('arrow')+'</button></div></article>').join('')+'</div>':
       empty(results?'Tidak ditemukan':'Belum ada pencarian',
@@ -741,10 +744,14 @@ async function submitMemberSearch(form){
   const data=new FormData(form),p={
     query:String(data.get('query')||'').trim(),
     product_id:String(data.get('product_id')||''),
-    status:String(data.get('status')||'')
+    status:String(data.get('status')||''),
+    akses_status:String(data.get('akses_status')||'')
   };
   if(!p.query&&!p.product_id&&!p.status){
     toast('Isi pencarian atau pilih salah satu filter.',true);return;
+  }
+  if(p.akses_status&&!p.product_id){
+    toast('Pilih produk untuk menggunakan filter status layanan.',true);return;
   }
   if(!isConnected()){
     toast('Pencarian nyata memerlukan API staging. Ini hanya data contoh.',true);
