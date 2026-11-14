@@ -60,7 +60,10 @@ jobs:
           grep -q 'Dari belajar digital' /tmp/ngd-guest.html
           grep -q 'hub-journey' /tmp/ngd-guest.html
           grep -q 'NGULIK DIGITAL / LINGGAU AI STUDIO' /tmp/ngd-guest.html
-          grep -q 'DEMO LOKAL' /tmp/ngd-guest.html
+          if grep -q 'DEMO LOKAL\|Pratinjau — bukan data transaksi' /tmp/ngd-guest.html; then
+            echo 'ERROR: internal development banner leaked to public page' >&2
+            exit 1
+          fi
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member" > /tmp/ngd-member.html 2>>/tmp/ngd-chrome.log
           grep -q 'RUANG BELAJAR PRIBADI' /tmp/ngd-member.html
@@ -75,7 +78,7 @@ jobs:
           grep -q 'Bundel Ebook Vibe Coder' /tmp/ngd-catalog.html
           grep -q 'data-catalog-filter="jasa"' /tmp/ngd-catalog.html
           grep -q 'Belum tersedia untuk pemesanan' /tmp/ngd-catalog.html
-          grep -q 'Pembayaran belum diaktifkan' /tmp/ngd-catalog.html
+          grep -q 'Paket 3-in-1' /tmp/ngd-catalog.html
           grep -q 'data-overflow="false"' /tmp/ngd-catalog.html
           grep -q 'data-buys-disabled="true"' /tmp/ngd-catalog.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
@@ -101,7 +104,7 @@ jobs:
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#lms" > /tmp/ngd-lms-admin.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="lms-course-form"' /tmp/ngd-lms-admin.html
-          grep -q 'CRUD LMS belum diaktifkan' /tmp/ngd-lms-admin.html
+          grep -q 'Penyuntingan kursus belum tersedia' /tmp/ngd-lms-admin.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-admin.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#lms-editor" > /tmp/ngd-lms-workspace.html 2>>/tmp/ngd-chrome.log
@@ -133,7 +136,7 @@ jobs:
             "http://127.0.0.1:8765/?preview=member#akun" > /tmp/ngd-member-account.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="profile-form"' /tmp/ngd-member-account.html
           grep -q 'Pusat notifikasi member' /tmp/ngd-member-account.html
-          grep -q 'Perubahan profil dinonaktifkan' /tmp/ngd-member-account.html
+          grep -q 'Penyimpanan perubahan profil saat ini belum tersedia' /tmp/ngd-member-account.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-account.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#akun" > /tmp/ngd-admin-account.html 2>>/tmp/ngd-chrome.log
@@ -189,7 +192,7 @@ jobs:
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#jasa" > /tmp/ngd-member-services.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="service-brief-form"' /tmp/ngd-member-services.html
-          grep -q 'Penerimaan brief baru dibuka setelah backend' /tmp/ngd-member-services.html
+          grep -q 'Pengiriman permintaan jasa saat ini belum tersedia' /tmp/ngd-member-services.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-services.html
           grep -q 'data-floating-nav="true"' /tmp/ngd-member-services.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
