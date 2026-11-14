@@ -5,6 +5,7 @@ window.NGD_CONFIG = Object.freeze({
   siteUrl: 'https://cuan74468-ux.github.io/ngulik-digital-member/',
   demoMode: true,
   paymentsEnabled: false,
+  catalogEnabled: false, // Admin catalogue mutations require an independent GAS staging gate.
   supportEnabled: false,
   notificationsEnabled: false, // In-app inbox only; no email or WhatsApp delivery.
   lmsEnabled: false, // LMS mutations OFF until staging integration passes. // Only activate after authenticated staging support QA. // Requires verified QRIS and a separate transaction QA checkpoint.
