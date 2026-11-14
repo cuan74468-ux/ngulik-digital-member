@@ -62,3 +62,12 @@
 ## 7. Approval produksi
 
 Rilis memerlukan bukti tertulis bahwa: CI lulus; Apps Script staging lulus; transport browser lulus; pengamanan data pribadi dan PIN ditinjau; uji transaksi/idempotensi lulus; QA UI Android/Windows lulus; QRIS/legal/operasional disetujui. **Tanpa seluruh bukti tersebut, mode demo tetap aktif.**
+
+## Pengaman baru pada backend development
+
+- `NGD_CLICK_TRACKING_ENABLED` tetap tidak disetel/false: jangan membuka tracking publik sebelum ada rate-limit dan kebijakan retensi yang disetujui.
+- Approval pembayaran kini membutuhkan `dana_diterima:true` dan `referensi_pembayaran`; kedua nilai bukan pengganti pemeriksaan bank secara manual.
+- Refund top-up otomatis hanya diizinkan bila ledger original tersedia, saldo kredit masih cukup, belum pernah dibalik, dan belum ada komisi PAID. Refund langganan/seat/lisensi diarahkan ke prosedur manual.
+- Admin fulfillment membutuhkan `aktivasi_terverifikasi:true`, `referensi_aktivasi`, dan email untuk Canva. Penanda percobaan pada order melindungi dari retry ganda setelah kegagalan.
+- Daftar anomali rekonsiliasi membedakan produk yang memang menunggu aktivasi manual dari kasus yang melewati 48 jam.
+- Semua perubahan ini belum disinkronkan ke Apps Script aktif; lakukan uji staging terlebih dahulu.
