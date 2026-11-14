@@ -45,7 +45,7 @@ jobs:
         run: |
           set -euo pipefail
           # Add a CI-only probe; repository index.html itself remains unchanged.
-          sed -i 's#</body>#<script src="./tests/layout-probe.js" defer></script></body>#' index.html
+          sed -i 's#</body>#<script src="./tests/layout-probe.js" defer></script><script src="./tests/browser-readonly-api.js" defer></script></body>#' index.html
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/ngd-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
@@ -206,4 +206,14 @@ jobs:
             echo 'ERROR: service quote editor visible to visitor' >&2
             exit 1
           fi
-          echo 'BROWSER_PREVIEW_OK: slate/ink public, member, admin, catalog and service flows'
+          # Live API browser check is informative only: external network/CORS is
+          # independently gated from deterministic frontend tests and no writes occur.
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=17000 --window-size=900,700 --dump-dom \
+            "http://127.0.0.1:8765/?api-check=1" > /tmp/ngd-browser-api.html 2>>/tmp/ngd-chrome.log || true
+          if grep -q 'API_BROWSER_READ_OK' /tmp/ngd-browser-api.html; then
+            echo 'BROWSER_API_TRANSPORT_OK: read-only POST to GAS succeeded'
+          else
+            echo 'BROWSER_API_TRANSPORT_UNVERIFIED: inspect browser CORS/redirect/network before enabling login or payments'
+            grep -o 'API_BROWSER_[A-Z_]*' /tmp/ngd-browser-api.html | tail -1 || true
+          fi
+          echo 'BROWSER_UI_OK: slate/ink public, member, admin, catalog and service flows'
