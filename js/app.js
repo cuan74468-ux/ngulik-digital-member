@@ -304,21 +304,24 @@ function viewHome(){
     ['shield','Bantuan','dukungan'],['user','Masuk','login']
   ];
   const goAttr=(r)=>['aplikasi','jasa'].includes(r)?'data-catalog-go="'+r+'"':'data-route="'+r+'"';
-  const hero='<section class="nh-hero" aria-label="Ngulik Digital">'+
-    '<span class="nh-orb nh-orb-a"></span><span class="nh-orb nh-orb-b"></span><span class="nh-orb nh-orb-c"></span>'+
+  const hero=window.NGD_CONTENT_UI?.hero(state.siteContent)||
+    '<section class="nh-hero" aria-label="Ngulik Digital">'+
     '<div class="nh-hero-brand"><span class="nh-hero-mark">n<i>.</i></span><strong>Ngulik Digital</strong></div>'+
     '<div class="nh-hero-copy"><h1>Belajar dan solusi digital untuk usaha Anda.</h1>'+
     '<p class="nh-hero-lead">Aplikasi UMKM, Studio AI, produk digital, dan jasa kreatif dalam satu tempat.</p></div>'+
-    '<div class="nh-hero-icons" aria-hidden="true">'+['book','store','spark','clipboard'].map(n=>'<span>'+icon(n)+'</span>').join('')+'</div>'+
-    '<button type="button" class="nh-hero-cta" data-route="katalog">Jelajahi '+icon('arrow')+'</button></section>';
+    '<button type="button" class="nh-hero-cta" data-route="katalog">Jelajahi produk</button></section>';
   const search='<label class="nh-search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'+
     '<input id="home-search" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="Cari" aria-label="Cari fitur atau produk"></label>';
   const grid='<section class="nh-grid" aria-label="Fitur">'+features.map(f=>
     '<button type="button" class="nh-tile" data-search="'+esc(f[1].toLowerCase())+'" '+goAttr(f[2])+'>'+
-    '<span class="nh-tile-icon nh-c'+(features.indexOf(f)%4+1)+'">'+icon(f[0])+'</span><span>'+esc(f[1])+'</span></button>').join('')+'</section>';
+    '<span class="nh-tile-icon nh-c'+(features.indexOf(f)%4+1)+'">'+
+    (window.NGD_CONTENT_UI?.media(state.siteContent,'FEATURE_ICON',f[2],'nh-feature-image','')||
+      '<span class="nh-feature-letter" aria-hidden="true">'+esc(f[1].slice(0,1))+'</span>')+
+    '</span><span>'+esc(f[1])+'</span></button>').join('')+'</section>';
   const rail=state.catalog.length?'<section class="nh-rail" aria-label="Produk">'+state.catalog.map(p=>
     '<button type="button" class="nh-card" data-route="katalog" data-search="'+esc(String(p.nama||'').toLowerCase())+'">'+
-    '<span class="nh-card-icon">'+icon(p.tipe==='JASA_SEKALI'||p.tipe==='TOPUP_KREDIT'?'spark':p.tipe==='PRODUK_DIGITAL'?'book':'store')+'</span>'+
+    '<span class="nh-card-icon">'+(window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'nh-product-image','')||
+      '<span class="nh-product-letter" aria-hidden="true">'+esc(String(p.nama||'P').slice(0,1))+'</span>')+'</span>'+
     '<strong>'+esc(p.nama)+'</strong><em>'+rupiah(p.harga)+'</em></button>').join('')+'</section>':'';
   return '<div class="nh-home">'+hero+search+grid+rail+'<p id="nh-empty" class="nh-empty" hidden>Tidak ada hasil</p></div>';
 }
@@ -370,7 +373,8 @@ function viewCatalog(){
         '<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi pemesanan '+esc(p.nama)+' melalui WhatsApp">Tanya pemesanan '+icon('arrow')+'</a>':
         '<button class="btn btn-primary" type="button" disabled title="'+esc(tooltip)+'">'+label+' '+icon('arrow')+'</button>';
     return '<article class="catalog-card"><div class="catalog-card-top">'+
-      '<span class="catalog-card-icon">'+icon(kind==='ai'||kind==='jasa'?'spark':kind==='belajar'?'book':kind==='fasilitas'?'users':'store')+'</span>'+
+      '<span class="catalog-card-icon">'+(window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'catalog-product-image','')||
+      '<span class="catalog-product-letter" aria-hidden="true">'+esc(String(p.nama||'P').slice(0,1))+'</span>')+'</span>'+
       '<span class="catalog-card-type">'+esc(offerCategoryLabel(p))+'</span></div>'+
       '<div class="catalog-card-copy"><h3>'+esc(p.nama)+'</h3><p>'+esc(p.deskripsi||'')+'</p></div>'+
       '<div class="catalog-card-bottom"><div><small>Harga penawaran</small><strong>'+rupiah(p.harga)+'</strong></div>'+
@@ -564,6 +568,7 @@ function viewAdmin(){
   const details=state.adminSummary?.ringkasan||[];
   return '<section class="admin-operations-intro"><p class="eyebrow">PUSAT OPERASIONAL</p><h1>Kelola ekosistem dengan lebih terarah.</h1><p>Awasi keanggotaan, aktivitas belajar, katalog yang terverifikasi, serta layanan bantuan. Data finansial tetap memerlukan pembuktian transaksi nyata.</p><span class="chip">Pilot maksimal 50 pengguna · sesuai rencana</span></section>'+
     '<div class="admin-module-grid">'+[
+      ['grid','Konten visual','Atur banner otomatis, gambar produk, ikon dan jadwal terbit.','konten'],
       ['clipboard','Pesanan','Periksa pembayaran manual dan status fulfillment.','pesanan'],
       ['users','Kelola member','Lihat data member dan status keanggotaan.','member'],
       ['store','Katalog produk','Periksa harga, ketersediaan dan penawaran yang tampil di publik.','produk'],
@@ -658,6 +663,13 @@ function viewAdminCatalog(){
     (!canWrite?'<span class="form-hint">Penyuntingan produk belum dapat dilakukan saat ini.</span>':'')+
     '</div></form></section>';
   return intro+'<div class="catalog-admin-layout"><div>'+entries+'</div>'+form+'</div>';
+}
+const contentWriteEnabled=()=>isWriteEnabled()&&config.contentEnabled===true;
+function viewAdminContent(){
+  return window.NGD_CONTENT_UI?
+    window.NGD_CONTENT_UI.admin({authorized:isAdmin(),items:state.adminContent,
+      selectedId:state.contentEditId,products:state.catalog,enabled:contentWriteEnabled()}):
+    empty('Editor belum tersedia','Komponen pengelolaan konten belum termuat.');
 }
 const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
 function viewServiceRequests(){
@@ -903,10 +915,13 @@ function render(){
       needLogin('hasil pembelajaran'),
     akun:viewAccount,login:()=>viewLogin(false),daftar:()=>viewLogin(true),
     pesanan:()=>isAdmin()?viewAdminOrders():viewMyOrders(),
-    checkout:viewCheckout,admin:viewAdmin,produk:viewAdminCatalog,jasa:viewServiceRequests,layanan:viewAdminServices,member:()=>viewMembers(false),antrean:()=>viewMembers(true),
+    checkout:viewCheckout,admin:viewAdmin,konten:viewAdminContent,produk:viewAdminCatalog,jasa:viewServiceRequests,layanan:viewAdminServices,member:()=>viewMembers(false),antrean:()=>viewMembers(true),
     dukungan:viewSupport,tiket:viewTicketDetail,member360:viewMember360,rilis:viewReleases
   };
-  by('screen').innerHTML=(routes[state.route]||viewHome)();
+  const screen=(routes[state.route]||viewHome)();
+  by('screen').innerHTML=(!logged()&&['belajar','katalog','jasa','ai','affiliate','dukungan'].includes(state.route)?
+    (window.NGD_CONTENT_UI?.cover(state.siteContent,state.route)||''):'')+screen;
+  syncHeroRotation_();
   document.title=(screens[state.route]?.[0]||'Beranda')+' — Ngulik Digital';
 }
 function go(route){
@@ -919,9 +934,11 @@ async function refreshPublic(){
   if(state.qa||!isConnected())return;
   // Independent public reads must not discard a valid catalogue when the
   // metadata service is briefly unavailable (or vice versa).
-  const [info,catalog]=await Promise.allSettled([api('getPublicInfo'),api('getKatalog')]);
+  const [info,catalog,content]=await Promise.allSettled([
+    api('getPublicInfo'),api('getKatalog'),api('getPublicContent')]);
   if(info.status==='fulfilled'&&info.value&&typeof info.value==='object')state.info=info.value;
   if(catalog.status==='fulfilled'&&Array.isArray(catalog.value))state.catalog=catalog.value;
+  if(content.status==='fulfilled'&&Array.isArray(content.value))state.siteContent=content.value;
   render();
   if(info.status==='rejected'&&catalog.status==='rejected')
     toast('Informasi terbaru belum dapat dimuat. Coba muat ulang halaman.',true);
@@ -962,6 +979,7 @@ async function loadRoute(route){
       if(responses[1].status==='fulfilled')state.lmsCourses=responses[1].value||[];
       if(responses[2].status==='fulfilled')state.lmsEnrollments=responses[2].value||[];
     }
+    if(route==='konten'&&isAdmin())state.adminContent=await api('adminListContent',{},token);
     if(route==='produk'&&isAdmin())state.adminCatalog=await api('adminListCatalog',{},token);
     if(route==='jasa'&&!isAdmin())state.services=await api('getMyServiceRequests',{},token);
     if(route==='layanan'&&isAdmin())state.services=await api('adminListServiceRequests',{},token);
