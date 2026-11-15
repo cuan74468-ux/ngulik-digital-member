@@ -1408,6 +1408,15 @@ function ngdStagingWorkspaceInfo_() {
   };
 }
 
+function ngdStagingWorkspaceReadOnlyCheck() {
+  var info=ngdStagingWorkspaceInfo_();
+  require_(!info.mutations_enabled&&!info.registration_enabled&&
+    !info.otp_enabled&&!info.finance_enabled,
+    'MAINTENANCE','Pengaman write STAGING harus tetap OFF untuk preflight.');
+  console.log('NGD_STAGING_WORKSPACE_READONLY_OK | environment=STAGING | writes=false');
+  return 'NGD_STAGING_WORKSPACE_READONLY_OK';
+}
+
 function apiRouter_(action,token,p,requestId) {
   var m=null, admin=null;
   switch(action) {
