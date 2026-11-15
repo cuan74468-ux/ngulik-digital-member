@@ -101,13 +101,23 @@
     text('page-description',description);
     text('page-location',place);
   }
+  function setNavEnabled(enabled) {
+    show('menu',true);
+    $('menu').classList.toggle('is-locked',!enabled);
+    $('menu').querySelectorAll('button[data-view]').forEach(button=>{
+      button.disabled=!enabled;
+      button.setAttribute('aria-disabled',String(!enabled));
+    });
+    const caption=document.querySelector('.nav-locked');
+    if(caption)caption.textContent=enabled?'AKSES AKTIF':'SESI DIPERLUKAN';
+  }
   function clearAuth() {
     state.token='';
     state.profile=null;
     state.data=null;
     state.current='dashboard';
     show('workspace-section',false);
-    show('menu',false);
+    setNavEnabled(false);
     show('exit',false);
     $('view-data').replaceChildren();
   }
@@ -116,19 +126,21 @@
     state.endpoint='';
     state.identity=null;
     $('endpoint').value='';
+    show('access-layout',true);
     show('setup-section',true);
     show('login-section',false);
-    text('connection-status','Belum terhubung');
+    text('connection-status','Koneksi belum aktif');
     $('connection-status').classList.remove('ready');
-    heading('Hubungkan workspace','Masukkan URL deployment GAS khusus STAGING. Halaman ini tidak terhubung otomatis ke server produksi.','Koneksi');
+    heading('Workspace administrator','Awasi anggota, produk, dan operasional Ngulik Digital melalui akses yang terverifikasi.','Akses administrator');
   }
   function showLogin(){
     clearAuth();
+    show('access-layout',true);
     show('setup-section',false);
     show('login-section',true);
     text('connection-status','STAGING terverifikasi');
     $('connection-status').classList.add('ready');
-    heading('Masuk ke panel administrator','Identitas lingkungan STAGING sudah diperiksa server. Gunakan akun administrator yang terdaftar pada database STAGING.','Login');
+    heading('Workspace administrator','Selamat datang. Masuk dengan akun resmi administrator untuk mengakses data operasional.','Masuk admin');
   }
   function badge(label,ok){
     return node('span','pill'+(ok?'':' locked'),label);
@@ -235,8 +247,10 @@
       alertMessage(error.message);
       if(['UNAUTHORIZED','FORBIDDEN'].includes(error.code)){
         clearAuth();
+        show('access-layout',true);
+        show('setup-section',false);
         show('login-section',true);
-        heading('Sesi administrator berakhir','Silakan masuk kembali.','Login');
+        heading('Sesi administrator berakhir','Silakan masuk kembali menggunakan akun administrator STAGING.','Masuk admin');
       }
     }finally{setBusy(false);}
   }
@@ -283,8 +297,9 @@
       state.profile={role:'ADMIN',member_id:String(data.profil.member_id||'')};
       form.reset();
       show('login-section',false);
+      show('access-layout',false);
       show('workspace-section',true);
-      show('menu',true);
+      setNavEnabled(true);
       show('exit',true);
       drawEnvironment();
       text('connection-status','ADMIN · STAGING');
@@ -299,8 +314,10 @@
     if(state.busy)return;
     const token=state.token;
     clearAuth();
+    show('access-layout',true);
+    show('setup-section',false);
     show('login-section',true);
-    heading('Anda sudah keluar','Sesi lokal ditutup. Gunakan PIN untuk masuk kembali.','Login');
+    heading('Anda sudah keluar','Sesi browser ditutup. Gunakan akun administrator untuk kembali masuk.','Masuk admin');
     alertMessage('Sesi browser telah dibersihkan.',true);
     // Best effort server revocation; no credentials in URL or browser storage.
     try{await request('adminLogout',{},token);}catch{
@@ -312,5 +329,17 @@
     const button=e.target.closest('[data-view]');
     if(button&&views[button.dataset.view])loadView(button.dataset.view);
   });
+  // An approved STAGING /exec URL may be published once in staging/config.js.
+  // Without it, one-time manual URL entry is required; NEVER fall back to production.
   showSetup();
+  const configuredEndpoint=String(globalThis.NGD_STAGING_CONFIG?.apiUrl||'').trim();
+  if(configuredEndpoint){
+    try{
+      const url=apiUrl(configuredEndpoint);
+      $('endpoint').value=url;
+      $('setup-form').requestSubmit();
+    }catch(error){
+      alertMessage('Konfigurasi STAGING tidak valid. Gunakan URL deployment yang benar.');
+    }
+  }
 })();
