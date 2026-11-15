@@ -38,7 +38,11 @@ function ngdOtpProperties_() {
 }
 
 function ngdOtpSheet_(name, required) {
-  var sheet = db_().getSheetByName(name);
+  var ss=db_(),props=PropertiesService.getScriptProperties();
+  require_(props.getProperty('NGD_ENVIRONMENT')==='STAGING' &&
+    String(ss.getId())===String(props.getProperty('NGD_OTP_STAGING_DB_ID')||''),
+    'MAINTENANCE','Database OTP STAGING tidak cocok.');
+  var sheet = ss.getSheetByName(name);
   require_(!!sheet,'MAINTENANCE','Tabel OTP belum tersedia.');
   var headers = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0]
     .map(function(h){return String(h).trim();});
@@ -117,6 +121,8 @@ function ngdOtpRequest_(p) {
   var wa=normalizeWa_(p.wa);
   var token=String(conf.props.getProperty('FONNTE_API_TOKEN')||'').trim();
   require_(!!token,'MAINTENANCE','Gateway OTP belum dikonfigurasi.');
+  require_(p.setuju_kebijakan===true,'VALIDATION',
+    'Persetujuan pengiriman kode WhatsApp diperlukan.');
 
   // A generic accepted response for an existing number avoids enumeration.
   // No OTP is sent and no record is written in that case.
