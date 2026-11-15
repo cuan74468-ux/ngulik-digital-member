@@ -4,6 +4,7 @@ window.NGD_CONFIG = Object.freeze({
   apiUrl: 'https://script.google.com/macros/s/AKfycbyQlhsRDfoHLIHaalBsBos5jJhvPmG3J8B0Al9XrqvUwBQkcnr8uzYRlpcjGlgC_-Xr/exec', // Verified read-only service endpoint.
   siteUrl: 'https://cuan74468-ux.github.io/ngulik-digital-member/',
   memberWritesEnabled: false, // Retain until authentication and data mutations pass verification.
+  registrationOtpEnabled: false, // Must remain OFF until Fonnte + staging end-to-end QA and owner approval.
   paymentsEnabled: false,
   adminLoginEnabled: true, // Isolated administrator login only; member registration and payments remain disabled.
   contentEnabled: false, // Visual CMS writing requires separate GAS staging release.
