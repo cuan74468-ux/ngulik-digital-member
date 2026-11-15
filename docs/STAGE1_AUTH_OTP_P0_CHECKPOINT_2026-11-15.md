@@ -68,6 +68,14 @@ Persiapan uji **STAGING saja** (setelah code review dan backup):
 - `NGD_OTP_DAILY_SEND_CAP`: optional, batasi agar tidak ada tagihan/kuota tak terkendali.
 - Sakelar pengaktifan hanya saat pengujian terpandu; kembali OFF setelah itu.
 
+## Preflight tambahan — siap dipasang STAGING (tanpa pengiriman OTP)
+
+- File `apps-script/StagingOtpDiagnostics.gs` menyediakan fungsi `ngdOtpStagingPreflight`.
+- Ini **baca-saja** dan mensyaratkan `Diagnostics.gs` STAGING V9 sudah terpasang.
+- Memeriksa identitas database melalui guard existing, header `members`, `otp_verifications`, `wa_notifications`, serta memastikan semua sakelar registrasi/mutasi/keuangan OFF.
+- Jika `OtpAuth.gs` belum dipasang, hanya memberi peringatan `OTP_SOURCE_NOT_INSTALLED_IN_STAGING`, bukan menjalankan pengiriman.
+- Jalankan sebelum mencoba sinkronisasi `OtpAuth.gs` atau perubahan registrasi; sertakan log sebagai bukti QA.
+
 ## Urutan QA berikutnya
 
 1. Pastikan source yang tersimpan di GitHub dan kode runtime STAGING dapat dibandingkan tanpa menimpa file manual yang sudah lulus.
