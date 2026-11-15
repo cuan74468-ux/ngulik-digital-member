@@ -20,6 +20,28 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '24'
+      - name: Inspect publicly exposed API version and safety flags (GET)
+        shell: bash
+        run: |
+          node <<'NODE'
+          const controller=new AbortController();
+          const timer=setTimeout(()=>controller.abort(),20000);
+          (async()=>{
+            try {
+              const response=await fetch(process.env.STAGING_CANDIDATE_URL,{
+                redirect:'follow',signal:controller.signal
+              });
+              if(!response.ok)throw Error('HTTP '+response.status);
+              const json=await response.json();
+              if(json?.ok!==true || json?.data?.app!=='Ngulik Digital API')
+                throw Error('Unexpected API health response');
+              const d=json.data;
+              console.log('STAGING_CANDIDATE_HEALTH: version='+String(d.version||'unknown').slice(0,24)+
+                '; writes_enabled='+String(d.writes_enabled)+
+                '; payments_enabled='+String(d.payments_enabled));
+            }finally{clearTimeout(timer);}
+          })().catch(e=>{console.error('STAGING_CANDIDATE_HEALTH_UNVERIFIED:',String(e.message).slice(0,120));process.exitCode=1;});
+          NODE
       - name: Verify identity without login or writes
         shell: bash
         run: |
