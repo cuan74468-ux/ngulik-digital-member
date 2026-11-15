@@ -58,3 +58,17 @@ Owner memberikan URL kandidat Web App STAGING pada sesi lanjutan. Pengujian dari
 **Tindakan operator minimum:** Di Google Apps Script **STAGING**, periksa bahwa `Code.gs` editor berisi `getStagingWorkspaceInfo` di `apiReadActions_` dan `case 'getStagingWorkspaceInfo'` pada `apiRouter_`. Jika sudah ada, perbarui **deployment STAGING yang sama** lewat `Deploy → Manage deployments → Edit (ikon pensil) → Version: New version → Deploy`. Jika belum ada, jangan mengaktifkan flag apa pun; backup/bandingkan source Code.gs dengan GitHub sebelum memasang revisi. Setelah deployment, GitHub workflow baca-saja dapat diuji ulang untuk memvalidasi STAGING sebelum menyetel frontend.
 
 Produksi tidak disentuh. Tidak ada klaim login browser, OTP WA nyata, CRUD, maupun siap go-live.
+
+## Diagnosis pasti dari salinan Apps Script pengguna (15 November 2026)
+
+Owner membagikan tautan spreadsheet STAGING (tab `members`) dan editor Apps Script STAGING beserta **salinan lengkap `Code.gs`**. Salinan 1704 baris tersebut **tidak memiliki** `ngdStagingWorkspaceInfo_`, `case 'getStagingWorkspaceInfo'` di `apiRouter_`, dan tidak mencantumkan action tersebut dalam `apiReadActions_`. Dengan `NGD_MUTATIONS_ENABLED=false`, `doPost` menolak action yang tidak dikenali sebagai READ pada gerbang mutasi dengan kode `MAINTENANCE`. Ini menjelaskan penolakan HTTP POST dari workflow run `43713266430` tanpa perlu mengasumsikan kesalahan database.
+
+Google Sheets metadata terverifikasi: nama workbook `STAGING Ngulik Digital - Migrasi 27 Tab - 15 November 2026`; total 29 tab, `gid=1100` adalah `members`, tab OTP `otp_verifications` dan `wa_notifications` tersedia. Pemeriksaan header `members` menunjukkan kolom ekstensi `wa_verified` dan `wa_verified_at`. `pengaturan_sistem.kredit_awal=10` masih ada; **jangan mengubah kebijakan kredit tanpa mandat**.
+
+**Patch minimal disiapkan dari salinan pengguna, diuji lokal**, meliputi:
+1. Menambahkan fungsi fail-closed `ngdStagingWorkspaceInfo_` yang hanya lolos bila `NGD_ENVIRONMENT=STAGING`, identitas DB dan konfigurasi admin sama, serta Web App merujuk DB yang sesuai.
+2. Menambahkan `ngdStagingWorkspaceReadOnlyCheck` sebagai preflight baca-saja dengan semua gerbang mutasi/OTP/registrasi/keuangan OFF.
+3. Menambahkan action identitas ke `apiRouter_` dan ke `apiReadActions_`.
+4. Hasil Node local VM: sintaks valid; response POST sukses untuk STAGING tepat; penolakan empat kondisi identitas bermasalah; preflight menolak empat sakelar aktif; tidak memaparkan database ID dalam response.
+
+**CATATAN PENTING**: Perbaikan tersebut hanya tersedia sebagai file bantuan di percakapan pemilik; **belum disalin ke proyek editor Apps Script dan belum diterbitkan**. GitHub `apps-script/Code.gs` sudah memiliki kode identitas yang setara, tidak perlu ditimpa. Operator harus mencadangkan `Code.gs` di Apps Script yang sedang terbuka dan menggunakan patch berbasis salinan persis, atau merge tiga perubahan jika editor telah berubah. Jangan mengganti `OtpAuth.gs` atau file lain. Selanjutnya deploy **New version pada deployment STAGING yang sama**, run workflow identitas baca-saja, baru konfigurasikan `staging/config.js` jika benar-benar lulus. Jangan menyalakan gerbang tulis tanpa QA dan persetujuan.
