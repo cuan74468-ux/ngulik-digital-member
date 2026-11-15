@@ -122,3 +122,14 @@ Urutan eksekusi yang aman saat operator tersedia:
 7. Fungsi owner-only ini tidak perlu dipublikasikan lewat `doPost`; menjalankannya dari editor tidak mengharuskan mengganti URL /exec. Perubahan kode Web App tetap membutuhkan proses versi dan rollback terpisah.
 
 Keputusan operasional: jangan menganggap angka 29/29 pada pemeriksaan header sama dengan audit relasi data. Kedua bukti harus dicatat terpisah sebelum membuka registrasi.
+
+ 
+## Snapshot privat STAGING dan audit isi data — 15 November 2026
+
+Owner telah memperoleh **salinan baru STAGING** bernama `BACKUP STAGING NGD 29 TAB - 15 November 2026 - Sebelum Audit Integritas` melalui Google Drive Copy. Salinan ditempatkan di folder yang sama dengan database STAGING aktif, `99_STAGING_BACKUP_DAN_HAPUS`. Identitas file salinan **sengaja tidak dicantumkan di repo GitHub publik**. Metadata hasil pemeriksaan: permission hanya `owner`, `shared=false`, 29 tab lengkap. Sembilan tabel operasional (`members`, `sessions`, `credits_ledger`, `orders`, `otp_verifications`, `wa_notifications`, `lms_courses`, `audit_logs`, `katalog_produk`) memiliki jumlah record yang cocok antara asal dan copy. Operasi ini **tidak mengubah spreadsheet aktif**.
+
+Audit baca-saja tambahan langsung melalui konektor Google Sheets pada delapan tab prioritas (`members`, `sessions`, `credits_ledger`, `orders`, `lms_courses`, `lms_lessons`, `lms_enrollments`, `otp_verifications`) hanya memeriksa baris dengan kolom A terisi sampai baris 500, dan menemukan **0 dari 14 kategori masalah**: duplikasi identitas/WA/token, member yang belum terverifikasi, sesi/pesanan/kredit tanpa anggota, double starter grant, serta relasi LMS/OTP yang tidak valid. Saat audit ada 1 akun ADMIN, 1 sesi, dan nol record pada enam tab lain yang dipilih.
+
+**Keterbatasan:** ini adalah verifikasi snapshot dan baca relasi data subset, **bukan** pembuktian restore file, bukan uji keamanan token admin live, bukan verifikasi 50 peserta, bukan database transaction consistency, bukan QA provider. Backup belum direstorasi di lingkungan terisolasi. Kriteria GO tetap tertahan.
+
+File `apps-script/DataIntegrityPreflight.gs` memiliki pemeriksaan editor-only yang dapat dijalankan ulang setelah source runtime GAS STAGING disejajarkan; tidak perlu membuat akun Fonnte, Mayar, atau provider AI untuk melakukannya. **Jangan menempel kredensial maupun nomor WA ke chat.**
