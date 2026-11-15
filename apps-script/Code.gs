@@ -136,11 +136,19 @@ function tbl_(name) {
 function readAll_(name) {
   var t = tbl_(name), count = t.sheet.getLastRow() - 1;
   if (count <= 0) return [];
-  return t.sheet.getRange(2, 1, count, t.headers.length).getValues().map(function(row, i) {
-    var item = {_row: i + 2};
-    t.headers.forEach(function(h, j) { item[h] = row[j]; });
-    return item;
-  });
+  // Skip fully empty physical rows but preserve the real sheet row number.
+  // Numeric zero and boolean false are legitimate values, not empty cells.
+  return t.sheet.getRange(2, 1, count, t.headers.length).getValues()
+    .reduce(function(items, row, i) {
+      var populated = row.some(function(value) {
+        return value !== '' && value !== null && value !== undefined;
+      });
+      if (!populated) return items;
+      var item = {_row: i + 2};
+      t.headers.forEach(function(h, j) { item[h] = row[j]; });
+      items.push(item);
+      return items;
+    }, []);
 }
 // Treat external text as literal spreadsheet data, never an executable formula.
 // Central protection applies to registration, notes, payouts and audit events.
@@ -740,12 +748,23 @@ function updateMyProfile_(member,p) {
   });
 }
 function authRegister_(p) {
+  // P0: a settings toggle is NEVER proof of WhatsApp ownership.
+  // Registration remains closed until a dedicated OTP module is installed,
+  // its runtime flag is enabled, and its single-use verifier is invoked.
+  var otpReady = PropertiesService.getScriptProperties()
+    .getProperty('NGD_OTP_REGISTRATION_ENABLED') === 'true' &&
+    typeof ngdConsumeVerifiedRegistrationOtp_ === 'function';
+  require_(otpReady, 'MAINTENANCE',
+    'Pendaftaran menunggu verifikasi OTP WhatsApp yang aman.');
   return withLock_(function(){
     var wa=normalizeWa_(p.wa), pin=String(p.pin||'');checkNewPin_(pin,wa);
     require_(safeText_(p.nama,80).length>=2,'VALIDATION','Nama minimal dua karakter.');
     require_(safeText_(p.nama_usaha,100).length>=2,'VALIDATION','Nama usaha minimal dua karakter.');
     require_(p.setuju_kebijakan===true,'VALIDATION','Persetujuan kebijakan diperlukan.');
     require_(!byId_('members','wa',wa),'CONFLICT','Nomor WhatsApp sudah terdaftar.');
+    // Must validate and consume a server-issued one-time OTP proof under the lock.
+    // Do not implement this as a client-side flag, OTP echo, or unverified boolean.
+    ngdConsumeVerifiedRegistrationOtp_(p);
     var s=settings_(),mode=String(s.mode_pendaftaran||'TERBUKA');
     require_(mode!=='TERTUTUP','QUOTA_FULL','Pendaftaran sementara ditutup.');
     var active=memberCount_(),wait=mode==='WAITING_LIST'||active>=Number(s.kuota_gelombang||50)||memberWaitlist_().length>0;
@@ -756,7 +775,7 @@ function authRegister_(p) {
     if(referrer&&referrer.wa===wa)referrer=null;
     if(referrer&&(referrer.status!=='AKTIF'||referrer.role!=='MEMBER'))referrer=null;
     var salt=newSalt_(),id=nextMemberId_(),joined=now_(),status=wait?'WAITING_LIST':'AKTIF';
-    var m={member_id:id,role:'MEMBER',nama:safeText_(p.nama,80),wa:wa,nama_usaha:safeText_(p.nama_usaha,100),pin_hash:pinHash_(pin,salt),pin_salt:salt,kode_referral:newReferralCode_(),referred_by:referrer?referrer.member_id:'',status:status,joined_at:joined,last_active_at:joined,status_pos:'BELUM',status_canva:'BELUM',d14_active:false,d30_active:false};
+    var m={member_id:id,role:'MEMBER',nama:safeText_(p.nama,80),wa:wa,nama_usaha:safeText_(p.nama_usaha,100),wa_verified:true,wa_verified_at:joined,pin_hash:pinHash_(pin,salt),pin_salt:salt,kode_referral:newReferralCode_(),referred_by:referrer?referrer.member_id:'',status:status,joined_at:joined,last_active_at:joined,status_pos:'BELUM',status_canva:'BELUM',d14_active:false,d30_active:false};
     appendRow_('members',m);logAudit_(id,'MEMBER','REGISTER','members',id,'',status,{});
     if(wait){return {status:status,posisi:findRows_('members',function(r){return r.status==='WAITING_LIST';}).length};}
     if(initial>0)grantInitialCredit_(id,initial);
