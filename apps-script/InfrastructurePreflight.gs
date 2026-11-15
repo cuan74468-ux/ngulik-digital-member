@@ -20,7 +20,8 @@ function ngdInfrastructurePreflightReadOnly() {
     'NGD_SERVICE_ENABLED','NGD_SUPPORT_ENABLED',
     'NGD_NOTIFICATIONS_ENABLED','NGD_LMS_ENABLED',
     'NGD_CLICK_TRACKING_ENABLED','NGD_SCHEMA_UPGRADE_ENABLED',
-    'NGD_ADMIN_RECOVERY_ENABLED'
+    'NGD_ADMIN_RECOVERY_ENABLED',
+    'NGD_EXTERNAL_PROVIDERS_ENABLED'
   ];
   flags.forEach(function(key) {
     var value=String(props.getProperty(key)||'').trim();

@@ -16,6 +16,7 @@ function boot(override) {
     NGD_OTP_REGISTRATION_ENABLED:'true',
     NGD_REGISTRATION_ENABLED:'true',
     NGD_MUTATIONS_ENABLED:'true',
+    NGD_EXTERNAL_PROVIDERS_ENABLED:'true',
     NGD_OTP_HASH_PEPPER:'123456789abcdef0123456789abcdef01234567890'
   },override||{});
   const sandbox={
@@ -94,4 +95,11 @@ test('OTP request refuses a broken member evidence schema before sending WhatsAp
   x.tbl_=()=>({headers:['member_id','wa','pin_hash','pin_salt']});
   assert.throws(()=>x.ngdOtpRequest_({wa:'081234567890',setuju_kebijakan:true}),
     /Kolom bukti verifikasi WA/);
+});
+
+test('global provider kill switch blocks OTP even when all individual registration gates are ON',()=>{
+  const x=boot({NGD_EXTERNAL_PROVIDERS_ENABLED:'false',FONNTE_API_TOKEN:'TEST_ONLY'});
+  assert.throws(()=>x.ngdOtpRequest_({wa:'081234567890',setuju_kebijakan:true}),
+    /Registrasi OTP STAGING belum diaktifkan/);
+  assert.throws(()=>x.ngdOtpProperties_(),/Registrasi OTP STAGING belum diaktifkan/);
 });

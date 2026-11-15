@@ -75,7 +75,7 @@ test('missing or mismatched OTP database attestation is rejected',()=>{
 test('feature mutations, recovery and schema upgrades are forbidden',()=>{
   for(const name of ['NGD_MUTATIONS_ENABLED','NGD_REGISTRATION_ENABLED',
     'NGD_OTP_REGISTRATION_ENABLED','NGD_FINANCE_ENABLED','NGD_LMS_ENABLED',
-    'NGD_SCHEMA_UPGRADE_ENABLED','NGD_ADMIN_RECOVERY_ENABLED']){
+    'NGD_SCHEMA_UPGRADE_ENABLED','NGD_ADMIN_RECOVERY_ENABLED','NGD_EXTERNAL_PROVIDERS_ENABLED']){
     const x=boot({props:{[name]:'true'}});
     assert.throws(()=>x.context.ngdInfrastructurePreflightReadOnly(),
       new RegExp('INFRA_FLAG_NOT_DISABLED: '+name));

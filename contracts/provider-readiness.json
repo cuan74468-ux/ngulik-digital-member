@@ -9,7 +9,8 @@
     "finance": false,
     "otp": false,
     "ai": false,
-    "notifications": false
+    "notifications": false,
+    "externalProviders": false
   },
   "description": "Architecture reference only: does not connect to vendors or set GAS properties.",
   "integrations": [
@@ -95,12 +96,10 @@
     }
   ],
   "globalRequirements": [
-    "owner_explicit_approval_before_activation",
-    "no_secrets_in_frontend_repository_or_logs",
-    "STAGING_first_with_owner_controlled_traffic",
-    "verified_backups_and_rollback",
-    "member_and_community_privacy_review",
-    "provider_cost_ceiling_before_any_outbound_call",
-    "production_unchanged_until_separate_approval"
+    "GLOBAL_PROVIDER_KILL_SWITCH_NGD_EXTERNAL_PROVIDERS_ENABLED_must_remain_false_during_foundation",
+    "vendor_account_creation_requires_owner_approval",
+    "all_provider_credentials_live_only_in_GAS_Script_Properties",
+    "STAGING_e2e_before_PRODUCTION",
+    "budgets_consent_idempotency_and_rollback_required"
   ]
 }

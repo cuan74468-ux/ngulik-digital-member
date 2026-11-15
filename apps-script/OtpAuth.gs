@@ -8,7 +8,8 @@
  * Requires existing STAGING tabs: otp_verifications, wa_notifications.
  * Runtime flags: NGD_ENVIRONMENT=STAGING, NGD_DB_ID,
  * NGD_OTP_STAGING_DB_ID=NGD_DB_ID, NGD_OTP_REGISTRATION_ENABLED=true,
- * NGD_REGISTRATION_ENABLED=true, NGD_MUTATIONS_ENABLED=true.
+ * NGD_REGISTRATION_ENABLED=true, NGD_MUTATIONS_ENABLED=true,
+ * NGD_EXTERNAL_PROVIDERS_ENABLED=true (global activation approved LAST).
  * Secrets: NGD_OTP_HASH_PEPPER (random >=32 chars), FONNTE_API_TOKEN.
  */
 
@@ -29,7 +30,8 @@ function ngdOtpProperties_() {
     !!dbId && dbId === confirmed &&
     p.getProperty('NGD_OTP_REGISTRATION_ENABLED') === 'true' &&
     p.getProperty('NGD_REGISTRATION_ENABLED') === 'true' &&
-    p.getProperty('NGD_MUTATIONS_ENABLED') === 'true',
+    p.getProperty('NGD_MUTATIONS_ENABLED') === 'true' &&
+    p.getProperty('NGD_EXTERNAL_PROVIDERS_ENABLED') === 'true',
     'MAINTENANCE','Registrasi OTP STAGING belum diaktifkan.');
   var pepper = String(p.getProperty('NGD_OTP_HASH_PEPPER') || '');
   require_(pepper.length >= 32, 'MAINTENANCE',
