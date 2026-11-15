@@ -102,3 +102,23 @@ Setelah penambahan pengaman global, audit STAGING melalui Google Sheets dilakuka
 GitHub Actions final untuk source code pada commit 4600eb5692b06707e05d5c59b708580384d05fe1: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43719240002 — hasil success, 343 dari 343 tes Node lulus, Chrome UI desktop/mobile lulus dan browser read-only POST ke GAS lulus. GitHub Pages deploy pada commit yang sama juga success: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43719239761 .
 
 Catatan penting: 29/29 header cocok melalui konektor Sheets dan 343/343 tes source tidak sama dengan telah menjalankan fungsi baru pada Apps Script STAGING. Rilis source sekarang belum mengaktifkan akun vendor. Jangan melanjutkan ke provider sampai checklist internal yang tersisa terbukti.
+
+
+## Audit integritas data internal — source tambahan
+
+Source `apps-script/DataIntegrityPreflight.gs` sekarang memiliki fungsi **`ngdDataIntegrityPreflightReadOnly()`**. Ini hanya untuk editor Apps Script STAGING, memerlukan lulus `ngdInfrastructurePreflightReadOnly()` dahulu, dan tidak terdaftar sebagai rute API publik.
+
+Cakupan awal (8 tabel prioritas): `members`, `sessions`, `credits_ledger`, `orders`, `lms_courses`, `lms_lessons`, `lms_enrollments`, `otp_verifications`. Audit memeriksa duplikasi ID dan nomor WA (menganggap 08 dan 62 ekuivalen), sesi/pesanan/kredit tanpa pemilik, satu kali grant awal, keanggotaan yang belum diverifikasi, serta relasi kursus/pelajaran/enrollment yang tidak valid. Semua hasil berupa **jumlah temuan**; tidak memuat data anggota, PIN, nilai hash sesi atau OTP. Audit menolak lingkungan produksi serta menolak pemindaian tabel berisi lebih dari 2.000 baris, bukan melakukan perubahan massal.
+
+Fungsi ini tidak berusaha memperbaiki data dan tidak menulis baris. Pengujian ada pada `tests/data-integrity-preflight.test.cjs`; mock memakai data sintetis secara offline. **Integritas isi data nyata belum dinyatakan lulus sebelum fungsi dijalankan pada runtime STAGING yang sudah dicadangkan dan diverifikasi.**
+
+Urutan eksekusi yang aman saat operator tersedia:
+1. Buka [editor Apps Script STAGING](https://script.google.com/u/0/home/projects/1hyfzUBrTJOYATVAbBzX_-p1YGCOIN1W8Ty0A2-JB-7THzq2GF1XVKQNz/edit), dan cadangkan semua source GAS sebelum memasang perubahan. Pastikan bukan proyek produksi.
+2. Bandingkan file yang sudah ada, jangan menimpa `Code.gs` atau file lain secara menyeluruh. Tambahkan satu file baru `InfrastructurePreflight.gs` dari GitHub jika belum tersedia, kemudian `DataIntegrityPreflight.gs`. Jika salah satu sudah ada, cocokkan diff lebih dulu.
+3. Biarkan semua flag mutasi, finansial, registrasi, LMS, OTP, dan `NGD_EXTERNAL_PROVIDERS_ENABLED` OFF. Jangan masukkan API key atau credentials provider.
+4. Jalankan `ngdInfrastructurePreflightReadOnly`. Sukses: `NGD_INFRASTRUCTURE_PREFLIGHT_OK | tables=29 | environment=STAGING | writes=false | providers=DEFERRED`.
+5. Jalankan `ngdDataIntegrityPreflightReadOnly`. Hasil: `NGD_DATA_INTEGRITY_OK` atau `NGD_DATA_INTEGRITY_REVIEW_REQUIRED` dengan **kategori + jumlah masalah saja**.
+6. Jika error: hentikan, simpan kode error dan tangani lewat audit terpisah. **Jangan** mengaktifkan sakelar, menghapus sesi, memperbaiki ledger, atau menyunting tab secara manual.
+7. Fungsi owner-only ini tidak perlu dipublikasikan lewat `doPost`; menjalankannya dari editor tidak mengharuskan mengganti URL /exec. Perubahan kode Web App tetap membutuhkan proses versi dan rollback terpisah.
+
+Keputusan operasional: jangan menganggap angka 29/29 pada pemeriksaan header sama dengan audit relasi data. Kedua bukti harus dicatat terpisah sebelum membuka registrasi.
