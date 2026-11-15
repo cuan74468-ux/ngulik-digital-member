@@ -6,11 +6,15 @@
   <meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
   <meta name="referrer" content="no-referrer">
   <meta name="color-scheme" content="light">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'">
   <meta name="description" content="Workspace operasional administrator Ngulik Digital untuk lingkungan STAGING terverifikasi.">
-  <title>Ngulik Digital · Workspace STAGING</title>
-  <link rel="stylesheet" href="./admin.css">
-  <script src="./admin.js" defer></script>
+  <title>Ngulik Digital — Operations Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./admin.css?v=20261115-editorial2">
+  <script src="./config.js?v=20261115-1" defer></script>
+  <script src="./admin.js?v=20261115-editorial2" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace-main">Ke konten utama</a>
@@ -18,59 +22,82 @@
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-icon" aria-hidden="true">n<span>.</span></div>
-        <div><strong>Ngulik Digital</strong><small>Operations workspace</small></div>
+        <div><strong>Ngulik Digital</strong><small>MEMBERSHIP OPERATIONS</small></div>
       </div>
       <div class="sidebar-divider"></div>
-      <p class="nav-caption">RUANG KERJA</p>
-      <nav id="menu" class="nav" aria-label="Menu admin" hidden>
-        <button type="button" data-view="dashboard" class="nav-link active">Ringkasan</button>
-        <button type="button" data-view="members" class="nav-link">Anggota</button>
-        <button type="button" data-view="catalog" class="nav-link">Katalog</button>
-        <button type="button" data-view="orders" class="nav-link">Pesanan</button>
-        <button type="button" data-view="waiting" class="nav-link">Antrean pendaftaran</button>
-        <button type="button" data-view="commissions" class="nav-link">Komisi</button>
-        <button type="button" data-view="settings" class="nav-link">Pengaturan</button>
+      <div class="sidebar-section-title"><p class="nav-caption">MENU OPERASIONAL</p><span class="nav-locked">SESI DIPERLUKAN</span></div>
+      <nav id="menu" class="nav is-locked" aria-label="Menu admin">
+        <button type="button" data-view="dashboard" class="nav-link active" disabled><span class="nav-index">01</span><span>Ringkasan</span></button>
+        <button type="button" data-view="members" class="nav-link" disabled><span class="nav-index">02</span><span>Anggota</span></button>
+        <button type="button" data-view="catalog" class="nav-link" disabled><span class="nav-index">03</span><span>Katalog</span></button>
+        <button type="button" data-view="orders" class="nav-link" disabled><span class="nav-index">04</span><span>Pesanan</span></button>
+        <button type="button" data-view="waiting" class="nav-link" disabled><span class="nav-index">05</span><span>Antrean</span></button>
+        <button type="button" data-view="commissions" class="nav-link" disabled><span class="nav-index">06</span><span>Komisi</span></button>
+        <button type="button" data-view="settings" class="nav-link" disabled><span class="nav-index">07</span><span>Pengaturan</span></button>
       </nav>
       <div class="sidebar-foot">
-        <span class="env-pill"><span class="dot"></span> STAGING ONLY</span>
-        <p>Sumber data harus terverifikasi di server. Tidak ada transaksi yang diaktifkan dari halaman ini.</p>
+        <span class="env-pill"><span class="dot"></span> ENVIRONMENT: STAGING</span>
+        <p>Identitas server diverifikasi sebelum akses admin dibuka. Transaksi dan registrasi publik tetap terkunci.</p>
+        <span class="side-signature">LINGGAU AI STUDIO <span aria-hidden="true">↗</span></span>
       </div>
     </aside>
     <div class="main-area">
       <header class="topbar">
-        <div class="breadcrumbs"><span>NGULIK DIGITAL</span><span aria-hidden="true">/</span><strong id="page-location">Koneksi</strong></div>
+        <div class="breadcrumbs"><span class="bread-mark">N<span>.</span></span><span>OPERATIONS</span><span class="bread-slash">/</span><strong id="page-location">Akses administrator</strong></div>
         <div class="top-actions">
           <span id="connection-status" class="status-label">Belum terhubung</span>
           <button type="button" class="text-button" id="exit" hidden>Keluar</button>
         </div>
       </header>
       <main id="workspace-main" tabindex="-1" class="content">
-        <div class="page-heading"><div><span class="eyebrow">OPERASIONAL TERKONTROL</span><h1 id="page-title">Hubungkan workspace</h1><p id="page-description">Sambungkan deployment Apps Script khusus STAGING. Identitas lingkungan diperiksa oleh backend sebelum login.</p></div></div>
+        <div class="page-heading">
+          <div class="heading-meta"><span class="eyebrow"><span class="heading-dot"></span> NGULIK DIGITAL / MANAGEMENT</span><span class="heading-edition">OPERATIONS 01</span></div>
+          <div><h1 id="page-title">Workspace administrator<span class="heading-period">.</span></h1><p id="page-description">Kelola layanan digital Anda dari satu tempat, dengan kontrol akses dan data yang terverifikasi.</p></div>
+          <div class="heading-rule"></div>
+        </div>
         <div id="alert" role="status" aria-live="polite" class="alert" hidden></div>
+        <div id="access-layout" class="access-layout">
+          <div class="access-form-area">
         <section id="setup-section" class="panel auth-panel" aria-labelledby="setup-title">
-          <div class="step-number">01 / KONEKSI AMAN</div>
-          <h2 id="setup-title">Hubungkan backend STAGING</h2>
-          <p>Gunakan URL <code>/exec</code> hasil deployment Google Apps Script proyek STAGING, bukan URL produksi. URL hanya disimpan sementara di memori tab browser ini.</p>
+          <div class="step-number"><span class="step-line"></span> TAHAP 01 — KONEKSI</div>
+          <h2 id="setup-title">Hubungkan layanan.</h2>
+          <p class="form-intro">Satu kali pemeriksaan endpoint STAGING sebelum Anda masuk dengan akun administrator. Tidak ada data yang diubah pada langkah ini.</p>
           <form id="setup-form" novalidate>
-            <label for="endpoint">URL Web App STAGING</label>
-            <input id="endpoint" name="endpoint" type="url" autocomplete="off" spellcheck="false" inputmode="url" placeholder="https://script.google.com/macros/s/.../exec" required>
-            <button class="primary-button" type="submit" id="connect">Periksa identitas STAGING</button>
+            <label for="endpoint">Alamat layanan STAGING <span class="field-optional">Google Apps Script · /exec</span></label>
+            <input id="endpoint" name="endpoint" type="url" autocomplete="off" spellcheck="false" inputmode="url" placeholder="Tempel alamat Web App STAGING" required>
+            <button class="primary-button" type="submit" id="connect"><span>Hubungkan dengan aman</span><span class="button-arrow" aria-hidden="true">→</span></button>
           </form>
-          <p class="hint">Pemeriksaan meminta <code>getStagingWorkspaceInfo</code>. Endpoint yang tidak membuktikan dirinya sebagai STAGING akan ditolak sebelum PIN administrator dikirim.</p>
+          <div class="connection-helper"><span class="helper-symbol" aria-hidden="true">i</span><p>Gunakan URL dari <strong>Deploy → Manage deployments</strong> di Apps Script STAGING. Sistem menolak URL produksi dan koneksi yang tidak dapat diverifikasi.</p></div>
         </section>
         <section id="login-section" class="panel auth-panel" aria-labelledby="login-title" hidden>
-          <div class="step-number">02 / AUTENTIKASI</div>
-          <h2 id="login-title">Masuk sebagai administrator</h2>
-          <p>Masuk menggunakan akun ADMIN resmi pada database STAGING. Kami tidak menyimpan PIN atau token sesi di penyimpanan browser.</p>
+          <div class="step-number"><span class="step-line"></span> TAHAP 02 — AKSES</div>
+          <h2 id="login-title">Selamat datang kembali.</h2>
+          <p class="form-intro">Masukkan akun ADMIN yang terdaftar di STAGING. Tidak ada PIN atau sesi yang disimpan permanen dalam browser.</p>
           <form id="login-form">
             <label for="wa">Nomor WhatsApp admin</label>
             <input id="wa" name="wa" type="tel" inputmode="tel" autocomplete="username" placeholder="08xxxxxxxxxx" required maxlength="20">
             <label for="pin">PIN 6 angka</label>
             <input id="pin" name="pin" type="password" inputmode="numeric" autocomplete="current-password" pattern="[0-9]{6}" maxlength="6" required>
-            <button class="primary-button" type="submit" id="login">Masuk ke workspace</button>
+            <button class="primary-button" type="submit" id="login"><span>Masuk ke workspace</span><span class="button-arrow" aria-hidden="true">→</span></button>
           </form>
-          <button type="button" class="text-button" id="change-endpoint">Ganti endpoint STAGING</button>
+          <button type="button" class="text-button" id="change-endpoint">Gunakan koneksi STAGING lain</button>
         </section>
+          </div>
+          <aside class="access-aside" aria-label="Tentang ruang kerja">
+            <div class="aside-top"><span class="aside-kicker">MEMBERSHIP OPERATIONS</span><span class="aside-monogram" aria-hidden="true">N<span>.</span></span></div>
+            <div class="aside-hero">
+              <p class="aside-overline">ONE PLACE, COMPLETE CLARITY</p>
+              <h2>Kendali bisnis,<br><em>di satu tempat.</em></h2>
+              <p>Ruang kerja pengelola Ngulik Digital — untuk membaca data anggota, katalog, pesanan, dan pengaturan dalam satu alur yang terukur.</p>
+            </div>
+            <div class="aside-bottom">
+              <div class="aside-feature"><span class="aside-feature-no">01</span><span>Identitas lingkungan diperiksa oleh server.</span></div>
+              <div class="aside-feature"><span class="aside-feature-no">02</span><span>Data berasal dari database STAGING, bukan contoh.</span></div>
+              <div class="aside-feature"><span class="aside-feature-no">03</span><span>Perubahan finansial tetap diblokir.</span></div>
+            </div>
+            <div class="aside-art" aria-hidden="true"><span class="art-circle art-one"></span><span class="art-circle art-two"></span><span class="art-circle art-three"></span></div>
+          </aside>
+        </div>
         <section id="workspace-section" hidden>
           <div id="env-info" class="env-strip" aria-live="polite"></div>
           <div class="toolbar">
