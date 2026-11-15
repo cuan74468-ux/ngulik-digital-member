@@ -160,6 +160,54 @@ test('formula-only row must NOT be silently discarded as a spacer',()=>{
   assert.equal(r.issue_counts.missing_whatsapp,1);
   assert.equal(x.calls.writes,0);
 });
+test('live STAGING pattern: blank derived formula cells AG:AI are not member records',()=>{
+  const headers=['member_id','wa','role','wa_verified','saldo_kredit','retensi_14','retensi_30'];
+  const x=fixture({members:[{},member('M-ADMIN','628123456789')]},{
+    headers:{members:headers},
+    formulas:{members:{0:{
+      saldo_kredit:'=IF(A2="";"";SUMIF(credits_ledger!B:B;A2;credits_ledger!E:E))',
+      retensi_14:'=IF(A2="";"";IF(AF2=TRUE;1;0))',
+      retensi_30:'=IF(A2="";"";IF(AG2=TRUE;1;0))'
+    }}}
+  });
+  const out=x.ctx.ngdDataIntegrityPreflightReadOnly();
+  assert.equal(out.ready,true);
+  assert.equal(out.scanned_rows.members,1);
+  assert.equal(out.issue_counts.missing_member_identifier,0);
+  assert.equal(out.issue_counts.missing_whatsapp,0);
+  assert.equal(x.calls.writes,0);
+});
+test('derived formula referencing a different row still counts as suspicious',()=>{
+  const headers=['member_id','wa','role','wa_verified','saldo_kredit'];
+  const x=fixture({members:[{},member('M-1')]},{
+    headers:{members:headers},
+    formulas:{members:{0:{saldo_kredit:'=IF(A3="";"";1)'}}}
+  });
+  const out=x.ctx.ngdDataIntegrityPreflightReadOnly();
+  assert.equal(out.ready,false);
+  assert.equal(out.issue_counts.missing_member_identifier,1);
+  assert.equal(out.issue_counts.missing_whatsapp,1);
+});
+test('unrecognized computed field with formula is never discarded',()=>{
+  const headers=['member_id','wa','role','wa_verified','calculated_other'];
+  const x=fixture({members:[{},member('M-1')]},{
+    headers:{members:headers},
+    formulas:{members:{0:{calculated_other:'=IF(A2="";"";42)'}}}
+  });
+  const out=x.ctx.ngdDataIntegrityPreflightReadOnly();
+  assert.equal(out.ready,false);
+  assert.equal(out.issue_counts.missing_member_identifier,1);
+});
+test('derived nonblank constant formula remains a blocking partial record',()=>{
+  const headers=['member_id','wa','role','wa_verified','saldo_kredit'];
+  const x=fixture({members:[{},member('M-1')]},{
+    headers:{members:headers},
+    formulas:{members:{0:{saldo_kredit:'=42'}}}
+  });
+  const out=x.ctx.ngdDataIntegrityPreflightReadOnly();
+  assert.equal(out.ready,false);
+  assert.equal(out.issue_counts.missing_whatsapp,1);
+});
 test('multiple consecutive blank spacers are skipped in one read block',()=>{
   const x=fixture({members:[{},{},member('M-1')]});
   const r=x.ctx.ngdDataIntegrityPreflightReadOnly();

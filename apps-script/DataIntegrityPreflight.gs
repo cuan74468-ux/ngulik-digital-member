@@ -66,9 +66,28 @@ function ngdIntegrityReadRows_(ss,name,columns) {
     var allFormulas=range.getFormulas();
     for(var offset=0;offset<size;offset++){
       var i=first+offset;
+      var physicalRow=i+2;
       var hasValues=allValues[offset].some(populated_);
-      var hasFormulas=allFormulas[offset].some(populated_);
-      if(!hasValues&&!hasFormulas)ignore[i]=true;
+      var hasBusinessFormula=false;
+      for(var col=0;col<width;col++){
+        var formula=String(allFormulas[offset][col]||'').trim();
+        if(!formula)continue;
+        var headerName=header[col];
+        // The real STAGING "members" sheet contains row-2 formulas in
+        // saldo_kredit, retensi_14 and retensi_30, each guarded by A2="".
+        // Their displayed values are blank; they are not member records.
+        // Never disregard formulas in identifiers, other columns, or
+        // derived columns with a different/malformed guard.
+        var derived=name==='members'&&
+          ['saldo_kredit','retensi_14','retensi_30'].indexOf(headerName)>=0;
+        var blankGuard=new RegExp('^=IF\\(\\$?A\\$?'+physicalRow+
+          '\\s*=\\s*""\\s*[,;]\\s*""\\s*[,;]','i');
+        if(!derived||!blankGuard.test(formula)){
+          hasBusinessFormula=true;
+          break;
+        }
+      }
+      if(!hasValues&&!hasBusinessFormula)ignore[i]=true;
     }
     cursor=end;
   }
