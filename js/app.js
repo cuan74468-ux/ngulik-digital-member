@@ -198,10 +198,12 @@ const state={
   lmsCompletion:null,notifications:{enabled:false,items:[],unread:0},catalogFilter:'semua',
   adminCatalog:[],catalogEditId:'',catalogRequestId:null,
   adminRuntime:null,adminRuntimeError:'',adminSettings:null,adminSettingsError:'',
-  services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null
+  services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null,
+  registrationOtpVerifiedWa:''
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const adminLoginEnabled=()=>isConnected()&&config.adminLoginEnabled===true;
+const registrationOtpEnabled=()=>isWriteEnabled()&&config.registrationOtpEnabled===true;
 const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true&&Boolean(config.qrisImageUrl)&&Boolean(config.qrisMerchant);
 const qrisUrl=()=>{try{const u=new URL(String(config.qrisImageUrl||''),location.href);return u.origin===location.origin&&u.protocol==='https:'?u.href:'';}catch{return '';}};
 const logged=()=>Boolean(state.me&&state.token);
@@ -507,7 +509,7 @@ function viewAccount(){
     '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan bug atau usulkan fitur '+icon('arrow')+'</button></div></div>'+viewNotificationCenter()+viewProfileEditor();
 }
 function viewLogin(register=false,adminMode=false){
-  const enabled=adminMode?adminLoginEnabled():isWriteEnabled();
+  const enabled=adminMode?adminLoginEnabled():register?registrationOtpEnabled():isWriteEnabled();
   return '<div class="login-shell"><p class="eyebrow">'+
     (adminMode?'AKSES PENGELOLA':register?'BERGABUNG':'SELAMAT DATANG KEMBALI')+'</p>'+
     '<h1 style="font-size:2.25rem">'+
@@ -519,6 +521,9 @@ function viewLogin(register=false,adminMode=false){
       '<div class="field"><label for="usaha">Nama usaha</label><input class="input" id="usaha" name="nama_usaha" required minlength="2" maxlength="100"></div>':'')+
     '<div class="field"><label for="wa">Nomor WhatsApp</label><input class="input" id="wa" name="wa" required inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx"></div>'+
     '<div class="field"><label for="pin">PIN 6 angka</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>'+
+    (register?'<div class="field"><label for="otp">Kode OTP WhatsApp</label><input class="input" id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" type="text" required placeholder="6 digit kode verifikasi"></div>'+
+      '<div class="actions" style="margin-bottom:13px"><button type="button" class="btn btn-secondary" data-action="otp-request" '+(!enabled?'disabled':'')+'>Kirim kode OTP</button>'+
+      '<button type="button" class="btn btn-ghost" data-action="otp-verify" '+(!enabled?'disabled':'')+'>Verifikasi kode</button></div>':'')+
     (register?'<div class="field"><label><input type="checkbox" name="setuju_kebijakan" required> Saya menyetujui ketentuan program dan kebijakan privasi.</label></div>':'')+
     '<button class="btn btn-primary btn-wide" type="submit" '+(!enabled?'disabled':'')+'>'+
     (adminMode?'Masuk admin':register?'Buat akun':'Masuk')+' '+icon('arrow')+'</button>'+
@@ -1202,6 +1207,38 @@ async function loadRoute(route){
     if(route===state.route)render();
   }catch(e){toast(e.message,true);}
 }
+async function handleRegistrationOtp_(action){
+  const form=document.getElementById('auth-form');
+  if(!form||form.dataset.mode!=='register'||!registrationOtpEnabled())
+    return toast('Pendaftaran WhatsApp belum diaktifkan.',true);
+  const fd=new FormData(form);
+  const wa=String(fd.get('wa')||'').trim();
+  const otp=String(fd.get('otp')||'').trim();
+  const agreed=fd.get('setuju_kebijakan')==='on';
+  const normalizedWa=wa.replace(/[ ()-]/g,'');
+  if(!/^(?:0|[+]?62)[0-9]{8,13}$/.test(normalizedWa))
+    return toast('Masukkan nomor WhatsApp yang valid.',true);
+  if(action==='otp-request'&&!agreed)
+    return toast('Persetujuan kebijakan dan pengiriman OTP diperlukan.',true);
+  if(action==='otp-verify'&&!/^[0-9]{6}$/.test(otp))
+    return toast('Masukkan kode OTP enam angka.',true);
+  const button=form.querySelector('[data-action="'+action+'"]');
+  if(button)button.disabled=true;
+  try{
+    if(action==='otp-request'){
+      state.registrationOtpVerifiedWa='';
+      await api('requestRegistrationOtp',{wa,setuju_kebijakan:agreed},'',{write:true});
+      toast('Permintaan kode diterima. Periksa WhatsApp Anda.');
+    }else if(action==='otp-verify'){
+      const result=await api('verifyRegistrationOtp',{wa,otp},'',{write:true});
+      if(result?.verified!==true)
+        throw new ApiError('Verifikasi OTP belum dikonfirmasi backend.');
+      state.registrationOtpVerifiedWa=wa;
+      toast('Nomor WhatsApp terverifikasi. Anda dapat menyelesaikan pendaftaran.');
+    }
+  }catch(error){toast(error.message,true);}
+  finally{if(button)button.disabled=false;}
+}
 async function processLogin(form,register){
   const adminMode=form.dataset.mode==='admin';
   if(!(adminMode?adminLoginEnabled():isWriteEnabled()))
@@ -1212,6 +1249,10 @@ async function processLogin(form,register){
     payload.nama=String(fd.get('nama')||'');
     payload.nama_usaha=String(fd.get('nama_usaha')||'');
     payload.setuju_kebijakan=fd.get('setuju_kebijakan')==='on';
+    payload.otp=String(fd.get('otp')||'').trim();
+    if(!registrationOtpEnabled())return toast('Registrasi OTP belum diaktifkan.',true);
+    if(!/^[0-9]{6}$/.test(payload.otp)||state.registrationOtpVerifiedWa!==payload.wa)
+      return toast('Verifikasi kode OTP WhatsApp terlebih dahulu.',true);
     const r=new URLSearchParams(location.search).get('ref');
     if(r)payload.ref=r;
   }
@@ -1795,6 +1836,8 @@ document.addEventListener('click',async(e)=>{
       render();
     }catch(error){toast(error.message,true);target.disabled=false;}
   }
+  else if(target.dataset.action==='otp-request'||target.dataset.action==='otp-verify')
+    await handleRegistrationOtp_(target.dataset.action);
   else if(target.dataset.action==='logout')await logout();
   else if(target.dataset.action==='confirm-payment')await confirmPayment();
   else if(target.dataset.copy){
