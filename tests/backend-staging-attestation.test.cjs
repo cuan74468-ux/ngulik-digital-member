@@ -33,6 +33,7 @@ test('verified STAGING returns environmental identity but no database id',()=>{
   assert.equal(identity.admin_login_enabled,true);
   assert.equal(identity.finance_enabled,false);
   assert.equal(identity.registration_enabled,false);
+  assert.equal(identity.external_providers_enabled,false);
   assert.equal(JSON.stringify(identity).includes('STAGING_ONLY_ID'),false);
 });
 test('production fails closed even with active admin login',()=>{
@@ -51,4 +52,10 @@ test('unknown database id in runtime fails closed',()=>{
 test('staging OTP database mismatch fails closed',()=>{
   assert.throws(()=>boot({NGD_OTP_STAGING_DB_ID:'OTHER_DB'}).ngdStagingWorkspaceInfo_(),
     /STAGING terverifikasi/);
+});
+
+test('STAGING read-only workspace preflight refuses external-provider activation',()=>{
+  const app=boot({NGD_EXTERNAL_PROVIDERS_ENABLED:'true'});
+  assert.equal(app.ngdStagingWorkspaceInfo_().external_providers_enabled,true);
+  assert.throws(()=>app.ngdStagingWorkspaceReadOnlyCheck(),/Pengaman write STAGING harus tetap OFF/);
 });

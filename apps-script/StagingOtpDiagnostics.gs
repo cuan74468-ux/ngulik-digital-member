@@ -20,7 +20,8 @@ function ngdOtpStagingPreflight() {
     'NGD_MUTATIONS_ENABLED',
     'NGD_REGISTRATION_ENABLED',
     'NGD_OTP_REGISTRATION_ENABLED',
-    'NGD_FINANCE_ENABLED'
+    'NGD_FINANCE_ENABLED',
+    'NGD_EXTERNAL_PROVIDERS_ENABLED'
   ];
   var enabled=forbidden.filter(function(k){
     return props.getProperty(k)==='true';

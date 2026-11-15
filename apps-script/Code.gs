@@ -1413,6 +1413,7 @@ function ngdStagingWorkspaceInfo_() {
     mutations_enabled:mutationsEnabled_(),
     registration_enabled:props.getProperty('NGD_REGISTRATION_ENABLED')==='true',
     otp_enabled:props.getProperty('NGD_OTP_REGISTRATION_ENABLED')==='true',
+    external_providers_enabled:props.getProperty('NGD_EXTERNAL_PROVIDERS_ENABLED')==='true',
     finance_enabled:financeEnabled_(),
     catalog_enabled:props.getProperty('NGD_CATALOG_ENABLED')==='true',
     content_enabled:props.getProperty('NGD_CONTENT_ENABLED')==='true',
@@ -1423,7 +1424,7 @@ function ngdStagingWorkspaceInfo_() {
 function ngdStagingWorkspaceReadOnlyCheck() {
   var info=ngdStagingWorkspaceInfo_();
   require_(!info.mutations_enabled&&!info.registration_enabled&&
-    !info.otp_enabled&&!info.finance_enabled,
+    !info.otp_enabled&&!info.external_providers_enabled&&!info.finance_enabled,
     'MAINTENANCE','Pengaman write STAGING harus tetap OFF untuk preflight.');
   console.log('NGD_STAGING_WORKSPACE_READONLY_OK | environment=STAGING | writes=false');
   return 'NGD_STAGING_WORKSPACE_READONLY_OK';
