@@ -288,6 +288,8 @@
       show('exit',true);
       drawEnvironment();
       text('connection-status','ADMIN · STAGING');
+      // Release login busy state before the first authenticated read.
+      setBusy(false);
       await loadView('dashboard');
     }catch(err){alertMessage(err.message);$('pin').value='';}
     finally{setBusy(false);}
