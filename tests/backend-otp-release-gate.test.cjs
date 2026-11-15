@@ -60,6 +60,17 @@ test('OTP verification runs before member insertion when verifier exists', () =>
   env.sandbox.checkNewPin_ = () => {};
   env.sandbox.safeText_ = v => String(v || '');
   env.sandbox.byId_ = () => null;
+  // Supply only the pure pre-insertion dependencies; writes remain prohibited.
+  env.sandbox.settings_ = () => ({
+    mode_pendaftaran: 'TERBUKA',kuota_gelombang: 50,kredit_awal: 0
+  });
+  env.sandbox.memberCount_ = () => 0;
+  env.sandbox.memberWaitlist_ = () => [];
+  env.sandbox.newSalt_ = () => 'FAKE-SALT-ONLY';
+  env.sandbox.nextMemberId_ = () => 'M-9999';
+  env.sandbox.now_ = () => new Date('2026-11-15T00:00:00Z');
+  env.sandbox.pinHash_ = () => 'FAKE-HASH-ONLY';
+  env.sandbox.newReferralCode_ = () => 'FAKE-REF-CODE';
   assert.throws(() => env.sandbox.authRegister_(sample), /OTP_REJECTED_BY_TEST_VERIFIER/);
   assert.equal(verifierCalls, 1);
   assert.equal(attemptedWrites, 0);
