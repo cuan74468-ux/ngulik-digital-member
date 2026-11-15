@@ -47,6 +47,10 @@ test('missing Fonnte token fails before DB access or network send',()=>{
   const x=boot();
   assert.throws(()=>x.ngdOtpRequest_({wa:'081234567890'}),/Gateway OTP belum dikonfigurasi/);
 });
+test('request OTP requires explicit WhatsApp consent',()=>{
+  const x=boot({FONNTE_API_TOKEN:'PLACEHOLDER_TEST_TOKEN'});
+  assert.throws(()=>x.ngdOtpRequest_({wa:'081234567890'}),/Persetujuan pengiriman kode WhatsApp/);
+});
 test('malformed OTP cannot trigger a database read',()=>{
   const x=boot();
   assert.throws(()=>x.ngdOtpVerify_({wa:'081234567890',otp:'bad'}),/enam angka/);
