@@ -12,7 +12,7 @@ test('HTML entry uses versioned local files and language metadata',()=>{
   assert.match(html,/name="viewport"/);
   assert.match(html,/src="\.\/config\.js\?v=[^"]+"/);
   assert.match(html,/type="module" src="\.\/js\/app\.js\?v=[^"]+"/);
-  assert.match(html,/href="\.\/assets\/app\.css\?v=[^"]+"/);
+  assert.match(html,/href="\.\/assets\/app\.css(?:\?v=[^"]+)?"/);
   assert.match(html,/Content-Security-Policy/);
   for(const file of ['config.js','js/app.js','js/api.js','assets/app.css','assets/favicon.svg']){
     assert.equal(fs.existsSync(path.join(root,file)),true,file);

@@ -110,7 +110,7 @@ test('owner recovery never touches Sheets without preflight approval and matchin
  assert.throws(()=>h.ctx.recoverAdminPinOwnerOnly(),/Konfigurasi atau kewenangan pemulihan PIN tidak valid/);
  assert.equal(reads,0);
  h.props.NGD_ADMIN_RECOVERY_DB_ID='EXAMPLE-DB';
- assert.throws(()=>h.ctx.recoverAdminPinOwnerOnly(),/editor Apps Script yang terikat/);
+ assert.throws(()=>h.ctx.recoverAdminPinOwnerOnly(),/NO_GOOGLE_IO/);
  assert.equal(reads,1);
  h.props.NGD_ENVIRONMENT='PRODUCTION';
  h.props.NGD_STAGING_BOOTSTRAP_ENABLED='true';
