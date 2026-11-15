@@ -65,12 +65,27 @@ test('PRODUCTION rejected before opening any spreadsheet',()=>{
   assert.throws(()=>x.context.ngdInfrastructurePreflightReadOnly(),/INFRA_NOT_STAGING/);
   assert.equal(x.calls.open,0);
 });
-test('missing or mismatched OTP database attestation is rejected',()=>{
-  for(const value of ['', 'OTHER']){
-    const x=boot({props:{NGD_OTP_STAGING_DB_ID:value}});
-    assert.throws(()=>x.context.ngdInfrastructurePreflightReadOnly(),/INFRA_DB_ATTESTATION_REQUIRED/);
-    assert.equal(x.calls.open,0);
-  }
+test('OTP database attestation may be unset during provider-last preparation',()=>{
+  const x=boot({props:{NGD_OTP_STAGING_DB_ID:''}});
+  assert.equal(x.context.ngdInfrastructurePreflightReadOnly().tables_checked,29);
+  assert.equal(x.calls.read,29);
+  assert.equal(x.calls.write,0);
+  assert.equal(x.calls.network,0);
+});
+test('configured but mismatched OTP DB still fails before opening any spreadsheet',()=>{
+  const x=boot({props:{NGD_OTP_STAGING_DB_ID:'OTHER'}});
+  assert.throws(()=>x.context.ngdInfrastructurePreflightReadOnly(),/INFRA_OTP_DB_MISMATCH/);
+  assert.equal(x.calls.open,0);
+});
+test('admin login DB mismatch fails before opening any spreadsheet',()=>{
+  const x=boot({props:{NGD_ADMIN_LOGIN_DB_ID:'OTHER'}});
+  assert.throws(()=>x.context.ngdInfrastructurePreflightReadOnly(),/INFRA_ADMIN_DB_MISMATCH/);
+  assert.equal(x.calls.open,0);
+});
+test('missing DB ID fails before opening any spreadsheet',()=>{
+  const x=boot({props:{NGD_DB_ID:''}});
+  assert.throws(()=>x.context.ngdInfrastructurePreflightReadOnly(),/INFRA_DB_ID_MISSING/);
+  assert.equal(x.calls.open,0);
 });
 test('feature mutations, recovery and schema upgrades are forbidden',()=>{
   for(const name of ['NGD_MUTATIONS_ENABLED','NGD_REGISTRATION_ENABLED',

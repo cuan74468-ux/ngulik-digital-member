@@ -72,7 +72,7 @@ Status: fondasi mulai dipersiapkan; layanan eksternal belum dihubungkan. Tahap 1
 1. Buka repository GitHub dan periksa commit serta GitHub Actions terakhir; jangan menyimpulkan source berhasil diterapkan ke Apps Script sebelum melihat versi runtime.
 2. Masuk editor Google Apps Script STAGING yang telah terhubung, bukan editor produksi. Simpan cadangan kode Apps Script terlebih dahulu (minimal salin file sebelum perubahan); jangan menimpa berkas yang sedang aktif secara membabi buta.
 3. Cocokkan Code.gs, Diagnostics.gs dan StagingOtpDiagnostics.gs dengan source GitHub. Tambahkan file baru bernama InfrastructurePreflight.gs hanya setelah membandingkan source dan memastikan tidak ada nama fungsi duplikat. Jangan mengganti seluruh proyek secara otomatis.
-4. Pastikan NGD_ENVIRONMENT=STAGING; NGD_DB_ID, NGD_ADMIN_LOGIN_DB_ID dan NGD_OTP_STAGING_DB_ID menunjuk database STAGING yang sama; jangan kirim nilainya melalui chat. Semua flag mutasi dan provider tetap OFF. Ini bukan izin untuk mengubah Script Properties tanpa pemeriksaan.
+4. Pastikan NGD_ENVIRONMENT=STAGING; NGD_DB_ID dan NGD_ADMIN_LOGIN_DB_ID menunjuk database STAGING yang sama. NGD_OTP_STAGING_DB_ID boleh belum diisi selama provider-last dan seluruh sakelar OTP/registrasi/provider OFF; bila diisi, nilainya wajib sama dengan database STAGING. Jangan kirim nilai properti melalui chat. Ini bukan izin untuk mengubah Script Properties tanpa pemeriksaan.
 5. Jalankan ngdInfrastructurePreflightReadOnly dari editor. Bila muncul NGD_INFRASTRUCTURE_PREFLIGHT_OK dengan tables=29 dan providers=DEFERRED, pemeriksaan sumber dan skema lulus. Jika gagal, hentikan dan laporkan hanya kode error (bukan data PII).
 6. Sebelum menerbitkan New version deployment STAGING, uji dokumentasi rollback dan verifikasi semua fungsi login/read-only tidak terganggu. Jangan aktifkan operator recover, schema migration, OTP send atau finance.
 7. Lanjutkan tes mekanisme internal dan QA Android/Windows. Provider eksternal terakhir ketika semua gate siap dan owner memberi persetujuan eksplisit.
@@ -82,7 +82,8 @@ Status: fondasi mulai dipersiapkan; layanan eksternal belum dihubungkan. Tahap 1
 | Kode | Penanganan aman |
 |---|---|
 | INFRA_NOT_STAGING | Anda berada pada proyek/Script Properties yang salah; jangan menjalankan lagi di produksi. |
-| INFRA_DB_ATTESTATION_REQUIRED | Cocokkan tiga penanda database di Script Properties dengan STAGING, jangan menyalin ID dari dokumen lama. |
+| INFRA_DB_ID_MISSING / INFRA_ADMIN_DB_MISMATCH | Database utama wajib terisi dan sama dengan penanda admin STAGING; jangan mengubah Script Properties tanpa memastikan proyek dan sheet yang benar. |
+| INFRA_OTP_DB_MISMATCH | Bila properti OTP sudah disetel, nilainya harus sama dengan database STAGING. Bila belum disetel, tetap aman selama seluruh sakelar OTP/registrasi/provider OFF. |
 | INFRA_FLAG_NOT_DISABLED | Ada sakelar aktif/tidak valid; hentikan dan audit sebelum pemeriksaan berikut. |
 | INFRA_TAB_MISSING | Jangan menciptakan tab mendadak. Periksa salinan database dan mandat skema. |
 | INFRA_COLUMNS_MISSING / INFRA_HEADER_INVALID | Jangan mengganti header yang sudah terisi; audit dampak dahulu. |
@@ -133,3 +134,10 @@ Audit baca-saja tambahan langsung melalui konektor Google Sheets pada delapan ta
 **Keterbatasan:** ini adalah verifikasi snapshot dan baca relasi data subset, **bukan** pembuktian restore file, bukan uji keamanan token admin live, bukan verifikasi 50 peserta, bukan database transaction consistency, bukan QA provider. Backup belum direstorasi di lingkungan terisolasi. Kriteria GO tetap tertahan.
 
 File `apps-script/DataIntegrityPreflight.gs` memiliki pemeriksaan editor-only yang dapat dijalankan ulang setelah source runtime GAS STAGING disejajarkan; tidak perlu membuat akun Fonnte, Mayar, atau provider AI untuk melakukannya. **Jangan menempel kredensial maupun nomor WA ke chat.**
+
+
+### Koreksi preflight — 15 November 2026, log pukul 21.27 WIB
+
+Operator melaporkan `INFRA_DB_ATTESTATION_REQUIRED` saat menjalankan `ngdDataIntegrityPreflightReadOnly` yang memanggil `ngdInfrastructurePreflightReadOnly`. Source pemeriksaan infrastruktur sebelumnya lebih ketat daripada `ngdStagingWorkspaceInfo_` yang sudah lulus attestation: `NGD_OTP_STAGING_DB_ID` yang kosong ditolak, padahal akun Fonnte dan OTP memang ditunda.
+
+Perbaikan source: penanda DB utama dan admin **tetap wajib cocok**, sementara penanda OTP **boleh kosong** selama integrasi belum aktif; bila diisi harus cocok. Kesalahan sekarang dibedakan menjadi `INFRA_DB_ID_MISSING`, `INFRA_ADMIN_DB_MISMATCH`, dan `INFRA_OTP_DB_MISMATCH` tanpa membocorkan ID. `NGD_EXTERNAL_PROVIDERS_ENABLED` dan semua write flags tetap wajib OFF. Tes regresi mencakup keempat kasus beserta jaminan nol mutasi. Source berubah **hanya di GitHub**; operator perlu mengganti isi `InfrastructurePreflight.gs` STAGING dengan versi terbaru setelah memeriksa bahwa file tersebut merupakan salinan patch lama. Tidak perlu mengubah `Code.gs`, `DataIntegrityPreflight.gs`, Script Properties, maupun deployment Web App untuk mengeksekusi fungsi owner-only editor ini.

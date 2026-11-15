@@ -9,8 +9,16 @@ function ngdInfrastructurePreflightReadOnly() {
   var dbId=String(props.getProperty('NGD_DB_ID')||'').trim();
   var adminDb=String(props.getProperty('NGD_ADMIN_LOGIN_DB_ID')||'').trim();
   var otpDb=String(props.getProperty('NGD_OTP_STAGING_DB_ID')||'').trim();
-  if(!dbId||adminDb!==dbId||otpDb!==dbId)
-    throw new Error('INFRA_DB_ATTESTATION_REQUIRED');
+  // Match the verified ngdStagingWorkspaceInfo_ contract: the OTP database
+  // property is optional until the provider-last registration phase. If set,
+  // it must point to the exact same STAGING spreadsheet. The OTP runtime
+  // independently rejects an absent property when actual OTP is enabled.
+  if(!dbId)
+    throw new Error('INFRA_DB_ID_MISSING');
+  if(adminDb!==dbId)
+    throw new Error('INFRA_ADMIN_DB_MISMATCH');
+  if(otpDb && otpDb!==dbId)
+    throw new Error('INFRA_OTP_DB_MISMATCH');
 
   // Safe for the current isolated ADMIN login, never for feature mutations.
   var flags=[
