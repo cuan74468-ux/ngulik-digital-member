@@ -28,7 +28,7 @@ test('admin login does not inherit member registration OTP gate',()=>{
 test('backend registration consumes verified one-time OTP server-side',()=>{
   assert.match(backend,/ngdConsumeVerifiedRegistrationOtp_\(p\)/);
   assert.match(otpBackend,/status:'USED'/);
-  assert.match(otpBackend,/status:'LOCKED'/);
+  assert.match(otpBackend,/next>=3\?'LOCKED'/);
 });
 test('frontend OTP flow has no staging endpoint or gateway credentials',()=>{
   assert.doesNotMatch(app,/FONNTE_API_TOKEN|NGD_OTP_HASH_PEPPER/);
