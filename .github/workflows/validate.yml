@@ -216,4 +216,15 @@ jobs:
             echo 'BROWSER_API_TRANSPORT_UNVERIFIED: inspect browser CORS/redirect/network before enabling login or payments'
             grep -o 'API_BROWSER_[A-Z_]*' /tmp/ngd-browser-api.html | tail -1 || true
           fi
+          # STAGING administrative workspace: verify real rendered DOM and layout
+          # at desktop + Android viewport widths without any API write.
+          sed -i 's#</body>#<script src="../tests/staging-layout-probe.js" defer></script></body>#' staging/index.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=4000 --window-size=1365,850 --dump-dom \
+            "http://127.0.0.1:8765/staging/" > /tmp/ngd-staging-desktop.html 2>>/tmp/ngd-chrome.log
+          grep -q 'data-staging-visual-check="pass"' /tmp/ngd-staging-desktop.html
+          grep -q 'data-staging-visual-count="10"' /tmp/ngd-staging-desktop.html
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=4000 --window-size=390,844 --dump-dom \
+            "http://127.0.0.1:8765/staging/" > /tmp/ngd-staging-mobile.html 2>>/tmp/ngd-chrome.log
+          grep -q 'data-staging-visual-check="pass"' /tmp/ngd-staging-mobile.html
+          echo 'STAGING_VISUAL_SMOKE_OK: desktop and mobile login shell'
           echo 'BROWSER_UI_OK: membership public, member, admin, catalog and service flows'
