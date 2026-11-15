@@ -44,3 +44,17 @@ Setelah URL terkonfirmasi, verifikasi identitas `getStagingWorkspaceInfo` sebelu
 - Jangan menyuntikkan data dummy ke jalur produksi, mengganti nilai `kredit_awal`, harga atau komisi sepihak.
 
 Sumber sejarah terdahulu: `docs/STAGING_WORKSPACE_HANDOFF_2026-11-15.md` dan `docs/STAGE1_AUTH_OTP_P0_CHECKPOINT_2026-11-15.md`.
+
+## Pengujian kandidat URL STAGING — 15 November 2026, lanjutan
+
+Owner memberikan URL kandidat Web App STAGING pada sesi lanjutan. Pengujian dari GitHub-hosted runner dilakukan menggunakan workflow `.github/workflows/verify-staging-identity.yml` **tanpa PIN dan tanpa aksi tulis**:
+- **GET /exec berhasil**: API `Ngulik Digital API`, `version=1.0.3`, `writes_enabled=false`, `payments_enabled=false`.
+- **POST `getStagingWorkspaceInfo` ditolak `MAINTENANCE`**, bukan identitas `NGD_STAGING`. Lihat workflow GitHub Actions run `43713266430`.
+- Source GitHub versi sekarang menempatkan aksi tersebut di daftar READ dan meminta identitas STAGING; `MAINTENANCE` konsisten dengan kemungkinan versi deployment lama yang belum memuat aksi ini. **Belum dapat dikatakan pasti** tanpa membandingkan kode Apps Script runtime.
+- URL **BELUM** dipasang ke `staging/config.js`; verifikasi wajib berhasil terlebih dahulu.
+- Pengaman frontend staging diperkuat: identitas harus juga melaporkan `mutations_enabled=false`, `registration_enabled=false`, `otp_enabled=false`, `finance_enabled=false` sebelum login dapat ditampilkan.
+- Ketika server mengembalikan `MAINTENANCE`, frontend menyarankan pemeriksaan versi deployment STAGING, bukan meminta PIN.
+
+**Tindakan operator minimum:** Di Google Apps Script **STAGING**, periksa bahwa `Code.gs` editor berisi `getStagingWorkspaceInfo` di `apiReadActions_` dan `case 'getStagingWorkspaceInfo'` pada `apiRouter_`. Jika sudah ada, perbarui **deployment STAGING yang sama** lewat `Deploy → Manage deployments → Edit (ikon pensil) → Version: New version → Deploy`. Jika belum ada, jangan mengaktifkan flag apa pun; backup/bandingkan source Code.gs dengan GitHub sebelum memasang revisi. Setelah deployment, GitHub workflow baca-saja dapat diuji ulang untuk memvalidasi STAGING sebelum menyetel frontend.
+
+Produksi tidak disentuh. Tidak ada klaim login browser, OTP WA nyata, CRUD, maupun siap go-live.

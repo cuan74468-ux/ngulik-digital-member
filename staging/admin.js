@@ -94,7 +94,11 @@
   function onlyStaging(result) {
     return Boolean(result && typeof result==='object' &&
       result.workspace==='NGD_STAGING' && result.environment==='STAGING' &&
-      result.admin_login_enabled===true);
+      result.admin_login_enabled===true &&
+      result.mutations_enabled===false &&
+      result.registration_enabled===false &&
+      result.otp_enabled===false &&
+      result.finance_enabled===false);
   }
   function heading(title,description,place) {
     text('page-title',title);
@@ -270,7 +274,11 @@
       showLogin();
       alertMessage('Identitas STAGING terverifikasi. Anda dapat login menggunakan akun admin.',true);
       $('wa').focus();
-    }catch(err){alertMessage(err.message);}
+    }catch(err){
+      alertMessage(err.code==='MAINTENANCE'
+        ? 'Web App STAGING merespons, tetapi versi deployment kemungkinan belum mendukung pemeriksaan identitas. Perbarui hanya deployment STAGING melalui Deploy → Manage deployments → Edit → New version → Deploy.'
+        : err.message);
+    }
     finally{setBusy(false);}
   });
   $('login-form').addEventListener('submit',async e=>{

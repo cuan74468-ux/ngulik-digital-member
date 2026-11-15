@@ -41,6 +41,8 @@ function boot(identity=verified) {
   async function fetchStub(endpoint,options){
     const body=JSON.parse(options.body);
     requests.push({action:body.action,endpoint,payload:body.payload,token:body.token});
+    if(body.action==='getStagingWorkspaceInfo' && identity==='MAINTENANCE')
+      return {ok:true,json:async()=>({ok:false,error:{code:'MAINTENANCE',message:'Perubahan data belum diaktifkan.'}})};
     const data=body.action==='getStagingWorkspaceInfo'?identity:
       body.action==='adminLogin'?{token:'PRIVATE_TEST_TOKEN',profil:{role:'ADMIN',member_id:'M-0001'}}:
       body.action==='adminGetDashboard'?{ringkasan:[{metrik:'anggota',nilai:0}]}:[];
@@ -95,4 +97,22 @@ test('workspace has no password or token storage and no finance write actions',(
   assert.doesNotMatch(source,/\b(?:adminRefundOrder|adminVerifyOrder|adminAdjustCredit|adminMarkCommissionPaid)\b/);
   assert.match(source,/credentials:'omit'/);
   assert.match(source,/referrerPolicy:'no-referrer'/);
+});
+
+test('identity attestation rejects STAGING with any core safety flag enabled',async()=>{
+  for(const field of ['mutations_enabled','registration_enabled','otp_enabled','finance_enabled']){
+    const env=boot({...verified,[field]:true});
+    env.field('endpoint').value=url;
+    await env.submit('setup-form');
+    assert.equal(env.field('login-section').hidden,true,field);
+    assert.deepEqual(env.requests.map(x=>x.action),['getStagingWorkspaceInfo'],field);
+  }
+});
+test('an older deployed Web App reports a specific recovery path without sending a PIN',async()=>{
+  const env=boot('MAINTENANCE');
+  env.field('endpoint').value=url;
+  await env.submit('setup-form');
+  assert.match(env.field('alert').textContent,/versi deployment kemungkinan belum/);
+  assert.equal(env.field('login-section').hidden,true);
+  assert.deepEqual(env.requests.map(x=>x.action),['getStagingWorkspaceInfo']);
 });
