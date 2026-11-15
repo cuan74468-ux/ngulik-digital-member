@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "documentType": "NON_EXECUTABLE_PROVIDER_READINESS_CONTRACT",
+  "decisionDate": "2026-11-15",
+  "releaseState": "INTERNAL_FOUNDATION_ONLY",
+  "externalTrafficAuthorized": false,
+  "releaseGates": {
+    "registration": false,
+    "finance": false,
+    "otp": false,
+    "ai": false,
+    "notifications": false
+  },
+  "description": "Architecture reference only: does not connect to vendors or set GAS properties.",
+  "integrations": [
+    {
+      "id": "registration_whatsapp",
+      "candidate": "Fonnte (owner will create account later)",
+      "status": "DEFERRED",
+      "sourceBoundary": "apps-script/OtpAuth.gs",
+      "secretPropertyNames": [
+        "FONNTE_API_TOKEN",
+        "NGD_OTP_HASH_PEPPER"
+      ],
+      "mustProve": [
+        "recipient_owns_number_and_consents",
+        "OTP_hash_only_storage",
+        "five_minute_TTL",
+        "three_wrong_attempt_limit",
+        "global_and_per_wa_send_limits",
+        "provider_api_acceptance_is_not_delivery",
+        "OTP_replay_rejection",
+        "single_verified_wa_single_starter_grant",
+        "no_PII_in_logs",
+        "cost_budget_and_kill_switch"
+      ]
+    },
+    {
+      "id": "merchant_payment",
+      "candidate": "Mayar or owner-approved alternative (not selected)",
+      "status": "DEFERRED",
+      "sourceBoundary": "future_verified_payment_adapter",
+      "secretPropertyNames": [
+        "MAYAR_API_KEY",
+        "MAYAR_WEBHOOK_SECRET"
+      ],
+      "mustProve": [
+        "merchant_authorization",
+        "official_provider_event_authentication",
+        "authoritative_payment_confirmation",
+        "webhook_idempotency_and_replay",
+        "one_internal_wallet_authority",
+        "settlement_reconciliation",
+        "refund_and_partial_failure_handling",
+        "cost_fee_policy",
+        "kill_switch"
+      ]
+    },
+    {
+      "id": "ai_generation",
+      "candidate": "Provider selected by owner later",
+      "status": "DEFERRED",
+      "sourceBoundary": "future_metered_ai_adapter",
+      "secretPropertyNames": [
+        "AI_PROVIDER_API_KEY"
+      ],
+      "mustProve": [
+        "provider_auth_server_only",
+        "per_action_price_approved",
+        "atomic_server_side_ledger",
+        "request_idempotency",
+        "usage_cap",
+        "provider_timeouts_and_ambiguous_failures",
+        "compensation_reconciliation",
+        "budget_limit_and_kill_switch",
+        "personal_data_minimization"
+      ]
+    },
+    {
+      "id": "external_notifications",
+      "candidate": "Provider selected by owner later",
+      "status": "DEFERRED",
+      "sourceBoundary": "future_notification_adapter",
+      "secretPropertyNames": [],
+      "mustProve": [
+        "template_approved",
+        "consent_and_opt_out",
+        "recipient_validation",
+        "deduplication",
+        "retry_budget",
+        "delivery_status_not_assumed",
+        "privacy_and_retention",
+        "kill_switch"
+      ]
+    }
+  ],
+  "globalRequirements": [
+    "owner_explicit_approval_before_activation",
+    "no_secrets_in_frontend_repository_or_logs",
+    "STAGING_first_with_owner_controlled_traffic",
+    "verified_backups_and_rollback",
+    "member_and_community_privacy_review",
+    "provider_cost_ceiling_before_any_outbound_call",
+    "production_unchanged_until_separate_approval"
+  ]
+}

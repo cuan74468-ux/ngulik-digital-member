@@ -1,0 +1,61 @@
+# NGULIK DIGITAL — FONDASI INTERNAL DULU, INTEGRASI EKSTERNAL TERAKHIR
+
+Keputusan Owner: 15 November 2026. Status: rencana kesiapan teknis dan hasil implementasi source, BUKAN persetujuan rilis.
+
+## Prinsip dan batasan
+
+Produk ini membership komersial nyata. Owner memutuskan akun Fonnte dan penyedia lain dibuat pada tahap akhir, setelah infrastruktur internal siap. Ini mengubah urutan persiapan teknis, tetapi TIDAK memindahkan milestone bisnis Tahap 2–6 lebih awal. Master Index dan Mandat Produksi tetap mengendalikan keputusan fitur dan rilis.
+
+Frontend publik GitHub Pages terpisah dari admin STAGING. Database STAGING 29 tab terpisah dari DB utama. Tidak ada reset, hapus baris, migrasi database produksi, perubahan harga, aktivasi pendaftaran, atau pengiriman provider selama persiapan.
+
+## Urutan kerja infrastruktur
+
+1. Pemeriksaan fondasi: repo, database 29 tab, identitas server STAGING, endpoint, pengamanan flags, backup, CI, tata kelola keputusan.
+2. Logika internal: autentikasi PIN/sesi, OTP hash dan bukti kepemilikan, LMS, kurikulum dan workspace, katalog, ledger kredit, rekonsiliasi, order, dukungan, notifikasi internal dan audit. Siapkan source, bukan transaksi aktif.
+3. QA tanpa provider: unit/VM tests, error handling, replay, double submission, rate limiting, simulasi timeout dan rollback di fixture terisolasi, Chrome desktop/mobile, pembacaan data STAGING tanpa mutasi.
+4. Operasional: inventaris data dan persetujuan privasi, kebijakan retensi, backup/restore drill terisolasi, migration checklist, alarm yang bebas biaya, runbook insiden, audit log dan akses operator.
+5. Last-mile provider: owner membuat dan memilih akun, menyetujui biaya dan data, mengisi secret langsung dalam Script Properties, uji STAGING berizin, review release gate per layanan, baru keputusan GO/NO-GO.
+
+## Pemeriksaan terpadu read-only
+
+File baru apps-script/InfrastructurePreflight.gs berisi fungsi ngdInfrastructurePreflightReadOnly(). Hanya dijalankan oleh owner dari editor Google Apps Script STAGING; tidak ditambahkan ke endpoint publik.
+
+Fungsi mengecek environment STAGING, identitas database terkonfirmasi di 3 Script Properties, sakelar mutasi/recovery/migrasi tetap OFF, serta header 27 tabel inti ditambah 2 tabel OTP dan WA. Kolom tambahan dipertahankan. Bukti verifikasi pada members (wa_verified dan wa_verified_at) diwajibkan. Tidak membaca data anggota, hash sesi, saldo, PIN, atau API key; tidak membuat tab atau memanggil vendor.
+
+Pesan sukses yang diharapkan: NGD_INFRASTRUCTURE_PREFLIGHT_OK | tables=29 | environment=STAGING | writes=false | providers=DEFERRED.
+
+Kegagalan preflight bukan izin mereset data. Baca kode kesalahan dan cocokkan source STAGING dengan kode GitHub yang diaudit. Source GitHub tidak otomatis men-deploy GAS; perubahan ini masih SOURCE-ONLY sampai editor STAGING diselaraskan dengan backup dan versioning.
+
+## Kontrak integrasi akhir (tanpa akun sekarang)
+
+Registry contracts/provider-readiness.json adalah dokumen JSON non-eksekutabel. Ia merinci tanggung jawab dan pembuktian yang diperlukan ketika owner nanti membuat akun provider. Tidak ada endpoint provider, API key, token, atau kredensial dalam registry.
+
+| Layanan | Kondisi sekarang | Bukti wajib saat integrasi |
+|---|---|---|
+| WhatsApp OTP (calon Fonnte) | Deferred | Consent, hash OTP, TTL 5 menit, 3 kali salah, batas biaya, anti-replay, verifikasi penerimaan dan single starter grant |
+| Payment (calon Mayar/alternatif) | Deferred | Akun merchant, verifikasi event resmi, idempotensi webhook, satu sumber wallet, reconciliation, refund/timeout, approval pemilik |
+| Provider AI | Deferred | API key server-only, harga dan limit biaya, debit ledger server-side, replay, timeout dan kompensasi |
+| Notifikasi eksternal | Deferred | Consent, template, deduplication, delivery proof, retry ceiling, privasi dan opsi nonaktif |
+
+Jangan membuat webhook pembayaran berdasarkan contoh usang hanya dengan token pada URL. Mekanisme validasi event nyata harus dipastikan dari dokumentasi resmi provider setelah akun dipilih; jangan mengarang header/payload atau menganggap accepted sebagai delivered.
+
+## Kondisi LMS dan membership
+
+Enam modul komunitas Chapter 01 sudah ada di Google Docs dan program dasar gratis via Classroom, tidak sama dengan kursus native LMS berbayar yang masih kosong. Jangan impor tracker komunitas atau mengubah akses tanpa izin. Kredit awal 10 berdasarkan mandat membutuhkan satu bukti WhatsApp terverifikasi dan pencatatan ledger tunggal agar tak bisa digandakan.
+
+## Gate internal sebelum akun pihak ketiga
+
+- [ ] Fungsi read-only 29/29 lulus pada Apps Script STAGING setelah source dan deployment dibandingkan.
+- [ ] Login/logout/revoke sesi admin dan member diuji, termasuk dua perangkat; jangan kirim PIN/OTP di chat.
+- [ ] Pengamanan registrasi OTP berjalan tanpa membutuhkan nomor sungguhan pada fixture, plus batas percobaan dan anti-replay.
+- [ ] Audit idempotensi dan pemulihan parsial untuk ledger/fulfillment ditinjau (belum menjamin transaksi multi-sheet ACID).
+- [ ] CI pada SHA final lulus, GitHub Pages berhasil dan Chrome mobile/desktop tidak overflow.
+- [ ] Privasi, retensi, backup, restore drill dan batas biaya vendor disepakati.
+- [ ] Persetujuan bisnis untuk entitlement LMS dan pemisahan Chapter 01 gratis dari layanan berbayar dicatat.
+- [ ] Pemilihan provider terakhir dan aktivasi dilakukan satu per satu hanya setelah approval eksplisit Owner.
+
+## Rollback
+
+Revert commit source frontend jika terjadi regresi. Untuk GAS, gunakan deployment STAGING versi lama yang sudah dicatat; jangan mengganti seluruh Code.gs sembarangan. Tidak ada perubahan database dalam pekerjaan ini; jika perlu pemulihan, gunakan cadangan terverifikasi dan audit sebelum tindakan.
+
+Status: fondasi mulai dipersiapkan; layanan eksternal belum dihubungkan. Tahap 1 masih PROSES dan monetisasi publik NO-GO.
