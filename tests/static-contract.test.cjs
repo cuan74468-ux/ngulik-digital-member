@@ -10,9 +10,9 @@ test('HTML entry uses versioned local files and language metadata',()=>{
   const html=read('index.html');
   assert.match(html,/<html lang="id">/);
   assert.match(html,/name="viewport"/);
-  assert.match(html,/src="\.\/config\.js"/);
-  assert.match(html,/type="module" src="\.\/js\/app\.js\?v=20261114-adminauth2"/);
-  assert.match(html,/href="\.\/assets\/app\.css"/);
+  assert.match(html,/src="\.\/config\.js\?v=[^"]+"/);
+  assert.match(html,/type="module" src="\.\/js\/app\.js\?v=[^"]+"/);
+  assert.match(html,/href="\.\/assets\/app\.css\?v=[^"]+"/);
   assert.match(html,/Content-Security-Policy/);
   for(const file of ['config.js','js/app.js','js/api.js','assets/app.css','assets/favicon.svg']){
     assert.equal(fs.existsSync(path.join(root,file)),true,file);
@@ -32,7 +32,8 @@ test('public UI strips unsafe HTML and restricts payments',()=>{
   assert.match(app,/const esc\s*=/);
   assert.match(app,/const paymentEnabled\s*=/);
   assert.match(app,/data-buy=/);
-  assert.match(app,/PUBLIC_CATALOG/);
+  assert.match(app,/const list=Array\.isArray\(state\.catalog\)\?state\.catalog:\[\]/);
+  assert.doesNotMatch(app,/const PUBLIC_CATALOG=/);
   const api=read('js/api.js');
   assert.match(api,/credentials:\s*'omit'/);
   assert.doesNotMatch(api,/mode:\s*'no-cors'/);

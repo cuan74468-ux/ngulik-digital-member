@@ -8,6 +8,7 @@ const base=path.resolve(__dirname,'..');
 const app=fs.readFileSync(path.join(base,'js/app.js'),'utf8');
 const api=fs.readFileSync(path.join(base,'js/api.js'),'utf8');
 const config=fs.readFileSync(path.join(base,'config.js'),'utf8');
+const QA_CATALOG=require('./fixtures/catalog.cjs');
 function stripModule(text){
   return text.replace(/^import .*?;\s*$/gm,'').replace(/^export /gm,'');
 }
@@ -30,6 +31,7 @@ function renderPreview(search=''){
     setTimeout,clearTimeout,Intl,URL,URLSearchParams,Date,Number,Object,String
   });
   vm.runInContext(stripModule(app),context,{filename:'app.js',timeout:3000});
+  vm.runInContext('state.catalog='+JSON.stringify(QA_CATALOG)+';render()',context,{timeout:2000});
   return {nodes,context,document};
 }
 test('frontend modules parse without build tools',()=>{

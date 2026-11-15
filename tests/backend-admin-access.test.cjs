@@ -107,7 +107,7 @@ test('owner recovery never touches Sheets without preflight approval and matchin
  h.props.NGD_ADMIN_RECOVERY_DB_ID='WRONG-DB';
  h.props.NGD_ADMIN_RECOVERY_ACCOUNT_ID='M-0001';
  h.props.NGD_ADMIN_RECOVERY_OPERATOR_EMAIL='owner@example.com';
- assert.throws(()=>h.ctx.recoverAdminPinOwnerOnly(),/Pemulihan PIN tidak diizinkan/);
+ assert.throws(()=>h.ctx.recoverAdminPinOwnerOnly(),/Konfigurasi atau kewenangan pemulihan PIN tidak valid/);
  assert.equal(reads,0);
  h.props.NGD_ADMIN_RECOVERY_DB_ID='EXAMPLE-DB';
  assert.throws(()=>h.ctx.recoverAdminPinOwnerOnly(),/editor Apps Script yang terikat/);
@@ -117,9 +117,12 @@ test('owner recovery never touches Sheets without preflight approval and matchin
  h.props.NGD_STAGING_BOOTSTRAP_DB_ID='EXAMPLE-DB';
  assert.throws(()=>h.ctx.bootstrapStagingAdminOwnerOnly(),/hanya diizinkan di staging/);
 });
-test('frontend admin login switch remains disabled until independently deployed',()=>{
+test('frontend admin login is independent while registrations and payments stay blocked',()=>{
  const conf=read('config.js'),client=read('js/api.js'),app=read('js/app.js');
- assert.match(conf,/adminLoginEnabled:\s*false/);
+ assert.match(conf,/adminLoginEnabled:\s*true/);
+ assert.match(conf,/memberWritesEnabled:\s*false/);
+ assert.match(conf,/registrationOtpEnabled:\s*false/);
+ assert.match(conf,/paymentsEnabled:\s*false/);
  assert.match(client,/adminAuth = false/);
  assert.match(client,/adminLogin','adminLogout','adminChangePin/);
  assert.match(app,/data-mode/);

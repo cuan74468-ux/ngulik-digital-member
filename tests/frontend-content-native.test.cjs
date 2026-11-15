@@ -3,6 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 const source=read('js/content-ui.js');
+const QA_CATALOG=require('./fixtures/catalog.cjs');
 function make(){
   const window={};const context=vm.createContext({window});
   vm.runInContext(source,context,{timeout:3000});
@@ -95,7 +96,7 @@ test('app integrates real image slots across guest home and catalogue and admin 
     return {ctx,nodes};
   }
   const guest=load();
-  vm.runInContext('state.siteContent='+JSON.stringify([
+  vm.runInContext('state.catalog='+JSON.stringify(QA_CATALOG)+';state.siteContent='+JSON.stringify([
     hero({content_id:'C-HERO-ONE'}),
     hero({content_id:'C-HERO-TWO',title:'Banner kedua',image_path:'assets/media/banner-dua.webp'}),
     hero({kind:'PRODUCT_IMAGE',placement:'P-POS',title:'POS Bakso Len',

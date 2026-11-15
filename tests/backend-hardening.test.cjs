@@ -35,8 +35,7 @@ test('kesalahan input tampil sebagai VALIDATION, bukan gangguan sistem',()=>{
   const h=boot(on);
   const cases=[
     ['login',{wa:'abc',pin:'123456'},/Nomor WhatsApp tidak valid/],
-    ['login',{wa:'081234567890',pin:'12'},/PIN harus enam angka/],
-    ['register',{wa:'12',pin:'493827',nama:'A',nama_usaha:'B',setuju_kebijakan:true},/Nomor WhatsApp tidak valid/]
+    ['login',{wa:'081234567890',pin:'12'},/PIN harus enam angka/]
   ];
   for(const [action,payload,msg] of cases){
     const r=h.request(action,payload);
@@ -44,6 +43,8 @@ test('kesalahan input tampil sebagai VALIDATION, bukan gangguan sistem',()=>{
     assert.equal(r.error.code,'VALIDATION',action);
     assert.match(r.error.message,msg);
   }
+  const reg=h.request('register',{wa:'12',pin:'493827',nama:'A',nama_usaha:'B'});
+  assert.equal(reg.error.code,'MAINTENANCE','registrasi memerlukan aktivasi OTP terpisah');
   assert.equal(h.errors.length,0,'validasi tidak boleh dicatat sebagai NGD_ERROR');
   assert.equal(h.touched(),0);
 });
@@ -73,8 +74,8 @@ test('register dan ganti PIN memakai aturan PIN baru; login tidak',()=>{
   assert.doesNotMatch(login,/checkNewPin_/);
   const h=boot(on);
   const r=h.request('register',{wa:'081234567890',pin:'123456',nama:'Ari',nama_usaha:'Warung',setuju_kebijakan:true});
-  assert.equal(r.error.code,'VALIDATION');
-  assert.match(r.error.message,/terlalu mudah ditebak/);
+  assert.equal(r.error.code,'MAINTENANCE');
+  assert.throws(()=>h.ctx.checkNewPin_('123456','6281234567890'),/terlalu mudah ditebak/);
 });
 test('PIN acak admin tidak pernah lemah',()=>{
   const h=boot();

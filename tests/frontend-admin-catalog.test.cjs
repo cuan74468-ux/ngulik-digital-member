@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const QA_CATALOG=require('./fixtures/catalog.cjs');
 const script=fs.readFileSync(path.join(__dirname,'../js/app.js'),'utf8')
   .replace(/^import .*?;\s*$/gm,'');
 const style=fs.readFileSync(path.join(__dirname,'../assets/unified-theme.css'),'utf8');
@@ -23,9 +24,10 @@ function makePreview(mode='admin',route='produk'){
     ApiError:class ApiError extends Error{},setTimeout,clearTimeout,
     URL,URLSearchParams,Intl,Date,Map,Number});
   vm.runInContext(script,ctx,{timeout:5000});
+  vm.runInContext('state.catalog='+JSON.stringify(QA_CATALOG)+';render()',ctx,{timeout:3000});
   return {nodes,ctx,apiCalls};
 }
-test('preview admin catalogue shows all eight staged product examples',()=>{
+test('local QA admin catalogue renders eight isolated test records',()=>{
   const h=makePreview();
   assert.match(h.nodes.screen.innerHTML,/Katalog & penawaran/);
   assert.match(h.nodes.screen.innerHTML,/Jasa Video Iklan AI/);

@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const QA_CATALOG=require('./fixtures/catalog.cjs');
 const app=fs.readFileSync(path.join(__dirname,'../js/app.js'),'utf8')
   .replace(/^import .*?;\s*$/gm,'');
 const backend=fs.readFileSync(path.join(__dirname,'../apps-script/Code.gs'),'utf8');
@@ -27,6 +28,7 @@ function preview(query=''){
     setTimeout,clearTimeout
   });
   vm.runInContext(app,ctx,{timeout:5000});
+  vm.runInContext('state.catalog='+JSON.stringify(QA_CATALOG)+';render()',ctx,{timeout:3000});
   return {ctx,nodes,listeners,apiCalls,go:r=>vm.runInContext('go('+JSON.stringify(r)+')',ctx)};
 }
 test('public hub is a native-style home: hero, search bar, feature grid',()=>{
@@ -50,7 +52,7 @@ test('guest learning page explains Chapter 1 while leaving real LMS locked',()=>
   assert.doesNotMatch(h.nodes.screen.innerHTML,/data-lms-action="complete"/);
   assert.equal(h.apiCalls.length,0);
 });
-test('catalogue preview mirrors 8 current Drive product identities and hides payment',()=>{
+test('local QA catalog renders eight test-only records with payment disabled',()=>{
   const h=preview();h.go('katalog');
   const html=h.nodes.screen.innerHTML;
   const IDs=['P-3IN1','P-POS','P-CANVA','P-KREDIT-50','P-KREDIT-150',
@@ -58,7 +60,7 @@ test('catalogue preview mirrors 8 current Drive product identities and hides pay
   assert.equal((html.match(/class="catalog-card"/g)||[]).length,8);
   // A storefront must not expose fake checkout while payment is gated.
   assert.doesNotMatch(html,/data-buy="/);
-  for(const id of IDs)assert.ok(app.includes("'"+id+"'"),id);
+  for(const id of IDs)assert.ok(QA_CATALOG.some(p=>p.product_id===id),id);
   assert.match(html,/8<\/strong><span>penawaran tercatat/);
   assert.match(html,/Jasa Video Iklan AI/);
   assert.match(html,/Bundel Ebook Vibe Coder/);
