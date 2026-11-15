@@ -60,6 +60,7 @@ test('OTP verification runs before member insertion when verifier exists', () =>
   env.sandbox.checkNewPin_ = () => {};
   env.sandbox.safeText_ = v => String(v || '');
   env.sandbox.byId_ = () => null;
+  env.sandbox.tbl_ = () => ({headers: ['member_id','wa','pin_hash','pin_salt','wa_verified','wa_verified_at']});
   // Supply only the pure pre-insertion dependencies; writes remain prohibited.
   env.sandbox.settings_ = () => ({
     mode_pendaftaran: 'TERBUKA',kuota_gelombang: 50,kredit_awal: 0
@@ -110,4 +111,23 @@ test('readAll_ returns empty list for a header-only sheet', () => {
     }
   });
   assert.equal(env.sandbox.readAll_('members').length, 0);
+});
+
+test('registration evidence schema guard rejects missing WhatsApp proof columns', () => {
+  const env = boot();
+  let count = 0;
+  env.sandbox.tbl_ = () => ({headers: ['member_id','wa','pin_hash','pin_salt']});
+  env.sandbox.ngdConsumeVerifiedRegistrationOtp_ = () => {count++;};
+  assert.throws(() => env.sandbox.requireRegistrationWaEvidenceColumns_(), /Kolom bukti verifikasi WA/);
+  assert.equal(count, 0);
+});
+test('registration evidence schema guard rejects duplicate WhatsApp proof column', () => {
+  const env = boot();
+  env.sandbox.tbl_ = () => ({headers: ['member_id','wa','pin_hash','pin_salt','wa_verified','wa_verified','wa_verified_at']});
+  assert.throws(() => env.sandbox.requireRegistrationWaEvidenceColumns_(), /Kolom bukti verifikasi WA/);
+});
+test('registration evidence schema guard accepts the currently verified STAGING columns', () => {
+  const env = boot();
+  env.sandbox.tbl_ = () => ({headers: ['member_id','wa','pin_hash','pin_salt','wa_verified','wa_verified_at','nama_usaha']});
+  assert.doesNotThrow(() => env.sandbox.requireRegistrationWaEvidenceColumns_());
 });

@@ -88,3 +88,10 @@ test('wrong OTP increases attempts and then locks the record',()=>{
   assert.equal(row.status,'LOCKED');
   assert.throws(()=>x.ngdConsumeVerifiedRegistrationOtp_({wa:'081234567890',otp:'285947'}),/belum selesai/);
 });
+
+test('OTP request refuses a broken member evidence schema before sending WhatsApp',()=>{
+  const x=boot({FONNTE_API_TOKEN:'PLACEHOLDER_TEST_TOKEN'});
+  x.tbl_=()=>({headers:['member_id','wa','pin_hash','pin_salt']});
+  assert.throws(()=>x.ngdOtpRequest_({wa:'081234567890',setuju_kebijakan:true}),
+    /Kolom bukti verifikasi WA/);
+});

@@ -123,6 +123,9 @@ function ngdOtpRequest_(p) {
   require_(!!token,'MAINTENANCE','Gateway OTP belum dikonfigurasi.');
   require_(p.setuju_kebijakan===true,'VALIDATION',
     'Persetujuan pengiriman kode WhatsApp diperlukan.');
+  // Do not incur WhatsApp gateway cost if registration cannot persist proof.
+  // Read-only guard. Repeat it immediately before consuming the OTP at signup.
+  requireRegistrationWaEvidenceColumns_();
 
   // A generic accepted response for an existing number avoids enumeration.
   // No OTP is sent and no record is written in that case.

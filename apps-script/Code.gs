@@ -747,6 +747,17 @@ function updateMyProfile_(member,p) {
     return {profil:publicMember_(byId_('members','member_id',member.member_id)),updated:true};
   });
 }
+// Tahap 1 P0: reject registration if the real members Sheet cannot record
+// WhatsApp ownership evidence. appendRow_ silently maps only existing headers.
+function requireRegistrationWaEvidenceColumns_() {
+  var headers=tbl_('members').headers;
+  ['member_id','wa','pin_hash','pin_salt','wa_verified','wa_verified_at']
+    .forEach(function(name){
+      require_(headers.filter(function(h){return h===name;}).length===1,
+        'MAINTENANCE','Kolom bukti verifikasi WA pada members belum siap.');
+    });
+}
+
 function authRegister_(p) {
   // P0: a settings toggle is NEVER proof of WhatsApp ownership.
   // Registration remains closed until a dedicated OTP module is installed,
@@ -776,6 +787,7 @@ function authRegister_(p) {
     var salt=newSalt_(),id=nextMemberId_(),joined=now_(),status=wait?'WAITING_LIST':'AKTIF';
     var m={member_id:id,role:'MEMBER',nama:safeText_(p.nama,80),wa:wa,nama_usaha:safeText_(p.nama_usaha,100),wa_verified:true,wa_verified_at:joined,pin_hash:pinHash_(pin,salt),pin_salt:salt,kode_referral:newReferralCode_(),referred_by:referrer?referrer.member_id:'',status:status,joined_at:joined,last_active_at:joined,status_pos:'BELUM',status_canva:'BELUM',d14_active:false,d30_active:false};
     // Validation is complete: consume server-verified OTP immediately before insert.
+    requireRegistrationWaEvidenceColumns_();
     ngdConsumeVerifiedRegistrationOtp_(p);
     appendRow_('members',m);logAudit_(id,'MEMBER','REGISTER','members',id,'',status,{});
     if(wait){return {status:status,posisi:findRows_('members',function(r){return r.status==='WAITING_LIST';}).length};}
