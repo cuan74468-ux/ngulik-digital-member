@@ -31,6 +31,17 @@ Informasi publik dan katalog dibaca dari API resmi Ngulik Digital. Hak akses pri
 
 Kode akses, token sesi, PIN, dan API key tidak disimpan di repositori atau disematkan ke HTML publik.
 
+## Status operasional terverifikasi — 15 November 2026
+
+**Tahap aktif: Tahap 1 — Auth WhatsApp, PIN dan sesi. Status PROSES / NO-GO untuk pendaftaran publik, OTP live, pembayaran, AI berbayar dan komisi.** Ini platform membership komersial sungguhan; sakelar keselamatan tidak boleh disalahartikan sebagai mode demo.
+
+- [Panel administrator STAGING](https://cuan74468-ux.github.io/ngulik-digital-member/staging/) sudah terhubung ke deployment GAS yang membuktikan identitas `NGD_STAGING` secara baca-saja.
+- [Pengujian identitas dan Chrome](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43716789442) lulus. Panel mengunci URL ke deployment yang telah disetujui; PIN tidak pernah dikirim ke endpoint lain.
+- Database STAGING memakai 29 tab (27 kontrak backend + dua tabel OTP/WA); satu sesi ADMIN tercatat. Belum ada record OTP maupun transaksi.
+- Source OTP di GitHub diberi guard agar bukti `wa_verified` tersimpan; **perubahan kode GitHub tidak otomatis memperbarui Apps Script yang sedang dideploy**.
+
+Untuk konteks paling mutakhir baca [Audit Terpadu Tahap 1](docs/AUDIT_TERPADU_TAHAP_1_2026-11-15.md) dan [Aturan Kerja Agen](AGENTS.md). Dokumen Master Index dan Mandat Produksi di Google Drive tetap merupakan otoritas kebijakan. Dokumen checkpoint bertanggal lebih lama adalah rekam historis, bukan persetujuan untuk menjalankan tahap selanjutnya.
+
 ## Informasi pengembang dan operasional
 
 - **Frontend:** HTML, CSS, JavaScript modular, GitHub Pages.
