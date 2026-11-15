@@ -35,6 +35,7 @@ function boot(identity=verified) {
   const nodes={},requests=[];
   const document={
     getElementById(id){return nodes[id]||(nodes[id]=domNode(id));},
+    querySelector(){return null;},
     createElement:domNode
   };
   async function fetchStub(endpoint,options){
