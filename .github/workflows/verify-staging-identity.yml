@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/verify-staging-identity.yml'
+      - 'staging/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -55,6 +56,9 @@ jobs:
           const productionConfig = fs.readFileSync('config.js','utf8');
           const match=productionConfig.match(/apiUrl:\s*'([^']+)'/);
           if(!match || candidate===match[1]) throw Error('STAGING endpoint must not equal production.');
+          const stagingConfig = fs.readFileSync('staging/config.js','utf8');
+          if(!stagingConfig.includes("apiUrl: '"+candidate+"'"))
+            throw Error('The verified STAGING endpoint must match the deployed staging configuration.');
           const controller=new AbortController();
           const timer=setTimeout(()=>controller.abort(),25000);
           (async()=>{
@@ -83,3 +87,47 @@ jobs:
             }finally{clearTimeout(timer);}
           })().catch(e=>{console.error('STAGING_IDENTITY_UNVERIFIED:',String(e.message).slice(0,180));process.exitCode=1;});
           NODE
+
+      - name: Verify STAGING admin browser auto-connect (Chrome, read-only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > staging/ci-attestation-probe.js <<'JS'
+          'use strict';
+          (() => {
+            let loops=0;
+            const timer=setInterval(() => {
+              const login=document.getElementById('login-section');
+              const status=document.getElementById('connection-status');
+              const alert=document.getElementById('alert');
+              if(login && !login.hidden && status?.textContent==='STAGING terverifikasi') {
+                document.body.setAttribute('data-staging-browser-attestation','pass');
+                clearInterval(timer);
+              }else if(++loops>=100){
+                document.body.setAttribute('data-staging-browser-attestation','failed');
+                document.body.setAttribute('data-staging-browser-failure',alert?.hidden?'timeout':'api-error');
+                clearInterval(timer);
+              }
+            },150);
+          })();
+          JS
+          sed -i 's#</body>#<script src="./ci-attestation-probe.js" defer></script></body>#' staging/index.html
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/staging-ci-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in {1..25}; do
+            if curl -fsS -o /dev/null http://127.0.0.1:8765/staging/; then break; fi
+            sleep 0.3
+          done
+          CHROME="$(command -v google-chrome || command -v chromium || true)"
+          test -n "$CHROME"
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=18000 --window-size=1365,850 --dump-dom \
+            "http://127.0.0.1:8765/staging/" > /tmp/ngd-staging-attestation.html 2>/tmp/ngd-staging-ci-chrome.log
+          if grep -q 'data-staging-browser-attestation="pass"' /tmp/ngd-staging-attestation.html; then
+            echo 'STAGING_CHROME_LOGIN_GATE_OK: read-only identity authenticated in real browser; login form displayed without PIN'
+          else
+            echo 'STAGING_CHROME_LOGIN_GATE_FAIL: browser did not reach verified login gate' >&2
+            grep -o 'data-staging-browser-failure="[^"]*"' /tmp/ngd-staging-attestation.html | tail -1 || true
+            grep -E 'CORS|Access-Control|net::ERR' /tmp/ngd-staging-ci-chrome.log | tail -8 || true
+            exit 1
+          fi
