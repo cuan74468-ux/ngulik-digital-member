@@ -15,6 +15,10 @@ Belajar keterampilan digital, menemukan aplikasi usaha, mengakses alat bantu AI,
 - **Jasa digital:** video iklan AI, website, landing page, aplikasi custom dan konsultasi.
 - **Membership & affiliate:** akun pribadi, riwayat layanan, aktivitas pembelajaran, serta rujukan anggota sesuai kebijakan program.
 
+## Belajar bersama melalui Chapter 01
+
+Program komunitas **Ngulik Digital Chapter 01** mempunyai enam modul praktik yang telah disusun dalam [materi pembelajaran resmi](https://docs.google.com/document/d/1s3Dki-UQVG2OUOpCBNPxyeCTkIvnZTpqtPOn2SpXkk4/edit). Materinya mencakup penggunaan alat digital untuk UMKM, Google Maps, Gemini AI, Canva, WhatsApp Business, dan kalender promosi. Sesuai [SOP komunitas](https://docs.google.com/document/d/1PGKFnPfSKVQ0SRFclgT5aN8_x2iipnW8ng6g2H24xVg/edit), **materi dan pendampingan dasar Chapter 01 tidak dikenakan biaya dan tidak mewajibkan pembelian**. Program ini dikelola melalui Google Classroom dan kanal komunitas; tidak sama dengan kursus berbayar yang kelak dibuka di LMS internal.
+
 ## Pengalaman anggota
 
 1. Jelajahi katalog dan pilih produk atau kelas yang sesuai kebutuhan.

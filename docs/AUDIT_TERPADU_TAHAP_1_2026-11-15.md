@@ -78,7 +78,25 @@ Snapshot jumlah baris dengan nilai kolom A yang tidak kosong pada 15 November 20
 3. Pengujian Node/Chrome dan GitHub Pages dijalankan melalui workflows; hasil terbaru harus dihubungkan ke SHA commit yang sama. Ketika ada perubahan source-only, **jangan** mengklaim OTP live sudah terpasang.
 4. Addendum fakta teknis ditambahkan ke Master Index dan Brief Eksekusi di Google Drive; Mandat Produksi, database, harga, ledger serta Script Properties tidak diubah.
 
-## 6. Gate prioritas dan langkah operator
+## 6. Klarifikasi materi Chapter 01 versus LMS komersial internal
+
+**Sumber terbaru yang diperiksa langsung**:
+- [Kumpulan Lengkap Modul Chapter 1](https://docs.google.com/document/d/1s3Dki-UQVG2OUOpCBNPxyeCTkIvnZTpqtPOn2SpXkk4/edit): enam modul nyata dan lengkap, berisi tujuan, langkah praktik dan tugas; materinya meliputi alat digital UMKM, Google Maps/Profil Bisnis, Gemini AI, poster Canva, WhatsApp Business, serta kalender promosi tujuh hari.
+- [Modul 01 — Sambutan & Cara Belajar](https://docs.google.com/document/d/1GTaci6pMSM5-oJdE5CEMpJOdj1X07dwXwRiHCwPiYwU/edit): materi pengantar yang lebih rinci.
+- [SOP Pertemuan 1 & Aturan Kelas](https://docs.google.com/document/d/1PGKFnPfSKVQ0SRFclgT5aN8_x2iipnW8ng6g2H24xVg/edit): **materi dan pendampingan dasar Chapter 01 gratis 100%, tanpa kewajiban membeli**; jaga kerahasiaan PIN/OTP, gunakan Classroom dan Grup WA dengan aturan pendampingan.
+- [Panduan Ringkas & Log Keputusan Chapter 01](https://docs.google.com/document/d/1bQPR8YD4EzD3DWuow7L1QmoVxBVn0lhFacRqCV03NXE/edit): keputusan 9 Nov 2026 memakai Google Classroom, Google Forms, Google Sheets serta Grup WhatsApp untuk komunitas.
+- [Data Peserta & Tracking Chapter 01](https://docs.google.com/spreadsheets/d/1W7PRj1BiKgLbw5bFkcKHogno8SMelbhjCC5OYH6hrzI/edit): workbook terpisah dengan tab `Form Responses 1` dan `Tracking Peserta`; hanya metadata diperiksa, **tidak menyalin PII peserta ke membership**.
+
+**Pembedaan tiga jenis isi**:
+1. **Kurikulum komunitas Chapter 01**: enam modul Google Docs **sudah ada**, jalur belajar Google Classroom dan grup WA disiapkan, kebijakan pendampingan dasar **gratis**. Tidak otomatis harus memungut saldo kredit dan tidak boleh dipaksakan menjadi konten membership berbayar.
+2. **Daftar belajar legacy dalam `modul_belajar`**: enam baris seed pada STAGING, namanya **tidak identik** dengan enam judul modul Chapter 01 di Google Docs; perlu pemetaan editorial sebelum ditautkan, jangan melakukan update massal ke Sheets atau mengklaim sudah tersinkron.
+3. **LMS native/internal dalam `lms_courses/lms_lessons`**: masih **nol** record STAGING. Ini infrastruktur kursus baru untuk tahap lebih lanjut, bukan bukti Chapter 01 belum punya materi.
+
+**Rekonsiliasi prinsip komersial**: `Zero-Freebie` pada Mandat Produksi menghargai aset digital/proses AI dan hak akses komersial yang dijual. Itu **tidak menghapus keputusan Chapter 01** untuk edukasi dasar dan pendampingan komunitas tanpa biaya. Mandat juga eksplisit menyebut starter 10 Token untuk satu nomor WA terverifikasi; belum ada grant riil dan seluruh pengaman tetap OFF. Jangan mengubah harga, entitlement, saldo, status peserta, atau memindahkan data komunitas tanpa mandat owner.
+
+**Belum boleh dilakukan otomatis**: menerbitkan isi Google Docs sebagai kursus publik tanpa penetapan izin akses dan kurasi; menyatukan tracker komunitas dan database membership; memberi akses LMS berbayar dari kelas komunitas gratis; membuat kursus dummy; mengaktifkan `NGD_LMS_ENABLED` demi memperlihatkan modul.
+
+## 7. Gate prioritas dan langkah operator
 
 **P0 A — Masih harus dibuktikan:** perbedaan source vs runtime GAS, semua file modul OTP terpasang; jalankan `ngdOtpStagingPreflight` dalam editor Apps Script STAGING dengan seluruh flags OFF. Log aman yang diharapkan `OTP_STAGING_SCHEMA_PREFLIGHT_OK` (jika kode diagnostik memang terpasang).
 
@@ -90,7 +108,7 @@ Snapshot jumlah baris dengan nilai kolom A yang tidak kosong pada 15 November 20
 
 **P2:** pengisian kursus internal nyata, eBook/PLR dengan lisensi sah, dashboard marketing, otomatisasi afiliasi dan konten — hanya setelah milestone terkait diizinkan.
 
-## 7. Rollback dan transparansi
+## 8. Rollback dan transparansi
 
 - Frontend: revert commit GitHub yang relevan; verifikasi ulang Actions dan Pages, tanpa menghapus histori.
 - Source backend: sebelum memasang ke Apps Script, buat salinan file editor STAGING dan catat versi deployment. Jika harus revert, pilih versi deployment STAGING sebelumnya, tanpa menyentuh produksi.

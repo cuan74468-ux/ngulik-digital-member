@@ -18,6 +18,13 @@ Prioritas bila dokumen bertentangan: keputusan tertulis Owner dan Master/Mandat 
 - **PRODUCTION**: Sheets terpisah [Ngulik Digital DB](https://docs.google.com/spreadsheets/d/19lJS-Re7TLfINjoo-wKoDkG_ikeEWNgGe9yf5Rywvm8/edit). Jangan mencampurkan database/endpoints, menyalin data pelanggan, memodifikasi skema produksi atau memindahkan backend utama tanpa approval.
 - Source GitHub **tidak otomatis dideploy ke Apps Script**. Selalu bandingkan proyek GAS yang benar, backup source runtime, lakukan uji STAGING, dan redeploy hanya dengan persetujuan dan catatan versi.
 
+## Batas komunitas gratis dan membership komersial
+
+- Enam modul lengkap Chapter 01 sudah tersusun dalam [Kumpulan Modul Chapter 1](https://docs.google.com/document/d/1s3Dki-UQVG2OUOpCBNPxyeCTkIvnZTpqtPOn2SpXkk4/edit). [SOP Chapter 01](https://docs.google.com/document/d/1PGKFnPfSKVQ0SRFclgT5aN8_x2iipnW8ng6g2H24xVg/edit) menetapkan kelas dan pendampingan dasar **100% gratis** dan tidak boleh dipaksa membeli produk.
+- Data komunitas Chapter 01 ada di spreadsheet tracking sendiri; jangan otomatis impor peserta ke `members` atau menerbitkan konten sebagai kursus berbayar.
+- `modul_belajar` memiliki enam entri seed yang judulnya berbeda dari dokumen komunitas; `lms_courses` masih kosong. Keduanya tidak otomatis mencerminkan program Classroom yang berjalan.
+- Zero-Freebie berlaku pada nilai karya/aset dan layanan **komersial**; jangan gunakan kebijakan ini untuk membatalkan kelas dasar gratis yang sudah disepakati. Starter 10 Token tetap perlu OTP dan pembuktian anti-duplikasi sebelum aktivasi.
+
 ## Tahap aktif dan gerbang keselamatan
 
 - Aktif: **Tahap 1 — OTP WhatsApp Fonnte, login PIN, sesi dan pengamanan registrasi**. Belum lulus end-to-end. Tahap 2–6 **tidak boleh diaktifkan** tanpa mandat owner.
