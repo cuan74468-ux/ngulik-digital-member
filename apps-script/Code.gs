@@ -764,7 +764,6 @@ function authRegister_(p) {
     require_(!byId_('members','wa',wa),'CONFLICT','Nomor WhatsApp sudah terdaftar.');
     // Must validate and consume a server-issued one-time OTP proof under the lock.
     // Do not implement this as a client-side flag, OTP echo, or unverified boolean.
-    ngdConsumeVerifiedRegistrationOtp_(p);
     var s=settings_(),mode=String(s.mode_pendaftaran||'TERBUKA');
     require_(mode!=='TERTUTUP','QUOTA_FULL','Pendaftaran sementara ditutup.');
     var active=memberCount_(),wait=mode==='WAITING_LIST'||active>=Number(s.kuota_gelombang||50)||memberWaitlist_().length>0;
@@ -776,6 +775,8 @@ function authRegister_(p) {
     if(referrer&&(referrer.status!=='AKTIF'||referrer.role!=='MEMBER'))referrer=null;
     var salt=newSalt_(),id=nextMemberId_(),joined=now_(),status=wait?'WAITING_LIST':'AKTIF';
     var m={member_id:id,role:'MEMBER',nama:safeText_(p.nama,80),wa:wa,nama_usaha:safeText_(p.nama_usaha,100),wa_verified:true,wa_verified_at:joined,pin_hash:pinHash_(pin,salt),pin_salt:salt,kode_referral:newReferralCode_(),referred_by:referrer?referrer.member_id:'',status:status,joined_at:joined,last_active_at:joined,status_pos:'BELUM',status_canva:'BELUM',d14_active:false,d30_active:false};
+    // Validation is complete: consume server-verified OTP immediately before insert.
+    ngdConsumeVerifiedRegistrationOtp_(p);
     appendRow_('members',m);logAudit_(id,'MEMBER','REGISTER','members',id,'',status,{});
     if(wait){return {status:status,posisi:findRows_('members',function(r){return r.status==='WAITING_LIST';}).length};}
     if(initial>0)grantInitialCredit_(id,initial);
