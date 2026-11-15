@@ -1381,9 +1381,37 @@ function adminRuntimeStatus_() {
   };
 }
 
+// Only the deliberately separate STAGING workspace may consume this endpoint.
+// This is a server-side attestation, not a client-supplied environment label.
+function ngdStagingWorkspaceInfo_() {
+  var props=PropertiesService.getScriptProperties();
+  var dbId=String(props.getProperty('NGD_DB_ID')||'').trim();
+  var adminDb=String(props.getProperty('NGD_ADMIN_LOGIN_DB_ID')||'').trim();
+  var otpDb=String(props.getProperty('NGD_OTP_STAGING_DB_ID')||'').trim();
+  require_(props.getProperty('NGD_ENVIRONMENT')==='STAGING' &&
+    !!dbId && adminDb===dbId &&
+    (!otpDb || otpDb===dbId) &&
+    props.getProperty('NGD_ADMIN_LOGIN_ENABLED')==='true',
+    'FORBIDDEN','Workspace bukan lingkungan STAGING terverifikasi.');
+  require_(String(db_().getId())===dbId,'FORBIDDEN',
+    'Database STAGING tidak sesuai konfigurasi.');
+  return {
+    workspace:'NGD_STAGING',environment:'STAGING',
+    admin_login_enabled:true,
+    mutations_enabled:mutationsEnabled_(),
+    registration_enabled:props.getProperty('NGD_REGISTRATION_ENABLED')==='true',
+    otp_enabled:props.getProperty('NGD_OTP_REGISTRATION_ENABLED')==='true',
+    finance_enabled:financeEnabled_(),
+    catalog_enabled:props.getProperty('NGD_CATALOG_ENABLED')==='true',
+    content_enabled:props.getProperty('NGD_CONTENT_ENABLED')==='true',
+    lms_enabled:props.getProperty('NGD_LMS_ENABLED')==='true'
+  };
+}
+
 function apiRouter_(action,token,p,requestId) {
   var m=null, admin=null;
   switch(action) {
+    case 'getStagingWorkspaceInfo':return ngdStagingWorkspaceInfo_();
     case 'getPublicInfo':return publicInfo_(p);
     case 'getKatalog':return publicCatalog_();
     case 'getPublicContent':return contentPublicList_();
@@ -1619,7 +1647,7 @@ function requirePublicTrackingEnabled_() {
     'MAINTENANCE','Pencatatan klik belum diaktifkan.');
 }
 function apiReadActions_() {
-  return ['getPublicInfo','getPublicContent','getMe','getBeranda','getModulBelajar','getKatalog',
+  return ['getStagingWorkspaceInfo','getPublicInfo','getPublicContent','getMe','getBeranda','getModulBelajar','getKatalog',
     'getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase',
     'getAffiliateDashboard','getMyNotifications','getMyServiceRequests',
     'adminListServiceRequests','adminGetDashboard','adminGetRuntimeStatus','adminListOrders','adminListMembers',
