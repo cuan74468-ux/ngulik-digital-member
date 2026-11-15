@@ -64,3 +64,20 @@ Jangan menyebarkan PIN, token sesi, Fonnte API token atau kode OTP ke chat ataup
 Pendaftaran nomor WA baru menghasilkan OTP 6 digit dari gateway Fonnte ke nomor uji yang disetujui; tiga kegagalan kode ditolak; TTL 5 menit terbukti; replay tidak dapat membuat akun/bonus ganda; PIN tersimpan dengan salt/hash; sesi terbit, bertahan, lalu dicabut pada logout/ganti PIN; admin dan member terisolasi; akses portal dipastikan menggunakan deployment yang benar; kebijakan privasi dan biaya notifikasi disepakati.
 
 **Status akhir sesi ini:** source dan UI terintegrasi di GitHub; onboarding runtime STAGING, Fonnte, QA perangkat dan release gate belum diselesaikan. Tidak mengklaim production-ready.
+
+
+## Koreksi UI/UX 15 November — Linggau Design System
+
+**Masalah ditemukan:** halaman `/staging/` sebelumnya sekadar formulir pengisian endpoint, sementara menu admin disembunyikan. Itu bukan pengalaman aplikasi operasional yang memadai. Pemilik menyampaikan tampilan belum layak.
+
+**Perbaikan source langsung di GitHub:**
+- Redesign `staging/index.html` + `staging/admin.css` dengan layout editorial, font Plus Jakarta Sans/DM Sans/Instrument Serif, warna admin `#384e82`, white space, fokus akses, mobile dan desktop.
+- Navigasi administrasi tetap tampak, **disabled sebelum login** dan aktif setelah sesi ADMIN terverifikasi. Tidak ada data dummy atau tombol yang memicu transaksi tanpa izin.
+- Koneksi backend kini dapat disimpan **sekali di `staging/config.js`** (alamat /exec saja, tanpa secret) setelah deployment STAGING terkonfirmasi; UI melakukan verifikasi server otomatis. Jika kosong, form koneksi ditampilkan. Tidak ada fallback ke endpoint produksi.
+- Integrasi belum melampaui Tahap 1; dashboard data tetap baca-saja, mutasi/keuangan/registrasi publik OFF.
+- `tests/staging-layout-probe.js` dan workflow `validate.yml` menambahkan smoke test Chrome desktop/mobile; uji UI dan kontrol login tetap pada suite Node.
+- Perubahan belum diverifikasi secara visual di website publik yang telah terbit. GitHub Actions harus dilihat sebelum menganggap browser QA lulus.
+
+**Pekerjaan operator berikutnya:** dapatkan URL Web App **STAGING** yang berakhir `/exec` setelah versi Code.gs yang mengandung `getStagingWorkspaceInfo` diterbitkan. Berikan URL itu tanpa PIN/token/Script Properties. Set `staging/config.js` melalui GitHub agar login langsung tersedia dari `/staging/` tanpa langkah pengisian ulang.
+
+**Penting:** Jangan menyebut source repository sebagai layanan berhasil hanya karena JS parsing lulus; otentikasi browser dan transport GAS masih perlu dibuktikan.
