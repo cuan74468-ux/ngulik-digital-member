@@ -1,0 +1,63 @@
+name: Verify STAGING Apps Script identity (read-only)
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-staging-identity.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  attestation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      STAGING_CANDIDATE_URL: 'https://script.google.com/macros/s/AKfycbyQYrRKN0mvIuoYFyWwQVNaA6Vc9hYYj4ycQSy3B1NXPJ4PbvbRIfZo7YVT4NL4IIlh/exec'
+    steps:
+      - name: Checkout for local production endpoint comparison
+        uses: actions/checkout@v7
+      - name: Node 24 — read-only server attestation
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Verify identity without login or writes
+        shell: bash
+        run: |
+          node <<'NODE'
+          'use strict';
+          const fs = require('node:fs');
+          const {randomUUID} = require('node:crypto');
+          const candidate = process.env.STAGING_CANDIDATE_URL;
+          const pattern = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,}\/exec$/;
+          if(!pattern.test(candidate)) throw Error('Invalid Google Apps Script URL.');
+          const productionConfig = fs.readFileSync('config.js','utf8');
+          const match=productionConfig.match(/apiUrl:\s*'([^']+)'/);
+          if(!match || candidate===match[1]) throw Error('STAGING endpoint must not equal production.');
+          const controller=new AbortController();
+          const timer=setTimeout(()=>controller.abort(),25000);
+          (async()=>{
+            try {
+              const response=await fetch(candidate,{
+                method:'POST',
+                headers:{'Content-Type':'text/plain;charset=utf-8'},
+                body:JSON.stringify({action:'getStagingWorkspaceInfo',payload:{},token:'',
+                  request_id:randomUUID().replace(/-/g,'')+'aa'}),
+                redirect:'follow',signal:controller.signal
+              });
+              if(!response.ok)throw Error('HTTP status '+response.status);
+              let json;
+              try{json=await response.json();}
+              catch {throw Error('Non-JSON response; deployment may be unready.');}
+              if(json?.ok!==true)throw Error('STAGING identity API rejected request; code='+
+                String(json?.error?.code||'UNKNOWN').slice(0,30));
+              const d=json.data;
+              if(d?.workspace!=='NGD_STAGING'||d.environment!=='STAGING'||
+                  d.admin_login_enabled!==true)
+                throw Error('STAGING identity invariants failed.');
+              for(const field of ['mutations_enabled','registration_enabled','otp_enabled','finance_enabled']){
+                if(d[field]!==false)throw Error('Safety gate not OFF: '+field);
+              }
+              console.log('STAGING_IDENTITY_VERIFIED: environment=STAGING; admin_login_enabled=true; mutations=false; registration=false; otp=false; finance=false');
+            }finally{clearTimeout(timer);}
+          })().catch(e=>{console.error('STAGING_IDENTITY_UNVERIFIED:',String(e.message).slice(0,180));process.exitCode=1;});
+          NODE
