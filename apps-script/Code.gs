@@ -1386,6 +1386,9 @@ function apiRouter_(action,token,p,requestId) {
     case 'getPublicInfo':return publicInfo_(p);
     case 'getKatalog':return publicCatalog_();
     case 'getPublicContent':return contentPublicList_();
+    // Both OTP actions are write-gated by doPost and STAGING-only guard.
+    case 'requestRegistrationOtp':return ngdOtpRequest_(p);
+    case 'verifyRegistrationOtp':return ngdOtpVerify_(p);
     case 'register':return authRegister_(p);
     case 'login':return authLogin_(p);
     case 'adminLogin':return adminPortalLogin_(p);
