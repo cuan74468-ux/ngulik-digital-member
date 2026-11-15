@@ -39,11 +39,40 @@ function ngdIntegrityReadRows_(ss,name,columns) {
       return row[0];
     });
   });
-  return Array.from({length:count},function(_,i) {
+  var rows=Array.from({length:count},function(_,i) {
     var obj={};
     columns.forEach(function(k){obj[k]=data[k][i];});
     return obj;
   });
+
+  // An empty spacer row between records is not a missing member. However,
+  // never silently discard a partial record whose other columns contain
+  // data or a formula. Check the full physical row only for candidates
+  // with ALL audited fields blank, batching consecutive candidates.
+  function populated_(v){return v!==''&&v!==null&&v!==undefined;}
+  var blankCandidates=[];
+  rows.forEach(function(row,i){
+    if(columns.every(function(col){return !populated_(row[col]);}))
+      blankCandidates.push(i);
+  });
+  var ignore={};
+  for(var cursor=0;cursor<blankCandidates.length;){
+    var first=blankCandidates[cursor],end=cursor+1;
+    while(end<blankCandidates.length &&
+      blankCandidates[end]===blankCandidates[end-1]+1)end++;
+    var size=end-cursor;
+    var range=sh.getRange(first+2,1,size,width);
+    var allValues=range.getValues();
+    var allFormulas=range.getFormulas();
+    for(var offset=0;offset<size;offset++){
+      var i=first+offset;
+      var hasValues=allValues[offset].some(populated_);
+      var hasFormulas=allFormulas[offset].some(populated_);
+      if(!hasValues&&!hasFormulas)ignore[i]=true;
+    }
+    cursor=end;
+  }
+  return rows.filter(function(_,i){return !ignore[i];});
 }
 
 function ngdIntegrityEvaluate_(t) {

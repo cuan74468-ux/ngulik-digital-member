@@ -27,13 +27,25 @@ function fixture(tables={},opts={}){
             getLastRow(){return rows.length+1;},
             getLastColumn(){return headers.length;},
             getRange(r,col,count,width){
-              assert.ok(width===1||r===1);
-              return {getValues(){
-                calls.reads++;
-                if(r===1)return [headers];
-                const field=headers[col-1];
-                return rows.slice(0,count).map(row=>[row[field]]);
-              }};
+              assert.ok(r>=1&&col>=1&&count>=1&&width>=1);
+              assert.ok(col+width<=headers.length+1);
+              const select=(row,position)=>Array.from({length:width},(_,i)=>
+                row[headers[col+i-1]]===undefined?'':row[headers[col+i-1]]);
+              return {
+                getValues(){
+                  calls.reads++;
+                  if(r===1)return [headers.slice(col-1,col-1+width)];
+                  return rows.slice(r-2,r-2+count).map(row=>select(row));
+                },
+                getFormulas(){
+                  calls.reads++;
+                  if(r===1)return [headers.slice(col-1,col-1+width).map(()=>'')];
+                  return rows.slice(r-2,r-2+count).map((_,i)=>{
+                    const realRow=r-2+i,raw=opts.formulas?.[name]?.[realRow]||{};
+                    return Array.from({length:width},(_,j)=>raw[headers[col+j-1]]||'');
+                  });
+                }
+              };
             },
             appendRow(){calls.writes++;throw Error('WRITE_FORBIDDEN');},
             setValues(){calls.writes++;throw Error('WRITE_FORBIDDEN');}
@@ -114,6 +126,46 @@ test('a missing table is never created or silently skipped',()=>{
 test('an invalid header fails without fixing or moving it',()=>{
   const x=fixture({members:[member('M-1')]},{headers:{members:['member_id','member_id','role','wa_verified']}});
   assert.throws(()=>x.ctx.ngdDataIntegrityPreflightReadOnly(),/INTEGRITY_HEADER_INVALID/);
+  assert.equal(x.calls.writes,0);
+});
+test('a truly empty spacer row before the real ADMIN account is ignored',()=>{
+  const admin={member_id:'M-ADMIN',wa:'628123456789',role:'ADMIN',wa_verified:true};
+  const x=fixture({members:[{},admin],sessions:[session('M-ADMIN','hash')]});
+  const r=x.ctx.ngdDataIntegrityPreflightReadOnly();
+  assert.equal(r.ready,true);
+  assert.equal(r.scanned_rows.members,1);
+  assert.equal(r.issue_counts.missing_member_identifier,0);
+  assert.equal(r.issue_counts.missing_whatsapp,0);
+  assert.equal(x.calls.writes,0);
+  assert.match(x.logs[0],/NGD_DATA_INTEGRITY_OK/);
+});
+test('partial record with data only in an unselected column must NOT be skipped',()=>{
+  const x=fixture({members:[{nama:'Partial record'},member('M-1')]},
+    {headers:{members:['member_id','wa','role','wa_verified','nama']}});
+  const r=x.ctx.ngdDataIntegrityPreflightReadOnly();
+  assert.equal(r.ready,false);
+  assert.equal(r.scanned_rows.members,2);
+  assert.equal(r.issue_counts.missing_member_identifier,1);
+  assert.equal(r.issue_counts.missing_whatsapp,1);
+  assert.equal(x.calls.writes,0);
+});
+test('formula-only row must NOT be silently discarded as a spacer',()=>{
+  const x=fixture({members:[{},member('M-1')]},
+    {headers:{members:['member_id','wa','role','wa_verified','nama']},
+      formulas:{members:{0:{nama:'=IF(TRUE,"","")'}}}});
+  const r=x.ctx.ngdDataIntegrityPreflightReadOnly();
+  assert.equal(r.ready,false);
+  assert.equal(r.scanned_rows.members,2);
+  assert.equal(r.issue_counts.missing_member_identifier,1);
+  assert.equal(r.issue_counts.missing_whatsapp,1);
+  assert.equal(x.calls.writes,0);
+});
+test('multiple consecutive blank spacers are skipped in one read block',()=>{
+  const x=fixture({members:[{},{},member('M-1')]});
+  const r=x.ctx.ngdDataIntegrityPreflightReadOnly();
+  assert.equal(r.ready,true);
+  assert.equal(r.scanned_rows.members,1);
+  assert.equal(r.issue_counts.missing_member_identifier,0);
   assert.equal(x.calls.writes,0);
 });
 test('read-only data audit is never bound as an HTTP API route',()=>{
