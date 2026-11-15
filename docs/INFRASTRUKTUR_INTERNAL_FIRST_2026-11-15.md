@@ -94,3 +94,11 @@ Status: fondasi mulai dipersiapkan; layanan eksternal belum dihubungkan. Tahap 1
 - Idempotensi multi-sheet credit/fulfillment pada kondisi gagal parsial.
 - Perangkat Android/Windows nyata dan aturan persetujuan data pribadi.
 - Integrasi Fonnte, payment, AI, serta notifikasi (semuanya menunggu akun provider saat tahap akhir).
+
+## Checkpoint verifikasi langsung — 15 November 2026
+
+Setelah penambahan pengaman global, audit STAGING melalui Google Sheets dilakukan secara READ ONLY terhadap semua tab. Seluruh 29 tab terverifikasi memiliki semua kolom wajib menurut NGD.HEADERS dan dua kontrak OTP; tidak ditemukan nama kolom duplikat. Kolom tambahan pada orders dan katalog_produk dipertahankan, bukan dikategorikan sebagai error.
+
+GitHub Actions final untuk source code pada commit 4600eb5692b06707e05d5c59b708580384d05fe1: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43719240002 — hasil success, 343 dari 343 tes Node lulus, Chrome UI desktop/mobile lulus dan browser read-only POST ke GAS lulus. GitHub Pages deploy pada commit yang sama juga success: https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43719239761 .
+
+Catatan penting: 29/29 header cocok melalui konektor Sheets dan 343/343 tes source tidak sama dengan telah menjalankan fungsi baru pada Apps Script STAGING. Rilis source sekarang belum mengaktifkan akun vendor. Jangan melanjutkan ke provider sampai checklist internal yang tersisa terbukti.
