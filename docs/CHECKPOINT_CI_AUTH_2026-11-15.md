@@ -72,3 +72,16 @@ Google Sheets metadata terverifikasi: nama workbook `STAGING Ngulik Digital - Mi
 4. Hasil Node local VM: sintaks valid; response POST sukses untuk STAGING tepat; penolakan empat kondisi identitas bermasalah; preflight menolak empat sakelar aktif; tidak memaparkan database ID dalam response.
 
 **CATATAN PENTING**: Perbaikan tersebut hanya tersedia sebagai file bantuan di percakapan pemilik; **belum disalin ke proyek editor Apps Script dan belum diterbitkan**. GitHub `apps-script/Code.gs` sudah memiliki kode identitas yang setara, tidak perlu ditimpa. Operator harus mencadangkan `Code.gs` di Apps Script yang sedang terbuka dan menggunakan patch berbasis salinan persis, atau merge tiga perubahan jika editor telah berubah. Jangan mengganti `OtpAuth.gs` atau file lain. Selanjutnya deploy **New version pada deployment STAGING yang sama**, run workflow identitas baca-saja, baru konfigurasikan `staging/config.js` jika benar-benar lulus. Jangan menyalakan gerbang tulis tanpa QA dan persetujuan.
+
+
+## Konfirmasi deployment STAGING dan browser login gate — 15 November 2026
+
+**Status terbaru (menggantikan status sebelumnya yang menyatakan URL STAGING belum diverifikasi):**
+- Operator menjalankan `ngdStagingWorkspaceReadOnlyCheck`, log sukses: `NGD_STAGING_WORKSPACE_READONLY_OK | environment=STAGING | writes=false`, lalu mengonfirmasi deployment **New version** pada Web App STAGING yang sama.
+- GitHub Actions read-only run `43713266430`, attempt 2: **success**, `STAGING_IDENTITY_VERIFIED`; `workspace=NGD_STAGING`, `environment=STAGING`, `admin_login_enabled=true`, `mutations_enabled=false`, `registration_enabled=false`, `otp_enabled=false`, `finance_enabled=false`. Read-only GET returned API version `1.0.3`, writes and payments false.
+- `staging/config.js` now points to owner-provided STAGING `/exec` URL, NOT the production URL. GitHub commit `3f45c01354af6afc5fa7808c1ef9f3c748426053`.
+- Workflow `.github/workflows/verify-staging-identity.yml` now also tests the real Chrome login gate. GitHub Actions run `43715144083` **success**: `STAGING_CHROME_LOGIN_GATE_OK`; browser auto-connected and displayed login form after server identity attestation; **no PIN submitted, no data mutation**.
+- Google Sheets `members!A1:B5` checked read-only: 1 physical account row in inspected range, role ADMIN. This confirms an admin record exists in STAGING, **not** that its PIN is known or login/session behavior works.
+- Previous backend/frontend automated test run `43713553240`: 315 tests passed, no failures.
+- Public endpoint `https://cuan74468-ux.github.io/ngulik-digital-member/staging/` is ready for **manual admin login** using operator's existing STAGING WhatsApp number and six-digit PIN. Keep credentials private; never transmit to ChatGPT.
+- **Outstanding P0:** real admin login, session persistence/revocation, read-only dashboard data, OTP WhatsApp/Fonnte end-to-end (requires explicit activation and controlled sender/recipient), registration workflow and rollback, business "Zero-Freebie" policy / `kredit_awal=10` discrepancy. Payment/real monetization **NO-GO**. Do not turn on any release switch or change production without permission.
