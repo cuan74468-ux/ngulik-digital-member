@@ -27,11 +27,11 @@ function domNode(id='') {
     setAttribute(key,value){this.attributes[key]=value;},
     removeAttribute(key){delete this.attributes[key];},
     querySelectorAll(){return [];},
-    focus(){},
+    focus(){},requestSubmit(){},
     reset(){this.elements.pin.value='';this.elements.wa.value='';}
   };
 }
-function boot(identity=verified) {
+function boot(identity=verified,pinnedUrl='') {
   const nodes={},requests=[];
   const document={
     getElementById(id){return nodes[id]||(nodes[id]=domNode(id));},
@@ -49,6 +49,7 @@ function boot(identity=verified) {
     return {ok:true,json:async()=>({ok:true,data})};
   }
   const sandbox={document,fetch:fetchStub,URL,AbortController,crypto:webcrypto,
+    NGD_STAGING_CONFIG:pinnedUrl?{apiUrl:pinnedUrl}:undefined,
     setTimeout,clearTimeout,console};
   vm.createContext(sandbox);
   vm.runInContext(source,sandbox,{timeout:3000});
@@ -115,4 +116,21 @@ test('an older deployed Web App reports a specific recovery path without sending
   assert.match(env.field('alert').textContent,/versi deployment kemungkinan belum/);
   assert.equal(env.field('login-section').hidden,true);
   assert.deepEqual(env.requests.map(x=>x.action),['getStagingWorkspaceInfo']);
+});
+
+test('approved STAGING endpoint is pinned and cannot be replaced by another valid GAS URL',async()=>{
+  const env=boot(verified,url);
+  assert.equal(env.field('endpoint').readOnly,true);
+  env.field('endpoint').value='https://script.google.com/macros/s/ANOTHER_VALID_DEPLOYMENT_1234567890/exec';
+  await env.submit('setup-form');
+  assert.equal(env.requests.length,0);
+  assert.equal(env.field('login-section').hidden,true);
+  assert.match(env.field('alert').textContent,/tidak cocok dengan endpoint STAGING resmi/);
+});
+test('approved STAGING endpoint remains allowed after pinning',async()=>{
+  const env=boot(verified,url);
+  assert.equal(env.field('endpoint').value,url);
+  await env.submit('setup-form');
+  assert.equal(env.requests[0].endpoint,url);
+  assert.equal(env.field('login-section').hidden,false);
 });

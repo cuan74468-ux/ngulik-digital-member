@@ -31,6 +31,10 @@
     current:'dashboard', data:null, busy:false
   };
   const API_PATTERN = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,}\/exec$/;
+  // A self-reported STAGING identity is not proof of endpoint ownership.
+  // Once GitHub has a verified deployment, PIN must never be sent to
+  // another GAS /exec merely because it returns the same identity fields.
+  const approvedEndpoint=String(globalThis.NGD_STAGING_CONFIG?.apiUrl||'').trim();
   const show = (id,visible) => {$(id).hidden = !visible;};
   const text = (id,value) => {$(id).textContent = String(value==null?'':value);};
   const node = (tag,className,content) => {
@@ -54,6 +58,8 @@
     try {url=new URL(String(raw||'').trim());}catch{throw new Error('URL Web App STAGING tidak valid.');}
     if(url.search||url.hash||url.username||url.password||!API_PATTERN.test(url.href))
       throw new Error('Gunakan URL resmi Google Apps Script yang berakhir dengan /exec, tanpa parameter.');
+    if(approvedEndpoint && url.href!==approvedEndpoint)
+      throw new Error('Alamat Web App tidak cocok dengan endpoint STAGING resmi yang telah diverifikasi.');
     return url.href;
   }
   function requestId() {
@@ -129,7 +135,8 @@
     clearAuth();
     state.endpoint='';
     state.identity=null;
-    $('endpoint').value='';
+    $('endpoint').value=approvedEndpoint;
+    $('endpoint').readOnly=Boolean(approvedEndpoint);
     show('access-layout',true);
     show('setup-section',true);
     show('login-section',false);
@@ -317,7 +324,12 @@
     }catch(err){alertMessage(err.message);$('pin').value='';}
     finally{setBusy(false);}
   });
-  $('change-endpoint').addEventListener('click',()=>{showSetup();alertMessage('Sambungan terputus. Masukkan ulang URL STAGING.',true);});
+  $('change-endpoint').addEventListener('click',()=>{
+    showSetup();
+    alertMessage(approvedEndpoint
+      ? 'Akses direset. Hubungkan ulang ke endpoint STAGING resmi.'
+      : 'Sambungan terputus. Masukkan URL STAGING yang terverifikasi.',true);
+  });
   $('exit').addEventListener('click',async ()=>{
     if(state.busy)return;
     const token=state.token;
@@ -340,10 +352,9 @@
   // An approved STAGING /exec URL may be published once in staging/config.js.
   // Without it, one-time manual URL entry is required; NEVER fall back to production.
   showSetup();
-  const configuredEndpoint=String(globalThis.NGD_STAGING_CONFIG?.apiUrl||'').trim();
-  if(configuredEndpoint){
+  if(approvedEndpoint){
     try{
-      const url=apiUrl(configuredEndpoint);
+      const url=apiUrl(approvedEndpoint);
       $('endpoint').value=url;
       $('setup-form').requestSubmit();
     }catch(error){

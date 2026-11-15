@@ -64,10 +64,10 @@
           <p class="form-intro">Satu kali pemeriksaan endpoint STAGING sebelum Anda masuk dengan akun administrator. Tidak ada data yang diubah pada langkah ini.</p>
           <form id="setup-form" novalidate>
             <label for="endpoint">Alamat layanan STAGING <span class="field-optional">Google Apps Script · /exec</span></label>
-            <input id="endpoint" name="endpoint" type="url" autocomplete="off" spellcheck="false" inputmode="url" placeholder="Tempel alamat Web App STAGING" required>
+            <input id="endpoint" name="endpoint" type="url" autocomplete="off" spellcheck="false" inputmode="url" placeholder="Alamat Web App STAGING resmi" required>
             <button class="primary-button" type="submit" id="connect"><span>Hubungkan dengan aman</span><span class="button-arrow" aria-hidden="true">→</span></button>
           </form>
-          <div class="connection-helper"><span class="helper-symbol" aria-hidden="true">i</span><p>Gunakan URL dari <strong>Deploy → Manage deployments</strong> di Apps Script STAGING. Sistem menolak URL produksi dan koneksi yang tidak dapat diverifikasi.</p></div>
+          <div class="connection-helper"><span class="helper-symbol" aria-hidden="true">i</span><p>URL resmi diambil dari konfigurasi proyek yang telah diaudit. Login menolak endpoint berbeda meskipun respons identitasnya tampak valid.</p></div>
         </section>
         <section id="login-section" class="panel auth-panel" aria-labelledby="login-title" hidden>
           <div class="step-number"><span class="step-line"></span> TAHAP 02 — AKSES</div>
@@ -80,7 +80,7 @@
             <input id="pin" name="pin" type="password" inputmode="numeric" autocomplete="current-password" pattern="[0-9]{6}" maxlength="6" required>
             <button class="primary-button" type="submit" id="login"><span>Masuk ke workspace</span><span class="button-arrow" aria-hidden="true">→</span></button>
           </form>
-          <button type="button" class="text-button" id="change-endpoint">Gunakan koneksi STAGING lain</button>
+          <button type="button" class="text-button" id="change-endpoint">Periksa ulang koneksi STAGING</button>
         </section>
           </div>
           <aside class="access-aside" aria-label="Tentang ruang kerja">
