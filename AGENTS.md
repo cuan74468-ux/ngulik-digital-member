@@ -25,6 +25,14 @@ Prioritas bila dokumen bertentangan: keputusan tertulis Owner dan Master/Mandat 
 - `modul_belajar` memiliki enam entri seed yang judulnya berbeda dari dokumen komunitas; `lms_courses` masih kosong. Keduanya tidak otomatis mencerminkan program Classroom yang berjalan.
 - Zero-Freebie berlaku pada nilai karya/aset dan layanan **komersial**; jangan gunakan kebijakan ini untuk membatalkan kelas dasar gratis yang sudah disepakati. Starter 10 Token tetap perlu OTP dan pembuktian anti-duplikasi sebelum aktivasi.
 
+## Keputusan Owner 15 November 2026: Infrastruktur dahulu, provider terakhir
+
+- Semua akun Fonnte, payment gateway, AI provider dan pengiriman pesan pihak ketiga akan dibuat atau diaktifkan oleh owner hanya setelah fondasi internal dan preflight lulus. Tidak perlu meminta API key, nomor tujuan uji, atau biaya provider sekarang.
+- Ini adalah **urutan kerja persiapan**. Milestone komersial 2-6 tidak boleh diaktifkan sebelum Master Index mengizinkan. Tahap 1 tetap PROSES / NO-GO.
+- Pakai [Runbook Foundation First](docs/INFRASTRUKTUR_INTERNAL_FIRST_2026-11-15.md) dan [Provider Readiness Contract](contracts/provider-readiness.json) sebagai kontrak non-eksekutabel; keduanya bukan otorisasi pembayaran/WA.
+- Secara kode, NGD_EXTERNAL_PROVIDERS_ENABLED harus absent/false. OtpAuth.gs membutuhkan persetujuan sakelar tersebut **selain** pengaman STAGING, OTP, registrasi, mutasi dan secret. Pemeriksaan STAGING juga menolak sakelar itu aktif. Jangan nyalakan untuk mempermudah uji.
+- Gunakan apps-script/InfrastructurePreflight.gs dan StagingOtpDiagnostics.gs untuk audit STAGING baca-saja. Keduanya belum otomatis terpasang pada runtime Google Apps Script; backup, diff, dan deploy terkendali diperlukan.
+
 ## Tahap aktif dan gerbang keselamatan
 
 - Aktif: **Tahap 1 — OTP WhatsApp Fonnte, login PIN, sesi dan pengamanan registrasi**. Belum lulus end-to-end. Tahap 2–6 **tidak boleh diaktifkan** tanpa mandat owner.

@@ -37,3 +37,11 @@ test('commercial and registration release switches remain OFF in public frontend
   }
   assert.ok(Object.values(data.releaseGates).every(value=>value===false));
 });
+
+test('global external-provider kill switch is required before any OTP integration can execute',()=>{
+  const otp=fs.readFileSync(path.join(root,'apps-script/OtpAuth.gs'),'utf8');
+  const infra=fs.readFileSync(path.join(root,'apps-script/InfrastructurePreflight.gs'),'utf8');
+  assert.match(otp,/getProperty\('NGD_EXTERNAL_PROVIDERS_ENABLED'\)\s*===\s*'true'/);
+  assert.match(infra,/'NGD_EXTERNAL_PROVIDERS_ENABLED'/);
+  assert.equal(data.releaseGates.externalProviders,false);
+});

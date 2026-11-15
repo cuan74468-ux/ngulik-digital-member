@@ -59,3 +59,38 @@ Enam modul komunitas Chapter 01 sudah ada di Google Docs dan program dasar grati
 Revert commit source frontend jika terjadi regresi. Untuk GAS, gunakan deployment STAGING versi lama yang sudah dicatat; jangan mengganti seluruh Code.gs sembarangan. Tidak ada perubahan database dalam pekerjaan ini; jika perlu pemulihan, gunakan cadangan terverifikasi dan audit sebelum tindakan.
 
 Status: fondasi mulai dipersiapkan; layanan eksternal belum dihubungkan. Tahap 1 masih PROSES dan monetisasi publik NO-GO.
+
+## Pengaman tambahan setelah checkpoint pertama
+
+- Source OtpAuth.gs kini membutuhkan NGD_EXTERNAL_PROVIDERS_ENABLED=true sebagai sakelar terpisah untuk setiap pemanggilan provider OTP. Selama fase persiapan sakelar tersebut tetap false atau tidak disetel.
+- Source ngdStagingWorkspaceReadOnlyCheck dan ngdOtpStagingPreflight menolak aktivasi provider global; ini pengamanan source-only dan tidak berarti versi GAS aktif otomatis sudah sama.
+- Tests/backend-otp-module, tests/infrastructure-preflight, tests/backend-staging-attestation dan tests/staging-otp-preflight mencakup penolakan provider sebelum biaya jaringan/penulisan.
+- Dashboard admin STAGING lama tetap bisa digunakan untuk fungsi yang telah diverifikasi, karena sakelar provider tidak disyaratkan untuk login admin terisolasi.
+
+## Panduan operator browser-first tanpa akun vendor
+
+1. Buka repository GitHub dan periksa commit serta GitHub Actions terakhir; jangan menyimpulkan source berhasil diterapkan ke Apps Script sebelum melihat versi runtime.
+2. Masuk editor Google Apps Script STAGING yang telah terhubung, bukan editor produksi. Simpan cadangan kode Apps Script terlebih dahulu (minimal salin file sebelum perubahan); jangan menimpa berkas yang sedang aktif secara membabi buta.
+3. Cocokkan Code.gs, Diagnostics.gs dan StagingOtpDiagnostics.gs dengan source GitHub. Tambahkan file baru bernama InfrastructurePreflight.gs hanya setelah membandingkan source dan memastikan tidak ada nama fungsi duplikat. Jangan mengganti seluruh proyek secara otomatis.
+4. Pastikan NGD_ENVIRONMENT=STAGING; NGD_DB_ID, NGD_ADMIN_LOGIN_DB_ID dan NGD_OTP_STAGING_DB_ID menunjuk database STAGING yang sama; jangan kirim nilainya melalui chat. Semua flag mutasi dan provider tetap OFF. Ini bukan izin untuk mengubah Script Properties tanpa pemeriksaan.
+5. Jalankan ngdInfrastructurePreflightReadOnly dari editor. Bila muncul NGD_INFRASTRUCTURE_PREFLIGHT_OK dengan tables=29 dan providers=DEFERRED, pemeriksaan sumber dan skema lulus. Jika gagal, hentikan dan laporkan hanya kode error (bukan data PII).
+6. Sebelum menerbitkan New version deployment STAGING, uji dokumentasi rollback dan verifikasi semua fungsi login/read-only tidak terganggu. Jangan aktifkan operator recover, schema migration, OTP send atau finance.
+7. Lanjutkan tes mekanisme internal dan QA Android/Windows. Provider eksternal terakhir ketika semua gate siap dan owner memberi persetujuan eksplisit.
+
+### Arti kesalahan preflight umum
+
+| Kode | Penanganan aman |
+|---|---|
+| INFRA_NOT_STAGING | Anda berada pada proyek/Script Properties yang salah; jangan menjalankan lagi di produksi. |
+| INFRA_DB_ATTESTATION_REQUIRED | Cocokkan tiga penanda database di Script Properties dengan STAGING, jangan menyalin ID dari dokumen lama. |
+| INFRA_FLAG_NOT_DISABLED | Ada sakelar aktif/tidak valid; hentikan dan audit sebelum pemeriksaan berikut. |
+| INFRA_TAB_MISSING | Jangan menciptakan tab mendadak. Periksa salinan database dan mandat skema. |
+| INFRA_COLUMNS_MISSING / INFRA_HEADER_INVALID | Jangan mengganti header yang sudah terisi; audit dampak dahulu. |
+
+### Status yang masih perlu dibuktikan
+
+- Pemulihan sesi dan revoke login pada perangkat nyata, bukan sekadar render browser.
+- Pengujian restore cadangan pada spreadsheet salinan terisolasi.
+- Idempotensi multi-sheet credit/fulfillment pada kondisi gagal parsial.
+- Perangkat Android/Windows nyata dan aturan persetujuan data pribadi.
+- Integrasi Fonnte, payment, AI, serta notifikasi (semuanya menunggu akun provider saat tahap akhir).

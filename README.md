@@ -53,7 +53,11 @@ Untuk konteks paling mutakhir baca [Audit Terpadu Tahap 1](docs/AUDIT_TERPADU_TA
 - **Manajemen kelas & konten:** modul Ngulik Digital, Google Classroom, dan integrasi pembelajaran bertahap.
 - **Pembayaran terencana:** Mayar.id / QRIS resmi, dengan verifikasi dan rekonsiliasi sebelum aktivasi hak akses.
 
+**Keputusan persiapan:** akun Fonnte, gateway pembayaran, model AI dan layanan eksternal baru dibuat di tahap integrasi akhir. Seluruh provider tetap nonaktif; pemeriksaan 29 tab dan kontrol QA dapat disiapkan tanpa vendor.
+
 Dokumen kerja:
+- [Fondasi internal — provider terakhir](docs/INFRASTRUKTUR_INTERNAL_FIRST_2026-11-15.md)
+- [Audit kesiapan 29 tab STAGING](docs/AUDIT_TERPADU_TAHAP_1_2026-11-15.md)
 - [Arsitektur membership komersial](docs/COMMERCIAL_MEMBERSHIP_RELEASE_2026-11-14.md)
 - [Prosedur keamanan dan pemeriksaan operasional](docs/PILOT_50_GO_LIVE_GATE_2026-11-14.md)
 - [Checkpoint pengembangan](docs/CHECKPOINT_2026-11-14.md)
