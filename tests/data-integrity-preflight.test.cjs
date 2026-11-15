@@ -63,7 +63,7 @@ test('empty STAGING and proper members/relations pass without any writes',()=>{
 });
 test('duplicate member WA normalizes 08 and 62 and detects unverified member',()=>{
   const x=fixture({members:[member('M-1','081200000000'),
-    {member_id:'M-2',wa:'6281200000000',role:'MEMBER',wa_verified:false}]});
+    {member_id:'M-2',wa:'628120000000',role:'MEMBER',wa_verified:false}]});
   const r=x.ctx.ngdDataIntegrityPreflightReadOnly();
   assert.equal(r.ready,false);
   assert.equal(r.issue_counts.duplicate_whatsapp,1);
