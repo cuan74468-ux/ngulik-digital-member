@@ -10,6 +10,10 @@ function harness(){
   const ctx=vm.createContext({console:{log(){},error(){},warn(){}}});
   vm.runInContext(backend,ctx,{timeout:12000});
   vm.runInContext(support,ctx,{timeout:12000});
+  // The fixture uses 2026-11-14 for new tickets. Freeze the VM wall clock
+  // as well: supportGetOverview_ checks Date.now() for 48h untriaged items.
+  // Without this, an unrelated test begins failing two days later.
+  vm.runInContext('Date.now = () => new Date("2026-11-14T00:00:00Z").getTime()',ctx);
   const members=[
     {member_id:'M1',role:'MEMBER',status:'AKTIF',nama:'Ari Usaha',
       nama_usaha:'Warung Ari',wa:'6281234560001',status_pos:'AKTIF',
