@@ -49,6 +49,8 @@ test('GAS staging E2E uses isolated scratch and cleanup with no real WhatsApp',(
   const body=code.slice(start,end);
   assert.match(body,/ngdStagingWorkspaceInfo_\(\)/);
   assert.match(body,/SpreadsheetApp\.create\(/);
+  assert.match(body,/insertColumnsAfter/);
+  assert.match(body,/allowedSettings/);
   assert.match(body,/NGD_DB_CACHE_=scratch/);
   assert.match(body,/NGD_SIMULATION_MODE_=true/);
   assert.match(body,/newOrder_\(/);
