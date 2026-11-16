@@ -1056,7 +1056,7 @@ async function submitContentForm_(form){
   if(id&&!old)return toast('Konten telah berubah. Muat ulang terlebih dahulu.',true);
   if(old){payload.content_id=id;payload.revision=old.revision;}
   if(!window.NGD_CONTENT_UI?.mediaPath(payload.image_path))
-    return toast('Gunakan path gambar PNG/JPG/WebP/AVIF di assets/media/.',true);
+    return toast('Gunakan URL HTTPS gambar atau path assets/ (PNG, JPG, WebP, AVIF).',true);
   const btn=form.querySelector('[type=submit]');
   if(btn?.disabled)return;
   if(btn)btn.disabled=true;
