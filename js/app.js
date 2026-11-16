@@ -444,7 +444,7 @@ function viewAI(){
     (tools.length?'<div class="grid-2 ai-grid">'+tools.map(t=>{
       const cost=Number(t.kredit_biaya)||0,can=isWriteEnabled();
       return '<article class="surface ai-tool"><div class="surface-icon">'+icon('spark')+'</div><h3>'+esc(t.nama)+'</h3><p class="card-desc">'+esc(t.deskripsi||'')+'</p>'+
-      '<form class="ai-form" id="ai-run-form" data-tool-id="'+idSafe(t.tool_id)+'" data-cost="'+cost+'" novalidate>'+
+      '<form class="ai-form" data-tool-id="'+idSafe(t.tool_id)+'" data-cost="'+cost+'" novalidate>'+
       '<label class="ai-label" for="ai-in-'+idSafe(t.tool_id)+'">Isi permintaan</label>'+
       '<textarea class="input ai-input" id="ai-in-'+idSafe(t.tool_id)+'" name="input" rows="4" maxlength="1500" required placeholder="'+esc(t.placeholder_input||'Tuliskan kebutuhan Anda')+'"'+(can?'':' disabled')+'></textarea>'+
       '<div class="ai-foot"><span class="product-meta">'+cost+' kredit / penggunaan</span>'+
@@ -459,14 +459,21 @@ async function submitAITool(form){
   const cost=Number(form.dataset.cost)||0,saldo=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
   if(saldo<cost)return toast('Kredit tidak cukup. Silakan top-up kredit di Katalog.',true);
   btn.disabled=true;area.disabled=true;box.hidden=false;box.className='ai-result is-loading';box.textContent='AI sedang menyusun hasil…';
+  const signature=JSON.stringify([form.dataset.toolId,input]);
+  if(state.aiPending?.signature!==signature)
+    state.aiPending={signature,requestId:createRequestId()};
   try{
-    const r=await api('generateAI',{tool_id:form.dataset.toolId,input},state.token,{write:true});
+    const r=await api('generateAI',{tool_id:form.dataset.toolId,input},state.token,
+      {write:true,requestId:state.aiPending.requestId});
+    state.aiPending=null;
     if(state.home)state.home.saldo_kredit=r.saldo;if(state.me)state.me.saldo_kredit=r.saldo;
     const bal=document.getElementById('ai-balance');if(bal)bal.textContent=r.saldo+' kredit';
     box.className='ai-result';box.innerHTML='<p class="card-kicker">HASIL · '+esc(r.kredit_terpakai)+' KREDIT TERPAKAI</p><div class="ai-text">'+esc(r.hasil)+'</div>'+
       '<button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(r.hasil)+'">Salin hasil '+icon('link')+'</button>';
     box.scrollIntoView({block:'nearest',behavior:'smooth'});
   }catch(e){
+    if(!['NETWORK_ERROR','INTERNAL','RECONCILIATION_REQUIRED'].includes(e.code))
+      state.aiPending=null;
     box.className='ai-result is-error';box.textContent=e.message||'AI gagal. Coba lagi.';
     if(e.code==='AI_FAILED')toast('Kredit Anda sudah dikembalikan.');
     try{const d=await api('getBeranda',{},state.token);state.home=d;const bal=document.getElementById('ai-balance');if(bal)bal.textContent=(d.saldo_kredit??0)+' kredit';}catch{}
@@ -763,7 +770,10 @@ function viewAdminCatalog(){
     '</select></div>'+
     input('urut','Urutan tampilan','number',0)+
     input('kredit_diberikan','Kredit diberikan','number',0)+
-    input('durasi_hari','Durasi hari (0 atau 30)','number',0)+'</div>'+
+    input('durasi_hari','Durasi hari (0 atau 30)','number',0)+
+    '<div class="field"><label for="cat-komisi">Komisi produk (%) — kosong = default</label>'+
+    '<input class="input" id="cat-komisi" name="komisi_persen" type="number" min="0" max="50" step="1" placeholder="Default" value="'+
+    esc(draft.komisi_persen??'')+'"></div></div>'+
     '<div class="field"><label for="cat-deskripsi">Deskripsi (minimal 10 karakter)</label>'+
     '<textarea class="input" id="cat-deskripsi" name="deskripsi" maxlength="350" minlength="10" rows="4" required>'+
     esc(draft.deskripsi)+'</textarea></div>'+
@@ -1701,7 +1711,8 @@ async function submitCatalogForm(form){
     durasi_hari:Number(fd.get('durasi_hari')),
     urut:Number(fd.get('urut')),
     perlu_approval_admin:fd.has('perlu_approval_admin'),
-    bisa_komisi:fd.has('bisa_komisi')
+    bisa_komisi:fd.has('bisa_komisi'),
+    komisi_persen:fd.get('komisi_persen')===''?'':Number(fd.get('komisi_persen'))
   };
   if(current){payload.product_id=current.product_id;payload.revision=current.revision;}
   const requestId=current?createRequestId():(state.catalogRequestId||createRequestId());
