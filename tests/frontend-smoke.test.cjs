@@ -52,14 +52,14 @@ test('guest homepage renders and shows offline preview warning',()=>{
   assert.match(nodes.screen.innerHTML,/nh-search/);
   assert.match(nodes.screen.innerHTML,/nh-grid/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
-  assert.match(nodes['desktop-nav'].innerHTML,/Katalog/);
-  assert.equal(document.title,'Beranda — Ngulik Digital');
+  assert.match(nodes['desktop-nav'].innerHTML,/Toko & Lisensi/);
+  assert.equal(document.title,'Meja Kerja — Ngulik Digital');
 });
 test('local member preview renders native-like dashboard without login',()=>{
   const {nodes,context}=renderPreview('?preview=member');
-  assert.match(nodes.screen.innerHTML,/RUANG BELAJAR PRIBADI/);
+  assert.match(nodes.screen.innerHTML,/DASHBOARD \/ MEJA KERJA/);
   assert.match(nodes.screen.innerHTML,/member-focus-ring/);
-  assert.match(nodes.screen.innerHTML,/Kredit AI tersisa/);
+  assert.match(nodes.screen.innerHTML,/Token tersedia/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.equal(vm.runInContext('isWriteEnabled()',context),false);
 });
@@ -72,7 +72,7 @@ test('preview catalog uses sample products with disabled buy buttons',()=>{
   assert.match(nodes.screen.innerHTML,/Bundel Ebook Vibe Coder/);
   assert.match(nodes.screen.innerHTML,/data-catalog-filter="aplikasi"/);
   assert.match(nodes.screen.innerHTML,/data-catalog-filter="jasa"/);
-  assert.match(nodes.screen.innerHTML,/disabled title="Pembayaran belum diaktifkan"/);
+  assert.match(nodes.screen.innerHTML,/disabled title="Checkout belum tersedia pada konfigurasi saat ini"/);
 });
 test('catalog escapes untrusted product names, and external URLs are restricted',()=>{
   const {nodes,context}=renderPreview();
