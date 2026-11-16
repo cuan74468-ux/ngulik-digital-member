@@ -725,7 +725,7 @@ function viewAdminCatalog(){
   const draft=selected||{
     nama:'',deskripsi:'',tipe:'PRODUK_DIGITAL',harga:'',
     kredit_diberikan:0,durasi_hari:0,urut:items.length+1,
-    perlu_approval_admin:false,bisa_komisi:false
+    perlu_approval_admin:false,bisa_komisi:false,sumber_produk:'INTERNAL',komisi_persen:''
   };
   const input=(name,label,type,max)=>
     '<div class="field"><label for="cat-'+name+'">'+label+'</label>'+
@@ -773,7 +773,10 @@ function viewAdminCatalog(){
     input('durasi_hari','Durasi hari (0 atau 30)','number',0)+
     '<div class="field"><label for="cat-komisi">Komisi produk (%) — kosong = default</label>'+
     '<input class="input" id="cat-komisi" name="komisi_persen" type="number" min="0" max="50" step="1" placeholder="Default" value="'+
-    esc(draft.komisi_persen??'')+'"></div></div>'+
+    esc(draft.komisi_persen??'')+'"></div>'+
+    '<div class="field"><label for="cat-sumber">Sumber produk</label>'+
+    '<input class="input" id="cat-sumber" name="sumber_produk" maxlength="60" required '+
+    'pattern="[A-Za-z0-9_-]{2,60}" value="'+esc(draft.sumber_produk||'INTERNAL')+'"></div></div>'+
     '<div class="field"><label for="cat-deskripsi">Deskripsi (minimal 10 karakter)</label>'+
     '<textarea class="input" id="cat-deskripsi" name="deskripsi" maxlength="350" minlength="10" rows="4" required>'+
     esc(draft.deskripsi)+'</textarea></div>'+
@@ -1712,7 +1715,8 @@ async function submitCatalogForm(form){
     urut:Number(fd.get('urut')),
     perlu_approval_admin:fd.has('perlu_approval_admin'),
     bisa_komisi:fd.has('bisa_komisi'),
-    komisi_persen:fd.get('komisi_persen')===''?'':Number(fd.get('komisi_persen'))
+    komisi_persen:fd.get('komisi_persen')===''?'':Number(fd.get('komisi_persen')),
+    sumber_produk:String(fd.get('sumber_produk')||'INTERNAL').trim()
   };
   if(current){payload.product_id=current.product_id;payload.revision=current.revision;}
   const requestId=current?createRequestId():(state.catalogRequestId||createRequestId());
