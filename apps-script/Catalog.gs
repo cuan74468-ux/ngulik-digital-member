@@ -3,7 +3,7 @@
  * Product rows are soft-archived, never deleted. Type and product ID are
  * immutable after creation, because orders and fulfillment depend on them.
  *
- * Writes require BOTH NGD_MUTATIONS_ENABLED=true AND NGD_CATALOG_ENABLED=true,
+ * Writes require NGD_MUTATIONS_ENABLED=true,
  * and a valid ADMIN session. Default server state: OFF.
  * No payments, balance changes, fulfillment, emails or external API calls.
  */
