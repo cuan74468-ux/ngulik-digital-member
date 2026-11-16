@@ -1,7 +1,7 @@
 /**
  * LMS V1 — course/lesson CRUD, durable editorial workspaces, enrollment,
  * progress and optional AI drafting queue. NO model/network calls, NO keys.
- * All writes are gated in Code.gs by NGD_MUTATIONS_ENABLED + NGD_LMS_ENABLED.
+ * All writes are gated in Code.gs by NGD_MUTATIONS_ENABLED.
  * Preserve modul_belajar/progress_member legacy tables, never overwrite.
  */
 function lmsText_(v,max,min,label){
