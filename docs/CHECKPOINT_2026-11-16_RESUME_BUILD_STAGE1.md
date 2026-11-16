@@ -1,5 +1,5 @@
 # Checkpoint terbaru — 16 November 2026 · Ngulik Digital Member
-**Checkpoint terverifikasi — 16 November 2026:** [430/430 tes PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43791863410), [GitHub Pages PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43791863012), source hardening PIN V2 yang **default OFF**, guard registrasi kredit awal eksplisit, serta tes kontrak keputusan dan hash 15 file Apps Script. Semua perubahan backend masih **source-only GitHub**; tidak ada bukti source terbaru terpasang pada editor GAS. Owner baru menjalankan preflight infrastruktur 29 tab dan integritas 8 tabel, belum menjalankan audit recovery terbaru. **Tahap 1 tetap PROSES/NO-GO**; provider, registrasi, LMS komersial dan finance tetap OFF. [Checkpoint rinci](CHECKPOINT_2026-11-16_RESUME_BUILD_STAGE1.md).
+**Checkpoint teknis terverifikasi — 16 November 2026:** [435/435 tes PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43794320563), [GitHub Pages PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43794346412). Source recovery STAGING baca-saja sekarang menolak ID/WhatsApp anggota ambigu atau duplikat dan ID OTP duplikat; PIN V2 tetap **default OFF**. Source GitHub belum dibuktikan identik dengan editor GAS, dan audit recovery **belum ada log operator**. **Tahap 1 masih PROSES/NO-GO**; registrasi, provider, LMS komersial dan finance OFF. [Checkpoint rinci](CHECKPOINT_2026-11-16_RESUME_BUILD_STAGE1.md).
 
 
 
@@ -110,3 +110,7 @@ Dokumen Google Drive yang diperbarui dengan **addendum faktual saja**: Master In
 ## Koreksi audit dokumen vs implementasi — 16 November
 
 Peninjauan ulang Master Index, Mandat, Brief Teknis, Design System, strategi risiko, panduan Mayar/LMS, SOP dan enam modul Chapter 01 serta checkpoint/source GitHub menghasilkan perbaikan source-only audit rekonsiliasi identitas duplikat atau kosong. Hak akses bisnis, saldo, harga, komisi, database dan produksi tidak diubah. File recovery belum dijalankan di GAS STAGING; aplikasi belum GO.
+
+## Verifikasi implementasi source 16 November — hasil final
+
+Source audit `RegistrationRecoveryPreflight.gs`, uji kondisi anggota/OTP duplikat dan manifest Git blob diperbaiki. Nilai manifest sekarang menggunakan ukuran **byte UTF-8**, bukan panjang karakter JavaScript. Pengujian lengkap pada commit `cae9decf78d33f2aa9e5ec7613b85b99437f1e11` [lulus 435/435](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43794320563) serta Chrome mobile/desktop, staging UI dan API baca-saja PASS; [GitHub Pages](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43794346412) sukses. **Tidak ada deploy Apps Script.** Sesi/properti, kredensial, pembayaran, aturan kredit/komisi, LMS komersial dan database tetap tidak berubah.

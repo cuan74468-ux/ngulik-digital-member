@@ -75,3 +75,7 @@ Dokumen normatif Mandat Produksi dan SOP komunitas **tidak diedit**, karena kete
 ## 8. Koreksi identitas pada audit registrasi
 
 Kode audit source-only ditambah lima kategori `duplicate_registration_member_id`, `duplicate_registration_whatsapp`, `registration_member_missing_identifier`, `registration_member_missing_whatsapp`, `duplicate_registration_otp_id`. Ini menutup risiko overwrite peta korelasi, tanpa mutasi dan tanpa mengubah gerbang Tahap 1 NO-GO. Auditor belum memiliki bukti bahwa file baru berjalan di editor GAS STAGING.
+
+## 9. Bukti verifikasi penerapan source
+
+Source audit `RegistrationRecoveryPreflight.gs`, uji kondisi anggota/OTP duplikat dan manifest Git blob diperbaiki. Nilai manifest sekarang menggunakan ukuran **byte UTF-8**, bukan panjang karakter JavaScript. Pengujian lengkap pada commit `cae9decf78d33f2aa9e5ec7613b85b99437f1e11` [lulus 435/435](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43794320563) serta Chrome mobile/desktop, staging UI dan API baca-saja PASS; [GitHub Pages](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43794346412) sukses. **Tidak ada deploy Apps Script.** Sesi/properti, kredensial, pembayaran, aturan kredit/komisi, LMS komersial dan database tetap tidak berubah.
