@@ -26,5 +26,10 @@ test('a source hash alone never claims that the GAS editor is synchronized',()=>
  assert.deepEqual(manifest.verified_editor_functions.map(x=>x.name),[
    'ngdInfrastructurePreflightReadOnly','ngdDataIntegrityPreflightReadOnly'
  ]);
- assert.equal(manifest.modules.filter(x=>x.runtime_evidence.startsWith('OPERATOR_')).length,2);
+ assert.deepEqual(manifest.modules
+   .filter(x=>x.runtime_evidence.startsWith('OPERATOR_'))
+   .map(x=>x.file),['DataIntegrityPreflight.gs']);
+ assert.equal(manifest.modules.find(x=>x.file==='InfrastructurePreflight.gs').runtime_evidence,
+   'SOURCE_UPDATED_RUNTIME_SYNC_NOT_VERIFIED');
+ assert.match(manifest.verified_editor_functions[0].result,/PREVIOUS_SOURCE/);
 });
