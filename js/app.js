@@ -2109,7 +2109,7 @@ document.addEventListener('click',async(e)=>{
     if(reason.trim().length<5)return toast('Referensi/alasan minimal 5 karakter.',true);
     if(isApprove&&!confirm('Saya sudah mencocokkan penerimaan dana '+rupiah(order.total_bayar)+' di mutasi. Aktifkan produk dan kredit order '+order.order_id+'?'))return;
     try{
-      await api(isApprove?'approvePayment':'rejectPayment',isApprove?{order_id:order.order_id,dana_diterima:true,referensi_pembayaran:reason.trim()}:{order_id:order.order_id,alasan:reason.trim()},state.token,{write:true});
+      await api('adminVerifyOrder',isApprove?{order_id:order.order_id,keputusan:'approve',dana_diterima:true,referensi_pembayaran:reason.trim()}:{order_id:order.order_id,keputusan:'reject',alasan:reason.trim()},state.token,{write:true});
       toast(isApprove?'Pembayaran disetujui.':'Pesanan ditolak.');await loadRoute('pesanan');render();
     }catch(error){toast(error.message,true);}
     return;
