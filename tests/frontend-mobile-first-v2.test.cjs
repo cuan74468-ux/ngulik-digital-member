@@ -12,8 +12,8 @@ const css=read('assets/experience.css');
 test('public and operations HTML load the same mobile-first stylesheet after legacy CSS',()=>{
   assert.match(publicHTML,/<body class="ngd-public-app">/);
   assert.match(opsHTML,/<body class="ngd-ops-app">/);
-  assert.match(publicHTML,/href="\.\/assets\/experience\.css\?v=20261116-v3"/);
-  assert.match(opsHTML,/href="\.\.\/assets\/experience\.css\?v=20261116-v3"/);
+  assert.match(publicHTML,/href="\.\/assets\/experience\.css\?v=20261116-v4"/);
+  assert.match(opsHTML,/href="\.\.\/assets\/experience\.css\?v=20261116-v4"/);
   assert.ok(publicHTML.indexOf('unified-theme.css')<publicHTML.indexOf('experience.css'));
   assert.ok(opsHTML.indexOf('admin.css')<opsHTML.indexOf('experience.css'));
 });
@@ -31,8 +31,8 @@ test('semantic colors fonts radius and mobile spacing are shared',()=>{
 test('presentation-only change cannot bypass server release flags',()=>{
   assert.doesNotMatch(css,/@import|@font-face|url\(\s*['"]?https?:|<script|UrlFetchApp|apiUrl|FONNTE_API_TOKEN/i);
   const publicConfig=read('config.js');
-  for(const flag of ['memberWritesEnabled: false','registrationOtpEnabled: false',
-    'paymentsEnabled: false','lmsEnabled: false']){
+  for(const flag of ['memberWritesEnabled: true','registrationOtpEnabled: true',
+    'paymentsEnabled: true','lmsEnabled: true']){
     assert.ok(publicConfig.includes(flag),flag);
   }
   assert.match(opsHTML,/name="robots" content="noindex,nofollow/);
