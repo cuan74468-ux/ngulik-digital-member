@@ -72,3 +72,10 @@ Pengujian kegagalan parsial `tests/backend-otp-module.test.cjs` diperluas untuk 
 ## 16 November — rekonsiliasi ledger diperketat
 
 Audit lintas sumber atas `RegistrationRecoveryPreflight.gs` menunjukkan verifikasi GRANT awal belum mencakup nominal/status/duplikasi. Source-only audit ditingkatkan untuk menandai nilai GRANT yang berbeda dari kebijakan kini, unposted, orphan, duplikasi GRANT dan duplikasi kunci `kredit_awal`. Keputusan perbaikan tetap manual setelah review riwayat; **audit tidak mengubah saldo**. Dokumen rinci: [Registration Recovery Preflight](REGISTRATION_RECOVERY_PREFLIGHT_2026-11-16.md). Data sumber yang dibaca langsung bersifat terbatas, bukan seluruh rekonsiliasi runtime; Script Properties, akun dan ledger tidak disentuh.
+
+## 16 November — pemulihan backup dan manifest runtime
+
+- **Restore rehearsal file-level PASS:** salinan terisolasi dari backup STAGING 15 November berhasil dibuat di folder privat yang sama; akses owner-only, shared=false; 29/29 nama tab dan header identik, 9/9 jumlah record operasional cocok, dan formula sel `members!AG2:AI3` identik. **Bukan** uji restore aplikasi end-to-end; tidak ada perubahan database aktif. [Detail](RESTORE_REHEARSAL_2026-11-16.md).
+- **Source inventory:** 15 file `.gs` ada dalam repository. Manifest blob SHA tersedia di `contracts/gas-runtime-source-manifest-2026-11-16.json` dan [runbook](GAS_RUNTIME_SYNC_MANIFEST_2026-11-16.md). Tidak ada bukti seluruh modul GAS di editor sama dengan GitHub; hanya dua fungsi preflight lama yang sudah pernah dijalankan oleh owner.
+- **Regression terbaru:** [405/405 sukses](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43787152837) pada source commit `a4e20065ab9f385c2a90a3c41e5d3492fb893c71`. Workflow GitHub Pages sempat menerima HTTP 502 (server GitHub, bukan build), lalu **rerun deploy sukses** pada [run 43787152151](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43787152151).
+- Yang tersisa: auth/GAS runtime diff, rekonsiliasi kredit yang bisa diaudit, uji session end-to-end serta recovery aplikasi penuh. Semua sakelar provider, registration, finance tetap OFF.

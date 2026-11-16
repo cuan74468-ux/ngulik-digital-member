@@ -1,0 +1,117 @@
+{
+  "product": "Ngulik Digital Member",
+  "date": "2026-11-16",
+  "purpose": "Source-to-runtime manifest; NOT an assertion that GAS source has been synchronized.",
+  "repository": "cuan74468-ux/ngulik-digital-member",
+  "source_snapshot_branch": "main",
+  "source_snapshot_commit": "a4e20065ab9f385c2a90a3c41e5d3492fb893c71",
+  "source_content_hash_kind": "Git blob SHA1; not an Apps Script editor fingerprint",
+  "environment": "STAGING",
+  "verified_editor_functions": [
+    {
+      "name": "ngdInfrastructurePreflightReadOnly",
+      "result": "PASS_29_TABLES",
+      "owner_log_date": "2026-11-15"
+    },
+    {
+      "name": "ngdDataIntegrityPreflightReadOnly",
+      "result": "PASS_8_TABLES",
+      "owner_log_date": "2026-11-15"
+    }
+  ],
+  "unverified": "Actual contents and version of Apps Script editor project, except observed functions above.",
+  "release_gate": "STAGE1_NO_GO",
+  "external_providers": "DEFERRED",
+  "modules": [
+    {
+      "file": "AdminAccess.gs",
+      "github_blob_sha": "ee2ffdf2e9632d703092c4f97cbc4ec9e2915f4d",
+      "bytes": 13829,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    },
+    {
+      "file": "Catalog.gs",
+      "github_blob_sha": "93edd327d45c78e8cf316fa279028524e5a18ec6",
+      "bytes": 7214,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    },
+    {
+      "file": "Code.gs",
+      "github_blob_sha": "e6c9f6d7bab0f48bd3f0d0e4f33da23d417ad8ba",
+      "bytes": 105079,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    },
+    {
+      "file": "Content.gs",
+      "github_blob_sha": "a5583fe79c6e8709021671f4692f3e9472ab6204",
+      "bytes": 11001,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    },
+    {
+      "file": "DataIntegrityPreflight.gs",
+      "github_blob_sha": "a5a805bf79a234f04db3bc1a36142550908eef8a",
+      "bytes": 8300,
+      "runtime_evidence": "OPERATOR_EXECUTION_OBSERVED_2026_11_15"
+    },
+    {
+      "file": "Diagnostics.gs",
+      "github_blob_sha": "697483258b3cbf72f8f4c522a68902f6a151deed",
+      "bytes": 22781,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    },
+    {
+      "file": "InfrastructurePreflight.gs",
+      "github_blob_sha": "08f3fef91494414b18b3f5b5ec8d270198f5a216",
+      "bytes": 3962,
+      "runtime_evidence": "OPERATOR_EXECUTION_OBSERVED_2026_11_15"
+    },
+    {
+      "file": "LMS.gs",
+      "github_blob_sha": "a2cf5683f55b7ca4fdf413c01ea9520ae4a56532",
+      "bytes": 28692,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    },
+    {
+      "file": "Notifications.gs",
+      "github_blob_sha": "206748fa40650ba82663f42710463580a1eef523",
+      "bytes": 5125,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    },
+    {
+      "file": "OtpAuth.gs",
+      "github_blob_sha": "94a15c524bd963f2fa00ab864ec46c0b5e18ed7e",
+      "bytes": 11510,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    },
+    {
+      "file": "RegistrationRecoveryPreflight.gs",
+      "github_blob_sha": "f05c7d9171fd065c375d3b1d5f9ab2228a9f1386",
+      "bytes": 6705,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    },
+    {
+      "file": "SchemaUpgrade.gs",
+      "github_blob_sha": "4ed18b3e42e0a6d1d823712f867ea7857ca0336f",
+      "bytes": 6870,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    },
+    {
+      "file": "Services.gs",
+      "github_blob_sha": "d077d83cd400dc4a3a9111759441ae480122a128",
+      "bytes": 7795,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    },
+    {
+      "file": "StagingOtpDiagnostics.gs",
+      "github_blob_sha": "e41b3705d5be15b52e97d70f7c0235d8f1d5dee0",
+      "bytes": 3051,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    },
+    {
+      "file": "Support.gs",
+      "github_blob_sha": "6d2d87db748eaac22299c1b824bbf1520fdf7125",
+      "bytes": 24218,
+      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+    }
+  ]
+}
