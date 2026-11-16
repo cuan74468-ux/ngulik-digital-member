@@ -317,13 +317,13 @@ function viewHome(){
       '<section class="wallet-hero" aria-label="Dompet Token Universal">'+
       '<div class="wallet-top"><span>DOMPET TOKEN UNIVERSAL</span><span class="wallet-state">● Saldo akun</span></div>'+
       '<div class="wallet-value"><strong>'+esc(wallet.toLocaleString('id-ID'))+'</strong><span>Token</span></div>'+
-      '<p>1 Token = Rp1.000 · Saldo diambil dari akun Anda</p>'+
+      '<p>Saldo token aktif Anda, diperbarui dari akun. Gunakan seperlunya untuk pekerjaan bisnis.</p>'+
       '<div class="wallet-commands"><button type="button" class="btn btn-primary" data-catalog-go="ai">+ Isi Token (QRIS) '+icon('arrow')+'</button>'+
       '<button type="button" class="btn btn-secondary" data-route="ai">Buka Studio AI</button></div>'+
       '<div class="wallet-service-list">'+serviceBadges.map(function(x){return '<span class="wallet-service"><strong>'+esc(x[0])+'</strong><small>'+esc(x[1])+'</small></span>';}).join('')+'</div></section>'+
-      '<section class="member-focus" aria-label="Ringkasan perjalanan belajar">'+
+      '<section class="member-focus" aria-label="Pusat aktivitas bisnis">'+
         '<div class="member-focus-content"><span class="member-focus-kicker">AKTIVITAS & PRODUKTIVITAS</span>'+
-        '<h2>'+(currentCourse?'Lanjutkan aktivitas terakhir.':'Kelola kebutuhan digital Anda.')+'</h2>'+
+        '<h2>'+(currentCourse?'Kembali ke pekerjaan Anda.':'Semua alat bisnis, satu meja kerja.')+'</h2>'+
         '<p>'+(currentCourse?esc(currentCourse.title)+' siap Anda lanjutkan.':
           'Buka Studio AI, pilih produk, atau mulai kelas yang tersedia.')+'</p>'+
         learningCTA+'</div>'+
@@ -349,7 +349,7 @@ function viewHome(){
   }
   // Native-app style home: hero banner, search bar, feature grid, product rail. Labels only.
   const features=[
-    ['book','Belajar','belajar'],['store','Aplikasi','aplikasi'],['spark','Studio AI','ai'],
+    ['spark','Studio AI','ai'],['store','Aplikasi','aplikasi'],['book','Kelas Gratis','belajar'],
     ['clipboard','Jasa','jasa'],['grid','Katalog','katalog'],['link','Affiliate','affiliate'],
     ['shield','Bantuan','dukungan'],['user','Masuk','login']
   ];
@@ -381,8 +381,8 @@ function viewHome(){
     '<span class="pf-hero-spark pf-spark-three" aria-hidden="true">✦</span>'+
     '<div class="public-hero-copy">'+
       '<p class="pf-hello"><span class="pf-hello-dot" aria-hidden="true"></span> Ngulik Digital <span aria-hidden="true">/</span> Alat & AI untuk UMKM</p>'+
-      '<h1>Usaha jalan. <em>Teknologi membantu.</em></h1>'+
-      '<p class="public-hero-lead">Bengkel kerja digital untuk membuat konten, mengelola usaha, dan mendapatkan alat AI siap pakai. Mulai Rp10.000, bayar sesuai kebutuhan.</p>'+
+      '<h1>Supermarket Tools AI. <em>Bengkel Kerja UMKM.</em></h1>'+
+      '<p class="public-hero-lead">Pilih alat bisnis, Studio AI, lisensi, dan paket token dalam satu tempat. Mulai Rp10.000, bayar sesuai kebutuhan.</p>'+
       '<div class="public-hero-buttons">'+
         '<button type="button" class="btn btn-primary pf-button-dark" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
         '<button type="button" class="btn btn-secondary pf-button-light" data-route="daftar">Masuk / Daftar WhatsApp</button>'+
@@ -422,11 +422,11 @@ const offerCategories=[
   ['semua','Semua'],['ai','Token AI'],['aplikasi','Aplikasi Bisnis'],
   ['jasa','Jasa & Seat'],['belajar','Bundel & Ebook']
 ];
-const supportedSaleTypes=new Set(['LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_KREDIT','PRODUK_DIGITAL','JASA_SEKALI']);
+const supportedSaleTypes=new Set(['LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_TOKEN','TOPUP_KREDIT','PRODUK_DIGITAL','JASA_SEKALI']);
 function offerCategory(p){
   switch(String(p.tipe||'')){
     case 'LANGGANAN_30H':case 'LISENSI_SEKALI':return 'aplikasi';
-    case 'TOPUP_KREDIT':return 'ai';
+    case 'TOPUP_TOKEN':case 'TOPUP_KREDIT':return 'ai';
     case 'JASA_SEKALI':case 'SEAT_30H':return 'jasa';
     case 'PRODUK_DIGITAL':return 'belajar';
     default:return 'lainnya';
@@ -531,8 +531,8 @@ function viewAI(){
     '<p>Pilih alat, masukkan brief, lalu gunakan hasil. Biaya dihitung per eksekusi.</p></div>'+
     '<div class="ai-wallet-mini"><small>SALDO TOKEN</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
     '<button type="button" data-catalog-go="ai">+ Isi Token</button></div></div>'+
-    '<div class="ai-wizard-progress" aria-label="Tahapan penggunaan alat AI">'+
-    '<span class="is-current">01 · Pilih Alat</span><span>02 · Isi Brief</span><span>03 · Gunakan Hasil</span></div>'+
+    '<ol class="ai-wizard-progress" aria-label="Tahapan penggunaan alat AI">'+
+    '<li class="is-current">01 · Pilih Alat</li><li>02 · Isi Brief</li><li>03 · Gunakan Hasil</li></ol>'+
     (tools.length?'<div class="ai-wizard-layout"><section class="ai-tool-selector" aria-label="Pilih alat AI">'+
       '<h2>Pilih alat</h2><p>Alat tersedia sesuai katalog yang diaktifkan.</p>'+
       tools.map(function(t){return '<button type="button" class="ai-tool-option'+(selected?.tool_id===t.tool_id?' is-current':'')+
@@ -547,9 +547,9 @@ function viewAI(){
       '<input class="input" id="ai-business-name" name="nama_usaha" maxlength="100" autocomplete="organization" value="'+
       esc(state.me?.nama_usaha||'')+'" placeholder="Nama usaha Anda"></div>'+
       '<div class="field"><label class="ai-label" for="ai-in-'+idSafe(selected.tool_id)+'">Produk atau kebutuhan Anda</label>'+
-      '<textarea class="input ai-input" id="ai-in-'+idSafe(selected.tool_id)+'" name="input" rows="6" maxlength="1400" required placeholder="'+
+      '<textarea class="input ai-input" id="ai-in-'+idSafe(selected.tool_id)+'" name="input" rows="6" maxlength="1500" required placeholder="'+
       esc(selected.placeholder_input||'Jelaskan produk, audiens, gaya bahasa, dan tujuan konten')+'"'+(can?'':' disabled')+'></textarea>'+
-      '<small class="form-hint">Maksimal 1.500 karakter total. Jangan memasukkan data rahasia pelanggan.</small></div>'+
+      '<small class="form-hint">Maksimal 1.500 karakter. Jangan memasukkan data rahasia pelanggan.</small></div>'+
       '<div class="ai-foot"><span class="ai-cost"><strong>'+esc(cost)+' Token</strong> / eksekusi</span>'+
       '<button class="btn btn-primary" type="submit"'+(can?'':' disabled')+'>Proses dengan AI '+icon('arrow')+'</button></div>'+
       '<div class="ai-result" role="status" aria-live="polite" hidden></div></form></article></div>':
