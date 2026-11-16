@@ -53,7 +53,8 @@ test('redesigned member dashboard shows a bounded real progress ring and navigat
   const h=preview('member');
   assert.match(h.nodes.screen.innerHTML,/member-focus-ring/);
   assert.match(h.nodes.screen.innerHTML,/33 persen progres modul/);
-  assert.match(h.nodes.screen.innerHTML,/Lanjutkan belajar/);
+  assert.match(h.nodes.screen.innerHTML,/Lanjutkan kelas/);
+  assert.match(h.nodes.screen.innerHTML,/data-lms-action="open-course"/);
   assert.match(h.nodes['mobile-nav'].innerHTML,/data-route="belajar"/);
   assert.match(h.nodes['mobile-nav'].innerHTML,/aria-current="page"/);
   assert.equal(h.attributes['data-member-route'],'beranda');
