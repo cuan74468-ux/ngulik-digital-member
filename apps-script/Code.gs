@@ -245,7 +245,7 @@ function settings_() {
   readAll_('pengaturan_sistem').forEach(function(r) {
     var v = r.value;
     if (r.tipe === 'NUMBER') v = num_(v, 0);
-    if (r.tipe === 'BOOL') v = v === true || String(v).toUpperCase() === 'TRUE';
+    if (r.tipe === 'BOOL' || r.tipe === 'BOOLEAN') v = v === true || String(v).toUpperCase() === 'TRUE';
     out[r.key] = v;
   });
   return out;
