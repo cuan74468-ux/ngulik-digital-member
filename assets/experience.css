@@ -369,3 +369,19 @@ body.ngd-public-app:not(#ngd) .ngd-menu-access .btn{min-height:48px}
 @media(min-width:761px){
  body.ngd-public-app:not(#ngd) .ngd-menu-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+/* Studio AI — form per alat, hasil, status */
+.ai-form{display:grid;gap:10px;margin-top:14px}
+.ai-label{font-size:.82rem;font-weight:700;color:var(--ink)}
+.ai-input{width:100%;min-height:104px;resize:vertical;line-height:1.5}
+.ai-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ai-foot .btn{min-height:var(--tap,48px)}
+.ai-result{border:1px solid var(--line);background:var(--subtle);border-radius:var(--r-md,16px);padding:14px 16px;display:grid;gap:10px;font-size:.92rem;color:var(--text)}
+.ai-result[hidden]{display:none}
+.ai-result{scroll-margin-bottom:120px}
+.ai-result.is-loading{color:var(--muted);animation:ai-pulse 1.4s ease-in-out infinite}
+.ai-result.is-error{background:#fdecee;border-color:#f3c4c8;color:var(--danger)}
+.ai-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;color:var(--ink)}
+@keyframes ai-pulse{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.ai-result.is-loading{animation:none}}
+@media (max-width:640px){.ai-grid{grid-template-columns:1fr}.ai-foot .btn{width:100%}}
