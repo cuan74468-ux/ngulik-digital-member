@@ -157,3 +157,24 @@ test('duplicate member identifiers invalidate a valid-looking session',()=>{
   };
   assert.throws(()=>h.ctx.session_(h.other),/Akun tidak aktif/);
 });
+
+test('session cleanup purges expired and malformed rows bottom-up under lock',()=>{
+  const h=fixture();
+  h.sessions[0].expires_at='not-a-date';
+  h.sessions[1].expires_at=new Date(Date.now()+120000);
+  h.sessions[2].expires_at='';
+  const removed=h.ctx.withLock_(()=>h.ctx.purgeExpiredSessions_());
+  assert.equal(removed,2);
+  assert.deepEqual(h.deletions.map(d=>d.row),[4,2]);
+  assert.equal(h.sessions.length,1);
+  assert.equal(h.sessions[0].member_id,'ADMIN');
+  assert.equal(h.locks(),1);
+});
+test('session cleanup retains all valid future sessions and is idempotent',()=>{
+  const h=fixture();
+  const removed=h.ctx.withLock_(()=>h.ctx.purgeExpiredSessions_());
+  assert.equal(removed,0);
+  assert.equal(h.sessions.length,3);
+  assert.equal(h.ctx.withLock_(()=>h.ctx.purgeExpiredSessions_()),0);
+  assert.equal(h.deletions.length,0);
+});

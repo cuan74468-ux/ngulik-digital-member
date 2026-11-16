@@ -118,3 +118,7 @@ Source audit `RegistrationRecoveryPreflight.gs`, uji kondisi anggota/OTP duplika
 ## P0 OTP dan login — pengamanan fail-closed source, 16 November 2026
 
 Source `OtpAuth.gs` sebelumnya menggunakan perbandingan expiry yang dapat menerima `NaN`, dan mengubah attempts rusak menjadi 0. Source baru secara eksplisit menolak tanggal OTP rusak/kedaluwarsa serta counter percobaan yang bukan bilangan bulat 0–2; batas maksimal tiga percobaan dan masa berlaku lima menit tidak diubah. `authLogin_` pada source menolak nomor WhatsApp dengan lebih dari satu record `members`, bukan memilih baris pertama, dengan pesan error generik. Pengujian mencakup validasi OTP PENDING/VERIFIED, attempts malformed, akun duplikat dan login unik. Perubahan ini **belum tersinkron ke runtime GAS**; provider, PIN V2, registrasi, finance tetap OFF.
+
+## Ketahanan maintenance sesi — 16 November 2026 (source-only)
+
+`purgeExpiredSessions_` semula tidak menghapus baris `sessions` dengan expiry malformed karena `NaN <= now` menghasilkan false; padahal `session_` sudah menolak token tersebut. Source maintenance diperbarui agar menghapus expiry kosong/rusak/kedaluwarsa ketika tugas pemeliharaan sah berjalan **di bawah script lock**, menggunakan pengurutan nomor baris fisik menurun untuk mencegah salah hapus. Regresi memastikan sesi valid masa depan tetap ada dan operasi dapat diulang tanpa menghapus baris tambahan. Pemeliharaan GAS aktif **tidak dieksekusi** oleh perubahan source GitHub ini; penghapusan data nyata tetap memerlukan prosedur STAGING, backup, dan izin operasional.

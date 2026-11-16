@@ -1300,9 +1300,14 @@ function requestPayout_(m) {
 }
 function purgeExpiredSessions_() {
   var now=Date.now(),count=0;
-  // Hapus dari baris paling bawah agar nomor baris yang tersisa tetap benar.
-  findRows_('sessions',function(s){return new Date(s.expires_at).getTime()<=now;})
-    .reverse().forEach(function(s){tbl_('sessions').sheet.deleteRow(s._row);count++;});
+  // Invalid dates must be removed too: session_ already treats them as
+  // unauthorized, but the old maintenance predicate kept them forever.
+  // Callers hold the script lock. Delete bottom-up to preserve sheet row IDs.
+  findRows_('sessions',function(s){
+    var expires=new Date(s.expires_at).getTime();
+    return !Number.isFinite(expires)||expires<=now;
+  }).sort(function(a,b){return b._row-a._row;})
+    .forEach(function(s){tbl_('sessions').sheet.deleteRow(s._row);count++;});
   return count;
 }
 // Bisa dipakai tanpa saklar keuangan (mis. pilot belajar saja). Tidak terpanggil dari API.
