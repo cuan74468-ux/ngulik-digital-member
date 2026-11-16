@@ -14,8 +14,9 @@
         .getPropertyValue('--green').trim();
       // Must match on desktop, mobile, public/member and ADMIN.
       var bg=getComputedStyle(document.body).getPropertyValue('--bg').trim().toLowerCase();
-      var sharedTheme=bg==='#f2f4f8'&&primaryColor.toLowerCase()==='#0e1320';
-      var themeLinked=!!document.querySelector('link[href*="unified-theme.css"]');
+      var sharedTheme=bg==='#f8faf7'&&primaryColor.toLowerCase()==='#20684e';
+      var themeLinked=!!document.querySelector('link[href*="unified-theme.css"]')&&
+        !!document.querySelector('link[href*="learning-studio.css"]');
       var main=document.getElementById('screen');
       var navRect=nav?nav.getBoundingClientRect():null;
       var floatingNav=window.innerWidth<=760&&visible&&navRect&&
@@ -25,14 +26,17 @@
         window.innerWidth<=760?'.mobile-nav .nav-item[aria-current="page"]':
           '.sidebar .nav-item[aria-current="page"]');
       var inkNav=!!activeNav&&
-        getComputedStyle(activeNav).backgroundColor==='rgb(14, 19, 32)';
+        ['rgb(232, 242, 233)','rgb(234, 243, 234)']
+          .includes(getComputedStyle(activeNav).backgroundColor)&&
+        ['rgb(21, 75, 56)','rgb(32, 104, 78)']
+          .includes(getComputedStyle(activeNav).color);
       var activeSurface=main?main.querySelector('.surface,.metric-card,.member-focus'):null;
       var surfaceReady=!!activeSurface&&
         getComputedStyle(activeSurface).backgroundColor!=='rgba(0, 0, 0, 0)';
       var safeTheme=sharedTheme&&themeLinked;
       var sharedExperience=!!document.querySelector('link[href*="assets/experience.css"]') &&
         document.body.classList.contains('ngd-public-app') &&
-        getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim()==='#4361ee';
+        getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim()==='#20684e';
       // Real browser acceptance for the new mobile menu: all features are
       // browseable, essential explanatory copy must remain visible.
       var headingHelp=main?main.querySelector('.section-head p:not(.eyebrow)'):null;
