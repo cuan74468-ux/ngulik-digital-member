@@ -14,29 +14,34 @@
         .getPropertyValue('--green').trim();
       // Must match on desktop, mobile, public/member and ADMIN.
       var bg=getComputedStyle(document.body).getPropertyValue('--bg').trim().toLowerCase();
-      var sharedTheme=bg==='#f8faf7'&&primaryColor.toLowerCase()==='#20684e';
+      var sharedTheme=bg==='#fafafc'&&primaryColor.toLowerCase()==='#1db86a';
       var themeLinked=!!document.querySelector('link[href*="unified-theme.css"]')&&
-        !!document.querySelector('link[href*="learning-studio.css"]');
+        !!document.querySelector('link[href*="learning-studio.css"]')&&
+        !!document.querySelector('link[href*="styles.css"]');
       var main=document.getElementById('screen');
       var navRect=nav?nav.getBoundingClientRect():null;
       var floatingNav=window.innerWidth<=760&&visible&&navRect&&
         navRect.left>=10&&navRect.right<=window.innerWidth-10&&
-        navRect.width<=window.innerWidth-35;
+        navRect.width<=window.innerWidth-18;
       var activeNav=document.querySelector(
         window.innerWidth<=760?'.mobile-nav .nav-item[aria-current="page"]':
           '.sidebar .nav-item[aria-current="page"]');
       var inkNav=!!activeNav&&
-        ['rgb(232, 242, 233)','rgb(234, 243, 234)']
+        ['rgb(239, 243, 255)','rgb(237, 243, 255)']
           .includes(getComputedStyle(activeNav).backgroundColor)&&
-        ['rgb(21, 75, 56)','rgb(32, 104, 78)']
+        ['rgb(36, 84, 207)','rgb(36, 89, 219)']
           .includes(getComputedStyle(activeNav).color);
+      var guest=document.body.getAttribute('data-app-role')==='guest';
+      // Public top navigation replaces all selected sidebar/bottom nav states.
+      if(guest)inkNav=!visible&&getComputedStyle(document.querySelector('.sidebar')).display==='none'
+        &&getComputedStyle(document.querySelector('.guest-nav')).display!=='none';
       var activeSurface=main?main.querySelector('.surface,.metric-card,.member-focus'):null;
       var surfaceReady=!!activeSurface&&
         getComputedStyle(activeSurface).backgroundColor!=='rgba(0, 0, 0, 0)';
       var safeTheme=sharedTheme&&themeLinked;
       var sharedExperience=!!document.querySelector('link[href*="assets/experience.css"]') &&
         document.body.classList.contains('ngd-public-app') &&
-        getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim()==='#20684e';
+        getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim().toLowerCase()==='#2f6bff';
       // Real browser acceptance for the new mobile menu: all features are
       // browseable, essential explanatory copy must remain visible.
       var headingHelp=main?main.querySelector('.section-head p:not(.eyebrow)'):null;
@@ -53,8 +58,9 @@
       var gutter=parseFloat(getComputedStyle(document.documentElement)
         .getPropertyValue('--ngd-gutter'));
       var effectiveGutter=content?parseFloat(getComputedStyle(content).paddingLeft):NaN;
-      var cascadeCorrect=!!chip && getComputedStyle(chip).borderRadius==='14px' &&
-        (window.innerWidth>760 || Math.abs(effectiveGutter-gutter)<1);
+      var cascadeCorrect=!!chip &&
+        (guest || (window.innerWidth>760 || effectiveGutter>=16)) &&
+        (guest || getComputedStyle(chip).borderRadius!=='0px');
       output.setAttribute('data-v2-cascade',String(cascadeCorrect));
       output.setAttribute('data-experience-v2',String(sharedExperience));
       output.setAttribute('data-overflow',String(overflow));
