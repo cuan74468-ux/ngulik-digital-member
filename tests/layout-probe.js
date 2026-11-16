@@ -42,6 +42,16 @@
       var allMenuCount=main?main.querySelectorAll('.ngd-menu-tile').length:0;
       output.setAttribute('data-guidance-visible',String(guidanceVisible));
       output.setAttribute('data-menu-items',String(allMenuCount));
+      // Effective computed styles, not only presence of a linked stylesheet.
+      // On 375px legacy main-content used 12px, V2 prescribes 16px.
+      var chip=document.getElementById('account-button');
+      var content=document.getElementById('main');
+      var gutter=parseFloat(getComputedStyle(document.documentElement)
+        .getPropertyValue('--ngd-gutter'));
+      var effectiveGutter=content?parseFloat(getComputedStyle(content).paddingLeft):NaN;
+      var cascadeCorrect=!!chip && getComputedStyle(chip).borderRadius==='14px' &&
+        (window.innerWidth>760 || Math.abs(effectiveGutter-gutter)<1);
+      output.setAttribute('data-v2-cascade',String(cascadeCorrect));
       output.setAttribute('data-experience-v2',String(sharedExperience));
       output.setAttribute('data-overflow',String(overflow));
       output.setAttribute('data-member-theme',String(memberTheme));

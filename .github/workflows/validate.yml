@@ -72,12 +72,14 @@ jobs:
           grep -q 'data-overflow="false"' /tmp/ngd-member.html
           grep -q 'data-floating-nav="true"' /tmp/ngd-member.html
           grep -q 'data-mobile-nav="true"' /tmp/ngd-member.html
+          grep -q 'data-v2-cascade="true"' /tmp/ngd-member.html
           # Verify all member/admin routes remain discoverable via the fifth mobile tab.
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#menu" > /tmp/ngd-member-menu.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-menu-items="8"' /tmp/ngd-member-menu.html
           grep -q 'data-guidance-visible="true"' /tmp/ngd-member-menu.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-menu.html
+          grep -q 'data-v2-cascade="true"' /tmp/ngd-member-menu.html
           grep -q 'data-route="affiliate"' /tmp/ngd-member-menu.html
           grep -q 'data-route="dukungan"' /tmp/ngd-member-menu.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \

@@ -34,3 +34,7 @@ Form admin STAGING diprioritaskan pada mobile: navigasi yang masih terkunci dan 
 ## Cache dan pengujian visual navigasi pada versi 2
 
 CSS publik, CSS operations dan JavaScript SPA memperoleh query version baru agar ponsel yang pernah membuka situs tidak terus memakai kode lama dari cache. Unit test dan browser Chrome menjalankan rute #menu pada 390 px, menguji 8 tautan member, 12 modul admin, visibilitas teks bantuan di heading serta bebas overflow horizontal. Browser juga menguji penyembunyian panel dekorasi dan nav terkunci pada halaman STAGING sebelum login, tanpa mematikan navigasi setelah autentikasi.
+
+## Koreksi cascade CSS (P0 visual)
+
+Gaya lama menggunakan selector `body:not(#ngd)` yang mengandung spesifisitas ID. Lapis V2 sebelumnya menggunakan `body.ngd-public-app` dengan spesifisitas class, sehingga sebagian aturan baru **tidak mengalahkan** aturan lama meskipun file V2 dimuat belakangan. Perbaikan mengganti seluruh selector publik V2 menjadi `body.ngd-public-app:not(#ngd)` untuk mengungguli aturan lama tanpa `!important`. Kelas `ngd-ops-app` tidak memerlukan perubahan karena CSS admin lama tidak memakai ID specificity itu. Browser Chrome mengukur radius tombol akun aktual 14 px dan padding utama sesuai gutter mobile; tes juga memeriksa selector baru agar tidak diregresi.

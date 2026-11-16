@@ -26,7 +26,7 @@ test('semantic colors fonts radius and mobile spacing are shared',()=>{
   assert.ok(css.includes('body.ngd-public-app'));
   assert.ok(css.includes('body.ngd-ops-app'));
   assert.match(css,/body\.ngd-ops-app\s*\{[\s\S]*?--accent:var\(--ngd-blue\)/);
-  assert.match(css,/body\.ngd-public-app\s*\{[\s\S]*?--brand-blue:var\(--ngd-blue\)/);
+  assert.match(css,/body\.ngd-public-app:not\(#ngd\)\s*\{[\s\S]*?--brand-blue:var\(--ngd-blue\)/);
 });
 test('presentation-only change cannot bypass server release flags',()=>{
   assert.doesNotMatch(css,/@import|@font-face|url\(\s*['"]?https?:|<script|UrlFetchApp|apiUrl|FONNTE_API_TOKEN/i);
@@ -44,7 +44,7 @@ test('all major screen families share mobile responsive behavior and focus style
     '.data-panel','.table-wrap','.nav-link']){
     assert.ok(css.includes(selector),selector);
   }
-  assert.match(css,/body\.ngd-public-app\s+:where\(button,a,input,select,textarea\):focus-visible/);
+  assert.match(css,/body\.ngd-public-app:not\(#ngd\)\s+:where\(button,a,input,select,textarea\):focus-visible/);
   assert.match(css,/body\.ngd-ops-app\s+:where\(button,a,input,select,textarea\):focus-visible/);
   for(const bp of ['@media(max-width:760px)','@media(max-width:420px)',
     '@media(min-width:761px)','prefers-reduced-motion:reduce'])assert.ok(css.includes(bp),bp);
@@ -63,4 +63,12 @@ test('mobile retains essential help text and exposes all routes',()=>{
  assert.ok(css.includes('.ngd-menu-tile'));
  assert.ok(css.includes('body.ngd-ops-app .nav.is-locked{display:none}'));
  assert.ok(css.includes('body.ngd-ops-app .access-aside{display:none}'));
+});
+
+test('V2 public selectors outrank earlier body:not(#ngd) legacy rules',()=>{
+  assert.ok(css.includes('body.ngd-public-app:not(#ngd) .main-content'));
+  assert.ok(css.includes('body.ngd-public-app:not(#ngd) .account-chip'));
+  assert.ok(css.includes('body.ngd-public-app:not(#ngd) .catalog-grid'));
+  assert.ok(css.includes('body.ngd-public-app:not(#ngd) .nav-link')===false);
+  assert.doesNotMatch(css,/body\.ngd-public-app(?!:not\(#ngd\))/);
 });
