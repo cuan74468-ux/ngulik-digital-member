@@ -532,7 +532,7 @@ function viewAI(){
     '<div class="ai-wallet-mini"><small>SALDO TOKEN</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
     '<button type="button" data-catalog-go="ai">+ Isi Token</button></div></div>'+
     '<ol class="ai-wizard-progress" aria-label="Tahapan penggunaan alat AI">'+
-    '<li class="is-current">01 · Pilih Alat</li><li>02 · Isi Brief</li><li>03 · Gunakan Hasil</li></ol>'+
+    '<li class="is-complete">01 · Pilih Alat</li><li class="is-current">02 · Isi Brief</li><li>03 · Gunakan Hasil</li></ol>'+
     (tools.length?'<div class="ai-wizard-layout"><section class="ai-tool-selector" aria-label="Pilih alat AI">'+
       '<h2>Pilih alat</h2><p>Alat tersedia sesuai katalog yang diaktifkan.</p>'+
       tools.map(function(t){return '<button type="button" class="ai-tool-option'+(selected?.tool_id===t.tool_id?' is-current':'')+
@@ -556,6 +556,16 @@ function viewAI(){
       empty('Belum ada alat AI aktif','Daftar alat akan tersedia setelah Admin mengaktifkannya.'))+
     '</section>';
 }
+function aiWizardStep_(form,step){
+  const root=form.closest?.('.ai-studio');
+  if(!root)return;
+  const steps=root.querySelectorAll?.('.ai-wizard-progress li')||[];
+  steps.forEach((item,index)=>{
+    const number=index+1;
+    item.classList.toggle('is-current',number===step);
+    item.classList.toggle('is-complete',number<step);
+  });
+}
 async function submitAITool(form){
   const btn=form.querySelector('[type=submit]'),box=form.querySelector('.ai-result'),area=form.querySelector('textarea');
   const detail=area.value.trim();
@@ -565,6 +575,7 @@ async function submitAITool(form){
   if(input.length>1500)return toast('Brief terlalu panjang. Batasi total 1.500 karakter.',true);
   const cost=Number(form.dataset.cost)||0,saldo=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
   if(saldo<cost)return toast('Kredit tidak cukup. Silakan top-up kredit di Katalog.',true);
+  aiWizardStep_(form,3);
   btn.disabled=true;area.disabled=true;box.hidden=false;box.className='ai-result is-loading';box.textContent='AI sedang menyusun hasil…';
   const signature=JSON.stringify([form.dataset.toolId,input]);
   if(state.aiPending?.signature!==signature)
@@ -582,6 +593,7 @@ async function submitAITool(form){
   }catch(e){
     if(!['NETWORK_ERROR','INTERNAL','RECONCILIATION_REQUIRED'].includes(e.code))
       state.aiPending=null;
+    aiWizardStep_(form,2);
     box.className='ai-result is-error';box.textContent=e.message||'AI gagal. Coba lagi.';
     if(e.code==='AI_FAILED')toast('Kredit Anda sudah dikembalikan.');
     try{const d=await api('getBeranda',{},state.token);state.home=d;const bal=document.getElementById('ai-balance');if(bal)bal.textContent=(d.saldo_kredit??0)+' kredit';}catch{}
