@@ -54,7 +54,7 @@ test('29 STAGING tables pass with no provider accounts, writes or network',()=>{
   const x=boot(),result=x.context.ngdInfrastructurePreflightReadOnly();
   assert.equal(result.tables_checked,29);
   assert.equal(result.schema_ready,true);
-  assert.equal(result.external_providers,'DEFERRED');
+  assert.equal(result.external_providers,'FLAG_OFF');
   assert.equal(x.calls.read,29);
   assert.equal(x.calls.write,0);assert.equal(x.calls.network,0);
   assert.match(x.logs.join('\n'),/NGD_INFRASTRUCTURE_PREFLIGHT_OK/);
@@ -87,19 +87,46 @@ test('missing DB ID fails before opening any spreadsheet',()=>{
   assert.throws(()=>x.context.ngdInfrastructurePreflightReadOnly(),/INFRA_DB_ID_MISSING/);
   assert.equal(x.calls.open,0);
 });
-test('feature mutations, recovery and schema upgrades are forbidden',()=>{
-  for(const name of ['NGD_MUTATIONS_ENABLED','NGD_REGISTRATION_ENABLED',
-    'NGD_OTP_REGISTRATION_ENABLED','NGD_FINANCE_ENABLED','NGD_LMS_ENABLED',
-    'NGD_SCHEMA_UPGRADE_ENABLED','NGD_ADMIN_RECOVERY_ENABLED','NGD_EXTERNAL_PROVIDERS_ENABLED']){
+test('owner-activated STAGING release flags do not cause preflight mutations or network',()=>{
+  const x=boot({props:{
+    NGD_MUTATIONS_ENABLED:'true',NGD_REGISTRATION_ENABLED:'true',
+    NGD_OTP_REGISTRATION_ENABLED:'true',NGD_FINANCE_ENABLED:'true',
+    NGD_CATALOG_ENABLED:'true',NGD_CONTENT_ENABLED:'true',
+    NGD_SERVICE_ENABLED:'true',NGD_SUPPORT_ENABLED:'true',
+    NGD_NOTIFICATIONS_ENABLED:'true',NGD_LMS_ENABLED:'true',
+    NGD_EXTERNAL_PROVIDERS_ENABLED:'true'
+  }});
+  const report=x.context.ngdInfrastructurePreflightReadOnly();
+  assert.equal(report.tables_checked,29);
+  assert.equal(report.feature_writes_enabled,true);
+  assert.equal(report.registration_enabled,true);
+  assert.equal(report.otp_enabled,true);
+  assert.equal(report.finance_enabled,true);
+  assert.equal(report.external_providers,'FLAG_ON');
+  assert.equal(report.mutation_performed,false);
+  assert.equal(x.calls.read,29);
+  assert.equal(x.calls.write,0);
+  assert.equal(x.calls.network,0);
+  assert.match(x.logs.join('\n'),/preflight_writes=false/);
+  assert.equal(x.logs.join('').includes(DB),false);
+});
+test('recovery and legacy schema upgrade remain disarmed for routine checks',()=>{
+  for(const name of ['NGD_SCHEMA_UPGRADE_ENABLED','NGD_ADMIN_RECOVERY_ENABLED']){
     const x=boot({props:{[name]:'true'}});
     assert.throws(()=>x.context.ngdInfrastructurePreflightReadOnly(),
-      new RegExp('INFRA_FLAG_NOT_DISABLED: '+name));
+      new RegExp('INFRA_DANGEROUS_FLAG_ENABLED: '+name));
     assert.equal(x.calls.open,0);
   }
 });
+test('enabled OTP requires STAGING database attestation before Sheets read',()=>{
+  const x=boot({props:{NGD_OTP_REGISTRATION_ENABLED:'true',NGD_OTP_STAGING_DB_ID:''}});
+  assert.throws(()=>x.context.ngdInfrastructurePreflightReadOnly(),
+    /INFRA_OTP_DB_ATTESTATION_REQUIRED/);
+  assert.equal(x.calls.open,0);
+});
 test('mis-typed release flag is not silently treated as safe',()=>{
   const x=boot({props:{NGD_FINANCE_ENABLED:'TRUE'}});
-  assert.throws(()=>x.context.ngdInfrastructurePreflightReadOnly(),/INFRA_FLAG_NOT_DISABLED/);
+  assert.throws(()=>x.context.ngdInfrastructurePreflightReadOnly(),/INFRA_FLAG_INVALID/);
 });
 test('missing OTP notification table fails without modifying anything',()=>{
   const x=boot({missing:'wa_notifications'});
