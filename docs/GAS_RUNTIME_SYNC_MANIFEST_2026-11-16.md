@@ -19,3 +19,7 @@
 
 ## Prioritas source-only berikut
 Tutup risiko starter grant/OTP failure recovery, audit idempotensi, serta prosedur bantuan operator; baru kemudian uji sinkronisasi STAGING. **Tahap 1 tetap PROSES/NO-GO.**
+
+## Update manifest source — 16 November 2026
+
+Daftar 15 modul dan Git blob SHA telah disegarkan terhadap snapshot source GitHub `67470ffd05b9aff9f7f52d1b320b59a072286d93` (sesudah hardening PIN V2 opt-in, sebelum commit dokumentasi ini). `tests/source-manifest.test.cjs` memverifikasi SHA1 blob Git terhadap bytes `apps-script/*.gs`; perubahan modul GAS berikutnya **harus** memperbarui manifest agar CI lulus. Kesesuaian sumber GitHub dengan isi file GAS editor aktif tetap **belum teruji**; jangan menyimpulkan 15 modul sudah terpasang.

@@ -3,6 +3,8 @@
 
 
 
+- [Audit dokumen dan penerapan lintas sumber 16 Nov](docs/AUDIT_DOKUMEN_DAN_IMPLEMENTASI_2026-11-16.md). Kontrak keputusan [non-eksekutabel](contracts/owner-decisions-stage1.json), PIN v2 opt-in OFF, dan manifest 15 modul harus dipatuhi sebelum sinkronisasi GAS.
+
 ## Status kerja terbaru — 16 November 2026 (baca sebelum tugas baru)
 
 - [Checkpoint pembangunan 16 November](docs/CHECKPOINT_2026-11-16_RESUME_BUILD_STAGE1.md) menggantikan checkpoint 15 November sebagai **titik lanjut teknis**, bukan mandat bisnis baru.

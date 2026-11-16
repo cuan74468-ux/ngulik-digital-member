@@ -4,7 +4,7 @@
   "purpose": "Source-to-runtime manifest; NOT an assertion that GAS source has been synchronized.",
   "repository": "cuan74468-ux/ngulik-digital-member",
   "source_snapshot_branch": "main",
-  "source_snapshot_commit": "a4e20065ab9f385c2a90a3c41e5d3492fb893c71",
+  "source_snapshot_commit": "67470ffd05b9aff9f7f52d1b320b59a072286d93",
   "source_content_hash_kind": "Git blob SHA1; not an Apps Script editor fingerprint",
   "environment": "STAGING",
   "verified_editor_functions": [
@@ -25,8 +25,8 @@
   "modules": [
     {
       "file": "AdminAccess.gs",
-      "github_blob_sha": "ee2ffdf2e9632d703092c4f97cbc4ec9e2915f4d",
-      "bytes": 13829,
+      "github_blob_sha": "414a4334db32eff9a1e8354c3c2c1420b42d7518",
+      "bytes": 13846,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
@@ -37,8 +37,8 @@
     },
     {
       "file": "Code.gs",
-      "github_blob_sha": "e6c9f6d7bab0f48bd3f0d0e4f33da23d417ad8ba",
-      "bytes": 105079,
+      "github_blob_sha": "8bda5316d25cad5100f5f0c70a04952abb22bdcd",
+      "bytes": 107139,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {

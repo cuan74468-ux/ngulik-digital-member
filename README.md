@@ -50,6 +50,8 @@ Kode akses, token sesi, PIN, dan API key tidak disimpan di repositori atau disem
 Untuk konteks paling mutakhir baca [Audit Terpadu Tahap 1](docs/AUDIT_TERPADU_TAHAP_1_2026-11-15.md) dan [Aturan Kerja Agen](AGENTS.md). Dokumen Master Index dan Mandat Produksi di Google Drive tetap merupakan otoritas kebijakan. Dokumen checkpoint bertanggal lebih lama adalah rekam historis, bukan persetujuan untuk menjalankan tahap selanjutnya.
 
 
+- [Audit dokumen + implementasi terkini](docs/AUDIT_DOKUMEN_DAN_IMPLEMENTASI_2026-11-16.md)
+
 ## Titik lanjut pembangunan — 16 November 2026
 
 UI/UX Mobile-first V2 telah mencapai baseline yang cukup untuk meneruskan pembangunan sistem; ini bukan sign-off perangkat Android fisik. Tahap aktif kembali pada **Tahap 1: keamanan autentikasi/OTP, PIN, sesi, dan integritas registrasi**.
