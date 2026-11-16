@@ -47,7 +47,7 @@ test('inbox is fail-closed and does not read a table when feature flag is OFF',(
   assert.equal(x.writes,0);
 });
 test('member only sees their own notifications, without internal IDs or request keys',()=>{
-  const x=fixture({NGD_NOTIFICATIONS_ENABLED:'true'});
+  const x=fixture({NGD_MUTATIONS_ENABLED:'true'});
   const result=x.ctx.notificationInbox_({member_id:'M1'});
   assert.equal(result.enabled,true);
   assert.equal(result.unread,1);
@@ -58,7 +58,7 @@ test('member only sees their own notifications, without internal IDs or request 
   assert.equal(JSON.stringify(result).includes('Rahasia milik M2'),false);
 });
 test('mark-read rejects foreign notifications and accepts idempotent replay',()=>{
-  const x=fixture({NGD_NOTIFICATIONS_ENABLED:'true'});
+  const x=fixture({NGD_MUTATIONS_ENABLED:'true'});
   const m={member_id:'M1'};
   assert.throws(()=>x.ctx.notificationMarkRead_(m,{notification_id:'NTF-BBBBBBBBBBBB'}),/Notifikasi tidak ditemukan/);
   const own={notification_id:'NTF-AAAAAAAAAAAA'};
@@ -67,13 +67,13 @@ test('mark-read rejects foreign notifications and accepts idempotent replay',()=
   assert.equal(x.rows.notifications[0].status,'READ');
   assert.equal(x.writes,1);
 });
-test('support materializer is disabled without both server-side switches',()=>{
-  const x=fixture({NGD_NOTIFICATIONS_ENABLED:'true'});
+test('support materializer is disabled without the master mutation switch',()=>{
+  const x=fixture();
   assert.throws(()=>x.ctx.buildSupportNotifications(),/Sistem masih dalam pengujian/);
   assert.equal(x.writes,0);
 });
 test('materializer is idempotent, ignores member replies, and stores no private reply text',()=>{
-  const x=fixture({NGD_NOTIFICATIONS_ENABLED:'true',NGD_MUTATIONS_ENABLED:'true'});
+  const x=fixture({NGD_MUTATIONS_ENABLED:'true'});
   const first=x.ctx.buildSupportNotifications();
   assert.equal(first.created,1);
   assert.equal(x.rows.notifications.length,3);
@@ -84,10 +84,10 @@ test('materializer is idempotent, ignores member replies, and stores no private 
   assert.equal(second.created,0);
   assert.equal(x.writes,1);
 });
-test('backend schema and routing require a separate opt-in feature gate',()=>{
+test('backend schema and routing rely on the master mutation gate',()=>{
   assert.match(core,/notifications: 'notification_id,member_id/);
   assert.match(core,/case 'getMyNotifications':return notificationInbox_/);
   assert.match(core,/case 'markNotificationRead':return notificationMarkRead_/);
-  assert.match(core,/NGD_NOTIFICATIONS_ENABLED/);
+  assert.match(core,/function requireMutationsEnabled_/);
   assert.doesNotMatch(notifications,/\bMailApp\b|\bUrlFetchApp\b|\bGmailApp\b/);
 });
