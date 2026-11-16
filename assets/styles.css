@@ -800,3 +800,10 @@ body.ngd-public-app:not(#ngd) .wallet-hero .wallet-value strong{font-variant-num
 .checkout-qr img{width:min(260px,100%);height:auto;aspect-ratio:1;object-fit:contain}
 .verification-count{font-weight:700;margin:18px 0}.verification-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .checkout-dialog .btn-wide{margin-top:10px}
+
+/* Unavailable QRIS asset must remain clearly non-payable and usable on mobile. */
+.qris-fallback{padding:22px 18px;border:1px dashed #b6c2cf;border-radius:16px;background:#f7f9fc;max-width:340px;margin:auto;color:#293a50;text-align:center}
+.qris-fallback strong{display:block;font-weight:700;margin-bottom:8px}
+.qris-fallback p{font-size:14px;line-height:1.55;margin:0}
+.checkout-qr img[hidden],.qris-fallback[hidden]{display:none!important}
+.checkout-qr .checkout-note{max-width:340px;line-height:1.6}
