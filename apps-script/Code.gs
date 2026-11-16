@@ -242,12 +242,26 @@ function issueSession_(member) {
   return token;
 }
 function session_(token) {
-  if (!/^[A-Fa-f0-9]{64}$/.test(String(token || ''))) throw new Error('Sesi tidak valid.');
-  var hash = sha256_(token);
-  var rows = findRows_('sessions', function(r) { return r.token_hash === hash; });
-  if (!rows.length || new Date(rows[0].expires_at).getTime() <= Date.now()) throw new Error('Sesi berakhir. Masuk kembali.');
-  var members = findRows_('members', function(r) { return r.member_id === rows[0].member_id; });
-  if (!members.length || members[0].status !== 'AKTIF') throw new Error('Akun tidak aktif.');
+  if (!/^[A-Fa-f0-9]{64}$/.test(String(token || '')))
+    throw new Error('Sesi tidak valid.');
+  var hash=sha256_(token);
+  var rows=findRows_('sessions',function(r){return r.token_hash===hash;});
+  // Missing or duplicate session hashes are ambiguous. Never authorize
+  // the first row simply because a malformed second row was ignored.
+  if(rows.length!==1)throw new Error('Sesi berakhir. Masuk kembali.');
+  var expires=new Date(rows[0].expires_at).getTime();
+  // NaN <= Date.now() is false: an invalid/empty date used to create an
+  // unintended non-expiring session. Reject it explicitly.
+  if(!Number.isFinite(expires)||expires<=Date.now())
+    throw new Error('Sesi berakhir. Masuk kembali.');
+  var members=findRows_('members',function(r){
+    return r.member_id===rows[0].member_id;
+  });
+  // The role is bound to the issued session. A changed role (particularly
+  // promotion to ADMIN) requires reauthentication with a fresh session.
+  if(members.length!==1||members[0].status!=='AKTIF'||
+      !rows[0].role||String(rows[0].role)!==String(members[0].role))
+    throw new Error('Akun tidak aktif.');
   return members[0];
 }
 function requireAdmin_(token) {

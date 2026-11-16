@@ -79,3 +79,12 @@ Audit lintas sumber atas `RegistrationRecoveryPreflight.gs` menunjukkan verifika
 - **Source inventory:** 15 file `.gs` ada dalam repository. Manifest blob SHA tersedia di `contracts/gas-runtime-source-manifest-2026-11-16.json` dan [runbook](GAS_RUNTIME_SYNC_MANIFEST_2026-11-16.md). Tidak ada bukti seluruh modul GAS di editor sama dengan GitHub; hanya dua fungsi preflight lama yang sudah pernah dijalankan oleh owner.
 - **Regression terbaru:** [405/405 sukses](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43787152837) pada source commit `a4e20065ab9f385c2a90a3c41e5d3492fb893c71`. Workflow GitHub Pages sempat menerima HTTP 502 (server GitHub, bukan build), lalu **rerun deploy sukses** pada [run 43787152151](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43787152151).
 - Yang tersisa: auth/GAS runtime diff, rekonsiliasi kredit yang bisa diaudit, uji session end-to-end serta recovery aplikasi penuh. Semua sakelar provider, registration, finance tetap OFF.
+
+## 16 November — validasi sesi gagal-tertutup (source-only)
+
+Audit `session_` menemukan kondisi kode lama yang keliru: `new Date(expires_at).getTime() <= Date.now()` bernilai **false** untuk tanggal rusak (NaN), sehingga sesi yang tidak memiliki expiry valid berpotensi diterima; `findRows_[0]` juga menerima hash sesi duplikat; dan perubahan peran anggota tidak dibandingkan dengan peran pada sesi yang diterbitkan. `Code.gs` diperkuat agar:
+- jumlah baris untuk hash token **tepat satu**;
+- `expires_at` harus menjadi timestamp valid dan belum kedaluwarsa;
+- identitas member harus unik, status `AKTIF`, dan `role` pada sesi sama dengan peran akun saat ini;
+- jika tidak memenuhi syarat, akses ditolak dan pengguna diminta login ulang, tanpa membocorkan token.
+Pengujian regresi sintetis ditambahkan untuk expiry kosong/rusak, hash duplikat, perubahan peran, dan ID anggota ganda. Ini hanya pengamanan **source GitHub** dan belum mengubah atau mencabut sesi apa pun pada Apps Script/database aktif. Sebelum menyalin `Code.gs` ke editor, wajib backup/diff, review kompatibilitas sesi lama, dan uji STAGING.

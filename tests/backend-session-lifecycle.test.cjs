@@ -81,6 +81,9 @@ test('logout retry is idempotent; unrelated admin session persists',()=>{
 });
 test('session lookup rejects revoked token, expired token and suspended member',()=>{
   const h=fixture();
+  // Remove the deliberately duplicated hash from the fixture: unique
+  // session IDs are now a hard requirement before authorization.
+  h.sessions.splice(2,1);
   assert.equal(h.ctx.session_(h.valid).member_id,'M-01');
   h.ctx.authLogout_(h.valid);
   assert.throws(()=>h.ctx.session_(h.valid),/berakhir/);
@@ -112,4 +115,43 @@ test('incorrect old PIN does not update member or revoke sessions',()=>{
   assert.equal(h.updates.length,0);
   assert.equal(h.deletions.length,0);
   assert.equal(h.sessions.length,3);
+});
+
+test('duplicate token hash fails closed and does not return the first session',()=>{
+  const h=fixture();
+  assert.throws(()=>h.ctx.session_(h.valid),/Sesi berakhir/);
+  assert.equal(h.sessions.length,3);
+  assert.equal(h.locks(),0);
+});
+test('session with missing or malformed expiry cannot remain active indefinitely',()=>{
+  const h=fixture();
+  h.sessions[1].expires_at='';
+  assert.throws(()=>h.ctx.session_(h.other),/Sesi berakhir/);
+  h.sessions[1].expires_at='not-a-date';
+  assert.throws(()=>h.ctx.session_(h.other),/Sesi berakhir/);
+  h.sessions[1].expires_at=null;
+  assert.throws(()=>h.ctx.session_(h.other),/Sesi berakhir/);
+});
+test('existing sessions cannot silently inherit an ADMIN role after role change',()=>{
+  const h=fixture();
+  h.sessions.splice(2,1);
+  h.member.role='ADMIN';
+  assert.throws(()=>h.ctx.session_(h.valid),/Akun tidak aktif/);
+  assert.equal(h.sessions.length,2);
+});
+test('a role mismatch or missing session role invalidates the token',()=>{
+  const h=fixture();
+  h.sessions[1].role='MEMBER';
+  assert.throws(()=>h.ctx.session_(h.other),/Akun tidak aktif/);
+  h.sessions[1].role='';
+  assert.throws(()=>h.ctx.session_(h.other),/Akun tidak aktif/);
+});
+test('duplicate member identifiers invalidate a valid-looking session',()=>{
+  const h=fixture();
+  const native=h.ctx.findRows_;
+  h.ctx.findRows_=(name,predicate)=>{
+    const result=native(name,predicate);
+    return name==='members'&&result.length?[...result,result[0]]:result;
+  };
+  assert.throws(()=>h.ctx.session_(h.other),/Akun tidak aktif/);
 });
