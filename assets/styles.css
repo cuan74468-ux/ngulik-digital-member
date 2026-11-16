@@ -442,7 +442,7 @@ body.ngd-public-app:not(#ngd) .ai-wallet-mini button{
 body.ngd-public-app:not(#ngd) .ai-wizard-progress{
  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
 }
-body.ngd-public-app:not(#ngd) .ai-wizard-progress span{
+body.ngd-public-app:not(#ngd) .ai-wizard-progress li{
  border-top:3px solid #E5E9F1;padding-top:10px;
  color:#868B9B;font-size:.77rem;font-weight:720;
 }
@@ -740,7 +740,7 @@ body.ngd-public-app:not(#ngd) .learning-lesson-body{
  body.ngd-public-app:not(#ngd) .ai-studio-head{align-items:start;flex-direction:column;gap:17px}
  body.ngd-public-app:not(#ngd) .ai-wallet-mini{width:100%;grid-template-columns:1fr auto;align-items:center}
  body.ngd-public-app:not(#ngd) .ai-wallet-mini small{grid-column:1/-1}
- body.ngd-public-app:not(#ngd) .ai-wizard-progress span{font-size:.66rem}
+ body.ngd-public-app:not(#ngd) .ai-wizard-progress li{font-size:.66rem}
  body.ngd-public-app:not(#ngd) .ai-tool-selector{grid-template-columns:1fr}
  body.ngd-public-app:not(#ngd) .ai-wizard-layout{gap:14px}
  body.ngd-public-app:not(#ngd) .affiliate-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -765,4 +765,31 @@ body.ngd-public-app:not(#ngd) .learning-lesson-body{
  body.ngd-public-app:not(#ngd) :is(*,::before,::after){
   animation-duration:0s!important;transition-duration:0s!important;
  }
+}
+
+
+/* Ngulik Digital: commercial tools storefront and semantic three-step wizard. */
+body.ngd-public-app:not(#ngd) .ai-wizard-progress{
+  margin:0;padding:0;list-style:none;align-items:stretch;
+}
+body.ngd-public-app:not(#ngd) .ai-wizard-progress li{
+  min-width:0;line-height:1.5;list-style:none;
+}
+body.ngd-public-app:not(#ngd) .ai-wizard-progress li.is-complete{
+  color:#12824B;border-top-color:#1DB86A;
+}
+body.ngd-public-app:not(#ngd) .ai-wizard-progress li.is-current{
+  color:#2F6BFF;border-top-color:#2F6BFF;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .sidebar{display:none!important}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .app-shell{
+  grid-template-columns:minmax(0,1fr);
+}
+body.ngd-public-app:not(#ngd) .wallet-hero{
+  background:#15161C;color:#FFFFFF;
+}
+body.ngd-public-app:not(#ngd) .wallet-hero .wallet-value strong{font-variant-numeric:tabular-nums}
+@media(max-width:560px){
+  body.ngd-public-app:not(#ngd) .ai-wizard-progress{gap:7px}
+  body.ngd-public-app:not(#ngd) .ai-wizard-progress li{font-size:.69rem}
 }
