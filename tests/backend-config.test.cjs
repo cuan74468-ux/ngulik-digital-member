@@ -59,7 +59,7 @@ test('server-side runtime assessment is read-only and never exposes database ID 
   }});
   const status=vm.runInContext('adminRuntimeStatus_()',h.ctx);
   assert.equal(status.schema.expected,29);
-  assert.equal(status.schema.ready,25);
+  assert.equal(status.schema.ready,27);
   assert.deepEqual(Array.from(status.schema.missing),['service_requests']);
   assert.deepEqual(Array.from(status.schema.mismatched),['notifications']);
   assert.equal(status.checks_read_only,true);
