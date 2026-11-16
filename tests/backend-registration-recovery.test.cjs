@@ -93,6 +93,7 @@ test('zero-credit policy never infers missing grants',()=>{
 test('missing credit policy blocks OK but never guesses default values',()=>{
   const h=fixture({pengaturan_sistem:[]});
   const r=h.run();assert.equal(r.ready,false);
+  assert.equal(r.review_required,true);
   assert.equal(r.starter_policy_configured,false);
   assert.equal(h.metrics.writes,0);
 });

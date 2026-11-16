@@ -113,7 +113,7 @@ function ngdRegistrationRecoveryEvaluate_(tables) {
   },0);
   return {
     ready:count===0&&creditPolicyKnown,
-    review_required:count!==0,
+    review_required:count!==0||!creditPolicyKnown,
     issue_counts:issues,
     starter_policy_configured:creditPolicyKnown,
     // Counts only, never print or expose IDs, OTP status row references or WA.
