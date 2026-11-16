@@ -125,6 +125,7 @@ jobs:
           grep -q 'id="member-search-form"' /tmp/ngd-support-admin.html
           grep -q 'Buka Member 360°' /tmp/ngd-support-admin.html
           grep -q 'data-overflow="false"' /tmp/ngd-support-admin.html
+          echo 'SUPPORT_ADMIN_BROWSER_OK'
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#belajar" > /tmp/ngd-lms-member.html 2>>/tmp/ngd-chrome.log
           grep -q 'Kelas dan perjalanan belajar' /tmp/ngd-lms-member.html
@@ -148,6 +149,7 @@ jobs:
           grep -q 'data-member-theme="true"' /tmp/ngd-lms-member.html
           grep -q 'data-unified-theme="true"' /tmp/ngd-lms-member.html
           grep -q 'data-unified-theme="true"' /tmp/ngd-lms-reader.html
+          echo 'LMS_BROWSER_QA_OK'
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#lms-complete" > /tmp/ngd-lms-success.html 2>>/tmp/ngd-chrome.log
           grep -q 'Pelajaran selesai!' /tmp/ngd-lms-success.html
@@ -172,6 +174,7 @@ jobs:
           grep -q 'Pusat notifikasi member' /tmp/ngd-member-account.html
           grep -q 'Simpan perubahan' /tmp/ngd-member-account.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-account.html
+          echo 'ACCOUNT_BROWSER_QA_OK'
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#akun" > /tmp/ngd-admin-account.html 2>>/tmp/ngd-chrome.log
           if grep -q 'id="profile-form"' /tmp/ngd-admin-account.html; then
@@ -189,6 +192,7 @@ jobs:
           grep -q 'data-unified-theme="true"' /tmp/ngd-admin-desktop.html
           grep -q 'data-ink-navigation="true"' /tmp/ngd-admin-desktop.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-desktop.html
+          echo 'DESKTOP_BROWSER_QA_OK'
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/#beranda" > /tmp/ngd-guest-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-unified-theme="true"' /tmp/ngd-guest-mobile.html
@@ -234,6 +238,7 @@ jobs:
           grep -q 'Permintaan jasa dan penawaran' /tmp/ngd-admin-services.html
           grep -q 'Antrean kosong' /tmp/ngd-admin-services.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-services.html
+          echo 'SERVICE_BROWSER_QA_OK'
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/#layanan" > /tmp/ngd-guest-services.html 2>>/tmp/ngd-chrome.log
           if grep -q 'id="service-quote-form"' /tmp/ngd-guest-services.html; then
