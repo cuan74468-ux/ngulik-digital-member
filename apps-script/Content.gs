@@ -1,7 +1,7 @@
 /**
  * Ngulik Digital — editorial content for GitHub Pages, backed by Google Sheets.
  * Public reads expose published assets only. All mutations require an ADMIN
- * session, NGD_MUTATIONS_ENABLED and NGD_CONTENT_ENABLED. No binary uploads.
+ * session and NGD_MUTATIONS_ENABLED. No binary uploads.
  * Image paths may use assets/, external HTTPS, or small raster data URIs.
  */
 var NGD_CONTENT_KINDS_=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO'];
