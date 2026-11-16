@@ -2065,7 +2065,7 @@ body.ngd-public-app[data-app-role=member]:not(#ngd) .wallet-hero .wallet-command
 }
 body.ngd-public-app[data-app-role=member]:not(#ngd) .sidebar .nav-item[aria-current=page],
 body.ngd-public-app[data-app-role=member]:not(#ngd) .mobile-nav .nav-item[aria-current=page]{
-  color:#2F6BFF;background:#ECF2FF;
+  color:#2454CF;background:#EFF3FF;
 }
 body.ngd-public-app[data-app-role=member]:not(#ngd) .ai-wizard-progress{
   padding:0;margin:0;list-style:none;
