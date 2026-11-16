@@ -12,8 +12,8 @@ const css=read('assets/experience.css');
 test('public and operations HTML load the same mobile-first stylesheet after legacy CSS',()=>{
   assert.match(publicHTML,/<body class="ngd-public-app">/);
   assert.match(opsHTML,/<body class="ngd-ops-app">/);
-  assert.match(publicHTML,/href="\.\/assets\/experience\.css\?v=20261116-v2"/);
-  assert.match(opsHTML,/href="\.\.\/assets\/experience\.css\?v=20261116-v2"/);
+  assert.match(publicHTML,/href="\.\/assets\/experience\.css\?v=20261116-v3"/);
+  assert.match(opsHTML,/href="\.\.\/assets\/experience\.css\?v=20261116-v3"/);
   assert.ok(publicHTML.indexOf('unified-theme.css')<publicHTML.indexOf('experience.css'));
   assert.ok(opsHTML.indexOf('admin.css')<opsHTML.indexOf('experience.css'));
 });

@@ -38,3 +38,7 @@ CSS publik, CSS operations dan JavaScript SPA memperoleh query version baru agar
 ## Koreksi cascade CSS (P0 visual)
 
 Gaya lama menggunakan selector `body:not(#ngd)` yang mengandung spesifisitas ID. Lapis V2 sebelumnya menggunakan `body.ngd-public-app` dengan spesifisitas class, sehingga sebagian aturan baru **tidak mengalahkan** aturan lama meskipun file V2 dimuat belakangan. Perbaikan mengganti seluruh selector publik V2 menjadi `body.ngd-public-app:not(#ngd)` untuk mengungguli aturan lama tanpa `!important`. Kelas `ngd-ops-app` tidak memerlukan perubahan karena CSS admin lama tidak memakai ID specificity itu. Browser Chrome mengukur radius tombol akun aktual 14 px dan padding utama sesuai gutter mobile; tes juga memeriksa selector baru agar tidak diregresi.
+
+## Rilis stylesheet akhir
+
+Setelah koreksi spesifisitas CSS, query versi cache `assets/experience.css` dinaikkan ke `v=20261116-v3` pada halaman publik dan STAGING, agar pemakai tidak melihat versi sebelumnya. Script dan konfigurasi backend tidak diubah.
