@@ -5,11 +5,10 @@
  * Intended source is an idempotent projection of existing support activities;
  * this does not make support-ticket writes depend on a second table.
  *
- * Feature gate: NGD_NOTIFICATIONS_ENABLED=true, default OFF.
- * All writes additionally require NGD_MUTATIONS_ENABLED=true.
+ * One master switch NGD_MUTATIONS_ENABLED controls inbox and mutations.
  */
 function notificationsEnabled_() {
-  return PropertiesService.getScriptProperties().getProperty('NGD_NOTIFICATIONS_ENABLED') === 'true';
+  return mutationsEnabled_();
 }
 function requireNotificationsEnabled_() {
   require_(notificationsEnabled_(),'MAINTENANCE','Notifikasi belum diaktifkan.');
