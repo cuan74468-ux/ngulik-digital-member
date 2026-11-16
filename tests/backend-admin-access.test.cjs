@@ -79,6 +79,7 @@ test('normal member credentials never acquire admin session, even with correct P
  h.ctx.withLock_=fn=>fn();
  h.ctx.loginGuard_=()=>({attempts:0});
  h.ctx.byId_=(table,col,val)=>rows.find(x=>x[col]===val)||null;
+ h.ctx.findRows_=(table,predicate)=>table==='members'?rows.filter(predicate):[];
  h.ctx.noteLoginFailure_=()=>{failures++;};
  h.ctx.extendAdminLock_=()=>{};
  h.ctx.clearLoginFailures_=()=>{};
