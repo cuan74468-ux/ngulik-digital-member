@@ -57,7 +57,7 @@ jobs:
           test -n "$CHROME"
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --dump-dom \
             "http://127.0.0.1:8765/" > /tmp/ngd-guest.html 2>/tmp/ngd-chrome.log
-          grep -q 'class="nh-hero"' /tmp/ngd-guest.html
+          grep -q 'class="nh-hero public-editorial-hero"' /tmp/ngd-guest.html
           grep -q 'class="nh-grid"' /tmp/ngd-guest.html
           grep -q 'Ngulik Digital' /tmp/ngd-guest.html
           grep -q 'data-experience-v2="true"' /tmp/ngd-guest.html
@@ -67,13 +67,13 @@ jobs:
           fi
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member" > /tmp/ngd-member.html 2>>/tmp/ngd-chrome.log
-          grep -q 'RUANG BELAJAR PRIBADI' /tmp/ngd-member.html
-          grep -q 'Kredit AI tersisa' /tmp/ngd-member.html
+          grep -q 'DASHBOARD / MEJA KERJA' /tmp/ngd-member.html
+          grep -q 'DOMPET TOKEN UNIVERSAL' /tmp/ngd-member.html
           grep -q 'data-overflow="false"' /tmp/ngd-member.html
           grep -q 'data-floating-nav="true"' /tmp/ngd-member.html
           grep -q 'data-mobile-nav="true"' /tmp/ngd-member.html
           grep -q 'data-v2-cascade="true"' /tmp/ngd-member.html
-          # Verify all member/admin routes remain discoverable via the fifth mobile tab.
+          # Member uses four primary mobile tabs; all secondary routes remain accessible from the top menu.
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#menu" > /tmp/ngd-member-menu.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-menu-items="8"' /tmp/ngd-member-menu.html
@@ -92,7 +92,7 @@ jobs:
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#katalog" > /tmp/ngd-catalog.html 2>>/tmp/ngd-chrome.log
           # Runtime storefront uses only API data: no built-in test offers.
-          if ! grep -Eq 'Katalog belum tersedia|Katalog untuk kebutuhan usaha' /tmp/ngd-catalog.html; then
+          if ! grep -Eq 'Katalog belum tersedia|Toko &amp; Lisensi Anda|Alat digital yang relevan untuk usaha' /tmp/ngd-catalog.html; then
             echo 'CATALOG_BROWSER_FAIL: expected catalogue heading missing' >&2
             grep -o -E '<h1[^>]*>[^<]*|<h2[^>]*>[^<]*|Katalog[^<]*|<section id="screen"[^>]*' /tmp/ngd-catalog.html | head -12 || true
             exit 1
@@ -197,7 +197,7 @@ jobs:
             "http://127.0.0.1:8765/#beranda" > /tmp/ngd-guest-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-unified-theme="true"' /tmp/ngd-guest-mobile.html
           grep -q 'data-ink-navigation="true"' /tmp/ngd-guest-mobile.html
-          grep -q 'data-floating-nav="true"' /tmp/ngd-guest-mobile.html
+          grep -q 'data-mobile-nav="false"' /tmp/ngd-guest-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
           grep -q 'class="nh-grid"' /tmp/ngd-guest-mobile.html
