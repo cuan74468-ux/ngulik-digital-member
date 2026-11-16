@@ -66,19 +66,19 @@ const icons = {
 };
 const icon=(name)=>'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||icons.grid)+'</svg>';
 const screens={
-  beranda:['Beranda','home'],belajar:['Belajar','book'],menu:['Menu','grid'],
+  beranda:['Meja Kerja','home'],belajar:['Kelas','book'],menu:['Menu','grid'],
   lms:['Studio LMS','book'],['lms-editor']:['Workspace Materi','book'],
   ['lms-lesson']:['Editor Pelajaran','book'],['lms-course']:['Ruang Kelas','book'],
   ['lms-ai']:['Review Draft AI','spark'],
-  ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Katalog','store'],
-  ai:['Studio AI','spark'],affiliate:['Affiliate','link'],akun:['Akun','user'],
+  ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Toko & Lisensi','store'],
+  ai:['Studio AI','spark'],affiliate:['Komisi Affiliate','link'],akun:['Akun','user'],
   produk:['Kelola Katalog','store'],jasa:['Pesan Jasa','gift'],layanan:['Permintaan Jasa','gift'],
   admin:['Admin','grid'],konten:['Konten Visual','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
   antrean:['Antrean','clock'],dukungan:['Bantuan','shield'],
   tiket:['Detail tiket','shield'],member360:['Member 360°','users'],
   rilis:['Rilis Produk','check'],pengaturan:['Pengaturan','shield'],login:['Masuk','user'],['admin-login']:['Masuk Admin','shield'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
-const memberNav=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','akun'];
+const memberNav=['beranda','ai','katalog','affiliate','belajar','jasa','dukungan','akun'];
 const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
 const adminContextRoute=(route)=>({
   'lms-editor':'lms','lms-lesson':'lms','lms-ai':'lms',
@@ -199,7 +199,7 @@ const state={
   adminCatalog:[],catalogEditId:'',catalogRequestId:null,
   adminRuntime:null,adminRuntimeError:'',adminSettings:null,adminSettingsError:'',
   services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null,
-  registrationOtpVerifiedWa:''
+  registrationOtpVerifiedWa:'',publicStep:0,selectedAiToolId:''
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const adminLoginEnabled=()=>isConnected()&&config.adminLoginEnabled===true;
@@ -235,7 +235,7 @@ function renderNav(){
   by('desktop-nav').innerHTML=items.map(button).join('');
   // Four high-frequency destinations + a full, discoverable menu. The topbar
   // account button stays available on every viewport, including mobile.
-  const mobileItems=isAdmin()?['admin','produk','pesanan','lms','menu']:['beranda','katalog','jasa','belajar','menu'];
+  const mobileItems=isAdmin()?['admin','produk','pesanan','lms','menu']:['beranda','ai','katalog','affiliate'];
   const context=mobileNavRoute(state.route);
   const selectedMobile=mobileItems.includes(context)?context:'menu';
   by('mobile-nav').innerHTML=mobileItems.map(route=>
@@ -249,7 +249,7 @@ function renderNav(){
   const mark=by('brand-mark');
   if(mark)mark.innerHTML=window.NGD_CONTENT_UI?.media(state.siteContent,'BRAND_LOGO','brand','brand-custom-image','')||'n<span>.</span>';
   const caption=by('sidebar-caption');
-  if(caption)caption.textContent=isAdmin()?'Panel admin':logged()?'Ruang belajar':'Menu';
+  if(caption)caption.textContent=isAdmin()?'Panel admin':logged()?'Menu member':'Menu';
 }
 const empty=(heading,message,action='',label='Masuk')=>
   '<div class="empty"><span class="symbol">◌</span><h3>'+esc(heading)+'</h3><p>'+esc(message)+'</p>'+
@@ -297,20 +297,34 @@ function viewHome(){
       '<button type="button" class="btn btn-primary" data-lms-action="open-course" data-course-id="'+
       esc(currentCourse.course_id)+'">Lanjutkan kelas '+icon('arrow')+'</button>':
       '<button type="button" class="btn btn-primary" data-route="belajar">Jelajahi kelas '+icon('arrow')+'</button>';
-    return '<section class="member-welcome"><div><p class="eyebrow">RUANG BELAJAR PRIBADI</p>'+
-      '<h1>Halo, <span class="accent">'+esc(first)+'.</span> Siap belajar hari ini?</h1>'+
-      '<p class="lead">Ruang pribadi untuk belajar, berkarya, dan mengembangkan usaha.</p></div>'+
+    const wallet=Number(d.saldo_kredit??state.me.saldo_kredit??0);
+    const serviceBadges=[
+      ['POS Kasir',String(state.me.status_pos||'BELUM AKTIF')],
+      ['Paket 3-in-1',state.me.akses_3in1_sampai&&new Date(state.me.akses_3in1_sampai).getTime()>Date.now()?'AKTIF':'BELUM AKTIF'],
+      ['Canva',String(state.me.status_canva||'BELUM AKTIF')]
+    ];
+    return '<section class="member-welcome"><div><p class="eyebrow">DASHBOARD / MEJA KERJA</p>'+
+      '<h1>Selamat datang, <span class="accent">'+esc(first)+'.</span></h1>'+
+      '<p class="lead">Token, alat AI, lisensi, dan aktivitas usaha dalam satu meja kerja.</p></div>'+
+      '<span class="chip green">'+esc(state.me.status||'AKTIF')+'</span></section>'+
+      '<section class="wallet-hero" aria-label="Dompet Token Universal">'+
+      '<div class="wallet-top"><span>DOMPET TOKEN UNIVERSAL</span><span class="wallet-state">● Saldo akun</span></div>'+
+      '<div class="wallet-value"><strong>'+esc(wallet.toLocaleString('id-ID'))+'</strong><span>Token</span></div>'+
+      '<p>1 Token = Rp1.000 · Saldo diambil dari akun Anda</p>'+
+      '<div class="wallet-commands"><button type="button" class="btn btn-primary" data-catalog-go="ai">+ Isi Token (QRIS) '+icon('arrow')+'</button>'+
+      '<button type="button" class="btn btn-secondary" data-route="ai">Buka Studio AI</button></div>'+
+      '<div class="wallet-service-list">'+serviceBadges.map(function(x){return '<span class="wallet-service"><strong>'+esc(x[0])+'</strong><small>'+esc(x[1])+'</small></span>';}).join('')+'</div></section>'+
       '<span class="chip green">'+esc(state.me.status||'AKTIF')+'</span></section>'+
       '<section class="member-focus" aria-label="Ringkasan perjalanan belajar">'+
-        '<div class="member-focus-content"><span class="member-focus-kicker">BELAJAR • PRAKTIK • TUMBUH</span>'+
-        '<h2>'+(currentCourse?'Teruskan perjalanan belajarmu.':'Belajar yang terasa lebih berarti.')+'</h2>'+
+        '<div class="member-focus-content"><span class="member-focus-kicker">AKTIVITAS & PRODUKTIVITAS</span>'+
+        '<h2>'+(currentCourse?'Lanjutkan aktivitas terakhir.':'Kelola kebutuhan digital Anda.')+'</h2>'+
         '<p>'+(currentCourse?esc(currentCourse.title)+' siap Anda lanjutkan.':
-          'Temukan kelas praktis, pelajari satu topik, dan praktikkan di usaha Anda.')+'</p>'+
+          'Buka Studio AI, pilih produk, atau mulai kelas yang tersedia.')+'</p>'+
         learningCTA+'</div>'+
         '<div class="member-focus-ring" style="--member-progress:'+progress+'%" role="img" aria-label="'+progress+' persen progres modul">'+
         '<div class="member-focus-ring-core"><strong>'+progress+'%</strong><small>progres</small></div></div></section>'+
       '<div class="metric-grid">'+[
-        [icon('spark'),esc(d.saldo_kredit??state.me.saldo_kredit??0),'Kredit AI tersisa','ai'],
+        [icon('spark'),esc(d.saldo_kredit??state.me.saldo_kredit??0),'Token tersedia','ai'],
         [icon('book'),esc(done)+' / '+esc(total),'Modul selesai','belajar'],
         [icon('clipboard'),esc(orderCount),'Pesanan aktif','pesanan']
       ].map(x=>'<button class="metric-card" data-route="'+x[3]+'"><span class="metric-icon">'+x[0]+'</span><strong>'+x[1]+'</strong><small>'+x[2]+'</small></button>').join('')+'</div>'+
@@ -321,8 +335,8 @@ function viewHome(){
       '<div class="progress-wrap"><div class="progress-track" role="progressbar" aria-valuenow="'+progress+'" aria-valuemin="0" aria-valuemax="100" aria-label="Progres belajar"><span style="width:'+progress+'%"></span></div>'+
       '<span class="tiny muted">'+progress+'% selesai</span></div><button class="btn btn-primary" data-route="belajar">Buka pembelajaran '+icon('arrow')+'</button></section>'+
       '<section class="surface"><p class="card-kicker">AKSI CEPAT</p><div class="quick-actions">'+[
-        ['spark','Buka Studio AI','ai'],['store','Lihat katalog digital','katalog'],
-        ['link','Program affiliate','affiliate'],['user','Kelola akun','akun']
+        ['spark','Buka Studio AI','ai'],['store','Toko & lisensi','katalog'],
+        ['link','Komisi affiliate','affiliate'],['user','Kelola akun','akun']
       ].map(x=>'<button class="quick-action" data-route="'+x[2]+'">'+icon(x[0])+'<span>'+x[1]+'</span>'+icon('arrow')+'</button>').join('')+
       '</div></section></div>'+
       (d.peringatan_kredit?'<div class="banner warning section-gap"><div><h3>Saldo kredit menipis</h3><p>Periksa penggunaan kredit sebelum memakai tools AI.</p></div><button class="btn btn-secondary" data-route="ai">Lihat saldo</button></div>':'');
