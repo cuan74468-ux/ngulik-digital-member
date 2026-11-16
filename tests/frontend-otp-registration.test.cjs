@@ -25,8 +25,14 @@ test('admin login does not inherit member registration OTP gate',()=>{
   assert.match(app,/adminMode\?adminLoginEnabled\(\):register\?registrationOtpEnabled\(\)/);
   assert.match(app,/adminMode\?'adminLogin':register\?'register':'login'/);
 });
-test('backend registration consumes verified one-time OTP server-side',()=>{
-  assert.match(backend,/ngdConsumeVerifiedRegistrationOtp_\(p\)/);
+test('backend validates OTP, commits account and then consumes one-time proof',()=>{
+  const block=backend.slice(backend.indexOf('function authRegister_('),
+    backend.indexOf('function authLogin_('));
+  const validate=block.indexOf('ngdValidateVerifiedRegistrationOtp_(p)');
+  const insert=block.indexOf("appendRow_('members',m)");
+  const consume=block.indexOf('ngdConsumeVerifiedRegistrationOtp_(p,verifiedOtpId)');
+  assert.ok(validate>=0&&insert>validate&&consume>insert);
+  assert.match(otpBackend,/function ngdValidateVerifiedRegistrationOtp_\(p\)/);
   assert.match(otpBackend,/status:'USED'/);
   assert.match(otpBackend,/next>=3\?'LOCKED'/);
 });

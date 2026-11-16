@@ -46,15 +46,17 @@ test('registration blocked if OTP flag is true but no verifier is installed', ()
   assert.equal(env.count(), 0);
 });
 
-test('OTP verification runs before member insertion when verifier exists', () => {
+test('OTP validation rejects unverified codes BEFORE member insertion even if consumer exists', () => {
   const env = boot({NGD_OTP_REGISTRATION_ENABLED: 'true'});
   let attemptedWrites = 0;
   let verifierCalls = 0;
+  let consumerCalls = 0;
   env.sandbox.withLock_ = fn => fn();
-  env.sandbox.ngdConsumeVerifiedRegistrationOtp_ = () => {
+  env.sandbox.ngdValidateVerifiedRegistrationOtp_ = () => {
     verifierCalls++;
     throw new Error('OTP_REJECTED_BY_TEST_VERIFIER');
   };
+  env.sandbox.ngdConsumeVerifiedRegistrationOtp_ = () => {consumerCalls++;};
   env.sandbox.appendRow_ = () => { attemptedWrites++; };
   env.sandbox.normalizeWa_ = () => '6281234567890';
   env.sandbox.checkNewPin_ = () => {};
@@ -74,6 +76,7 @@ test('OTP verification runs before member insertion when verifier exists', () =>
   env.sandbox.newReferralCode_ = () => 'FAKE-REF-CODE';
   assert.throws(() => env.sandbox.authRegister_(sample), /OTP_REJECTED_BY_TEST_VERIFIER/);
   assert.equal(verifierCalls, 1);
+  assert.equal(consumerCalls, 0);
   assert.equal(attemptedWrites, 0);
 });
 
