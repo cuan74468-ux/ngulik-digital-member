@@ -37,59 +37,141 @@ function link(v){
     return u.protocol==='https:'&&!u.username&&!u.password&&hosts.indexOf(u.hostname)>=0?u.href:'';
   }catch(_){return '';}
 }
-function courseTile(course,admin){
-  return '<article class="surface lms-course-tile"><div class="lms-course-top">'+
-    tag(course.category)+' '+tag(course.level)+' '+tag(course.status||'')+
-    (course.access_granted===false?'<span class="chip">Akses terbatas</span>':'')+
-    '</div><h3>'+e(course.title)+'</h3><p class="card-desc">'+e(course.summary)+'</p>'+
-    '<div class="lms-meta"><span>'+e(course.access_type==='PRODUCT'?'Khusus pembeli':'Semua member')+'</span>'+
-    (course.unpublished_changes?'<span>Draft belum diterbitkan</span>':'')+'</div>'+
-    btn('open-course',admin?'Kelola kursus':'Buka kursus',false,
-      ' data-course-id="'+e(course.course_id)+'"','btn-secondary')+'</article>';
+
+function courseTile(course,admin,enrolled){
+  var title=e(course.title||'Kursus'),status=String(course.status||'').toUpperCase();
+  var active=Boolean(enrolled),locked=course.access_granted===false;
+  var labelText=admin?(status==='PUBLISHED'?'Terbit':'Draft'):
+    locked?'Akses khusus':active?'Sedang dipelajari':'Siap dimulai';
+  var actionText=admin?'Kelola kelas':active?'Lanjutkan kelas':locked?'Lihat detail':'Lihat kurikulum';
+  return '<article class="surface lms-course-tile" data-course-state="'+(active?'active':'available')+
+    '" data-course-search="'+e((String(course.title||'')+' '+String(course.category||'')+' '+String(course.summary||'')).toLocaleLowerCase('id-ID'))+'">'+
+    '<div class="learning-course-art" aria-hidden="true"><div class="learning-course-symbol">'+
+    '<span></span><span></span><span></span></div><span class="learning-art-index">NGULIK / LEARNING</span></div>'+
+    '<div class="learning-course-copy"><div class="lms-course-top">'+
+    '<span class="learning-course-category">'+e(course.category||'Kelas praktis')+'</span>'+
+    '<span class="learning-status'+(active?' is-active':'')+'">'+e(labelText)+'</span></div>'+
+    '<h3>'+title+'</h3><p class="card-desc">'+e(course.summary||'Materi dan praktik yang disusun untuk membantu usaha berkembang.')+'</p>'+
+    '<div class="learning-course-footer"><span class="learning-course-level">'+
+    e(course.level||'Semua tingkat')+'</span>'+
+    btn('open-course',actionText,false,' data-course-id="'+e(course.course_id)+'"','btn-secondary')+
+    '</div></div></article>';
 }
 function memberCatalog(courses,enrollments,legacy){
-  var list=Array.isArray(courses)?courses:[],old=Array.isArray(legacy)?legacy:[];
-  return '<section class="lms-heading"><p class="eyebrow">NGULIK DIGITAL / LMS</p>'+
+  var list=Array.isArray(courses)?courses:[],joined=Array.isArray(enrollments)?enrollments:[],
+    old=Array.isArray(legacy)?legacy:[];
+  var activeCourseIds=joined.filter(function(x){return x&&x.status==='ACTIVE';})
+    .map(function(x){return x.course_id;});
+  var active=list.filter(function(x){return activeCourseIds.indexOf(x.course_id)>=0;});
+  var next=active[0]||null;
+  return '<div class="learning-dashboard">'+
+    '<section class="learning-intro"><div class="learning-intro-copy">'+
+    '<span class="learning-overline"><span class="learning-overline-dot"></span> NGULIK DIGITAL / LEARNING STUDIO</span>'+
     '<h2>Kelas dan perjalanan belajar</h2>'+
-    '<p class="lead">Belajar dengan kurikulum bertahap, progress per pelajaran dan ruang belajar pribadi.</p></section>'+
-    '<div class="lms-stats"><div class="surface"><strong>'+list.length+'</strong><small>Kursus diterbitkan</small></div>'+
-    '<div class="surface"><strong>'+(enrollments||[]).length+'</strong><small>Kelas yang diikuti</small></div></div>'+
-    (list.length?'<div class="lms-course-grid">'+list.map(function(c){return courseTile(c,false);}).join('')+'</div>':
-      '<div class="surface lms-empty"><h3>Kursus LMS belum diterbitkan</h3>'+
-      '<p>Admin sedang menyiapkan kurikulum baru. Modul pengantar lama tetap tersedia di bawah.</p></div>')+
-    (old.length?'<section class="section-gap"><h3>Modul pengantar</h3><p class="card-desc">Materi lama dari Google Classroom dipertahankan selama transisi.</p>'+
-      '<div class="stack">'+old.map(function(m,i){
+    '<p>Belajar yang relevan untuk usaha Anda. Temukan kelas, lanjutkan materi, dan praktikkan satu hal baru setiap hari.</p>'+
+    '<div class="learning-intro-actions">'+
+    (next?btn('open-course','Lanjutkan kelas',false,' data-course-id="'+e(next.course_id)+'"','btn-primary')+
+      '<span class="learning-next-hint">'+e(next.title)+'</span>':
+      '<span class="learning-next-hint">Pilih kelas pertama Anda untuk mulai belajar.</span>')+
+    '</div></div>'+
+    '<div class="learning-intro-aside" aria-label="Ringkasan kelas Anda">'+
+    '<span class="learning-aside-label">PERJALANAN ANDA</span>'+
+    '<div class="learning-aside-value">'+active.length+'<span> / '+list.length+'</span></div>'+
+    '<p>Kelas yang sedang Anda ikuti</p>'+
+    '<div class="learning-intro-rule" aria-hidden="true"><span></span><span></span><span></span></div>'+
+    '</div></section>'+
+    '<div class="learning-section-head"><div><p class="eyebrow">KURIKULUM</p>'+
+    '<h3>Temukan kelas yang tepat</h3><p>Mulai dari fondasi, lalu perdalam sesuai kebutuhan.</p></div>'+
+    '<span class="learning-course-count">'+list.length+' kelas tersedia</span></div>'+
+    (list.length?
+      '<div class="learning-toolbar" aria-label="Filter kelas">'+
+      '<div class="learning-filter-group" role="group" aria-label="Status kelas">'+
+      '<button type="button" class="learning-filter" data-lms-filter="all" aria-pressed="true">Semua kelas</button>'+
+      '<button type="button" class="learning-filter" data-lms-filter="active" aria-pressed="false">Sedang dipelajari</button>'+
+      '<button type="button" class="learning-filter" data-lms-filter="available" aria-pressed="false">Kelas lainnya</button></div>'+
+      '<label class="learning-search"><span aria-hidden="true">⌕</span>'+
+      '<input id="learning-course-search" type="search" autocomplete="off" placeholder="Cari kelas atau topik" aria-label="Cari kelas"></label></div>'+
+      '<div class="lms-course-grid learning-course-grid">'+list.map(function(c){
+        return courseTile(c,false,activeCourseIds.indexOf(c.course_id)>=0);
+      }).join('')+'</div>'+
+      '<p class="learning-filter-empty" hidden role="status">Tidak ada kelas yang cocok. Coba kata kunci atau filter lainnya.</p>':
+      '<div class="surface lms-empty learning-empty">'+
+      '<h3>Perjalanan belajar akan dimulai di sini</h3>'+
+      '<p>Kelas akan tampil saat pengelola menerbitkan kurikulum. Anda tetap bisa mempelajari materi pengantar di bawah.</p></div>')+
+    (old.length?'<section class="learning-legacy section-gap"><div class="learning-section-head">'+
+      '<div><p class="eyebrow">MATERI TAMBAHAN</p><h3>Modul pengantar</h3>'+
+      '<p>Materi dari Google Classroom tetap tersedia selama transisi.</p></div></div>'+
+      '<div class="learning-legacy-list">'+old.map(function(m,i){
         var target=link(m.url_classroom);
-        return '<article class="surface lms-legacy-row"><div><strong>'+e(m.judul)+'</strong><p class="card-desc">'+e(m.deskripsi)+'</p></div>'+
+        return '<article class="learning-legacy-row"><span class="learning-legacy-no">'+
+          String(i+1).padStart(2,'0')+'</span><div class="learning-legacy-copy">'+
+          '<h4>'+e(m.judul)+'</h4><p>'+e(m.deskripsi)+'</p></div>'+
           (target?'<a class="btn btn-secondary btn-sm" href="'+e(target)+'" rel="noopener noreferrer" target="_blank">Buka materi</a>':
-          '<span class="chip">Materi menyusul</span>')+'</article>';}).join('')+'</div></section>':'');
+            '<span class="chip">Materi menyusul</span>')+'</article>';
+      }).join('')+'</div></section>':'')+
+    '</div>';
 }
 function memberCourse(detail,enrollments,canWrite){
   if(!detail)return '<div class="surface lms-empty"><h3>Memuat kelas…</h3><p>Pilih kursus dari halaman Belajar.</p></div>';
-  var c=detail.course||{},access=detail.access_granted!==false;
-  var enrolled=(enrollments||[]).some(function(x){return x.course_id===c.course_id&&x.status==='ACTIVE';});
-  var lessons=detail.lessons||[];
-  return '<button type="button" class="btn btn-ghost btn-sm lms-back-link" data-route="belajar">Kembali ke daftar kelas</button>'+
-    '<section class="lms-heading"><p class="eyebrow">RUANG BELAJAR MEMBER</p><h2>'+e(c.title)+'</h2>'+
-    '<p class="lead">'+e(c.summary)+'</p><div class="lms-course-top">'+tag(c.level)+' '+tag(c.category)+'</div></section>'+
+  var c=detail.course||{},access=detail.access_granted!==false,
+    enrolled=(enrollments||[]).some(function(x){return x.course_id===c.course_id&&x.status==='ACTIVE';}),
+    lessons=Array.isArray(detail.lessons)?detail.lessons:[],
+    total=Math.max(lessons.length,Number(detail.total)||0),
+    done=Math.max(0,Math.min(total,Number(detail.completed)||0)),
+    percent=total?Math.round(done/total*100):0;
+  var nextIndex=lessons.findIndex(function(l){return l.completed!==true;});
+  if(nextIndex<0)nextIndex=0;
+  return '<div class="learning-reader">'+
+    '<button type="button" class="learning-reader-back" data-route="belajar">← Semua kelas</button>'+
+    '<header class="learning-reader-header"><div>'+
+    '<p class="eyebrow">RUANG BELAJAR / '+e(c.category||'KURSUS')+'</p>'+
+    '<h2>'+e(c.title)+'</h2><p>'+e(c.summary||'')+'</p>'+
+    '</div><div class="learning-reader-progress" aria-label="'+percent+' persen pelajaran selesai">'+
+    '<strong>'+percent+'%</strong><span>'+done+' dari '+total+' pelajaran</span>'+
+    '<div class="progress-track" role="progressbar" aria-valuenow="'+percent+'" aria-valuemin="0" aria-valuemax="100" aria-label="Progres kelas">'+
+    '<span style="width:'+percent+'%"></span></div></div></header>'+
     (!access?'<section class="surface lms-empty"><h3>Materi memerlukan akses produk</h3>'+
-      '<p>Hubungi admin atau periksa status pembelian dan masa aktif produk yang terkait dengan kursus.</p></section>':
-      '<div class="lms-stats"><div class="surface"><strong>'+Number(detail.completed||0)+'/'+Number(detail.total||0)+'</strong><small>Pelajaran selesai</small></div>'+
-      '<div class="surface"><strong>'+(enrolled?'Aktif':'Belum')+'</strong><small>Pendaftaran belajar</small></div></div>'+
-      (!enrolled?'<div class="surface lms-callout"><h3>Mulai kursus ini</h3>'+
-        '<p>Pendaftaran kelas membuat ruang progres Anda secara otomatis. Tidak ada biaya tambahan dari proses ini.</p>'+
-        btn('enroll','Ikuti kursus',!canWrite,' data-course-id="'+e(c.course_id)+'"','btn-primary')+'</div>':'')+
-      '<div class="lms-lessons">'+lessons.map(function(l,i){
-        var url=link(l.media_url);
-        return '<article class="surface lms-lesson-card"><div class="lms-lesson-head"><span class="lms-step">'+(i+1)+'</span>'+
-          '<div><h3>'+e(l.title)+'</h3><p class="small muted">'+e(l.kind||'ARTICLE')+
-            ' · '+e(l.duration_minutes||10)+' menit</p></div>'+
-          '<span class="chip">'+(l.completed?'Selesai':'Belum selesai')+'</span></div>'+
-          '<div class="lms-body">'+text(l.body||'')+'</div>'+
-          (url?'<a class="btn btn-secondary btn-sm" href="'+e(url)+'" target="_blank" rel="noopener noreferrer">Buka referensi resmi</a>':'')+
-          (!l.completed?btn('complete','Tandai selesai',!canWrite||!enrolled,
-            ' data-lesson-id="'+e(l.lesson_id)+'"','btn-primary'):'')+'</article>';
-      }).join('')+'</div>');
+      '<p>Periksa status pembelian atau hubungi Admin untuk mendapatkan akses kursus ini.</p>'+
+      '<button type="button" class="btn btn-secondary" data-route="katalog">Lihat katalog</button></section>':
+      (!enrolled?'<section class="learning-enroll-callout"><div>'+
+        '<span class="eyebrow">MULAI PERJALANAN</span><h3>Belajar lebih terarah, selangkah demi selangkah.</h3>'+
+        '<p>Ikuti kursus agar penyelesaian pelajaran tercatat pada akun Anda.</p></div>'+
+        btn('enroll','Mulai kursus',!canWrite,' data-course-id="'+e(c.course_id)+'"','btn-primary')+'</section>':'')+
+      '<div class="learning-reader-layout">'+
+      '<aside class="learning-lesson-sidebar" aria-label="Daftar pelajaran">'+
+        '<div class="learning-lesson-sidebar-heading"><span class="eyebrow">ISI KELAS</span>'+
+        '<strong>'+lessons.length+' pelajaran</strong></div>'+
+        (lessons.length?'<nav class="learning-lesson-nav" aria-label="Pilih pelajaran">'+
+          lessons.map(function(l,i){return '<button type="button" class="learning-lesson-nav-item'+
+            (i===nextIndex?' is-current':'')+(l.completed?' is-complete':'')+
+            '" data-lms-lesson-open="'+i+'" aria-current="'+(i===nextIndex?'step':'false')+'">'+
+            '<span class="learning-lesson-index">'+(l.completed?'✓':String(i+1).padStart(2,'0'))+'</span>'+
+            '<span class="learning-lesson-label"><strong>'+e(l.title||'Pelajaran '+(i+1))+'</strong>'+
+            '<small>'+e(l.kind||'ARTICLE')+' · '+e(l.duration_minutes||10)+' menit</small></span>'+
+            '</button>';}).join('')+'</nav>':
+          '<p class="learning-empty-note">Pelajaran belum diterbitkan.</p>')+
+        '</aside><div class="learning-lesson-stage">'+
+        (lessons.length?lessons.map(function(l,i){
+          var url=link(l.media_url);
+          return '<article class="learning-lesson-panel" data-lms-panel="'+i+'"'+
+            (i===nextIndex?'':' hidden')+'>'+
+            '<div class="learning-lesson-overline">PELAJARAN '+String(i+1).padStart(2,'0')+
+            ' / '+String(lessons.length).padStart(2,'0')+
+            (l.completed?' · SELESAI':' · DALAM PROSES')+'</div>'+
+            '<h3>'+e(l.title||'Pelajaran')+'</h3>'+
+            '<p class="learning-lesson-duration">'+e(l.kind||'ARTICLE')+' · '+e(l.duration_minutes||10)+' menit membaca</p>'+
+            '<div class="lms-body learning-lesson-body">'+text(l.body||'Konten materi akan tersedia setelah diterbitkan.')+'</div>'+
+            (url?'<a class="learning-resource-link" href="'+e(url)+'" target="_blank" rel="noopener noreferrer">Lihat referensi pelajaran ↗</a>':'')+
+            '<div class="learning-lesson-actions">'+
+            (l.completed?'<span class="learning-complete-label">✓ Pelajaran selesai</span>':
+              btn('complete','Tandai selesai',!canWrite||!enrolled,
+                ' data-lesson-id="'+e(l.lesson_id)+'"','btn-primary'))+
+            (i<lessons.length-1?'<button class="btn btn-secondary" type="button" data-lms-next="'+(i+1)+'">Berikutnya →</button>':'')+
+            '</div></article>';
+        }).join(''):
+          '<div class="learning-empty-note">Belum ada materi yang bisa dibaca.</div>')+
+        '</div></div>')+
+    '</div>';
 }
 function memberSuccess(record){
   if(!record)return '<section class="surface lms-empty"><h3>Belum ada pelajaran yang baru diselesaikan</h3>'+
