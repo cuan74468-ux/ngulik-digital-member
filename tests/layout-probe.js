@@ -33,6 +33,15 @@
       var sharedExperience=!!document.querySelector('link[href*="assets/experience.css"]') &&
         document.body.classList.contains('ngd-public-app') &&
         getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim()==='#4361ee';
+      // Real browser acceptance for the new mobile menu: all features are
+      // browseable, essential explanatory copy must remain visible.
+      var headingHelp=main?main.querySelector('.section-head p:not(.eyebrow)'):null;
+      var guidanceVisible=!headingHelp ||
+        (getComputedStyle(headingHelp).display!=='none' &&
+          headingHelp.getBoundingClientRect().height>0);
+      var allMenuCount=main?main.querySelectorAll('.ngd-menu-tile').length:0;
+      output.setAttribute('data-guidance-visible',String(guidanceVisible));
+      output.setAttribute('data-menu-items',String(allMenuCount));
       output.setAttribute('data-experience-v2',String(sharedExperience));
       output.setAttribute('data-overflow',String(overflow));
       output.setAttribute('data-member-theme',String(memberTheme));
