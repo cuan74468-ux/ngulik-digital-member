@@ -62,14 +62,16 @@ test('CMS supports revision-safe edits, unpublish, soft archive and recovery',()
   assert.equal(h.rows.length,1);
   assert.ok(h.audits.some(a=>a[2]==='CONTENT_STATUS'));
 });
-test('CMS requires same-origin image paths and known placements, rejects unsafe inputs without writes',()=>{
+test('CMS accepts HTTPS banner URLs and raster data, rejects unsafe inputs without writes',()=>{
   const h=fixture();
   const invalid=[
-    sample({image_path:'https://evil.invalid/banner.webp'}),
+    sample({image_path:'http://example.org/unsafe.png'}),
+    sample({image_path:'javascript:alert(1)'}),
+    sample({image_path:'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4='}),
     sample({image_path:'../secrets.png'}),
     sample({image_path:'assets/media/../../confidential.png'}),
     sample({image_path:'assets/media/img.svg'}),
-    sample({image_path:'assets/media/image.webp?code=123'}),
+    sample({image_path:'assets/media/image.webp?code=123&x=<script>'}),
     sample({image_path:'assets/media/folder//image.png'}),
     sample({placement:'other'}),
     sample({kind:'PRODUCT_IMAGE',placement:'../../members'}),
@@ -80,9 +82,16 @@ test('CMS requires same-origin image paths and known placements, rejects unsafe 
     sample({sort_order:-1}),
     sample({unknown_field:'bad'}),
   ];
-  for(const payload of invalid)assert.throws(()=>h.create(payload),/tidak valid|diizinkan|dikenali|memiliki tujuan|tidak boleh|path lokal|tidak dikenal/);
+  for(const payload of invalid)assert.throws(()=>h.create(payload),/tidak valid|diizinkan|dikenali|memiliki tujuan|tidak boleh|path lokal|tidak dikenal|HTTPS/);
   assert.equal(h.writes,0);
   assert.equal(h.rows.length,0);
+  const ok=fixture();
+  const first=ok.create(sample({image_path:'https://cdn.example.com/images/promo.webp?size=wide'}),'HTTPS_BANNER_123456789');
+  assert.equal(first.item.image_path,'https://cdn.example.com/images/promo.webp?size=wide');
+  const second=ok.create(sample({image_path:'assets/banners/sale-01.png'}),'ASSET_BANNER_123456789');
+  assert.equal(second.item.image_path,'assets/banners/sale-01.png');
+  const third=ok.create(sample({image_path:'data:image/png;base64,aGVsbG8='}),'DATA_BANNER_1234567890');
+  assert.equal(third.item.image_path,'data:image/png;base64,aGVsbG8=');
 });
 test('scheduled campaigns honor Jakarta-local start and end date inclusively',()=>{
   const h=fixture(),a=h.create(sample({start_date:'2026-11-14',end_date:'2026-11-14'}),'SCHEDULE_CONTENT_123456').item;
@@ -94,18 +103,18 @@ test('scheduled campaigns honor Jakarta-local start and end date inclusively',()
   h.status({content_id:c.content_id,status:'PUBLISHED',revision:c.revision});
   assert.equal(h.ctx.contentPublicList_().length,1);
 });
-test('CMS endpoints are admin-only with separate release switch; no external requests',()=>{
+test('CMS endpoints remain admin-only with master mutation switch; no external requests',()=>{
   const h=fixture();
   h.ctx.activeMember_=()=>({member_id:'M1',role:'MEMBER',status:'AKTIF'});
   h.ctx.admin_=()=>{throw h.ctx.ngdError_('FORBIDDEN','Admin required');};
   assert.throws(()=>h.ctx.apiRouter_('adminListContent','USER',{},''),/Admin required/);
   assert.throws(()=>h.ctx.apiRouter_('adminCreateContent','USER',sample(),'RID_123456789012345'),/Admin required/);
   assert.equal(h.writes,0);
-  assert.match(code,/NGD_CONTENT_ENABLED/);
+  assert.match(code,/function requireMutationsEnabled_/);
   for(const action of ['getPublicContent','adminListContent','adminCreateContent','adminUpdateContent','adminSetContentStatus'])
     assert.ok(code.includes("'"+action+"'"),action);
   assert.ok(code.includes("case 'getPublicContent':return contentPublicList_()"));
-  assert.ok(read('config.js').includes('contentEnabled: false'));
+  assert.ok(read('config.js').includes('contentEnabled: true'));
   assert.doesNotMatch(content,/UrlFetchApp|MailApp|GmailApp|DriveApp/);
 });
 
