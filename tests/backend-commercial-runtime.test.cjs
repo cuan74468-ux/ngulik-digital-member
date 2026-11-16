@@ -117,7 +117,7 @@ test('fresh seed catalog includes nine brief-approved product IDs and per-produc
   let seeded;
   c.seedIfEmpty_=(table,rows)=>{assert.equal(table,'katalog_produk');seeded=rows;return rows.length;};
   assert.equal(c.seedCatalog_(),9);
-  assert.deepEqual(seeded.map(x=>x.product_id),[
+  assert.deepEqual(Array.from(seeded,x=>x.product_id),[
     'P-EBOOK','P-3IN1','P-POS','P-VIDEO-AI','P-CANVA','P-TOKEN-10',
     'P-KREDIT-50','P-KREDIT-150','P-KREDIT-400'
   ]);
