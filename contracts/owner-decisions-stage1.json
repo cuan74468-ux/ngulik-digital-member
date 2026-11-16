@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-11-16",
+  "documentType": "NON_EXECUTABLE_OWNER_DECISION_REGISTRY",
+  "ownerApprovalRequiredFor": [
+    "production_schema_or_architecture",
+    "financial_pricing_commission_credit_policy",
+    "payout_refund",
+    "production_code_deployment",
+    "data_or_file_deletion",
+    "public_launch"
+  ],
+  "sourceHierarchy": [
+    "Owner explicit written decision",
+    "Master Index Ngulik Digital and Mandat Produksi",
+    "Validated STAGING runtime and database evidence",
+    "GitHub source plus verified CI",
+    "Historical templates and drafts"
+  ],
+  "sourceDocuments": {
+    "master": "https://docs.google.com/document/d/1Vy2OPrhhk1nOMNQ_nrz5pcNmklpMQvd0hZ9k83RGh1Q/edit",
+    "mandate": "https://docs.google.com/document/d/19KIklWdph7JSO0fiGWdpwsAe_QfqxK4mOxa5ghAJP0w/edit",
+    "brief": "https://docs.google.com/document/d/1o_Pea9x7A6l2U0xdxFuQNTM2BkoZ6FXI2p68JyMUnbk/edit",
+    "chapter01": "https://docs.google.com/document/d/1PGKFnPfSKVQ0SRFclgT5aN8_x2iipnW8ng6g2H24xVg/edit"
+  },
+  "environment": {
+    "phase1": "GitHub Pages + Google Apps Script + Google Sheets",
+    "productionSchemaObservedTabs": 16,
+    "stagingSchemaObservedTabs": 29,
+    "productionAndStagingMustRemainSeparated": true,
+    "sourceIsNotRuntime": true
+  },
+  "release": {
+    "stage": 1,
+    "status": "PROCESS_NO_GO",
+    "providerActivation": "DEFERRED",
+    "publicRegistration": false,
+    "otpDispatch": false,
+    "payments": false,
+    "finance": false,
+    "aiBilling": false,
+    "stages2Through6": "NOT_ACTIVATED"
+  },
+  "programBoundary": {
+    "chapter01": "FREE_100_PERCENT_NO_FORCED_PURCHASE",
+    "commercial": "REAL_PAID_MEMBERSHIP_AND_DIGITAL_PRODUCTS",
+    "communityParticipantsMustNotBeAutoImported": true,
+    "internalLmsEntitlementAuthority": "UNDECIDED_PER_PRODUCT"
+  },
+  "starterCredit": {
+    "policy": "ONE_VERIFIED_WHATSAPP_ONE_STARTER_GRANT",
+    "documentedProposedTokens": 10,
+    "productionAmountMutationAuthorized": false,
+    "operatorRecoveryAutoGrantAllowed": false
+  },
+  "pendingBusinessDecisions": [
+    "affiliate_commission_rates_and_recurring_eligibility",
+    "LMS_authority_by_program_and_product",
+    "PII_OTP_and_notification_retention_and_consent",
+    "payment_refund_and_settlement_reconciliation",
+    "PIN_v2_activation_and_key_backup",
+    "real_provider_cost_limits_and_test_approval"
+  ],
+  "verifiedEvidence": {
+    "stagingInfrastructureAndIntegrity": "OWNER_READ_ONLY_LOG_OK_29_TABS_8_TABLES_2026_11_15",
+    "backupRestore": "ISOLATED_FILE_COPY_AND_HEADER_COUNTS_MATCH_NOT_APP_RESTORE",
+    "appScriptGitHubParity": "NOT_VERIFIED",
+    "runtimeRegistrationRecovery": "NOT_RUN_OR_UNCONFIRMED",
+    "physicalAndroidQA": "NOT_ATTESTED"
+  }
+}
