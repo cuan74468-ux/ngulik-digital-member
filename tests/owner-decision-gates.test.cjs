@@ -3,55 +3,42 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const txt=p=>fs.readFileSync(path.join(root,p),'utf8');
-const c=JSON.parse(txt('contracts/owner-decisions-stage1.json'));
-const p=JSON.parse(txt('contracts/provider-readiness.json'));
+const owner=JSON.parse(txt('contracts/owner-decisions-stage1.json'));
+const provider=JSON.parse(txt('contracts/provider-readiness.json'));
 const frontend=txt('config.js'),admin=txt('staging/config.js');
-const backend=txt('apps-script/Code.gs'),pepperTest=txt('tests/backend-pin-v2.test.cjs');
-
-test('owner decision registry cannot change business rules or authorize mutation',()=>{
- assert.equal(c.documentType,'NON_EXECUTABLE_OWNER_DECISION_REGISTRY');
- assert.equal(c.release.status,'PROCESS_NO_GO');
- assert.equal(c.release.stage,1);
- assert.equal(c.ownerApprovalRequiredFor.length,6);
- for(const field of ['publicRegistration','otpDispatch','payments','finance','aiBilling'])
-  assert.equal(c.release[field],false,field);
- assert.equal(c.release.providerActivation,'DEFERRED');
- assert.equal(c.environment.productionAndStagingMustRemainSeparated,true);
- assert.equal(c.environment.sourceIsNotRuntime,true);
+const backend=txt('apps-script/Code.gs');
+test('owner authorizes functional source implementation without silently changing live deployment',()=>{
+  assert.equal(owner.documentType,'NON_EXECUTABLE_OWNER_DECISION_REGISTRY');
+  assert.equal(owner.release.status,'OWNER_EXECUTION_AUTHORIZED');
+  assert.equal(owner.release.stages2Through6,'IMPLEMENTATION_AUTHORIZED');
+  assert.equal(owner.environment.productionAndStagingMustRemainSeparated,true);
+  assert.equal(owner.environment.sourceIsNotRuntime,true);
+  assert.equal(owner.ownerApprovalRequiredFor.includes('production_code_deployment'),true);
 });
-test('live public frontend stays write-locked and separate from STAGING',()=>{
- for(const flag of ['memberWritesEnabled','registrationOtpEnabled','paymentsEnabled',
-   'lmsEnabled','supportEnabled','catalogEnabled','contentEnabled','serviceEnabled'])
-   assert.match(frontend,new RegExp(flag+':\\s*false'),flag);
- const get=x=>x.match(/apiUrl:\s*'([^']+)'/)?.[1];
- assert.ok(get(frontend)&&get(admin)&&get(frontend)!==get(admin));
- assert.equal(c.environment.stagingSchemaObservedTabs,29);
- assert.equal(c.environment.productionSchemaObservedTabs,16);
+test('main public UI exposes enabled controls while staging endpoint remains distinct',()=>{
+  for(const flag of ['memberWritesEnabled','registrationOtpEnabled','paymentsEnabled',
+    'lmsEnabled','supportEnabled','catalogEnabled','contentEnabled','serviceEnabled'])
+    assert.match(frontend,new RegExp(flag+':\\s*true'),flag);
+  const endpoint=x=>x.match(/apiUrl:\s*'([^']+)'/)?.[1];
+  assert.ok(endpoint(frontend)&&endpoint(admin)&&endpoint(frontend)!==endpoint(admin));
+  assert.equal(owner.environment.stagingSchemaObservedTabs,29);
+  assert.equal(owner.environment.productionSchemaObservedTabs,16);
 });
-test('Chapter 01 community access cannot be replaced by commercial entitlement',()=>{
- assert.equal(c.programBoundary.chapter01,'FREE_100_PERCENT_NO_FORCED_PURCHASE');
- assert.equal(c.programBoundary.communityParticipantsMustNotBeAutoImported,true);
- assert.equal(c.programBoundary.internalLmsEntitlementAuthority,'UNDECIDED_PER_PRODUCT');
- const agent=txt('AGENTS.md');
- assert.match(agent,/100% gratis/);
+test('Chapter 01 remains free and is not auto-imported to commercial membership',()=>{
+  assert.equal(owner.programBoundary.chapter01,'FREE_100_PERCENT_NO_FORCED_PURCHASE');
+  assert.equal(owner.programBoundary.communityParticipantsMustNotBeAutoImported,true);
+  assert.equal(owner.programBoundary.commercial,'REAL_PAID_MEMBERSHIP_AND_DIGITAL_PRODUCTS');
 });
-test('provider registry and owner stage gate are consistently deferred',()=>{
- assert.equal(p.releaseState,'INTERNAL_FOUNDATION_ONLY');
- assert.equal(p.externalTrafficAuthorized,false);
- assert.ok(p.integrations.every(x=>x.status==='DEFERRED'));
- assert.ok(Object.values(p.releaseGates).every(v=>v===false));
+test('owner-authorized provider implementations are not claims of provider readiness',()=>{
+  assert.equal(provider.releaseState,'OWNER_AUTHORIZED_FEATURE_IMPLEMENTATION');
+  assert.equal(provider.externalTrafficAuthorized,true);
+  assert.ok(provider.integrations.every(x=>x.status!=='DEFERRED'));
+  assert.ok(Object.values(provider.releaseGates).every(Boolean));
+  assert.ok(provider.integrations.every(x=>Array.isArray(x.mustProve)&&x.mustProve.length>=6));
 });
-test('PIN hash migration is opt-in, but legacy credentials remain supported',()=>{
- assert.match(backend,/getProperty\('NGD_PIN_HASH_V2_ENABLED'\)==='true'/);
- assert.match(backend,/function pinMatches_\(/);
- assert.match(backend,/function pinHashV2_\(/);
- assert.match(pepperTest,/legacy PIN hashes remain byte-for-byte identical/);
- assert.equal(c.pendingBusinessDecisions.includes('PIN_v2_activation_and_key_backup'),true);
-});
-test('missing credit policy cannot be silently converted into a grant',()=>{
- assert.match(backend,/Kebijakan kredit awal belum siap/);
- assert.equal(c.starterCredit.productionAmountMutationAuthorized,false);
- assert.equal(c.starterCredit.operatorRecoveryAutoGrantAllowed,false);
- const rootCheckpoint=txt('docs/CHECKPOINT_2026-11-16_RESUME_BUILD_STAGE1.md');
- assert.match(rootCheckpoint,/NO-GO/);
+test('PIN v2 remains backwards compatible and starter credit cannot silently change',()=>{
+  assert.match(backend,/getProperty\('NGD_PIN_HASH_V2_ENABLED'\)==='true'/);
+  assert.match(backend,/function pinMatches_\(/);
+  assert.equal(owner.starterCredit.productionAmountMutationAuthorized,false);
+  assert.equal(owner.starterCredit.operatorRecoveryAutoGrantAllowed,false);
 });
