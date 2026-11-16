@@ -62,3 +62,12 @@
 - [Manifest source 15 modul](../contracts/gas-runtime-source-manifest-2026-11-16.json)
 
 **Status GO-LIVE: NO-GO.** Audit tidak memberi izin migrasi produksi maupun tindakan finansial.
+
+## 7. Sinkronisasi dokumen kendali Google Drive (faktual, tidak mengubah mandat)
+
+Pada 16 November, addendum status faktual disisipkan dan dibaca ulang di:
+- [Master Index](https://docs.google.com/document/d/1Vy2OPrhhk1nOMNQ_nrz5pcNmklpMQvd0hZ9k83RGh1Q/edit): status Tahap 1, bukti runtime 29/8, PIN V2 default OFF, kebijakan provider-last, bukan izin aktivasi.
+- [Brief Eksekusi Teknis](https://docs.google.com/document/d/1o_Pea9x7A6l2U0xdxFuQNTM2BkoZ6FXI2p68JyMUnbk/edit): delta source/runtime, explicit kredit awal, checksum GAS, risiko ledger & komisi tanpa mengubah nilai.
+- [Peta Kendali Drive](https://docs.google.com/document/d/15LYvAyOBkSO2ROLr09sZuWZV83MNOI1NLe9U3t6L8GM/edit): peringatan bahwa folder bernama `99_STAGING_BACKUP_DAN_HAPUS` masih menampung database STAGING aktif. **Dilarang penghapusan/pemindahan berdasarkan nama folder.**
+
+Dokumen normatif Mandat Produksi dan SOP komunitas **tidak diedit**, karena ketentuannya tetap berlaku. Addendum ini tidak mengganti tahap, izin, harga, komisi, atau struktur database. [CI source 430/430 PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43791863410) dan [Pages PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43791863012). Pembacaan source bukan bukti GAS aktif telah dimigrasikan.

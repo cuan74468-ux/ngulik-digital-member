@@ -3,7 +3,7 @@
 **Tujuan:** mencegah penimpaan `Code.gs`/modul terpasang tanpa verifikasi. Berkas pasangan mesin: [`contracts/gas-runtime-source-manifest-2026-11-16.json`](../contracts/gas-runtime-source-manifest-2026-11-16.json).
 
 ## Status yang diketahui
-- GitHub `main` memiliki **15 file Apps Script `.gs`**; SHA blob dan ukuran setiap file dicatat dalam manifest pada source snapshot `a4e20065...`.
+- GitHub `main` memiliki **15 file Apps Script `.gs`**; SHA blob dan ukuran setiap file dicatat dalam manifest pada source snapshot `67470ffd05b9aff9f7f52d1b320b59a072286d93`.
 - Hanya dua fungsi diagnostik pada editor Apps Script STAGING yang **diketahui pernah berjalan** dari log owner: `ngdInfrastructurePreflightReadOnly` (29/29) dan `ngdDataIntegrityPreflightReadOnly` (8/8). Ini membuktikan fungsi berjalan, **bukan** bahwa seluruh isi file editor identik dengan commit GitHub.
 - Konten editor GAS `Code.gs`, `OtpAuth.gs`, `AdminAccess.gs`, `LMS.gs`, dan semua modul lain **belum diverifikasi dari konektor**; Google Drive tidak menyediakan pembacaan script yang terotorisasi saat dicoba.
 - Script baru `RegistrationRecoveryPreflight.gs` masih **SOURCE GitHub** dalam catatan verifikasi; belum ada log owner yang memastikan pemasangan atau eksekusinya.
