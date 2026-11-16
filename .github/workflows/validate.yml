@@ -193,7 +193,6 @@ jobs:
           grep -q 'data-ink-navigation="true"' /tmp/ngd-admin-desktop.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-desktop.html
           echo 'DESKTOP_BROWSER_QA_OK'
-          set -x  # temporary CI trace: identify first failing browser assertion
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/#beranda" > /tmp/ngd-guest-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-unified-theme="true"' /tmp/ngd-guest-mobile.html
@@ -213,7 +212,7 @@ jobs:
             "http://127.0.0.1:8765/?preview=admin#produk" > /tmp/ngd-admin-catalog-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="admin-catalog-form"' /tmp/ngd-admin-catalog-mobile.html
           grep -q 'produk tercatat' /tmp/ngd-admin-catalog-mobile.html
-          grep -q 'Pengelolaan katalog belum diaktifkan' /tmp/ngd-admin-catalog-mobile.html
+          grep -q 'Buat produk (nonaktif)' /tmp/ngd-admin-catalog-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-catalog-mobile.html
           grep -q 'data-ink-navigation="true"' /tmp/ngd-admin-catalog-mobile.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
