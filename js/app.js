@@ -314,7 +314,6 @@ function viewHome(){
       '<div class="wallet-commands"><button type="button" class="btn btn-primary" data-catalog-go="ai">+ Isi Token (QRIS) '+icon('arrow')+'</button>'+
       '<button type="button" class="btn btn-secondary" data-route="ai">Buka Studio AI</button></div>'+
       '<div class="wallet-service-list">'+serviceBadges.map(function(x){return '<span class="wallet-service"><strong>'+esc(x[0])+'</strong><small>'+esc(x[1])+'</small></span>';}).join('')+'</div></section>'+
-      '<span class="chip green">'+esc(state.me.status||'AKTIF')+'</span></section>'+
       '<section class="member-focus" aria-label="Ringkasan perjalanan belajar">'+
         '<div class="member-focus-content"><span class="member-focus-kicker">AKTIVITAS & PRODUKTIVITAS</span>'+
         '<h2>'+(currentCourse?'Lanjutkan aktivitas terakhir.':'Kelola kebutuhan digital Anda.')+'</h2>'+
@@ -349,29 +348,54 @@ function viewHome(){
   ];
   const goAttr=(r)=>['aplikasi','jasa'].includes(r)?'data-catalog-go="'+r+'"':'data-route="'+r+'"';
   const processLabels=[
-    ['01','Pilih alat'],['02','Isi kebutuhan'],['03','Gunakan hasil']
+    ['01','Pilih alat'],['02','Tulis brief'],['03','Gunakan hasil']
   ];
   const processExplanations=[
-    'Temukan alat AI sesuai jenis pekerjaan: caption, deskripsi produk, atau balasan pelanggan.',
-    'Masukkan nama usaha dan detail produk. Biaya Token terlihat sebelum eksekusi.',
-    'Setelah diproses, hasil dapat disalin atau dibagikan ke WhatsApp.'
+    'Jelajahi asisten AI yang tersedia untuk konten, deskripsi, atau pekerjaan usaha Anda.',
+    'Ceritakan produk dan kebutuhan Anda. Biaya Token ditampilkan sebelum dijalankan.',
+    'Salin hasil yang dibuat, lalu gunakan untuk promosi atau komunikasi pelanggan.'
   ];
-  const hero='<section class="nh-hero public-editorial-hero" aria-label="Bengkel kerja digital untuk UMKM">'+
-    '<div class="public-hero-copy"><p class="eyebrow">PRAKTIS UNTUK BISNIS SEHARI-HARI</p>'+
-    '<h1>Bengkel kerja digital <em>& asisten AI</em> untuk UMKM.</h1>'+
-    '<p class="public-hero-lead">Mulai Rp10.000. Tanpa biaya langganan mahal. Isi Token, pilih alat, dan selesaikan pekerjaan digital Anda.</p>'+
-    '<div class="public-hero-buttons"><button type="button" class="btn btn-primary" data-route="katalog">Lihat Katalog Alat '+icon('arrow')+'</button>'+
-    '<button type="button" class="btn btn-secondary" data-route="daftar">Daftar via WhatsApp</button></div>'+
-    '<p class="public-hero-note">Pay-as-you-go · Penawaran dan harga resmi ada di katalog</p></div>'+
-    '<div class="public-workflow" aria-label="Cara menggunakan Studio AI">'+
-      '<div class="public-workflow-top"><span>STUDIO AI / CARA KERJA</span><span>01—03</span></div>'+
-      '<h2>Dari brief singkat ke <span>hasil siap pakai.</span></h2>'+
-      '<div class="public-workflow-steps">'+processLabels.map(function(x,i){return '<button type="button" class="public-workflow-step'+
-        (state.publicStep===i?' is-selected':'')+'" data-public-step="'+i+'" aria-pressed="'+(state.publicStep===i?'true':'false')+
-        '"><small>'+x[0]+'</small><strong>'+x[1]+'</strong></button>';}).join('')+'</div>'+
-      '<p class="public-workflow-explain">'+esc(processExplanations[state.publicStep||0])+'</p>'+
-      '<button type="button" class="public-workflow-link" data-route="ai">Temukan alat AI '+icon('arrow')+'</button>'+
-    '</div></section>'+(window.NGD_CONTENT_UI?.hero(state.siteContent)||'');
+  // Cards are populated exclusively by getKatalog; nothing is invented for the showcase.
+  const featuredProducts=(Array.isArray(state.catalog)?state.catalog:[])
+    .filter(p=>p&&p.aktif!==false)
+    .slice(0,5).map((p,i)=>{
+      const image=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',
+        p.product_id,'pf-product-cover','')||'<span class="pf-product-monogram" aria-hidden="true">'+
+        esc(String(p.nama||'N').slice(0,1).toUpperCase())+'</span>';
+      return '<button type="button" class="pf-product-card pf-tone-'+(i%5+1)+
+        '" data-route="katalog" aria-label="Lihat '+esc(p.nama)+' di katalog">'+
+        '<span class="pf-product-art">'+image+'</span>'+
+        '<span class="pf-product-info"><strong>'+esc(p.nama)+'</strong><small>'+
+        rupiah(p.harga)+'</small></span></button>';
+    }).join('');
+  const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero" aria-label="Bengkel kerja digital untuk UMKM">'+
+    '<span class="pf-hero-spark pf-spark-one" aria-hidden="true">✦</span>'+
+    '<span class="pf-hero-spark pf-spark-two" aria-hidden="true">✧</span>'+
+    '<span class="pf-hero-spark pf-spark-three" aria-hidden="true">✦</span>'+
+    '<div class="public-hero-copy">'+
+      '<p class="pf-hello"><span class="pf-hello-dot" aria-hidden="true"></span> Ngulik Digital <span aria-hidden="true">/</span> Alat & AI untuk UMKM</p>'+
+      '<h1>Usaha jalan. <em>Teknologi membantu.</em></h1>'+
+      '<p class="public-hero-lead">Bengkel kerja digital untuk membuat konten, mengelola usaha, dan mendapatkan alat AI siap pakai. Mulai Rp10.000, bayar sesuai kebutuhan.</p>'+
+      '<div class="public-hero-buttons">'+
+        '<button type="button" class="btn btn-primary pf-button-dark" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
+        '<button type="button" class="btn btn-secondary pf-button-light" data-route="daftar">Masuk / Daftar WhatsApp</button>'+
+      '</div>'+
+      '<p class="public-hero-note">Aplikasi bisnis · Token AI · Jasa kreatif · Ebook</p>'+
+    '</div>'+
+    '<div class="pf-showcase" aria-label="Produk digital dan cara kerja Studio AI">'+
+      '<div class="pf-showcase-glow" aria-hidden="true"></div>'+
+      (featuredProducts?'<div class="pf-product-orbit" aria-label="Produk katalog yang tersedia">'+featuredProducts+'</div>':'')+
+      '<div class="public-workflow">'+
+        '<div class="public-workflow-top"><span>STUDIO AI / ALUR PENGGUNAAN</span><span>01—03</span></div>'+
+        '<h2>Dari ide usaha menjadi <span>hasil siap pakai.</span></h2>'+
+        '<div class="public-workflow-steps">'+processLabels.map((x,k)=>'<button type="button" class="public-workflow-step'+
+          (state.publicStep===k?' is-selected':'')+'" data-public-step="'+k+'" aria-pressed="'+(state.publicStep===k?'true':'false')+
+          '"><small>'+x[0]+'</small><strong>'+x[1]+'</strong></button>').join('')+'</div>'+
+        '<p class="public-workflow-explain">'+esc(processExplanations[state.publicStep||0])+'</p>'+
+        '<button type="button" class="public-workflow-link" data-route="ai">Kenali Studio AI '+icon('arrow')+'</button>'+
+      '</div>'+
+    '</div>'+
+  '</section>'+(window.NGD_CONTENT_UI?.hero(state.siteContent)||'');
   const search='<label class="nh-search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'+
     '<input id="home-search" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="Cari" aria-label="Cari fitur atau produk"></label>';
   const grid='<section class="nh-grid" aria-label="Fitur">'+features.map(f=>
@@ -665,7 +689,7 @@ function viewLogin(register=false,adminMode=false){
     '<h1 style="font-size:2.25rem">'+
     (adminMode?'Masuk panel administrator.':register?'Buat akun member.':'Masuk ke ruang Anda.')+'</h1>'+
     '<p class="lead">'+
-    (adminMode?'Gunakan nomor WhatsApp administrator yang sudah terdaftar dan PIN enam angka. Tidak perlu membuat akun baru.':register?'Mulai belajar dan bergabung dengan ekosistem Ngulik Digital.':'Gunakan nomor WhatsApp dan PIN enam angka yang terdaftar.')+'</p>'+
+    (adminMode?'Gunakan nomor WhatsApp administrator yang sudah terdaftar dan PIN enam angka. Tidak perlu membuat akun baru.':register?'Buat akun melalui WhatsApp untuk menggunakan alat dan layanan Ngulik Digital.':'Gunakan nomor WhatsApp dan PIN enam angka yang terdaftar.')+'</p>'+
     '<form id="auth-form" class="surface" data-mode="'+(adminMode?'admin':register?'register':'login')+'">'+
     (register?'<div class="field"><label for="nama">Nama lengkap</label><input class="input" id="nama" name="nama" autocomplete="name" required minlength="2" maxlength="80"></div>'+
       '<div class="field"><label for="usaha">Nama usaha</label><input class="input" id="usaha" name="nama_usaha" required minlength="2" maxlength="100"></div>':'')+
@@ -2031,7 +2055,7 @@ document.addEventListener('input',e=>{
   if(e.target.id==='learning-course-search')filterLearningCards_();
 });
 document.addEventListener('click',async(e)=>{
-  const target=e.target.closest('[data-public-step],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next]');
+  const target=e.target.closest('[data-public-step],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next]');
   if(!target)return;
   if(target.hasAttribute('data-public-step')){
     const step=Number(target.dataset.publicStep);
