@@ -20,6 +20,10 @@
     check('no-document-overflow',document.documentElement.scrollWidth<=window.innerWidth+4);
     check('access-layout-visible',!!access && access.getBoundingClientRect().height>200);
     check('valid-viewport',window.innerWidth>=300);
+    check('shared-experience-v2',
+      !!document.querySelector('link[href*="../assets/experience.css"]') &&
+      document.body.classList.contains('ngd-ops-app') &&
+      getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim()==='#4361ee');
     var ok=checks.every(function(x){return x.pass;});
     document.body.setAttribute('data-staging-visual-check',ok?'pass':'fail');
     document.body.setAttribute('data-staging-visual-count',String(checks.length));

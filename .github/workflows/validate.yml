@@ -60,6 +60,7 @@ jobs:
           grep -q 'class="nh-hero"' /tmp/ngd-guest.html
           grep -q 'class="nh-grid"' /tmp/ngd-guest.html
           grep -q 'Ngulik Digital' /tmp/ngd-guest.html
+          grep -q 'data-experience-v2="true"' /tmp/ngd-guest.html
           if grep -q 'DEMO LOKAL\|Pratinjau — bukan data transaksi' /tmp/ngd-guest.html; then
             echo 'ERROR: internal development banner leaked to public page' >&2
             exit 1
@@ -222,9 +223,10 @@ jobs:
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=4000 --window-size=1365,850 --dump-dom \
             "http://127.0.0.1:8765/staging/" > /tmp/ngd-staging-desktop.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-staging-visual-check="pass"' /tmp/ngd-staging-desktop.html
-          grep -q 'data-staging-visual-count="10"' /tmp/ngd-staging-desktop.html
+          grep -q 'data-staging-visual-count="11"' /tmp/ngd-staging-desktop.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=4000 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/staging/" > /tmp/ngd-staging-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-staging-visual-check="pass"' /tmp/ngd-staging-mobile.html
+          grep -q 'shared-experience-v2:PASS' /tmp/ngd-staging-mobile.html
           echo 'STAGING_VISUAL_SMOKE_OK: desktop and mobile login shell'
           echo 'BROWSER_UI_OK: membership public, member, admin, catalog and service flows'

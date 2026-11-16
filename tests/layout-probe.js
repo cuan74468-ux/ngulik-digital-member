@@ -30,6 +30,10 @@
       var surfaceReady=!!activeSurface&&
         getComputedStyle(activeSurface).backgroundColor!=='rgba(0, 0, 0, 0)';
       var safeTheme=sharedTheme&&themeLinked;
+      var sharedExperience=!!document.querySelector('link[href*="assets/experience.css"]') &&
+        document.body.classList.contains('ngd-public-app') &&
+        getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim()==='#4361ee';
+      output.setAttribute('data-experience-v2',String(sharedExperience));
       output.setAttribute('data-overflow',String(overflow));
       output.setAttribute('data-member-theme',String(memberTheme));
       output.setAttribute('data-unified-theme',String(safeTheme));
