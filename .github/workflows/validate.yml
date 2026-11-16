@@ -257,13 +257,13 @@ jobs:
           fi
           # STAGING administrative workspace: verify real rendered DOM and layout
           # at desktop + Android viewport widths without any API write.
-          sed -i 's#</body>#<script src="../tests/staging-layout-probe.js" defer></script></body>#' staging/index.html
+          sed -i 's#</body>#<script src="../tests/staging-layout-probe.js" defer></script></body>#' staging/monitor.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=4000 --window-size=1365,850 --dump-dom \
-            "http://127.0.0.1:8765/staging/" > /tmp/ngd-staging-desktop.html 2>>/tmp/ngd-chrome.log
+            "http://127.0.0.1:8765/staging/monitor.html" > /tmp/ngd-staging-desktop.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-staging-visual-check="pass"' /tmp/ngd-staging-desktop.html
           grep -q 'data-staging-visual-count="11"' /tmp/ngd-staging-desktop.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=4000 --window-size=390,844 --dump-dom \
-            "http://127.0.0.1:8765/staging/" > /tmp/ngd-staging-mobile.html 2>>/tmp/ngd-chrome.log
+            "http://127.0.0.1:8765/staging/monitor.html" > /tmp/ngd-staging-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-staging-visual-check="pass"' /tmp/ngd-staging-mobile.html
           grep -q 'shared-experience-v2:PASS' /tmp/ngd-staging-mobile.html
           echo 'STAGING_VISUAL_SMOKE_OK: desktop and mobile login shell'
