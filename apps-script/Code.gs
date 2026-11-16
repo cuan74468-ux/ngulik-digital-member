@@ -381,6 +381,54 @@ function grantInitialCredit_(memberId, amount) {
 }
 
 // ===== SEED =====
+/**
+ * Align the 16 production-core columns in the isolated STAGING database.
+ * Adds missing columns/tabs; never clears, reseeds or overwrites existing rows.
+ */
+function syncCommercialSchemaStaging() {
+  var props=PropertiesService.getScriptProperties();
+  var target=String(props.getProperty('NGD_DB_ID')||'');
+  require_(props.getProperty('NGD_ENVIRONMENT')==='STAGING'&&target&&
+    String(db_().getId())===target,'FORBIDDEN','Hanya untuk database STAGING yang sesuai.');
+  requireMutationsEnabled_();
+  var core=['members','katalog_produk','etalase_affiliate_luar','orders',
+    'credits_ledger','affiliate_commissions','audit_logs','pengaturan_sistem',
+    'sessions','klik_log','ai_tools','modul_belajar','progress_member',
+    'otp_verifications','wa_notifications','ringkasan'];
+  return withLock_(function(){
+    var db=db_(),created=[],added={},checked=0;
+    core.forEach(function(name){
+      var expected=NGD.HEADERS[name].split(','),sheet=db.getSheetByName(name);
+      if(!sheet){
+        sheet=db.insertSheet(name);
+        if(sheet.getMaxColumns()<expected.length)
+          sheet.insertColumnsAfter(sheet.getMaxColumns(),expected.length-sheet.getMaxColumns());
+        sheet.getRange(1,1,1,expected.length).setValues([expected]);
+        sheet.setFrozenRows(1);
+        created.push(name);
+      }else{
+        var count=sheet.getLastColumn();
+        var current=count?sheet.getRange(1,1,1,count).getValues()[0].map(String):[];
+        var seen={};
+        current.forEach(function(col){
+          require_(col&&!seen[col],'SCHEMA_MISMATCH','Header kosong atau ganda: '+name);
+          seen[col]=true;
+        });
+        var missing=expected.filter(function(col){return current.indexOf(col)<0;});
+        missing.forEach(function(col){
+          var index=sheet.getLastColumn()+1;
+          if(sheet.getMaxColumns()<index)
+            sheet.insertColumnsAfter(sheet.getMaxColumns(),index-sheet.getMaxColumns());
+          sheet.getRange(1,index).setValue(col);
+        });
+        if(missing.length)added[name]=missing;
+      }
+      checked++;
+    });
+    return {tables_checked:checked,created:created,added:added,
+      existing_rows_preserved:true};
+  });
+}
 function seedSettings_() {
   var entries = [
     ['nama_brand','Ngulik Digital','TEXT'], ['gelombang_aktif',1,'NUMBER'],
