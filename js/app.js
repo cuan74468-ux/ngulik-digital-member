@@ -250,6 +250,13 @@ function renderNav(){
   if(mark)mark.innerHTML=window.NGD_CONTENT_UI?.media(state.siteContent,'BRAND_LOGO','brand','brand-custom-image','')||'n<span>.</span>';
   const caption=by('sidebar-caption');
   if(caption)caption.textContent=isAdmin()?'Panel admin':logged()?'Menu member':'Menu';
+  // The same portfolio-style navigation highlights the active public destination.
+  const publicLinks=typeof document.querySelectorAll==='function'
+    ?document.querySelectorAll('#guest-nav [data-route]'):[];
+  publicLinks.forEach(btn=>{
+    if(btn.dataset?.route===state.route)btn.setAttribute('aria-current','page');
+    else btn.removeAttribute('aria-current');
+  });
 }
 const empty=(heading,message,action='',label='Masuk')=>
   '<div class="empty"><span class="symbol">◌</span><h3>'+esc(heading)+'</h3><p>'+esc(message)+'</p>'+
