@@ -24,3 +24,9 @@ Node tests dan GitHub Actions Chrome smoke pada checkout SHA final wajib lulus, 
 Rollback visual: revert commit UI atau hapus dua link experience.css dan body class; database tidak perlu dipulihkan. CSS lama sengaja tidak dihapus agar halaman dan class yang digunakan JS tetap kompatibel. Consolidate legacy overrides pada iterasi visual berikut setelah QA, bukan dengan penghapusan serentak.
 
 **Release tetap Tahap 1 PROSES/NO-GO.** Keputusan foundation-first/providers-last tetap berlaku.
+
+## Iterasi penyempurnaan navigasi dan keterbacaan — 16 November 2026
+
+Pemeriksaan kode menemukan penyebab UX nyata: beberapa kalimat pengantar, label halaman dan jumlah hasil katalog disembunyikan oleh rules mobile legacy; dan banyak menu member/admin tidak terlihat di lima tab bawah. Karena pemakai harus dapat menemukan fitur, source diperbaiki dengan **rute Menu** (daftar seluruh modul sesuai role) sebagai tab kelima. Profil tetap bisa dibuka dari tombol akun topbar dan dari menu. Modul admin yang tidak muat di tab bawah tampil dalam daftar menu, tidak ada otorisasi baru ataupun bypass login.
+
+Form admin STAGING diprioritaskan pada mobile: navigasi yang masih terkunci dan panel ilustrasi disembunyikan secara presentasi, nav operasional muncul setelah sesi aktif. Deskripsi yang membantu orientasi kembali ditampilkan. Input memiliki font minimal 16px agar tidak memicu zoom otomatis iOS. Regresi VM menegaskan menu member/admin/guest tersedia tanpa memanggil API pada preview; Chrome menguji layout lintas role. Tidak ada perubahan schema, Script Properties, atau provider.

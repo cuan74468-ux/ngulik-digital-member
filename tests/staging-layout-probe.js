@@ -13,8 +13,10 @@
     check('page-visible',!!page && page.getBoundingClientRect().width>=280);
     check('heading-visible',!!heading && heading.getBoundingClientRect().height>20);
     check('connection-visible',!!setup && !setup.hidden && setup.getBoundingClientRect().height>100);
-    check('editorial-aside-visible',!!aside && aside.getBoundingClientRect().width>200);
-    check('navigation-visible',!!menu && !menu.hidden);
+    check('editorial-aside-contextual',!!aside && (window.innerWidth<=760?
+      getComputedStyle(aside).display==='none':aside.getBoundingClientRect().width>200));
+    check('navigation-state',!!menu && (window.innerWidth<=760 && menu.classList.contains('is-locked')?
+      getComputedStyle(menu).display==='none':getComputedStyle(menu).display!=='none'));
     check('login-not-public',document.getElementById('login-section').hidden===true);
     check('workspace-not-public',document.getElementById('workspace-section').hidden===true);
     check('no-document-overflow',document.documentElement.scrollWidth<=window.innerWidth+4);

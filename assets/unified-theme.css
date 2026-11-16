@@ -690,15 +690,12 @@ body:not(#ngd) .toast.error{background:var(--danger)}
 
 /* 16b — Mobile native: semua layar mengikuti pola beranda (judul besar, grup daftar, kartu datar, formulir terisi) */
 @media(max-width:760px){
-  /* Kepala halaman: tanpa eyebrow/paragraf promosi — judul besar saja */
-  body:not(#ngd) :is(.catalog-intro,.service-heading,.catalog-admin-intro,.admin-operations-intro,.lms-heading,.learn-guest-intro) :is(.eyebrow,.card-kicker,p){display:none}
+  /* Keep real introductory guidance visible on mobile; do not erase page context. */
   body:not(#ngd) :is(.catalog-intro,.service-heading,.catalog-admin-intro,.admin-operations-intro,.lms-heading,.learn-guest-intro){margin:0 0 14px;gap:8px}
   body:not(#ngd) :is(.catalog-intro,.service-heading,.catalog-admin-intro,.admin-operations-intro,.lms-heading,.learn-guest-intro) :is(h1,h2){font-size:1.5rem;line-height:1.15;margin:0}
-  body:not(#ngd) .main-content>section>.eyebrow,body:not(#ngd) #screen>.eyebrow{display:none}
   /* Judul seksi = label grup daftar */
   body:not(#ngd) .section-head{margin:22px 4px 10px}
   body:not(#ngd) .section-head h2{font:700 .74rem var(--font-body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0}
-  body:not(#ngd) .section-head p{display:none}
   /* Kartu datar ala daftar terkelompok */
   body:not(#ngd) :is(.surface,.catalog-card,.lms-course-tile,.support-ticket,.support-release,.lms-lesson-card,.lms-editor-section,.service-entry,.service-admin-item,.catalog-admin-row,.catalog-admin-editor,.learn-path-item,.login-shell>form){
     border:0;border-radius:20px;box-shadow:0 1px 2px rgba(14,19,32,.05),0 8px 20px -16px rgba(14,19,32,.18);
@@ -723,7 +720,6 @@ body:not(#ngd) .toast.error{background:var(--danger)}
   body:not(#ngd) .catalog-card-bottom{grid-template-columns:minmax(0,auto) minmax(0,1fr);align-items:center;gap:12px;padding-top:12px}
   body:not(#ngd) .catalog-card-bottom strong{font-size:1.2rem}
   body:not(#ngd) .catalog-card-bottom .btn{width:auto;justify-self:end;min-height:44px;padding:8px 14px;font-size:.82rem}
-  body:not(#ngd) .catalog-result-count{display:none}
   body:not(#ngd) .catalog-filter{min-height:38px;padding:0 16px;font-size:.84rem}
   /* LMS & daftar */
   body:not(#ngd) .lms-course-tile{padding:16px;gap:8px}

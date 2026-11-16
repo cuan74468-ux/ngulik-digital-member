@@ -66,7 +66,7 @@ const icons = {
 };
 const icon=(name)=>'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||icons.grid)+'</svg>';
 const screens={
-  beranda:['Beranda','home'],belajar:['Belajar','book'],
+  beranda:['Beranda','home'],belajar:['Belajar','book'],menu:['Menu','grid'],
   lms:['Studio LMS','book'],['lms-editor']:['Workspace Materi','book'],
   ['lms-lesson']:['Editor Pelajaran','book'],['lms-course']:['Ruang Kelas','book'],
   ['lms-ai']:['Review Draft AI','spark'],
@@ -233,8 +233,11 @@ function renderNav(){
   const navIcon=(route)=>window.NGD_CONTENT_UI?.media(state.siteContent,'NAV_ICON',route,'nav-custom-icon','')||icon(screens[route][1]);
   const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+navIcon(route)+'<span>'+esc(screens[route][0])+'</span></button>';
   by('desktop-nav').innerHTML=items.map(button).join('');
-  const mobileItems=isAdmin()?['admin','produk','pesanan','lms','akun']:['beranda','katalog','jasa','belajar','akun'];
-  const selectedMobile=mobileNavRoute(state.route);
+  // Four high-frequency destinations + a full, discoverable menu. The topbar
+  // account button stays available on every viewport, including mobile.
+  const mobileItems=isAdmin()?['admin','produk','pesanan','lms','menu']:['beranda','katalog','jasa','belajar','menu'];
+  const context=mobileNavRoute(state.route);
+  const selectedMobile=mobileItems.includes(context)?context:'menu';
   by('mobile-nav').innerHTML=mobileItems.map(route=>
     '<button type="button" class="nav-item" data-route="'+route+'" '+
     (route===selectedMobile?'aria-current="page"':'')+' aria-label="'+esc(screens[route][0])+'">'+
@@ -253,6 +256,32 @@ const empty=(heading,message,action='',label='Masuk')=>
   (action?'<button class="btn btn-primary" data-route="'+action+'">'+esc(label)+' '+icon('arrow')+'</button>':'')+'</div>';
 const needLogin=(feature)=>
   empty('Masuk untuk membuka '+feature,'Aktivitas member dan data pribadi hanya tersedia setelah login.','login','Masuk sekarang');
+// Browseable on mobile instead of hiding most routes behind a desktop-only sidebar.
+// This is a presentation route: existing auth checks still guard every action.
+function viewMore(){
+  const routes=isAdmin()?adminNav:memberNav;
+  const descriptions={
+    beranda:'Aktivitas dan rekomendasi',belajar:'Materi dan progres',katalog:'Produk dan lisensi',
+    jasa:'Permintaan layanan',ai:'Asisten kreativitas',affiliate:'Program referensi',
+    dukungan:'Pertanyaan dan tiket',akun:'Profil dan keamanan',admin:'Ringkasan operasional',
+    konten:'Halaman dan media',produk:'Produk dan harga',layanan:'Permintaan pelanggan',
+    lms:'Kursus dan materi',pesanan:'Status transaksi',member:'Data keanggotaan',
+    rilis:'Pembaruan produk',antrean:'Daftar menunggu',pengaturan:'Pengaturan layanan'
+  };
+  return '<section class="ngd-menu-page" aria-label="Semua menu">'+
+    title(isAdmin()?'Modul pengelolaan':'Jelajahi Ngulik Digital','SEMUA MENU',
+      'Pilih tujuan untuk melanjutkan. Setiap fitur mengikuti izin dan status layanan.')+
+    '<nav class="ngd-menu-grid" aria-label="Daftar seluruh fitur">'+routes.map(route=>
+      '<button type="button" class="ngd-menu-tile" data-route="'+route+'">'+
+      '<span class="ngd-menu-icon" aria-hidden="true">'+icon(screens[route][1])+'</span>'+
+      '<span class="ngd-menu-copy"><strong>'+esc(screens[route][0])+'</strong><small>'+
+      esc(descriptions[route]||'Buka fitur')+'</small></span>'+icon('arrow')+'</button>'
+    ).join('')+'</nav>'+
+    (!logged()?'<div class="ngd-menu-access"><p>Sudah menjadi anggota?</p>'+
+      '<button class="btn btn-primary" type="button" data-route="login">Masuk member</button>'+
+      '<button class="btn btn-secondary" type="button" data-route="admin-login">Akses administrator</button></div>':'')+
+    '</section>';
+}
 const safeBadge=(s)=>'<span class="chip '+(['AKTIF','FULFILLED','PAID','APPROVED'].includes(String(s))?'green':'orange')+'">'+esc(s||'-')+'</span>';
 function viewHome(){
   if(isAdmin())return viewAdmin();
@@ -1031,7 +1060,7 @@ function render(){
   renderNav();
   by('notice-slot').innerHTML=notice();
   const routes={
-    beranda:viewHome,belajar:viewLearn,katalog:viewCatalog,ai:viewAI,affiliate:viewAffiliate,
+    beranda:viewHome,belajar:viewLearn,katalog:viewCatalog,ai:viewAI,affiliate:viewAffiliate,menu:viewMore,
     lms:()=>isAdmin()&&window.NGD_LMS_UI?
       window.NGD_LMS_UI.adminCatalog(state.lmsAdminCourses,lmsWriteEnabled(),state.catalog):
       needLogin('studio LMS'),

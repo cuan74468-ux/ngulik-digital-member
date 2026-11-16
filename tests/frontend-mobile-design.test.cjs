@@ -109,7 +109,7 @@ test('admin mobile workspace exposes every operational module with a consistent 
   for(const route of ['admin','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','akun'])
     assert.ok(bar.includes('data-route="'+route+'"'),'Admin route missing: '+route);
   assert.match(bar,/data-route="lms" aria-current="page"/);
-  for(const route of ['admin','produk','pesanan','lms','akun'])
+  for(const route of ['admin','produk','pesanan','lms','menu'])
     assert.ok(h.nodes['mobile-nav'].innerHTML.includes('data-route="'+route+'"'),route);
   h.go('member360');
   assert.match(h.nodes['notice-slot'].innerHTML,/data-route="member" aria-current="page"/);
@@ -126,4 +126,25 @@ test('administrator account has operational controls without member-only affilia
   assert.match(screen,/Kelola kelas dan materi/);
   assert.match(screen,/data-action="logout"/);
   assert.doesNotMatch(screen,/Lihat referral saya|Simpan perubahan profil/);
+});
+
+test('mobile all-menu route exposes member services and admin modules without API',()=>{
+  const member=preview('member','menu');
+  assert.match(member.nodes['mobile-nav'].innerHTML,/data-route="menu" aria-current="page"/);
+  for(const route of ['ai','affiliate','dukungan','akun'])
+    assert.match(member.nodes.screen.innerHTML,new RegExp('data-route="'+route+'"'));
+  member.go('affiliate');
+  assert.match(member.nodes['mobile-nav'].innerHTML,/data-route="menu" aria-current="page"/);
+  const admin=preview('admin','menu');
+  for(const route of ['konten','layanan','member','rilis','antrean','pengaturan','akun'])
+    assert.match(admin.nodes.screen.innerHTML,new RegExp('data-route="'+route+'"'));
+  assert.equal(member.apiCalls(),0);
+  assert.equal(admin.apiCalls(),0);
+});
+test('guest all-menu offers sign-in links without bypassing access flags',()=>{
+  const guest=preview('','menu');
+  assert.match(guest.nodes.screen.innerHTML,/data-route="login"/);
+  assert.match(guest.nodes.screen.innerHTML,/data-route="admin-login"/);
+  assert.doesNotMatch(guest.nodes.screen.innerHTML,/PRIVATE_TEST_TOKEN|FONNTE_API_KEY/);
+  assert.equal(guest.apiCalls(),0);
 });

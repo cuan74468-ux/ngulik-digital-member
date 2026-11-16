@@ -49,3 +49,18 @@ test('all major screen families share mobile responsive behavior and focus style
   for(const bp of ['@media(max-width:760px)','@media(max-width:420px)',
     '@media(min-width:761px)','prefers-reduced-motion:reduce'])assert.ok(css.includes(bp),bp);
 });
+
+test('mobile retains essential help text and exposes all routes',()=>{
+ const unified=read('assets/unified-theme.css');
+ assert.doesNotMatch(unified,/\.section-head p\{display:none\}/);
+ assert.doesNotMatch(unified,/\.catalog-result-count\{display:none\}/);
+ assert.doesNotMatch(unified,/:is\(\.eyebrow,\.card-kicker,p\)\{display:none\}/);
+ const app=read('js/app.js');
+ assert.match(app,/menu:\['Menu','grid'\]/);
+ assert.ok(app.includes('function viewMore()'));
+ assert.ok(app.includes('menu:viewMore'));
+ assert.ok(css.includes('.ngd-menu-grid'));
+ assert.ok(css.includes('.ngd-menu-tile'));
+ assert.ok(css.includes('body.ngd-ops-app .nav.is-locked{display:none}'));
+ assert.ok(css.includes('body.ngd-ops-app .access-aside{display:none}'));
+});
