@@ -772,6 +772,10 @@ function viewCheckout(){
   const timer=Number.isFinite(ms)?
     String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0'):'—';
   const readyQr=fallbackQr?qrSource:'';
+  // The bundled qris.png is explicitly NOT a payable code. Owner approval
+  // only applies after the asset has been replaced with their real QRIS.
+  const bundledPlaceholder=/(?:^|\\/)assets\\/qris\\.png(?:$|[?#])/i.test(qrRaw)&&
+    config.qrisOwnerImageApproved!==true;
   const manual=String(o.metode||'').includes('STATIS');
   const pending=['PENDING','MENUNGGU_VERIFIKASI'].includes(String(o.status||''));
   return '<div class="checkout-backdrop"><section class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-title">'+
@@ -792,13 +796,16 @@ function viewCheckout(){
       '<p class="checkout-note">Tautan pembayaran resmi tersedia dari server.</p>'+
       '<a class="btn btn-primary" href="'+esc(paymentLink)+'" target="_blank" rel="noopener noreferrer">Buka pembayaran aman ↗</a></div>':
       readyQr?
-      '<div class="checkout-qr"><img src="'+esc(readyQr)+'" alt="QRIS penerima '+esc(merchant)+'" width="260" height="260">'+
-      '<strong>'+esc(merchant)+'</strong><p class="checkout-note">Bayar sesuai jumlah termasuk kode unik.</p></div>':
+      '<div class="checkout-qr"><img data-qris-image src="'+esc(readyQr)+'" alt="'+(bundledPlaceholder?'Placeholder QRIS belum bisa dibayar — ':'QRIS penerima ')+esc(merchant)+'" width="260" height="260">'+
+      '<div data-qris-fallback class="qris-fallback" hidden><strong>Gambar QRIS gagal dimuat</strong><p>Jangan transfer tanpa memastikan QRIS resmi. Minta kode QR pembayaran langsung kepada Admin melalui WhatsApp.</p></div>'+
+      '<strong>'+esc(merchant)+'</strong><p class="checkout-note">'+
+      (bundledPlaceholder?'QRIS masih placeholder pengujian. JANGAN SCAN / JANGAN TRANSFER. Minta QRIS resmi dari Admin.':'Bayar sesuai jumlah termasuk kode unik.')+'</p></div>':
       '<div class="checkout-qr"><strong>Informasi pembayaran</strong>'+
       '<p class="checkout-note">QRIS belum tersedia pada respons pesanan. Jangan mentransfer sebelum QRIS atau tautan resmi ditampilkan.</p></div>')+
-    (manual&&readyQr&&o.status==='PENDING'&&seconds>0?
+    (manual&&readyQr&&!bundledPlaceholder&&o.status==='PENDING'&&seconds>0?
       '<button class="btn btn-primary btn-wide" type="button" data-action="confirm-payment">Saya Sudah Bayar</button>':'')+
-    (adminChat?'<a class="btn btn-secondary btn-wide" href="'+esc(adminChat)+'" target="_blank" rel="noopener noreferrer">Chat Admin via WA</a>':'')+
+    (adminChat?'<a class="btn btn-secondary btn-wide" href="'+esc(adminChat)+'" target="_blank" rel="noopener noreferrer">'+
+      (bundledPlaceholder||!readyQr?'Konfirmasi &amp; Minta QRIS via WA Admin':'Chat Admin via WA')+'</a>':'')+
     '<p class="checkout-note">Simpan nomor pesanan untuk memantau status pada menu Pesanan.</p></section></div>'+
     '</section></div>';
 }
@@ -1617,7 +1624,11 @@ async function buy(productId){
   }catch(e){toast(e.message,true);}
 }
 async function confirmPayment(){
-  if(!state.lastOrder||!paymentEnabled()||!state.lastOrder.qris_gambar_path||!state.lastOrder.qris_atas_nama)return toast('QRIS untuk konfirmasi manual belum tersedia.',true);
+  if(!state.lastOrder||!paymentEnabled()||!state.lastOrder.qris_gambar_path||!state.lastOrder.qris_atas_nama)
+    return toast('QRIS untuk konfirmasi manual belum tersedia.',true);
+  if(/(?:^|\\/)assets\\/qris\\.png(?:$|[?#])/i.test(String(state.lastOrder.qris_gambar_path))&&
+    config.qrisOwnerImageApproved!==true)
+    return toast('QRIS masih placeholder. Minta QRIS resmi via WhatsApp Admin.',true);
   if(!confirm('Anda yakin pembayaran telah dikirim ke QRIS resmi? Konfirmasi ini bukan bukti pembayaran berhasil.'))return;
   try{
     const r=await api('confirmPayment',{order_id:state.lastOrder.order_id},state.token,{write:true});
@@ -2095,6 +2106,15 @@ function selectLearningLesson_(index){
 document.addEventListener('input',e=>{
   if(e.target.id==='learning-course-search')filterLearningCards_();
 });
+// Capture image loading failures even when the checkout is re-rendered.
+document.addEventListener('error',event=>{
+  const img=event.target;
+  if(!(img instanceof HTMLImageElement)||!img.matches('[data-qris-image]'))return;
+  img.hidden=true;
+  const fallback=img.parentElement?.querySelector('[data-qris-fallback]');
+  if(fallback)fallback.hidden=false;
+},true);
+
 document.addEventListener('click',async(e)=>{
   const target=e.target.closest('[data-public-step],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin]');
   if(!target)return;
