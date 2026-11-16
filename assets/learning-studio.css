@@ -693,3 +693,46 @@ body.ngd-ops-app .workspace-card{
  body.ngd-public-app:not(#ngd) .lms-course-tile{transition:none!important;transform:none!important}
  body.ngd-public-app:not(#ngd) .learning-search input{scroll-behavior:auto}
 }
+
+/* Business-first Admin entry: actionable operational setup above system metrics. */
+body.ngd-public-app:not(#ngd) .admin-start-actions{
+  display:grid;gap:19px;margin:0 0 34px;
+}
+body.ngd-public-app:not(#ngd) .admin-start-actions h2{
+  font-size:clamp(1.32rem,2.25vw,1.8rem);margin:0;
+}
+body.ngd-public-app:not(#ngd) .admin-start-grid{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;
+}
+body.ngd-public-app:not(#ngd) .admin-start-item{
+  display:flex;flex-direction:column;text-align:left;align-items:flex-start;
+  padding:22px 19px;gap:9px;min-height:129px;
+  border:1px solid #dbe7de;border-radius:18px;
+  background:#fff;color:var(--studio-ink);
+  transition:background .15s,border-color .15s;
+}
+body.ngd-public-app:not(#ngd) .admin-start-item:hover{
+  background:#eef6ef;border-color:#9bc8ad;
+}
+body.ngd-public-app:not(#ngd) .admin-start-item strong{
+  display:flex;gap:8px;align-items:center;font-size:.94rem;font-weight:800;
+}
+body.ngd-public-app:not(#ngd) .admin-start-item strong svg{
+  width:16px;height:16px;color:var(--studio-forest);
+}
+body.ngd-public-app:not(#ngd) .admin-start-item small{
+  font-size:.79rem;line-height:1.55;color:var(--studio-muted);
+}
+@media(max-width:1150px){
+  body.ngd-public-app:not(#ngd) .admin-start-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:600px){
+  body.ngd-public-app:not(#ngd) .admin-start-grid{
+    grid-template-columns:1fr;gap:9px;
+  }
+  body.ngd-public-app:not(#ngd) .admin-start-item{
+    min-height:0;padding:17px 18px;gap:5px;border-radius:15px;
+  }
+}
