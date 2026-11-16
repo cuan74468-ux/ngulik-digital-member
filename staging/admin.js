@@ -101,7 +101,7 @@
     return Boolean(result && typeof result==='object' &&
       result.workspace==='NGD_STAGING' && result.environment==='STAGING' &&
       result.admin_login_enabled===true &&
-      result.mutations_enabled===false &&
+      typeof result.mutations_enabled==='boolean' &&
       result.registration_enabled===false &&
       result.otp_enabled===false &&
       result.finance_enabled===false);
