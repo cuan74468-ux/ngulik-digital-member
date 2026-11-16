@@ -1990,8 +1990,10 @@ function ngdStagingEndToEndSimulation() {
     schemas.forEach(function(name,i){
       var sh=i===0?first:scratch.insertSheet();
       sh.setName(name);
-      sh.getRange(1,1,1,NGD.HEADERS[name].split(',').length)
-        .setValues([NGD.HEADERS[name].split(',')]);
+      var headers=NGD.HEADERS[name].split(',');
+      if(sh.getMaxColumns()<headers.length)
+        sh.insertColumnsAfter(sh.getMaxColumns(),headers.length-sh.getMaxColumns());
+      sh.getRange(1,1,1,headers.length).setValues([headers]);
       sh.setFrozenRows(1);
     });
     function put(name,rows){
