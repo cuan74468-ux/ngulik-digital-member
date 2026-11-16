@@ -25,7 +25,7 @@
     check('shared-experience-v2',
       !!document.querySelector('link[href*="../assets/experience.css"]') &&
       document.body.classList.contains('ngd-ops-app') &&
-      getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim()==='#4361ee');
+      getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim()==='#20684e');
     var ok=checks.every(function(x){return x.pass;});
     document.body.setAttribute('data-staging-visual-check',ok?'pass':'fail');
     document.body.setAttribute('data-staging-visual-count',String(checks.length));
