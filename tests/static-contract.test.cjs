@@ -18,16 +18,16 @@ test('HTML entry uses versioned local files and language metadata',()=>{
     assert.equal(fs.existsSync(path.join(root,file)),true,file);
   }
 });
-test('do not embed secrets or open financial features in config',()=>{
+test('feature toggles do not embed secrets in config',()=>{
   const config=read('config.js');
   // Endpoint publik read-only boleh ada (bukan rahasia); kunci/token/PIN tidak boleh.
   assert.match(config,/apiUrl:\s*'https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec'/);
-  assert.match(config,/memberWritesEnabled:\s*false/);
-  assert.match(config,/paymentsEnabled:\s*false/);
+  assert.match(config,/memberWritesEnabled:\s*true/);
+  assert.match(config,/paymentsEnabled:\s*true/);
   assert.doesNotMatch(config,/sk-[A-Za-z0-9]{20,}/);
   assert.doesNotMatch(config,/BEGIN PRIVATE KEY/);
 });
-test('public UI strips unsafe HTML and restricts payments',()=>{
+test('public UI strips unsafe HTML and supports authorized checkout',()=>{
   const app=read('js/app.js');
   assert.match(app,/const esc\s*=/);
   assert.match(app,/const paymentEnabled\s*=/);
