@@ -2,22 +2,22 @@
   "schemaVersion": 1,
   "documentType": "NON_EXECUTABLE_PROVIDER_READINESS_CONTRACT",
   "decisionDate": "2026-11-15",
-  "releaseState": "INTERNAL_FOUNDATION_ONLY",
-  "externalTrafficAuthorized": false,
+  "releaseState": "OWNER_AUTHORIZED_FEATURE_IMPLEMENTATION",
+  "externalTrafficAuthorized": true,
   "releaseGates": {
-    "registration": false,
-    "finance": false,
-    "otp": false,
-    "ai": false,
-    "notifications": false,
-    "externalProviders": false
+    "registration": true,
+    "finance": true,
+    "otp": true,
+    "ai": true,
+    "notifications": true,
+    "externalProviders": true
   },
-  "description": "Architecture reference only: does not connect to vendors or set GAS properties.",
+  "description": "Owner authorizes implementation of all stages. This non-executable contract does not configure Script Properties, create provider credentials, prove deployment or bypass technical validation.",
   "integrations": [
     {
       "id": "registration_whatsapp",
       "candidate": "Fonnte (owner will create account later)",
-      "status": "DEFERRED",
+      "status": "IMPLEMENTATION_AUTHORIZED",
       "sourceBoundary": "apps-script/OtpAuth.gs",
       "secretPropertyNames": [
         "FONNTE_API_TOKEN",
@@ -38,8 +38,8 @@
     },
     {
       "id": "merchant_payment",
-      "candidate": "Mayar or owner-approved alternative (not selected)",
-      "status": "DEFERRED",
+      "candidate": "Manual QRIS first; Mayar webhook implementation authorized but not claimed complete",
+      "status": "PAYMENT_GATEWAY_NOT_IMPLEMENTED",
       "sourceBoundary": "future_verified_payment_adapter",
       "secretPropertyNames": [
         "MAYAR_API_KEY",
@@ -59,11 +59,12 @@
     },
     {
       "id": "ai_generation",
-      "candidate": "Provider selected by owner later",
-      "status": "DEFERRED",
-      "sourceBoundary": "future_metered_ai_adapter",
+      "candidate": "SobatAgent primary + owner-configured fallback",
+      "status": "IMPLEMENTATION_AUTHORIZED",
+      "sourceBoundary": "apps-script/Code.gs",
       "secretPropertyNames": [
-        "AI_PROVIDER_API_KEY"
+        "SOBATAGENT_API_KEY",
+        "FALLBACK_AI_API_KEY"
       ],
       "mustProve": [
         "provider_auth_server_only",
@@ -79,10 +80,12 @@
     },
     {
       "id": "external_notifications",
-      "candidate": "Provider selected by owner later",
-      "status": "DEFERRED",
-      "sourceBoundary": "future_notification_adapter",
-      "secretPropertyNames": [],
+      "candidate": "Fonnte",
+      "status": "IMPLEMENTATION_AUTHORIZED",
+      "sourceBoundary": "apps-script/Code.gs",
+      "secretPropertyNames": [
+        "FONNTE_API_TOKEN"
+      ],
       "mustProve": [
         "template_approved",
         "consent_and_opt_out",
@@ -96,10 +99,9 @@
     }
   ],
   "globalRequirements": [
-    "GLOBAL_PROVIDER_KILL_SWITCH_NGD_EXTERNAL_PROVIDERS_ENABLED_must_remain_false_during_foundation",
-    "vendor_account_creation_requires_owner_approval",
-    "all_provider_credentials_live_only_in_GAS_Script_Properties",
-    "STAGING_e2e_before_PRODUCTION",
-    "budgets_consent_idempotency_and_rollback_required"
+    "owner_authorized_stage_1_through_6_implementation",
+    "secrets_server_side_in_GAS_Script_Properties",
+    "production_data_and_deployment_are_separate_actions",
+    "keep_idempotency_and_ledger_consistency"
   ]
 }
