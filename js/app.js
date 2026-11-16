@@ -755,7 +755,12 @@ function viewCheckout(){
   const o=state.lastOrder;
   if(!o)return title('Pembayaran','PESANAN ANDA','')+
     empty('Pesanan belum dipilih','Pilih produk terlebih dahulu.','katalog','Buka katalog');
-  const fallbackQr=Boolean(qrisUrl()&&config.qrisMerchant);
+  const qrRaw=String(o.qris_gambar_path||config.qrisImageUrl||'');
+  const qrSource=(()=>{try{const u=new URL(qrRaw,location.href);return u.protocol==='https:'&& !u.username&&!u.password?u.href:'';}catch{return '';}})();
+  const merchant=String(o.qris_atas_nama||config.qrisMerchant||'');
+  const fallbackQr=Boolean(qrSource&&merchant);
+  const adminWa=String(o.wa_admin||'').replace(/[^0-9]/g,'');
+  const adminChat=adminWa?'https://wa.me/'+adminWa+'?text='+encodeURIComponent('Halo Admin, saya perlu bantuan pembayaran order '+o.order_id+' nominal '+rupiah(o.total_bayar)):'';
   const paymentLink=(()=>{
     try{
       const url=new URL(String(o.gateway_payment_url||''));
@@ -766,7 +771,7 @@ function viewCheckout(){
   const seconds=Number.isFinite(ms)?Math.max(0,Math.ceil(ms/1000)):0;
   const timer=Number.isFinite(ms)?
     String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0'):'—';
-  const qrSource=fallbackQr?qrisUrl():'';
+  const readyQr=fallbackQr?qrSource:'';
   const manual=String(o.metode||'').includes('STATIS');
   const pending=['PENDING','MENUNGGU_VERIFIKASI'].includes(String(o.status||''));
   return '<div class="checkout-backdrop"><section class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-title">'+
@@ -777,7 +782,7 @@ function viewCheckout(){
     '<div class="price-line"><span>Produk</span><strong>'+esc(o.nama_produk||'—')+'</strong></div>'+
     '<div class="price-line"><span>Harga</span><strong>'+rupiah(o.harga_dasar)+'</strong></div>'+
     '<div class="price-line"><span>Kode unik</span><strong>'+rupiah(o.kode_unik)+'</strong></div>'+
-    '<div class="checkout-total"><small>Total tagihan</small><strong>'+rupiah(o.total_bayar)+'</strong></div>'+
+    '<div class="checkout-total"><small>Transfer tepat (termasuk kode unik)</small><strong>'+rupiah(o.harga_dasar)+'<mark class="unique-digits">'+esc(String(o.kode_unik||'').padStart(3,'0'))+'</mark></strong><button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(String(o.total_bayar))+'">Salin Nominal</button></div>'+
     '<p class="checkout-countdown" id="checkout-countdown" data-expiry="'+esc(o.expires_at||'')+'">Batas pembayaran: '+timer+'</p>'+
     '<p class="checkout-note">Status: '+esc(o.status||'PENDING')+
     '. Pembayaran dianggap berhasil setelah terverifikasi oleh backend.</p></section>'+
@@ -786,13 +791,14 @@ function viewCheckout(){
       '<div class="checkout-qr"><strong>Pembayaran QRIS</strong>'+
       '<p class="checkout-note">Tautan pembayaran resmi tersedia dari server.</p>'+
       '<a class="btn btn-primary" href="'+esc(paymentLink)+'" target="_blank" rel="noopener noreferrer">Buka pembayaran aman ↗</a></div>':
-      qrSource?
-      '<div class="checkout-qr"><img src="'+esc(qrSource)+'" alt="QRIS merchant '+esc(config.qrisMerchant)+'" width="220" height="220">'+
-      '<strong>'+esc(config.qrisMerchant)+'</strong><p class="checkout-note">Bayar sesuai jumlah termasuk kode unik.</p></div>':
+      readyQr?
+      '<div class="checkout-qr"><img src="'+esc(readyQr)+'" alt="QRIS penerima '+esc(merchant)+'" width="260" height="260">'+
+      '<strong>'+esc(merchant)+'</strong><p class="checkout-note">Bayar sesuai jumlah termasuk kode unik.</p></div>':
       '<div class="checkout-qr"><strong>Informasi pembayaran</strong>'+
       '<p class="checkout-note">QRIS belum tersedia pada respons pesanan. Jangan mentransfer sebelum QRIS atau tautan resmi ditampilkan.</p></div>')+
-    (manual&&qrSource&&pending?
-      '<button class="btn btn-primary btn-wide" type="button" data-action="confirm-payment">Saya sudah membayar</button>':'')+
+    (manual&&readyQr&&o.status==='PENDING'&&seconds>0?
+      '<button class="btn btn-primary btn-wide" type="button" data-action="confirm-payment">Saya Sudah Bayar</button>':'')+
+    (adminChat?'<a class="btn btn-secondary btn-wide" href="'+esc(adminChat)+'" target="_blank" rel="noopener noreferrer">Chat Admin via WA</a>':'')+
     '<p class="checkout-note">Simpan nomor pesanan untuk memantau status pada menu Pesanan.</p></section></div>'+
     '</section></div>';
 }
@@ -997,15 +1003,22 @@ function viewAdminServices(){
 }
 function viewAdminOrders(){
   if(!isAdmin())return needLogin('pesanan admin');
-  const rows=state.adminOrders;
-  const reconciliation=state.reconciliation?.needs_review||0;
-  return title('Verifikasi & rekonsiliasi','PESANAN ADMIN','Pembayaran QRIS harus diperiksa melalui bukti dan penerimaan dana yang nyata.')+
-    (reconciliation?'<div class="banner warning"><div><h3>'+reconciliation+' pesanan perlu peninjauan</h3><p>Jangan memberikan akses produk dua kali. Lihat catatan rekonsiliasi.</p></div></div>':'')+
-    (!rows.length?empty('Belum ada order','Order dari member akan tercatat di sini.'):
-    '<div class="table-wrap"><table class="table"><thead><tr><th>Order</th><th>Produk</th><th>Total</th><th>Status</th></tr></thead><tbody>'+
-    rows.map(o=>'<tr><td>'+esc(o.order_id)+'</td><td>'+esc(o.nama_produk)+'</td><td>'+rupiah(o.total_bayar)+'</td><td>'+safeBadge(o.status)+'</td></tr>').join('')+'</tbody></table></div>')+
-    '<p class="small muted" style="margin-top:14px">Pengembalian dana hanya diproses setelah verifikasi tim administrasi.</p>';
+  const rows=[...(state.adminOrders||[])].sort((a,b)=>
+    Number(b.status==='MENUNGGU_VERIFIKASI')-Number(a.status==='MENUNGGU_VERIFIKASI')||
+    new Date(b.created_at)-new Date(a.created_at));
+  const waiting=rows.filter(o=>o.status==='MENUNGGU_VERIFIKASI').length;
+  return title('Verifikasi pembayaran','PESANAN ADMIN','Cocokkan nominal pada mutasi DANA/QRIS sebelum menyetujui.')+
+    '<p class="verification-count">'+waiting+' pesanan menunggu verifikasi</p>'+
+    (!rows.length?empty('Belum ada order','Pesanan member akan muncul di sini.'):
+    '<div class="table-wrap"><table class="table"><thead><tr><th>Order</th><th>Produk</th><th>Nominal tepat</th><th>Status / Tindakan</th></tr></thead><tbody>'+
+    rows.map(o=>'<tr><td><strong>'+esc(o.order_id)+'</strong><small class="sub">'+esc(o.member_id)+'</small></td>'+
+      '<td>'+esc(o.nama_produk)+'</td><td>'+rupiah(o.total_bayar)+'</td><td>'+safeBadge(o.status)+
+      (o.status==='MENUNGGU_VERIFIKASI'?'<div class="verification-actions">'+
+        '<button type="button" class="btn btn-primary btn-sm" data-payment-admin="approve" data-order-id="'+esc(o.order_id)+'">Terima &amp; Aktifkan</button>'+
+        '<button type="button" class="btn btn-secondary btn-sm" data-payment-admin="reject" data-order-id="'+esc(o.order_id)+'">Tolak</button></div>':'')+
+      '</td></tr>').join('')+'</tbody></table></div>');
 }
+
 function viewMembers(waiting=false){
   if(!isAdmin())return needLogin('data member admin');
   if(waiting){
@@ -1604,7 +1617,7 @@ async function buy(productId){
   }catch(e){toast(e.message,true);}
 }
 async function confirmPayment(){
-  if(!state.lastOrder||!paymentEnabled()||!qrisUrl()||!config.qrisMerchant)return toast('QRIS untuk konfirmasi manual belum tersedia.',true);
+  if(!state.lastOrder||!paymentEnabled()||!state.lastOrder.qris_gambar_path||!state.lastOrder.qris_atas_nama)return toast('QRIS untuk konfirmasi manual belum tersedia.',true);
   if(!confirm('Anda yakin pembayaran telah dikirim ke QRIS resmi? Konfirmasi ini bukan bukti pembayaran berhasil.'))return;
   try{
     const r=await api('confirmPayment',{order_id:state.lastOrder.order_id},state.token,{write:true});
@@ -2083,8 +2096,24 @@ document.addEventListener('input',e=>{
   if(e.target.id==='learning-course-search')filterLearningCards_();
 });
 document.addEventListener('click',async(e)=>{
-  const target=e.target.closest('[data-public-step],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next]');
+  const target=e.target.closest('[data-public-step],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin]');
   if(!target)return;
+  if(target.hasAttribute('data-payment-admin')){
+    if(!isAdmin()||!paymentEnabled())return toast('Aksi pembayaran belum aktif.',true);
+    const order=state.adminOrders.find(o=>o.order_id===target.dataset.orderId);
+    if(!order||order.status!=='MENUNGGU_VERIFIKASI')return toast('Muat ulang antrean pembayaran.',true);
+    const decision=target.dataset.paymentAdmin;
+    const isApprove=decision==='approve';
+    const reason=prompt(isApprove?'Masukkan referensi mutasi DANA/QRIS yang SUDAH DITERIMA (minimal 5 karakter):':'Alasan penolakan (minimal 5 karakter):');
+    if(reason===null)return;
+    if(reason.trim().length<5)return toast('Referensi/alasan minimal 5 karakter.',true);
+    if(isApprove&&!confirm('Saya sudah mencocokkan penerimaan dana '+rupiah(order.total_bayar)+' di mutasi. Aktifkan produk dan kredit order '+order.order_id+'?'))return;
+    try{
+      await api(isApprove?'approvePayment':'rejectPayment',isApprove?{order_id:order.order_id,dana_diterima:true,referensi_pembayaran:reason.trim()}:{order_id:order.order_id,alasan:reason.trim()},state.token,{write:true});
+      toast(isApprove?'Pembayaran disetujui.':'Pesanan ditolak.');await loadRoute('pesanan');render();
+    }catch(error){toast(error.message,true);}
+    return;
+  }
   if(target.hasAttribute('data-public-step')){
     const step=Number(target.dataset.publicStep);
     if(Number.isInteger(step)&&step>=0&&step<3){state.publicStep=step;render();}
