@@ -17,7 +17,7 @@ function contentImagePath_(value) {
     path.indexOf('..')<0&&path.indexOf('//')<0;
   var external=path.length<=2048&&
     /^https:\/\/[a-zA-Z0-9.-]+(?::[0-9]{2,5})?(?:\/[a-zA-Z0-9!$&'()*+,;=:@%_./~-]*)?(?:\?[a-zA-Z0-9!$&'()*+,;=:@%_./?~-]*)?(?:#[a-zA-Z0-9_.-]*)?$/i.test(path);
-  var inline=path.length<=1048576&&
+  var inline=path.length<=45000&&
     /^data:image\/(?:png|jpeg|jpg|webp|gif|avif);base64,[A-Za-z0-9+/]+={0,2}$/i.test(path);
   require_(!!path&&(local||external||inline),'VALIDATION',
     'Gunakan path assets/..., gambar HTTPS, atau data URI gambar.');
