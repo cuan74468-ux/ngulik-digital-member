@@ -54,6 +54,8 @@ test('29 STAGING tables pass with no provider accounts, writes or network',()=>{
   const x=boot(),result=x.context.ngdInfrastructurePreflightReadOnly();
   assert.equal(result.tables_checked,29);
   assert.equal(result.schema_ready,true);
+  assert.equal(result.feature_writes_enabled,false);
+  assert.equal(result.mutation_performed,false);
   assert.equal(result.external_providers,'FLAG_OFF');
   assert.equal(x.calls.read,29);
   assert.equal(x.calls.write,0);assert.equal(x.calls.network,0);
