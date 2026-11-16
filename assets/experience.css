@@ -1,0 +1,327 @@
+/*
+ NGULIK DIGITAL — MOBILE-FIRST SHARED EXPERIENCE V2, 16 NOV 2026
+ Presentation only. Loaded after legacy CSS by BOTH frontends.
+ Body scopes isolate the different markup and preserve all behavior.
+*/
+:root{
+ --ngd-canvas:#f2f4f8;--ngd-surface:#fff;--ngd-ink:#0e1320;
+ --ngd-text:#303849;--ngd-muted:#657084;--ngd-border:#e3e8f1;
+ --ngd-subtle:#f8f9fc;--ngd-blue:#4361ee;--ngd-blue-soft:#ebefff;
+ --ngd-success:#187452;--ngd-danger:#b93245;--ngd-focus:#4361ee;
+ --ngd-shadow:0 1px 2px rgba(14,19,32,.025),0 12px 36px -28px rgba(14,19,32,.28);
+ --ngd-font-ui:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+ --ngd-font-heading:'Plus Jakarta Sans','DM Sans',system-ui,sans-serif;
+ --ngd-radius-sm:11px;--ngd-radius-md:16px;--ngd-radius-lg:20px;
+ --ngd-touch:48px;--ngd-gutter:20px;--ngd-space-1:4px;--ngd-space-2:8px;
+ --ngd-space-3:12px;--ngd-space-4:16px;--ngd-space-6:24px;
+ --ngd-space-8:32px;--ngd-space-12:48px;
+}
+body.ngd-public-app,body.ngd-ops-app{
+ background:var(--ngd-canvas);color:var(--ngd-text);font:400 15px/1.6 var(--ngd-font-ui);
+ -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+}
+body.ngd-public-app *,body.ngd-ops-app *{box-sizing:border-box}
+body.ngd-public-app :where(img,svg,video),body.ngd-ops-app :where(img,svg,video){max-width:100%}
+body.ngd-public-app :where(button,input,select,textarea),body.ngd-ops-app :where(button,input,select,textarea){font-family:var(--ngd-font-ui);min-width:0}
+body.ngd-public-app :where(button,a,input,select,textarea):focus-visible,
+body.ngd-ops-app :where(button,a,input,select,textarea):focus-visible{
+ outline:3px solid var(--ngd-focus);outline-offset:3px;
+}
+body.ngd-public-app button:disabled,body.ngd-ops-app button:disabled{opacity:.58;cursor:not-allowed;transform:none}
+body.ngd-public-app :where(h1,h2,h3,h4),body.ngd-ops-app :where(h1,h2,h3,h4){
+ font-family:var(--ngd-font-heading);color:var(--ngd-ink);letter-spacing:-.035em;text-wrap:balance
+}
+body.ngd-public-app :where(p,li),body.ngd-ops-app :where(p,li){overflow-wrap:break-word}
+body.ngd-public-app :where(a,button),body.ngd-ops-app :where(a,button){touch-action:manipulation}
+body.ngd-public-app{
+ --bg:var(--ngd-canvas);--paper:var(--ngd-surface);--ink:var(--ngd-ink);
+ --text:var(--ngd-text);--muted:var(--ngd-muted);--line:var(--ngd-border);
+ --green:#0e1320;--green-deep:#0e1320;--brand-blue:var(--ngd-blue);
+ --brand-soft:var(--ngd-blue-soft);--font-body:var(--ngd-font-ui);
+ --font-head:var(--ngd-font-heading);
+}
+body.ngd-ops-app{
+ --paper:var(--ngd-canvas);--canvas:var(--ngd-surface);--paper-2:var(--ngd-subtle);
+ --ink:var(--ngd-ink);--ink-2:var(--ngd-text);--ink-3:var(--ngd-muted);
+ --line:var(--ngd-border);--navy:var(--ngd-ink);
+ --accent:var(--ngd-blue);--accent-hover:#344bc5;--focus:var(--ngd-focus);
+ --heading:var(--ngd-font-heading);--body:var(--ngd-font-ui);
+}
+/* Public/member shell: readability and rhythm shared by all routes */
+body.ngd-public-app .workarea{min-width:0;background:var(--ngd-canvas)}
+body.ngd-public-app .topbar{
+ min-height:64px;height:auto;padding:10px var(--ngd-gutter);
+ background:rgba(255,255,255,.95);border-bottom:1px solid var(--ngd-border);
+}
+body.ngd-public-app .breadcrumb{
+ min-width:0;font:750 .96rem/1.3 var(--ngd-font-heading);letter-spacing:-.025em
+}
+body.ngd-public-app .top-actions{gap:10px}
+body.ngd-public-app .account-chip{
+ width:44px;height:44px;min-width:44px;border-radius:14px;
+ background:var(--ngd-ink);color:#fff;
+}
+body.ngd-public-app .main-content{
+ width:100%;max-width:1260px;margin-inline:auto;
+ padding:22px var(--ngd-gutter) calc(112px + env(safe-area-inset-bottom,0px));
+}
+body.ngd-public-app #screen{min-width:0}
+body.ngd-public-app :where(.section-head,.content-admin-heading,.lms-heading){
+ min-width:0;margin-bottom:18px;
+}
+body.ngd-public-app #screen .section-head h2{
+ font:750 1.23rem/1.28 var(--ngd-font-heading);letter-spacing:-.035em;
+ text-transform:none;color:var(--ngd-ink);
+}
+body.ngd-public-app #screen :where(.lms-heading,.member-welcome,.content-admin-heading) h1{
+ font-size:clamp(1.85rem,6vw,2.7rem);line-height:1.14;letter-spacing:-.052em
+}
+body.ngd-public-app :where(.card-desc,.form-hint,.lead,.muted,.small){color:var(--ngd-muted)}
+body.ngd-public-app :where(.eyebrow,.card-kicker,.member-focus-kicker){
+ font:750 .7rem/1.45 var(--ngd-font-ui);letter-spacing:.09em
+}
+body.ngd-public-app .section-gap{margin-top:28px}
+body.ngd-public-app :where(.surface,.catalog-card,.lms-course-tile,.metric-card,
+.catalog-admin-editor,.service-entry,.service-admin-item,.content-admin-item,.support-ticket,.support-release){
+ background:var(--ngd-surface);border:1px solid var(--ngd-border);
+ border-radius:var(--ngd-radius-lg);box-shadow:var(--ngd-shadow);min-width:0
+}
+body.ngd-public-app :where(.surface,.catalog-card,.lms-course-tile,
+.catalog-admin-editor,.service-entry,.service-admin-item,.support-ticket,.support-release){padding:20px}
+body.ngd-public-app :where(.catalog-grid,.grid-2,.grid-3,.stat-grid,.metric-grid,
+.lms-course-grid,.content-admin-layout,.service-columns,.admin-module-grid){min-width:0;gap:14px}
+body.ngd-public-app :where(.catalog-card,.lms-course-tile,.surface,.content-editor) .chip{max-width:100%}
+body.ngd-public-app :where(.empty,.lms-empty,.empty-state){
+ padding:28px 20px;border-radius:var(--ngd-radius-lg);
+ background:var(--ngd-subtle);color:var(--ngd-muted);text-align:center
+}
+body.ngd-public-app .member-welcome{margin:0 0 20px}
+body.ngd-public-app .member-welcome .lead{max-width:55ch;margin-bottom:0}
+body.ngd-public-app .nh-home{gap:20px;max-width:1160px}
+body.ngd-public-app .nh-grid{gap:16px 8px}
+body.ngd-public-app .nh-tile{min-height:48px;gap:9px}
+body.ngd-public-app .nh-tile-icon{border-radius:16px}
+body.ngd-public-app .nh-search{min-height:50px}
+body.ngd-public-app .nh-carousel-viewport{border-radius:var(--ngd-radius-lg)}
+body.ngd-public-app .nh-carousel .nh-hero{border-radius:inherit}
+body.ngd-public-app .nh-carousel-controls{gap:12px}
+body.ngd-public-app :where(.nh-carousel-arrow,.nh-carousel-toggle){min-width:44px;min-height:44px}
+body.ngd-public-app .catalog-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
+body.ngd-public-app .catalog-card{gap:14px}
+body.ngd-public-app :where(.product-price,.catalog-product-price){font-variant-numeric:tabular-nums}
+body.ngd-public-app :where(.btn,.catalog-filter){
+ min-height:48px;border-radius:var(--ngd-radius-sm);
+ font-family:var(--ngd-font-ui);font-size:.93rem;font-weight:700
+}
+body.ngd-public-app .btn-primary{background:var(--ngd-ink);color:#fff}
+body.ngd-public-app .btn-secondary{background:#fff;color:var(--ngd-ink);border-color:var(--ngd-border)}
+body.ngd-public-app .btn-ghost{color:var(--ngd-ink)}
+body.ngd-public-app :where(.input,input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]){
+ min-height:48px;max-width:100%;border-radius:var(--ngd-radius-sm);font-size:1rem;
+}
+body.ngd-public-app :where(.field,.lms-form,.catalog-form,.content-form) label{
+ color:var(--ngd-ink);font-size:.88rem;font-weight:700
+}
+body.ngd-public-app :where(.form-hint,.field small){line-height:1.5}
+body.ngd-public-app :where(.chip,.pill){border-radius:99px}
+body.ngd-public-app :where(.banner,.toast,.learn-guest-note){border-radius:var(--ngd-radius-md)}
+body.ngd-public-app :where(.table-wrap,.lms-table-wrap){
+ max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch
+}
+body.ngd-public-app :where(.table,.data-table){font-variant-numeric:tabular-nums}
+body.ngd-public-app .modal{max-width:min(520px,100%);overscroll-behavior:contain}
+body.ngd-public-app .modal-backdrop{z-index:100}
+body.ngd-public-app .mobile-nav .nav-item{min-width:44px;min-height:48px;border-radius:14px}
+body.ngd-public-app .footer{color:var(--ngd-muted)}
+/* Staging operations: same brand, focused on reliable administration */
+body.ngd-ops-app .app-shell{min-width:0}
+body.ngd-ops-app .main-area{background:var(--ngd-canvas);min-width:0}
+body.ngd-ops-app .sidebar{background:#fff;border-color:var(--ngd-border);min-width:0}
+body.ngd-ops-app .brand-icon{background:var(--ngd-ink);border-radius:14px;color:#fff}
+body.ngd-ops-app .brand-icon span{color:#9aa9ff}
+body.ngd-ops-app .brand strong{color:var(--ngd-ink)}
+body.ngd-ops-app .brand small{font-family:var(--ngd-font-ui);color:var(--ngd-muted)}
+body.ngd-ops-app .topbar{
+ min-height:64px;height:auto;background:rgba(255,255,255,.95);
+ border-bottom:1px solid var(--ngd-border);padding:10px var(--ngd-gutter)
+}
+body.ngd-ops-app .breadcrumbs{min-width:0;gap:10px}
+body.ngd-ops-app .breadcrumbs strong{
+ font-family:var(--ngd-font-heading);color:var(--ngd-ink);
+ letter-spacing:-.02em;font-size:.88rem
+}
+body.ngd-ops-app .top-actions{min-width:0;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+body.ngd-ops-app .content{
+ width:100%;max-width:1260px;margin-inline:auto;min-width:0;
+ padding:24px var(--ngd-gutter) 64px
+}
+body.ngd-ops-app .page-heading{margin-bottom:24px}
+body.ngd-ops-app .heading-meta{gap:12px;margin-bottom:13px}
+body.ngd-ops-app .heading-meta .eyebrow{
+ font-size:.69rem;letter-spacing:.09em;color:var(--ngd-blue)
+}
+body.ngd-ops-app .heading-dot{background:var(--ngd-blue)}
+body.ngd-ops-app #page-title{
+ font-size:clamp(1.8rem,4.8vw,2.65rem);letter-spacing:-.05em;line-height:1.13
+}
+body.ngd-ops-app #page-description{
+ font-size:.95rem;color:var(--ngd-muted);max-width:70ch;line-height:1.65
+}
+body.ngd-ops-app .heading-rule{border-color:var(--ngd-border);margin-top:18px}
+body.ngd-ops-app .nav-link{
+ min-height:46px;border-radius:var(--ngd-radius-sm);
+ font:700 .88rem/1.4 var(--ngd-font-ui);color:var(--ngd-muted)
+}
+body.ngd-ops-app .nav-link.active:not(:disabled){background:var(--ngd-ink);color:#fff}
+body.ngd-ops-app .nav-link.active:not(:disabled) .nav-index{color:#b9c5e3}
+body.ngd-ops-app .nav-link:hover:not(:disabled):not(.active){
+ background:var(--ngd-subtle);color:var(--ngd-ink)
+}
+body.ngd-ops-app :where(.auth-panel,.metric-card,.data-panel){
+ border:1px solid var(--ngd-border);border-radius:var(--ngd-radius-lg);
+ background:var(--ngd-surface);box-shadow:var(--ngd-shadow)
+}
+body.ngd-ops-app .auth-panel{padding:24px;min-width:0}
+body.ngd-ops-app .auth-panel h2{
+ font-size:clamp(1.45rem,2vw,1.95rem);letter-spacing:-.04em
+}
+body.ngd-ops-app .form-intro{color:var(--ngd-muted);font-size:.91rem;line-height:1.68}
+body.ngd-ops-app :where(.step-number,.mini-caption){color:var(--ngd-blue);letter-spacing:.09em}
+body.ngd-ops-app .auth-panel :where(input,select,textarea){
+ min-height:50px;border:1px solid var(--ngd-border);
+ border-radius:var(--ngd-radius-sm);background:#fff;
+ color:var(--ngd-ink);font-size:1rem;
+}
+body.ngd-ops-app .auth-panel :where(input,select,textarea):focus-visible{
+ border-color:var(--ngd-blue);box-shadow:0 0 0 4px rgba(67,97,238,.13)
+}
+body.ngd-ops-app .auth-panel label{
+ font-weight:700;color:var(--ngd-ink);font-size:.88rem
+}
+body.ngd-ops-app :where(.primary-button,.secondary-button){
+ min-height:48px;border-radius:var(--ngd-radius-sm);
+ font:700 .9rem/1.4 var(--ngd-font-ui)
+}
+body.ngd-ops-app .primary-button{background:var(--ngd-ink);color:white}
+body.ngd-ops-app .primary-button:hover:not(:disabled){background:#222c43}
+body.ngd-ops-app .secondary-button{
+ background:#fff;border-color:var(--ngd-border);color:var(--ngd-ink)
+}
+body.ngd-ops-app .text-button{min-height:44px;color:var(--ngd-blue)}
+body.ngd-ops-app .connection-helper{
+ border-radius:var(--ngd-radius-sm);
+ background:var(--ngd-subtle);border-color:var(--ngd-border)
+}
+body.ngd-ops-app .access-layout{gap:18px}
+body.ngd-ops-app .access-aside{
+ border-radius:var(--ngd-radius-lg);
+ background:var(--ngd-ink);box-shadow:var(--ngd-shadow)
+}
+body.ngd-ops-app .aside-monogram span{color:#9aa9ff}
+body.ngd-ops-app .aside-hero h2{
+ color:white;font-family:var(--ngd-font-heading);letter-spacing:-.04em
+}
+body.ngd-ops-app .aside-hero h2 em{
+ font-family:inherit;font-weight:600;font-style:normal;color:#c5d0ff
+}
+body.ngd-ops-app .aside-hero p{line-height:1.7}
+body.ngd-ops-app .aside-art{opacity:.23}
+body.ngd-ops-app .alert{
+ border-radius:var(--ngd-radius-md);font-size:.88rem;line-height:1.6
+}
+body.ngd-ops-app .env-strip{margin-top:0;color:var(--ngd-muted)}
+body.ngd-ops-app .env-pill{
+ border-color:#d8e0ff;color:#314ac5;background:var(--ngd-blue-soft)
+}
+body.ngd-ops-app .metric-grid{gap:12px}
+body.ngd-ops-app .metric-card{padding:20px;min-width:0}
+body.ngd-ops-app .metric-label{font-size:.83rem;color:var(--ngd-muted)}
+body.ngd-ops-app .metric-value{font-variant-numeric:tabular-nums;color:var(--ngd-ink)}
+body.ngd-ops-app .data-panel{overflow:hidden}
+body.ngd-ops-app .data-panel-head{padding:20px;gap:12px}
+body.ngd-ops-app .data-panel-head h2{font-size:1.05rem}
+body.ngd-ops-app .table-wrap{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+body.ngd-ops-app .data-table{min-width:620px}
+body.ngd-ops-app .data-table :where(th,td){
+ padding:13px 16px;font-size:.83rem;line-height:1.6
+}
+body.ngd-ops-app .data-table th{background:var(--ngd-subtle);color:var(--ngd-muted)}
+body.ngd-ops-app .data-table td{color:var(--ngd-text)}
+body.ngd-ops-app .empty-state{padding:38px 18px}
+body.ngd-ops-app .toolbar{gap:14px;flex-wrap:wrap}
+body.ngd-ops-app .footer{color:var(--ngd-muted);border-color:var(--ngd-border)}
+/* 320–760px first. Desktop adds space without changing visual language. */
+@media(max-width:760px){
+ :root{--ngd-gutter:18px}
+ body.ngd-public-app .topbar{min-height:62px}
+ body.ngd-public-app .main-content{padding-top:20px}
+ body.ngd-public-app #screen :where(.section-head,.content-admin-heading){margin-bottom:16px}
+ body.ngd-public-app #screen .section-head h2{font-size:1.22rem}
+ body.ngd-public-app :where(.surface,.catalog-card,.lms-course-tile,
+ .catalog-admin-editor,.service-entry,.service-admin-item){padding:18px}
+ body.ngd-public-app :where(.catalog-grid,.lms-course-grid,.grid-2,.grid-3,
+ .admin-module-grid,.service-columns){grid-template-columns:minmax(0,1fr);gap:12px}
+ body.ngd-public-app .nh-home{gap:18px}
+ body.ngd-public-app .nh-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 5px}
+ body.ngd-public-app .nh-carousel-viewport{border-radius:var(--ngd-radius-lg)}
+ body.ngd-public-app .member-welcome h1{font-size:clamp(1.75rem,7vw,2.2rem)}
+ body.ngd-public-app .mobile-nav{
+  border:1px solid var(--ngd-border);background:rgba(255,255,255,.97);
+  box-shadow:0 18px 42px rgba(14,19,32,.17)
+ }
+ body.ngd-public-app .mobile-nav .nav-item{min-height:48px}
+ body.ngd-public-app .modal{padding-bottom:calc(26px + env(safe-area-inset-bottom,0px))}
+ body.ngd-ops-app .app-shell{grid-template-columns:minmax(0,1fr)}
+ body.ngd-ops-app .sidebar{background:#fff;border-bottom:1px solid var(--ngd-border)}
+ body.ngd-ops-app .sidebar .nav{overscroll-behavior-x:contain;max-width:100%}
+ body.ngd-ops-app .nav-link{min-height:44px;white-space:nowrap}
+ body.ngd-ops-app .content{padding-top:24px}
+ body.ngd-ops-app .access-layout{grid-template-columns:minmax(0,1fr);gap:16px}
+ body.ngd-ops-app .access-aside{min-height:0;padding:22px}
+ body.ngd-ops-app .aside-hero{margin:18px 0}
+ body.ngd-ops-app .aside-hero h2{font-size:1.75rem}
+ body.ngd-ops-app .aside-art{display:none}
+ body.ngd-ops-app .aside-bottom{gap:10px}
+ body.ngd-ops-app .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body.ngd-ops-app .metric-card{min-height:112px;padding:16px}
+ body.ngd-ops-app .metric-value{font-size:1.5rem}
+ body.ngd-ops-app .toolbar{align-items:stretch}
+ body.ngd-ops-app .toolbar button{width:100%}
+}
+@media(max-width:420px){
+ :root{--ngd-gutter:16px}
+ body.ngd-public-app .main-content{padding-inline:var(--ngd-gutter)}
+ body.ngd-public-app :where(.surface,.catalog-card,.lms-course-tile,
+ .catalog-admin-editor){padding:16px}
+ body.ngd-public-app .nh-grid{gap:12px 4px}
+ body.ngd-public-app .nh-tile{font-size:.75rem}
+ body.ngd-public-app #screen .section-head h2{font-size:1.19rem}
+ body.ngd-ops-app .content{padding:20px var(--ngd-gutter) 48px}
+ body.ngd-ops-app .auth-panel{padding:20px}
+ body.ngd-ops-app .access-aside{padding:19px}
+ body.ngd-ops-app .aside-bottom{display:none}
+ body.ngd-ops-app #page-title{font-size:1.9rem}
+ body.ngd-ops-app .breadcrumbs{gap:6px}
+ body.ngd-ops-app .topbar{padding:10px var(--ngd-gutter)}
+ body.ngd-ops-app .data-table{min-width:570px}
+}
+@media(min-width:761px){
+ :root{--ngd-gutter:clamp(24px,3.7vw,56px)}
+ body.ngd-public-app .main-content{padding-top:36px;padding-bottom:80px}
+ body.ngd-public-app .topbar{min-height:72px}
+ body.ngd-public-app :where(.surface,.catalog-card,.lms-course-tile,.catalog-admin-editor){padding:24px}
+ body.ngd-public-app .section-gap{margin-top:36px}
+ body.ngd-ops-app .content{padding-top:36px}
+ body.ngd-ops-app .topbar{min-height:72px}
+ body.ngd-ops-app .auth-panel{padding:clamp(24px,2.6vw,34px)}
+}
+@media(min-width:1180px){
+ body.ngd-ops-app .app-shell{grid-template-columns:246px minmax(0,1fr)}
+ body.ngd-ops-app .access-layout{grid-template-columns:minmax(0,1fr) minmax(0,.85fr);gap:24px}
+}
+@media(prefers-reduced-motion:reduce){
+ body.ngd-public-app *,body.ngd-public-app *::before,body.ngd-public-app *::after,
+ body.ngd-ops-app *,body.ngd-ops-app *::before,body.ngd-ops-app *::after{
+  scroll-behavior:auto!important;animation:none!important;transition:none!important;
+ }
+}
