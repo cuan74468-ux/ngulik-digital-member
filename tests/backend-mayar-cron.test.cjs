@@ -38,10 +38,12 @@ function setup(){
   ctx.appendRow_=(table,data)=>{if(table==='wa_notifications')queue.push(data);};
   ctx.logAudit_=(...a)=>audit.push(a);
   ctx.onPaid_=()=>{};
-  ctx.settings_=()=>({order_expiry_menit:60});
+  ctx.settings_=()=>({order_expiry_menit:60,cart_abandonment_menit:15,followup_member_otomatis:true,payment_gateway_mode:'MAYAR_QRIS_OTOMATIS'});
   ctx.now_=()=>new Date();
   ctx.recordId_=()=>('REC-'+(queue.length+1));
   ctx.normalizeWa_=x=>x;
+  ctx.sendFonnteWa_=(wa,message,role,template,ref)=>{queue.push({tujuan_wa:wa,pesan:message,tipe_penerima:role,template_kode:template,ref_id:ref,status:'ACCEPTED'});return {status:'ACCEPTED'};};
+  ctx.requireFinanceEnabled_=()=>{};
   const webhook=(secret=token)=>vm.runInContext(
     'mayarWebhook_('+JSON.stringify({parameter:{source:'mayar',webhook_token:secret},
     postData:{contents:JSON.stringify({event:'payment.received',data:{id:'pay_123456789012'}})}})+')',ctx);
@@ -67,14 +69,14 @@ test('Mayar: reject paid amount mismatch',()=>{
   assert.throws(()=>x.webhook(),/Jumlah pembayaran berbeda/);
   assert.equal(x.order.status,'PENDING');
 });
-test('cron: queues one reminder and marks the order',()=>{
+test('cron: sends one reminder and marks the order',()=>{
   const x=setup();
   const a=vm.runInContext('runScheduledAutomations()',x.ctx);
-  assert.equal(a.reminders_queued,1);
+  assert.equal(a.reminders_accepted,1);
   assert.equal(x.queue.length,1);
-  assert.equal(x.queue[0].status,'QUEUED');
+  assert.equal(x.queue[0].status,'ACCEPTED');
   const b=vm.runInContext('runScheduledAutomations()',x.ctx);
-  assert.equal(b.reminders_queued,0);
+  assert.equal(b.reminders_accepted,0);
 });
 test('cron: expires old pending order without reminder',()=>{
   const x=setup();x.order.created_at=new Date(Date.now()-61*60000).toISOString();
@@ -86,4 +88,10 @@ test('cron: expires old pending order without reminder',()=>{
 test('both token types remain supported in checkout and fulfillment',()=>{
   assert.match(source,/NGD_CHECKOUT_TYPES_=\['TOPUP_TOKEN','TOPUP_KREDIT'/);
   assert.match(source,/\['TOPUP_TOKEN','TOPUP_KREDIT'\]\.indexOf\(product\.tipe\)/);
+});
+
+test('static QRIS: Mayar webhook rejects even with valid gateway credentials',()=>{
+  const x=setup();x.ctx.settings_=()=>({payment_gateway_mode:'QRIS_STATIS'});
+  assert.throws(()=>x.webhook(),/Webhook Mayar tidak aktif/);
+  assert.equal(x.order.status,'PENDING');
 });
