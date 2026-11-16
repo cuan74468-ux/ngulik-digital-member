@@ -14,7 +14,7 @@
     if(path.length<=500&&/^assets\/[A-Za-z0-9_./-]+\.(?:png|jpe?g|webp|gif|avif)(?:\?[A-Za-z0-9_=&%-]+)?$/i.test(path)&&
       !path.includes('..')&&!path.includes('//'))return './'+path;
     if(path.length<=2048&&/^https:\/\/[A-Za-z0-9.-]+(?::[0-9]{2,5})?(?:\/[A-Za-z0-9!$&'()*+,;=:@%_./~-]*)?(?:\?[A-Za-z0-9!$&'()*+,;=:@%_./?~-]*)?(?:#[A-Za-z0-9_.-]*)?$/i.test(path))return path;
-    if(path.length<=1048576&&/^data:image\/(?:png|jpeg|jpg|webp|gif|avif);base64,[A-Za-z0-9+/]+={0,2}$/i.test(path))return path;
+    if(path.length<=45000&&/^data:image\/(?:png|jpeg|jpg|webp|gif|avif);base64,[A-Za-z0-9+/]+={0,2}$/i.test(path))return path;
     return '';
   }
   function published(contents,kind,placement){
@@ -103,7 +103,7 @@
       (Array.isArray(ctx.products)?ctx.products.map(p=>'<option value="'+h(p.product_id)+'" label="'+h(p.nama)+'"></option>').join(''):'')+
       '</datalist></div></div>'+
       '<div class="field"><label for="content-image">URL gambar HTTPS atau path assets/</label>'+
-      '<input class="input" id="content-image" name="image_path" required maxlength="180" placeholder="assets/media/promo-bisnis.webp" value="'+h(draft.image_path||'')+'">'+
+      '<input class="input" id="content-image" name="image_path" required maxlength="45000" placeholder="https://contoh.com/banner.webp" value="'+h(draft.image_path||'')+'">'+
       (mediaPath(draft.image_path)?'<img class="content-editor-preview" src="'+h(mediaPath(draft.image_path))+'" alt="Pratinjau file gambar" loading="lazy">':'')+
       '</div>'+
       '<div class="field"><label for="content-title">Judul atau alt text</label>'+
