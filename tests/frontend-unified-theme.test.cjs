@@ -1,66 +1,60 @@
 'use strict';
-const test=require('node:test');
-const assert=require('node:assert/strict');
+const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
-const read=(file)=>fs.readFileSync(path.join(root,file),'utf8');
-const html=read('index.html');
-const css=read('assets/unified-theme.css');
-const app=read('js/app.js');
-test('one shared stylesheet is loaded last for guests members and admins',()=>{
-  const main=html.indexOf('href="./assets/app.css"');
-  const mobile=html.indexOf('href="./assets/member-mobile.css');
-  const unified=html.indexOf('href="./assets/unified-theme.css');
-  assert.ok(main>=0&&mobile>main&&unified>mobile);
-  assert.match(html,/name="theme-color" content="#f2f4f8"/);
-  assert.ok(css.includes(':root,\nbody,\nbody.member-experience{'));
-  assert.ok(css.includes('@media(max-width:760px)'));
+const read=file=>fs.readFileSync(path.join(root,file),'utf8');
+const html=read('index.html'),css=read('assets/styles.css'),app=read('js/app.js');
+test('Linggau V1.2 stylesheet is the final layer on public and STAGING membership',()=>{
+  for(const file of ['index.html','staging/member.html']){
+    const src=read(file);
+    assert.ok(src.indexOf('learning-studio.css')>=0);
+    assert.ok(src.indexOf('styles.css')>src.indexOf('learning-studio.css'));
+    assert.match(src,/Geist:wght/);
+    assert.match(src,/Instrument\+Serif/);
+    assert.match(src,/Plus\+Jakarta\+Sans/);
+    assert.match(src,/img-src 'self' data: https:;/);
+  }
+  assert.match(html,/name="theme-color" content="#FAFAFC"/);
 });
-test('desktop and mobile share identical slate canvas and charcoal control tokens',()=>{
-  for(const token of ['--bg:#f2f4f8','--ink:#0e1320','--green:#0e1320',
-    '--brand-blue:#4361ee','--radius:24px']){
+test('palette and typography match the Linggau master exactly',()=>{
+  for(const token of ['--lds-bg:#FAFAFC','--lds-surface:#FFFFFF',
+    '--lds-text:#15161C','--lds-muted:#4A4D5A','--lds-blue:#2F6BFF',
+    '--lds-success:#1DB86A','--lds-danger:#E11D48',
+    "--lds-font-ui:'Geist'","--lds-font-heading:'Plus Jakarta Sans'",
+    "--lds-font-editorial:'Instrument Serif'"])
     assert.ok(css.includes(token),token);
-  }
-  assert.match(css,/\.sidebar \.nav-item\[aria-current=page\]\{\s*background:#0e1320/);
-  assert.match(css,/\.mobile-nav \.nav-item\[aria-current=page\][\s\S]*?background:#0e1320/);
-  assert.ok(css.includes('body.member-experience .surface'));
-  assert.ok(css.includes('body.member-experience .mobile-nav'));
+  assert.ok(css.includes("font-variant-numeric:tabular-nums"));
+  assert.ok(css.includes("focus-visible"));
 });
-test('mobile uses accessible floating five-icon navigation rather than a full-width dock',()=>{
-  assert.match(css,/left:50%;right:auto;bottom:calc\(16px \+ env\(safe-area-inset-bottom\)\)/);
-  assert.match(css,/width:min\(350px,calc\(100vw - 56px\)\)/);
-  assert.ok(css.includes('clip:rect(0,0,0,0)'));
-  assert.ok(app.includes("aria-label=\"'+esc(screens[route][0])+'\""));
-  assert.ok(app.includes('aria-current="page"'));
+test('guest has no sidebar or mobile dock; logged members have four destinations',()=>{
+  assert.match(html,/data-app-role="guest"/);
+  assert.match(css,/data-app-role=guest\]:not\(#ngd\) \.sidebar\{display:none!important\}/);
+  assert.match(css,/data-app-role=guest\]:not\(#ngd\) \.mobile-nav\{display:none!important\}/);
+  assert.match(html,/id="guest-nav"/);
+  assert.match(html,/Katalog Alat/);
+  assert.match(html,/Masuk \/ Daftar WA/);
+  assert.match(app,/\['beranda','ai','katalog','affiliate'\]/);
+  assert.match(html,/data-route="menu"/);
+  assert.doesNotMatch(html,/Bertumbuh dimulai|Belajar • Berkarya • Bertumbuh|Ruang belajar/i);
 });
-test('all business screens and financial flags remain untouched by the skin',()=>{
-  const config=read('config.js');
-  for(const flag of ['memberWritesEnabled: true','paymentsEnabled: true','supportEnabled: true',
-     'lmsEnabled: true','notificationsEnabled: true',"apiUrl: 'https://script.google.com/macros/s/"])assert.ok(config.includes(flag));
-  for(const route of ["admin:['Admin'","lms:['Studio LMS'","beranda:['Beranda'",
-    "belajar:['Belajar'","katalog:['Katalog'","ai:['Studio AI'"]){
-    assert.ok(app.includes(route),route);
-  }
-  assert.doesNotMatch(css,/@import\s|url\(\s*['"]?https?:/i);
+test('full commercial routes and API modules are preserved',()=>{
+  const config=read('config.js'),code=read('js/api.js');
+  for(const flag of ['memberWritesEnabled: true','paymentsEnabled: true',
+    'supportEnabled: true','lmsEnabled: true','notificationsEnabled: true'])
+    assert.ok(config.includes(flag),flag);
+  for(const route of ["admin:['Admin'","lms:['Studio LMS'",
+    "beranda:['Meja Kerja'","belajar:['Kelas'","katalog:['Toko & Lisensi'",
+    "ai:['Studio AI'"]){assert.ok(app.includes(route),route);}
+  for(const action of ['getKatalog','generateAI','createOrder','confirmPayment',
+    'adminCreateContent','adminUpdateContent','adminListCatalog'])
+    assert.ok(app.includes(action),action);
+  assert.match(code,/headers:\{'Content-Type':'text\/plain;charset=utf-8'\}/);
 });
-test('color is not selected by role or desktop-only breakpoints',()=>{
-  assert.ok(css.includes('body,'));
-  assert.ok(css.includes('body.member-experience'));
-  assert.ok(css.includes('.support-ticket'));
-  assert.ok(css.includes('.lms-course-tile'));
-  assert.ok(css.includes('.login-shell'));
-  assert.ok(css.includes('.modal'));
-  assert.ok(css.includes('.table-wrap'));
-  assert.ok(css.includes('.member-success'));
-  assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
-});
-
-test('operational admin uses one mobile and desktop design system',()=>{
-  for(const selector of ['.admin-commandbar','.admin-module-card','.admin-runtime-summary',
-    '.admin-runtime-flags','.admin-runtime-flag']){
-    assert.ok(css.includes(selector),selector);
-  }
-  assert.ok(css.includes('body[data-app-role="admin"]'));
-  assert.ok(app.includes("data-app-role',isAdmin()?'admin'"));
-  assert.ok(app.includes('viewAdminRuntime()'));
+test('financial interfaces are static and reduced motion is honored',()=>{
+  assert.match(css,/\.checkout-dialog :is\(\.btn,button\)/);
+  assert.match(css,/transition:none!important;transform:none!important;animation:none!important/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
+  assert.match(css,/max-width:760px/);
+  assert.ok(css.includes('min-height:44px'));
+  assert.doesNotMatch(css,/@import|<script|UrlFetchApp|SOBATAGENT_API_KEY|FONNTE_API_TOKEN/i);
 });
