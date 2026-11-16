@@ -1,6 +1,7 @@
 /**
- * NGD STAGING infrastructure foundation preflight. READ ONLY, editor-only.
- * No provider accounts, secrets, writes, outbound requests, or API routes.
+ * NGD STAGING infrastructure verification. READ ONLY, editor-only.
+ * Compatible with owner-enabled feature flags: reads identity and headers only.
+ * Never performs database writes or outbound provider requests.
  */
 function ngdInfrastructurePreflightReadOnly() {
   var props=PropertiesService.getScriptProperties();
@@ -20,8 +21,11 @@ function ngdInfrastructurePreflightReadOnly() {
   if(otpDb && otpDb!==dbId)
     throw new Error('INFRA_OTP_DB_MISMATCH');
 
-  // Safe for the current isolated ADMIN login, never for feature mutations.
-  var flags=[
+  // Feature state is an observation, not an instruction to mutate.
+  // A STAGING release may have its write gate ON while THIS preflight
+  // remains strictly read-only. Reject malformed values instead of
+  // quietly interpreting "TRUE", "1", or unexpected strings as OFF.
+  var flagNames=[
     'NGD_MUTATIONS_ENABLED','NGD_REGISTRATION_ENABLED',
     'NGD_OTP_REGISTRATION_ENABLED','NGD_FINANCE_ENABLED',
     'NGD_CATALOG_ENABLED','NGD_CONTENT_ENABLED',
@@ -31,11 +35,21 @@ function ngdInfrastructurePreflightReadOnly() {
     'NGD_ADMIN_RECOVERY_ENABLED',
     'NGD_EXTERNAL_PROVIDERS_ENABLED'
   ];
-  flags.forEach(function(key) {
-    var value=String(props.getProperty(key)||'').trim();
-    if(value!==''&&value!=='false')
-      throw new Error('INFRA_FLAG_NOT_DISABLED: '+key);
+  var flags={};
+  flagNames.forEach(function(key) {
+    var raw=props.getProperty(key);
+    var value=raw===null||raw===undefined?'':String(raw).trim();
+    if(value!==''&&value!=='false'&&value!=='true')
+      throw new Error('INFRA_FLAG_INVALID: '+key);
+    flags[key]=value==='true';
   });
+  // Recovery and one-off legacy schema operations are not normal release
+  // features. Keep them explicitly disarmed during ordinary preflight.
+  ['NGD_ADMIN_RECOVERY_ENABLED','NGD_SCHEMA_UPGRADE_ENABLED'].forEach(function(key) {
+    if(flags[key])throw new Error('INFRA_DANGEROUS_FLAG_ENABLED: '+key);
+  });
+  if(flags.NGD_OTP_REGISTRATION_ENABLED&&!otpDb)
+    throw new Error('INFRA_OTP_DB_ATTESTATION_REQUIRED');
   if(typeof NGD==='undefined'||!NGD.HEADERS)
     throw new Error('INFRA_SOURCE_CONTRACT_MISSING');
 
@@ -86,10 +100,17 @@ function ngdInfrastructurePreflightReadOnly() {
   // Inspect headers only. Never inspect row values, tokens, numbers or balances.
   var report={
     environment:'STAGING',tables_checked:tableNames.length,
-    schema_ready:true,feature_writes_enabled:false,
-    external_providers:'DEFERRED',mutation_performed:false
+    schema_ready:true,
+    feature_writes_enabled:flags.NGD_MUTATIONS_ENABLED,
+    registration_enabled:flags.NGD_REGISTRATION_ENABLED,
+    otp_enabled:flags.NGD_OTP_REGISTRATION_ENABLED,
+    finance_enabled:flags.NGD_FINANCE_ENABLED,
+    external_providers:flags.NGD_EXTERNAL_PROVIDERS_ENABLED?'FLAG_ON':'FLAG_OFF',
+    mutation_performed:false
   };
   console.log('NGD_INFRASTRUCTURE_PREFLIGHT_OK | tables='+
-    tableNames.length+' | environment=STAGING | writes=false | providers=DEFERRED');
+    tableNames.length+' | environment=STAGING | mutations_flag='+
+    flags.NGD_MUTATIONS_ENABLED+' | preflight_writes=false | providers_flag='+
+    flags.NGD_EXTERNAL_PROVIDERS_ENABLED);
   return report;
 }
