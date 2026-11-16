@@ -1,5 +1,8 @@
 # Tahap 1 — Rencana Pengamanan Autentikasi & Rekonsiliasi
 
+> **Status aktual (audit ulang 16 November 2026):** Rencana PIN V2 dalam bagian historis di bawah **sudah diimplementasikan pada source GitHub** sebagai opsi HMAC-SHA256 ber-*server pepper*, tetapi **default OFF** dan **belum aktif pada runtime GAS STAGING/PRODUCTION**. Login verifikasi V1/V2 diuji di fixture. Ini bukan bukti migrasi akun, bukan instruksi mengisi secret/menyalakan flag. Source juga memiliki registrasi kredit awal dengan kebijakan eksplisit, bukan default diam-diam. [Audit terbarukan](AUDIT_DOKUMEN_DAN_IMPLEMENTASI_2026-11-16.md) dan [checkpoint aktif](CHECKPOINT_2026-11-16_RESUME_BUILD_STAGE1.md) lebih baru daripada rencana implementasi awal di bawah.
+
+
 **Tanggal:** 16 November 2026 (WIB)  
 **Status:** desain keamanan dan kesiapan migrasi **SOURCE-ONLY**, belum mengubah runtime Apps Script STAGING/PRODUCTION.  
 **Gerbang rilis:** **NO-GO** untuk registrasi, OTP Fonnte, pembayaran dan finance.
