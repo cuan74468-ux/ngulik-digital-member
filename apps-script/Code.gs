@@ -822,7 +822,12 @@ function authRegister_(p) {
     var s=settings_(),mode=String(s.mode_pendaftaran||'TERBUKA');
     require_(mode!=='TERTUTUP','QUOTA_FULL','Pendaftaran sementara ditutup.');
     var active=memberCount_(),wait=mode==='WAITING_LIST'||active>=Number(s.kuota_gelombang||50)||memberWaitlist_().length>0;
-    var initial=Number(s.kredit_awal===undefined||s.kredit_awal===''?10:s.kredit_awal);
+    // A verified policy must be present. Never silently mint the historic
+    // default when the configuration key was removed or corrupted.
+    require_(s.kredit_awal!==undefined&&s.kredit_awal!==null&&
+      String(s.kredit_awal).trim()!=='','MAINTENANCE',
+      'Kebijakan kredit awal belum siap.');
+    var initial=Number(s.kredit_awal);
     require_(Number.isInteger(initial)&&initial>=0&&initial<=1000,'VALIDATION',
       'Pengaturan kredit awal tidak valid.');
     var ref=String(p.ref||'').toUpperCase(),referrer=ref?byId_('members','kode_referral',ref):null;

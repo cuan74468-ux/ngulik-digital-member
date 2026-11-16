@@ -251,3 +251,19 @@ test('session issuance outage after successful grant never creates duplicate sta
   assert.throws(()=>h.register(),/sudah terdaftar/);
   assert.equal(h.credits.length,1);
 });
+
+test('missing starter-credit policy fails closed before OTP or account mutations',()=>{
+  const h=registrationHarness();
+  h.x.settings_=()=>({mode_pendaftaran:'TERBUKA',kuota_gelombang:50});
+  assert.throws(()=>h.register(),/Kebijakan kredit awal belum siap/);
+  assert.equal(h.members.length,0);
+  assert.equal(h.credits.length,0);
+  assert.equal(h.row.status,'VERIFIED');
+});
+test('blank starter-credit policy fails closed instead of defaulting to 10',()=>{
+  const h=registrationHarness();
+  h.x.settings_=()=>({mode_pendaftaran:'TERBUKA',kuota_gelombang:50,kredit_awal:''});
+  assert.throws(()=>h.register(),/Kebijakan kredit awal belum siap/);
+  assert.equal(h.members.length,0);
+  assert.equal(h.row.status,'VERIFIED');
+});
