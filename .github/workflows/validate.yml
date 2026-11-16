@@ -92,13 +92,27 @@ jobs:
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#katalog" > /tmp/ngd-catalog.html 2>>/tmp/ngd-chrome.log
           # Runtime storefront uses only API data: no built-in test offers.
-          grep -Eq 'Katalog belum tersedia|Katalog untuk kebutuhan usaha' /tmp/ngd-catalog.html
+          if ! grep -Eq 'Katalog belum tersedia|Katalog untuk kebutuhan usaha' /tmp/ngd-catalog.html; then
+            echo 'CATALOG_BROWSER_FAIL: expected catalogue heading missing' >&2
+            grep -o -E '<h1[^>]*>[^<]*|<h2[^>]*>[^<]*|Katalog[^<]*|<section id="screen"[^>]*' /tmp/ngd-catalog.html | head -12 || true
+            exit 1
+          fi
+          echo 'CATALOG_BROWSER_HEADING_OK'
           if grep -q 'CRS-DEMO\|ORDER-CONTOH\|P-VIDEO-AI' /tmp/ngd-catalog.html; then
             echo 'ERROR: QA fixture leaked into storefront DOM' >&2
             exit 1
           fi
-          grep -q 'data-overflow="false"' /tmp/ngd-catalog.html
-          grep -q 'data-buys-disabled="true"' /tmp/ngd-catalog.html
+          if ! grep -q 'data-overflow="false"' /tmp/ngd-catalog.html; then
+            echo 'CATALOG_BROWSER_FAIL: responsive overflow or layout probe missing' >&2
+            grep -o -E 'data-overflow="[^"]*"' /tmp/ngd-catalog.html | tail -3 || true
+            exit 1
+          fi
+          if ! grep -q 'data-buys-disabled="true"' /tmp/ngd-catalog.html; then
+            echo 'CATALOG_BROWSER_FAIL: checkout rendering probe mismatch' >&2
+            grep -o -E 'data-buys-disabled="[^"]*"' /tmp/ngd-catalog.html | tail -3 || true
+            exit 1
+          fi
+          echo 'CATALOG_BROWSER_QA_OK'
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#dukungan" > /tmp/ngd-support-member.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="support-create-form"' /tmp/ngd-support-member.html
