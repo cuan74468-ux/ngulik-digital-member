@@ -14,5 +14,6 @@ window.NGD_CONFIG = Object.freeze({
   notificationsEnabled: true,
   lmsEnabled: true,
   qrisImageUrl: '', // Example: assets/qris.png (upload owner-approved image only)
-  qrisMerchant: ''
+  qrisMerchant: '',
+  qrisOwnerImageApproved: false // bundled assets/qris.png is NOT payable
 });
