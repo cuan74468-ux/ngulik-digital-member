@@ -485,25 +485,53 @@ function viewLearn(){
     empty('Materi belum tersedia','Materi tersedia setelah pengelola menerbitkannya.'));
 }
 function viewAI(){
-  if(!logged())return title('Studio AI untuk UMKM','ASISTEN KREATIF','Ide, caption, dan copywriting produk.')+needLogin('Studio AI');
-  const tools=state.tools;
-  return title('Studio AI','TOOLKIT KREATIF','Pilih jenis bantuan yang ingin Anda gunakan.')+
-    '<div class="banner"><div><h3>Saldo kredit Anda</h3><p>Kredit terpotong saat hasil diminta. Jika AI gagal, kredit otomatis dikembalikan.</p></div><span class="stat-value" id="ai-balance">'+esc(state.home?.saldo_kredit??state.me?.saldo_kredit??0)+' kredit</span></div>'+
-    (tools.length?'<div class="grid-2 ai-grid">'+tools.map(t=>{
-      const cost=Number(t.kredit_biaya)||0,can=isWriteEnabled();
-      return '<article class="surface ai-tool"><div class="surface-icon">'+icon('spark')+'</div><h3>'+esc(t.nama)+'</h3><p class="card-desc">'+esc(t.deskripsi||'')+'</p>'+
-      '<form class="ai-form" data-tool-id="'+idSafe(t.tool_id)+'" data-cost="'+cost+'" novalidate>'+
-      '<label class="ai-label" for="ai-in-'+idSafe(t.tool_id)+'">Isi permintaan</label>'+
-      '<textarea class="input ai-input" id="ai-in-'+idSafe(t.tool_id)+'" name="input" rows="4" maxlength="1500" required placeholder="'+esc(t.placeholder_input||'Tuliskan kebutuhan Anda')+'"'+(can?'':' disabled')+'></textarea>'+
-      '<div class="ai-foot"><span class="product-meta">'+cost+' kredit / penggunaan</span>'+
-      '<button class="btn btn-primary" type="submit"'+(can?'':' disabled title="Fitur AI belum aktif"')+'>Buat hasil '+icon('spark')+'</button></div>'+
-      '<div class="ai-result" role="status" aria-live="polite" hidden></div></form></article>';}).join('')+'</div>':
-    empty('Alat AI belum tersedia','Belum ada alat AI aktif. Kredit tidak akan dipotong.'));
+  if(!logged())return '<section class="ai-public"><p class="eyebrow">STUDIO AI</p>'+
+    '<h1>AI yang bekerja untuk usaha Anda.</h1>'+
+    '<p>Gunakan Token sesuai kebutuhan untuk membuat caption, deskripsi produk, dan materi pemasaran. Masuk untuk melihat alat dan biaya langsung dari akun.</p>'+
+    '<div class="actions"><button type="button" class="btn btn-primary" data-route="daftar">Daftar via WhatsApp</button>'+
+    '<button type="button" class="btn btn-secondary" data-route="katalog">Lihat Token AI</button></div></section>';
+  const tools=Array.isArray(state.tools)?state.tools:[];
+  const selected=tools.find(x=>x.tool_id===state.selectedAiToolId)||tools[0]||null;
+  const cost=selected?Number(selected.kredit_biaya)||0:0;
+  const balance=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
+  const can=isWriteEnabled();
+  return '<section class="ai-studio"><div class="ai-studio-head"><div><p class="eyebrow">STUDIO AI / WORKSPACE</p>'+
+    '<h1>Hasilkan konten dengan lebih cepat.</h1>'+
+    '<p>Pilih alat, masukkan brief, lalu gunakan hasil. Biaya dihitung per eksekusi.</p></div>'+
+    '<div class="ai-wallet-mini"><small>SALDO TOKEN</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
+    '<button type="button" data-catalog-go="ai">+ Isi Token</button></div></div>'+
+    '<div class="ai-wizard-progress" aria-label="Tahapan penggunaan alat AI">'+
+    '<span class="is-current">01 · Pilih Alat</span><span>02 · Isi Brief</span><span>03 · Gunakan Hasil</span></div>'+
+    (tools.length?'<div class="ai-wizard-layout"><section class="ai-tool-selector" aria-label="Pilih alat AI">'+
+      '<h2>Pilih alat</h2><p>Alat tersedia sesuai katalog yang diaktifkan.</p>'+
+      tools.map(function(t){return '<button type="button" class="ai-tool-option'+(selected?.tool_id===t.tool_id?' is-current':'')+
+        '" data-ai-select="'+idSafe(t.tool_id)+'" aria-pressed="'+(selected?.tool_id===t.tool_id?'true':'false')+'">'+
+        '<span class="ai-tool-icon">'+icon('spark')+'</span><span><strong>'+esc(t.nama)+'</strong>'+
+        '<small>'+esc(t.deskripsi||'Alat AI untuk kebutuhan usaha')+'</small></span>'+
+        '<em>'+esc(Number(t.kredit_biaya)||0)+' Token</em></button>';}).join('')+'</section>'+
+      '<article class="surface ai-tool"><div class="ai-editor-head"><p class="eyebrow">LANGKAH 02 / BRIEF</p>'+
+      '<h2>'+esc(selected.nama)+'</h2><p>'+esc(selected.deskripsi||'Jelaskan kebutuhan Anda secara ringkas.')+'</p></div>'+
+      '<form class="ai-form" data-tool-id="'+idSafe(selected.tool_id)+'" data-cost="'+esc(cost)+'" novalidate>'+
+      '<div class="field"><label class="ai-label" for="ai-business-name">Nama usaha</label>'+
+      '<input class="input" id="ai-business-name" name="nama_usaha" maxlength="100" autocomplete="organization" value="'+
+      esc(state.me?.nama_usaha||'')+'" placeholder="Nama usaha Anda"></div>'+
+      '<div class="field"><label class="ai-label" for="ai-in-'+idSafe(selected.tool_id)+'">Produk atau kebutuhan Anda</label>'+
+      '<textarea class="input ai-input" id="ai-in-'+idSafe(selected.tool_id)+'" name="input" rows="6" maxlength="1400" required placeholder="'+
+      esc(selected.placeholder_input||'Jelaskan produk, audiens, gaya bahasa, dan tujuan konten')+'"'+(can?'':' disabled')+'></textarea>'+
+      '<small class="form-hint">Maksimal 1.500 karakter total. Jangan memasukkan data rahasia pelanggan.</small></div>'+
+      '<div class="ai-foot"><span class="ai-cost"><strong>'+esc(cost)+' Token</strong> / eksekusi</span>'+
+      '<button class="btn btn-primary" type="submit"'+(can?'':' disabled')+'>Proses dengan AI '+icon('arrow')+'</button></div>'+
+      '<div class="ai-result" role="status" aria-live="polite" hidden></div></form></article></div>':
+      empty('Belum ada alat AI aktif','Daftar alat akan tersedia setelah Admin mengaktifkannya.'))+
+    '</section>';
 }
 async function submitAITool(form){
   const btn=form.querySelector('[type=submit]'),box=form.querySelector('.ai-result'),area=form.querySelector('textarea');
-  const input=area.value.trim();
-  if(!input){area.focus();return toast('Isi permintaan terlebih dahulu.',true);}
+  const detail=area.value.trim();
+  const business=String(form.elements?.nama_usaha?.value||'').trim();
+  const input=(business?'Nama usaha: '+business+'\n':'')+'Detail kebutuhan: '+detail;
+  if(!detail){area.focus();return toast('Isi permintaan terlebih dahulu.',true);}
+  if(input.length>1500)return toast('Brief terlalu panjang. Batasi total 1.500 karakter.',true);
   const cost=Number(form.dataset.cost)||0,saldo=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
   if(saldo<cost)return toast('Kredit tidak cukup. Silakan top-up kredit di Katalog.',true);
   btn.disabled=true;area.disabled=true;box.hidden=false;box.className='ai-result is-loading';box.textContent='AI sedang menyusun hasil…';
@@ -517,7 +545,8 @@ async function submitAITool(form){
     if(state.home)state.home.saldo_kredit=r.saldo;if(state.me)state.me.saldo_kredit=r.saldo;
     const bal=document.getElementById('ai-balance');if(bal)bal.textContent=r.saldo+' kredit';
     box.className='ai-result';box.innerHTML='<p class="card-kicker">HASIL · '+esc(r.kredit_terpakai)+' KREDIT TERPAKAI</p><div class="ai-text">'+esc(r.hasil)+'</div>'+
-      '<button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(r.hasil)+'">Salin hasil '+icon('link')+'</button>';
+      '<div class="ai-result-actions"><button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(r.hasil)+'">Salin teks '+icon('link')+'</button>'+
+      '<a class="btn btn-secondary btn-sm" href="https://wa.me/?text='+encodeURIComponent(String(r.hasil||''))+'" target="_blank" rel="noopener noreferrer">Kirim ke WA ↗</a></div>';
     box.scrollIntoView({block:'nearest',behavior:'smooth'});
   }catch(e){
     if(!['NETWORK_ERROR','INTERNAL','RECONCILIATION_REQUIRED'].includes(e.code))
@@ -528,18 +557,28 @@ async function submitAITool(form){
   }finally{btn.disabled=false;area.disabled=false;}
 }
 function viewAffiliate(){
-  if(!logged())return title('Bagikan manfaatnya','PROGRAM AFFILIATE','Ajak sesama pelaku usaha untuk ikut belajar.')+needLogin('program affiliate');
-  const a=state.affiliates;const code=a?.kode_referral||state.me?.kode_referral||'';
-  const link=code?(config.siteUrl||location.href.split('#')[0])+'?ref='+encodeURIComponent(code):'';
-  const stats=a?.saldo||{};
-  return title('Bertumbuh bersama','PROGRAM AFFILIATE','Gunakan kode referral Anda untuk mengajak pelaku usaha lain.')+
-    '<div class="surface"><p class="card-kicker">KODE REFERRAL</p><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><h2 style="margin:0">'+esc(code||'Belum tersedia')+'</h2>'+
-    '<button class="btn btn-primary" data-copy="'+esc(link)+'" '+(!link||!isWriteEnabled()?'disabled title="Referral belum aktif"':'')+'>Salin tautan '+icon('link')+'</button></div><div class="stat-grid">'+
-    '<div class="stat"><div class="stat-value">'+esc(a?.pendaftar??0)+'</div><div class="stat-label">Pendaftar</div></div>'+
-    '<div class="stat"><div class="stat-value">'+esc(a?.konversi??0)+'</div><div class="stat-label">Konversi</div></div>'+
-    '<div class="stat"><div class="stat-value">'+rupiah(stats.APPROVED??0)+'</div><div class="stat-label">Disetujui</div></div></div></div>'+
-    '<div class="section-gap">'+title('Transparansi program','KETENTUAN','Komisi mengikuti verifikasi pembayaran dan masa tunggu.')+
-    '<div class="banner"><div><h3>Catatan affiliate</h3><p>'+esc(state.info?.disclosure||'Tautan affiliate dapat memberikan komisi kepada perekomendasi tanpa biaya tambahan untuk pembeli.')+'</p></div></div></div>';
+  if(!logged())return '<section class="affiliate-public"><p class="eyebrow">PROGRAM AFFILIATE</p>'+
+    '<h1>Bagikan produk yang relevan. Dapatkan komisi.</h1>'+
+    '<p>Tautan referral pribadi tersedia setelah Anda masuk sebagai member. Komisi mengikuti pembelian dan verifikasi pesanan yang tercatat.</p>'+
+    '<button class="btn btn-primary" type="button" data-route="login">Masuk untuk melihat affiliate</button></section>';
+  const a=state.affiliates||{},code=a.kode_referral||state.me?.kode_referral||'';
+  const site=String(config.siteUrl||location.href.split('#')[0]);
+  const url=code?site+(site.includes('?')?'&':'?')+'ref='+encodeURIComponent(code):'';
+  const stats=a.saldo||{};
+  return '<section class="affiliate-workspace"><header class="affiliate-header"><div><p class="eyebrow">WORKSPACE / AFFILIATE</p>'+
+    '<h1>Komisi Affiliate</h1><p>Bagikan tautan Anda. Pantau pendaftar, transaksi, dan komisi yang telah disetujui.</p></div></header>'+
+    '<div class="affiliate-summary-grid">'+[
+      ['Komisi tertahan',rupiah(stats.PENDING??0),'Dalam masa tahan'],
+      ['Siap cair',rupiah(stats.APPROVED??0),'Setelah disetujui'],
+      ['Pendaftar',esc(a.pendaftar??0),'Melalui tautan Anda'],
+      ['Konversi',esc(a.konversi??0),'Pembelian terverifikasi']
+    ].map(function(x){return '<article class="affiliate-summary"><small>'+x[0]+'</small><strong>'+x[1]+'</strong><span>'+x[2]+'</span></article>';}).join('')+'</div>'+
+    '<section class="affiliate-referral"><div><p class="eyebrow">TAUTAN REFERRAL ANDA</p><h2>'+esc(code||'Belum tersedia')+'</h2>'+
+    '<p>Komisi berulang mengikuti persentase masing-masing produk. Masa tahan 14 hari; minimum pengajuan pencairan Rp50.000.</p>'+
+    (url?'<div class="affiliate-referral-url">'+esc(url)+'</div>':'')+'</div>'+
+    '<button type="button" class="btn btn-primary" data-copy="'+esc(url)+'"'+(!url?' disabled':'')+'>Salin tautan '+icon('link')+'</button></section>'+
+    '<section class="affiliate-terms"><h3>Transparansi komisi</h3><p>'+esc(state.info?.disclosure||
+      'Komisi referral dihitung atas transaksi yang memenuhi syarat dan mengikuti pemeriksaan status pembayaran.')+'</p></section></section>';
 }
 function viewNotificationCenter(){
   if(!logged()||isAdmin())return '';
@@ -1935,6 +1974,11 @@ document.addEventListener('click',async(e)=>{
   if(target.hasAttribute('data-public-step')){
     const step=Number(target.dataset.publicStep);
     if(Number.isInteger(step)&&step>=0&&step<3){state.publicStep=step;render();}
+  }
+  else if(target.hasAttribute('data-ai-select')){
+    if(!logged()||isAdmin())return;
+    const tool=state.tools.find(x=>x.tool_id===target.dataset.aiSelect);
+    if(tool){state.selectedAiToolId=tool.tool_id;render();}
   }
   else if(target.hasAttribute('data-hero-step')){
     showHeroSlide_(state.heroIndex+Number(target.dataset.heroStep||1));syncHeroRotation_();
