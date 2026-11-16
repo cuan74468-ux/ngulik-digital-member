@@ -1256,7 +1256,10 @@ function onPaid_(o,actor) {
   // A notification failure cannot un-pay an already verified order.
   notifyPaidOrder_(o,member,product,s);
 }
+var NGD_SIMULATION_MODE_=false;
 function sendFonnteWa_(targetWa,message,tipePenerima,templateKode,refId) {
+  // A temporary STAGING simulation must never contact a real member/admin.
+  if(NGD_SIMULATION_MODE_)return {status:'SUPPRESSED',simulation:true};
   // Documented Fonnte API: form fields target/message, raw authorization token.
   // An HTTP/API acceptance is NOT proof of WhatsApp delivery.
   try{
@@ -1948,6 +1951,138 @@ function ngdPilotSelfTestReadOnly() {
     checks:checks,verdict:failed.length?'NEEDS_CONFIGURATION':'READ_ONLY_CHECKS_PASS'};
   console.log('NGD_PILOT_READONLY_QA '+JSON.stringify(summary));
   return summary;
+}
+
+/**
+ * End-to-end pilot simulation, using the REAL checkout/confirm/approve code
+ * on a disposable spreadsheet. Source STAGING tables are read, never mutated.
+ * No WhatsApp/API calls and no real payment is represented.
+ * A dedicated temporary file is trashed in finally; cleanup errors are surfaced.
+ */
+function ngdStagingEndToEndSimulation() {
+  ngdStagingWorkspaceInfo_(); // fails closed outside the verified STAGING DB.
+  var sourceDb=db_(),scratch=null,scratchId='',passed=false,report={};
+  require_(!NGD_SIMULATION_MODE_,'CONFLICT','Simulasi sedang berjalan.');
+  var memberSource=byId_('members','member_id','M-0009');
+  var refSource=byId_('members','member_id','M-0001');
+  var sourceProduct=byId_('katalog_produk','product_id','P-TOKEN-10');
+  require_(memberSource&&memberSource.role==='MEMBER'&&memberSource.referred_by==='M-0001'&&refSource&&
+    sourceProduct&&sourceProduct.tipe==='TOPUP_TOKEN',
+    'CONFLICT','Data member/referrer/produk pilot tidak sesuai.');
+  require_(ngdPriceRupiah_(sourceProduct.harga)===10000&&
+    Number(sourceProduct.kredit_diberikan)===10&&
+    commissionRate_(settings_(),sourceProduct)===10,
+    'CONFLICT','Harga, top-up atau komisi pilot belum sesuai.');
+  var before=creditBalance_('M-0009');
+  // Compare the current staging wallet ledger with the member snapshot.
+  require_(Number(memberSource.saldo_kredit)===before,
+    'RECONCILIATION_REQUIRED','Saldo member dan ledger STAGING belum konsisten.');
+  var settingsRows=readAll_('pengaturan_sistem').map(function(s){
+    return {key:s.key,value:s.value,tipe:s.tipe,deskripsi:s.deskripsi};
+  });
+  var schemas=['members','katalog_produk','orders','credits_ledger',
+    'affiliate_commissions','audit_logs','pengaturan_sistem','wa_notifications'];
+  var removed=false;
+  try {
+    scratch=SpreadsheetApp.create('NGD_STAGING_E2E_TEMP_'+uuid_().slice(0,10));
+    scratchId=scratch.getId();
+    var first=scratch.getSheets()[0];
+    schemas.forEach(function(name,i){
+      var sh=i===0?first:scratch.insertSheet();
+      sh.setName(name);
+      sh.getRange(1,1,1,NGD.HEADERS[name].split(',').length)
+        .setValues([NGD.HEADERS[name].split(',')]);
+      sh.setFrozenRows(1);
+    });
+    function put(name,rows){
+      if(!rows.length)return;
+      var sh=scratch.getSheetByName(name),head=NGD.HEADERS[name].split(',');
+      sh.getRange(2,1,rows.length,head.length).setValues(rows.map(function(r){
+        return head.map(function(key){return sheetLiteral_(r[key]===undefined?'':r[key]);});
+      }));
+    }
+    // Synthetic identity: no PIN hashes, contact numbers, or live order records.
+    put('members',[
+      {member_id:'M-0001',role:'MEMBER',nama:'Test Referrer',status:'AKTIF',saldo_kredit:0},
+      {member_id:'M-0009',role:'MEMBER',nama:'Test Member',
+       referred_by:'M-0001',status:'AKTIF',saldo_kredit:before}
+    ]);
+    put('katalog_produk',[{
+      product_id:'P-TOKEN-10',nama:'Top-Up 10 Token Universal',
+      tipe:'TOPUP_TOKEN',harga:10000,kredit_diberikan:10,
+      bisa_komisi:true,komisi_persen:10,aktif:true
+    }]);
+    put('credits_ledger',[{
+      entry_id:'E2E_START',member_id:'M-0009',created_at:now_(),
+      tipe:'GRANT',jumlah:before,status:'POSTED',ref_id:'E2E_START',
+      saldo_setelah:before
+    }]);
+    put('pengaturan_sistem',settingsRows);
+    NGD_DB_CACHE_=scratch;
+    NGD_SIMULATION_MODE_=true;
+    var member=byId_('members','member_id','M-0009');
+    var req='E2E_'+uuid_().slice(0,20);
+    var order=newOrder_(member,{product_id:'P-TOKEN-10'},req);
+    require_(order.status==='PENDING'&&Number(order.kode_unik)>=100&&
+      Number(order.kode_unik)<=999&&Number(order.total_bayar)===10000+Number(order.kode_unik),
+      'CONFLICT','Checkout atau kode unik tidak valid.');
+    var confirmed=transitionOrder_(member,order.order_id,'confirm',{});
+    require_(confirmed.status==='MENUNGGU_VERIFIKASI',
+      'CONFLICT','Konfirmasi pembayaran tidak valid.');
+    var admin={member_id:'E2E_ADMIN',role:'ADMIN'};
+    var approved=transitionOrder_(admin,order.order_id,'approve',{
+      dana_diterima:true,referensi_pembayaran:'E2E_SIMULATED_ONLY'
+    });
+    var finalOrder=byId_('orders','order_id',order.order_id);
+    var ledger=findRows_('credits_ledger',function(r){
+      return r.ref_id===order.order_id&&r.tipe==='TOPUP';
+    });
+    var commissions=findRows_('affiliate_commissions',function(r){
+      return r.order_id===order.order_id;
+    });
+    var finalMember=byId_('members','member_id','M-0009');
+    require_(approved&&!approved.needs_review&&finalOrder&&
+      finalOrder.status==='FULFILLED'&&ledger.length===1&&
+      Number(ledger[0].jumlah)===10&&creditBalance_('M-0009')===before+10&&
+      Number(finalMember.saldo_kredit)===before+10&&commissions.length===1&&
+      commissions[0].referrer_id==='M-0001'&&
+      Number(commissions[0].nominal)===1000&&
+      Number(commissions[0].persen)===10,
+      'CONFLICT','Ledger, token atau komisi simulasi tidak sesuai.');
+    // No second posting or commission is permitted for the same order.
+    onPaid_(finalOrder,admin);
+    require_(findRows_('credits_ledger',function(r){
+      return r.ref_id===order.order_id&&r.tipe==='TOPUP';
+    }).length===1&&findRows_('affiliate_commissions',function(r){
+      return r.order_id===order.order_id;
+    }).length===1,'CONFLICT','Idempotensi tidak terpenuhi.');
+    passed=true;
+    report={status:'PASS_ISOLATED',environment:'STAGING',
+      mode:'DISPOSABLE_SPREADSHEET_NO_REAL_PAYMENT',
+      order_id:order.order_id,initial_balance:before,final_balance:before+10,
+      credit_posted:10,referrer_id:'M-0001',commission_idr:1000,
+      live_database_orders_created:0,live_database_ledger_mutations:0,
+      real_fonnte_messages:0};
+    return report;
+  } finally {
+    NGD_SIMULATION_MODE_=false;
+    NGD_DB_CACHE_=sourceDb;
+    if(scratchId){
+      try{
+        DriveApp.getFileById(scratchId).setTrashed(true);
+        removed=true;
+      }catch(cleanupError){
+        console.error('NGD_E2E_TEMP_CLEANUP_FAILED id='+scratchId);
+        throw new Error('Simulasi membuat file temporer yang belum terhapus. '+
+          'Hapus file NGD_STAGING_E2E_TEMP dengan ID '+scratchId+
+          ' secara manual sebelum pengujian diulang.');
+      }
+    }
+    console.log('NGD_STAGING_E2E '+JSON.stringify({
+      verdict:passed?'PASS':'FAILED',temp_removed:removed,
+      production_touched:false,staging_data_mutated:false
+    }));
+  }
 }
 
 function ngdStagingWorkspaceReadOnlyCheck() {
