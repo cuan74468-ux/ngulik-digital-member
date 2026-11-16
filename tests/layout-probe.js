@@ -17,7 +17,8 @@
       var sharedTheme=bg==='#fafafc'&&primaryColor.toLowerCase()==='#1db86a';
       var themeLinked=!!document.querySelector('link[href*="unified-theme.css"]')&&
         !!document.querySelector('link[href*="learning-studio.css"]')&&
-        !!document.querySelector('link[href*="styles.css"]');
+        !!document.querySelector('link[href*="styles.css"]')&&
+        !!document.querySelector('link[href*="portfolio-adaptation.css"]');
       var main=document.getElementById('screen');
       var navRect=nav?nav.getBoundingClientRect():null;
       var floatingNav=window.innerWidth<=760&&visible&&navRect&&
@@ -27,9 +28,9 @@
         window.innerWidth<=760?'.mobile-nav .nav-item[aria-current="page"]':
           '.sidebar .nav-item[aria-current="page"]');
       var inkNav=!!activeNav&&
-        ['rgb(239, 243, 255)','rgb(237, 243, 255)']
+        ['rgb(239, 243, 255)','rgb(237, 243, 255)','rgb(237, 242, 250)']
           .includes(getComputedStyle(activeNav).backgroundColor)&&
-        ['rgb(36, 84, 207)','rgb(36, 89, 219)']
+        ['rgb(36, 84, 207)','rgb(36, 89, 219)','rgb(37, 61, 96)']
           .includes(getComputedStyle(activeNav).color);
       var guest=document.body.getAttribute('data-app-role')==='guest';
       // Public top navigation replaces all selected sidebar/bottom nav states.
