@@ -166,7 +166,7 @@
     ];
     info.replaceChildren();
     info.append(node('b','','NGD · STAGING'));
-    flags.forEach(([name,enabled])=>info.append(badge(name+' '+(enabled?'ON':'OFF'),!enabled)));
+    flags.forEach(([name,enabled])=>info.append(badge(name+' '+(enabled?'ON':'OFF'),Boolean(enabled))));
   }
   function formatValue(value){
     if(value===true)return 'Ya';
