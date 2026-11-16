@@ -10,7 +10,7 @@
   "verified_editor_functions": [
     {
       "name": "ngdInfrastructurePreflightReadOnly",
-      "result": "PASS_29_TABLES",
+      "result": "PASS_29_TABLES_ON_PREVIOUS_SOURCE",
       "owner_log_date": "2026-11-15"
     },
     {
@@ -19,7 +19,7 @@
       "owner_log_date": "2026-11-15"
     }
   ],
-  "unverified": "Apps Script editor sync and deployment are not inferred from repository hashes; production and staging remain separate until editor readback.",
+  "unverified": "New InfrastructurePreflight.gs source has NOT yet been executed/read back in Apps Script STAGING; GitHub source hash alone does not establish runtime synchronization or deployment.",
   "release_gate": "OWNER_EXECUTION_AUTHORIZED",
   "external_providers": "CONFIGURATION_PENDING",
   "modules": [
