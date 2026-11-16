@@ -225,16 +225,18 @@ function ngdOtpVerify_(p) {
 }
 
 /**
- * Called INSIDE authRegister_'s LockService region.
- * Consumes exactly one already-verified OTP before creating any member.
+ * Verify a valid, still-single-use registration OTP INSIDE the registration
+ * lock, without consuming it on success. Invalid/expired OTPs preserve the
+ * existing failed-attempt/expiration behavior. The returned ID stays server
+ * side; it must never be sent to a browser or used as an authorization token.
  */
-function ngdConsumeVerifiedRegistrationOtp_(p) {
+function ngdValidateVerifiedRegistrationOtp_(p) {
   p=p||{};
   var conf=ngdOtpProperties_();
   var wa=normalizeWa_(p.wa),otp=String(p.otp||'');
   require_(/^\d{6}$/.test(otp),'VALIDATION','Kode OTP harus enam angka.');
   var row=ngdOtpLatest_(ngdOtpRead_(),wa);
-  require_(!!row && row.status==='VERIFIED','UNAUTHORIZED',
+  require_(!!row&&row.status==='VERIFIED','UNAUTHORIZED',
     'Verifikasi WhatsApp belum selesai.');
   if(new Date(row.expires_at).getTime()<=Date.now()){
     ngdOtpPatch_(row._row,{status:'EXPIRED'});
@@ -245,6 +247,32 @@ function ngdConsumeVerifiedRegistrationOtp_(p) {
     ngdOtpRecordAttempt_(row);
     throw ngdError_('UNAUTHORIZED','Kode OTP salah.');
   }
+  return String(row.otp_id);
+}
+
+/**
+ * Called INSIDE authRegister_'s LockService region, AFTER the member append.
+ * The optional validated ID is a server-only evidence pointer obtained earlier
+ * in the same locked request. Direct callers still undergo full validation.
+ *
+ * If this status write fails after an account is saved, a future registration
+ * must not proceed: authRegister_ rejects the existing WhatsApp account.
+ * Such partial commits need explicit reconciliation, never auto-reset OTP.
+ */
+function ngdConsumeVerifiedRegistrationOtp_(p, validatedOtpId) {
+  p=p||{};
+  var id=validatedOtpId===undefined
+    ?ngdValidateVerifiedRegistrationOtp_(p)
+    :String(validatedOtpId||'');
+  require_(!!id,'UNAUTHORIZED','Verifikasi WhatsApp belum selesai.');
+  var conf=ngdOtpProperties_(),wa=normalizeWa_(p.wa),otp=String(p.otp||'');
+  require_(/^\d{6}$/.test(otp),'VALIDATION','Kode OTP harus enam angka.');
+  var row=ngdOtpLatest_(ngdOtpRead_(),wa);
+  require_(!!row&&row.status==='VERIFIED'&&String(row.otp_id)===id,
+    'UNAUTHORIZED','Verifikasi WhatsApp belum selesai.');
+  // A trusted server-side ID is not a substitute for the OTP itself.
+  require_(ngdOtpEqual_(row.kode_hash,ngdOtpHash_(conf.pepper,wa,otp)),
+    'UNAUTHORIZED','Kode OTP salah.');
   ngdOtpPatch_(row._row,{status:'USED'});
   return true;
 }

@@ -786,10 +786,19 @@ function authRegister_(p) {
     if(referrer&&(referrer.status!=='AKTIF'||referrer.role!=='MEMBER'))referrer=null;
     var salt=newSalt_(),id=nextMemberId_(),joined=now_(),status=wait?'WAITING_LIST':'AKTIF';
     var m={member_id:id,role:'MEMBER',nama:safeText_(p.nama,80),wa:wa,nama_usaha:safeText_(p.nama_usaha,100),wa_verified:true,wa_verified_at:joined,pin_hash:pinHash_(pin,salt),pin_salt:salt,kode_referral:newReferralCode_(),referred_by:referrer?referrer.member_id:'',status:status,joined_at:joined,last_active_at:joined,status_pos:'BELUM',status_canva:'BELUM',d14_active:false,d30_active:false};
-    // Validation is complete: consume server-verified OTP immediately before insert.
+    // Verify an OTP under the lock without marking it USED yet. Sheets has
+    // no cross-tab transaction: if the member insert fails, the same valid
+    // OTP must remain available for a safe retry within its original TTL.
     requireRegistrationWaEvidenceColumns_();
-    ngdConsumeVerifiedRegistrationOtp_(p);
-    appendRow_('members',m);logAudit_(id,'MEMBER','REGISTER','members',id,'',status,{});
+    require_(typeof ngdValidateVerifiedRegistrationOtp_==='function',
+      'MAINTENANCE','Pemeriksaan OTP registrasi belum siap.');
+    var verifiedOtpId=ngdValidateVerifiedRegistrationOtp_(p);
+    appendRow_('members',m);
+    // Commit the one-time proof only AFTER the account row was persisted.
+    // If this status write fails, a duplicate-WA guard prevents replay:
+    // reconciliation is required, not an unsafe second member insert.
+    ngdConsumeVerifiedRegistrationOtp_(p,verifiedOtpId);
+    logAudit_(id,'MEMBER','REGISTER','members',id,'',status,{});
     if(wait){return {status:status,posisi:findRows_('members',function(r){return r.status==='WAITING_LIST';}).length};}
     if(initial>0)grantInitialCredit_(id,initial);
     if(active+1>=Number(s.kuota_gelombang||50)){updateSetting_('mode_pendaftaran','WAITING_LIST');logAudit_('SYSTEM','SYSTEM','REGISTRATION_FULL','pengaturan_sistem','mode_pendaftaran','TERBUKA','WAITING_LIST',{});}

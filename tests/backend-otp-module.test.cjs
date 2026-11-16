@@ -103,3 +103,107 @@ test('global provider kill switch blocks OTP even when all individual registrati
     /Registrasi OTP STAGING belum diaktifkan/);
   assert.throws(()=>x.ngdOtpProperties_(),/Registrasi OTP STAGING belum diaktifkan/);
 });
+
+
+function registrationHarness(options={}) {
+  const x=boot();
+  const number='6281234567890';
+  const members=[],credits=[],audits=[],sessions=[];
+  const row={
+    _row:2,otp_id:'OTP-TEST-001',wa:number,tujuan:'REGISTRATION',
+    status:'VERIFIED',attempts:0,expires_at:new Date(Date.now()+180000),
+    kode_hash:x.ngdOtpHash_('123456789abcdef0123456789abcdef01234567890',
+      number,'285947')
+  };
+  let failInsert=Boolean(options.failInsert),failConsume=Boolean(options.failConsume);
+  const rowPatches=[];
+  x.withLock_=fn=>fn();
+  x.ngdOtpRead_=()=>[row];
+  x.ngdOtpPatch_=(r,p)=>{
+    if(failConsume && p.status==='USED') {
+      failConsume=false;throw Error('SIMULATED_OTP_COMMIT_FAILURE');
+    }
+    assert.equal(r,2);Object.assign(row,p);rowPatches.push(p);
+  };
+  x.tbl_=()=>({headers:['member_id','wa','pin_hash','pin_salt',
+    'wa_verified','wa_verified_at']});
+  x.checkNewPin_=()=>{};
+  x.safeText_=v=>String(v||'');
+  x.byId_=(name,key,value)=>{
+    if(name==='members'&&key==='wa')
+      return members.find(m=>m.wa===value)||null;
+    return null;
+  };
+  x.settings_=()=>({mode_pendaftaran:'TERBUKA',kuota_gelombang:50,kredit_awal:10});
+  x.memberCount_=()=>members.length;
+  x.memberWaitlist_=()=>[];
+  x.newSalt_=()=> 'TEST_SALT_NOT_REAL';
+  x.nextMemberId_=()=> 'M-0002';
+  x.now_=()=>new Date('2026-11-16T00:00:00Z');
+  x.pinHash_=()=> 'TEST_PIN_HASH_NOT_REAL';
+  x.newReferralCode_=()=> 'TEST_REF';
+  x.appendRow_=(table,data)=>{
+    if(table==='members'){
+      if(failInsert){failInsert=false;throw Error('SIMULATED_MEMBER_INSERT_FAILURE');}
+      members.push(data);return;
+    }
+    if(table==='credits_ledger'){credits.push(data);return;}
+    throw Error('UNEXPECTED_WRITE_'+table);
+  };
+  x.logAudit_=(...args)=>audits.push(args);
+  x.grantInitialCredit_=(id,amount)=>{credits.push({id,amount});return {granted:true};};
+  x.newSessionMember_=m=>{sessions.push(m.member_id);return {token:'TEST_SESSION'};};
+  const data={wa:'081234567890',otp:'285947',pin:'285947',
+    nama:'Anggota Pengujian',nama_usaha:'Usaha Pengujian',setuju_kebijakan:true};
+  return {x,data,row,members,credits,audits,sessions,rowPatches,
+    register:()=>x.authRegister_(data)};
+}
+
+test('partial member INSERT failure leaves valid OTP unconsumed, allowing a safe retry',()=>{
+  const h=registrationHarness({failInsert:true});
+  assert.throws(()=>h.register(),/SIMULATED_MEMBER_INSERT_FAILURE/);
+  assert.equal(h.row.status,'VERIFIED');
+  assert.equal(h.members.length,0);
+  assert.equal(h.credits.length,0);
+  assert.equal(h.sessions.length,0);
+  const success=h.register();
+  assert.equal(success.status,'AKTIF');
+  assert.equal(h.row.status,'USED');
+  assert.equal(h.members.length,1);
+  assert.equal(h.credits.length,1);
+  assert.equal(h.sessions.length,1);
+  assert.throws(()=>h.register(),/sudah terdaftar/);
+  assert.equal(h.members.length,1);
+  assert.equal(h.credits.length,1);
+});
+test('OTP commit failure after account write cannot mint second account or starter grant',()=>{
+  const h=registrationHarness({failConsume:true});
+  assert.throws(()=>h.register(),/SIMULATED_OTP_COMMIT_FAILURE/);
+  assert.equal(h.members.length,1);
+  assert.equal(h.row.status,'VERIFIED');
+  assert.equal(h.credits.length,0);
+  assert.equal(h.sessions.length,0);
+  assert.throws(()=>h.register(),/sudah terdaftar/);
+  assert.equal(h.members.length,1);
+  assert.equal(h.row.status,'VERIFIED');
+  assert.equal(h.credits.length,0);
+});
+test('invalid OTP never inserts member; wrong code increases attempts',()=>{
+  const h=registrationHarness();
+  h.data.otp='111111';
+  assert.throws(()=>h.register(),/Kode OTP salah/);
+  assert.equal(h.row.attempts,1);
+  assert.equal(h.members.length,0);
+  assert.equal(h.credits.length,0);
+  assert.equal(h.row.status,'VERIFIED');
+});
+test('OTP validation only returns server-side evidence; consumption requires matching code',()=>{
+  const h=registrationHarness();
+  const id=h.x.ngdValidateVerifiedRegistrationOtp_(h.data);
+  assert.equal(id,'OTP-TEST-001');
+  assert.equal(h.row.status,'VERIFIED');
+  assert.throws(()=>h.x.ngdConsumeVerifiedRegistrationOtp_({...h.data,otp:'123456'},id),/Kode OTP salah/);
+  assert.equal(h.row.status,'VERIFIED');
+  assert.equal(h.x.ngdConsumeVerifiedRegistrationOtp_(h.data,id),true);
+  assert.equal(h.row.status,'USED');
+});
