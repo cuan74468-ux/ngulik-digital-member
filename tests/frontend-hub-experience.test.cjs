@@ -40,7 +40,9 @@ test('public hub is a native-style home: hero, search bar, feature grid',()=>{
   for(const label of ['Belajar','Aplikasi','Studio AI','Jasa','Katalog']){
     assert.ok(html.includes('>'+label+'<'),label);
   }
-  assert.doesNotMatch(html,/hub-journey|hub-lead|class="eyebrow"/);
+  assert.match(html,/public-editorial-hero/);
+  assert.match(html,/Bengkel kerja digital/);
+  assert.doesNotMatch(html,/Bertumbuh dimulai dari satu langkah kecil/);
   assert.doesNotMatch(html,/Daftar member/);
   assert.equal(h.apiCalls.length,0);
 });
@@ -65,7 +67,7 @@ test('local QA catalog renders eight test-only records with payment disabled',()
   assert.match(html,/8<\/strong><span>penawaran tercatat/);
   assert.match(html,/Jasa Video Iklan AI/);
   assert.match(html,/Bundel Ebook Vibe Coder/);
-  assert.match(html,/disabled title="Pembayaran belum diaktifkan"/);
+  assert.match(html,/disabled title="Checkout belum tersedia pada konfigurasi saat ini"/);
   assert.doesNotMatch(html,/data-buy="P-VIDEO-AI"[^>]*>Pilih produk/);
   assert.doesNotMatch(html,/data-buy="P-EBOOK"[^>]*>Pilih produk/);
   assert.equal(h.apiCalls.length,0);
@@ -80,7 +82,7 @@ test('public catalog offers WhatsApp consultation only for a valid official cont
   assert.doesNotMatch(html,/data-buy="/);
   vm.runInContext("state.info={wa_admin:'https://evil.example'};render()",h.ctx);
   assert.doesNotMatch(h.nodes.screen.innerHTML,/href="https:\/\/wa\.me\//);
-  assert.match(h.nodes.screen.innerHTML,/disabled title="Pembayaran belum diaktifkan"/);
+  assert.match(h.nodes.screen.innerHTML,/disabled title="Checkout belum tersedia pada konfigurasi saat ini"/);
 });
 test('category filtering isolates services and does not invent sale actions',()=>{
   const h=preview();
@@ -88,7 +90,7 @@ test('category filtering isolates services and does not invent sale actions',()=
   assert.match(h.nodes.screen.innerHTML,/Jasa Video Iklan AI/);
   assert.doesNotMatch(h.nodes.screen.innerHTML,/Top-up 150 Kredit AI/);
   assert.match(h.nodes.screen.innerHTML,/aria-pressed="true"/);
-  assert.match(h.nodes.screen.innerHTML,/Menampilkan 1 dari 8 penawaran/);
+  assert.match(h.nodes.screen.innerHTML,/Menampilkan 2 dari 8 penawaran/);
   vm.runInContext("state.catalogFilter='belajar';render()",h.ctx);
   assert.match(h.nodes.screen.innerHTML,/Bundel Ebook Vibe Coder/);
   assert.doesNotMatch(h.nodes.screen.innerHTML,/Jasa Video Iklan AI/);
@@ -109,7 +111,7 @@ test('untrusted catalog labels are escaped even inside category-filtered views',
   assert.match(html,/&lt;img src=x onerror=alert\(1\)&gt;/);
   assert.match(html,/&lt;script&gt;unsafe&lt;\/script&gt;/);
   assert.doesNotMatch(html,/<img src=x onerror/);
-  assert.match(html,/disabled title="Pembayaran belum diaktifkan"/);
+  assert.match(html,/disabled title="Checkout belum tersedia pada konfigurasi saat ini"/);
 });
 test('digital and service checkout paths reach server order validation',()=>{
   const ctx=vm.createContext({console:{log(){},warn(){},error(){}}});
