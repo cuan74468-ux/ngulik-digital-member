@@ -111,3 +111,80 @@ test('provider failure retries fallback key and compensates credits once',()=>{
   assert.throws(()=>h.c.runAiTool_(h.member,h.payload,h.id),/sudah diproses/);
   assert.equal(h.entries.filter(x=>x.tipe==='REFUND_ERROR').length,1);
 });
+
+test('fresh seed catalog includes nine brief-approved product IDs and per-product rates',()=>{
+  const c=boot();
+  let seeded;
+  c.seedIfEmpty_=(table,rows)=>{assert.equal(table,'katalog_produk');seeded=rows;return rows.length;};
+  assert.equal(c.seedCatalog_(),9);
+  assert.deepEqual(seeded.map(x=>x.product_id),[
+    'P-EBOOK','P-3IN1','P-POS','P-VIDEO-AI','P-CANVA','P-TOKEN-10',
+    'P-KREDIT-50','P-KREDIT-150','P-KREDIT-400'
+  ]);
+  assert.equal(seeded.find(x=>x.product_id==='P-EBOOK').komisi_persen,40);
+  assert.equal(seeded.find(x=>x.product_id==='P-VIDEO-AI').komisi_persen,20);
+  assert.equal(seeded.find(x=>x.product_id==='P-TOKEN-10').harga,10000);
+  assert.ok(seeded.every(x=>x.sumber_produk==='INTERNAL'));
+});
+test('digital purchase grants bonus once, closes order and repeats commissions per order',()=>{
+  const c=boot(),records={credits_ledger:[],affiliate_commissions:[],orders:[],members:[],katalog_produk:[]};
+  const member={member_id:'M2',nama:'Test Member',wa:'6281000000000',role:'MEMBER',
+    status:'AKTIF',referred_by:'M1'};
+  const product={product_id:'P-EBOOK',nama:'Ebook',tipe:'PRODUK_DIGITAL',kredit_diberikan:10,
+    bisa_komisi:true,komisi_persen:40};
+  const order={order_id:'ORDER-A',member_id:'M2',product_id:'P-EBOOK',
+    harga_dasar:25000,total_bayar:25100,status:'PAID',_row:2};
+  records.members.push(member);
+  records.katalog_produk.push(product);
+  records.orders.push(order);
+  let n=0,notifications=0;
+  c.byId_=(table,key,val)=>(records[table]||[]).find(x=>String(x[key])===String(val))||null;
+  c.findRows_=(table,pred)=>(records[table]||[]).filter(pred);
+  c.appendRow_=(table,x)=>{records[table].push({...x,_row:records[table].length+2});};
+  c.updateRow_=(table,row,patch)=>Object.assign(records[table][row-2],patch);
+  c.creditBalance_=id=>records.credits_ledger.filter(x=>x.member_id===id)
+    .reduce((sum,x)=>sum+Number(x.jumlah),0);
+  c.settings_=()=>({komisi_persen:25,komisi_hanya_order_pertama:false,
+    masa_tahan_hari:14});
+  c.now_=()=>new Date('2026-11-16T05:00:00Z');
+  c.recordId_=()=>String(++n);
+  c.logAudit_=()=>{};
+  c.notifyPaidOrder_=()=>{notifications++};
+  const actor={role:'ADMIN',member_id:'M-0001'};
+  c.onPaid_(order,actor);
+  c.onPaid_(order,actor);
+  assert.equal(records.credits_ledger.length,1);
+  assert.equal(records.credits_ledger[0].tipe,'DIGITAL_BONUS');
+  assert.equal(c.creditBalance_('M2'),10);
+  assert.equal(order.status,'FULFILLED');
+  assert.equal(records.affiliate_commissions.length,1);
+  assert.equal(records.affiliate_commissions[0].nominal,10000);
+  assert.equal(notifications,2);
+});
+test('Fonnte uses raw Authorization token, persists accepted message and skips duplicate',()=>{
+  const c=boot(),records=[],calls=[];
+  c.normalizeWa_=wa=>wa;
+  c.findRows_=(table,pred)=>{
+    assert.equal(table,'wa_notifications');return records.filter(pred);
+  };
+  c.appendRow_=(table,row)=>{
+    assert.equal(table,'wa_notifications');records.push({...row,_row:records.length+2});
+  };
+  c.updateRow_=(table,row,patch)=>Object.assign(records[row-2],patch);
+  c.recordId_=()=> 'WA-0001';
+  c.now_=()=>new Date('2026-11-16T06:00:00Z');
+  c.PropertiesService={getScriptProperties(){return{
+    getProperty:k=>k==='FONNTE_API_TOKEN'?'TEST_FONNTE_TOKEN':null
+  };}};
+  c.UrlFetchApp={fetch(url,opt){calls.push({url,opt});
+    return {getResponseCode:()=>200,getContentText:()=>JSON.stringify({status:true,id:[123]})};
+  }};
+  const first=c.sendFonnteWa_('6281000000000','Pesanan dibayar','MEMBER','ORDER_PAID_MEMBER','ORDER-A');
+  const second=c.sendFonnteWa_('6281000000000','Pesanan dibayar','MEMBER','ORDER_PAID_MEMBER','ORDER-A');
+  assert.equal(first.status,'ACCEPTED');
+  assert.equal(second.already_sent,true);
+  assert.equal(records.length,1);
+  assert.equal(calls.length,1);
+  assert.equal(calls[0].url,'https://api.fonnte.com/send');
+  assert.equal(calls[0].opt.headers.Authorization,'TEST_FONNTE_TOKEN');
+});
