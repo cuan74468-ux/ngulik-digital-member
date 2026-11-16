@@ -1004,7 +1004,7 @@ function expireOrder_(o) {
   }
   return o;
 }
-var NGD_CHECKOUT_TYPES_=['TOPUP_KREDIT','LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','PRODUK_DIGITAL','JASA_SEKALI'];
+var NGD_CHECKOUT_TYPES_=['TOPUP_TOKEN','TOPUP_KREDIT','LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','PRODUK_DIGITAL','JASA_SEKALI'];
 function newOrder_(m,p,requestId) {
   return withLock_(function(){
     require_(m.role==='MEMBER','FORBIDDEN','Hanya member dapat membeli.');
@@ -1086,7 +1086,7 @@ function transitionOrder_(m,id,type,p) {
       if(linkedProduct.tipe==='LISENSI_SEKALI')
         require_(['AKTIF','DIAJUKAN'].indexOf(linkedMember.status_pos)<0,
           'RECONCILIATION_REQUIRED','Lisensi POS sudah dipenuhi atau menunggu aktivasi lain.');
-      if(linkedProduct.tipe==='TOPUP_KREDIT')
+      if(['TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(linkedProduct.tipe)>=0)
         require_(Number.isInteger(Number(linkedProduct.kredit_diberikan))&&Number(linkedProduct.kredit_diberikan)>0,
           'CONFLICT','Jumlah kredit produk belum valid.');
       if(linkedProduct.tipe==='LANGGANAN_30H')
@@ -1155,8 +1155,14 @@ function onPaid_(o,actor) {
   if(commissionEligible)require_(Number.isSafeInteger(commissionValue)&&commissionValue>0,
     'CONFLICT','Nominal komisi tidak valid.');
   var fulfilled=false,days=Number(product.durasi_hari||0),end;
-  if(product.tipe==='TOPUP_KREDIT'){
-    grantCredits_(member.member_id,Number(product.kredit_diberikan),o.order_id,'TOPUP');
+  if(['TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(product.tipe)>=0){
+    var credited=grantCredits_(member.member_id,Number(product.kredit_diberikan),o.order_id,'TOPUP');
+    // Keep the member snapshot aligned with the idempotent ledger posting.
+    // A spreadsheet formula, if present, remains authoritative and is not overwritten.
+    var mt=tbl_('members'),saldoCol=mt.headers.indexOf('saldo_kredit')+1;
+    require_(saldoCol>0,'CONFLICT','Kolom saldo member tidak tersedia.');
+    var saldoCell=mt.sheet.getRange(member._row,saldoCol);
+    if(!saldoCell.getFormula())saldoCell.setValue(credited.balance);
     fulfilled=true;
   }else if(product.tipe==='LANGGANAN_30H'){
     var old=member.akses_3in1_sampai?new Date(member.akses_3in1_sampai).getTime():0;
@@ -2073,7 +2079,164 @@ function apiReadActions_() {
     'adminListLMSCourses','adminGetLMSCourse','adminListLMSRevisions',
     'adminListLMSAIJobs'];
 }
+
+/**
+ * Mayar webhook entrypoint for GAS. A pre-linked Mayar payment ID is REQUIRED:
+ * create/associate gateway_ref_id during a server-side Mayar checkout process.
+ * This handler never trusts webhook-supplied amounts or account IDs.
+ */
+function mayarWebhook_(e) {
+  var params=e&&e.parameter||{},multi=e&&e.parameters||{};
+  var supplied=String(params.webhook_token||'');
+  var stored=String(PropertiesService.getScriptProperties().getProperty('MAYAR_WEBHOOK_SECRET')||'');
+  require_(stored.length>=32&&supplied.length===stored.length,
+    'FORBIDDEN','Webhook tidak diizinkan.');
+  var diff=0;
+  for(var i=0;i<stored.length;i++)diff|=stored.charCodeAt(i)^supplied.charCodeAt(i);
+  require_(diff===0&&String(params.source)==='mayar'&&
+    (!multi.source||multi.source.length===1)&&
+    (!multi.webhook_token||multi.webhook_token.length===1),
+    'FORBIDDEN','Webhook tidak diizinkan.');
+  requireMutationsEnabled_();
+  requireFinanceEnabled_();
+  var raw=e&&e.postData&&e.postData.contents;
+  require_(typeof raw==='string'&&raw.length>0&&raw.length<20000,
+    'BAD_REQUEST','Payload webhook tidak valid.');
+  var event=JSON.parse(raw);
+  require_(event&&typeof event==='object'&&!Array.isArray(event),
+    'BAD_REQUEST','Payload webhook tidak valid.');
+  var eventType=String(event.event||event.type||'');
+  require_(eventType==='payment.received','BAD_REQUEST','Event tidak didukung.');
+  var payment=event.data||{},paymentId=String(
+    payment.id||payment.paymentId||payment.payment_id||event.paymentId||''
+  );
+  require_(/^[A-Za-z0-9_-]{8,100}$/.test(paymentId),
+    'BAD_REQUEST','ID pembayaran tidak valid.');
+  var linked=findRows_('orders',function(o){
+    return String(o.gateway_ref_id||'')===paymentId;
+  });
+  require_(linked.length===1,'RECONCILIATION_REQUIRED',
+    'ID pembayaran belum terhubung ke satu pesanan yang valid.');
+  var apiKey=String(PropertiesService.getScriptProperties()
+    .getProperty('MAYAR_API_KEY')||'').trim();
+  require_(apiKey.length>10,'MAINTENANCE','Kunci API Mayar belum tersedia.');
+  // The provider response is the authority, NOT the webhook payload.
+  var resp=UrlFetchApp.fetch('https://api.mayar.id/hl/v2/payment/'+
+    encodeURIComponent(paymentId),{
+      method:'get',headers:{Authorization:'Bearer '+apiKey},
+      followRedirects:false,muteHttpExceptions:true
+    });
+  require_(Number(resp.getResponseCode())===200,'PAYMENT_UNVERIFIED',
+    'Status pembayaran tidak dapat diverifikasi.');
+  var parsed=JSON.parse(resp.getContentText());
+  var details=parsed&&parsed.data||parsed;
+  if(Array.isArray(details))details=details.length===1?details[0]:null;
+  require_(details&&typeof details==='object','PAYMENT_UNVERIFIED',
+    'Detail pembayaran tidak valid.');
+  require_(String(details.id||details.uuid||details.uuId||'')===paymentId,
+    'PAYMENT_UNVERIFIED','Identitas pembayaran berbeda.');
+  require_(String(details.status||'').toLowerCase()==='paid',
+    'PAYMENT_UNVERIFIED','Pembayaran belum lunas.');
+  var verifiedAmount=Number(details.amount);
+  require_(Number.isSafeInteger(verifiedAmount)&&
+    verifiedAmount===Number(linked[0].total_bayar),
+    'PAYMENT_UNVERIFIED','Jumlah pembayaran berbeda.');
+  return withLock_(function(){
+    var order=byId_('orders','order_id',linked[0].order_id);
+    require_(order&&String(order.gateway_ref_id||'')===paymentId,
+      'RECONCILIATION_REQUIRED','Referensi pembayaran berubah.');
+    var duplicate=findRows_('orders',function(o){
+      return String(o.gateway_ref_id||'')===paymentId;
+    });
+    require_(duplicate.length===1,'RECONCILIATION_REQUIRED',
+      'Referensi gateway duplikat.');
+    require_(Number(order.total_bayar)===verifiedAmount,
+      'PAYMENT_UNVERIFIED','Jumlah order berubah.');
+    if(['PAID','FULFILLED'].indexOf(order.status)>=0)
+      return {accepted:true,duplicate:true,order_id:order.order_id};
+    require_(['PENDING','MENUNGGU_VERIFIKASI','EXPIRED'].indexOf(order.status)>=0,
+      'RECONCILIATION_REQUIRED','Status order perlu peninjauan.');
+    var product=byId_('katalog_produk','product_id',order.product_id);
+    var member=byId_('members','member_id',order.member_id);
+    require_(product&&member&&NGD_CHECKOUT_TYPES_.indexOf(product.tipe)>=0,
+      'RECONCILIATION_REQUIRED','Produk atau member tidak valid.');
+    if(['TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(product.tipe)>=0)
+      require_(Number.isInteger(Number(product.kredit_diberikan))&&
+        Number(product.kredit_diberikan)>0,
+        'RECONCILIATION_REQUIRED','Nominal token tidak valid.');
+    updateRow_('orders',order._row,{
+      status:'PAID',paid_at:now_(),verified_by:'MAYAR_WEBHOOK',
+      catatan_admin:'Mayar verified payment '+paymentId
+    });
+    logAudit_('SYSTEM','SYSTEM','MAYAR_PAYMENT_VERIFIED','orders',
+      order.order_id,order.status,'PAID',{gateway_ref_id:paymentId});
+    try{
+      onPaid_(order,{member_id:'SYSTEM',role:'SYSTEM'});
+    }catch(failure){
+      // Leave PAID for explicit reconciliation, never silently repeat fulfillment.
+      console.error('MAYAR_FULFILLMENT_RECONCILE '+order.order_id+
+        ' '+String(failure&&failure.message||'').slice(0,120));
+    }
+    return {accepted:true,duplicate:false,order_id:order.order_id};
+  });
+}
+/** 15-minute trigger: bounded, idempotent order expiry and reminder queue. */
+function runScheduledAutomations() {
+  requireMutationsEnabled_();
+  return withLock_(function(){
+    var now=Date.now(),expired=0,queued=0,orders=readAll_('orders');
+    var settings=settings_(),expiryMin=Number(settings.order_expiry_menit||60);
+    if(!Number.isFinite(expiryMin)||expiryMin<1)expiryMin=60;
+    // Cap work per invocation; next trigger handles the remaining backlog.
+    var processed=0;
+    orders.forEach(function(o){
+      if(o.status!=='PENDING'||processed>=100)return;
+      processed++;
+      var created=new Date(o.created_at).getTime();
+      if(!Number.isFinite(created))return;
+      var age=now-created;
+      if(age>=60*60000||(Number.isFinite(new Date(o.expires_at).getTime())&&
+        new Date(o.expires_at).getTime()<=now)){
+        updateRow_('orders',o._row,{status:'EXPIRED'});
+        logAudit_('SYSTEM','SYSTEM','ORDER_EXPIRED','orders',
+          o.order_id,'PENDING','EXPIRED',{reason:'SCHEDULED'});
+        expired++;return;
+      }
+      if(age<15*60000||o.abandonment_reminded_at)return;
+      var member=byId_('members','member_id',o.member_id);
+      if(!member||!member.wa)return;
+      var exists=findRows_('wa_notifications',function(n){
+        return String(n.ref_id||'')===String(o.order_id)&&
+          String(n.template_kode||'')==='CART_ABANDONMENT';
+      });
+      if(exists.length){
+        updateRow_('orders',o._row,{abandonment_reminded_at:now_()});
+        return;
+      }
+      appendRow_('wa_notifications',{
+        notif_id:recordId_('WA'),tujuan_wa:normalizeWa_(member.wa),
+        tipe_penerima:'MEMBER',template_kode:'CART_ABANDONMENT',
+        ref_id:o.order_id,
+        pesan:'Halo '+String(member.nama||'Member').slice(0,50)+
+          ', pesanan '+String(o.order_id).slice(0,60)+
+          ' belum dibayar. Periksa kembali di akun Ngulik Digital.',
+        status:'QUEUED',retry_count:0,created_at:now_()
+      });
+      updateRow_('orders',o._row,{abandonment_reminded_at:now_()});
+      queued++;
+    });
+    return {processed:processed,expired:expired,reminders_queued:queued};
+  });
+}
+
 function doPost(e) {
+  if(e&&e.parameter&&String(e.parameter.source||'')==='mayar'){
+    try{return apiOutput_({ok:true,data:mayarWebhook_(e)});}
+    catch(webhookError){
+      console.error('MAYAR_WEBHOOK_REJECTED '+String(webhookError&&webhookError.publicCode||'INVALID'));
+      return apiOutput_({ok:false,error:{code:'WEBHOOK_REJECTED',message:'Webhook tidak diterima.'}});
+    }
+  }
   try {
     var raw=e&&e.postData&&e.postData.contents;
     require_(typeof raw==='string'&&raw.length<56000,'BAD_REQUEST','Permintaan tidak valid.');
