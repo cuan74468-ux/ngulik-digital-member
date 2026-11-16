@@ -48,16 +48,22 @@ function ngdInfrastructurePreflightReadOnly() {
   Object.keys(NGD.HEADERS).forEach(function(name) {
     contracts[name]=NGD.HEADERS[name].split(',');
   });
-  if(contracts.otp_verifications||contracts.wa_notifications)
-    throw new Error('INFRA_DUPLICATE_OTP_CONTRACT');
-  contracts.otp_verifications=[
+  // OTP/WA tables are now part of NGD.HEADERS; older runtime builds
+  // may still omit them. Both forms must agree on the same columns.
+  var otpColumns=[
     'otp_id','wa','kode_hash','tujuan','status','attempts',
     'created_at','expires_at','verified_at','ip_or_device'
   ];
-  contracts.wa_notifications=[
+  var waColumns=[
     'notif_id','tujuan_wa','tipe_penerima','template_kode','ref_id',
     'pesan','status','retry_count','created_at','sent_at','gateway_response'
   ];
+  if(contracts.otp_verifications&&contracts.otp_verifications.join(',')!==otpColumns.join(','))
+    throw new Error('INFRA_OTP_CONTRACT_MISMATCH');
+  if(contracts.wa_notifications&&contracts.wa_notifications.join(',')!==waColumns.join(','))
+    throw new Error('INFRA_WA_CONTRACT_MISMATCH');
+  contracts.otp_verifications=otpColumns;
+  contracts.wa_notifications=waColumns;
   // Real members table extends the base schema with verification evidence.
   ['wa_verified','wa_verified_at'].forEach(function(name) {
     if(contracts.members.indexOf(name)===-1)contracts.members.push(name);
