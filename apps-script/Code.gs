@@ -1251,7 +1251,7 @@ function aiReserve_(m,p,requestId) {
     var props=PropertiesService.getScriptProperties(),s=settings_();
     var maxChar=Number(props.getProperty('AI_MAX_INPUT_CHAR')||s.ai_max_input_char||1500);
     var daily=Number(props.getProperty('AI_DAILY_LIMIT_PER_MEMBER')||
-      s.ai_daily_limit_per_member||20);
+      s.ai_daily_limit_per_member||30);
     var perMin=Number(s.ai_rate_limit_per_menit||5);
     require_(Number.isInteger(maxChar)&&maxChar>0&&maxChar<=5000&&
       Number.isInteger(daily)&&daily>0&&daily<=100&&
@@ -1298,28 +1298,24 @@ function aiReserve_(m,p,requestId) {
     var balance=creditBalance_(m.member_id);
     require_(balance>=cost,'INSUFFICIENT_CREDIT',
       'Kredit tidak cukup. Silakan top-up kredit.');
-    var entryId=recordId_('L');
-    // All configuration and limits are checked before the first debit.
-    appendRow_('credits_ledger',{
-      entry_id:entryId,member_id:m.member_id,created_at:now_(),
-      tipe:'USAGE',jumlah:-cost,status:'POSTED',ref_id:rid,
-      tool_id:tool.tool_id,keterangan:'Pemakaian alat AI '+tool.tool_id,
-      saldo_setelah:balance-cost
+    // Debit through the shared ledger under the same script lock.
+    grantCredits_(m.member_id,-cost,rid,'USAGE',tool.tool_id);
+    var usage=findRows_('credits_ledger',function(x){
+      return x.member_id===m.member_id&&x.tipe==='USAGE'&&x.ref_id===rid;
     });
-    return {entry_id:entryId,tool:tool,cost:cost,prompt:prompt,
-      model:model,url:url,balance:balance-cost};
+    require_(usage.length===1,'RECONCILIATION_REQUIRED','Catatan debit AI tidak unik.');
+    return {entry_id:usage[0].entry_id,tool:tool,cost:cost,prompt:prompt,
+      model:model,url:url,balance:creditBalance_(m.member_id)};
   });
 }
 function aiRefund_(m,r,rid,reason) {
   return withLock_(function(){
     var prior=findRows_('credits_ledger',function(x){return x.member_id===m.member_id&&x.tipe==='REFUND_ERROR'&&x.ref_id===rid;});
     if(prior.length)return creditBalance_(m.member_id);
-    var balance=creditBalance_(m.member_id)+r.cost;
-    appendRow_('credits_ledger',{entry_id:recordId_('L'),member_id:m.member_id,created_at:now_(),tipe:'REFUND_ERROR',
-      jumlah:r.cost,status:'POSTED',ref_id:rid,tool_id:r.tool.tool_id,
-      keterangan:'Pengembalian kredit: '+String(reason||'AI gagal').slice(0,100),saldo_setelah:balance});
-    logAudit_(m.member_id,m.role,'AI_REFUND','credits_ledger',rid,'USAGE','REFUND_ERROR',{tool_id:r.tool.tool_id,amount:r.cost});
-    return balance;
+    var returned=grantCredits_(m.member_id,r.cost,rid,'REFUND_ERROR',r.tool.tool_id);
+    logAudit_(m.member_id,m.role,'AI_REFUND','credits_ledger',rid,'USAGE','REFUND_ERROR',
+      {tool_id:r.tool.tool_id,amount:r.cost,reason:String(reason||'Provider gagal').slice(0,50)});
+    return returned.balance;
   });
 }
 function aiExtractText_(body) {
