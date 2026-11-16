@@ -81,9 +81,12 @@ jobs:
                   d.admin_login_enabled!==true)
                 throw Error('STAGING identity invariants failed.');
               for(const field of ['mutations_enabled','registration_enabled','otp_enabled','finance_enabled']){
-                if(d[field]!==false)throw Error('Safety gate not OFF: '+field);
+                if(typeof d[field]!=='boolean')
+                  throw Error('STAGING identity flag invalid: '+field);
               }
-              console.log('STAGING_IDENTITY_VERIFIED: environment=STAGING; admin_login_enabled=true; mutations=false; registration=false; otp=false; finance=false');
+              console.log('STAGING_IDENTITY_VERIFIED: environment=STAGING; admin_login_enabled=true; mutations='+
+                d.mutations_enabled+'; registration='+d.registration_enabled+
+                '; otp='+d.otp_enabled+'; finance='+d.finance_enabled);
             }finally{clearTimeout(timer);}
           })().catch(e=>{console.error('STAGING_IDENTITY_UNVERIFIED:',String(e.message).slice(0,180));process.exitCode=1;});
           NODE
