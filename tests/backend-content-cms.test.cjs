@@ -161,7 +161,7 @@ test('schema migration is staging-only, id-confirmed, forward-only, and idempote
   properties.NGD_CONTENT_MIGRATION_TARGET_ID='STAGING-1234';
   const first=h.ctx.installContentSchemaStaging();
   assert.equal(first.created,true);
-  assert.equal(first.tabs_checked,27);
+  assert.equal(first.tabs_checked,29);
   assert.equal(created,1);
   const second=h.ctx.installContentSchemaStaging();
   assert.equal(second.created,false);
