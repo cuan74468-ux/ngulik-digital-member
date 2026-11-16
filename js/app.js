@@ -375,6 +375,18 @@ function viewHome(){
         '<span class="pf-product-info"><strong>'+esc(p.nama)+'</strong><small>'+
         rupiah(p.harga)+'</small></span></button>';
     }).join('');
+  const tokenPackages=(Array.isArray(state.catalog)?state.catalog:[])
+    .filter(p=>p&&p.aktif!==false&&['TOPUP_TOKEN','TOPUP_KREDIT'].includes(String(p.tipe)))
+    .sort((a,b)=>Number(a.urut||0)-Number(b.urut||0))
+    .map(p=>'<button class="ngd-token-package" type="button" data-catalog-go="ai" aria-label="Lihat paket '+esc(p.nama)+' di katalog">'+
+      '<span class="ngd-token-package-count">'+esc(Number(p.kredit_diberikan)||0)+' <small>Token</small></span>'+
+      '<span class="ngd-token-package-name">'+esc(p.nama)+'</span>'+
+      '<strong>'+rupiah(p.harga)+'</strong>'+icon('arrow')+'</button>').join('');
+  const tokenRail=tokenPackages?'<section class="ngd-token-market" aria-label="Paket token dari katalog aktif">'+
+    '<div class="ngd-token-market-heading"><div><p class="eyebrow">PAKET TOKEN / BAYAR SESUAI PAKAI</p>'+
+    '<h2>Pilih saldo yang Anda butuhkan.</h2></div>'+
+    '<button type="button" class="btn btn-secondary" data-catalog-go="ai">Lihat semua paket '+icon('arrow')+'</button></div>'+
+    '<div class="ngd-token-market-grid">'+tokenPackages+'</div></section>':'';
   const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero" aria-label="Bengkel kerja digital untuk UMKM">'+
     '<span class="pf-hero-spark pf-spark-one" aria-hidden="true">✦</span>'+
     '<span class="pf-hero-spark pf-spark-two" aria-hidden="true">✧</span>'+
@@ -416,7 +428,7 @@ function viewHome(){
     '<span class="nh-card-icon">'+(window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'nh-product-image','')||
       '<span class="nh-product-letter" aria-hidden="true">'+esc(String(p.nama||'P').slice(0,1))+'</span>')+'</span>'+
     '<strong>'+esc(p.nama)+'</strong><em>'+rupiah(p.harga)+'</em></button>').join('')+'</section>':'';
-  return '<div class="nh-home">'+hero+'<section class="public-discovery"><div class="public-discovery-head"><p class="eyebrow">PILIH SESUAI KEBUTUHAN</p><h2>Alat digital untuk pekerjaan nyata.</h2></div>'+search+grid+rail+'</section><p id="nh-empty" class="nh-empty" hidden>Tidak ada hasil</p></div>';
+  return '<div class="nh-home">'+hero+tokenRail+'<section class="public-discovery"><div class="public-discovery-head"><p class="eyebrow">PILIH SESUAI KEBUTUHAN</p><h2>Alat digital untuk pekerjaan nyata.</h2></div>'+search+grid+rail+'</section><p id="nh-empty" class="nh-empty" hidden>Tidak ada hasil</p></div>';
 }
 const offerCategories=[
   ['semua','Semua'],['ai','Token AI'],['aplikasi','Aplikasi Bisnis'],
