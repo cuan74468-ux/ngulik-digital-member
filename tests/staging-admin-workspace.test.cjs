@@ -6,7 +6,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 const {webcrypto}=require('node:crypto');
 const source=fs.readFileSync(path.join(__dirname,'../staging/admin.js'),'utf8');
-const html=fs.readFileSync(path.join(__dirname,'../staging/index.html'),'utf8');
+const html=fs.readFileSync(path.join(__dirname,'../staging/monitor.html'),'utf8');
 const url='https://script.google.com/macros/s/STAGING_TEST_DEPLOYMENT_123456789/exec';
 const verified={
   workspace:'NGD_STAGING',environment:'STAGING',admin_login_enabled:true,
@@ -147,4 +147,14 @@ test('approved STAGING endpoint remains allowed after pinning',async()=>{
   await env.submit('setup-form');
   assert.equal(env.requests[0].endpoint,url);
   assert.equal(env.field('login-section').hidden,false);
+});
+
+test('default STAGING admin URL opens the full editable Admin Studio',()=>{
+  const entry=fs.readFileSync(path.join(__dirname,'../staging/index.html'),'utf8');
+  const editor=fs.readFileSync(path.join(__dirname,'../staging/member.html'),'utf8');
+  assert.match(entry,/http-equiv="refresh" content="0;url=\.\/member\.html#admin-login"/);
+  assert.match(entry,/href="\.\/member\.html#admin-login"/);
+  assert.match(editor,/member-config\.js/);
+  assert.match(editor,/app\.js/);
+  assert.doesNotMatch(entry,/AKfycbyQlhsRDfo/);
 });
