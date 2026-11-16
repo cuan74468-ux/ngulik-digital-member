@@ -204,7 +204,7 @@ const state={
 const isAdmin=()=>state.me?.role==='ADMIN';
 const adminLoginEnabled=()=>isConnected()&&config.adminLoginEnabled===true;
 const registrationOtpEnabled=()=>isWriteEnabled()&&config.registrationOtpEnabled===true;
-const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true&&Boolean(config.qrisImageUrl)&&Boolean(config.qrisMerchant);
+const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true;
 const qrisUrl=()=>{try{const u=new URL(String(config.qrisImageUrl||''),location.href);return u.origin===location.origin&&u.protocol==='https:'?u.href:'';}catch{return '';}};
 const logged=()=>Boolean(state.me&&state.token);
 const title=(heading,eyebrow,detail)=>'<div class="section-head"><div><p class="eyebrow">'+esc(eyebrow)+'</p><h2>'+esc(heading)+'</h2>'+(detail?'<p>'+esc(detail)+'</p>':'')+'</div></div>';
@@ -388,17 +388,16 @@ function viewHome(){
   return '<div class="nh-home">'+hero+'<section class="public-discovery"><div class="public-discovery-head"><p class="eyebrow">PILIH SESUAI KEBUTUHAN</p><h2>Alat digital untuk pekerjaan nyata.</h2></div>'+search+grid+rail+'</section><p id="nh-empty" class="nh-empty" hidden>Tidak ada hasil</p></div>';
 }
 const offerCategories=[
-  ['semua','Semua'],['aplikasi','Aplikasi usaha'],['ai','Kredit AI'],
-  ['jasa','Jasa kreatif'],['belajar','Materi & aset'],['fasilitas','Fasilitas']
+  ['semua','Semua'],['ai','Token AI'],['aplikasi','Aplikasi Bisnis'],
+  ['jasa','Jasa & Seat'],['belajar','Bundel & Ebook']
 ];
 const supportedSaleTypes=new Set(['LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_KREDIT','PRODUK_DIGITAL','JASA_SEKALI']);
 function offerCategory(p){
   switch(String(p.tipe||'')){
     case 'LANGGANAN_30H':case 'LISENSI_SEKALI':return 'aplikasi';
     case 'TOPUP_KREDIT':return 'ai';
-    case 'JASA_SEKALI':return 'jasa';
+    case 'JASA_SEKALI':case 'SEAT_30H':return 'jasa';
     case 'PRODUK_DIGITAL':return 'belajar';
-    case 'SEAT_30H':return 'fasilitas';
     default:return 'lainnya';
   }
 }
@@ -418,19 +417,19 @@ function viewCatalog(){
   const filters='<div class="catalog-filters" role="group" aria-label="Filter jenis penawaran">'+
     offerCategories.map(([id,label])=>'<button class="catalog-filter" type="button" data-catalog-filter="'+id+
       '" aria-pressed="'+(id===current?'true':'false')+'">'+label+'</button>').join('')+'</div>';
-  const header='<div class="catalog-intro"><div><p class="eyebrow">PILIH YANG SESUAI, BUKAN YANG TERBANYAK</p>'+
-    '<h1>Katalog untuk kebutuhan usaha Anda.</h1>'+
-    '<p>Jelajahi aplikasi, alat AI, materi, dan jasa digital. Pilih produk dan jasa digital yang paling sesuai dengan kebutuhan Anda.</p></div>'+
+  const header='<div class="catalog-intro"><div><p class="eyebrow">NGULIK DIGITAL / TOKO & LISENSI</p>'+
+    '<h1>'+ (logged()?'Toko & Lisensi Anda.':'Alat digital yang relevan untuk usaha.')+'</h1>'+
+    '<p>Token AI, aplikasi kasir, akses digital, ebook, dan jasa kreatif. Harga diambil langsung dari katalog resmi.</p></div>'+
     '<div class="catalog-summary"><strong>'+list.length+'</strong><span>penawaran tercatat'+
     ''+'</span></div></div>';
   const cards=shown.length?'<div class="catalog-grid">'+shown.map(p=>{
     const kind=offerCategory(p),safeSale=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
-    const allowed=safeSale&&paymentEnabled();
+    const allowed=safeSale&&config.paymentsEnabled===true;
     const consult=allowed?'':consultationUrl(p);
-    const label=allowed?'Pilih produk':safeSale?'Pembayaran belum diaktifkan':'Belum tersedia untuk pemesanan';
-    const tooltip=safeSale?'Pembayaran belum diaktifkan':'Produk memerlukan proses layanan atau fulfillment yang belum diaktifkan';
+    const label=allowed?'Beli Sekarang':safeSale?'Checkout sedang tidak tersedia':'Produk belum tersedia';
+    const tooltip=safeSale?'Checkout belum tersedia pada konfigurasi saat ini':'Periksa ketersediaan produk';
     const action=allowed?
-      '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'">Pilih produk '+icon('arrow')+'</button>':
+      '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'">Beli Sekarang '+icon('arrow')+'</button>':
       consult?
         '<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi pemesanan '+esc(p.nama)+' melalui WhatsApp">Tanya pemesanan '+icon('arrow')+'</a>':
         '<button class="btn btn-primary" type="button" disabled title="'+esc(tooltip)+'">'+label+' '+icon('arrow')+'</button>';
@@ -438,14 +437,24 @@ function viewCatalog(){
       '<span class="catalog-card-icon">'+(window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'catalog-product-image','')||
       '<span class="catalog-product-letter" aria-hidden="true">'+esc(String(p.nama||'P').slice(0,1))+'</span>')+'</span>'+
       '<span class="catalog-card-type">'+esc(offerCategoryLabel(p))+'</span></div>'+
-      '<div class="catalog-card-copy"><h3>'+esc(p.nama)+'</h3><p>'+esc(p.deskripsi||'')+'</p></div>'+
+      '<div class="catalog-card-copy"><h3>'+esc(p.nama)+'</h3><p>'+esc(p.deskripsi||'')+'</p>'+
+      '<div class="product-benefits">'+
+      (Number(p.kredit_diberikan)>0?'<span class="chip green">+'+esc(Number(p.kredit_diberikan))+' Token</span>':'')+
+      (Number(p.durasi_hari)>0?'<span class="chip">'+esc(Number(p.durasi_hari))+' hari</span>':'')+
+      '</div></div>'+
       '<div class="catalog-card-bottom"><div><small>Harga penawaran</small><strong>'+rupiah(p.harga)+'</strong></div>'+
       action+'</div>'+
       (kind==='jasa'?'<button type="button" class="service-cta" data-service-go>Ajukan brief jasa '+icon('arrow')+'</button>':'')+
       '</article>';
   }).join('')+'</div>':
     '<div class="catalog-empty">'+empty('Belum ada penawaran di kategori ini','Pilih kategori lain untuk melihat pilihan tersedia.')+'</div>';
-  return header+filters+'<p class="catalog-result-count" aria-live="polite">Menampilkan '+shown.length+
+  const licenses=logged()&&!isAdmin()?
+    '<div class="catalog-license-strip" aria-label="Status akses layanan">'+[
+      ['POS Kasir',state.me?.status_pos||'Belum aktif'],
+      ['Paket 3-in-1',state.me?.akses_3in1_sampai&&new Date(state.me.akses_3in1_sampai).getTime()>Date.now()?'Aktif':'Belum aktif'],
+      ['Canva',state.me?.status_canva||'Belum aktif']
+    ].map(([name,status])=>'<span><strong>'+esc(name)+'</strong><small>'+esc(status)+'</small></span>').join('')+'</div>':'';
+  return header+licenses+filters+'<p class="catalog-result-count" aria-live="polite">Menampilkan '+shown.length+
     ' dari '+list.length+' penawaran</p>'+cards+
     '<section class="catalog-guidance section-gap"><div><span class="card-kicker">CATATAN</span>'+
     '<h3>Butuh layanan khusus?</h3><p>Ajukan brief melalui ruang member atau konsultasikan kebutuhan melalui tautan pada produk. Konfirmasi pemesanan dan pembayaran hanya melalui kanal resmi.</p></div>'+
