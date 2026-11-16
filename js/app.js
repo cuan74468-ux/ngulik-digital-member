@@ -423,10 +423,10 @@ function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
     return window.NGD_LMS_UI.memberCatalog(state.lmsCourses,state.lmsEnrollments,state.modules);
   if(!logged())return title('Belajar lebih terarah','CHAPTER 1 / PENGANTAR GRATIS',
-    'Materi praktis untuk pelaku UMKM. Ini pengenalan program, bukan akses kelas aktif.')+
+    'Materi pengantar praktis untuk pelaku UMKM. Jelajahi jalur belajar, lalu masuk untuk melanjutkan kelas.')+
     '<section class="learn-guest-intro"><div><p class="card-kicker">JALUR PENGENALAN</p>'+
     '<h3>Pelajari satu hal, praktikkan di usaha sendiri.</h3>'+
-    '<p>Chapter 1 mengenalkan Google Profil Bisnis, Gemini, Canva, WhatsApp Business, dan pencatatan promosi sederhana. Materi detail mengikuti ruang belajar resmi saat program dibuka.</p></div>'+
+    '<p>Chapter 1 mengenalkan Google Profil Bisnis, Gemini, Canva, WhatsApp Business, dan pencatatan promosi sederhana. Pelajaran lanjutan dapat diakses melalui ruang belajar sesuai keanggotaan Anda.</p></div>'+
     '<span class="chip">KELAS PENGANTAR</span></section>'+
     '<div class="learn-path-list">'+[
       ['01','Siapkan identitas digital','Kenali profil usaha dan titik lokasi di Google.'],
@@ -434,8 +434,8 @@ function viewLearn(){
       ['03','Atur komunikasi pelanggan','Rapikan katalog dan balasan cepat WhatsApp Business.'],
       ['04','Catat dan evaluasi','Mulai kalender promosi serta tracking sederhana.']
     ].map(x=>'<article class="learn-path-item"><span>'+x[0]+'</span><div><h3>'+x[1]+'</h3><p>'+x[2]+'</p></div></article>').join('')+'</div>'+
-    '<div class="learn-guest-note"><strong>Ruang member belum dibuka untuk publik.</strong>'+
-    '<p>Pendaftaran, akses modul terkunci, dan progres belajar memerlukan akun aktif setelah integrasi selesai.</p></div>';
+    '<div class="learn-guest-note"><strong>Lanjutkan perjalanan di ruang member.</strong>'+
+    '<p>Masuk dengan akun Anda untuk membuka kelas yang tersedia dan menyimpan progres belajar.</p>'+'<button type="button" class="btn btn-primary btn-sm" data-route="login">Masuk ruang belajar</button></div>';
   const modules=state.modules;
   return title('Perjalanan belajar Anda','KURIKULUM PRAKTIS','Modul tersedia sesuai program dan akses akun.')+
     (modules.length?'<div class="stack">'+modules.map((m,i)=>'<article class="surface list-row"><div class="left" style="display:flex;gap:15px;align-items:center"><span class="step-no">'+esc(m.urut||i+1)+'</span><div><strong>'+esc(m.judul)+'</strong><small>'+esc(m.deskripsi||'')+'</small></div></div>'+
