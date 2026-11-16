@@ -1,5 +1,15 @@
 # AGENTS.md — Ngulik Digital Member
 
+## Status kerja terbaru — 16 November 2026 (baca sebelum tugas baru)
+
+- [Checkpoint pembangunan 16 November](docs/CHECKPOINT_2026-11-16_RESUME_BUILD_STAGE1.md) menggantikan checkpoint 15 November sebagai **titik lanjut teknis**, bukan mandat bisnis baru.
+- Dua pemeriksaan owner-only pada **editor Apps Script STAGING** sudah terbukti melalui log operator 15 November pukul 22.24: `NGD_INFRASTRUCTURE_PREFLIGHT_OK | tables=29` dan `NGD_DATA_INTEGRITY_OK | tables=8`. **Jangan** mengulang diagnosis baris kosong kecuali ada perubahan skema/data.
+- UI/UX Mobile-first V2 menjadi baseline sementara; CI Chrome telah lulus. QA Android fisik dan persetujuan desain akhir belum dilaksanakan.
+- Kandidat keamanan Tahap 1 terbaru di `Code.gs`/`OtpAuth.gs`: verifikasi OTP sebelum insert, konsumsi setelah insert, dan logout menggunakan lock agar baris `sessions` tidak terhapus keliru. Perubahan ini **hanya source GitHub**, belum disinkronkan/dideploy ke editor Apps Script STAGING.
+- [GitHub Actions 16 November](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43783011719) **SUCCESS: 381/381 tes**, Chrome lintas tampilan dan API readonly PASS; GitHub Pages [SUCCESS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43783011286). Commit source terakhir `bdacfa37cfd3432559831008eedb74ad9b4dfd2b`.
+- Tahap 1 tetap **PROSES/NO-GO**; semua provider/kredit/pendaftaran/pembayaran tetap OFF. Tidak boleh menganggap tes offline sudah membuktikan runtime GAS setara.
+
+
 ## Wajib dibaca sebelum coding atau otomasi
 
 Proyek ini **produk membership komersial nyata**, bukan proyek demo. Sumber kebijakan tertinggi adalah:
@@ -31,7 +41,7 @@ Prioritas bila dokumen bertentangan: keputusan tertulis Owner dan Master/Mandat 
 - Ini adalah **urutan kerja persiapan**. Milestone komersial 2-6 tidak boleh diaktifkan sebelum Master Index mengizinkan. Tahap 1 tetap PROSES / NO-GO.
 - Pakai [Runbook Foundation First](docs/INFRASTRUKTUR_INTERNAL_FIRST_2026-11-15.md) dan [Provider Readiness Contract](contracts/provider-readiness.json) sebagai kontrak non-eksekutabel; keduanya bukan otorisasi pembayaran/WA.
 - Secara kode, NGD_EXTERNAL_PROVIDERS_ENABLED harus absent/false. OtpAuth.gs membutuhkan persetujuan sakelar tersebut **selain** pengaman STAGING, OTP, registrasi, mutasi dan secret. Pemeriksaan STAGING juga menolak sakelar itu aktif. Jangan nyalakan untuk mempermudah uji.
-- Gunakan apps-script/InfrastructurePreflight.gs dan StagingOtpDiagnostics.gs untuk audit STAGING baca-saja. Keduanya belum otomatis terpasang pada runtime Google Apps Script; backup, diff, dan deploy terkendali diperlukan.
+- `InfrastructurePreflight.gs` dan `DataIntegrityPreflight.gs` sudah terbukti berjalan melalui eksekusi operator di editor STAGING (15 Nov 22.24 WIB). Namun pemasangan file lainnya seperti `StagingOtpDiagnostics.gs` **tidak dapat diasumsikan**, dan source GitHub `Code.gs`/`OtpAuth.gs` terbaru belum otomatis tersinkron. Tetap wajib backup, diff dan pengujian terkendali.
 
 ## Tahap aktif dan gerbang keselamatan
 

@@ -46,6 +46,19 @@ Kode akses, token sesi, PIN, dan API key tidak disimpan di repositori atau disem
 
 Untuk konteks paling mutakhir baca [Audit Terpadu Tahap 1](docs/AUDIT_TERPADU_TAHAP_1_2026-11-15.md) dan [Aturan Kerja Agen](AGENTS.md). Dokumen Master Index dan Mandat Produksi di Google Drive tetap merupakan otoritas kebijakan. Dokumen checkpoint bertanggal lebih lama adalah rekam historis, bukan persetujuan untuk menjalankan tahap selanjutnya.
 
+
+## Titik lanjut pembangunan — 16 November 2026
+
+UI/UX Mobile-first V2 telah mencapai baseline yang cukup untuk meneruskan pembangunan sistem; ini bukan sign-off perangkat Android fisik. Tahap aktif kembali pada **Tahap 1: keamanan autentikasi/OTP, PIN, sesi, dan integritas registrasi**.
+
+- Pemeriksaan runtime STAGING dari operator telah **lulus 29/29 tab dan 8/8 tabel integritas**, tanpa perubahan data.
+- Source di GitHub telah diperkuat untuk memvalidasi OTP sebelum append akun dan mengonsumsi OTP sesudah akun tersimpan; logout juga menggunakan `LockService` bersama login/PIN. Hanya source, tidak otomatis mengubah runtime Apps Script.
+- [CI terbaru](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43783011719): **381/381 tes lulus**, browser Chrome dan API readonly PASS. [Pages deployment](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43783011286) SUCCESS.
+- **Langkah kerja berikutnya:** manifest source vs Apps Script editor STAGING, simulasi kegagalan kredit awal/recovery, audit sesi end-to-end, restore terisolasi, dan perancangan LMS/entitlement. Seluruh provider eksternal tetap LAST.
+- [Checkpoint terkini](docs/CHECKPOINT_2026-11-16_RESUME_BUILD_STAGE1.md). Materi historis 13–15 November tidak boleh diperlakukan sebagai bukti terbaru untuk izin aktivasi fitur.
+
+**Rilis bisnis dan registrasi publik: NO-GO.** Pengaturan, transaksi, data produksi dan runtime GAS tetap tidak diubah oleh update source ini.
+
 ## Informasi pengembang dan operasional
 
 - **Frontend:** HTML, CSS, JavaScript modular, GitHub Pages.

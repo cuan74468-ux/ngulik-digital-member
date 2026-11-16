@@ -23,7 +23,7 @@
 **Batas perubahan:** Perubahan dibuat hanya pada source di GitHub + pengujian offline dan dokumen; tidak ada pengubahan/aktivasi Apps Script STAGING/PRODUCTION, Sheets, pelanggan, sistem kredit, pengiriman WA, atau pembayaran. Semua sakelar tetap OFF.
 
 ## Pekerjaan yang masih harus dilakukan
-1. Periksa hasil CI commit terbaru: Node regression tests, browser Chrome, dan identitas STAGING read-only. Jika gagal, perbaiki source sebelum meneruskan; jangan menyatakan GO.
+1. **TERVERIFIKASI untuk source commit `bdacfa37cfd3432559831008eedb74ad9b4dfd2b`:** GitHub Actions `43783011719` lulus 381/381 Node tests, Chrome visual/mobile, public API readonly; Pages `43783011286` SUCCESS. Pemeriksaan identitas STAGING editor yang lebih awal sudah lulus, tetapi **kesetaraan seluruh runtime GAS dengan source terbaru belum dibuktikan**.
 2. Lanjut audit registrasi dengan kasus crash sesudah append akun, crash saat grant kredit, OTP expired/used/replay, lock concurrency, dan prosedur rekonsiliasi operator. Perbaikan kandidat ini **mengurangi risiko OTP terbakar**, tidak membuat Google Sheets menjadi transaksi ACID.
 3. Audit logout, session revocation, PIN throttle, expiry, dan perubahan PIN; tambahkan regresi berbasis clock serta failure injection sebelum runtime sinkronisasi.
 4. Petakan manifest isi source `Code.gs`, `OtpAuth.gs`, `AdminAccess.gs`, `LMS.gs` vs versi editor Apps Script STAGING (tanpa menimpa source live).
@@ -46,3 +46,7 @@
 Audit `authLogout_` menemukan pembacaan dan `deleteRow` terhadap tab sesi berjalan tanpa `LockService`, sedangkan login dan penggantian PIN sudah memakai lock bersama. Karena `deleteRow` mengubah nomor baris fisik, logout bersamaan dengan pembuatan/pencabutan sesi lain memiliki risiko race dan target baris keliru. Source `Code.gs` dibenahi untuk membaca dan menghapus sesi **di dalam** `withLock_`, mengurutkan nomor baris fisik menurun sebelum penghapusan. Tes sintetis `tests/backend-session-lifecycle.test.cjs` memeriksa logout, retry idempoten, sesi kedaluwarsa, PIN rotation yang mencabut semua sesi anggota tanpa menyentuh sesi admin lain, serta PIN salah tanpa mutasi.
 
 Perubahan ini hanya source di GitHub, bukan penghapusan sesi nyata. Belum ada tes pada browser autentikasi riil, belum ada deploy Apps Script, dan tidak ada perubahan fitur finansial. Operator harus membandingkan source STAGING yang aktif sebelum menjalankan patch backend yang lebih luas.
+
+## Konfirmasi lintas-stack 16 November 2026
+
+Commit source `bdacfa37cfd3432559831008eedb74ad9b4dfd2b` lulus [CI regression 381/381](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43783011719). Chrome guest/member/admin/LMS/operations dan POST baca-saja lolos; [GitHub Pages deployment](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43783011286) SUCCESS. Pengaman registrasi OTP dan logout masih **SOURCE-ONLY** pada GitHub. Pemilik belum diminta mengganti `Code.gs` pada editor; lakukan manifest/diff dan backup runtime terlebih dahulu sebelum mengubah Apps Script. Belum ada OTP send atau transaksi, dan belum ada izin membuka pendaftaran.
