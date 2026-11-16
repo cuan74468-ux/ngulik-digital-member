@@ -30,7 +30,7 @@ function boot(options={}){
             const contract=vm.runInContext('NGD.HEADERS',context)[name];
             if(!contract)return null;
             h=contract.split(',');
-            if(name==='members')h.push('wa_verified','wa_verified_at');
+            if(name==='members')for(const col of ['wa_verified','wa_verified_at'])if(!h.includes(col))h.push(col);
           }
           if(name===options.changeHeader)h=options.newHeader;
           if(name===options.extraColumn)h.push('safe_future_column');
