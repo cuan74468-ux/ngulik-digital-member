@@ -48,7 +48,8 @@ test('guest learning page explains Chapter 1 while leaving real LMS locked',()=>
   const h=preview();h.go('belajar');
   assert.match(h.nodes.screen.innerHTML,/Google Profil Bisnis/);
   assert.match(h.nodes.screen.innerHTML,/WhatsApp Business/);
-  assert.match(h.nodes.screen.innerHTML,/Ruang member belum dibuka/);
+  assert.match(h.nodes.screen.innerHTML,/Lanjutkan perjalanan di ruang member/);
+  assert.match(h.nodes.screen.innerHTML,/data-route="login"/);
   assert.doesNotMatch(h.nodes.screen.innerHTML,/data-lms-action="complete"/);
   assert.equal(h.apiCalls.length,0);
 });
