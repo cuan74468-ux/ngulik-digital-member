@@ -31,15 +31,15 @@
     "sourceIsNotRuntime": true
   },
   "release": {
-    "stage": 1,
-    "status": "PROCESS_NO_GO",
-    "providerActivation": "DEFERRED",
-    "publicRegistration": false,
-    "otpDispatch": false,
-    "payments": false,
-    "finance": false,
-    "aiBilling": false,
-    "stages2Through6": "NOT_ACTIVATED"
+    "stage": "1-6",
+    "status": "OWNER_EXECUTION_AUTHORIZED",
+    "providerActivation": "OWNER_AUTHORIZED_CONFIG_REQUIRED",
+    "publicRegistration": "AUTHORIZED_PENDING_RUNTIME_SETUP",
+    "otpDispatch": "AUTHORIZED_PENDING_PROVIDER_SETUP",
+    "payments": "AUTHORIZED_PENDING_PROVIDER_AND_QA",
+    "finance": "AUTHORIZED_PENDING_RUNTIME_SETUP",
+    "aiBilling": "AUTHORIZED_PENDING_API_AND_QA",
+    "stages2Through6": "IMPLEMENTATION_AUTHORIZED"
   },
   "programBoundary": {
     "chapter01": "FREE_100_PERCENT_NO_FORCED_PURCHASE",
@@ -54,7 +54,6 @@
     "operatorRecoveryAutoGrantAllowed": false
   },
   "pendingBusinessDecisions": [
-    "affiliate_commission_rates_and_recurring_eligibility",
     "LMS_authority_by_program_and_product",
     "PII_OTP_and_notification_retention_and_consent",
     "payment_refund_and_settlement_reconciliation",
@@ -64,8 +63,8 @@
   "verifiedEvidence": {
     "stagingInfrastructureAndIntegrity": "OWNER_READ_ONLY_LOG_OK_29_TABS_8_TABLES_2026_11_15",
     "backupRestore": "ISOLATED_FILE_COPY_AND_HEADER_COUNTS_MATCH_NOT_APP_RESTORE",
-    "appScriptGitHubParity": "NOT_VERIFIED",
-    "runtimeRegistrationRecovery": "NOT_RUN_OR_UNCONFIRMED",
+    "appScriptGitHubParity": "UNVERIFIED_EDITOR_SYNC_REQUIRED",
+    "runtimeRegistrationRecovery": "OWNER_LOG_OK_2026_11_16",
     "physicalAndroidQA": "NOT_ATTESTED"
   }
 }
