@@ -348,12 +348,30 @@ function viewHome(){
     ['shield','Bantuan','dukungan'],['user','Masuk','login']
   ];
   const goAttr=(r)=>['aplikasi','jasa'].includes(r)?'data-catalog-go="'+r+'"':'data-route="'+r+'"';
-  const hero=window.NGD_CONTENT_UI?.hero(state.siteContent)||
-    '<section class="nh-hero" aria-label="Ngulik Digital">'+
-    '<div class="nh-hero-brand"><span class="nh-hero-mark">n<i>.</i></span><strong>Ngulik Digital</strong></div>'+
-    '<div class="nh-hero-copy"><h1>Belajar dan solusi digital untuk usaha Anda.</h1>'+
-    '<p class="nh-hero-lead">Aplikasi UMKM, Studio AI, produk digital, dan jasa kreatif dalam satu tempat.</p></div>'+
-    '<button type="button" class="nh-hero-cta" data-route="katalog">Jelajahi produk</button></section>';
+  const processLabels=[
+    ['01','Pilih alat'],['02','Isi kebutuhan'],['03','Gunakan hasil']
+  ];
+  const processExplanations=[
+    'Temukan alat AI sesuai jenis pekerjaan: caption, deskripsi produk, atau balasan pelanggan.',
+    'Masukkan nama usaha dan detail produk. Biaya Token terlihat sebelum eksekusi.',
+    'Setelah diproses, hasil dapat disalin atau dibagikan ke WhatsApp.'
+  ];
+  const hero='<section class="nh-hero public-editorial-hero" aria-label="Bengkel kerja digital untuk UMKM">'+
+    '<div class="public-hero-copy"><p class="eyebrow">PRAKTIS UNTUK BISNIS SEHARI-HARI</p>'+
+    '<h1>Bengkel kerja digital <em>& asisten AI</em> untuk UMKM.</h1>'+
+    '<p class="public-hero-lead">Mulai Rp10.000. Tanpa biaya langganan mahal. Isi Token, pilih alat, dan selesaikan pekerjaan digital Anda.</p>'+
+    '<div class="public-hero-buttons"><button type="button" class="btn btn-primary" data-route="katalog">Lihat Katalog Alat '+icon('arrow')+'</button>'+
+    '<button type="button" class="btn btn-secondary" data-route="daftar">Daftar via WhatsApp</button></div>'+
+    '<p class="public-hero-note">Pay-as-you-go · Penawaran dan harga resmi ada di katalog</p></div>'+
+    '<div class="public-workflow" aria-label="Cara menggunakan Studio AI">'+
+      '<div class="public-workflow-top"><span>STUDIO AI / CARA KERJA</span><span>01—03</span></div>'+
+      '<h2>Dari brief singkat ke <span>hasil siap pakai.</span></h2>'+
+      '<div class="public-workflow-steps">'+processLabels.map(function(x,i){return '<button type="button" class="public-workflow-step'+
+        (state.publicStep===i?' is-selected':'')+'" data-public-step="'+i+'" aria-pressed="'+(state.publicStep===i?'true':'false')+
+        '"><small>'+x[0]+'</small><strong>'+x[1]+'</strong></button>';}).join('')+'</div>'+
+      '<p class="public-workflow-explain">'+esc(processExplanations[state.publicStep||0])+'</p>'+
+      '<button type="button" class="public-workflow-link" data-route="ai">Temukan alat AI '+icon('arrow')+'</button>'+
+    '</div></section>'+(window.NGD_CONTENT_UI?.hero(state.siteContent)||'');
   const search='<label class="nh-search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'+
     '<input id="home-search" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="Cari" aria-label="Cari fitur atau produk"></label>';
   const grid='<section class="nh-grid" aria-label="Fitur">'+features.map(f=>
@@ -367,7 +385,7 @@ function viewHome(){
     '<span class="nh-card-icon">'+(window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'nh-product-image','')||
       '<span class="nh-product-letter" aria-hidden="true">'+esc(String(p.nama||'P').slice(0,1))+'</span>')+'</span>'+
     '<strong>'+esc(p.nama)+'</strong><em>'+rupiah(p.harga)+'</em></button>').join('')+'</section>':'';
-  return '<div class="nh-home">'+hero+search+grid+rail+'<p id="nh-empty" class="nh-empty" hidden>Tidak ada hasil</p></div>';
+  return '<div class="nh-home">'+hero+'<section class="public-discovery"><div class="public-discovery-head"><p class="eyebrow">PILIH SESUAI KEBUTUHAN</p><h2>Alat digital untuk pekerjaan nyata.</h2></div>'+search+grid+rail+'</section><p id="nh-empty" class="nh-empty" hidden>Tidak ada hasil</p></div>';
 }
 const offerCategories=[
   ['semua','Semua'],['aplikasi','Aplikasi usaha'],['ai','Kredit AI'],
@@ -1903,9 +1921,13 @@ document.addEventListener('input',e=>{
   if(e.target.id==='learning-course-search')filterLearningCards_();
 });
 document.addEventListener('click',async(e)=>{
-  const target=e.target.closest('[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next]');
+  const target=e.target.closest('[data-public-step],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next]');
   if(!target)return;
-  if(target.hasAttribute('data-hero-step')){
+  if(target.hasAttribute('data-public-step')){
+    const step=Number(target.dataset.publicStep);
+    if(Number.isInteger(step)&&step>=0&&step<3){state.publicStep=step;render();}
+  }
+  else if(target.hasAttribute('data-hero-step')){
     showHeroSlide_(state.heroIndex+Number(target.dataset.heroStep||1));syncHeroRotation_();
   }else if(target.hasAttribute('data-hero-index')){
     showHeroSlide_(Number(target.dataset.heroIndex));syncHeroRotation_();
