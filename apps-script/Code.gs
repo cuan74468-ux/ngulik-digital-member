@@ -1066,12 +1066,12 @@ function transitionOrder_(m,id,type,p) {
     return orderView_(byId_('orders','order_id',id),m);
   });
 }
-function grantCredits_(id,amount,ref,kind) {
+function grantCredits_(id,amount,ref,kind,toolId) {
   amount=Number(amount);
   require_(Number.isFinite(amount)&&Number.isInteger(amount)&&amount!==0,'VALIDATION','Jumlah kredit tidak valid.');
   // Every order/admin reference identifies exactly one posting.
   // Cross-member or different-amount replay must be rejected, not duplicated.
-  if(ref&&['TOPUP','ADJUST_REFUND','ADJUST'].indexOf(kind)>=0){
+  if(ref&&['TOPUP','DIGITAL_BONUS','USAGE','REFUND_ERROR','ADJUST_REFUND','ADJUST'].indexOf(kind)>=0){
     var prior=findRows_('credits_ledger',function(r){return r.ref_id===ref&&r.tipe===kind;});
     if(prior.length){
       require_(prior.length===1&&prior[0].member_id===id&&Number(prior[0].jumlah)===amount,
@@ -1082,7 +1082,7 @@ function grantCredits_(id,amount,ref,kind) {
   var balance=creditBalance_(id),final=balance+amount;
   require_(Number.isFinite(final)&&Number.isInteger(final)&&final>=0,
     'CONFLICT','Posting kredit tidak boleh menyebabkan saldo negatif atau tidak valid.');
-  appendRow_('credits_ledger',{entry_id:recordId_('L'),member_id:id,created_at:now_(),tipe:kind||'ADJUST',jumlah:amount,status:'POSTED',ref_id:ref||'',keterangan:'Transaksi '+(ref||''),saldo_setelah:final});
+  appendRow_('credits_ledger',{entry_id:recordId_('L'),member_id:id,created_at:now_(),tipe:kind||'ADJUST',jumlah:amount,status:'POSTED',ref_id:ref||'',tool_id:toolId||'',keterangan:'Transaksi '+(ref||''),saldo_setelah:final});
   logAudit_('SYSTEM','SYSTEM','CREDIT_'+(kind||'ADJUST'),'credits_ledger',ref||id,'','POSTED',{jumlah:amount});
   return {alreadyApplied:false,balance:final};
 }
@@ -1098,51 +1098,142 @@ function commissionRate_(settings,product) {
   return value;
 }
 function onPaid_(o,actor) {
-  var product=byId_('katalog_produk','product_id',o.product_id),member=byId_('members','member_id',o.member_id);
+  var product=byId_('katalog_produk','product_id',o.product_id);
+  var member=byId_('members','member_id',o.member_id);
   require_(product&&member,'CONFLICT','Data produk atau member tidak tersedia.');
-  // Read and validate finance settings BEFORE any entitlement or ledger write.
   var s=settings_(),percent=commissionRate_(s,product);
   var commissionEligible=Boolean(member.referred_by&&product.bisa_komisi===true&&percent>0);
   var commissionValue=commissionEligible?Math.floor(Number(o.harga_dasar)*percent/100):0;
-  if(commissionEligible)
-    require_(Number.isSafeInteger(commissionValue)&&commissionValue>0,'CONFLICT',
-      'Nominal komisi tidak valid.');
-  var patch={},fulfilled=false,days=Number(product.durasi_hari||0),end;
+  if(commissionEligible)require_(Number.isSafeInteger(commissionValue)&&commissionValue>0,
+    'CONFLICT','Nominal komisi tidak valid.');
+  var fulfilled=false,days=Number(product.durasi_hari||0),end;
   if(product.tipe==='TOPUP_KREDIT'){
-    grantCredits_(member.member_id,Number(product.kredit_diberikan),o.order_id,'TOPUP');fulfilled=true;
-  } else if(product.tipe==='LANGGANAN_30H'){
+    grantCredits_(member.member_id,Number(product.kredit_diberikan),o.order_id,'TOPUP');
+    fulfilled=true;
+  }else if(product.tipe==='LANGGANAN_30H'){
     var old=member.akses_3in1_sampai?new Date(member.akses_3in1_sampai).getTime():0;
     end=new Date(Math.max(Date.now(),old)+days*86400000);
-    updateRow_('members',member._row,{akses_3in1_sampai:end,sumber_akses_3in1:'BERBAYAR'});fulfilled=true;
-  }else if(product.tipe==='PRODUK_DIGITAL'&&Number(product.kredit_diberikan||0)>0){
-    // Bonus kredit (mis. P-EBOOK 10 kredit) diterbitkan otomatis dan idempoten per order.
-    grantCredits_(member.member_id,Number(product.kredit_diberikan),o.order_id,'TOPUP');fulfilled=true;
+    updateRow_('members',member._row,{akses_3in1_sampai:end,sumber_akses_3in1:'BERBAYAR'});
+    fulfilled=true;
+  }else if(product.tipe==='PRODUK_DIGITAL'){
+    var bonus=Number(product.kredit_diberikan||0);
+    require_(Number.isInteger(bonus)&&bonus>=0,'CONFLICT','Bonus kredit produk tidak valid.');
+    if(bonus>0)grantCredits_(member.member_id,bonus,o.order_id,'DIGITAL_BONUS');
+    fulfilled=true;
   }else if(product.tipe==='JASA_SEKALI'){
-    // PAID stays authoritative, with an explicit queue marker for admin.
     if(String(o.catatan_admin||'').indexOf('[JASA_SIAP_DIPROSES_ADMIN]')<0)
       updateRow_('orders',o._row,{catatan_admin:
         '[JASA_SIAP_DIPROSES_ADMIN] | '+String(o.catatan_admin||'').slice(0,270)});
-    logAudit_(actor.member_id,actor.role,'ORDER_READY_FOR_ADMIN','orders',o.order_id,'PAID','PAID',{product_id:product.product_id});
-  }else if(product.tipe==='LISENSI_SEKALI')updateRow_('members',member._row,{status_pos:'DIAJUKAN'});
-  else if(product.tipe==='SEAT_30H'){
-    // A renewal must not interrupt an already active Canva seat.
+    logAudit_(actor.member_id,actor.role,'ORDER_READY_FOR_ADMIN','orders',
+      o.order_id,'PAID','PAID',{product_id:product.product_id});
+  }else if(product.tipe==='LISENSI_SEKALI'){
+    updateRow_('members',member._row,{status_pos:'DIAJUKAN'});
+  }else if(product.tipe==='SEAT_30H'){
     if(['AKTIF_BULAN_1','AKTIF_BULAN_2'].indexOf(member.status_canva)<0)
       updateRow_('members',member._row,{status_canva:'DIAJUKAN'});
+  }else throw ngdError_('CONFLICT','Tipe produk belum didukung.');
+  if(fulfilled){
+    updateRow_('orders',o._row,{status:'FULFILLED',fulfilled_at:now_()});
+    logAudit_(actor.member_id,actor.role,'ORDER_FULFILLED','orders',
+      o.order_id,'PAID','FULFILLED',{product_id:product.product_id});
   }
-  if(fulfilled){updateRow_('orders',o._row,{status:'FULFILLED',fulfilled_at:now_()});logAudit_(actor.member_id,actor.role,'ORDER_FULFILLED','orders',o.order_id,'PAID','FULFILLED',{});}
-  if(commissionEligible) {
-    // Komisi harus idempoten per order, termasuk setelah retry dari kegagalan parsial.
-    var existingCommission=findRows_('affiliate_commissions',function(c){return c.order_id===o.order_id;});
-    if(existingCommission.length)return;
-    var any=findRows_('affiliate_commissions',function(c){return c.referred_member_id===member.member_id;});
-    if(!s.komisi_hanya_order_pertama||!any.length){
-      var value=commissionValue;
-      var when=new Date(Date.now()+Number(s.masa_tahan_hari||14)*86400000);
-      var cid=recordId_('K');
-      appendRow_('affiliate_commissions',{komisi_id:cid,referrer_id:member.referred_by,referred_member_id:member.member_id,order_id:o.order_id,dasar_komisi:o.harga_dasar,persen:percent,nominal:value,status:'PENDING',created_at:now_(),approve_after:when});
-      logAudit_('SYSTEM','SYSTEM','COMMISSION_CREATED','affiliate_commissions',cid,'','PENDING',{amount:value});
+  if(commissionEligible){
+    // Commission is once per order, NOT once per member when repeat is enabled.
+    var existing=findRows_('affiliate_commissions',function(c){
+      return c.order_id===o.order_id;
+    });
+    require_(existing.length<=1,'RECONCILIATION_REQUIRED',
+      'Duplikat komisi pesanan memerlukan pemeriksaan.');
+    if(existing.length===0){
+      var history=findRows_('affiliate_commissions',function(c){
+        return c.referred_member_id===member.member_id;
+      });
+      if(!s.komisi_hanya_order_pertama||!history.length){
+        var when=new Date(Date.now()+Number(s.masa_tahan_hari||14)*86400000);
+        var id=recordId_('K');
+        appendRow_('affiliate_commissions',{
+          komisi_id:id,referrer_id:member.referred_by,
+          referred_member_id:member.member_id,order_id:o.order_id,
+          dasar_komisi:o.harga_dasar,persen:percent,
+          nominal:commissionValue,status:'PENDING',
+          created_at:now_(),approve_after:when
+        });
+        logAudit_('SYSTEM','SYSTEM','COMMISSION_CREATED','affiliate_commissions',
+          id,'','PENDING',{amount:commissionValue});
+      }
     }
   }
+  // A notification failure cannot un-pay an already verified order.
+  notifyPaidOrder_(o,member,product,s);
+}
+function sendFonnteWa_(targetWa,message,tipePenerima,templateKode,refId) {
+  // Documented Fonnte API: form fields target/message, raw authorization token.
+  // An HTTP/API acceptance is NOT proof of WhatsApp delivery.
+  try{
+    var wa=normalizeWa_(String(targetWa||''));
+    var body=String(message||'').trim(),ref=String(refId||'');
+    var template=String(templateKode||'');
+    require_(body.length>0&&body.length<=2000,'VALIDATION','Pesan WhatsApp tidak valid.');
+    var previous=findRows_('wa_notifications',function(n){
+      return n.ref_id===ref&&n.tujuan_wa===wa&&n.template_kode===template;
+    });
+    if(previous.some(function(n){return ['ACCEPTED','SENT','DELIVERED'].indexOf(n.status)>=0}))
+      return {status:'ACCEPTED',already_sent:true};
+    var token=String(PropertiesService.getScriptProperties()
+      .getProperty('FONNTE_API_TOKEN')||'').trim();
+    var status='SKIPPED_NO_TOKEN',responseNote='TOKEN_NOT_CONFIGURED';
+    if(token){
+      try{
+        var res=UrlFetchApp.fetch('https://api.fonnte.com/send',{
+          method:'post',headers:{Authorization:token},
+          payload:{target:wa,message:body,countryCode:'0'},
+          muteHttpExceptions:true,followRedirects:false
+        });
+        var code=Number(res.getResponseCode()),data={};
+        try{data=JSON.parse(res.getContentText());}catch(parseError){}
+        var accepted=code>=200&&code<300&&data.status===true;
+        status=accepted?'ACCEPTED':'FAILED';
+        responseNote='HTTP_'+code+(accepted?'_ACCEPTED':'_REJECTED');
+      }catch(fetchError){status='FAILED';responseNote='FETCH_FAILED';}
+    }
+    var now=now_();
+    var row={
+      notif_id:recordId_('WA'),tujuan_wa:wa,
+      tipe_penerima:String(tipePenerima||'').slice(0,30),
+      template_kode:template.slice(0,60),ref_id:ref,pesan:body,
+      status:status,retry_count:previous.length,created_at:now,
+      sent_at:status==='ACCEPTED'?now:'',
+      gateway_response:responseNote
+    };
+    if(previous.length===1){
+      updateRow_('wa_notifications',previous[0]._row,{
+        status:status,retry_count:Number(previous[0].retry_count||0)+1,
+        sent_at:row.sent_at,gateway_response:responseNote
+      });
+    }else if(!previous.length)appendRow_('wa_notifications',row);
+    return {status:status,already_sent:false};
+  }catch(error){
+    console.error('FONNTE_NOTIFY_ERROR reason='+String(error&&error.publicCode||'LOG_FAILURE'));
+    return {status:'FAILED'};
+  }
+}
+function notifyPaidOrder_(order,member,product,settings) {
+  try{
+    var money='Rp'+Number(order.total_bayar||0).toLocaleString('id-ID');
+    if(settings.notif_admin_wa_aktif!==false&&settings.wa_admin){
+      sendFonnteWa_(settings.wa_admin,'Ngulik Digital: pesanan '+order.order_id+
+        ' dibayar '+money+'. Produk: '+String(product.nama||'').slice(0,80)+
+        '. Periksa detail di panel Admin.',
+        'ADMIN','ORDER_PAID_ADMIN',order.order_id);
+    }
+    if(settings.followup_member_otomatis!==false&&member.wa){
+      sendFonnteWa_(member.wa,'Halo '+String(member.nama||'Member').slice(0,60)+
+        ', pembayaran '+order.order_id+' sebesar '+money+' sudah dikonfirmasi. '+
+        (product.tipe==='JASA_SEKALI'?'Pesanan jasa siap diproses admin.':
+          'Silakan periksa status produk di akun Ngulik Digital.'),
+        'MEMBER','ORDER_PAID_MEMBER',order.order_id);
+    }
+  }catch(e){console.error('ORDER_NOTIFICATION_DEFERRED '+String(order.order_id||''));}
 }
 // ===== MESIN AI =====
 function aiTodayKey_(d) {return Utilities.formatDate(new Date(d),NGD.TZ,'yyyy-MM-dd');}
