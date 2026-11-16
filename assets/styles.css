@@ -793,3 +793,10 @@ body.ngd-public-app:not(#ngd) .wallet-hero .wallet-value strong{font-variant-num
   body.ngd-public-app:not(#ngd) .ai-wizard-progress{gap:7px}
   body.ngd-public-app:not(#ngd) .ai-wizard-progress li{font-size:.69rem}
 }
+
+/* QRIS static payment and verification queue */
+.unique-digits{background:#fff0df;color:#a94a14;padding:.1em .2em;border-radius:.28em;margin-left:.12em;font:inherit}
+.checkout-total .btn{margin-top:12px;align-self:flex-start}
+.checkout-qr img{width:min(260px,100%);height:auto;aspect-ratio:1;object-fit:contain}
+.verification-count{font-weight:700;margin:18px 0}.verification-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.checkout-dialog .btn-wide{margin-top:10px}
