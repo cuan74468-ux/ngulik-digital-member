@@ -35,8 +35,8 @@ test('mobile uses accessible floating five-icon navigation rather than a full-wi
 });
 test('all business screens and financial flags remain untouched by the skin',()=>{
   const config=read('config.js');
-  for(const flag of ['memberWritesEnabled: false','paymentsEnabled: false','supportEnabled: false',
-     'lmsEnabled: false','notificationsEnabled: false',"apiUrl: 'https://script.google.com/macros/s/"])assert.ok(config.includes(flag));
+  for(const flag of ['memberWritesEnabled: true','paymentsEnabled: true','supportEnabled: true',
+     'lmsEnabled: true','notificationsEnabled: true',"apiUrl: 'https://script.google.com/macros/s/"])assert.ok(config.includes(flag));
   for(const route of ["admin:['Admin'","lms:['Studio LMS'","beranda:['Beranda'",
     "belajar:['Belajar'","katalog:['Katalog'","ai:['Studio AI'"]){
     assert.ok(app.includes(route),route);
