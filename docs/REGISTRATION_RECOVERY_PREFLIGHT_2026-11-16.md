@@ -35,3 +35,7 @@ Pemeriksaan awal hanya melihat keberadaan GRANT POSTED dan berisiko menerima GRA
 Skema nyata STAGING yang telah dikonfirmasi dengan range baca-saja: `members` mempunyai kolom `wa_verified`; `otp_verifications` mempunyai `tujuan,status`; `credits_ledger` mempunyai `entry_id,member_id,tipe,status,jumlah`; `pengaturan_sistem` mempunyai `key,value`. Seluruhnya masih **29 tab**. Pada pembacaan terbatas hari ini ditemukan 1 akun ADMIN dan nol baris transaksi/OTP, sedangkan `kredit_awal=10`. Pembacaan terbatas **bukan** lulus runtime preflight dan tidak membuktikan konsistensi semua data di masa depan.
 
 Fungsi tetap hanya untuk Apps Script editor STAGING. Tidak ada remediasi otomatis atau jalur API publik. Tunda pemasangan source ke GAS sampai manifest runtime dan checkpoint diverifikasi.
+
+## Deteksi identitas ambigu — 16 November 2026
+
+Pemeriksaan tambahan mendeteksi ID anggota duplikat, WhatsApp duplikat, data anggota dengan ID/WhatsApp kosong, dan ID OTP registrasi duplikat. Sebelumnya peta korelasi dapat menimpa baris sebelumnya. Kini seluruh hasil ambigu menghasilkan `REVIEW_REQUIRED`; kode tetap baca-saja, tidak menghapus atau menggabungkan data.

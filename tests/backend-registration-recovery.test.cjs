@@ -169,6 +169,33 @@ test('zero-credit policy with non-zero starter GRANT is flagged for historical r
   assert.equal(r.ready,false);
   assert.equal(r.issue_counts.unexpected_starter_grant_amount,1);
 });
+test('duplicate WhatsApp is not hidden by last-write-wins recovery map',()=>{
+ const h=fixture({members:[member('M-1','081231231231'),member('M-2','6281231231231')],
+ otp_verifications:[otp('6281231231231','USED')],
+ credits_ledger:[grant('M-1'),grant('M-2')]});
+ const result=h.run();assert.equal(result.issue_counts.duplicate_registration_whatsapp,1);
+ assert.equal(result.ready,false);assert.doesNotMatch(h.logs[0],/628123|M-1|M-2/);
+});
+test('duplicate member identifier is always review required',()=>{
+ const h=fixture({members:[member('M-1','6281231231231'),member('M-1','6281231112222')],
+ otp_verifications:[otp('6281231231231','USED')],credits_ledger:[grant('M-1')]});
+ assert.equal(h.run().issue_counts.duplicate_registration_member_id,1);
+});
+test('partially populated member identity rows are never assumed empty',()=>{
+ const h=fixture({members:[
+ {role:'MEMBER',member_id:'M-3',wa:'',status:'AKTIF',wa_verified:true},
+ {role:'MEMBER',member_id:'',wa:'6281231112222',status:'AKTIF',wa_verified:true}]});
+ const result=h.run();assert.equal(result.issue_counts.registration_member_missing_identifier,1);
+ assert.equal(result.issue_counts.registration_member_missing_whatsapp,1);
+ assert.equal(result.ready,false);
+});
+test('duplicate registration OTP ID is reported',()=>{
+ const h=fixture({members:[member('M-1','6281231231231')],
+ credits_ledger:[grant('M-1')],
+ otp_verifications:[otp('6281231231231','USED'),{...otp('6281235557777','FAILED')}]});
+ const result=h.run();assert.equal(result.issue_counts.duplicate_registration_otp_id,1);
+ assert.equal(result.ready,false);
+});
 test('production is rejected without opening Sheets',()=>{
   const h=fixture({}, {props:{NGD_ENVIRONMENT:'PRODUCTION'}});
   assert.throws(()=>h.run(),/RECOVERY_NOT_STAGING/);

@@ -71,3 +71,7 @@ Pada 16 November, addendum status faktual disisipkan dan dibaca ulang di:
 - [Peta Kendali Drive](https://docs.google.com/document/d/15LYvAyOBkSO2ROLr09sZuWZV83MNOI1NLe9U3t6L8GM/edit): peringatan bahwa folder bernama `99_STAGING_BACKUP_DAN_HAPUS` masih menampung database STAGING aktif. **Dilarang penghapusan/pemindahan berdasarkan nama folder.**
 
 Dokumen normatif Mandat Produksi dan SOP komunitas **tidak diedit**, karena ketentuannya tetap berlaku. Addendum ini tidak mengganti tahap, izin, harga, komisi, atau struktur database. [CI source 430/430 PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43791863410) dan [Pages PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43791863012). Pembacaan source bukan bukti GAS aktif telah dimigrasikan.
+
+## 8. Koreksi identitas pada audit registrasi
+
+Kode audit source-only ditambah lima kategori `duplicate_registration_member_id`, `duplicate_registration_whatsapp`, `registration_member_missing_identifier`, `registration_member_missing_whatsapp`, `duplicate_registration_otp_id`. Ini menutup risiko overwrite peta korelasi, tanpa mutasi dan tanpa mengubah gerbang Tahap 1 NO-GO. Auditor belum memiliki bukti bahwa file baru berjalan di editor GAS STAGING.

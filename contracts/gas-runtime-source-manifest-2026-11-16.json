@@ -4,7 +4,7 @@
   "purpose": "Source-to-runtime manifest; NOT an assertion that GAS source has been synchronized.",
   "repository": "cuan74468-ux/ngulik-digital-member",
   "source_snapshot_branch": "main",
-  "source_snapshot_commit": "67470ffd05b9aff9f7f52d1b320b59a072286d93",
+  "source_snapshot_commit": "f7cd9ff2f84ab943410621cf63171e2621fc4c07",
   "source_content_hash_kind": "Git blob SHA1; not an Apps Script editor fingerprint",
   "environment": "STAGING",
   "verified_editor_functions": [
@@ -85,8 +85,8 @@
     },
     {
       "file": "RegistrationRecoveryPreflight.gs",
-      "github_blob_sha": "f05c7d9171fd065c375d3b1d5f9ab2228a9f1386",
-      "bytes": 6705,
+      "github_blob_sha": "dbe9680ee1c0e592f4e592ddb4b9d022c891e41b",
+      "bytes": 7554,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {

@@ -23,6 +23,11 @@ function ngdRegistrationRecoveryEvaluate_(tables) {
     waiting_member_with_starter_grant:0,
     verified_member_without_used_otp:0,
     duplicate_credit_policy_key:0,
+    duplicate_registration_member_id:0,
+    duplicate_registration_whatsapp:0,
+    registration_member_missing_identifier:0,
+    registration_member_missing_whatsapp:0,
+    duplicate_registration_otp_id:0,
     orphan_starter_grant:0,
     unposted_starter_grant:0,
     duplicate_starter_grant:0,
@@ -54,16 +59,29 @@ function ngdRegistrationRecoveryEvaluate_(tables) {
     (policyKeys.kredit_awal||0)===1;
   var membersByWa=Object.create(null),membersById=Object.create(null);
   tables.members.forEach(function(row){
+    if(text_(row.role)!=='MEMBER')return;
     var id=text_(row.member_id),wa=normalize_(row.wa);
-    if(text_(row.role)==='MEMBER'&&id&&wa){
-      membersById[id]=row;
-      membersByWa[wa]=row;
-    }
+    // Never let a second member silently replace an existing identity.
+    if(!id)issues.registration_member_missing_identifier++;
+    else if(Object.prototype.hasOwnProperty.call(membersById,id))
+      issues.duplicate_registration_member_id++;
+    else membersById[id]=row;
+    if(!wa)issues.registration_member_missing_whatsapp++;
+    else if(Object.prototype.hasOwnProperty.call(membersByWa,wa))
+      issues.duplicate_registration_whatsapp++;
+    else membersByWa[wa]=row;
   });
+  var otpIds=Object.create(null);
   var usedByWa=Object.create(null),verifiedByWa=Object.create(null),
     grantByMember=Object.create(null),allGrantsByMember=Object.create(null);
   tables.otp_verifications.forEach(function(row){
     if(text_(row.tujuan)!=='REGISTRATION')return;
+    var otpId=text_(row.otp_id);
+    if(otpId){
+      if(Object.prototype.hasOwnProperty.call(otpIds,otpId))
+        issues.duplicate_registration_otp_id++;
+      else otpIds[otpId]=true;
+    }
     var wa=normalize_(row.wa),status=text_(row.status);
     if(!wa)return;
     if(status==='USED'){
