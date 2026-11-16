@@ -6,7 +6,7 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const publicHTML=read('index.html');
-const opsHTML=read('staging/index.html');
+const opsHTML=read('staging/monitor.html');
 const css=read('assets/experience.css');
 
 test('public and operations HTML load the same mobile-first stylesheet after legacy CSS',()=>{
