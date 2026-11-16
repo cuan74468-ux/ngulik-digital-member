@@ -1004,6 +1004,15 @@ function expireOrder_(o) {
   }
   return o;
 }
+// Spreadsheet prices may be numeric or Indonesian-formatted text (Rp10.000).
+// Reject fractions and ambiguous separators rather than silently changing price.
+function ngdPriceRupiah_(value){
+  if(typeof value==='number')return Number.isSafeInteger(value)&&value>=0?value:NaN;
+  var plain=String(value==null?'':value).trim().replace(/^Rp\s*/i,'').replace(/\s/g,'');
+  if(!/^(?:[0-9]+|[1-9][0-9]{0,2}(?:\.[0-9]{3})+)$/.test(plain))return NaN;
+  var price=Number(plain.replace(/\./g,''));
+  return Number.isSafeInteger(price)&&price>=0?price:NaN;
+}
 var NGD_CHECKOUT_TYPES_=['TOPUP_TOKEN','TOPUP_KREDIT','LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','PRODUK_DIGITAL','JASA_SEKALI'];
 function newOrder_(m,p,requestId) {
   return withLock_(function(){
@@ -1023,7 +1032,7 @@ function newOrder_(m,p,requestId) {
         'CONFLICT','Lisensi POS sudah aktif atau sedang menunggu aktivasi.');
     var mine=findRows_('orders',function(o){return o.member_id===m.member_id&&o.product_id===product.product_id&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;});
     if(mine.length){var existing=expireOrder_(mine[0]);if(existing.status!=='EXPIRED')return orderView_(existing,m);}
-    var s=settings_(),min=Number(s.kode_unik_min||100),max=Number(s.kode_unik_max||999),price=Number(product.harga);
+    var s=settings_(),min=Number(s.kode_unik_min||100),max=Number(s.kode_unik_max||999),price=ngdPriceRupiah_(product.harga);
     require_(Number.isInteger(price)&&price>0,'VALIDATION','Harga produk belum valid.');
     require_(Number.isInteger(min)&&Number.isInteger(max)&&min>=100&&max<=999&&min<=max,'VALIDATION','Rentang kode unik tidak valid.');
     var open=readAll_('orders').filter(function(o){return ['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;});
