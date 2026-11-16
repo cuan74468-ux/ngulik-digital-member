@@ -65,7 +65,7 @@ test('commercial service module is loaded on all member/admin routes',()=>{
   assert.match(app,/api\('submitServiceBrief'/);
   assert.match(app,/api\('adminUpdateServiceQuote'/);
   assert.match(app,/data-service-go/);
-  assert.match(config,/serviceEnabled: false/);
+  assert.match(config,/serviceEnabled: true/);
   assert.match(css,/\.service-columns/);
   assert.match(css,/@media\(max-width:760px\)[\s\S]*?\.service-columns/);
 });
