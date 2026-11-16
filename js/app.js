@@ -603,7 +603,12 @@ function viewLogin(register=false,adminMode=false){
     (adminMode?'<button class="btn btn-ghost btn-sm" data-route="login">Kembali ke login member</button>':
       register?'Sudah punya akun? <button class="btn btn-ghost btn-sm" data-route="login">Masuk</button>':
       'Pengelola Ngulik Digital? <button class="btn btn-ghost btn-sm" data-route="admin-login">Masuk sebagai admin</button>')+
-    '</p></div>';
+    '</p>'+
+    (adminMode&&!String(config.brand||'').includes('STAGING')?
+      '<section class="admin-env-notice"><strong>Database STAGING menggunakan Admin Studio terpisah.</strong>'+
+      '<p>Website ini memakai deployment Apps Script yang berbeda. Untuk input banner, katalog, LMS dan jasa pada STAGING yang sudah aktif, gunakan editor berikut.</p>'+
+      '<a class="btn btn-primary" href="./staging/member.html#admin-login">Buka Admin Studio STAGING '+icon('arrow')+'</a></section>':'')+
+    '</div>';
 }
 function viewMyOrders(){
   if(!logged())return title('Pesanan saya','RIWAYAT TRANSAKSI','Akses data pesanan pribadi.')+needLogin('pesanan');
@@ -1287,7 +1292,13 @@ async function loadRoute(route){
       state.supportReleases=await api(isAdmin()?'adminListProductReleases':
         'getMyProductReleases',{},token);
     if(route===state.route)render();
-  }catch(e){toast(e.message,true);}
+  }catch(e){
+    const label=screens[route]?.[0]||'halaman';
+    const detail=e?.code==='INTERNAL'?
+      'Server Apps Script mengalami kesalahan internal. Periksa menu Eksekusi pada project GAS yang sedang dipakai.':
+      (e?.message||'Gagal memuat data.');
+    toast('Gagal memuat '+label+': '+detail,true);
+  }
 }
 async function handleRegistrationOtp_(action){
   const form=document.getElementById('auth-form');
