@@ -614,7 +614,7 @@ body.ngd-ops-app .workspace-card{
 }
 @media (max-width:760px){
  body.ngd-public-app:not(#ngd) .main-content{
-  padding:22px 18px calc(115px + env(safe-area-inset-bottom,0px));
+  padding:22px var(--ngd-gutter,20px) calc(115px + env(safe-area-inset-bottom,0px));
  }
  body.ngd-public-app:not(#ngd) .topbar{background:rgba(255,255,255,.97)}
  body.ngd-public-app:not(#ngd) .member-welcome{gap:10px}
