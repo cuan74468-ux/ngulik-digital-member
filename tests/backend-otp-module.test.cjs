@@ -115,7 +115,9 @@ function registrationHarness(options={}) {
     kode_hash:x.ngdOtpHash_('123456789abcdef0123456789abcdef01234567890',
       number,'285947')
   };
-  let failInsert=Boolean(options.failInsert),failConsume=Boolean(options.failConsume);
+  let failInsert=Boolean(options.failInsert),failConsume=Boolean(options.failConsume),
+    failAudit=Boolean(options.failAudit),failGrant=Boolean(options.failGrant),
+    failSession=Boolean(options.failSession);
   const rowPatches=[];
   x.withLock_=fn=>fn();
   x.ngdOtpRead_=()=>[row];
@@ -150,9 +152,18 @@ function registrationHarness(options={}) {
     if(table==='credits_ledger'){credits.push(data);return;}
     throw Error('UNEXPECTED_WRITE_'+table);
   };
-  x.logAudit_=(...args)=>audits.push(args);
-  x.grantInitialCredit_=(id,amount)=>{credits.push({id,amount});return {granted:true};};
-  x.newSessionMember_=m=>{sessions.push(m.member_id);return {token:'TEST_SESSION'};};
+  x.logAudit_=(...args)=>{
+    if(failAudit){failAudit=false;throw Error('SIMULATED_AUDIT_APPEND_FAILURE');}
+    audits.push(args);
+  };
+  x.grantInitialCredit_=(id,amount)=>{
+    if(failGrant){failGrant=false;throw Error('SIMULATED_CREDIT_GRANT_FAILURE');}
+    credits.push({id,amount});return {granted:true};
+  };
+  x.newSessionMember_=m=>{
+    if(failSession){failSession=false;throw Error('SIMULATED_SESSION_ISSUE_FAILURE');}
+    sessions.push(m.member_id);return {token:'TEST_SESSION'};
+  };
   const data={wa:'081234567890',otp:'285947',pin:'285947',
     nama:'Anggota Pengujian',nama_usaha:'Usaha Pengujian',setuju_kebijakan:true};
   return {x,data,row,members,credits,audits,sessions,rowPatches,
@@ -206,4 +217,37 @@ test('OTP validation only returns server-side evidence; consumption requires mat
   assert.equal(h.row.status,'VERIFIED');
   assert.equal(h.x.ngdConsumeVerifiedRegistrationOtp_(h.data,id),true);
   assert.equal(h.row.status,'USED');
+});
+
+test('audit-log outage after OTP commitment leaves account registered, but no grant/session',()=>{
+  const h=registrationHarness({failAudit:true});
+  assert.throws(()=>h.register(),/SIMULATED_AUDIT_APPEND_FAILURE/);
+  assert.equal(h.members.length,1);
+  assert.equal(h.row.status,'USED');
+  assert.equal(h.credits.length,0);
+  assert.equal(h.sessions.length,0);
+  assert.throws(()=>h.register(),/sudah terdaftar/);
+  assert.equal(h.members.length,1);
+  assert.equal(h.credits.length,0);
+});
+test('credit grant outage after registration prevents session but cannot duplicate accounts',()=>{
+  const h=registrationHarness({failGrant:true});
+  assert.throws(()=>h.register(),/SIMULATED_CREDIT_GRANT_FAILURE/);
+  assert.equal(h.members.length,1);
+  assert.equal(h.row.status,'USED');
+  assert.equal(h.audits.length,1);
+  assert.equal(h.credits.length,0);
+  assert.equal(h.sessions.length,0);
+  assert.throws(()=>h.register(),/sudah terdaftar/);
+  assert.equal(h.members.length,1);
+});
+test('session issuance outage after successful grant never creates duplicate starter grants',()=>{
+  const h=registrationHarness({failSession:true});
+  assert.throws(()=>h.register(),/SIMULATED_SESSION_ISSUE_FAILURE/);
+  assert.equal(h.members.length,1);
+  assert.equal(h.row.status,'USED');
+  assert.equal(h.credits.length,1);
+  assert.equal(h.sessions.length,0);
+  assert.throws(()=>h.register(),/sudah terdaftar/);
+  assert.equal(h.credits.length,1);
 });
