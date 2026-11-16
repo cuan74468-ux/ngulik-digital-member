@@ -1014,3 +1014,970 @@ body.ngd-public-app:not(#ngd) .footer{
     animation:none!important;
   }
 }
+
+
+/* ─────────────────────────────────────────────────────────────
+   PORTFOLIO / MEMBERSHIP REFINEMENT: a single, calm component
+   language for every real public, member and admin feature.
+   Financial and authentication controls are intentionally static.
+   ─────────────────────────────────────────────────────────── */
+body.ngd-public-app:not(#ngd){
+  --pf-control:#E1E5ED;
+  --pf-soft:#F7F8FB;
+  --pf-navy:#24364D;
+}
+body.ngd-public-app:not(#ngd) .workarea,
+body.ngd-public-app:not(#ngd) #screen{
+  min-width:0;
+}
+body.ngd-public-app:not(#ngd) #screen>*{
+  min-width:0;
+}
+body.ngd-public-app:not(#ngd) .main-content{
+  scroll-margin-top:90px;
+}
+body.ngd-public-app:not(#ngd) .main-content:focus{outline:0}
+body.ngd-public-app:not(#ngd) :is(.section-head,.lms-heading,.service-heading,
+ .content-admin-heading,.catalog-admin-intro,.catalog-intro,.learning-reader-header,
+ .affiliate-header,.ai-studio-head){
+  max-width:100%;
+  margin-bottom:clamp(20px,2.6vw,31px);
+}
+body.ngd-public-app:not(#ngd) :is(.section-head h2,.lms-heading h2,
+ .service-heading h2,.content-admin-heading h2,.learning-reader-header h2,
+ .admin-section-heading h2){
+  font-family:var(--pf-heading);
+  font-size:clamp(1.55rem,2.7vw,2.3rem);
+  letter-spacing:-.05em;
+  line-height:1.2;
+  color:var(--pf-ink);
+}
+body.ngd-public-app:not(#ngd) :is(.section-head p,.lms-heading p,.service-heading p,
+ .content-admin-heading p,.catalog-admin-intro p,.learning-reader-header p){
+  color:var(--pf-ink-2);
+  max-width:74ch;
+  line-height:1.74;
+  overflow-wrap:anywhere;
+}
+body.ngd-public-app:not(#ngd) :is(.section-head .eyebrow,.lms-heading .eyebrow,
+ .service-heading .eyebrow,.content-admin-heading .eyebrow,
+ .catalog-admin-intro .eyebrow,.learning-reader-header .eyebrow){
+  color:#737989;
+  font-size:.7rem;
+  font-weight:750;
+  letter-spacing:.12em;
+}
+body.ngd-public-app:not(#ngd) .section-gap{
+  margin-top:clamp(28px,4vw,46px);
+}
+body.ngd-public-app:not(#ngd) :is(.grid-2,.grid-3,.metric-grid,
+ .admin-module-grid,.lms-course-grid){
+  min-width:0;
+  gap:clamp(12px,1.6vw,18px);
+}
+body.ngd-public-app:not(#ngd) :is(.grid-2,.grid-3,.metric-grid,
+ .admin-module-grid,.lms-course-grid)>*{
+  min-width:0;
+}
+body.ngd-public-app:not(#ngd) .surface{
+  border:1px solid var(--pf-line);
+  border-radius:20px;
+  background:#fff;
+  box-shadow:none;
+}
+body.ngd-public-app:not(#ngd) .surface h3{
+  font-size:1.05rem;
+  letter-spacing:-.025em;
+}
+body.ngd-public-app:not(#ngd) .card-kicker{
+  font-size:.69rem;
+  letter-spacing:.12em;
+  color:#858A99;
+  font-weight:800;
+}
+body.ngd-public-app:not(#ngd) .card-desc{
+  color:var(--pf-ink-2);
+  font-size:.875rem;
+  line-height:1.7;
+}
+body.ngd-public-app:not(#ngd) .stat{
+  border:1px solid var(--pf-line);
+  border-radius:17px;
+  background:#fff;
+  box-shadow:none;
+  padding:clamp(17px,2vw,24px);
+}
+body.ngd-public-app:not(#ngd) .stat-value{
+  color:var(--pf-ink);
+  font:750 clamp(1.45rem,2.2vw,2rem)/1.15 var(--pf-heading);
+  letter-spacing:-.04em;
+  overflow-wrap:anywhere;
+}
+body.ngd-public-app:not(#ngd) .stat-label{
+  color:var(--pf-ink-2);
+  font-size:.78rem;
+}
+body.ngd-public-app:not(#ngd) .chip{
+  max-width:100%;
+  min-height:27px;
+  line-height:1.35;
+  letter-spacing:0;
+  font-size:.71rem;
+  font-weight:700;
+  overflow-wrap:anywhere;
+}
+body.ngd-public-app:not(#ngd) .banner{
+  border:1px solid #DDE5F2;
+  background:#F4F7FC;
+  color:var(--pf-ink);
+  border-radius:15px;
+  padding:16px 18px;
+  box-shadow:none;
+}
+body.ngd-public-app:not(#ngd) .banner.info{
+  border-color:#DDE5F2;
+  background:#F4F7FC;
+}
+body.ngd-public-app:not(#ngd) .banner.warning{
+  border-color:#F5CFDA;
+  background:#FFF5F7;
+}
+body.ngd-public-app:not(#ngd) .banner h3{
+  font-size:.9rem;
+  margin:0 0 4px;
+  color:inherit;
+}
+body.ngd-public-app:not(#ngd) .banner p{
+  font-size:.8rem;
+  margin:0;
+  line-height:1.6;
+  color:inherit;
+}
+/* Forms and validation, including OTP, support, LMS and catalog. */
+body.ngd-public-app:not(#ngd) :is(.field,.stack,.content-form,.catalog-admin-form){
+  min-width:0;
+}
+body.ngd-public-app:not(#ngd) .field{gap:8px}
+body.ngd-public-app:not(#ngd) .field>label{
+  display:block;
+  font-size:.79rem;
+  font-weight:730;
+  color:#363D4A;
+  margin-bottom:7px;
+}
+body.ngd-public-app:not(#ngd) :is(input.input,select.input,textarea.input){
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  min-height:48px;
+  background:#fff;
+  color:var(--pf-ink);
+  font:500 14px/1.45 var(--pf-ui);
+  border:1px solid var(--pf-control);
+  border-radius:12px;
+  padding:12px 14px;
+  box-shadow:0 1px 0 rgba(21,22,28,.01);
+  transition:border-color .15s,box-shadow .15s;
+}
+body.ngd-public-app:not(#ngd) textarea.input{
+  min-height:118px;
+  resize:vertical;
+  line-height:1.65;
+}
+body.ngd-public-app:not(#ngd) :is(input.input,textarea.input)::placeholder{
+  color:#9499A6;
+}
+body.ngd-public-app:not(#ngd) :is(input.input,select.input,textarea.input):hover:not(:disabled){
+  border-color:#BFC8D8;
+}
+body.ngd-public-app:not(#ngd) :is(input.input,select.input,textarea.input):focus{
+  outline:0;
+  border-color:var(--pf-blue);
+  box-shadow:0 0 0 3px rgba(47,107,255,.13);
+}
+body.ngd-public-app:not(#ngd) :is(input,select,textarea,button):disabled{
+  cursor:not-allowed;
+}
+body.ngd-public-app:not(#ngd) :is(input.input,select.input,textarea.input):disabled{
+  color:#858A99;
+  background:#F6F7F9;
+}
+body.ngd-public-app:not(#ngd) .form-hint{
+  color:#717786;
+  font-size:.74rem;
+  line-height:1.6;
+}
+body.ngd-public-app:not(#ngd) :is(.catalog-check,.content-check,.field label:has(input[type=checkbox])){
+  cursor:pointer;
+}
+body.ngd-public-app:not(#ngd) input[type=checkbox],
+body.ngd-public-app:not(#ngd) input[type=radio]{
+  accent-color:var(--pf-blue);
+  width:17px;height:17px;
+}
+body.ngd-public-app:not(#ngd) .btn{
+  min-height:44px;
+  max-width:100%;
+  line-height:1.3;
+}
+body.ngd-public-app:not(#ngd) :is(.btn-primary,.btn-secondary,.btn-ghost):focus-visible{
+  outline:3px solid rgba(47,107,255,.72);
+  outline-offset:3px;
+}
+body.ngd-public-app:not(#ngd) .btn:disabled{
+  opacity:.53;
+  filter:none;
+  box-shadow:none;
+  transform:none;
+}
+body.ngd-public-app:not(#ngd) .btn-sm{
+  min-height:40px;
+  padding-inline:14px;
+  font-size:.77rem;
+}
+body.ngd-public-app:not(#ngd) .btn-wide{
+  width:100%;
+  justify-content:center;
+}
+body.ngd-public-app:not(#ngd) .actions{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+}
+/* Consistent quiet list and empty surfaces. */
+body.ngd-public-app:not(#ngd) .empty{
+  background:#fff;
+  color:var(--pf-ink);
+  border:1px dashed #D9DFEB;
+  border-radius:19px;
+  box-shadow:none;
+  padding:clamp(23px,3vw,37px);
+}
+body.ngd-public-app:not(#ngd) .empty h3{
+  font-size:1.02rem;
+  margin-bottom:7px;
+}
+body.ngd-public-app:not(#ngd) .empty p{
+  color:var(--pf-ink-2);
+  max-width:55ch;
+  line-height:1.7;
+}
+body.ngd-public-app:not(#ngd) .list-row{
+  align-items:center;
+  min-width:0;
+  border-color:var(--pf-line);
+  gap:14px;
+}
+body.ngd-public-app:not(#ngd) .list-row .left,
+body.ngd-public-app:not(#ngd) .list-row .right{
+  min-width:0;
+}
+body.ngd-public-app:not(#ngd) .list-row strong{
+  overflow-wrap:anywhere;
+}
+body.ngd-public-app:not(#ngd) .list-row small{
+  color:var(--pf-ink-3);
+  line-height:1.55;
+}
+/* Filter and data-table clarity, without faking or animating financial metrics. */
+body.ngd-public-app:not(#ngd) .table-wrap{
+  max-width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  border:1px solid var(--pf-line);
+  border-radius:17px;
+  background:#fff;
+}
+body.ngd-public-app:not(#ngd) .table{
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:510px;
+  background:#fff;
+}
+body.ngd-public-app:not(#ngd) .table :is(th,td){
+  padding:14px 16px;
+  border-bottom:1px solid var(--pf-line);
+  font-size:.8rem;
+  line-height:1.5;
+}
+body.ngd-public-app:not(#ngd) .table th{
+  background:#F8F9FC;
+  font-size:.7rem;
+  font-weight:800;
+  letter-spacing:.055em;
+  color:#667084;
+  white-space:nowrap;
+}
+body.ngd-public-app:not(#ngd) .table tr:last-child td{border-bottom:0}
+body.ngd-public-app:not(#ngd) .table tr:hover td{
+  background:#FCFCFE;
+}
+body.ngd-public-app:not(#ngd) :is(.table,.price-line,.checkout-total,
+ .affiliate-summary,.metric-card,.wallet-value,.stat){
+  font-variant-numeric:tabular-nums;
+}
+body.ngd-public-app:not(#ngd) .support-search-grid{
+  gap:13px;
+  align-items:end;
+}
+body.ngd-public-app:not(#ngd) :is(.table-wrap,.checkout-dialog,.login-shell,
+ .content-editor,.catalog-admin-editor,.lms-editor-section) :is(input,select,textarea,button){
+  animation:none;
+}
+/* Single-operator Admin: top tasks stand out; overview becomes a tidy directory. */
+body.ngd-public-app:not(#ngd) .admin-operations-intro{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:10px;
+}
+body.ngd-public-app:not(#ngd) .admin-operations-intro h1{
+  max-width:23ch;
+  margin:0;
+  font:750 clamp(1.8rem,3.2vw,2.65rem)/1.16 var(--pf-heading);
+}
+body.ngd-public-app:not(#ngd) .admin-operations-intro>p:not(.eyebrow){
+  max-width:70ch;
+  font-size:.91rem;
+  line-height:1.7;
+  color:var(--pf-ink-2);
+}
+body.ngd-public-app:not(#ngd) .admin-operations-intro .chip{
+  margin-top:4px;
+  background:#fff;
+  border:1px solid var(--pf-line);
+  color:#566273;
+}
+body.ngd-public-app:not(#ngd) .admin-start-actions{
+  margin-block:clamp(26px,3.2vw,38px) clamp(29px,3.5vw,43px);
+  gap:16px;
+}
+body.ngd-public-app:not(#ngd) :is(.admin-start-actions h2,.admin-section-heading h2){
+  font:750 clamp(1.34rem,2.15vw,1.75rem)/1.2 var(--pf-heading);
+  letter-spacing:-.046em;
+  margin:3px 0 0;
+}
+body.ngd-public-app:not(#ngd) .admin-start-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+body.ngd-public-app:not(#ngd) .admin-start-item{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:10px;
+  padding:clamp(17px,2vw,23px);
+  border-radius:17px;
+  box-shadow:none;
+  min-height:137px;
+  background:#fff;
+  border-color:var(--pf-line);
+}
+body.ngd-public-app:not(#ngd) .admin-start-item:hover{
+  background:#F8FAFD;
+  border-color:#C5D0E5;
+  transform:translateY(-2px);
+}
+body.ngd-public-app:not(#ngd) .admin-start-item strong{
+  display:flex;
+  gap:9px;
+  font-size:.91rem;
+  font-weight:760;
+  line-height:1.4;
+}
+body.ngd-public-app:not(#ngd) .admin-start-item small{
+  font-size:.76rem;
+  color:var(--pf-ink-2);
+  line-height:1.6;
+}
+body.ngd-public-app:not(#ngd) .admin-section-heading{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:17px;
+  border-top:1px solid var(--pf-line);
+  padding-top:25px;
+  margin-bottom:18px;
+}
+body.ngd-public-app:not(#ngd) .admin-section-heading .eyebrow{
+  color:#8A8E9C;
+}
+body.ngd-public-app:not(#ngd) .admin-section-heading>p{
+  max-width:31ch;
+  margin:0;
+  font-size:.76rem;
+  color:var(--pf-ink-3);
+  line-height:1.6;
+}
+body.ngd-public-app:not(#ngd) .admin-module-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+body.ngd-public-app:not(#ngd) .admin-module-card{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  min-height:189px;
+  padding:19px;
+  border-radius:17px;
+}
+body.ngd-public-app:not(#ngd) .admin-module-card h3{
+  font-size:.91rem;
+  margin:14px 0 5px;
+}
+body.ngd-public-app:not(#ngd) .admin-module-card .card-desc{
+  font-size:.76rem;
+  line-height:1.55;
+  margin-bottom:13px;
+}
+body.ngd-public-app:not(#ngd) .admin-module-card .btn{
+  margin-top:auto;
+  padding-left:0;
+  font-size:.73rem;
+}
+body.ngd-public-app:not(#ngd) .admin-module-card .surface-icon{
+  width:39px;height:39px;
+  border-radius:12px;
+  background:#EFF3FB;
+  color:#3F5E8C;
+}
+/* Admin content editor & visual CMS. */
+body.ngd-public-app:not(#ngd) .content-admin-layout{
+  display:grid;
+  gap:clamp(15px,2vw,23px);
+  align-items:start;
+  min-width:0;
+}
+body.ngd-public-app:not(#ngd) .content-admin-list,
+body.ngd-public-app:not(#ngd) .content-editor{
+  min-width:0;
+}
+body.ngd-public-app:not(#ngd) .content-editor{
+  border-radius:20px;
+  padding:clamp(19px,2.5vw,29px);
+}
+body.ngd-public-app:not(#ngd) .content-editor-heading{
+  display:flex;
+  justify-content:space-between;
+  align-items:start;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:13px;
+}
+body.ngd-public-app:not(#ngd) .content-editor-heading h2{
+  font-size:1.4rem;
+  margin:4px 0 0;
+}
+body.ngd-public-app:not(#ngd) .content-editor-preview{
+  max-width:100%;
+  overflow:hidden;
+  border:1px solid var(--pf-line);
+  border-radius:13px;
+  background:#F6F7FB;
+}
+body.ngd-public-app:not(#ngd) .content-editor-preview :is(img,video){
+  display:block;
+  max-width:100%;
+  max-height:245px;
+  height:auto;
+  object-fit:contain;
+  margin:auto;
+}
+body.ngd-public-app:not(#ngd) .content-admin-item{
+  background:#fff;
+  border:1px solid var(--pf-line);
+  border-radius:14px;
+  overflow:hidden;
+  min-width:0;
+}
+body.ngd-public-app:not(#ngd) .content-admin-copy{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+body.ngd-public-app:not(#ngd) .content-admin-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+body.ngd-public-app:not(#ngd) .content-admin-actions .btn{
+  min-height:40px;
+}
+/* Catalog product editor: neutral, structured, manageable on Android. */
+body.ngd-public-app:not(#ngd) .catalog-admin-intro{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  flex-wrap:wrap;
+  gap:14px;
+}
+body.ngd-public-app:not(#ngd) .catalog-admin-intro h1{
+  font:750 clamp(1.8rem,3vw,2.55rem)/1.16 var(--pf-heading);
+}
+body.ngd-public-app:not(#ngd) .catalog-admin-layout{
+  min-width:0;
+  gap:clamp(13px,2vw,21px);
+  align-items:start;
+}
+body.ngd-public-app:not(#ngd) .catalog-admin-list,
+body.ngd-public-app:not(#ngd) .catalog-admin-editor{
+  min-width:0;
+  border:1px solid var(--pf-line);
+  border-radius:19px;
+  background:#fff;
+  box-shadow:none;
+}
+body.ngd-public-app:not(#ngd) .catalog-admin-editor{
+  padding:clamp(18px,2.2vw,28px);
+}
+body.ngd-public-app:not(#ngd) .catalog-admin-row{
+  min-width:0;
+  background:#fff;
+  border-bottom:1px solid var(--pf-line);
+  gap:10px;
+  padding:14px;
+}
+body.ngd-public-app:not(#ngd) .catalog-admin-row:last-child{border-bottom:0}
+body.ngd-public-app:not(#ngd) .catalog-admin-row-info{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+body.ngd-public-app:not(#ngd) .catalog-admin-row-info h3{
+  font-size:.87rem;
+  line-height:1.4;
+}
+body.ngd-public-app:not(#ngd) .catalog-admin-row-info p{
+  font-size:.73rem;
+  color:var(--pf-ink-2);
+  line-height:1.65;
+}
+body.ngd-public-app:not(#ngd) .catalog-admin-controls{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:7px;
+}
+body.ngd-public-app:not(#ngd) .catalog-admin-editor-head h2{
+  font-size:1.4rem;
+}
+body.ngd-public-app:not(#ngd) .catalog-form-grid{
+  min-width:0;
+  column-gap:13px;
+  row-gap:5px;
+}
+body.ngd-public-app:not(#ngd) .catalog-checks{
+  display:flex;
+  flex-wrap:wrap;
+  gap:13px;
+}
+/* Service brief & admin queue: easy to scan; no important actions hidden. */
+body.ngd-public-app:not(#ngd) .service-columns,
+body.ngd-public-app:not(#ngd) .service-admin-list,
+body.ngd-public-app:not(#ngd) .service-admin-detail{
+  min-width:0;
+}
+body.ngd-public-app:not(#ngd) .service-form-shell{
+  border-radius:20px;
+  padding:clamp(19px,2.4vw,29px);
+}
+body.ngd-public-app:not(#ngd) .service-heading h1,
+body.ngd-public-app:not(#ngd) .service-heading h2{
+  font-size:clamp(1.8rem,3vw,2.5rem);
+}
+body.ngd-public-app:not(#ngd) .service-entry,
+body.ngd-public-app:not(#ngd) .service-admin-item{
+  border:1px solid var(--pf-line);
+  border-radius:13px;
+  background:#fff;
+  box-shadow:none;
+  padding:15px;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+body.ngd-public-app:not(#ngd) .service-admin-item[aria-current=true]{
+  background:#F0F4FD;
+  border-color:#C4D4F2;
+}
+body.ngd-public-app:not(#ngd) .service-admin-detail>p{
+  overflow-wrap:anywhere;
+  line-height:1.75;
+}
+/* Learning: quiet reading surface and clear mobile course navigation. */
+body.ngd-public-app:not(#ngd) .learning-dashboard{min-width:0}
+body.ngd-public-app:not(#ngd) .learning-intro{
+  border:1px solid var(--pf-line);
+  border-radius:23px;
+  padding:clamp(22px,3vw,38px);
+  background:
+    radial-gradient(ellipse 35% 85% at 95% 0,rgba(94,196,255,.16),transparent),
+    radial-gradient(ellipse 40% 90% at 0 95%,rgba(255,210,94,.17),transparent),#fff;
+  box-shadow:none;
+}
+body.ngd-public-app:not(#ngd) .learning-intro h2{
+  font:750 clamp(1.75rem,3.3vw,2.85rem)/1.18 var(--pf-heading);
+  letter-spacing:-.055em;
+}
+body.ngd-public-app:not(#ngd) .learning-intro p{
+  color:var(--pf-ink-2);
+  line-height:1.72;
+}
+body.ngd-public-app:not(#ngd) .learning-intro-aside{
+  border:1px solid var(--pf-line);
+  border-radius:17px;
+  background:#fff;
+  box-shadow:none;
+}
+body.ngd-public-app:not(#ngd) .learning-toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:11px;
+}
+body.ngd-public-app:not(#ngd) .learning-filter-group{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+body.ngd-public-app:not(#ngd) .learning-filter{
+  border:1px solid var(--pf-line);
+  border-radius:999px;
+  padding:9px 15px;
+  min-height:42px;
+  background:#fff;
+  color:var(--pf-ink-2);
+  font-size:.79rem;
+}
+body.ngd-public-app:not(#ngd) .learning-filter[aria-pressed=true]{
+  color:#fff;background:var(--pf-ink);border-color:var(--pf-ink);
+}
+body.ngd-public-app:not(#ngd) .learning-search{
+  min-height:46px;
+  border:1px solid var(--pf-control);
+  background:#fff;
+  border-radius:999px;
+}
+body.ngd-public-app:not(#ngd) .learning-course-grid{
+  gap:clamp(13px,2vw,20px);
+}
+body.ngd-public-app:not(#ngd) .lms-course-tile{
+  border-radius:20px;
+  border:1px solid var(--pf-line);
+  box-shadow:0 17px 35px -34px rgba(21,22,28,.42);
+  overflow:hidden;
+  transition:border-color .18s,transform .18s;
+}
+body.ngd-public-app:not(#ngd) .lms-course-tile:hover{
+  border-color:#C6D6F2;
+  transform:translateY(-2px);
+}
+body.ngd-public-app:not(#ngd) .learning-course-art{
+  background:linear-gradient(140deg,#FDEBC2,#E2DDFC 56%,#D6F0FF);
+}
+body.ngd-public-app:not(#ngd) .learning-course-copy h3{
+  font-size:1.05rem;
+  line-height:1.4;
+}
+body.ngd-public-app:not(#ngd) .learning-course-copy p{
+  font-size:.8rem;
+  line-height:1.7;
+}
+body.ngd-public-app:not(#ngd) .learning-reader-layout,
+body.ngd-public-app:not(#ngd) .lms-workspace-layout{
+  min-width:0;
+  gap:clamp(14px,2vw,22px);
+  align-items:start;
+}
+body.ngd-public-app:not(#ngd) .learning-lesson-sidebar,
+body.ngd-public-app:not(#ngd) .learning-lesson-panel{
+  min-width:0;
+  border:1px solid var(--pf-line);
+  border-radius:17px;
+  background:#fff;
+}
+body.ngd-public-app:not(#ngd) .learning-lesson-nav-item{
+  min-height:44px;
+  border-radius:11px;
+}
+body.ngd-public-app:not(#ngd) .learning-lesson-nav-item.is-current{
+  background:#EFF3FC;
+  color:var(--pf-navy);
+}
+body.ngd-public-app:not(#ngd) .learning-lesson-body{
+  font:400 15px/1.85 var(--pf-ui);
+  color:var(--pf-ink);
+  overflow-wrap:anywhere;
+  max-width:75ch;
+}
+body.ngd-public-app:not(#ngd) .learning-lesson-body :is(h2,h3,h4){
+  line-height:1.3;
+  margin-top:1.3em;
+}
+body.ngd-public-app:not(#ngd) .lms-editor-section{
+  border-radius:17px;
+  padding:clamp(18px,2.3vw,27px);
+}
+body.ngd-public-app:not(#ngd) .lms-stats>.surface{
+  border-radius:16px;
+}
+body.ngd-public-app:not(#ngd) .lms-stats strong{
+  font:750 clamp(1.35rem,2.4vw,2rem)/1.2 var(--pf-heading);
+  color:var(--pf-ink);
+}
+/* AI workflow and affiliate: consistent pricing/readability. */
+body.ngd-public-app:not(#ngd) .ai-studio{
+  max-width:1260px;
+}
+body.ngd-public-app:not(#ngd) .ai-wizard-layout>.ai-tool,
+body.ngd-public-app:not(#ngd) .ai-tool-selector{
+  border:1px solid var(--pf-line);
+  box-shadow:none;
+}
+body.ngd-public-app:not(#ngd) .ai-tool-selector{
+  gap:7px;
+}
+body.ngd-public-app:not(#ngd) .ai-tool-option{
+  min-height:77px;
+  padding:12px;
+}
+body.ngd-public-app:not(#ngd) .ai-tool-option:focus-visible{
+  outline-offset:2px;
+}
+body.ngd-public-app:not(#ngd) .ai-cost{
+  font-variant-numeric:tabular-nums;
+  color:var(--pf-ink-2);
+}
+body.ngd-public-app:not(#ngd) .ai-foot{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:13px;
+  border-top:1px solid var(--pf-line);
+  padding-top:16px;
+}
+body.ngd-public-app:not(#ngd) .ai-result{
+  border:1px solid #D9E6F7;
+  background:#F7FAFF;
+  border-radius:16px;
+}
+body.ngd-public-app:not(#ngd) .affiliate-summary-grid{
+  gap:12px;
+}
+body.ngd-public-app:not(#ngd) .affiliate-summary{
+  min-width:0;
+  border:1px solid var(--pf-line);
+  box-shadow:none;
+}
+body.ngd-public-app:not(#ngd) .affiliate-referral-url{
+  overflow-wrap:anywhere;
+}
+/* Account security, notifications and ticketing. */
+body.ngd-public-app:not(#ngd) .admin-account-actions{
+  display:grid;
+  gap:8px;
+}
+body.ngd-public-app:not(#ngd) .admin-password-panel,
+body.ngd-public-app:not(#ngd) .service-admin-detail{
+  border-radius:19px;
+}
+body.ngd-public-app:not(#ngd) .ngd-menu-page .section-head{
+  margin-bottom:23px;
+}
+body.ngd-public-app:not(#ngd) .ngd-menu-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:11px;
+}
+body.ngd-public-app:not(#ngd) .ngd-menu-tile{
+  display:flex;align-items:center;gap:13px;
+  min-width:0;
+  min-height:85px;
+  padding:15px 17px;
+  background:#fff;
+  border:1px solid var(--pf-line);
+  border-radius:16px;
+  text-align:left;
+}
+body.ngd-public-app:not(#ngd) .ngd-menu-tile:hover{
+  background:#F8FAFD;
+  border-color:#C8D5EB;
+}
+body.ngd-public-app:not(#ngd) .ngd-menu-copy{
+  display:grid;gap:3px;min-width:0;
+  flex:1;
+}
+body.ngd-public-app:not(#ngd) .ngd-menu-copy strong{
+  font-size:.86rem;
+  font-weight:750;
+  color:var(--pf-ink);
+}
+body.ngd-public-app:not(#ngd) .ngd-menu-copy small{
+  font-size:.73rem;
+  color:var(--pf-ink-2);
+  line-height:1.55;
+}
+body.ngd-public-app:not(#ngd) .ngd-menu-icon{
+  display:grid;place-items:center;
+  width:40px;height:40px;
+  flex:none;border-radius:12px;
+  color:#3D5B88;
+  background:#EDF3FC;
+}
+body.ngd-public-app:not(#ngd) .ngd-menu-tile>svg:last-child{
+  width:16px;height:16px;
+  flex:none;color:#8290A5;
+}
+body.ngd-public-app:not(#ngd) .support-search-grid .btn{
+  min-width:0;
+  justify-self:start;
+}
+body.ngd-public-app:not(#ngd) .support-ticket-card{
+  border-radius:16px;
+  border-color:var(--pf-line);
+}
+/* Consistent dialogs remain intentionally still. */
+body.ngd-public-app:not(#ngd) :is(.checkout-dialog,.modal,.admin-modal,
+ .service-admin-detail,.content-editor,.catalog-admin-editor) :is(input,select,textarea,button){
+  max-width:100%;
+}
+body.ngd-public-app:not(#ngd) .checkout-summary{
+  align-items:start;
+}
+body.ngd-public-app:not(#ngd) .checkout-dialog :is(h2,strong){
+  color:var(--pf-ink);
+}
+body.ngd-public-app:not(#ngd) .checkout-total{
+  background:#F1F5FF;
+  border-radius:12px;
+  border:1px solid #DFE8FC;
+}
+body.ngd-public-app:not(#ngd) .checkout-total strong{
+  color:#255ADB;
+}
+body.ngd-public-app:not(#ngd) .checkout-qr{
+  background:#FBFCFF;
+}
+body.ngd-public-app:not(#ngd) .checkout-countdown{
+  font-variant-numeric:tabular-nums;
+}
+@media(max-width:1080px){
+  body.ngd-public-app:not(#ngd) .admin-start-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  body.ngd-public-app:not(#ngd) .admin-module-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  body.ngd-public-app:not(#ngd) .ngd-menu-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:760px){
+  body.ngd-public-app:not(#ngd) .main-content{
+    padding-left:max(18px,env(safe-area-inset-left,0px));
+    padding-right:max(18px,env(safe-area-inset-right,0px));
+  }
+  body.ngd-public-app:not(#ngd) .admin-operations-intro{
+    border-radius:19px;
+    padding:23px 20px;
+  }
+  body.ngd-public-app:not(#ngd) .admin-start-grid,
+  body.ngd-public-app:not(#ngd) .admin-module-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+  body.ngd-public-app:not(#ngd) .admin-start-item{
+    min-height:115px;
+    padding:15px 14px;
+    gap:7px;
+    border-radius:15px;
+  }
+  body.ngd-public-app:not(#ngd) .admin-module-card{
+    min-height:174px;
+    padding:15px;
+    border-radius:15px;
+  }
+  body.ngd-public-app:not(#ngd) .admin-start-item strong,
+  body.ngd-public-app:not(#ngd) .admin-module-card h3{
+    font-size:.81rem;
+  }
+  body.ngd-public-app:not(#ngd) .admin-start-item small,
+  body.ngd-public-app:not(#ngd) .admin-module-card .card-desc{
+    font-size:.71rem;
+  }
+  body.ngd-public-app:not(#ngd) .admin-section-heading{
+    display:block;
+  }
+  body.ngd-public-app:not(#ngd) .admin-section-heading>p{
+    margin-top:9px;
+  }
+  body.ngd-public-app:not(#ngd) .catalog-admin-layout,
+  body.ngd-public-app:not(#ngd) .content-admin-layout,
+  body.ngd-public-app:not(#ngd) .learning-reader-layout,
+  body.ngd-public-app:not(#ngd) .lms-workspace-layout,
+  body.ngd-public-app:not(#ngd) .service-columns{
+    grid-template-columns:minmax(0,1fr);
+  }
+  body.ngd-public-app:not(#ngd) .catalog-admin-editor{
+    padding:20px 17px;
+  }
+  body.ngd-public-app:not(#ngd) .content-editor,
+  body.ngd-public-app:not(#ngd) .service-form-shell,
+  body.ngd-public-app:not(#ngd) .lms-editor-section{
+    padding:20px 17px;
+  }
+  body.ngd-public-app:not(#ngd) .ngd-menu-grid{
+    gap:9px;
+  }
+  body.ngd-public-app:not(#ngd) .ngd-menu-tile{
+    padding:13px 12px;
+    min-height:83px;
+  }
+  body.ngd-public-app:not(#ngd) .ngd-menu-icon{
+    width:34px;height:34px;
+    border-radius:10px;
+  }
+  body.ngd-public-app:not(#ngd) .ngd-menu-copy strong{
+    font-size:.76rem;
+  }
+  body.ngd-public-app:not(#ngd) .ngd-menu-copy small{
+    font-size:.7rem;
+  }
+  body.ngd-public-app:not(#ngd) .ai-foot .btn{
+    width:100%;
+    justify-content:center;
+  }
+  body.ngd-public-app:not(#ngd) .section-head h2{
+    font-size:1.65rem;
+  }
+  body.ngd-public-app:not(#ngd) .table{
+    min-width:490px;
+  }
+  body.ngd-public-app:not(#ngd) .learning-reader-header{
+    gap:13px;
+  }
+}
+@media(max-width:390px){
+  body.ngd-public-app:not(#ngd) .admin-start-grid,
+  body.ngd-public-app:not(#ngd) .admin-module-grid{
+    grid-template-columns:minmax(0,1fr);
+  }
+  body.ngd-public-app:not(#ngd) .admin-start-item,
+  body.ngd-public-app:not(#ngd) .admin-module-card{
+    min-height:0;
+  }
+  body.ngd-public-app:not(#ngd) .ngd-menu-grid{
+    grid-template-columns:minmax(0,1fr);
+  }
+  body.ngd-public-app:not(#ngd) .catalog-form-grid{
+    grid-template-columns:minmax(0,1fr);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body.ngd-public-app:not(#ngd) :is(.lms-course-tile,
+    .admin-start-item,.admin-module-card,.ai-tool-option,.ngd-menu-tile){
+    transition:none!important;
+    transform:none!important;
+  }
+}
