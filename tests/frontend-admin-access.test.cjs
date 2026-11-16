@@ -31,6 +31,7 @@ test('administrator route is explicit and does not suggest creating a second own
  assert.match(html,/Akses administrator belum diaktifkan pada backend/);
  assert.match(html,/type="submit" disabled/);
  assert.doesNotMatch(html,/name="setuju_kebijakan"/);
+ assert.match(html,/href="\.\/staging\/member\.html#admin-login"/);
 });
 test('unauthed admin dashboard points to real administrator login rather than member registration',()=>{
  const p=preview('admin');
@@ -75,4 +76,14 @@ test('client transport only permits auth channel for three exact administrator a
  }
  await assert.rejects(ctx.api('register',{},'',{write:true}),/tidak tersedia/);
  assert.equal(calls.length,1);
+});
+
+test('signed-in Admin dashboard prioritizes editable modules, not repeated disabled-state notices',()=>{
+ const p=preview('admin');
+ vm.runInContext("state.token='TEST_ONLY_TOKEN';state.me={role:'ADMIN',member_id:'TEST',nama:'Owner'};render()",p.ctx,{timeout:3000});
+ const html=p.elements.screen.innerHTML;
+ for(const route of ['konten','produk','lms','layanan'])
+   assert.match(html,new RegExp('data-route="'+route+'"'));
+ assert.match(html,/Apa yang ingin Anda isi hari ini/);
+ assert.doesNotMatch(html,/Kesiapan operasional backend|Mode baca-saja|Perubahan data.*Nonaktif/);
 });
