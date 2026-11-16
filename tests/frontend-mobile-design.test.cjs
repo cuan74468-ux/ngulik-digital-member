@@ -55,16 +55,22 @@ test('redesigned member dashboard shows a bounded real progress ring and navigat
   assert.match(h.nodes.screen.innerHTML,/33 persen progres modul/);
   assert.match(h.nodes.screen.innerHTML,/Lanjutkan kelas/);
   assert.match(h.nodes.screen.innerHTML,/data-lms-action="open-course"/);
-  assert.match(h.nodes['mobile-nav'].innerHTML,/data-route="belajar"/);
+  assert.match(h.nodes['mobile-nav'].innerHTML,/data-route="ai"/);
+  assert.match(h.nodes['mobile-nav'].innerHTML,/data-route="katalog"/);
+  assert.match(h.nodes.screen.innerHTML,/wallet-hero/);
   assert.match(h.nodes['mobile-nav'].innerHTML,/aria-current="page"/);
   assert.equal(h.attributes['data-member-route'],'beranda');
 });
-test('mobile bottom navigation preserves Belajar active in detail and success screens',()=>{
+test('mobile uses exactly four transactional destinations while class routes remain accessible',()=>{
   const h=preview('member','lms-course');
-  assert.match(h.nodes['mobile-nav'].innerHTML,/data-route="belajar" aria-current="page"/);
+  const nav=h.nodes['mobile-nav'].innerHTML;
+  for(const route of ['beranda','ai','katalog','affiliate'])
+    assert.match(nav,new RegExp('data-route="'+route+'"'));
+  assert.doesNotMatch(nav,/data-route="belajar"|data-route="menu"/);
   h.go('lms-complete');
-  assert.match(h.nodes['mobile-nav'].innerHTML,/data-route="belajar" aria-current="page"/);
   assert.equal(h.attributes['data-member-route'],'lms-complete');
+  h.go('menu');
+  assert.match(h.nodes.screen.innerHTML,/data-route="belajar"/);
 });
 test('success screen is explicitly labeled preview, not a real stored completion',()=>{
   const h=preview('member','lms-complete'),display=h.nodes.screen.innerHTML;
@@ -131,11 +137,11 @@ test('administrator account has operational controls without member-only affilia
 
 test('mobile all-menu route exposes member services and admin modules without API',()=>{
   const member=preview('member','menu');
-  assert.match(member.nodes['mobile-nav'].innerHTML,/data-route="menu" aria-current="page"/);
+  assert.doesNotMatch(member.nodes['mobile-nav'].innerHTML,/data-route="menu"/);
   for(const route of ['ai','affiliate','dukungan','akun'])
     assert.match(member.nodes.screen.innerHTML,new RegExp('data-route="'+route+'"'));
   member.go('affiliate');
-  assert.match(member.nodes['mobile-nav'].innerHTML,/data-route="menu" aria-current="page"/);
+  assert.match(member.nodes['mobile-nav'].innerHTML,/data-route="affiliate" aria-current="page"/);
   const admin=preview('admin','menu');
   for(const route of ['konten','layanan','member','rilis','antrean','pengaturan','akun'])
     assert.match(admin.nodes.screen.innerHTML,new RegExp('data-route="'+route+'"'));
