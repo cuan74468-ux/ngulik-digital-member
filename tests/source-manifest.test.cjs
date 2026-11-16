@@ -21,6 +21,7 @@ test('runtime manifest records exact SHA1 blobs of all GitHub GAS source files',
 });
 test('a source hash alone never claims that the GAS editor is synchronized',()=>{
  assert.match(manifest.unverified,/Apps Script editor sync/);
+ assert.match(manifest.unverified,/NOT yet verified by operator execution/);
  assert.equal(manifest.release_gate,'OWNER_EXECUTION_AUTHORIZED');
  assert.equal(manifest.external_providers,'CONFIGURATION_PENDING');
  assert.deepEqual(manifest.verified_editor_functions.map(x=>x.name),[
