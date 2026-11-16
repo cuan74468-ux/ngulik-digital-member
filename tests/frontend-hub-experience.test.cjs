@@ -64,7 +64,7 @@ test('local QA catalog renders eight test-only records with payment disabled',()
   assert.match(html,/8<\/strong><span>penawaran tercatat/);
   assert.match(html,/Jasa Video Iklan AI/);
   assert.match(html,/Bundel Ebook Vibe Coder/);
-  assert.match(html,/Belum tersedia untuk pemesanan/);
+  assert.match(html,/disabled title="Pembayaran belum diaktifkan"/);
   assert.doesNotMatch(html,/data-buy="P-VIDEO-AI"[^>]*>Pilih produk/);
   assert.doesNotMatch(html,/data-buy="P-EBOOK"[^>]*>Pilih produk/);
   assert.equal(h.apiCalls.length,0);
@@ -108,21 +108,22 @@ test('untrusted catalog labels are escaped even inside category-filtered views',
   assert.match(html,/&lt;img src=x onerror=alert\(1\)&gt;/);
   assert.match(html,/&lt;script&gt;unsafe&lt;\/script&gt;/);
   assert.doesNotMatch(html,/<img src=x onerror/);
-  assert.match(html,/Belum tersedia untuk pemesanan/);
+  assert.match(html,/disabled title="Pembayaran belum diaktifkan"/);
 });
-test('unsupported offer types are rejected server-side before any new order or ledger write',()=>{
+test('digital and service checkout paths reach server order validation',()=>{
   const ctx=vm.createContext({console:{log(){},warn(){},error(){}}});
   vm.runInContext(backend,ctx,{timeout:10000});
-  let writes=0;
+  let writes=0,checks=0;
   ctx.withLock_=fn=>fn();
-  ctx.byId_=(table,column,id)=>table==='katalog_produk'?
-    {product_id:id,aktif:true,tipe:id==='P-VIDEO-AI'?'JASA_SEKALI':'PRODUK_DIGITAL',
-      nama:'Unfulfilled offer',harga:50000}:null;
-  ctx.appendRow_=()=>{writes++;};
-  ctx.findRows_=()=>{throw Error('Should reject before inspecting orders');};
+  ctx.byId_=(table,column,id)=>table==='katalog_produk'
+    ?{product_id:id,aktif:true,tipe:id==='P-VIDEO-AI'?'JASA_SEKALI':'PRODUK_DIGITAL',
+      nama:'Offer',harga:50000}:null;
+  ctx.appendRow_=()=>{writes++};
+  ctx.findRows_=()=>{checks++;throw Error('ORDER_CHECK_REACHED')};
   for(const id of ['P-VIDEO-AI','P-EBOOK']){
     assert.throws(()=>vm.runInContext("newOrder_({role:'MEMBER',member_id:'M1'}, {product_id:'"+id+"'}, 'fresh-request')",ctx,{timeout:3000}),
-      /Produk ini belum dapat dipesan/);
+      /ORDER_CHECK_REACHED/);
   }
+  assert.equal(checks,2);
   assert.equal(writes,0);
 });
