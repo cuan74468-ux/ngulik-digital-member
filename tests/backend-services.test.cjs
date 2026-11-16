@@ -120,7 +120,7 @@ test('quotations never mark payments as paid or grant credit',()=>{
 });
 test('release gate and table schema exist in source with no public write bypass',()=>{
   assert.match(code,/service_requests: 'service_id,member_id/);
-  assert.match(code,/NGD_SERVICE_ENABLED/);
+  assert.match(code,/function requireMutationsEnabled_/);
   assert.match(code,/case 'submitServiceBrief':return serviceSubmit_/);
   assert.match(code,/case 'adminUpdateServiceQuote':return serviceQuote_/);
   assert.match(code,/case 'getMyServiceRequests':return serviceListMine_/);
