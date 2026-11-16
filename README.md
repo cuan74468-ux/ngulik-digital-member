@@ -74,6 +74,7 @@ UI/UX Mobile-first V2 telah mencapai baseline yang cukup untuk meneruskan pemban
 Dokumen kerja:
 - [Fondasi internal — provider terakhir](docs/INFRASTRUKTUR_INTERNAL_FIRST_2026-11-15.md)
 - [Audit rekonsiliasi registrasi STAGING — source-only](docs/REGISTRATION_RECOVERY_PREFLIGHT_2026-11-16.md)
+- [Keamanan Tahap 1: sesi, PIN dan ledger](docs/SECURITY_DECISION_STAGE1_2026-11-16.md)
 - [Audit kesiapan 29 tab STAGING](docs/AUDIT_TERPADU_TAHAP_1_2026-11-15.md)
 - [Arsitektur membership komersial](docs/COMMERCIAL_MEMBERSHIP_RELEASE_2026-11-14.md)
 - [Prosedur keamanan dan pemeriksaan operasional](docs/PILOT_50_GO_LIVE_GATE_2026-11-14.md)

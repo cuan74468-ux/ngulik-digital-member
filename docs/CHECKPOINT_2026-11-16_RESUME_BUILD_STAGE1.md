@@ -88,3 +88,11 @@ Audit `session_` menemukan kondisi kode lama yang keliru: `new Date(expires_at).
 - identitas member harus unik, status `AKTIF`, dan `role` pada sesi sama dengan peran akun saat ini;
 - jika tidak memenuhi syarat, akses ditolak dan pengguna diminta login ulang, tanpa membocorkan token.
 Pengujian regresi sintetis ditambahkan untuk expiry kosong/rusak, hash duplikat, perubahan peran, dan ID anggota ganda. Ini hanya pengamanan **source GitHub** dan belum mengubah atau mencabut sesi apa pun pada Apps Script/database aktif. Sebelum menyalin `Code.gs` ke editor, wajib backup/diff, review kompatibilitas sesi lama, dan uji STAGING.
+
+## Pengamanan sesi dan rencana migrasi PIN — 16 November
+
+Source terbaru `Code.gs` menolak sesi dengan tanggal kedaluwarsa kosong/rusak, hash token duplikat, lebih dari satu record anggota untuk ID sesi, perubahan peran, atau akun tidak aktif. Risiko expiry `NaN` dan role drift yang sebelumnya bisa lolos telah ditutup pada **GitHub source-only**. Pengujian 5 kasus regresi baru lulus pada [CI 410/410](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43788485412); [GitHub Pages PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43788485670) pada commit `9d893c117918ad5c26431ee52c859124faa1b7f3`.
+
+**Risiko P0 terbuka:** `pinHash_` saat ini SHA-256 tunggal atas salt dan PIN enam digit, rentan brute-force offline jika database bocor. Rencana migrasi hasher berversi dan pengujian kompatibilitas diperlukan, tetapi **belum dieksekusi** agar akun lama tidak terkunci. **Risiko ledger terbuka:** fungsi `creditBalance_` menjumlahkan entri tanpa filter `POSTED`, memerlukan keputusan kontrak saldo sebelum finance diaktifkan. Rincian dan urutan aman ada di [Rencana Pengamanan Tahap 1](SECURITY_DECISION_STAGE1_2026-11-16.md). Pendaftaran, OTP, provider dan finance tetap **OFF**.
+
+Pembacaan metadata Sheets STAGING `sessions!E2` menunjukkan `expires_at` disimpan sebagai serial numerik dengan format `DATE_TIME` normal; hasil format string connector yang tidak dikenali `Date.parse` tidak dipakai untuk menyimpulkan sesi rusak. Runtime GAS `session_` belum diattest, pemeriksaan ini bukan login nyata.

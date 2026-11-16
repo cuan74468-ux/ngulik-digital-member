@@ -13,6 +13,7 @@
 - Tahap 1 tetap **PROSES/NO-GO**; semua provider/kredit/pendaftaran/pembayaran tetap OFF. Tidak boleh menganggap tes offline sudah membuktikan runtime GAS setara.
 - Restore rehearsal file-level dari **backup privat** telah diuji (29/29 header, 9/9 hitungan operasional, formula anggota identik), tetapi aplikasi/Apps Script belum dipulihkan atau dihubungkan ke clone. [Bukti](docs/RESTORE_REHEARSAL_2026-11-16.md).
 - Manifest 15 source Apps Script GitHub dan status runtime yang belum terbukti: [GAS Runtime Sync](docs/GAS_RUNTIME_SYNC_MANIFEST_2026-11-16.md). Jangan melakukan `Code.gs` overwrite otomatis.
+- [Audit keamanan Tahap 1 dan migrasi PIN](docs/SECURITY_DECISION_STAGE1_2026-11-16.md): sesi fail-closed sudah diuji di source GitHub, tetapi PIN SHA-256 tunggal dan saldo ledger tanpa filter POSTED tetap P0 yang **belum** boleh otomatis diubah. 410/410 pengujian lulus; GAS runtime belum tersinkron.
 
 - Audit rekonsiliasi registrasi hanya-baca tersedia pada `apps-script/RegistrationRecoveryPreflight.gs` dan [runbook-nya](docs/REGISTRATION_RECOVERY_PREFLIGHT_2026-11-16.md), **source-only**: belum terpasang di Apps Script STAGING. Bergantung pada dua preflight yang sudah terverifikasi. Kode audit tidak memperbaiki data atau menerbitkan kredit.
 
