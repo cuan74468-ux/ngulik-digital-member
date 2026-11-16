@@ -133,7 +133,8 @@ body.ngd-public-app:not(#ngd) .nh-home > .public-editorial-hero.pf-portfolio-her
   background:none;
   box-shadow:none;
   color:var(--pf-ink);
-  overflow:visible;
+  overflow-x:clip;
+  overflow-y:visible;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -153,7 +154,7 @@ body.ngd-public-app:not(#ngd) .pf-portfolio-hero::before{
 body.ngd-public-app:not(#ngd) .pf-portfolio-hero::after{
   content:"";
   position:absolute;
-  inset:-40px -40px 0;
+  inset:-40px 0 0;
   height:780px;
   z-index:-3;
   pointer-events:none;
@@ -902,6 +903,9 @@ body.ngd-public-app:not(#ngd) .footer{
   }
   body.ngd-public-app:not(#ngd) .nh-home>.public-editorial-hero.pf-portfolio-hero{
     padding-top:14px;
+    max-width:100%;
+    min-width:0;
+    overflow-x:clip;
   }
   body.ngd-public-app:not(#ngd) .pf-portfolio-hero .public-hero-copy{
     gap:15px;padding:14px 0 0;
