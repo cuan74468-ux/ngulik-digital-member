@@ -3,7 +3,7 @@
  * Member brief -> admin review -> quotation -> service follow-up.
  * This is NOT payment processing or proof of payment.
  * Only authenticated members can submit; all mutations require
- * NGD_MUTATIONS_ENABLED=true AND NGD_SERVICE_ENABLED=true.
+ * NGD_MUTATIONS_ENABLED=true.
  */
 function serviceStatus_(){return ['BARU','DITINJAU','PENAWARAN','DITOLAK','SELESAI'];}
 function serviceKinds_(){return ['VIDEO_AI','WEBSITE_CUSTOM','APLIKASI_CUSTOM','KONSULTASI'];}
