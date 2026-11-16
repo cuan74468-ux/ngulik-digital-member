@@ -1,6 +1,6 @@
 /* Ngulik Digital — media-first editorial UI (no frameworks or external CDN).
  * Content originates in an authenticated Google Sheets CMS. All asset paths
- * are same-origin and confined to assets/media/. No inline SVG in campaigns.
+ * may use local assets, HTTPS URLs or raster data URIs; no inline SVG campaigns.
  */
 (function(){
   'use strict';
@@ -10,9 +10,12 @@
   const kinds=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO'];
   function mediaPath(raw){
     const path=String(raw||'').trim();
-    if(path.length>180||!/^assets\/media\/[A-Za-z0-9][A-Za-z0-9_/-]*\.(png|jpe?g|webp|avif)$/i.test(path)||
-       path.includes('..')||path.includes('//'))return '';
-    return './'+path;
+    if(!path)return '';
+    if(path.length<=500&&/^assets\/[A-Za-z0-9_./-]+\.(?:png|jpe?g|webp|gif|avif)(?:\?[A-Za-z0-9_=&%-]+)?$/i.test(path)&&
+      !path.includes('..')&&!path.includes('//'))return './'+path;
+    if(path.length<=2048&&/^https:\/\/[A-Za-z0-9.-]+(?::[0-9]{2,5})?(?:\/[A-Za-z0-9!$&'()*+,;=:@%_./~-]*)?(?:\?[A-Za-z0-9!$&'()*+,;=:@%_./?~-]*)?(?:#[A-Za-z0-9_.-]*)?$/i.test(path))return path;
+    if(path.length<=1048576&&/^data:image\/(?:png|jpeg|jpg|webp|gif|avif);base64,[A-Za-z0-9+/]+={0,2}$/i.test(path))return path;
+    return '';
   }
   function published(contents,kind,placement){
     return (Array.isArray(contents)?contents:[]).filter(x=>x&&x.kind===kind&&
@@ -86,8 +89,8 @@
       '<div class="content-editor-heading"><div><p class="eyebrow">EDITOR VISUAL</p><h2>'+
       (selected?'Ubah konten':'Tambah konten')+'</h2></div>'+
       (selected?'<button type="button" class="btn btn-secondary btn-sm" data-content-new>Buat baru</button>':'')+'</div>'+
-      '<p class="form-hint">Unggah gambar ke folder <code>assets/media/</code> di GitHub terlebih dahulu. '+
-      'Isi path gambar saja, contoh: assets/media/banner-promo.webp. File tidak diunggah melalui formulir ini.</p>'+
+      '<p class="form-hint">Tempel URL gambar HTTPS, data URI, atau path <code>assets/...</code>. '+
+      'Contoh: https://cdn.example.com/banner.webp atau assets/media/banner-promo.webp.</p>'+
       '<form id="content-editor-form" data-content-id="'+h(selected?.content_id||'')+'" class="content-form">'+
       '<div class="grid-2"><div class="field"><label for="content-kind">Jenis visual</label>'+
       (selected?'<input class="input" value="'+h(names[draft.kind]||draft.kind)+'" disabled>'+
@@ -99,7 +102,7 @@
       '<datalist id="content-places">'+places.map(p=>'<option value="'+h(p[1])+'" label="'+h(p[2])+'"></option>').join('')+
       (Array.isArray(ctx.products)?ctx.products.map(p=>'<option value="'+h(p.product_id)+'" label="'+h(p.nama)+'"></option>').join(''):'')+
       '</datalist></div></div>'+
-      '<div class="field"><label for="content-image">Path gambar</label>'+
+      '<div class="field"><label for="content-image">URL gambar HTTPS atau path assets/</label>'+
       '<input class="input" id="content-image" name="image_path" required maxlength="180" placeholder="assets/media/promo-bisnis.webp" value="'+h(draft.image_path||'')+'">'+
       (mediaPath(draft.image_path)?'<img class="content-editor-preview" src="'+h(mediaPath(draft.image_path))+'" alt="Pratinjau file gambar" loading="lazy">':'')+
       '</div>'+
