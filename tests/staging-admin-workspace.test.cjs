@@ -100,8 +100,15 @@ test('workspace has no password or token storage and no finance write actions',(
   assert.match(source,/referrerPolicy:'no-referrer'/);
 });
 
-test('identity attestation rejects STAGING with any core safety flag enabled',async()=>{
-  for(const field of ['mutations_enabled','registration_enabled','otp_enabled','finance_enabled']){
+test('STAGING admin identity accepts the owner-enabled master mutation switch',async()=>{
+  const env=boot({...verified,mutations_enabled:true});
+  env.field('endpoint').value=url;
+  await env.submit('setup-form');
+  assert.equal(env.field('login-section').hidden,false);
+  assert.deepEqual(env.requests.map(x=>x.action),['getStagingWorkspaceInfo']);
+});
+test('identity attestation rejects STAGING when registration, OTP or finance is enabled',async()=>{
+  for(const field of ['registration_enabled','otp_enabled','finance_enabled']){
     const env=boot({...verified,[field]:true});
     env.field('endpoint').value=url;
     await env.submit('setup-form');
@@ -109,6 +116,7 @@ test('identity attestation rejects STAGING with any core safety flag enabled',as
     assert.deepEqual(env.requests.map(x=>x.action),['getStagingWorkspaceInfo'],field);
   }
 });
+
 test('an older deployed Web App reports a specific recovery path without sending a PIN',async()=>{
   const env=boot('MAINTENANCE');
   env.field('endpoint').value=url;
