@@ -98,13 +98,13 @@
     }finally{clearTimeout(timeout);}
   }
   function onlyStaging(result) {
-    return Boolean(result && typeof result==='object' &&
-      result.workspace==='NGD_STAGING' && result.environment==='STAGING' &&
-      result.admin_login_enabled===true &&
-      typeof result.mutations_enabled==='boolean' &&
-      result.registration_enabled===false &&
-      result.otp_enabled===false &&
-      result.finance_enabled===false);
+    // Feature activation must not invalidate a verified staging identity.
+    // Authentication of the ADMIN still happens independently on the backend.
+    return Boolean(result&&typeof result==='object'&&
+      result.workspace==='NGD_STAGING'&&result.environment==='STAGING'&&
+      result.admin_login_enabled===true&&
+      ['mutations_enabled','registration_enabled','otp_enabled','finance_enabled']
+        .every(key=>typeof result[key]==='boolean'));
   }
   function heading(title,description,place) {
     text('page-title',title);
