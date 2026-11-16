@@ -349,7 +349,7 @@ function viewHome(){
   }
   // Native-app style home: hero banner, search bar, feature grid, product rail. Labels only.
   const features=[
-    ['spark','Studio AI','ai'],['store','Aplikasi','aplikasi'],['book','Kelas Gratis','belajar'],
+    ['spark','Studio AI','ai'],['store','Aplikasi','aplikasi'],['book','Belajar','belajar'],
     ['clipboard','Jasa','jasa'],['grid','Katalog','katalog'],['link','Affiliate','affiliate'],
     ['shield','Bantuan','dukungan'],['user','Masuk','login']
   ];
@@ -382,7 +382,7 @@ function viewHome(){
     '<div class="public-hero-copy">'+
       '<p class="pf-hello"><span class="pf-hello-dot" aria-hidden="true"></span> Ngulik Digital <span aria-hidden="true">/</span> Alat & AI untuk UMKM</p>'+
       '<h1>Supermarket Tools AI. <em>Bengkel Kerja UMKM.</em></h1>'+
-      '<p class="public-hero-lead">Pilih alat bisnis, Studio AI, lisensi, dan paket token dalam satu tempat. Mulai Rp10.000, bayar sesuai kebutuhan.</p>'+
+      '<p class="public-hero-lead">Bengkel kerja digital untuk UMKM: pilih alat bisnis, Studio AI, lisensi, dan paket token dalam satu tempat. Mulai Rp10.000, bayar sesuai kebutuhan.</p>'+
       '<div class="public-hero-buttons">'+
         '<button type="button" class="btn btn-primary pf-button-dark" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
         '<button type="button" class="btn btn-secondary pf-button-light" data-route="daftar">Masuk / Daftar WhatsApp</button>'+
