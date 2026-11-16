@@ -4,7 +4,7 @@
   "purpose": "Source-to-runtime manifest; NOT an assertion that GAS source has been synchronized.",
   "repository": "cuan74468-ux/ngulik-digital-member",
   "source_snapshot_branch": "main",
-  "source_snapshot_commit": "37dbd924ad411cb40eca4e6513bbafb5d0acb66f",
+  "source_snapshot_commit": "a5ae1b0e2c382e1a69ae6e40abe0914007c082ad",
   "source_content_hash_kind": "Git blob SHA1; not an Apps Script editor fingerprint",
   "environment": "STAGING",
   "verified_editor_functions": [
@@ -61,9 +61,9 @@
     },
     {
       "file": "InfrastructurePreflight.gs",
-      "github_blob_sha": "984933a0d8f18c39acab5962d08acf7d1e9a37b8",
-      "bytes": 4333,
-      "runtime_evidence": "OPERATOR_EXECUTION_OBSERVED_2026_11_15"
+      "github_blob_sha": "707c3f19ee1265c50ab8c790debf4781ebfc3723",
+      "bytes": 5460,
+      "runtime_evidence": "SOURCE_UPDATED_RUNTIME_SYNC_NOT_VERIFIED"
     },
     {
       "file": "LMS.gs",
