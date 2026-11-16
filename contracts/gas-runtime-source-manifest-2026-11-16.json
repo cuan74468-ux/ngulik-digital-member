@@ -4,7 +4,7 @@
   "purpose": "Source-to-runtime manifest; NOT an assertion that GAS source has been synchronized.",
   "repository": "cuan74468-ux/ngulik-digital-member",
   "source_snapshot_branch": "main",
-  "source_snapshot_commit": "91bfd12d87e22ee8eb572dcc1827cde3750609f8",
+  "source_snapshot_commit": "c42ee1df5ac412b608e9bf22c9b1401be931f088",
   "source_content_hash_kind": "Git blob SHA1; not an Apps Script editor fingerprint",
   "environment": "STAGING",
   "verified_editor_functions": [
@@ -31,8 +31,8 @@
     },
     {
       "file": "Catalog.gs",
-      "github_blob_sha": "d1dcdb8dd7b092ff50b21e34f2aff46029e55730",
-      "bytes": 8695,
+      "github_blob_sha": "94e8bc5599f07d41d5f16cabc0d9c39bdc8cb13f",
+      "bytes": 8661,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
@@ -43,8 +43,8 @@
     },
     {
       "file": "Content.gs",
-      "github_blob_sha": "da043d1f9cbf63e677b50895ad44ba1b608413aa",
-      "bytes": 11425,
+      "github_blob_sha": "3c657714fbc2e22c1dfee2b82b2298336b66b81f",
+      "bytes": 11404,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
@@ -67,8 +67,8 @@
     },
     {
       "file": "LMS.gs",
-      "github_blob_sha": "a2cf5683f55b7ca4fdf413c01ea9520ae4a56532",
-      "bytes": 28692,
+      "github_blob_sha": "387fd84bd3bf4f4b6a8879bb89a57c042467c6e2",
+      "bytes": 28674,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
@@ -97,8 +97,8 @@
     },
     {
       "file": "Services.gs",
-      "github_blob_sha": "d077d83cd400dc4a3a9111759441ae480122a128",
-      "bytes": 7795,
+      "github_blob_sha": "9c8133b468c86aba5e98b239bdf6f0336c053316",
+      "bytes": 7766,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
