@@ -1602,12 +1602,12 @@ function adminRuntimeStatus_() {
       mutations:mutationsEnabled_(),
       registration:enabled('NGD_REGISTRATION_ENABLED'),
       finance:financeEnabled_(),
-      catalog:enabled('NGD_CATALOG_ENABLED'),
-      content:enabled('NGD_CONTENT_ENABLED'),
-      services:enabled('NGD_SERVICE_ENABLED'),
-      support:enabled('NGD_SUPPORT_ENABLED'),
-      lms:enabled('NGD_LMS_ENABLED'),
-      notifications:enabled('NGD_NOTIFICATIONS_ENABLED')
+      catalog:mutationsEnabled_(),
+      content:mutationsEnabled_(),
+      services:mutationsEnabled_(),
+      support:mutationsEnabled_(),
+      lms:mutationsEnabled_(),
+      notifications:mutationsEnabled_()
     },
     // This field deliberately does not say that payments, privacy or auth are GO.
     checks_read_only:true
@@ -1636,9 +1636,9 @@ function ngdStagingWorkspaceInfo_() {
     otp_enabled:props.getProperty('NGD_OTP_REGISTRATION_ENABLED')==='true',
     external_providers_enabled:props.getProperty('NGD_EXTERNAL_PROVIDERS_ENABLED')==='true',
     finance_enabled:financeEnabled_(),
-    catalog_enabled:props.getProperty('NGD_CATALOG_ENABLED')==='true',
-    content_enabled:props.getProperty('NGD_CONTENT_ENABLED')==='true',
-    lms_enabled:props.getProperty('NGD_LMS_ENABLED')==='true'
+    catalog_enabled:mutationsEnabled_(),
+    content_enabled:mutationsEnabled_(),
+    lms_enabled:mutationsEnabled_()
   };
 }
 
@@ -1849,42 +1849,19 @@ function requireFinanceEnabled_() {
     'Transaksi, kredit berbayar, dan pencairan belum diaktifkan.');
 }
 function requireActionFeatureEnabled_(action) {
-  var settings=PropertiesService.getScriptProperties();
-  if(action==='register')
-    require_(settings.getProperty('NGD_REGISTRATION_ENABLED')==='true',
-      'MAINTENANCE','Pendaftaran belum dibuka.');
-  if(['enrollLMSCourse','completeLMSLesson','adminCreateLMSCourse',
-      'adminUpdateLMSCourse','adminArchiveLMSCourse','adminRestoreLMSCourse',
-      'adminPublishLMSCourse',
-      'adminCreateLMSLesson','adminUpdateLMSLesson','adminArchiveLMSLesson',
-      'adminRestoreLMSLesson',
-      'adminPublishLMSLesson','adminPrepareLMSAIJob','adminImportLMSAIResult',
-      'adminReviewLMSAIJob'].indexOf(action)>=0)
-    require_(settings.getProperty('NGD_LMS_ENABLED')==='true',
-      'MAINTENANCE','Pengelolaan LMS masih dalam tahap pengujian.');
-  if(['adminCreateContent','adminUpdateContent','adminSetContentStatus'].indexOf(action)>=0)
-    require_(settings.getProperty('NGD_CONTENT_ENABLED')==='true',
-      'MAINTENANCE','Pengelolaan konten belum diaktifkan pada backend.');
-  if(['adminCreateCatalogItem','adminUpdateCatalogItem','adminSetCatalogActive'].indexOf(action)>=0)
-    require_(settings.getProperty('NGD_CATALOG_ENABLED')==='true',
-      'MAINTENANCE','Perubahan katalog masih dalam tahap staging.');
-  if(['submitServiceBrief','adminUpdateServiceQuote'].indexOf(action)>=0)
-    require_(settings.getProperty('NGD_SERVICE_ENABLED')==='true',
-      'MAINTENANCE','Pemesanan jasa belum diaktifkan pada backend ini.');
-  if(action==='markNotificationRead')
-    require_(settings.getProperty('NGD_NOTIFICATIONS_ENABLED')==='true',
-      'MAINTENANCE','Pusat notifikasi belum diaktifkan.');
-  if(['createTicket','replyTicket','adminChangeTicketStatus','adminSetTicketPriority','adminReplyTicket',
-      'adminCreateProductRelease','adminPublishProductRelease'].indexOf(action)>=0)
-    require_(settings.getProperty('NGD_SUPPORT_ENABLED')==='true',
-      'MAINTENANCE','Layanan tiket dan rilis masih dalam tahap pengujian.');
+  // A single master switch controls content, catalog, LMS, services,
+  // support and in-app notifications. Authentication and roles are enforced
+  // independently in apiRouter_ and each business function.
+  // Registration/finance keep their distinct integrity checks.
+  if(action==='register'){
+    // OTP verification is still mandatory in authRegister_.
+    return;
+  }
   if(['createOrder','confirmPayment','cancelOrder','adminVerifyOrder',
       'adminFulfillOrder','adminRefundOrder','adminAdjustCredit',
       'adminMarkCommissionPaid','requestPayout','generateAI'].indexOf(action)>=0)
     requireFinanceEnabled_();
 }
-// Public visitor click logging is independently disabled until abuse controls
-// and an explicit privacy/retention policy have been approved.
 function requirePublicTrackingEnabled_() {
   require_(PropertiesService.getScriptProperties().getProperty('NGD_CLICK_TRACKING_ENABLED')==='true',
     'MAINTENANCE','Pencatatan klik belum diaktifkan.');
