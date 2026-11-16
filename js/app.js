@@ -643,7 +643,7 @@ function viewAdminRuntime(){
         '. Header berbeda: '+esc((schema.mismatched||[]).join(', ')||'—')+'.</p>':'')+
       '<div class="admin-runtime-flags">'+names.map(([key,label])=>
         '<div class="admin-runtime-flag"><span>'+esc(label)+'</span>'+
-        '<strong>'+((flags||{})[key]===true?'Aktif':'Nonaktif')+'</strong></div>').join('')+'</div>':
+        '<strong>'+((flags||{})[key]===true?'Aktif':(flags||{})[key]===false?'Nonaktif':'Belum diketahui')+'</strong></div>').join('')+'</div>':
       '<div class="surface"><p class="card-desc">'+
       esc(state.adminRuntimeError||'Pemeriksaan backend belum dimuat. Data status belum dapat dinyatakan siap.')+
       '</p></div>')+'</section>';
@@ -651,7 +651,18 @@ function viewAdminRuntime(){
 function viewAdmin(){
   if(!isAdmin())return empty('Akses administrator','Gunakan akun administrator terdaftar untuk membuka pengelolaan Ngulik Digital.','admin-login','Masuk admin');
   const details=state.adminSummary?.ringkasan||[];
-  return '<section class="admin-operations-intro"><p class="eyebrow">PUSAT OPERASIONAL</p><h1>Kelola ekosistem dengan lebih terarah.</h1><p>Awasi keanggotaan, aktivitas belajar, katalog yang terverifikasi, serta layanan bantuan. Data finansial tetap memerlukan pembuktian transaksi nyata.</p><span class="chip">Data operasional terhubung</span></section>'+
+  return '<section class="admin-operations-intro"><p class="eyebrow">ADMIN STUDIO / NGULIK DIGITAL</p><h1>Siap mengelola bisnis Anda.</h1><p>Mulai isi konten, produk, kelas, dan layanan. Semua tombol penyimpanan tetap diperiksa oleh backend sesuai hak akses Admin.</p>'+
+    (config.brand?.includes('STAGING')?'<span class="chip">DATA STAGING — bukan website produksi</span>':'<span class="chip">Data sesuai layanan terhubung</span>')+'</section>'+
+    '<section class="admin-start-actions" aria-label="Mulai mengelola bisnis">'+
+    '<div><p class="eyebrow">MULAI DARI SINI</p><h2>Apa yang ingin Anda isi hari ini?</h2></div>'+
+    '<div class="admin-start-grid">'+[
+      ['konten','Pasang banner','Atur gambar, judul dan tombol promosi.'],
+      ['produk','Tambah produk','Masukkan nama, harga dan katalog.'],
+      ['lms','Buat kelas LMS','Susun kurikulum dan pelajaran.'],
+      ['layanan','Kelola jasa','Tinjau brief dan penawaran pelanggan.']
+    ].map(([route,heading,detail])=>'<button type="button" class="admin-start-item" data-route="'+route+'">'+
+      '<strong>'+heading+' '+icon('arrow')+'</strong><small>'+detail+'</small></button>').join('')+
+    '</div></section>'+
     '<div class="admin-module-grid">'+[
       ['grid','Konten visual','Atur banner otomatis, gambar produk, ikon dan jadwal terbit.','konten'],
       ['clipboard','Pesanan','Periksa pembayaran manual dan status fulfillment.','pesanan'],
@@ -664,7 +675,6 @@ function viewAdmin(){
       ['clipboard','Tiket support','Kelola bug, pertanyaan, dan permintaan fitur.','dukungan'],
       ['grid','Product releases','Catat versi, perbaikan, dan pembaruan produk.','rilis']
     ].map(x=>'<article class="surface admin-module-card"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" data-route="'+x[3]+'">Buka modul '+icon('arrow')+'</button></article>').join('')+'</div>'+
-    viewAdminRuntime()+
     '<section class="section-gap">'+title('Ringkasan data','METRIK SISTEM','Nilai berasal dari rumus Google Sheets.')+
     (details.length?'<div class="grid-3">'+details.slice(0,12).map(x=>'<div class="stat"><div class="stat-value">'+esc(x.nilai)+'</div><div class="stat-label">'+esc(x.metrik)+'</div></div>').join('')+'</div>':
     empty('Ringkasan belum dimuat','Periksa koneksi dan hak akses admin.'))+'</section>';
@@ -700,12 +710,10 @@ function viewAdminSettings(){
       '<div class="grid-3">'+fields.map(([key,label])=>cell(key,label)).join('')+'</div></section>').join(''):
     empty('Pengaturan belum terbaca',state.adminSettingsError||
       'Sesi atau koneksi ke backend belum selesai dimuat.');
-  const status=isWriteEnabled()?
-    'Gerbang perubahan data umum aktif. Perubahan pengaturan tetap memerlukan validasi backend dan pemeriksaan operasional.':
-    'Mode baca-saja: penyimpanan pengaturan belum dibuka untuk database produksi. Jangan aktifkan seluruh mutasi hanya untuk membuka formulir.';
+  const status='Pengaturan global ditampilkan untuk referensi. Untuk input banner, katalog, dan kelas, gunakan modul Admin terkait. Status izin backend ditampilkan terpisah di bawah.';
   return '<section class="section-head"><div><p class="eyebrow">ADMIN / PENGATURAN SISTEM</p>'+
     '<h2>Konfigurasi Ngulik Digital</h2><p>Periksa nilai resmi, bukan contoh. Hanya data konfigurasi nonrahasia yang ditampilkan.</p></div></section>'+
-    '<div class="banner warning"><div><h3>Kontrol perubahan</h3><p>'+esc(status)+'</p></div></div>'+
+    '<div class="banner"><div><h3>Pengaturan dan data operasional</h3><p>'+esc(status)+'</p></div></div>'+
     body+viewAdminRuntime();
 }
 
@@ -1233,24 +1241,22 @@ async function loadRoute(route){
         state.adminRuntime=null;
         state.adminRuntimeError='Status backend tidak tersedia pada deployment Apps Script yang sedang terhubung.';
       }
+      // Failed summary widgets must not prevent Admin from entering CMS,
+      // catalog, LMS and service modules. Individual API write errors remain visible.
       if(dashboard.status==='rejected'&&overview.status==='rejected')
-        throw dashboard.reason;
+        state.adminSummary=null;
     }
     if(route==='pengaturan'&&isAdmin()){
-      // API production v1.0.2 supports adminGetSettings as an authenticated
-      // READ, but does not implement adminGetRuntimeStatus. Do not call the
-      // unknown action: the fail-closed router would (correctly) deny it as
-      // an attempted mutation while NGD_MUTATIONS_ENABLED=false.
-      state.adminRuntime=null;
-      state.adminRuntimeError='Indikator kesiapan teknis memerlukan rilis backend berikutnya. Pengaturan yang tampil tetap dibaca langsung dari database.';
-      try{
-        const settings=await api('adminGetSettings',{},token);
-        state.adminSettings=settings;
-        state.adminSettingsError='';
-      }catch(error){
-        state.adminSettings=null;
-        state.adminSettingsError=error?.message||'Pengaturan belum bisa dibaca.';
-      }
+      const [settings,runtime]=await Promise.allSettled([
+        api('adminGetSettings',{},token),
+        api('adminGetRuntimeStatus',{},token)
+      ]);
+      state.adminSettings=settings.status==='fulfilled'?settings.value:null;
+      state.adminSettingsError=settings.status==='rejected'?
+        (settings.reason?.message||'Pengaturan belum bisa dibaca.'):'';
+      state.adminRuntime=runtime.status==='fulfilled'?runtime.value:null;
+      state.adminRuntimeError=runtime.status==='rejected'?
+        'Status teknis belum dapat dimuat dari deployment yang terhubung. Cek versi deployment Apps Script.':'';
     }
     if(route==='member'&&isAdmin())state.members=await api('adminListMembers',{},token);
     if(route==='antrean'&&isAdmin())state.waitlist=await api('adminListWaitingList',{},token);
