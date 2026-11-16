@@ -774,7 +774,7 @@ function viewCheckout(){
   const readyQr=fallbackQr?qrSource:'';
   // The bundled qris.png is explicitly NOT a payable code. Owner approval
   // only applies after the asset has been replaced with their real QRIS.
-  const bundledPlaceholder=/(?:^|\\/)assets\\/qris\\.png(?:$|[?#])/i.test(qrRaw)&&
+  const bundledPlaceholder=/(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrRaw)&&
     config.qrisOwnerImageApproved!==true;
   const manual=String(o.metode||'').includes('STATIS');
   const pending=['PENDING','MENUNGGU_VERIFIKASI'].includes(String(o.status||''));
@@ -1626,7 +1626,7 @@ async function buy(productId){
 async function confirmPayment(){
   if(!state.lastOrder||!paymentEnabled()||!state.lastOrder.qris_gambar_path||!state.lastOrder.qris_atas_nama)
     return toast('QRIS untuk konfirmasi manual belum tersedia.',true);
-  if(/(?:^|\\/)assets\\/qris\\.png(?:$|[?#])/i.test(String(state.lastOrder.qris_gambar_path))&&
+  if(/(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(String(state.lastOrder.qris_gambar_path))&&
     config.qrisOwnerImageApproved!==true)
     return toast('QRIS masih placeholder. Minta QRIS resmi via WhatsApp Admin.',true);
   if(!confirm('Anda yakin pembayaran telah dikirim ke QRIS resmi? Konfirmasi ini bukan bukti pembayaran berhasil.'))return;
