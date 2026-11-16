@@ -48,7 +48,7 @@ test('full commercial routes and API modules are preserved',()=>{
   for(const action of ['getKatalog','generateAI','createOrder','confirmPayment',
     'adminCreateContent','adminUpdateContent','adminListCatalog'])
     assert.ok(app.includes(action),action);
-  assert.match(code,/headers:\{'Content-Type':'text\/plain;charset=utf-8'\}/);
+  assert.match(code,/headers:\s*\{'Content-Type':'text\/plain;charset=utf-8'\}/);
 });
 test('financial interfaces are static and reduced motion is honored',()=>{
   assert.match(css,/\.checkout-dialog :is\(\.btn,button\)/);
