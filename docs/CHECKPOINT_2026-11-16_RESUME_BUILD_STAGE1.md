@@ -40,3 +40,9 @@
 - [AGENTS.md](../AGENTS.md)
 
 **Semua perubahan produksi, mutation flag, registration, OTP send, finance/refund/settlement, dan provider activation memerlukan persetujuan spesifik owner serta bukti QA.**
+
+## P0 lanjutan — operasi sesi dan penggantian PIN (source only)
+
+Audit `authLogout_` menemukan pembacaan dan `deleteRow` terhadap tab sesi berjalan tanpa `LockService`, sedangkan login dan penggantian PIN sudah memakai lock bersama. Karena `deleteRow` mengubah nomor baris fisik, logout bersamaan dengan pembuatan/pencabutan sesi lain memiliki risiko race dan target baris keliru. Source `Code.gs` dibenahi untuk membaca dan menghapus sesi **di dalam** `withLock_`, mengurutkan nomor baris fisik menurun sebelum penghapusan. Tes sintetis `tests/backend-session-lifecycle.test.cjs` memeriksa logout, retry idempoten, sesi kedaluwarsa, PIN rotation yang mencabut semua sesi anggota tanpa menyentuh sesi admin lain, serta PIN salah tanpa mutasi.
+
+Perubahan ini hanya source di GitHub, bukan penghapusan sesi nyata. Belum ada tes pada browser autentikasi riil, belum ada deploy Apps Script, dan tidak ada perubahan fitur finansial. Operator harus membandingkan source STAGING yang aktif sebelum menjalankan patch backend yang lebih luas.

@@ -828,9 +828,18 @@ function authLogin_(p,adminOnly,expectedAdminId) {
   });
 }
 function authLogout_(token) {
-  var hash=sha256_(token),rows=findRows_('sessions',function(r){return r.token_hash===hash;});
-  rows.reverse().forEach(function(r){tbl_('sessions').sheet.deleteRow(r._row);});
-  return {success:true};
+  // Session rows are physically deleted in Sheets. Serialize this with login,
+  // PIN rotation and other session writes: otherwise concurrent row shifts
+  // can cause deletion of a different member's session.
+  return withLock_(function(){
+    var hash=sha256_(token),rows=findRows_('sessions',function(r){
+      return r.token_hash===hash;
+    });
+    rows.sort(function(a,b){return b._row-a._row;}).forEach(function(r){
+      tbl_('sessions').sheet.deleteRow(r._row);
+    });
+    return {success:true};
+  });
 }
 function authChangePin_(m,p) {
   checkPin_(p.pin_lama);checkNewPin_(p.pin_baru,m.wa);
