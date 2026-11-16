@@ -4,7 +4,7 @@
   "purpose": "Source-to-runtime manifest; NOT an assertion that GAS source has been synchronized.",
   "repository": "cuan74468-ux/ngulik-digital-member",
   "source_snapshot_branch": "main",
-  "source_snapshot_commit": "c42ee1df5ac412b608e9bf22c9b1401be931f088",
+  "source_snapshot_commit": "c52b61d1bc2a716ee162b0141a3c36e3e28a8b2a",
   "source_content_hash_kind": "Git blob SHA1; not an Apps Script editor fingerprint",
   "environment": "STAGING",
   "verified_editor_functions": [
@@ -31,14 +31,14 @@
     },
     {
       "file": "Catalog.gs",
-      "github_blob_sha": "94e8bc5599f07d41d5f16cabc0d9c39bdc8cb13f",
-      "bytes": 8661,
+      "github_blob_sha": "dd8f054c64e93cd31c7b897d9d546ade3d3854b4",
+      "bytes": 9876,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
       "file": "Code.gs",
-      "github_blob_sha": "f20443832fac2df08c2575541d27a6568ed09ebd",
-      "bytes": 114272,
+      "github_blob_sha": "9fd7cc80172c8436696cfa1b5870b7e447226299",
+      "bytes": 123201,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
