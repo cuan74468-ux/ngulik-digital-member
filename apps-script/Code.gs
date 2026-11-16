@@ -1108,7 +1108,10 @@ function onPaid_(o,actor) {
     // Bonus kredit (mis. P-EBOOK 10 kredit) diterbitkan otomatis dan idempoten per order.
     grantCredits_(member.member_id,Number(product.kredit_diberikan),o.order_id,'TOPUP');fulfilled=true;
   }else if(product.tipe==='JASA_SEKALI'){
-    // Dana sudah diverifikasi: order tetap PAID dan masuk antrean admin untuk dikerjakan.
+    // PAID stays authoritative, with an explicit queue marker for admin.
+    if(String(o.catatan_admin||'').indexOf('[JASA_SIAP_DIPROSES_ADMIN]')<0)
+      updateRow_('orders',o._row,{catatan_admin:
+        '[JASA_SIAP_DIPROSES_ADMIN] | '+String(o.catatan_admin||'').slice(0,270)});
     logAudit_(actor.member_id,actor.role,'ORDER_READY_FOR_ADMIN','orders',o.order_id,'PAID','PAID',{product_id:product.product_id});
   }else if(product.tipe==='LISENSI_SEKALI')updateRow_('members',member._row,{status_pos:'DIAJUKAN'});
   else if(product.tipe==='SEAT_30H'){
@@ -1136,41 +1139,74 @@ function aiTodayKey_(d) {return Utilities.formatDate(new Date(d),NGD.TZ,'yyyy-MM
 // Prasyarat + potong kredit dalam satu lock. Panggilan HTTP dilakukan di luar lock.
 function aiReserve_(m,p,requestId) {
   return withLock_(function(){
-    require_(m&&m.role==='MEMBER','FORBIDDEN','Hanya member dapat memakai alat AI.');
+    require_(m&&m.role==='MEMBER'&&m.status==='AKTIF',
+      'FORBIDDEN','Hanya member aktif dapat memakai alat AI.');
     var rid=String(requestId||'');
     require_(/^[A-Za-z0-9_-]{16,80}$/.test(rid),'VALIDATION','ID permintaan tidak valid.');
+    require_(p&&typeof p==='object'&&!Array.isArray(p),
+      'VALIDATION','Input AI tidak valid.');
     var tool=byId_('ai_tools','tool_id',String(p.tool_id||''));
     require_(tool&&tool.aktif===true,'NOT_FOUND','Alat AI tidak tersedia.');
-    var s=settings_(),maxChar=Number(s.ai_max_input_char||1500);
+    var props=PropertiesService.getScriptProperties(),s=settings_();
+    var maxChar=Number(props.getProperty('AI_MAX_INPUT_CHAR')||s.ai_max_input_char||1500);
+    var daily=Number(props.getProperty('AI_DAILY_LIMIT_PER_MEMBER')||
+      s.ai_daily_limit_per_member||20);
+    var perMin=Number(s.ai_rate_limit_per_menit||5);
+    require_(Number.isInteger(maxChar)&&maxChar>0&&maxChar<=5000&&
+      Number.isInteger(daily)&&daily>0&&daily<=100&&
+      Number.isInteger(perMin)&&perMin>0&&perMin<=30,
+      'MAINTENANCE','Batas alat AI belum valid.');
     var input=String(p.input==null?'':p.input).trim();
-    require_(input.length>0,'VALIDATION','Isi input terlebih dahulu.');
-    require_(input.length<=maxChar,'VALIDATION','Input maksimal '+maxChar+' karakter.');
+    require_(input.length>=3&&input.length<=maxChar,'VALIDATION',
+      'Input harus 3 sampai '+maxChar+' karakter.');
     var cost=Number(tool.kredit_biaya);
-    require_(Number.isInteger(cost)&&cost>0,'CONFLICT','Biaya alat AI belum valid.');
-    var ledger=readAll_('credits_ledger').filter(function(r){return r.member_id===m.member_id;});
-    require_(!ledger.some(function(r){return r.tipe==='USAGE'&&r.ref_id===rid;}),
-      'CONFLICT','Permintaan ini sudah diproses. Buat permintaan baru.');
-    var today=aiTodayKey_(now_()),minuteAgo=Date.now()-60000,used=0,recent=0;
-    ledger.forEach(function(r){
-      var t=new Date(r.created_at).getTime();
-      if(r.tipe==='USAGE'){if(aiTodayKey_(t)===today)used++;if(t>=minuteAgo)recent++;}
-      if(r.tipe==='REFUND_ERROR'){if(aiTodayKey_(t)===today)used--;}
-    });
-    var daily=Number(s.ai_daily_limit_per_member||20),perMin=Number(s.ai_rate_limit_per_menit||5);
-    require_(used<daily,'RATE_LIMIT','Batas pemakaian AI harian tercapai. Coba lagi besok.');
-    require_(recent<perMin,'RATE_LIMIT','Terlalu cepat. Tunggu sebentar lalu coba lagi.');
-    var balance=creditBalance_(m.member_id);
-    require_(balance>=cost,'INSUFFICIENT_CREDIT','Kredit tidak cukup. Silakan top-up kredit.');
-    var entryId=recordId_('L');
-    appendRow_('credits_ledger',{entry_id:entryId,member_id:m.member_id,created_at:now_(),tipe:'USAGE',
-      jumlah:-cost,status:'POSTED',ref_id:rid,tool_id:tool.tool_id,
-      keterangan:'Pemakaian alat AI '+tool.tool_id,saldo_setelah:balance-cost});
+    require_(Number.isInteger(cost)&&cost>0&&cost<=1000,
+      'CONFLICT','Biaya alat AI belum valid.');
+    // Allow explicit operator Script Properties without changing Sheet schema.
+    var base=String(props.getProperty('AI_BASE_URL')||s.ai_base_url||'').trim();
+    var route=String(props.getProperty('AI_ENDPOINT_PATH')||s.ai_endpoint_path||'').trim();
+    var model=String(props.getProperty('AI_MODEL')||s.ai_model||'').trim();
+    require_(base&&route&&model,'MAINTENANCE',
+      'Endpoint dan model provider AI harus dikonfigurasi.');
+    require_(/^https:\/\/[a-zA-Z0-9.-]+(?::[0-9]{2,5})?(?:\/[a-zA-Z0-9/_-]*)?$/.test(base)
+      &&/^\/?[a-zA-Z0-9/_-]+$/.test(route)
+      &&!/\.{2}/.test(route)
+      &&/^[a-zA-Z0-9._:/-]{2,120}$/.test(model),
+      'MAINTENANCE','URL HTTPS, jalur, atau model provider AI tidak valid.');
+    var url=base.replace(/\/+$/,'')+'/'+route.replace(/^\/+/,'');
     var prompt=String(tool.prompt_template||'')
       .split('{{nama_usaha}}').join(String(m.nama_usaha||m.nama||'usaha saya'))
       .split('{{input}}').join(input);
-    return {entry_id:entryId,tool:tool,cost:cost,prompt:prompt,model:String(s.ai_model||''),
-      url:String(s.ai_base_url||'').replace(/\/+$/,'')+(s.ai_endpoint_path?'/'+String(s.ai_endpoint_path).replace(/^\/+/,''):''),
-      balance:balance-cost};
+    require_(prompt.length>0&&prompt.length<=12000,
+      'CONFLICT','Template prompt alat AI tidak valid.');
+    var ledger=readAll_('credits_ledger').filter(function(x){return x.member_id===m.member_id;});
+    require_(!ledger.some(function(x){return x.tipe==='USAGE'&&x.ref_id===rid;}),
+      'CONFLICT','Permintaan ini sudah diproses. Gunakan permintaan baru bila perlu.');
+    var today=aiTodayKey_(now_()),minuteAgo=Date.now()-60000,used=0,recent=0;
+    ledger.forEach(function(x){
+      if(['USAGE','REFUND_ERROR'].indexOf(x.tipe)<0)return;
+      var timestamp=new Date(x.created_at).getTime();
+      require_(Number.isFinite(timestamp),'RECONCILIATION_REQUIRED',
+        'Tanggal ledger AI tidak valid.');
+      if(aiTodayKey_(timestamp)===today)
+        used+=x.tipe==='USAGE'?1:-1;
+      if(x.tipe==='USAGE'&&timestamp>=minuteAgo)recent++;
+    });
+    require_(used<daily,'RATE_LIMIT','Batas pemakaian AI harian tercapai.');
+    require_(recent<perMin,'RATE_LIMIT','Terlalu cepat. Tunggu sebentar.');
+    var balance=creditBalance_(m.member_id);
+    require_(balance>=cost,'INSUFFICIENT_CREDIT',
+      'Kredit tidak cukup. Silakan top-up kredit.');
+    var entryId=recordId_('L');
+    // All configuration and limits are checked before the first debit.
+    appendRow_('credits_ledger',{
+      entry_id:entryId,member_id:m.member_id,created_at:now_(),
+      tipe:'USAGE',jumlah:-cost,status:'POSTED',ref_id:rid,
+      tool_id:tool.tool_id,keterangan:'Pemakaian alat AI '+tool.tool_id,
+      saldo_setelah:balance-cost
+    });
+    return {entry_id:entryId,tool:tool,cost:cost,prompt:prompt,
+      model:model,url:url,balance:balance-cost};
   });
 }
 function aiRefund_(m,r,rid,reason) {
@@ -1187,6 +1223,7 @@ function aiRefund_(m,r,rid,reason) {
 }
 function aiExtractText_(body) {
   var j;try{j=JSON.parse(body);}catch(e){return String(body||'').trim();}
+  if(j&&j.error)return '';
   if(j&&j.choices&&j.choices[0]){
     var c=j.choices[0];
     if(c.message&&typeof c.message.content==='string')return c.message.content.trim();
@@ -1201,7 +1238,7 @@ function aiCall_(url,key,model,prompt) {
   var payload={messages:[{role:'user',content:prompt}]};
   if(model)payload.model=model;
   var res=UrlFetchApp.fetch(url,{method:'post',contentType:'application/json',muteHttpExceptions:true,
-    headers:{Authorization:'Bearer '+key},payload:JSON.stringify(payload)});
+    headers:{Authorization:'Bearer '+key},followRedirects:false,payload:JSON.stringify(payload)});
   var code=res.getResponseCode();
   if(code<200||code>=300)throw new Error('HTTP '+code);
   var text=aiExtractText_(res.getContentText());
@@ -1209,11 +1246,12 @@ function aiCall_(url,key,model,prompt) {
   return text;
 }
 function runAiTool_(m,p,requestId) {
-  var r=aiReserve_(m,p,requestId),rid=String(requestId);
   var props=PropertiesService.getScriptProperties();
   var keys=[props.getProperty('SOBATAGENT_API_KEY'),props.getProperty('FALLBACK_AI_API_KEY')]
     .map(function(k){return String(k||'').trim();}).filter(function(k){return k;});
-  var text='',lastError='API key AI belum diisi';
+  require_(keys.length>0,'MAINTENANCE','API key AI belum diisi.');
+  var r=aiReserve_(m,p,requestId),rid=String(requestId);
+  var text='',lastError='Permintaan provider gagal';
   for(var i=0;i<keys.length&&!text;i++){
     try{text=aiCall_(r.url,keys[i],r.model,r.prompt);}
     catch(err){lastError=String(err&&err.message||'gagal');console.error('AI_CALL_FAILED key#'+(i+1)+' '+lastError);}
@@ -1502,7 +1540,7 @@ function financeFindings_(orders,ledger,commissions,products,policy) {
     if(orderCommissions.length>1)reasons.push('COMMISSION_DUPLICATE');
     // Only the admin's configured audit checks commission expectations.
     // Previous commissions (including reversed) consume the once-only grant.
-    if(policy&&policy.komisi_persen>0&&['PAID','FULFILLED'].indexOf(o.status)>=0
+    if(policy&&commissionRate_(policy,catalog[String(o.product_id)])>0&&['PAID','FULFILLED'].indexOf(o.status)>=0
         &&String(o.ref_member_id||'')!==''
         &&catalog[String(o.product_id)]&&catalog[String(o.product_id)].bisa_komisi===true
         &&orderCommissions.length===0){
