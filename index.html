@@ -2,64 +2,69 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <!-- Static CSP: no remote scripts or unapproved API destinations. -->
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
-  <meta name="theme-color" content="#f2f4f8">
-  <meta name="description" content="Ngulik Digital — pusat belajar dan solusi usaha: aplikasi UMKM, Studio AI, produk digital, dan jasa kreatif.">
+  <meta name="theme-color" content="#FAFAFC">
+  <meta name="description" content="Ngulik Digital — bengkel kerja digital, aplikasi bisnis, token AI, dan layanan kreatif praktis untuk UMKM.">
   <meta name="robots" content="noindex,nofollow">
-  <title>Ngulik Digital — Belajar & Solusi Digital untuk UMKM</title>
+  <title>Ngulik Digital — Alat & AI untuk UMKM</title>
   <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/app.css">
   <link rel="stylesheet" href="./assets/member-mobile.css?v=20261114-slate2">
-  <!-- Global design layer: identical visual language for public, members and admin -->
   <link rel="stylesheet" href="./assets/unified-theme.css?v=20261116-readable-mobile">
-  <!-- Same mobile-first visual contract as the operations workspace. -->
   <link rel="stylesheet" href="./assets/experience.css?v=20261116-v4">
-  <!-- Premium light learning system shared by every application surface -->
   <link rel="stylesheet" href="./assets/learning-studio.css?v=20261116-ls3">
+  <link rel="stylesheet" href="./assets/styles.css?v=20261116-ldsv12-1">
   <script src="./config.js?v=20261116-owner-input-live" defer></script>
   <script src="./js/lms-ui.js?v=20261116-ls1" defer></script>
   <script src="./js/services-ui.js?v=20261114-native2" defer></script>
   <script src="./js/content-ui.js?v=20261116-https-banner" defer></script>
-  <script type="module" src="./js/app.js?v=20261116-admin-start"></script>
+  <script type="module" src="./js/app.js?v=20261116-ldsv12-1"></script>
 </head>
-<body class="ngd-public-app">
-  <a class="skip-link" href="#main">Langsung ke konten</a>
+<body class="ngd-public-app" data-app-role="guest">
+  <a class="skip-link" href="#main">Langsung ke konten utama</a>
   <div id="app" class="app-shell">
-    <aside class="sidebar" aria-label="Navigasi utama">
-      <a class="brand" href="#beranda" aria-label="Ngulik Digital beranda">
+    <aside class="sidebar" aria-label="Navigasi workspace">
+      <a class="brand" href="#beranda" aria-label="Ngulik Digital, Meja Kerja">
         <span id="brand-mark" class="brand-mark" aria-hidden="true">n<span>.</span></span>
-        <span class="brand-copy"><strong>Ngulik Digital</strong><small>Solusi digital UMKM</small></span>
+        <span class="brand-copy"><strong>Ngulik Digital</strong><small>Alat & AI UMKM</small></span>
       </a>
       <div class="sidebar-middle">
-        <p id="sidebar-caption" class="sidebar-caption">Ruang belajar</p>
-        <nav id="desktop-nav" class="desktop-nav" aria-label="Menu desktop"></nav>
+        <p id="sidebar-caption" class="sidebar-caption">Menu workspace</p>
+        <nav id="desktop-nav" class="desktop-nav" aria-label="Menu workspace desktop"></nav>
       </div>
       <div class="sidebar-footer">
-        <div class="sidebar-quote">Bertumbuh dimulai dari satu langkah kecil yang konsisten.</div>
-        <span class="sidebar-version">NGULIK / 2026</span>
+        <button type="button" class="sidebar-support" data-route="dukungan">Bantuan & dukungan <span aria-hidden="true">↗</span></button>
+        <small class="sidebar-version">NGULIK DIGITAL © 2026</small>
       </div>
     </aside>
     <div class="workarea">
       <header class="topbar">
+        <a href="#beranda" class="guest-brand" data-route="beranda" aria-label="Ngulik Digital, Beranda"><span class="guest-brand-icon" aria-hidden="true">n.</span><span><strong>Ngulik Digital</strong><small>Alat & AI UMKM</small></span></a>
+        <nav id="guest-nav" class="guest-nav" aria-label="Navigasi publik">
+          <button type="button" data-route="katalog">Katalog Alat</button>
+          <button type="button" data-route="ai">Studio AI</button>
+          <button type="button" data-route="affiliate">Affiliate</button>
+        </nav>
         <button type="button" id="mobile-back" class="mobile-back" aria-label="Kembali ke halaman sebelumnya"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
         <div class="breadcrumb"><span class="breadcrumb-dot"></span><span id="page-label">Beranda</span></div>
         <div class="top-actions">
           <span id="mode-indicator" class="mode-indicator">NGULIK DIGITAL</span>
+          <button type="button" class="guest-login" data-route="login">Masuk / Daftar WA <span aria-hidden="true">↗</span></button>
+          <button type="button" class="workspace-menu" data-route="menu">Menu lainnya</button>
           <button id="account-button" class="account-chip" type="button" aria-label="Buka akun"><span id="account-avatar">ND</span></button>
         </div>
       </header>
-      <main id="main" tabindex="-1" class="main-content">
+      <main id="main" class="main-content" tabindex="-1">
         <div id="notice-slot" aria-live="polite"></div>
         <section id="screen" aria-live="polite"></section>
       </main>
-      <footer class="footer"><span>© 2026 Ngulik Digital</span><span>Belajar • Berkarya • Bertumbuh</span></footer>
+      <footer class="footer"><span>© 2026 Ngulik Digital</span><span>Alat & AI praktis untuk UMKM</span></footer>
     </div>
-    <nav id="mobile-nav" class="mobile-nav" aria-label="Navigasi utama seluler"></nav>
+    <nav id="mobile-nav" class="mobile-nav" aria-label="Menu aplikasi mobile"></nav>
   </div>
   <div id="modal-root"></div>
   <div id="toast-root" role="status" aria-live="polite"></div>
