@@ -736,3 +736,10 @@ body.ngd-public-app:not(#ngd) .admin-start-item small{
     min-height:0;padding:17px 18px;gap:5px;border-radius:15px;
   }
 }
+
+/* Distinguish public deployment from the owner-activated STAGING editor. */
+body.ngd-public-app:not(#ngd) .admin-env-notice{display:grid;gap:13px;padding:22px;margin-top:20px;background:#edf5ed;border:1px solid #d9e8dd;border-radius:18px;max-width:570px}
+body.ngd-public-app:not(#ngd) .admin-env-notice strong{color:var(--studio-forest-dark);font-weight:800}
+body.ngd-public-app:not(#ngd) .admin-env-notice p{font-size:.86rem;line-height:1.65;color:#536c5b;margin:0}
+body.ngd-public-app:not(#ngd) .admin-env-notice a{justify-self:start}
+@media(max-width:600px){body.ngd-public-app:not(#ngd) .admin-env-notice a{width:100%;justify-content:center}}
