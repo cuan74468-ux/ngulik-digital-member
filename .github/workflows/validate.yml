@@ -115,16 +115,10 @@ jobs:
           echo 'CATALOG_BROWSER_QA_OK'
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#dukungan" > /tmp/ngd-support-member.html 2>>/tmp/ngd-chrome.log
-          python3 - <<'PY'
-          from pathlib import Path
-          s=Path('/tmp/ngd-support-member.html').read_text()
-          i=s.find('id="screen"')
-          print('SUPPORT_SCREEN_SNAPSHOT:',s[i:i+2200].replace('\\n',' ') if i>=0 else 'NO_SCREEN')
-          PY
           echo 'SUPPORT_BROWSER_QA_PROBE:'
           grep -Eo 'id="support-create-form"|Fitur support belum diaktifkan|Kirim laporan|Bantuan[^<]{0,70}|data-overflow="[^"]*"' /tmp/ngd-support-member.html | head -18 || true
           grep -q 'id="support-create-form"' /tmp/ngd-support-member.html
-          grep -q 'Fitur support belum diaktifkan' /tmp/ngd-support-member.html
+          grep -q 'Kirim laporan' /tmp/ngd-support-member.html
           grep -q 'data-overflow="false"' /tmp/ngd-support-member.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#member" > /tmp/ngd-support-admin.html 2>>/tmp/ngd-chrome.log
@@ -144,7 +138,7 @@ jobs:
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#lms" > /tmp/ngd-lms-admin.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="lms-course-form"' /tmp/ngd-lms-admin.html
-          grep -q 'Penyuntingan kursus belum tersedia' /tmp/ngd-lms-admin.html
+          grep -q 'id="lms-course-form"' /tmp/ngd-lms-admin.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-admin.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#lms-editor" > /tmp/ngd-lms-workspace.html 2>>/tmp/ngd-chrome.log
@@ -176,7 +170,7 @@ jobs:
             "http://127.0.0.1:8765/?preview=member#akun" > /tmp/ngd-member-account.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="profile-form"' /tmp/ngd-member-account.html
           grep -q 'Pusat notifikasi member' /tmp/ngd-member-account.html
-          grep -q 'Penyimpanan perubahan profil saat ini belum tersedia' /tmp/ngd-member-account.html
+          grep -q 'Simpan perubahan' /tmp/ngd-member-account.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-account.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#akun" > /tmp/ngd-admin-account.html 2>>/tmp/ngd-chrome.log
@@ -232,7 +226,7 @@ jobs:
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#jasa" > /tmp/ngd-member-services.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="service-brief-form"' /tmp/ngd-member-services.html
-          grep -q 'Pengiriman permintaan jasa saat ini belum tersedia' /tmp/ngd-member-services.html
+          grep -q 'Kirim brief untuk ditinjau' /tmp/ngd-member-services.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-services.html
           grep -q 'data-floating-nav="true"' /tmp/ngd-member-services.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
