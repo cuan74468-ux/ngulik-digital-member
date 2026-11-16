@@ -2122,6 +2122,8 @@ function apiReadActions_() {
  * This handler never trusts webhook-supplied amounts or account IDs.
  */
 function mayarWebhook_(e) {
+  require_(String(settings_().payment_gateway_mode||'QRIS_STATIS')!=='QRIS_STATIS',
+    'NOT_AVAILABLE','Webhook Mayar tidak aktif untuk QRIS statis.');
   var params=e&&e.parameter||{},multi=e&&e.parameters||{};
   var supplied=String(params.webhook_token||'');
   var stored=String(PropertiesService.getScriptProperties().getProperty('MAYAR_WEBHOOK_SECRET')||'');
