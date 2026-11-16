@@ -8,6 +8,8 @@
 - Kandidat keamanan Tahap 1 terbaru di `Code.gs`/`OtpAuth.gs`: verifikasi OTP sebelum insert, konsumsi setelah insert, dan logout menggunakan lock agar baris `sessions` tidak terhapus keliru. Perubahan ini **hanya source GitHub**, belum disinkronkan/dideploy ke editor Apps Script STAGING.
 - [GitHub Actions 16 November](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43783011719) **SUCCESS: 381/381 tes**, Chrome lintas tampilan dan API readonly PASS; GitHub Pages [SUCCESS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43783011286). Commit source terakhir `bdacfa37cfd3432559831008eedb74ad9b4dfd2b`.
 - Tahap 1 tetap **PROSES/NO-GO**; semua provider/kredit/pendaftaran/pembayaran tetap OFF. Tidak boleh menganggap tes offline sudah membuktikan runtime GAS setara.
+- Audit rekonsiliasi registrasi hanya-baca tersedia pada `apps-script/RegistrationRecoveryPreflight.gs` dan [runbook-nya](docs/REGISTRATION_RECOVERY_PREFLIGHT_2026-11-16.md), **source-only**: belum terpasang di Apps Script STAGING. Bergantung pada dua preflight yang sudah terverifikasi. Kode audit tidak memperbaiki data atau menerbitkan kredit.
+
 
 
 ## Wajib dibaca sebelum coding atau otomasi

@@ -50,3 +50,18 @@ Perubahan ini hanya source di GitHub, bukan penghapusan sesi nyata. Belum ada te
 ## Konfirmasi lintas-stack 16 November 2026
 
 Commit source `bdacfa37cfd3432559831008eedb74ad9b4dfd2b` lulus [CI regression 381/381](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43783011719). Chrome guest/member/admin/LMS/operations dan POST baca-saja lolos; [GitHub Pages deployment](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43783011286) SUCCESS. Pengaman registrasi OTP dan logout masih **SOURCE-ONLY** pada GitHub. Pemilik belum diminta mengganti `Code.gs` pada editor; lakukan manifest/diff dan backup runtime terlebih dahulu sebelum mengubah Apps Script. Belum ada OTP send atau transaksi, dan belum ada izin membuka pendaftaran.
+
+## 16 November — audit rekonsiliasi source-only dan fault injection (lanjutan)
+
+Source baru `apps-script/RegistrationRecoveryPreflight.gs` dan tes `tests/backend-registration-recovery.test.cjs` ditambahkan untuk **audit baca-saja** pada `members`, `otp_verifications`, `credits_ledger`, dan `pengaturan_sistem`; hasil hanya menghitung kategori masalah, tidak mencantumkan nomor WhatsApp, member_id, PIN/OTP, atau data transaksi. Semua flag STAGING tetap OFF. Fungsi ini **belum terpasang di editor GAS** dan belum dijalankan pada spreadsheet asli.
+
+Kasus yang ditangani: OTP USED tanpa member; akun sudah ada sementara OTP masih VERIFIED; akun MEMBER aktif terverifikasi kehilangan GRANT POSTED ketika `kredit_awal` benar-benar dikonfigurasi lebih dari nol; grant diberikan saat WAITING_LIST; akun verified tanpa bukti USED/VERIFIED (perlu meninjau kemungkinan data historis). Tidak ada perbaikan otomatis atau penyesuaian saldo.
+
+Pengujian kegagalan parsial `tests/backend-otp-module.test.cjs` diperluas untuk mensimulasikan: INSERT member gagal, update OTP `USED` gagal, append `audit_logs` gagal, grant kredit gagal, dan penerbitan sesi gagal. Skenario-skenario setelah akun disimpan memang **belum menjamin pemulihan otomatis**: retry registrasi akan ditolak oleh guard WA agar tidak membuat member/kredit ganda. Kasus tersebut harus didiagnosis dan dipulihkan melalui prosedur aman yang belum mengizinkan mutasi.
+
+**Manifes dan batas sinkronisasi runtime:**
+- Source GitHub `Code.gs`, `OtpAuth.gs`, `AdminAccess.gs`, `RegistrationRecoveryPreflight.gs` serta modul lain perlu dibedakan dari file yang benar-benar ada pada editor Google Apps Script STAGING. Koneksi Google Drive tidak berhasil membuka identitas proyek Apps Script melalui metadata file; sehingga **belum ada diff runtime otomatis dan jangan mengklaim kesetaraan source**.
+- Pada editor GAS STAGING, kedua preflight sebelumnya (`InfrastructurePreflight.gs`, `DataIntegrityPreflight.gs`) sudah terbukti aktif dari log owner. Namun semua file selain kedua preflight itu perlu pemeriksaan versi/presensi yang terpisah.
+- Operator nantinya boleh menambahkan file audit baru saja setelah memastikan editor STAGING benar dan menyimpan salinan source lokal; tidak perlu menyalin `Code.gs` atau mengganti deployment untuk menjalankan fungsi editor-only. **Jangan** memasang modul/ubah registrasi langsung tanpa perbandingan diff menyeluruh.
+
+**Batas bukti:** semua pengujian dengan akun, OTP, kredit, dan sesi sintetis. Tidak ada akun/OTP/ledger STAGING maupun produksi yang dimodifikasi atau dibuat; tidak ada Fonnte/Mayar, pembayaran, mutasi, atau deployment GAS. **Tahap 1 tetap NO-GO**.
