@@ -1977,7 +1977,15 @@ function ngdStagingEndToEndSimulation() {
   // Compare the current staging wallet ledger with the member snapshot.
   require_(Number(memberSource.saldo_kredit)===before,
     'RECONCILIATION_REQUIRED','Saldo member dan ledger STAGING belum konsisten.');
-  var settingsRows=readAll_('pengaturan_sistem').map(function(s){
+  // Only the business settings needed for checkout/commission are copied.
+  // Never clone arbitrary user config or possible provider secrets.
+  var allowedSettings=['payment_gateway_mode','kode_unik_min','kode_unik_max',
+    'order_expiry_menit','followup_member_otomatis','notif_admin_wa_aktif',
+    'wa_admin','komisi_persen','komisi_hanya_order_pertama','masa_tahan_hari',
+    'qris_gambar_path','qris_atas_nama'];
+  var settingsRows=readAll_('pengaturan_sistem').filter(function(s){
+    return allowedSettings.indexOf(String(s.key))>=0;
+  }).map(function(s){
     return {key:s.key,value:s.value,tipe:s.tipe,deskripsi:s.deskripsi};
   });
   var schemas=['members','katalog_produk','orders','credits_ledger',
