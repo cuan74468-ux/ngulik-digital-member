@@ -291,15 +291,22 @@ function viewHome(){
     const progress=total?Math.max(0,Math.min(100,Math.round(done/total*100))):0;
     const orderCount=Array.isArray(d.order_aktif)?d.order_aktif.length:0;
     const next=d.modul_berikutnya;
+    const currentCourse=(state.lmsCourses||[]).find(c=>(state.lmsEnrollments||[])
+      .some(e=>e.course_id===c.course_id&&e.status==='ACTIVE'))||null;
+    const learningCTA=currentCourse?
+      '<button type="button" class="btn btn-primary" data-lms-action="open-course" data-course-id="'+
+      esc(currentCourse.course_id)+'">Lanjutkan kelas '+icon('arrow')+'</button>':
+      '<button type="button" class="btn btn-primary" data-route="belajar">Jelajahi kelas '+icon('arrow')+'</button>';
     return '<section class="member-welcome"><div><p class="eyebrow">RUANG BELAJAR PRIBADI</p>'+
-      '<h1>Selamat datang, <span class="accent">'+esc(first)+'.</span></h1>'+
-      '<p class="lead">Aktivitas belajar dan bisnis Anda, dalam satu tempat.</p></div>'+
+      '<h1>Halo, <span class="accent">'+esc(first)+'.</span> Siap belajar hari ini?</h1>'+
+      '<p class="lead">Ruang pribadi untuk belajar, berkarya, dan mengembangkan usaha.</p></div>'+
       '<span class="chip green">'+esc(state.me.status||'AKTIF')+'</span></section>'+
       '<section class="member-focus" aria-label="Ringkasan perjalanan belajar">'+
         '<div class="member-focus-content"><span class="member-focus-kicker">BELAJAR • PRAKTIK • TUMBUH</span>'+
-        '<h2>Selangkah lebih dekat dengan tujuanmu.</h2>'+
-        '<p>Materi singkat dan tindakan praktis, kapan pun dibutuhkan.</p>'+
-        '<button type="button" class="btn btn-primary" data-route="belajar">Lanjutkan belajar '+icon('arrow')+'</button></div>'+
+        '<h2>'+(currentCourse?'Teruskan perjalanan belajarmu.':'Belajar yang terasa lebih berarti.')+'</h2>'+
+        '<p>'+(currentCourse?esc(currentCourse.title)+' siap Anda lanjutkan.':
+          'Temukan kelas praktis, pelajari satu topik, dan praktikkan di usaha Anda.')+'</p>'+
+        learningCTA+'</div>'+
         '<div class="member-focus-ring" style="--member-progress:'+progress+'%" role="img" aria-label="'+progress+' persen progres modul">'+
         '<div class="member-focus-ring-core"><strong>'+progress+'%</strong><small>progres</small></div></div></section>'+
       '<div class="metric-grid">'+[
@@ -1832,8 +1839,40 @@ document.addEventListener('focusin',e=>{
 document.addEventListener('focusout',e=>{
   if(e.target.closest?.('[data-hero-carousel]')){heroFocused_=false;syncHeroRotation_();}
 });
+function filterLearningCards_(){
+  const root=document.querySelector('.learning-dashboard');
+  if(!root)return;
+  const selected=root.querySelector('[data-lms-filter][aria-pressed="true"]')?.dataset.lmsFilter||'all';
+  const query=(root.querySelector('#learning-course-search')?.value||'').trim().toLocaleLowerCase('id-ID');
+  let count=0;
+  root.querySelectorAll('.learning-course-grid .lms-course-tile').forEach(card=>{
+    const matches=(selected==='all'||card.dataset.courseState===selected)&&
+      (!query||(card.dataset.courseSearch||'').includes(query));
+    card.hidden=!matches;if(matches)count++;
+  });
+  const notice=root.querySelector('.learning-filter-empty');
+  if(notice)notice.hidden=count>0;
+}
+function selectLearningLesson_(index){
+  const root=document.querySelector('.learning-reader-layout');
+  if(!root||!Number.isSafeInteger(index)||index<0)return;
+  const panel=root.querySelector('[data-lms-panel="'+index+'"]');
+  if(!panel)return;
+  root.querySelectorAll('[data-lms-panel]').forEach(el=>{el.hidden=el!==panel;});
+  root.querySelectorAll('[data-lms-lesson-open]').forEach(btn=>{
+    const active=Number(btn.dataset.lmsLessonOpen)===index;
+    btn.classList.toggle('is-current',active);
+    if(active)btn.setAttribute('aria-current','step');
+    else btn.removeAttribute('aria-current');
+  });
+  const title=panel.querySelector('h3');
+  if(title){title.tabIndex=-1;title.focus({preventScroll:true});}
+}
+document.addEventListener('input',e=>{
+  if(e.target.id==='learning-course-search')filterLearningCards_();
+});
 document.addEventListener('click',async(e)=>{
-  const target=e.target.closest('[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action]');
+  const target=e.target.closest('[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next]');
   if(!target)return;
   if(target.hasAttribute('data-hero-step')){
     showHeroSlide_(state.heroIndex+Number(target.dataset.heroStep||1));syncHeroRotation_();
@@ -1873,6 +1912,18 @@ document.addEventListener('click',async(e)=>{
     if(!isAdmin())return;
     state.catalogEditId='';state.catalogRequestId=null;render();
   }
+  else if(target.hasAttribute('data-lms-filter')){
+    const group=target.closest('.learning-filter-group');
+    if(group){
+      group.querySelectorAll('[data-lms-filter]').forEach(btn=>
+        btn.setAttribute('aria-pressed',String(btn===target)));
+      filterLearningCards_();
+    }
+  }
+  else if(target.hasAttribute('data-lms-lesson-open'))
+    selectLearningLesson_(Number(target.dataset.lmsLessonOpen));
+  else if(target.hasAttribute('data-lms-next'))
+    selectLearningLesson_(Number(target.dataset.lmsNext));
   else if(target.hasAttribute('data-lms-action'))await lmsButtonAction(target);
   else if(target.hasAttribute('data-catalog-go')){
     state.catalogFilter=target.dataset.catalogGo;
