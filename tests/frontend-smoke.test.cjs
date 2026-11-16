@@ -52,7 +52,7 @@ test('guest homepage renders and shows offline preview warning',()=>{
   assert.match(nodes.screen.innerHTML,/nh-search/);
   assert.match(nodes.screen.innerHTML,/nh-grid/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
-  assert.match(nodes['desktop-nav'].innerHTML,/Toko & Lisensi/);
+  assert.match(nodes['desktop-nav'].innerHTML,/Toko &amp; Lisensi/);
   assert.equal(document.title,'Meja Kerja — Ngulik Digital');
 });
 test('local member preview renders native-like dashboard without login',()=>{
