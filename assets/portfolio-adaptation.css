@@ -1981,3 +1981,119 @@ body.ngd-public-app:not(#ngd) .checkout-countdown{
     transform:none!important;
   }
 }
+
+
+/* NGULIK DIGITAL — commercial storefront layer, Linggau Design System v1.2.
+   Deliberately limited to guest/member; preserves operational admin screens. */
+body.ngd-public-app:not(#ngd){
+  --pf-paper:#FAFAFC;--pf-ink:#15161C;--pf-blue:#2F6BFF;--pf-green:#1DB86A;
+}
+body.ngd-public-app:not(#ngd) ::selection{background:#DDE7FF;color:#15161C}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-portfolio-hero::after{
+  background:
+    radial-gradient(ellipse 28% 42% at 83% 22%,rgba(47,107,255,.11),transparent 80%),
+    radial-gradient(ellipse 22% 30% at 14% 55%,rgba(29,184,106,.08),transparent 80%);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-hero-spark{opacity:.4}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .guest-nav button[aria-current=page]{
+  background:#EAF0FF;color:#2455D6;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-portfolio-hero .public-hero-copy h1{
+  max-width:16ch;letter-spacing:-.065em;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-portfolio-hero .public-hero-lead{
+  max-width:62ch;line-height:1.7;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-portfolio-hero .pf-button-dark{
+  background:#2F6BFF;border-color:#2F6BFF;color:#FFFFFF;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-portfolio-hero .pf-button-dark:hover{
+  background:#2455D6;border-color:#2455D6;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-market{
+  display:grid;gap:23px;margin:clamp(28px,5vw,70px) auto;
+  padding:clamp(20px,3vw,40px);background:#FFFFFF;
+  border:1px solid #EAECF2;border-radius:24px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-market-heading{
+  display:flex;align-items:end;justify-content:space-between;gap:18px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-market-heading h2{
+  color:#15161C;letter-spacing:-.045em;
+  font:750 clamp(1.45rem,2.6vw,2.35rem)/1.18 "Plus Jakarta Sans",sans-serif;
+  margin:7px 0 0;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-market-grid{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-package{
+  display:flex;flex-direction:column;align-items:flex-start;gap:9px;
+  text-align:left;min-width:0;min-height:174px;padding:19px 17px;
+  border:1px solid #E7EBF3;border-radius:17px;background:#FAFBFE;
+  color:#15161C;transition:border-color .16s,background .16s,transform .16s;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-package:hover,
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-package:focus-visible{
+  border-color:#9FB9FF;background:#EFF4FF;transform:translateY(-2px);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-package-count{
+  color:#2F6BFF;font:800 clamp(1.55rem,2.6vw,2.2rem)/1.1 "Plus Jakarta Sans",sans-serif;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-package-count small{
+  font:650 .75rem "Geist",sans-serif;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-package-name{
+  color:#687083;font-size:.77rem;line-height:1.5;flex:1;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-package strong{
+  font-size:1rem;letter-spacing:-.025em;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-package>svg:last-child{
+  align-self:flex-end;margin-top:-23px;color:#2F6BFF;
+}
+body.ngd-public-app[data-app-role=member]:not(#ngd) .wallet-hero{
+  background:#15161C;color:#FFFFFF;border-color:#15161C;
+}
+body.ngd-public-app[data-app-role=member]:not(#ngd) .wallet-hero .wallet-value strong{
+  color:#FFFFFF;font-variant-numeric:tabular-nums;
+}
+body.ngd-public-app[data-app-role=member]:not(#ngd) .wallet-hero .wallet-state{
+  color:#1DB86A;
+}
+body.ngd-public-app[data-app-role=member]:not(#ngd) .wallet-hero .wallet-commands .btn-primary{
+  background:#2F6BFF;border-color:#2F6BFF;color:#FFFFFF;
+}
+body.ngd-public-app[data-app-role=member]:not(#ngd) .sidebar .nav-item[aria-current=page],
+body.ngd-public-app[data-app-role=member]:not(#ngd) .mobile-nav .nav-item[aria-current=page]{
+  color:#2F6BFF;background:#ECF2FF;
+}
+body.ngd-public-app[data-app-role=member]:not(#ngd) .ai-wizard-progress{
+  padding:0;margin:0;list-style:none;
+}
+body.ngd-public-app[data-app-role=member]:not(#ngd) .ai-wizard-progress li{
+  list-style:none;min-width:0;
+}
+@media(max-width:920px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-market-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:560px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-market{
+    border-radius:19px;padding:20px 15px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-market-heading{
+    align-items:start;flex-direction:column;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-market-heading .btn{
+    width:100%;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-market-grid{gap:8px}
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-package{
+    min-height:160px;padding:14px 12px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-package{transition:none}
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-token-package:hover{transform:none}
+}
