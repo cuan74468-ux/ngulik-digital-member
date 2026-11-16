@@ -199,7 +199,7 @@ const state={
   adminCatalog:[],catalogEditId:'',catalogRequestId:null,
   adminRuntime:null,adminRuntimeError:'',adminSettings:null,adminSettingsError:'',
   services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null,
-  registrationOtpVerifiedWa:'',publicStep:0,selectedAiToolId:''
+  registrationOtpVerifiedWa:'',publicStep:0,selectedAiToolId:'',pendingPurchaseId:''
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const adminLoginEnabled=()=>isConnected()&&config.adminLoginEnabled===true;
@@ -697,15 +697,49 @@ function viewMyOrders(){
     '<div class="stack">'+state.orders.map(o=>'<article class="surface list-row"><div class="left"><strong>'+esc(o.nama_produk)+'</strong><small>'+esc(o.order_id)+' · '+friendlyDate(o.created_at)+'</small></div><div class="right">'+safeBadge(o.status)+'<div class="product-meta" style="margin-top:7px">'+rupiah(o.total_bayar)+'</div></div></article>').join('')+'</div>');
 }
 function viewCheckout(){
-  const o=state.lastOrder;if(!o)return title('Pembayaran','RINGKASAN ORDER','')+empty('Tidak ada order','Pilih produk terlebih dahulu.','katalog','Kembali ke katalog');
-  return title('Konfirmasi pesanan','PEMBAYARAN QRIS MANUAL','Pembayaran hanya dianggap selesai setelah diverifikasi admin.')+
-    '<div class="two-col"><article class="surface"><p class="card-kicker">RINCIAN</p><h3>'+esc(o.nama_produk)+'</h3>'+
+  const o=state.lastOrder;
+  if(!o)return title('Pembayaran','PESANAN ANDA','')+
+    empty('Pesanan belum dipilih','Pilih produk terlebih dahulu.','katalog','Buka katalog');
+  const fallbackQr=Boolean(qrisUrl()&&config.qrisMerchant);
+  const paymentLink=(()=>{
+    try{
+      const url=new URL(String(o.gateway_payment_url||''));
+      return url.protocol==='https:'&&url.username===''&&url.password===''?url.href:'';
+    }catch{return '';}
+  })();
+  const ms=new Date(o.expires_at).getTime()-Date.now();
+  const seconds=Number.isFinite(ms)?Math.max(0,Math.ceil(ms/1000)):0;
+  const timer=Number.isFinite(ms)?
+    String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0'):'—';
+  const qrSource=fallbackQr?qrisUrl():'';
+  const manual=String(o.metode||'').includes('STATIS');
+  const pending=['PENDING','MENUNGGU_VERIFIKASI'].includes(String(o.status||''));
+  return '<div class="checkout-backdrop"><section class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-title">'+
+    '<header class="checkout-heading"><div><p class="eyebrow">NGULIK DIGITAL / CHECKOUT</p>'+
+    '<h1 id="checkout-title">Konfirmasi pesanan</h1><p>Nomor order: '+esc(o.order_id)+'</p></div>'+
+    '<button type="button" class="checkout-close" data-route="katalog" aria-label="Tutup checkout">×</button></header>'+
+    '<div class="checkout-summary"><section><h2>Rincian pembelian</h2>'+
+    '<div class="price-line"><span>Produk</span><strong>'+esc(o.nama_produk||'—')+'</strong></div>'+
     '<div class="price-line"><span>Harga</span><strong>'+rupiah(o.harga_dasar)+'</strong></div>'+
     '<div class="price-line"><span>Kode unik</span><strong>'+rupiah(o.kode_unik)+'</strong></div>'+
-    '<div class="price-line"><span>Total pembayaran</span><strong>'+rupiah(o.total_bayar)+'</strong></div>'+
-    '<p class="small muted" style="margin-top:20px">Nomor order: '+esc(o.order_id)+' · Batas: '+friendlyDate(o.expires_at)+'</p>'+
-    '<button class="btn btn-primary btn-wide" data-action="confirm-payment" '+(!paymentEnabled()?'disabled':'')+'>Saya sudah membayar</button></article>'+
-    '<article class="surface"><h3>Instruksi pembayaran</h3><p class="card-desc">Pastikan nama merchant QRIS sesuai informasi resmi sebelum membayar.</p>'+ (paymentEnabled()&&qrisUrl()?'<div style="text-align:center;margin-top:20px"><img src="'+esc(qrisUrl())+'" alt="QRIS resmi '+esc(config.qrisMerchant)+'" width="220" height="220" style="max-width:100%;height:auto"><p class="small muted">Merchant: '+esc(config.qrisMerchant)+'</p></div>':'<div class="empty" style="margin-top:20px"><span class="symbol">▦</span><p>QRIS resmi belum dipasang atau disetujui.</p></div>')+'</article></div>';
+    '<div class="checkout-total"><small>Total tagihan</small><strong>'+rupiah(o.total_bayar)+'</strong></div>'+
+    '<p class="checkout-countdown" id="checkout-countdown" data-expiry="'+esc(o.expires_at||'')+'">Batas pembayaran: '+timer+'</p>'+
+    '<p class="checkout-note">Status: '+esc(o.status||'PENDING')+
+    '. Pembayaran dianggap berhasil setelah terverifikasi oleh backend.</p></section>'+
+    '<section><h2>Metode pembayaran</h2>'+
+    (paymentLink?
+      '<div class="checkout-qr"><strong>Pembayaran QRIS</strong>'+
+      '<p class="checkout-note">Tautan pembayaran resmi tersedia dari server.</p>'+
+      '<a class="btn btn-primary" href="'+esc(paymentLink)+'" target="_blank" rel="noopener noreferrer">Buka pembayaran aman ↗</a></div>':
+      qrSource?
+      '<div class="checkout-qr"><img src="'+esc(qrSource)+'" alt="QRIS merchant '+esc(config.qrisMerchant)+'" width="220" height="220">'+
+      '<strong>'+esc(config.qrisMerchant)+'</strong><p class="checkout-note">Bayar sesuai jumlah termasuk kode unik.</p></div>':
+      '<div class="checkout-qr"><strong>Informasi pembayaran</strong>'+
+      '<p class="checkout-note">QRIS belum tersedia pada respons pesanan. Jangan mentransfer sebelum QRIS atau tautan resmi ditampilkan.</p></div>')+
+    (manual&&qrSource&&pending?
+      '<button class="btn btn-primary btn-wide" type="button" data-action="confirm-payment">Saya sudah membayar</button>':'')+
+    '<p class="checkout-note">Simpan nomor pesanan untuk memantau status pada menu Pesanan.</p></section></div>'+
+    '</section></div>';
 }
 function viewAdminRuntime(){
   const data=state.adminRuntime, schema=data?.schema;
@@ -1192,6 +1226,27 @@ async function changeContentStatus_(id,nextStatus){
   }catch(e){toast(e.message,true);}
 }
 
+let checkoutTimer_=null;
+function syncCheckoutClock_(){
+  if(checkoutTimer_!==null&&typeof clearInterval==='function'){
+    clearInterval(checkoutTimer_);checkoutTimer_=null;
+  }
+  if(state.route!=='checkout'||typeof setInterval!=='function')return;
+  const label=by('checkout-countdown');
+  if(!label)return;
+  const expiry=label.dataset?.expiry;
+  if(!expiry)return;
+  const update=()=>{
+    const remaining=new Date(expiry).getTime()-Date.now();
+    if(!Number.isFinite(remaining)){label.textContent='Periksa batas waktu pesanan';return;}
+    const sec=Math.max(0,Math.ceil(remaining/1000));
+    label.textContent='Batas pembayaran: '+String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+    if(sec===0&&checkoutTimer_!==null&&typeof clearInterval==='function'){
+      clearInterval(checkoutTimer_);checkoutTimer_=null;
+    }
+  };
+  update();checkoutTimer_=setInterval(update,1000);
+}
 function render(){
   // Scoped mobile visual system: preserve the admin desktop appearance.
   document.body?.classList?.toggle('member-experience',!isAdmin());
@@ -1227,6 +1282,7 @@ function render(){
   const screen=(routes[state.route]||viewHome)();
   by('screen').innerHTML=(!logged()&&['belajar','katalog','jasa','ai','affiliate','dukungan'].includes(state.route)?
     (window.NGD_CONTENT_UI?.cover(state.siteContent,state.route)||''):'')+screen;
+  syncCheckoutClock_();
   syncHeroRotation_();
   document.title=(screens[state.route]?.[0]||'Beranda')+' — Ngulik Digital';
 }
@@ -1443,7 +1499,10 @@ async function processLogin(form,register){
     state.token=result.token;state.me=result.profil;
     sessionStorage.setItem(tokenKey,result.token);
     toast('Selamat datang di Ngulik Digital.');
-    go(isAdmin()?'admin':'beranda');
+    const resume=(!isAdmin()&&state.pendingPurchaseId)?state.pendingPurchaseId:'';
+    state.pendingPurchaseId='';
+    go(isAdmin()?'admin':resume?'katalog':'beranda');
+    if(resume)await buy(resume);
   }catch(e){toast(e.message,true);}finally{btn.disabled=false;}
 }
 async function logout(){
@@ -1479,8 +1538,11 @@ async function changeAdminPin_(form){
   }catch(error){toast(error.message,true);if(button)button.disabled=false;}
 }
 async function buy(productId){
-  if(!logged()){go('login');toast('Masuk terlebih dahulu untuk memesan.',true);return;}
-  if(!paymentEnabled()||!qrisUrl()){toast('Transaksi belum diaktifkan dan QRIS belum diverifikasi.',true);return;}
+  if(!logged()){
+    state.pendingPurchaseId=productId;
+    go('login');toast('Masuk dengan WhatsApp terlebih dahulu untuk membeli.');return;
+  }
+  if(!paymentEnabled()){toast('Checkout belum aktif pada layanan yang terhubung.',true);return;}
   const product=state.catalog.find(p=>p.product_id===productId);
   if(!product)return toast('Produk tidak ditemukan.',true);
   if(!confirm('Buat pesanan '+product.nama+' seharga '+rupiah(product.harga)+'?'))return;
@@ -1490,7 +1552,7 @@ async function buy(productId){
   }catch(e){toast(e.message,true);}
 }
 async function confirmPayment(){
-  if(!state.lastOrder||!paymentEnabled()||!qrisUrl())return toast('Pembayaran belum aktif.',true);
+  if(!state.lastOrder||!paymentEnabled()||!qrisUrl()||!config.qrisMerchant)return toast('QRIS untuk konfirmasi manual belum tersedia.',true);
   if(!confirm('Anda yakin pembayaran telah dikirim ke QRIS resmi? Konfirmasi ini bukan bukti pembayaran berhasil.'))return;
   try{
     const r=await api('confirmPayment',{order_id:state.lastOrder.order_id},state.token,{write:true});
