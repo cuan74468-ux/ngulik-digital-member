@@ -26,6 +26,8 @@ function fixture(){
   vm.runInContext(code,ctx,{timeout:10000});
   ctx.sha256_=x=>'hash-'+String(x);
   ctx.pinHash_=(pin,salt)=>'hash-'+salt+'-'+pin;
+  ctx.pinMatches_=(pin,salt,stored)=>ctx.pinHash_(pin,salt)===stored;
+  ctx.pinHashForWrite_=(pin,salt)=>ctx.pinHash_(pin,salt);
   ctx.newSalt_=()=> 'NEW_SALT';
   ctx.checkNewPin_=()=>{};
   ctx.now_=()=>new Date('2026-11-16T00:00:00Z');

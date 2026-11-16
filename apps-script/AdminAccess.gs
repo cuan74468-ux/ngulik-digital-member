@@ -153,12 +153,12 @@ function submitAdminPinRecoveryOwnerOnly(newPin, repeatedPin) {
     require_(state.accountId === check.accountId, 'CONFLICT', 'Akun administrator berubah.');
     var admin = findRows_('members', function (row) {return row.role === 'ADMIN';})[0];
     checkNewPin_(newPin, admin.wa);
-    require_(pinHash_(newPin, admin.pin_salt) !== admin.pin_hash,
+    require_(!pinMatches_(newPin, admin.pin_salt, admin.pin_hash),
       'VALIDATION', 'PIN baru harus berbeda dengan PIN yang lama.');
     var salt = newSalt_();
     updateRow_('members', admin._row, {
       pin_salt: salt,
-      pin_hash: pinHash_(newPin, salt)
+      pin_hash: pinHashForWrite_(newPin, salt)
     });
     var revoked = findRows_('sessions', function (s) {return s.member_id === admin.member_id;});
     revoked.reverse().forEach(function (s) {tbl_('sessions').sheet.deleteRow(s._row);});
@@ -202,7 +202,7 @@ function bootstrapStagingAdminOwnerOnly(){
       'CONFLICT','Identitas admin sudah digunakan.');
     var id='M-0001',pin=randomStrongPin_(),salt=newSalt_();
     appendRow_('members',{member_id:id,role:'ADMIN',nama:'Admin Ngulik Digital',
-      wa:wa,nama_usaha:'Ngulik Digital',pin_hash:pinHash_(pin,salt),pin_salt:salt,
+      wa:wa,nama_usaha:'Ngulik Digital',pin_hash:pinHashForWrite_(pin,salt),pin_salt:salt,
       kode_referral:'R'+uuid_().slice(0,7),status:'AKTIF',joined_at:now_()});
     logAudit_(id,'ADMIN','STAGING_ADMIN_CREATED','members',id,'','AKTIF',{});
     return {id:id,pin:pin};
