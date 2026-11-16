@@ -12,14 +12,17 @@ function make(){
 const hero=(p={})=>({kind:'HERO',placement:'home',image_path:'assets/media/banner-promo.webp',
   title:'Promo Tahun Baru',description:'Produk digital berkualitas',cta_label:'Jelajahi',
   cta_route:'katalog',sort_order:1,...p});
-test('image URLs accept only same-origin uploaded assets, no SVG or data injection',()=>{
+test('banner URLs accept safe HTTPS and raster data URIs but reject unsafe schemes',()=>{
   const ui=make();
   for(const p of [
-    'https://example.com/img.png','//cdn.com/img.png','assets/media/icon.svg',
+    'http://example.com/img.png','//cdn.com/img.png','assets/media/icon.svg',
     'assets/media/x.png?javascript:alert(1)','assets/media/../secret.webp',
-    'assets/media/dir//pic.jpg','data:image/png;base64,AAAA'])
+    'assets/media/dir//pic.jpg','data:image/svg+xml;base64,AAAA'])
     assert.equal(ui.mediaPath(p),'',p);
   assert.equal(ui.mediaPath('assets/media/november/promo-1.webp'),'./assets/media/november/promo-1.webp');
+  assert.equal(ui.mediaPath('assets/banner.png'),'./assets/banner.png');
+  assert.equal(ui.mediaPath('https://cdn.example.com/img.png'),'https://cdn.example.com/img.png');
+  assert.equal(ui.mediaPath('data:image/png;base64,AAAA'),'data:image/png;base64,AAAA');
 });
 test('carousel renders unlimited published marketing banners as real images with accessible controls',()=>{
   const ui=make();
