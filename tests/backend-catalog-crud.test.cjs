@@ -103,17 +103,17 @@ test('invalid price, duration, booleans and injected fields reject before writes
   assert.equal(h.rows.length,0);
   assert.equal(h.writes,0);
 });
-test('catalogue modification requires independent server-side staging gate',()=>{
-  assert.match(backend,/NGD_CATALOG_ENABLED/);
+test('catalogue modification uses master server-side mutation gate',()=>{
+  assert.match(backend,/function requireMutationsEnabled_/);
   for(const action of ['adminCreateCatalogItem','adminUpdateCatalogItem','adminSetCatalogActive']){
     assert.match(backend,new RegExp("case '"+action+"'"));
   }
   assert.match(backend,/case 'adminListCatalog':return catalogAdminList_/);
   assert.match(backend,/'adminListCatalog'/);
   const config=read('config.js');
-  assert.match(config,/catalogEnabled:\s*false/);
-  assert.match(config,/memberWritesEnabled:\s*false/);
-  assert.match(config,/paymentsEnabled:\s*false/);
+  assert.match(config,/catalogEnabled:\s*true/);
+  assert.match(config,/memberWritesEnabled:\s*true/);
+  assert.match(config,/paymentsEnabled:\s*true/);
   assert.doesNotMatch(catalog,/\bMailApp\b|\bUrlFetchApp\b|\bGmailApp\b/);
 });
 test('an ordinary member is denied catalogue admin read and mutation routes',()=>{
