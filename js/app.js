@@ -467,7 +467,7 @@ function viewLearn(){
     'Materi pengantar praktis untuk pelaku UMKM. Jelajahi jalur belajar, lalu masuk untuk melanjutkan kelas.')+
     '<section class="learn-guest-intro"><div><p class="card-kicker">JALUR PENGENALAN</p>'+
     '<h3>Pelajari satu hal, praktikkan di usaha sendiri.</h3>'+
-    '<p>Chapter 1 mengenalkan Google Profil Bisnis, Gemini, Canva, WhatsApp Business, dan pencatatan promosi sederhana. Pelajaran lanjutan dapat diakses melalui ruang belajar sesuai keanggotaan Anda.</p></div>'+
+    '<p>Chapter 1 mengenalkan Google Profil Bisnis, Gemini, Canva, WhatsApp Business, dan pencatatan promosi sederhana. Pelajaran lanjutan tersedia melalui akses kelas member yang sesuai.</p></div>'+
     '<span class="chip">KELAS PENGANTAR</span></section>'+
     '<div class="learn-path-list">'+[
       ['01','Siapkan identitas digital','Kenali profil usaha dan titik lokasi di Google.'],
@@ -476,7 +476,7 @@ function viewLearn(){
       ['04','Catat dan evaluasi','Mulai kalender promosi serta tracking sederhana.']
     ].map(x=>'<article class="learn-path-item"><span>'+x[0]+'</span><div><h3>'+x[1]+'</h3><p>'+x[2]+'</p></div></article>').join('')+'</div>'+
     '<div class="learn-guest-note"><strong>Lanjutkan perjalanan di ruang member.</strong>'+
-    '<p>Masuk dengan akun Anda untuk membuka kelas yang tersedia dan menyimpan progres belajar.</p>'+'<button type="button" class="btn btn-primary btn-sm" data-route="login">Masuk ruang belajar</button></div>';
+    '<p>Masuk dengan akun Anda untuk membuka kelas yang tersedia dan menyimpan progres belajar.</p>'+'<button type="button" class="btn btn-primary btn-sm" data-route="login">Masuk ke kelas</button></div>';
   const modules=state.modules;
   return title('Perjalanan belajar Anda','KURIKULUM PRAKTIS','Modul tersedia sesuai program dan akses akun.')+
     (modules.length?'<div class="stack">'+modules.map((m,i)=>'<article class="surface list-row"><div class="left" style="display:flex;gap:15px;align-items:center"><span class="step-no">'+esc(m.urut||i+1)+'</span><div><strong>'+esc(m.judul)+'</strong><small>'+esc(m.deskripsi||'')+'</small></div></div>'+
@@ -621,7 +621,7 @@ function viewProfileEditor(){
     (!isWriteEnabled()?'<p class="form-hint">Penyimpanan perubahan profil saat ini belum tersedia.</p>':'')+'</form>';
 }
 function viewAccount(){
-  if(!logged())return title('Akun member','PROFIL & KEAMANAN','Kelola akses ke ruang belajar.')+
+  if(!logged())return title('Akun member','PROFIL & KEAMANAN','Kelola akses ke akun Anda.')+
     '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk dengan nomor WhatsApp dan PIN Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk member</button><button class="btn btn-secondary" data-route="admin-login">Masuk admin</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
   if(isAdmin()){
     const m=state.me;
