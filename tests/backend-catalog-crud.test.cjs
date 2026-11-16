@@ -17,6 +17,7 @@ function fixture(){
   vm.runInContext(catalog,ctx,{timeout:10000});
   ctx.sha256_=v=>crypto.createHash('sha256').update(String(v)).digest('hex');
   ctx.withLock_=fn=>fn();
+  ctx.tbl_=()=>({headers:vm.runInContext('NGD.HEADERS.katalog_produk',ctx).split(',')});
   ctx.byId_=(t,k,v)=>t==='katalog_produk'?rows.find(r=>r[k]===v)||null:null;
   ctx.readAll_=t=>t==='katalog_produk'?rows.map(x=>({...x})):[];
   ctx.appendRow_=(t,row)=>{
@@ -126,11 +127,11 @@ test('an ordinary member is denied catalogue admin read and mutation routes',()=
   assert.equal(h.writes,0);
 });
 
-test('new install seeds exactly the eight current offers, including service and ebook',()=>{
-  const ids=[...backend.matchAll(/\['(P-(?:3IN1|POS|CANVA|KREDIT-50|KREDIT-150|KREDIT-400|VIDEO-AI|EBOOK))','/g)]
+test('new install seeds nine documented commercial offers, including 10-token topup',()=>{
+  const ids=[...backend.matchAll(/\['(P-(?:3IN1|POS|CANVA|TOKEN-10|KREDIT-50|KREDIT-150|KREDIT-400|VIDEO-AI|EBOOK))','/g)]
     .map(m=>m[1]);
-  assert.equal(ids.length,8);
-  assert.equal(new Set(ids).size,8);
+  assert.equal(ids.length,9);
+  assert.equal(new Set(ids).size,9);
   assert.match(backend,/function publicCatalog_\(\) \{return readAll_\('katalog_produk'\)[\s\S]*?\.sort\(/);
   const diagnostics=read('apps-script/Diagnostics.gs');
   assert.match(diagnostics,/katalog\.data\.length === readAll_\('katalog_produk'\)/);
