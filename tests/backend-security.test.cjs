@@ -16,6 +16,7 @@ function boot(enabled=false,registration=false,finance=false,support=false,lms=f
       return {getProperty(key){
         if(key==='NGD_MUTATIONS_ENABLED')return enabled?'true':null;
         if(key==='NGD_REGISTRATION_ENABLED')return registration?'true':null;
+        if(key==='NGD_OTP_REGISTRATION_ENABLED')return null;
         if(key==='NGD_FINANCE_ENABLED')return finance?'true':null;
         if(key==='NGD_SUPPORT_ENABLED')return support?'true':null;
         if(key==='NGD_LMS_ENABLED')return lms?'true':null;
@@ -97,13 +98,14 @@ test('registration and financial actions stay blocked when only base writes are 
   const health=JSON.parse(vm.runInContext('doGet({}).getContent()',s.context));
   assert.equal(health.data.payments_enabled,false);
 });
-test('registration is independently gated after enabling global writes',()=>{
+test('registration still requires verified OTP inside handler even when master gate is on',()=>{
   const s=boot(true,false,false);
-  assert.throws(()=>vm.runInContext("requireActionFeatureEnabled_('register')",s.context),/Pendaftaran belum dibuka/);
-  const enabled=boot(true,true,false);
-  assert.doesNotThrow(()=>vm.runInContext("requireActionFeatureEnabled_('register')",enabled.context));
-  assert.throws(()=>vm.runInContext("requireActionFeatureEnabled_('createOrder')",enabled.context),/Transaksi/);
-  assert.equal(enabled.touched(),0);
+  assert.doesNotThrow(()=>vm.runInContext("requireActionFeatureEnabled_('register')",s.context));
+  const response=s.request('register');
+  assert.equal(response.ok,false);
+  assert.equal(response.error.code,'MAINTENANCE');
+  assert.throws(()=>vm.runInContext("requireActionFeatureEnabled_('createOrder')",s.context),/Transaksi/);
+  assert.equal(s.touched(),0);
 });
 test('finance switch cannot be enabled by only opening the frontend',()=>{
   const s=boot(true,true,false);
@@ -112,34 +114,27 @@ test('finance switch cannot be enabled by only opening the frontend',()=>{
   assert.equal(s.touched(),0);
 });
 
-test('support mutations are disabled even when base writes and finance are on',()=>{
+test('master switch unlocks support eligibility without NGD_SUPPORT_ENABLED',()=>{
   const s=boot(true,true,true,false);
   const actions=['createTicket','replyTicket','adminChangeTicketStatus',
     'adminSetTicketPriority','adminReplyTicket',
     'adminCreateProductRelease','adminPublishProductRelease'];
-  for(const action of actions){
-    const result=s.request(action);
-    assert.equal(result.ok,false,action);
-    assert.equal(result.error.code,'MAINTENANCE',action);
-  }
-  assert.equal(s.touched(),0);
-});
-test('independent support switch grants only support eligibility, not finance',()=>{
-  const s=boot(true,false,false,true);
-  for(const action of ['createTicket','replyTicket','adminChangeTicketStatus',
-    'adminSetTicketPriority','adminCreateProductRelease','adminPublishProductRelease']){
+  for(const action of actions)
     assert.doesNotThrow(()=>vm.runInContext(
       'requireActionFeatureEnabled_('+JSON.stringify(action)+')',s.context));
-  }
-  assert.throws(()=>vm.runInContext("requireActionFeatureEnabled_('createOrder')",s.context),
-    /Transaksi/);
-  assert.throws(()=>vm.runInContext("requireActionFeatureEnabled_('register')",s.context),
-    /Pendaftaran/);
   assert.equal(s.touched(),0);
 });
-
-test('LMS enrollment, CRUD, publishing and AI drafting stay locked by default',()=>{
-  const s=boot(true,true,true,true,false);
+test('support needs only master switch, finance still requires financial gate',()=>{
+  const s=boot(true,false,false,false);
+  for(const action of ['createTicket','replyTicket','adminChangeTicketStatus',
+    'adminSetTicketPriority','adminCreateProductRelease','adminPublishProductRelease'])
+    assert.doesNotThrow(()=>vm.runInContext(
+      'requireActionFeatureEnabled_('+JSON.stringify(action)+')',s.context));
+  assert.throws(()=>vm.runInContext("requireActionFeatureEnabled_('createOrder')",s.context),/Transaksi/);
+  assert.equal(s.touched(),0);
+});
+test('master switch OFF blocks LMS mutations before database access',()=>{
+  const s=boot(false,true,true,true,false);
   const actions=['enrollLMSCourse','completeLMSLesson','adminCreateLMSCourse',
     'adminUpdateLMSCourse','adminArchiveLMSCourse','adminRestoreLMSCourse',
     'adminPublishLMSCourse','adminCreateLMSLesson','adminUpdateLMSLesson',
@@ -152,16 +147,14 @@ test('LMS enrollment, CRUD, publishing and AI drafting stay locked by default',(
   }
   assert.equal(s.touched(),0);
 });
-test('LMS server gate is independent of finance, support and registration',()=>{
-  const s=boot(true,false,false,false,true);
+test('single master switch permits LMS, catalog, CMS and services without independent flags',()=>{
+  const s=boot(true,false,false,false,false);
   for(const action of ['enrollLMSCourse','completeLMSLesson','adminCreateLMSCourse',
-    'adminRestoreLMSLesson','adminPrepareLMSAIJob']){
+    'adminRestoreLMSLesson','adminPrepareLMSAIJob','createTicket','submitServiceBrief',
+    'adminCreateContent','adminUpdateContent','adminCreateCatalogItem']){
     assert.doesNotThrow(()=>vm.runInContext(
       'requireActionFeatureEnabled_('+JSON.stringify(action)+')',s.context));
   }
-  for(const action of ['createOrder','register','createTicket']){
-    assert.throws(()=>vm.runInContext(
-      'requireActionFeatureEnabled_('+JSON.stringify(action)+')',s.context),/belum|masih/);
-  }
+  assert.throws(()=>vm.runInContext("requireActionFeatureEnabled_('createOrder')",s.context),/Transaksi/);
   assert.equal(s.touched(),0);
 });
