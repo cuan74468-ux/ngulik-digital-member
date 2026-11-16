@@ -115,6 +115,8 @@ jobs:
           echo 'CATALOG_BROWSER_QA_OK'
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#dukungan" > /tmp/ngd-support-member.html 2>>/tmp/ngd-chrome.log
+          echo 'SUPPORT_BROWSER_QA_PROBE:'
+          grep -Eo 'id="support-create-form"|Fitur support belum diaktifkan|Kirim laporan|Bantuan[^<]{0,70}|data-overflow="[^"]*"' /tmp/ngd-support-member.html | head -18 || true
           grep -q 'id="support-create-form"' /tmp/ngd-support-member.html
           grep -q 'Fitur support belum diaktifkan' /tmp/ngd-support-member.html
           grep -q 'data-overflow="false"' /tmp/ngd-support-member.html
