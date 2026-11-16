@@ -23,3 +23,7 @@ Tutup risiko starter grant/OTP failure recovery, audit idempotensi, serta prosed
 ## Update manifest source — 16 November 2026
 
 Daftar 15 modul dan Git blob SHA telah disegarkan terhadap snapshot source GitHub `67470ffd05b9aff9f7f52d1b320b59a072286d93` (sesudah hardening PIN V2 opt-in, sebelum commit dokumentasi ini). `tests/source-manifest.test.cjs` memverifikasi SHA1 blob Git terhadap bytes `apps-script/*.gs`; perubahan modul GAS berikutnya **harus** memperbarui manifest agar CI lulus. Kesesuaian sumber GitHub dengan isi file GAS editor aktif tetap **belum teruji**; jangan menyimpulkan 15 modul sudah terpasang.
+
+## Handoff patch P0 terbaru — 16 November 2026
+
+Rincian fungsi dan urutan pengamanan tersedia pada [Handoff Patch P0 Autentikasi](STAGE1_AUTH_PATCH_HANDOFF_2026-11-16.md). Snapshot source `1cd335e47cd5ff61ec1482e3e6976b83b8501177`; 443/443 test lulus dan Chrome sukses. Kode editor GAS tetap belum dibandingkan atau dideploy, jadi **jangan** menyimpulkan parity dari SHA GitHub.

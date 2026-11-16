@@ -1,5 +1,5 @@
 # Checkpoint terbaru — 16 November 2026 · Ngulik Digital Member
-**Checkpoint teknis terverifikasi — 16 November 2026:** [435/435 tes PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43794320563), [GitHub Pages PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43794346412). Source recovery STAGING baca-saja sekarang menolak ID/WhatsApp anggota ambigu atau duplikat dan ID OTP duplikat; PIN V2 tetap **default OFF**. Source GitHub belum dibuktikan identik dengan editor GAS, dan audit recovery **belum ada log operator**. **Tahap 1 masih PROSES/NO-GO**; registrasi, provider, LMS komersial dan finance OFF. [Checkpoint rinci](CHECKPOINT_2026-11-16_RESUME_BUILD_STAGE1.md).
+**Checkpoint teknis terverifikasi — 16 November 2026:** [443/443 tes PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43797282501), [GitHub Pages PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43797282176). Source Tahap 1 kini menolak expiry/attempt counter OTP malformed, WhatsApp anggota duplikat saat login, serta membersihkan sesi ber-expiry tidak valid pada maintenance terkunci. PIN V2 tetap **default OFF**. **Source GitHub bukan runtime GAS**: sinkronisasi editor dan audit recovery STAGING belum terverifikasi. **Tahap 1 PROSES/NO-GO**; registrasi, finance, LMS berbayar, dan provider tetap OFF. [Checkpoint rinci](CHECKPOINT_2026-11-16_RESUME_BUILD_STAGE1.md).
 
 
 
@@ -122,3 +122,9 @@ Source `OtpAuth.gs` sebelumnya menggunakan perbandingan expiry yang dapat meneri
 ## Ketahanan maintenance sesi — 16 November 2026 (source-only)
 
 `purgeExpiredSessions_` semula tidak menghapus baris `sessions` dengan expiry malformed karena `NaN <= now` menghasilkan false; padahal `session_` sudah menolak token tersebut. Source maintenance diperbarui agar menghapus expiry kosong/rusak/kedaluwarsa ketika tugas pemeliharaan sah berjalan **di bawah script lock**, menggunakan pengurutan nomor baris fisik menurun untuk mencegah salah hapus. Regresi memastikan sesi valid masa depan tetap ada dan operasi dapat diulang tanpa menghapus baris tambahan. Pemeliharaan GAS aktif **tidak dieksekusi** oleh perubahan source GitHub ini; penghapusan data nyata tetap memerlukan prosedur STAGING, backup, dan izin operasional.
+
+## Checkpoint final lanjutan Tahap 1 — 443/443 PASS, source-only
+
+**Commit source terakhir:** `1cd335e47cd5ff61ec1482e3e6976b83b8501177`. CI [443/443 sukses](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43797282501), Chrome UI dan transport API read-only PASS; [GitHub Pages deployment sukses](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43797282176). Perbaikan source: OTP expiry/attempts fail-closed; login menolak nomor WA yang dimiliki lebih dari satu akun; pemeliharaan sesi menghapus expiry malformed/kedaluwarsa dengan lock dan urutan row menurun. PIN V2 tetap OFF, tidak ada mutasi database, Secret/Script Properties, kode GAS editor, atau transaksi. Rencana penerapan aman: [STAGE1_AUTH_PATCH_HANDOFF](STAGE1_AUTH_PATCH_HANDOFF_2026-11-16.md).
+
+**Masih NO-GO:** pemilik belum mengirim log audit recovery registrasi STAGING, source editor belum dibandingkan dengan 15 modul GitHub, full restore aplikasi dan pengujian auth runtime belum diselesaikan. Provider-last dan pemisahan Chapter 01 gratis dari LMS komersial tetap berlaku.
