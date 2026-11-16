@@ -2,7 +2,7 @@
  * Ngulik Digital — editorial content for GitHub Pages, backed by Google Sheets.
  * Public reads expose published assets only. All mutations require an ADMIN
  * session, NGD_MUTATIONS_ENABLED and NGD_CONTENT_ENABLED. No binary uploads.
- * An image path must be a same-origin asset committed under assets/media/.
+ * Image paths may use assets/, external HTTPS, or small raster data URIs.
  */
 var NGD_CONTENT_KINDS_=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO'];
 var NGD_CONTENT_ROUTES_=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun'];
@@ -12,9 +12,15 @@ var NGD_CONTENT_FIELDS_=[
 ];
 function contentImagePath_(value) {
   var path=String(value==null?'':value).trim();
-  require_(path.length<=180 && /^assets\/media\/[A-Za-z0-9][A-Za-z0-9_/-]*\.(?:png|jpe?g|webp|avif)$/i.test(path) &&
-    path.indexOf('..')<0 && path.indexOf('//')<0,
-    'VALIDATION','Gambar wajib memakai path lokal assets/media/ dengan format PNG, JPG, WebP atau AVIF.');
+  // Allow safe repository assets, HTTPS image links, and raster data URIs.
+  var local=path.length<=500&&/^assets\/[a-zA-Z0-9_./-]+\.(?:png|jpe?g|webp|gif|avif)(?:\?[A-Za-z0-9_=&%-]+)?$/i.test(path)&&
+    path.indexOf('..')<0&&path.indexOf('//')<0;
+  var external=path.length<=2048&&
+    /^https:\/\/[a-zA-Z0-9.-]+(?::[0-9]{2,5})?(?:\/[a-zA-Z0-9!$&'()*+,;=:@%_./~-]*)?(?:\?[a-zA-Z0-9!$&'()*+,;=:@%_./?~-]*)?(?:#[a-zA-Z0-9_.-]*)?$/i.test(path);
+  var inline=path.length<=1048576&&
+    /^data:image\/(?:png|jpeg|jpg|webp|gif|avif);base64,[A-Za-z0-9+/]+={0,2}$/i.test(path);
+  require_(!!path&&(local||external||inline),'VALIDATION',
+    'Gunakan path assets/..., gambar HTTPS, atau data URI gambar.');
   return path;
 }
 function contentDate_(value,label) {
