@@ -114,7 +114,7 @@ jobs:
             },150);
           })();
           JS
-          sed -i 's#</body>#<script src="./ci-attestation-probe.js" defer></script></body>#' staging/index.html
+          sed -i 's#</body>#<script src="./ci-attestation-probe.js" defer></script></body>#' staging/monitor.html
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/staging-ci-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
@@ -125,7 +125,7 @@ jobs:
           CHROME="$(command -v google-chrome || command -v chromium || true)"
           test -n "$CHROME"
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=18000 --window-size=1365,850 --dump-dom \
-            "http://127.0.0.1:8765/staging/" > /tmp/ngd-staging-attestation.html 2>/tmp/ngd-staging-ci-chrome.log
+            "http://127.0.0.1:8765/staging/monitor.html" > /tmp/ngd-staging-attestation.html 2>/tmp/ngd-staging-ci-chrome.log
           if grep -q 'data-staging-browser-attestation="pass"' /tmp/ngd-staging-attestation.html; then
             echo 'STAGING_CHROME_LOGIN_GATE_OK: read-only identity authenticated in real browser; login form displayed without PIN'
           else
