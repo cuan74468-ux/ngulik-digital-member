@@ -994,7 +994,14 @@ function orderView_(order,m) {
        'konfirmasi_bayar_at','paid_at','fulfilled_at','cancelled_at','refunded_at'];
   var o={};fields.forEach(function(k){
     o[k]=order[k] instanceof Date?isoWib_(order[k]):order[k];
-  });return o;
+  });
+  if(String(order.metode||'')==='QRIS_STATIS'){
+    var cfg=settings_();
+    o.qris_gambar_path=String(cfg.qris_gambar_path||'');
+    o.qris_atas_nama=String(cfg.qris_atas_nama||'');
+    o.wa_admin=String(cfg.wa_admin||'');
+  }
+  return o;
 }
 function expireOrder_(o) {
   if(o.status==='PENDING'&&new Date(o.expires_at).getTime()<=Date.now()) {
@@ -1033,9 +1040,11 @@ function newOrder_(m,p,requestId) {
     var mine=findRows_('orders',function(o){return o.member_id===m.member_id&&o.product_id===product.product_id&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;});
     if(mine.length){var existing=expireOrder_(mine[0]);if(existing.status!=='EXPIRED')return orderView_(existing,m);}
     var s=settings_(),min=Number(s.kode_unik_min||100),max=Number(s.kode_unik_max||999),price=ngdPriceRupiah_(product.harga);
+    require_(String(s.payment_gateway_mode||'QRIS_STATIS')==='QRIS_STATIS','NOT_AVAILABLE','Metode pembayaran saat ini tidak tersedia.');
     require_(Number.isInteger(price)&&price>0,'VALIDATION','Harga produk belum valid.');
     require_(Number.isInteger(min)&&Number.isInteger(max)&&min>=100&&max<=999&&min<=max,'VALIDATION','Rentang kode unik tidak valid.');
-    var open=readAll_('orders').filter(function(o){return ['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;});
+    var open=readAll_('orders').filter(function(o){return ['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0&&
+      (o.status==='MENUNGGU_VERIFIKASI'||new Date(o.expires_at).getTime()>Date.now());});
     var taken={};open.forEach(function(o){taken[Number(o.total_bayar)]=true;});
     // Scan the entire unique-code range from a random starting point.
     // Unlike 25 random trials, this only fails when every amount is occupied.
@@ -1043,8 +1052,15 @@ function newOrder_(m,p,requestId) {
     for(var k=0;k<range;k++){var n=min+(start+k)%range;if(!taken[price+n]){code=n;break;}}
     require_(code!==null,'CONFLICT','Kode pembayaran sedang penuh. Coba lagi nanti.');
     var created=now_(),id='NGD-'+Utilities.formatDate(created,NGD.TZ,'yyMMdd')+'-'+uuid_().slice(0,12);
-    var o={order_id:id,member_id:m.member_id,product_id:product.product_id,nama_produk:product.nama,harga_dasar:price,kode_unik:code,total_bayar:price+code,status:'PENDING',metode:'QRIS_STATIS',created_at:created,expires_at:new Date(created.getTime()+Number(s.order_expiry_menit||15)*60000),ref_member_id:m.referred_by||'',request_id:requestId};
+    var o={order_id:id,member_id:m.member_id,product_id:product.product_id,nama_produk:product.nama,harga_dasar:price,kode_unik:code,total_bayar:price+code,status:'PENDING',metode:'QRIS_STATIS',created_at:created,expires_at:new Date(created.getTime()+Number(s.order_expiry_menit||60)*60000),ref_member_id:m.referred_by||'',request_id:requestId};
     appendRow_('orders',o);logAudit_(m.member_id,m.role,'ORDER_CREATED','orders',id,'','PENDING',{product_id:product.product_id});
+    if(s.followup_member_otomatis===true&&m.wa){
+      sendFonnteWa_(m.wa,'Halo '+String(m.nama||'Member').slice(0,60)+', pesanan #'+id+
+        ' untuk '+String(product.nama||'produk').slice(0,90)+' berhasil dibuat. Transfer TEPAT Rp'+
+        Number(o.total_bayar).toLocaleString('id-ID')+' sebelum '+isoWib_(o.expires_at)+
+        '. Setelah transfer tekan Saya Sudah Bayar di aplikasi.',
+        'MEMBER','ORDER_INVOICE_MEMBER',id);
+    }
     return orderView_(o,m);
   });
 }
@@ -1103,6 +1119,17 @@ function transitionOrder_(m,id,type,p) {
           'CONFLICT','Durasi produk belum valid.');
     }
     patch.status=to;updateRow_('orders',o._row,patch);
+    if(type==='confirm'&&to==='MENUNGGU_VERIFIKASI'){
+      var settingConfirm=settings_(),orderMember=byId_('members','member_id',o.member_id);
+      if(settingConfirm.notif_admin_wa_aktif===true&&settingConfirm.wa_admin&&orderMember){
+        sendFonnteWa_(settingConfirm.wa_admin,'KONFIRMASI BAYAR MASUK! Order #'+id+
+          ' | Member: '+String(orderMember.nama||'').slice(0,60)+' ('+String(orderMember.wa||'')+
+          ') | Produk: '+String(o.nama_produk||'').slice(0,90)+' | Nominal HARUS MASUK: Rp'+
+          Number(o.total_bayar).toLocaleString('id-ID')+
+          '. Cocokkan mutasi DANA/QRIS dan approve di Admin Panel.',
+          'ADMIN','ORDER_CONFIRM_ADMIN',id);
+      }
+    }
     logAudit_(m.member_id,m.role,'ORDER_'+type.toUpperCase(),'orders',id,from,to,
       {note:patch.catatan_admin||'',payment_received:to==='PAID'});
     if(to==='PAID'){
@@ -2192,11 +2219,14 @@ function mayarWebhook_(e) {
 /** 15-minute trigger: bounded, idempotent order expiry and reminder queue. */
 function runScheduledAutomations() {
   requireMutationsEnabled_();
+  requireFinanceEnabled_();
   return withLock_(function(){
-    var now=Date.now(),expired=0,queued=0,orders=readAll_('orders');
-    var settings=settings_(),expiryMin=Number(settings.order_expiry_menit||60);
-    if(!Number.isFinite(expiryMin)||expiryMin<1)expiryMin=60;
-    // Cap work per invocation; next trigger handles the remaining backlog.
+    var now=Date.now(),expired=0,reminders=0,orders=readAll_('orders');
+    var s=settings_(),expiryMin=Number(s.order_expiry_menit||60);
+    var remindMin=Number(s.cart_abandonment_menit||15);
+    require_(Number.isInteger(expiryMin)&&expiryMin>=20&&expiryMin<=1440&&
+      Number.isInteger(remindMin)&&remindMin>=5&&remindMin<expiryMin,
+      'MAINTENANCE','Interval pengingat dan kedaluwarsa order tidak valid.');
     var processed=0;
     orders.forEach(function(o){
       if(o.status!=='PENDING'||processed>=100)return;
@@ -2204,37 +2234,28 @@ function runScheduledAutomations() {
       var created=new Date(o.created_at).getTime();
       if(!Number.isFinite(created))return;
       var age=now-created;
-      if(age>=60*60000||(Number.isFinite(new Date(o.expires_at).getTime())&&
-        new Date(o.expires_at).getTime()<=now)){
+      if(age>=expiryMin*60000){
         updateRow_('orders',o._row,{status:'EXPIRED'});
         logAudit_('SYSTEM','SYSTEM','ORDER_EXPIRED','orders',
           o.order_id,'PENDING','EXPIRED',{reason:'SCHEDULED'});
         expired++;return;
       }
-      if(age<15*60000||o.abandonment_reminded_at)return;
+      if(age<remindMin*60000||o.abandonment_reminded_at||
+         s.followup_member_otomatis!==true)return;
       var member=byId_('members','member_id',o.member_id);
       if(!member||!member.wa)return;
-      var exists=findRows_('wa_notifications',function(n){
-        return String(n.ref_id||'')===String(o.order_id)&&
-          String(n.template_kode||'')==='CART_ABANDONMENT';
-      });
-      if(exists.length){
+      var sent=sendFonnteWa_(member.wa,
+        'Halo '+String(member.nama||'Member').slice(0,50)+', tagihan pesanan #'+
+        String(o.order_id).slice(0,65)+' ('+String(o.nama_produk||'produk').slice(0,70)+
+        ') sebesar Rp'+Number(o.total_bayar).toLocaleString('id-ID')+
+        ' belum dikonfirmasi. Silakan buka menu Pesanan di Ngulik Digital.',
+        'MEMBER','CART_ABANDONMENT',o.order_id);
+      if(sent.status==='ACCEPTED'){
         updateRow_('orders',o._row,{abandonment_reminded_at:now_()});
-        return;
+        reminders++;
       }
-      appendRow_('wa_notifications',{
-        notif_id:recordId_('WA'),tujuan_wa:normalizeWa_(member.wa),
-        tipe_penerima:'MEMBER',template_kode:'CART_ABANDONMENT',
-        ref_id:o.order_id,
-        pesan:'Halo '+String(member.nama||'Member').slice(0,50)+
-          ', pesanan '+String(o.order_id).slice(0,60)+
-          ' belum dibayar. Periksa kembali di akun Ngulik Digital.',
-        status:'QUEUED',retry_count:0,created_at:now_()
-      });
-      updateRow_('orders',o._row,{abandonment_reminded_at:now_()});
-      queued++;
     });
-    return {processed:processed,expired:expired,reminders_queued:queued};
+    return {processed:processed,expired:expired,reminders_accepted:reminders};
   });
 }
 
