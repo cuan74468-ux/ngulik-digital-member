@@ -124,7 +124,7 @@ function memberCourse(detail,enrollments,canWrite){
   return '<div class="learning-reader">'+
     '<button type="button" class="learning-reader-back" data-route="belajar">← Semua kelas</button>'+
     '<header class="learning-reader-header"><div>'+
-    '<p class="eyebrow">RUANG BELAJAR / '+e(c.category||'KURSUS')+'</p>'+
+    '<p class="eyebrow">KELAS / '+e(c.category||'KURSUS')+'</p>'+
     '<h2>'+e(c.title)+'</h2><p>'+e(c.summary||'')+'</p>'+
     '</div><div class="learning-reader-progress" aria-label="'+percent+' persen pelajaran selesai">'+
     '<strong>'+percent+'%</strong><span>'+done+' dari '+total+' pelajaran</span>'+
