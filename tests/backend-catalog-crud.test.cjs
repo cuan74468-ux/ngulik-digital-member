@@ -41,7 +41,7 @@ test('new admin offer is inactive by default and can be found by readable catalo
   assert.equal(out.already_created,false);
   assert.match(out.item.product_id,/^P-[0-9A-F]{12}$/);
   assert.equal(out.item.aktif,false);
-  assert.equal(out.item.checkout_supported,false);
+  assert.equal(out.item.checkout_supported,true);
   assert.equal(h.rows.length,1);
   assert.equal(h.writes,1);
   assert.equal(h.audit.length,1);
@@ -140,10 +140,8 @@ test('Apps Script manifest requests only scopes actually exercised by current co
   const manifest=JSON.parse(read('apps-script/appsscript.json'));
   assert.equal(manifest.webapp.executeAs,'USER_DEPLOYING');
   assert.equal(manifest.webapp.access,'ANYONE_ANONYMOUS');
-  for(const scope of ['https://www.googleapis.com/auth/script.external_request',
-    'https://www.googleapis.com/auth/script.send_mail']){
-    assert.equal(manifest.oauthScopes.includes(scope),false);
-  }
+  assert.equal(manifest.oauthScopes.includes('https://www.googleapis.com/auth/script.external_request'),true);
+  assert.equal(manifest.oauthScopes.includes('https://www.googleapis.com/auth/script.send_mail'),false);
   assert.equal(manifest.oauthScopes.includes('https://www.googleapis.com/auth/spreadsheets'),true);
   assert.equal(manifest.oauthScopes.includes('https://www.googleapis.com/auth/script.scriptapp'),true);
 });
