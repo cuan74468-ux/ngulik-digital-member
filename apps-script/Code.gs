@@ -16,10 +16,10 @@ const NGD = Object.freeze({
   ADMIN_LOCK_MINUTES: 60, // akun ADMIN dikunci lebih lama: nomornya tampil di getPublicInfo
   MAX_LOGIN_FAILURES: 5,
   HEADERS: {
-    members: 'member_id,role,nama,wa,nama_usaha,pin_hash,pin_salt,kode_referral,referred_by,status,joined_at,jenis_usaha,kota,deskripsi_usaha,instagram,onboarding_at,trial_mulai,trial_berakhir,akses_3in1_sampai,sumber_akses_3in1,url_halaman_bisnis,status_pos,pos_lisensi_kode,status_canva,canva_email,canva_mulai,canva_berakhir,last_active_at,d14_active,d30_active,saldo_kredit,retensi_14,retensi_30',
-    katalog_produk: 'product_id,nama,deskripsi,tipe,harga,kredit_diberikan,durasi_hari,perlu_approval_admin,bisa_komisi,aktif,urut,komisi_persen',
+    members: 'member_id,role,nama,wa,wa_verified,wa_verified_at,nama_usaha,pin_hash,pin_salt,kode_referral,referred_by,status,joined_at,jenis_usaha,kota,deskripsi_usaha,instagram,onboarding_at,trial_mulai,trial_berakhir,akses_3in1_sampai,sumber_akses_3in1,url_halaman_bisnis,status_pos,pos_lisensi_kode,status_canva,canva_email,canva_mulai,canva_berakhir,last_active_at,d14_active,d30_active,saldo_kredit,retensi_14,retensi_30',
+    katalog_produk: 'product_id,nama,deskripsi,tipe,harga,kredit_diberikan,durasi_hari,perlu_approval_admin,bisa_komisi,komisi_persen,sumber_produk,aktif,urut',
     etalase_affiliate_luar: 'item_id,judul,kategori,deskripsi_singkat,alasan_rekomendasi,harga_info,link_affiliate,gambar_url,urut,aktif,klik_total,catatan_admin',
-    orders: 'order_id,member_id,product_id,nama_produk,harga_dasar,kode_unik,total_bayar,status,metode,created_at,expires_at,konfirmasi_bayar_at,paid_at,verified_by,fulfilled_at,cancelled_at,refunded_at,ref_member_id,catatan_admin,request_id',
+    orders: 'order_id,member_id,product_id,nama_produk,harga_dasar,kode_unik,total_bayar,status,metode,created_at,expires_at,konfirmasi_bayar_at,paid_at,verified_by,fulfilled_at,cancelled_at,refunded_at,ref_member_id,catatan_admin,request_id,gateway_ref_id,gateway_payment_url,qris_payload,admin_notified_at,member_followup_at,abandonment_reminded_at',
     credits_ledger: 'entry_id,member_id,created_at,tipe,jumlah,status,ref_id,tool_id,keterangan,saldo_setelah',
     affiliate_commissions: 'komisi_id,referrer_id,referred_member_id,order_id,dasar_komisi,persen,nominal,status,created_at,approve_after,approved_at,payout_requested_at,paid_at,payout_note,reversed_at,reversed_reason',
     audit_logs: 'log_id,timestamp,actor_id,actor_role,action,entity,entity_id,dari_status,ke_status,detail_json',
@@ -29,6 +29,8 @@ const NGD = Object.freeze({
     ai_tools: 'tool_id,nama,deskripsi,placeholder_input,prompt_template,kredit_biaya,aktif,urut',
     modul_belajar: 'modul_id,urut,judul,deskripsi,url_classroom,aktif',
     progress_member: 'member_id,modul_id,selesai_at',
+    otp_verifications: 'otp_id,wa,kode_hash,tujuan,status,attempts,created_at,expires_at,verified_at,ip_or_device',
+    wa_notifications: 'notif_id,tujuan_wa,tipe_penerima,template_kode,ref_id,pesan,status,retry_count,created_at,sent_at,gateway_response',
     ringkasan: 'metrik,nilai',
     support_tickets: 'ticket_id,member_id,product_id,order_id,kategori,judul,deskripsi,platform,versi_aplikasi,status,prioritas,assigned_to,created_at,updated_at,resolved_at,closed_at,request_id',
     ticket_activities: 'activity_id,ticket_id,actor_id,actor_role,jenis,dari_status,ke_status,pesan,created_at,request_id',
@@ -386,13 +388,18 @@ function seedSettings_() {
     ['wa_admin',PropertiesService.getScriptProperties().getProperty('NGD_ADMIN_WA')||'','TEXT'], ['email_admin',Session.getEffectiveUser().getEmail(),'TEXT'],
     ['link_classroom','https://classroom.google.com','TEXT'],
     ['qris_gambar_path','assets/qris.png','TEXT'], ['qris_atas_nama','','TEXT'],
-    ['order_expiry_menit',15,'NUMBER'], ['kode_unik_min',100,'NUMBER'], ['kode_unik_max',999,'NUMBER'],
+    ['order_expiry_menit',60,'NUMBER'], ['kode_unik_min',100,'NUMBER'], ['kode_unik_max',999,'NUMBER'],
     ['trial_hari',30,'NUMBER'], ['kredit_awal',10,'NUMBER'], ['kredit_peringatan_persen',20,'NUMBER'],
-    ['komisi_persen',25,'NUMBER'], ['komisi_hanya_order_pertama',true,'BOOL'],
+    ['komisi_persen',25,'NUMBER'], ['komisi_hanya_order_pertama',false,'BOOL'],
     ['masa_tahan_hari',14,'NUMBER'], ['min_payout',50000,'NUMBER'],
     ['ref_cookie_hari',30,'NUMBER'], ['ai_base_url','https://app.sobatagent.com/','TEXT'],
-    ['ai_endpoint_path','','TEXT'], ['ai_model','','TEXT'],
-    ['ai_rate_limit_per_menit',5,'NUMBER'], ['ai_max_input_char',1500,'NUMBER'], ['ai_daily_limit_per_member',20,'NUMBER'],
+    ['ai_endpoint_path','api/v1/chat/completions','TEXT'], ['ai_model','gpt-4o-mini','TEXT'],
+    ['ai_rate_limit_per_menit',5,'NUMBER'], ['ai_max_input_char',1500,'NUMBER'], ['ai_daily_limit_per_member',30,'NUMBER'],
+    ['payment_gateway_mode','QRIS_STATIS','TEXT'], ['wa_gateway_provider','FONNTE','TEXT'],
+    ['otp_expiry_menit',5,'NUMBER'], ['otp_max_attempt',3,'NUMBER'],
+    ['notif_admin_wa_aktif',true,'BOOL'], ['followup_member_otomatis',true,'BOOL'],
+    ['nilai_1_token_idr',1000,'NUMBER'], ['topup_minimal_idr',10000,'NUMBER'],
+    ['cart_abandonment_menit',15,'NUMBER'],
     ['teks_disclosure_affiliate','Beberapa link di halaman ini adalah link affiliate. Kami bisa mendapat komisi tanpa biaya tambahan untukmu.','TEXT'],
     ['versi_skema',1,'NUMBER']
   ];
@@ -413,19 +420,22 @@ function seedSettings_() {
   return count;
 }
 function seedCatalog_() {
-  var rows = [
-    ['P-3IN1','Paket 3-in-1: Bio Link + Profil Bisnis + Katalog Checkout Kurir','Akses Bio Link, profil usaha, dan katalog selama 30 hari.','LANGGANAN_30H',99000,0,30,false,true,true,1,30],
-    ['P-POS','Aplikasi POS Kasir Sederhana / Linggau POS Lite','Lisensi sekali bayar; aktivasi diverifikasi admin.','LISENSI_SEKALI',149000,0,0,true,true,true,2,25],
-    ['P-CANVA','Seat Canva Pro 30 Hari','Undangan seat 30 hari diproses admin.','SEAT_30H',35000,0,30,true,true,true,3,20],
-    ['P-KREDIT-50','Top-Up 50 Kredit AI','Tambahan 50 kredit AI.','TOPUP_KREDIT',25000,50,0,false,false,true,4,0],
-    ['P-KREDIT-150','Top-Up 150 Kredit AI','Tambahan 150 kredit AI.','TOPUP_KREDIT',60000,150,0,false,false,true,5,0],
-    ['P-KREDIT-400','Top-Up 400 Kredit AI','Tambahan 400 kredit AI.','TOPUP_KREDIT',140000,400,0,false,false,true,6,0],
-    ['P-VIDEO-AI','Jasa Video Iklan AI - Paket Hemat','Jasa pembuatan video iklan/promosi AI untuk produk & usaha; aktivasi diproses admin.','JASA_SEKALI',50000,0,0,true,true,true,7,20],
-    ['P-EBOOK','Bundel Ebook Vibe Coder & Template Siap Pakai','Ebook panduan praktis Vibe Coder, bundel template siap pakai, dan bonus 10 kredit AI.','PRODUK_DIGITAL',49000,10,0,false,true,true,8,30]
+  // Only a fresh database is seeded. Never overwrite live prices.
+  var rows=[
+    ['P-EBOOK','Ebook Panduan Workflow AI','Panduan workflow AI untuk kebutuhan praktis UMKM.','PRODUK_DIGITAL',25000,0,0,false,true,40,'INTERNAL',true,1],
+    ['P-3IN1','Paket Akses 3-in-1 Tools','Akses produk digital untuk UMKM selama 30 hari.','LANGGANAN_30H',100000,0,30,false,true,25,'INTERNAL',true,2],
+    ['P-POS','Lisensi POS Kasir Digital','Lisensi kasir satu kali bayar, diproses admin.','LISENSI_SEKALI',150000,0,0,true,true,25,'INTERNAL',true,3],
+    ['P-VIDEO-AI','Layanan Generasi Video AI','Produksi video iklan menggunakan AI, dikerjakan admin.','JASA_SEKALI',50000,0,0,true,true,20,'INTERNAL',true,4],
+    ['P-CANVA','Akses Canva Pro Tim','Akses tim Canva selama 30 hari, diproses admin.','SEAT_30H',35000,0,30,true,true,15,'INTERNAL',true,5],
+    ['P-TOKEN-10','Top-Up 10 Token Universal','Tambahan 10 token universal.','TOPUP_KREDIT',10000,10,0,false,true,10,'INTERNAL',true,6],
+    ['P-KREDIT-50','Top-Up 50 Token Universal','Tambahan 50 token universal.','TOPUP_KREDIT',50000,50,0,false,true,10,'INTERNAL',true,7],
+    ['P-KREDIT-150','Top-Up 150 Token Universal','Tambahan 150 token universal.','TOPUP_KREDIT',150000,150,0,false,true,10,'INTERNAL',true,8],
+    ['P-KREDIT-400','Top-Up 400 Token Universal','Tambahan 400 token universal.','TOPUP_KREDIT',400000,400,0,false,true,10,'INTERNAL',true,9]
   ];
-  return seedIfEmpty_('katalog_produk', rows.map(function(r) {
-    var names = NGD.HEADERS.katalog_produk.split(','), o={};
-    names.forEach(function(k,i){o[k]=r[i];});return o;
+  return seedIfEmpty_('katalog_produk',rows.map(function(row){
+    var obj={},columns=NGD.HEADERS.katalog_produk.split(',');
+    columns.forEach(function(key,i){obj[key]=row[i];});
+    return obj;
   }));
 }
 function seedAiTools_() {
