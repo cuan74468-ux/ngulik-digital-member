@@ -13,7 +13,7 @@ const course={
   level:'PEMULA',status:'PUBLISHED',access_granted:true
 };
 test('Learning Studio loads on public, staging-member and operations after legacy CSS',()=>{
-  for(const file of ['index.html','staging/member.html','staging/index.html']){
+  for(const file of ['index.html','staging/member.html','staging/monitor.html']){
     const src=read(file),legacy=src.indexOf('experience.css'),studio=src.indexOf('learning-studio.css');
     assert.ok(legacy>=0&&studio>legacy,file);
   }
