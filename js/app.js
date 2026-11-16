@@ -801,10 +801,10 @@ function viewAdminRuntime(){
 function viewAdmin(){
   if(!isAdmin())return empty('Akses administrator','Gunakan akun administrator terdaftar untuk membuka pengelolaan Ngulik Digital.','admin-login','Masuk admin');
   const details=state.adminSummary?.ringkasan||[];
-  return '<section class="admin-operations-intro"><p class="eyebrow">ADMIN STUDIO / NGULIK DIGITAL</p><h1>Siap mengelola bisnis Anda.</h1><p>Mulai isi konten, produk, kelas, dan layanan. Semua tombol penyimpanan tetap diperiksa oleh backend sesuai hak akses Admin.</p>'+
+  return '<section class="admin-operations-intro"><p class="eyebrow">ADMIN STUDIO / NGULIK DIGITAL</p><h1>Semua kebutuhan usaha, satu meja kendali.</h1><p>Atur etalase dan kelas, tangani pesanan, serta lanjutkan pekerjaan yang paling penting hari ini.</p>'+
     (config.brand?.includes('STAGING')?'<span class="chip">DATA STAGING — bukan website produksi</span>':'<span class="chip">Data sesuai layanan terhubung</span>')+'</section>'+
     '<section class="admin-start-actions" aria-label="Mulai mengelola bisnis">'+
-    '<div><p class="eyebrow">MULAI DARI SINI</p><h2>Apa yang ingin Anda isi hari ini?</h2></div>'+
+    '<div><p class="eyebrow">PINTASAN UTAMA</p><h2>Mulai kelola bisnis Anda.</h2></div>'+
     '<div class="admin-start-grid">'+[
       ['konten','Pasang banner','Atur gambar, judul dan tombol promosi.'],
       ['produk','Tambah produk','Masukkan nama, harga dan katalog.'],
@@ -813,17 +813,14 @@ function viewAdmin(){
     ].map(([route,heading,detail])=>'<button type="button" class="admin-start-item" data-route="'+route+'">'+
       '<strong>'+heading+' '+icon('arrow')+'</strong><small>'+detail+'</small></button>').join('')+
     '</div></section>'+
+    '<div class="admin-section-heading"><div><p class="eyebrow">OPERASIONAL</p><h2>Pantau dan tindak lanjuti</h2></div><p>Pesanan, member, tiket, rilis, dan pengaturan dalam satu tempat.</p></div>'+ 
     '<div class="admin-module-grid">'+[
-      ['grid','Konten visual','Atur banner otomatis, gambar produk, ikon dan jadwal terbit.','konten'],
-      ['clipboard','Pesanan','Periksa pembayaran manual dan status fulfillment.','pesanan'],
-      ['users','Kelola member','Lihat data member dan status keanggotaan.','member'],
-      ['store','Katalog produk','Periksa harga, ketersediaan dan penawaran yang tampil di publik.','produk'],
-      ['clipboard','Permintaan jasa','Tinjau brief pelanggan dan siapkan penawaran.','layanan'],
-      ['clock','Waiting list','Tinjau antrean dan kuota gelombang.','antrean'],
-      ['shield','Pengaturan sistem','Lihat konfigurasi resmi dan kesiapan fitur backend.','pengaturan'],
-      ['book','Studio LMS','Kelola kurikulum, pelajaran, workspace otomatis dan draft AI.','lms'],
-      ['clipboard','Tiket support','Kelola bug, pertanyaan, dan permintaan fitur.','dukungan'],
-      ['grid','Product releases','Catat versi, perbaikan, dan pembaruan produk.','rilis']
+      ['clipboard','Pesanan','Pantau status pembayaran dan pemenuhan akses.','pesanan'],
+      ['users','Kelola member','Periksa akun dan status keanggotaan.','member'],
+      ['clipboard','Tiket masuk','Jawab pertanyaan dan tindak lanjuti kendala.','dukungan'],
+      ['clock','Antrean pendaftaran','Pantau kuota dan member menunggu.','antrean'],
+      ['grid','Rilis produk','Kelola versi dan informasi pembaruan.','rilis'],
+      ['shield','Pengaturan','Tinjau konfigurasi layanan yang berlaku.','pengaturan']
     ].map(x=>'<article class="surface admin-module-card"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" data-route="'+x[3]+'">Buka modul '+icon('arrow')+'</button></article>').join('')+'</div>'+
     '<section class="section-gap">'+title('Ringkasan data','METRIK SISTEM','Nilai berasal dari rumus Google Sheets.')+
     (details.length?'<div class="grid-3">'+details.slice(0,12).map(x=>'<div class="stat"><div class="stat-value">'+esc(x.nilai)+'</div><div class="stat-label">'+esc(x.metrik)+'</div></div>').join('')+'</div>':
@@ -903,8 +900,8 @@ function viewAdminCatalog(){
   const intro='<div class="catalog-admin-intro"><div><p class="eyebrow">ADMIN / OPERASIONAL PRODUK</p>'+
     '<h1>Katalog & penawaran</h1><p>Atur penawaran yang terlihat di publik tanpa mengubah riwayat order yang sudah ada.</p></div>'+
     '<span class="chip">'+items.length+' produk tercatat</span></div>'+
-    '<div class="banner warning"><div><h3>Perubahan katalog dikendalikan secara terpisah</h3>'+
-    '<p>Semua jenis penawaran dapat dipesan. Top-up dan eBook bonus kredit diproses otomatis; jasa, lisensi, dan seat diselesaikan admin setelah pembayaran terverifikasi.</p></div>'+
+    '<div class="banner '+(canWrite?'info':'warning')+'"><div><h3>'+(canWrite?'Editor katalog siap digunakan':'Editor katalog tidak aktif')+'</h3>'+
+    '<p>Atur nama, harga, bonus token, masa aktif, dan komisi sesuai produk. Fulfillment tetap mengikuti konfirmasi pembayaran di server.</p></div>'+
     '<span class="chip orange">'+(canWrite?'EDITOR PRODUK':'TIDAK DAPAT DIEDIT')+'</span></div>';
   const entries='<section class="catalog-admin-list" aria-label="Daftar penawaran">'+
     items.map(p=>'<article class="catalog-admin-row">'+
