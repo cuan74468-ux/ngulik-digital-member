@@ -1,4 +1,7 @@
 # AGENTS.md — Ngulik Digital Member
+**Checkpoint teknis terbaru (16 November 2026):** Source audit rekonsiliasi registrasi STAGING baca-saja dan uji gangguan log/kredit/sesi sudah ditambahkan. [CI 398/398 PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43785751207), [Pages PASS](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43785751269), commit source `78160154a4279aba1e5c8fd09ae64acec5d54bdb`. Seluruh perubahan backend adalah **GitHub source-only**, belum terpasang ke Apps Script STAGING; Tahap 1 tetap NO-GO.
+
+
 
 ## Status kerja terbaru — 16 November 2026 (baca sebelum tugas baru)
 
