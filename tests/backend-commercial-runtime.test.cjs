@@ -12,11 +12,11 @@ function boot(){
   vm.runInContext(catalog,ctx,{timeout:10000});
   return ctx;
 }
-test('all six commercial types can enter checkout',()=>{
+test('all seven supported commercial type identifiers can enter checkout',()=>{
   const c=boot();
   assert.deepEqual(Array.from(c.NGD_CHECKOUT_TYPES_).sort(),[
     'JASA_SEKALI','LANGGANAN_30H','LISENSI_SEKALI',
-    'PRODUK_DIGITAL','SEAT_30H','TOPUP_KREDIT'
+    'PRODUK_DIGITAL','SEAT_30H','TOPUP_KREDIT','TOPUP_TOKEN'
   ].sort());
 });
 test('product commission override, explicit zero, and global fallback',()=>{
