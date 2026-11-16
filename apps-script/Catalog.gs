@@ -24,8 +24,9 @@ function catalogAdminView_(row) {
   var out={product_id:row.product_id,revision:catalogRevision_(row)};
   NGD_CATALOG_EDIT_FIELDS_.forEach(function(k){out[k]=row[k];});
   out.aktif=row.aktif===true;
-  out.checkout_supported=['LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_KREDIT']
-    .indexOf(row.tipe)>=0;
+  out.komisi_persen=row.komisi_persen===undefined||row.komisi_persen===''?null:Number(row.komisi_persen);
+  out.checkout_supported=['LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_KREDIT',
+    'PRODUK_DIGITAL','JASA_SEKALI'].indexOf(row.tipe)>=0;
   return out;
 }
 function catalogAdminList_() {
