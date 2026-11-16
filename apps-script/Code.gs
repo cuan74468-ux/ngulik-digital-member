@@ -1642,11 +1642,59 @@ function maintenance_() {
 }
 function expireOrders() {requireMutationsEnabled_();requireFinanceEnabled_();return withLock_(function(){var count=0;readAll_('orders').forEach(function(o){if(o.status==='PENDING'&&new Date(o.expires_at).getTime()<=Date.now()){expireOrder_(o);count++;}});return count;});}
 function dailyMaintenance() {requireMutationsEnabled_();requireFinanceEnabled_();return maintenance_();}
+function financeAutomationTick() {
+  requireMutationsEnabled_();
+  requireFinanceEnabled_();
+  return withLock_(function(){
+    var s=settings_(),time=Date.now();
+    var delay=Number(s.cart_abandonment_menit||15);
+    require_(Number.isInteger(delay)&&delay>=5&&delay<=120,
+      'MAINTENANCE','Pengaturan pengingat order tidak valid.');
+    var results={abandoned_sent:0,low_balance_sent:0};
+    readAll_('orders').filter(function(o){
+      var created=new Date(o.created_at).getTime();
+      var deadline=new Date(o.expires_at).getTime();
+      return o.status==='PENDING'&&!o.abandonment_reminded_at&&
+        Number.isFinite(created)&&created<=time-delay*60000&&
+        Number.isFinite(deadline)&&deadline>time;
+    }).slice(0,30).forEach(function(o){
+      var m=byId_('members','member_id',o.member_id);
+      if(!m||!m.wa)return;
+      var text='Ngulik Digital: pesanan '+o.order_id+' ('+
+        String(o.nama_produk||'produk').slice(0,80)+') senilai Rp'+
+        Number(o.total_bayar||0).toLocaleString('id-ID')+
+        ' belum terkonfirmasi. Jika sudah transfer, kirim konfirmasi di akun Anda.';
+      var result=sendFonnteWa_(m.wa,text,'MEMBER',
+        'ORDER_ABANDONED',o.order_id);
+      if(result.status==='ACCEPTED'){
+        updateRow_('orders',o._row,{abandonment_reminded_at:now_()});
+        results.abandoned_sent++;
+      }
+    });
+    var today=Utilities.formatDate(now_(),NGD.TZ,'yyyy-MM-dd');
+    readAll_('members').filter(function(m){
+      if(m.role!=='MEMBER'||m.status!=='AKTIF'||!m.wa)return false;
+      var seen=new Date(m.last_active_at).getTime();
+      return Number.isFinite(seen)&&seen>=time-7*86400000;
+    }).slice(0,50).forEach(function(m){
+      if(creditBalance_(m.member_id)>2)return;
+      var ref='LOW_BALANCE:'+m.member_id+':'+today;
+      var result=sendFonnteWa_(m.wa,
+        'Ngulik Digital: saldo token Anda tersisa '+creditBalance_(m.member_id)+
+        '. Top-up tersedia di menu Katalog.',
+        'MEMBER','LOW_BALANCE',ref);
+      if(result.status==='ACCEPTED'&&!result.already_sent)
+        results.low_balance_sent++;
+    });
+    return results;
+  });
+}
 function installTriggers() {
   requireMutationsEnabled_();
   requireFinanceEnabled_();
-  ScriptApp.getProjectTriggers().forEach(function(t){if(['expireOrders','dailyMaintenance'].indexOf(t.getHandlerFunction())>=0)ScriptApp.deleteTrigger(t);});
+  ScriptApp.getProjectTriggers().forEach(function(t){if(['expireOrders','dailyMaintenance','financeAutomationTick'].indexOf(t.getHandlerFunction())>=0)ScriptApp.deleteTrigger(t);});
   ScriptApp.newTrigger('expireOrders').timeBased().everyMinutes(5).create();
+  ScriptApp.newTrigger('financeAutomationTick').timeBased().everyMinutes(15).create();
   ScriptApp.newTrigger('dailyMaintenance').timeBased().everyDays(1).atHour(1).create();
   console.log('TRIGGERS_OK');
   return 'TRIGGERS_OK';
