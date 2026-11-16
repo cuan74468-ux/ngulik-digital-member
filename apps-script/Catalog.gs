@@ -17,6 +17,7 @@ var NGD_CATALOG_EDIT_FIELDS_=[
 ];
 function catalogRevision_(row) {
   var values=NGD_CATALOG_EDIT_FIELDS_.map(function(k){return row[k];});
+  values.push(row.komisi_persen===undefined||row.komisi_persen===null?'':row.komisi_persen);
   values.push(row.aktif===true);
   return sha256_(JSON.stringify(values));
 }
@@ -44,7 +45,7 @@ function catalogInt_(p,name,min,max) {
 function catalogPayload_(p,existing) {
   require_(p&&typeof p==='object'&&!Array.isArray(p),
     'VALIDATION','Isi produk tidak valid.');
-  var keys=NGD_CATALOG_EDIT_FIELDS_.concat(
+  var keys=NGD_CATALOG_EDIT_FIELDS_.concat(['komisi_persen'],
     existing?['product_id','revision']:[]);
   require_(Object.keys(p).every(function(k){return keys.indexOf(k)>=0;}),
     'VALIDATION','Kolom katalog tidak diizinkan.');
@@ -70,6 +71,17 @@ function catalogPayload_(p,existing) {
     require_(typeof p[k]==='boolean','VALIDATION','Pilihan '+k+' tidak valid.');
     patch[k]=p[k];
   });
+  // Optional per-product rate. Blank = system default; 0 = no commission.
+  var rawRate=Object.prototype.hasOwnProperty.call(p,'komisi_persen')
+    ?p.komisi_persen:(existing?existing.komisi_persen:'');
+  if(rawRate===undefined||rawRate===null||String(rawRate).trim()===''){
+    patch.komisi_persen='';
+  }else{
+    var rate=Number(rawRate);
+    require_(Number.isInteger(rate)&&rate>=0&&rate<=50,
+      'VALIDATION','Komisi produk harus 0–50 persen atau kosong.');
+    patch.komisi_persen=rate;
+  }
   if(existing)
     require_(patch.tipe===existing.tipe,
       'CONFLICT','Tipe produk tidak dapat diubah setelah dibuat.');
@@ -87,8 +99,9 @@ function catalogPayload_(p,existing) {
   return patch;
 }
 function catalogSame_(a,b) {
-  return NGD_CATALOG_EDIT_FIELDS_.every(function(k){
-    return String(a[k])===String(b[k]);
+  return NGD_CATALOG_EDIT_FIELDS_.concat(['komisi_persen']).every(function(k){
+    return String(a[k]===undefined||a[k]===null?'':a[k])===
+      String(b[k]===undefined||b[k]===null?'':b[k]);
   });
 }
 function catalogCreate_(admin,p,requestId) {
@@ -107,6 +120,11 @@ function catalogCreate_(admin,p,requestId) {
     }
     var record={product_id:id,aktif:false};
     NGD_CATALOG_EDIT_FIELDS_.forEach(function(k){record[k]=patch[k];});
+    if(patch.komisi_persen!==''){
+      require_(tbl_('katalog_produk').headers.indexOf('komisi_persen')>=0,
+        'MAINTENANCE','Tambahkan kolom komisi_persen di katalog_produk.');
+      record.komisi_persen=patch.komisi_persen;
+    }
     appendRow_('katalog_produk',record);
     logAudit_(admin.member_id,'ADMIN','CATALOG_CREATED','katalog_produk',
       id,'','INACTIVE',{product_id:id,tipe:patch.tipe});
@@ -127,12 +145,18 @@ function catalogUpdate_(admin,p) {
       'CONFLICT','Produk telah berubah. Muat ulang sebelum menyimpan.');
     // Existing orders retain their snapshot amounts. Price changes affect
     // only new orders and require a separate audit event.
+    if(String(patch.komisi_persen)!==String(old.komisi_persen==null?'':old.komisi_persen)){
+      require_(tbl_('katalog_produk').headers.indexOf('komisi_persen')>=0,
+        'MAINTENANCE','Tambahkan kolom komisi_persen di katalog_produk.');
+    }else delete patch.komisi_persen;
     updateRow_('katalog_produk',old._row,patch);
     logAudit_(admin.member_id,'ADMIN','CATALOG_UPDATED','katalog_produk',
       id,'','UPDATED',{fields:NGD_CATALOG_EDIT_FIELDS_.filter(function(k){
         return String(old[k])!==String(patch[k]);
       })});
     NGD_CATALOG_EDIT_FIELDS_.forEach(function(k){old[k]=patch[k];});
+    if(Object.prototype.hasOwnProperty.call(patch,'komisi_persen'))
+      old.komisi_persen=patch.komisi_persen;
     return {item:catalogAdminView_(old),updated:true};
   });
 }
