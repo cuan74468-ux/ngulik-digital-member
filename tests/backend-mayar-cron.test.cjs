@@ -26,6 +26,7 @@ function setup(){
       getContentText:()=>JSON.stringify({data:{id:'pay_123456789012',status:'paid',amount:10100}})};
   }};
   ctx.withLock_=fn=>fn();
+  ctx.readAll_=table=>table==='orders'?[order]:table==='wa_notifications'?queue:[];
   ctx.findRows_=(table,predicate)=>table==='orders'?[order].filter(predicate):
     table==='wa_notifications'?queue.filter(predicate):[];
   ctx.byId_=(table,field,id)=>table==='orders'?order:
