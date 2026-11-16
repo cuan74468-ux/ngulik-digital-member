@@ -1877,6 +1877,79 @@ function ngdStagingWorkspaceInfo_() {
   };
 }
 
+/**
+ * Pilot membership QA: deterministic, read-only STAGING diagnostics.
+ * No login, payment, wallet, affiliate, notification, or order mutations.
+ * Does not send Fonnte messages or invoke external provider APIs.
+ */
+function ngdPilotSelfTestReadOnly() {
+  var info=ngdStagingWorkspaceInfo_(); // refuses production/unbound databases
+  var checks=[],s=settings_(),props=PropertiesService.getScriptProperties();
+  function check(name,pass,reason){
+    checks.push({name:name,ok:!!pass,note:pass?'OK':reason});
+  }
+  var expected={
+    members:['member_id','referred_by','saldo_kredit'],
+    katalog_produk:['product_id','tipe','harga','kredit_diberikan','komisi_persen'],
+    orders:['order_id','status','total_bayar','kode_unik','expires_at','konfirmasi_bayar_at','abandonment_reminded_at'],
+    credits_ledger:['member_id','tipe','jumlah','ref_id'],
+    affiliate_commissions:['referrer_id','order_id','dasar_komisi','persen','nominal'],
+    audit_logs:['action','entity_id'],
+    pengaturan_sistem:['key','value'],
+    wa_notifications:['tujuan_wa','template_kode','ref_id','status']
+  };
+  Object.keys(expected).forEach(function(table){
+    try{
+      var head=tbl_(table).headers;
+      check('schema_'+table,expected[table].every(function(h){return head.indexOf(h)>=0;}),
+        'Kolom wajib belum tersedia.');
+    }catch(e){check('schema_'+table,false,'Tabel tidak terbaca.');}
+  });
+  check('payment_mode',s.payment_gateway_mode==='QRIS_STATIS','Mode harus QRIS_STATIS.');
+  var min=Number(s.kode_unik_min),max=Number(s.kode_unik_max);
+  check('unique_code_range',Number.isInteger(min)&&Number.isInteger(max)&&
+    min>=100&&max<=999&&max>=min,'Kode unik harus tiga digit.');
+  var expiry=Number(s.order_expiry_menit),remind=Number(s.cart_abandonment_menit);
+  check('expiry_and_reminder',expiry===60&&remind===15,
+    'Pilot memakai expiry 60 menit dan reminder 15 menit.');
+  check('member_notifications',s.followup_member_otomatis===true,
+    'Aktifkan followup_member_otomatis.');
+  check('admin_notifications',s.notif_admin_wa_aktif===true&&
+    /^62[0-9]{8,13}$/.test(String(s.wa_admin||'')),
+    'Aktifkan notif_admin_wa_aktif dan nomor wa_admin valid.');
+  check('fonnte_token_present',!!String(props.getProperty('FONNTE_API_TOKEN')||'').trim(),
+    'FONNTE_API_TOKEN belum disetel.');
+  check('qris_owner_name',!!String(s.qris_atas_nama||'').trim(),
+    'Nama penerima QRIS belum diisi.');
+  var qris=String(s.qris_gambar_path||'').trim();
+  check('qris_image_reference',/^(https:\/\/[^\s]+|assets\/[A-Za-z0-9_.-]+\.(?:png|jpg|jpeg|webp))$/i.test(qris),
+    'Path atau URL gambar QRIS tidak valid; ketersediaan gambar diperiksa di browser.');
+  try {
+    var product=byId_('katalog_produk','product_id','P-TOKEN-10');
+    check('token10_product',!!product&&product.tipe==='TOPUP_TOKEN'&&
+      ngdPriceRupiah_(product.harga)===10000&&Number(product.kredit_diberikan)===10,
+      'Produk top-up 10 Token tidak sesuai.');
+  }catch(e){check('token10_product',false,'Produk belum terbaca.');}
+  try {
+    var orders=readAll_('orders'),open=orders.filter(function(o){
+      return ['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;
+    }),amounts={};
+    var conflict=open.some(function(o){
+      var key=String(o.total_bayar);
+      if(amounts[key])return true;
+      amounts[key]=true;return false;
+    });
+    check('active_amount_uniqueness',!conflict,'Ada nominal yang sama pada pesanan aktif.');
+  }catch(e){check('active_amount_uniqueness',false,'Pesanan aktif tidak terbaca.');}
+  var failed=checks.filter(function(x){return !x.ok;});
+  var summary={environment:info.environment,read_only:true,
+    sent_whatsapp:0,created_orders:0,posted_credits:0,
+    total:checks.length,passed:checks.length-failed.length,failed:failed.length,
+    checks:checks,verdict:failed.length?'NEEDS_CONFIGURATION':'READ_ONLY_CHECKS_PASS'};
+  console.log('NGD_PILOT_READONLY_QA '+JSON.stringify(summary));
+  return summary;
+}
+
 function ngdStagingWorkspaceReadOnlyCheck() {
   var info=ngdStagingWorkspaceInfo_();
   require_(!info.mutations_enabled&&!info.registration_enabled&&
