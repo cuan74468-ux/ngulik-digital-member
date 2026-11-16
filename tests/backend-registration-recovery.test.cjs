@@ -196,6 +196,15 @@ test('duplicate registration OTP ID is reported',()=>{
  const result=h.run();assert.equal(result.issue_counts.duplicate_registration_otp_id,1);
  assert.equal(result.ready,false);
 });
+test('prototype-like registration IDs do not bypass duplicate checks',()=>{
+ const h=fixture({members:[
+  member('__proto__','6281231231231'),
+  member('__proto__','6281235557777')
+ ]});
+ const r=h.run();
+ assert.equal(r.ready,false);
+ assert.equal(r.issue_counts.duplicate_registration_member_id,1);
+});
 test('production is rejected without opening Sheets',()=>{
   const h=fixture({}, {props:{NGD_ENVIRONMENT:'PRODUCTION'}});
   assert.throws(()=>h.run(),/RECOVERY_NOT_STAGING/);
