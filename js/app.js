@@ -439,47 +439,38 @@ function viewLearn(){
 function viewAI(){
   if(!logged())return title('Studio AI untuk UMKM','ASISTEN KREATIF','Ide, caption, dan copywriting produk.')+needLogin('Studio AI');
   const tools=state.tools;
-  const ready=isWriteEnabled()&&config.paymentsEnabled===true;
-  return title('Studio AI','TOOLKIT KREATIF','Pilih bantuan kreatif dan jalankan dengan kredit Anda.')+
-    '<div class="banner"><div><h3>Saldo kredit Anda</h3><p>Setiap pemakaian dikenakan biaya sesuai alat; kegagalan provider dikembalikan sebagai kredit.</p></div><span class="stat-value">'+esc(state.home?.saldo_kredit??state.me?.saldo_kredit??0)+' kredit</span></div>'+
-    (tools.length?'<div class="grid-2">'+tools.map(t=>'<article class="surface"><div class="surface-icon">'+icon('spark')+'</div><h3>'+esc(t.nama)+'</h3><p class="card-desc">'+esc(t.deskripsi||'')+'</p>'+
-    '<p class="product-meta" style="margin-top:14px">'+esc(t.kredit_biaya)+' kredit / penggunaan</p>'+
-    '<form class="ai-tool-form" data-tool-id="'+esc(t.tool_id)+'">'+
-    '<div class="field"><label for="ai-'+esc(t.tool_id)+'">Ceritakan kebutuhan Anda</label>'+
-    '<textarea class="input" id="ai-'+esc(t.tool_id)+'" name="input" rows="4" maxlength="1500" minlength="3" required placeholder="Misalnya: Buat caption Instagram untuk promosi bakso kuah..."></textarea></div>'+
-    '<button class="btn btn-primary" type="submit" '+(!ready?'disabled title="Pemakaian kredit belum diaktifkan"':'')+'>Buat dengan AI '+icon('spark')+'</button></form>'+
-    (state.aiResult?.tool_id===t.tool_id?
-      '<div class="section-gap"><h4>Hasil AI</h4><div class="card-desc" style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(state.aiResult.hasil||'')+'</div>'+
-      '<p class="small muted">Saldo tersisa: '+esc(state.aiResult.saldo_kredit??'—')+' kredit</p></div>':'')+
-    '</article>').join('')+'</div>':
-    empty('Tool AI belum aktif','Admin belum mengaktifkan alat AI.'));
+  return title('Studio AI','TOOLKIT KREATIF','Pilih jenis bantuan yang ingin Anda gunakan.')+
+    '<div class="banner"><div><h3>Saldo kredit Anda</h3><p>Kredit terpotong saat hasil diminta. Jika AI gagal, kredit otomatis dikembalikan.</p></div><span class="stat-value" id="ai-balance">'+esc(state.home?.saldo_kredit??state.me?.saldo_kredit??0)+' kredit</span></div>'+
+    (tools.length?'<div class="grid-2 ai-grid">'+tools.map(t=>{
+      const cost=Number(t.kredit_biaya)||0,can=isWriteEnabled();
+      return '<article class="surface ai-tool"><div class="surface-icon">'+icon('spark')+'</div><h3>'+esc(t.nama)+'</h3><p class="card-desc">'+esc(t.deskripsi||'')+'</p>'+
+      '<form class="ai-form" id="ai-run-form" data-tool-id="'+idSafe(t.tool_id)+'" data-cost="'+cost+'" novalidate>'+
+      '<label class="ai-label" for="ai-in-'+idSafe(t.tool_id)+'">Isi permintaan</label>'+
+      '<textarea class="input ai-input" id="ai-in-'+idSafe(t.tool_id)+'" name="input" rows="4" maxlength="1500" required placeholder="'+esc(t.placeholder_input||'Tuliskan kebutuhan Anda')+'"'+(can?'':' disabled')+'></textarea>'+
+      '<div class="ai-foot"><span class="product-meta">'+cost+' kredit / penggunaan</span>'+
+      '<button class="btn btn-primary" type="submit"'+(can?'':' disabled title="Fitur AI belum aktif"')+'>Buat hasil '+icon('spark')+'</button></div>'+
+      '<div class="ai-result" role="status" aria-live="polite" hidden></div></form></article>';}).join('')+'</div>':
+    empty('Alat AI belum tersedia','Belum ada alat AI aktif. Kredit tidak akan dipotong.'));
 }
-async function submitAiTool(form){
-  if(!logged()||isAdmin()||!isWriteEnabled()||config.paymentsEnabled!==true){
-    toast('Pemakaian kredit AI belum diaktifkan.',true);return;
-  }
-  const tool_id=form.dataset.toolId,input=String(new FormData(form).get('input')||'').trim();
-  if(input.length<3){toast('Input minimal tiga karakter.',true);return;}
-  const btn=form.querySelector('[type=submit]');
-  if(btn)btn.disabled=true;
-  // Preserve request ID across uncertain network results to avoid double debit.
-  const fingerprint=JSON.stringify([tool_id,input]);
-  if(state.aiPending?.fingerprint!==fingerprint)
-    state.aiPending={fingerprint,requestId:createRequestId()};
+async function submitAITool(form){
+  const btn=form.querySelector('[type=submit]'),box=form.querySelector('.ai-result'),area=form.querySelector('textarea');
+  const input=area.value.trim();
+  if(!input){area.focus();return toast('Isi permintaan terlebih dahulu.',true);}
+  const cost=Number(form.dataset.cost)||0,saldo=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
+  if(saldo<cost)return toast('Kredit tidak cukup. Silakan top-up kredit di Katalog.',true);
+  btn.disabled=true;area.disabled=true;box.hidden=false;box.className='ai-result is-loading';box.textContent='AI sedang menyusun hasil…';
   try{
-    const result=await api('generateAI',{tool_id,input},state.token,
-      {write:true,requestId:state.aiPending.requestId});
-    state.aiPending=null;
-    state.aiResult={tool_id,hasil:String(result.hasil||''),
-      saldo_kredit:result.saldo??result.saldo_kredit};
-    if(state.home)state.home.saldo_kredit=state.aiResult.saldo_kredit;
-    if(state.me)state.me.saldo_kredit=state.aiResult.saldo_kredit;
-    render();toast('Hasil AI berhasil dibuat.');
-  }catch(error){
-    if(!['NETWORK_ERROR','INTERNAL','RECONCILIATION_REQUIRED'].includes(error?.code))
-      state.aiPending=null;
-    toast(error.message||'Permintaan AI gagal.',true);
-  }finally{if(btn)btn.disabled=false;}
+    const r=await api('generateAI',{tool_id:form.dataset.toolId,input},state.token,{write:true});
+    if(state.home)state.home.saldo_kredit=r.saldo;if(state.me)state.me.saldo_kredit=r.saldo;
+    const bal=document.getElementById('ai-balance');if(bal)bal.textContent=r.saldo+' kredit';
+    box.className='ai-result';box.innerHTML='<p class="card-kicker">HASIL · '+esc(r.kredit_terpakai)+' KREDIT TERPAKAI</p><div class="ai-text">'+esc(r.hasil)+'</div>'+
+      '<button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(r.hasil)+'">Salin hasil '+icon('link')+'</button>';
+    box.scrollIntoView({block:'nearest',behavior:'smooth'});
+  }catch(e){
+    box.className='ai-result is-error';box.textContent=e.message||'AI gagal. Coba lagi.';
+    if(e.code==='AI_FAILED')toast('Kredit Anda sudah dikembalikan.');
+    try{const d=await api('getBeranda',{},state.token);state.home=d;const bal=document.getElementById('ai-balance');if(bal)bal.textContent=(d.saldo_kredit??0)+' kredit';}catch{}
+  }finally{btn.disabled=false;area.disabled=false;}
 }
 function viewAffiliate(){
   if(!logged())return title('Bagikan manfaatnya','PROGRAM AFFILIATE','Ajak sesama pelaku usaha untuk ikut belajar.')+needLogin('program affiliate');
@@ -741,7 +732,7 @@ function viewAdminCatalog(){
     '<h1>Katalog & penawaran</h1><p>Atur penawaran yang terlihat di publik tanpa mengubah riwayat order yang sudah ada.</p></div>'+
     '<span class="chip">'+items.length+' produk tercatat</span></div>'+
     '<div class="banner warning"><div><h3>Perubahan katalog dikendalikan secara terpisah</h3>'+
-    '<p>Enam tipe produk dapat dipesan. Pengiriman aset digital dan penyelesaian jasa tetap ditangani sesuai status fulfillment.</p></div>'+
+    '<p>Semua jenis penawaran dapat dipesan. Top-up dan eBook bonus kredit diproses otomatis; jasa, lisensi, dan seat diselesaikan admin setelah pembayaran terverifikasi.</p></div>'+
     '<span class="chip orange">'+(canWrite?'EDITOR PRODUK':'TIDAK DAPAT DIEDIT')+'</span></div>';
   const entries='<section class="catalog-admin-list" aria-label="Daftar penawaran">'+
     items.map(p=>'<article class="catalog-admin-row">'+
@@ -772,10 +763,7 @@ function viewAdminCatalog(){
     '</select></div>'+
     input('urut','Urutan tampilan','number',0)+
     input('kredit_diberikan','Kredit diberikan','number',0)+
-    input('durasi_hari','Durasi hari (0 atau 30)','number',0)+
-    '<div class="field"><label for="cat-komisi">Komisi produk (%) — kosong memakai default</label>'+
-    '<input class="input" id="cat-komisi" name="komisi_persen" type="number" min="0" max="50" step="1" placeholder="Default sistem" value="'+
-    esc(draft.komisi_persen??'')+'"></div></div>'+
+    input('durasi_hari','Durasi hari (0 atau 30)','number',0)+'</div>'+
     '<div class="field"><label for="cat-deskripsi">Deskripsi (minimal 10 karakter)</label>'+
     '<textarea class="input" id="cat-deskripsi" name="deskripsi" maxlength="350" minlength="10" rows="4" required>'+
     esc(draft.deskripsi)+'</textarea></div>'+
@@ -1713,8 +1701,7 @@ async function submitCatalogForm(form){
     durasi_hari:Number(fd.get('durasi_hari')),
     urut:Number(fd.get('urut')),
     perlu_approval_admin:fd.has('perlu_approval_admin'),
-    bisa_komisi:fd.has('bisa_komisi'),
-    komisi_persen:fd.get('komisi_persen')===''?'':Number(fd.get('komisi_persen'))
+    bisa_komisi:fd.has('bisa_komisi')
   };
   if(current){payload.product_id=current.product_id;payload.revision=current.revision;}
   const requestId=current?createRequestId():(state.catalogRequestId||createRequestId());
@@ -1910,7 +1897,7 @@ document.addEventListener('click',async(e)=>{
   else if(target.dataset.action==='logout')await logout();
   else if(target.dataset.action==='confirm-payment')await confirmPayment();
   else if(target.dataset.copy){
-    try{await navigator.clipboard.writeText(target.dataset.copy);toast('Tautan tersalin.');}
+    try{await navigator.clipboard.writeText(target.dataset.copy);toast('Tersalin.');}
     catch{toast('Gagal menyalin. Silakan gunakan browser HTTPS.',true);}
   }
 });
@@ -1931,11 +1918,10 @@ async function submitProfileForm(form){
   }catch(error){btn.disabled=false;toast(error.message,true);}
 }
 document.addEventListener('submit',(e)=>{
-  if(e.target.matches('form.ai-tool-form')){e.preventDefault();submitAiTool(e.target);return;}
-  const id=e.target.id;
+  const id=e.target.id||(e.target.classList?.contains('ai-form')?'ai-run-form':'');
   if(!['admin-pin-form','content-editor-form','service-brief-form','service-quote-form','admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
     'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form',
-    'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form'].includes(id))return;
+    'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form','ai-run-form'].includes(id))return;
   e.preventDefault();
   if(id==='admin-pin-form')changeAdminPin_(e.target);
   if(id==='content-editor-form')submitContentForm_(e.target);
@@ -1955,6 +1941,7 @@ document.addEventListener('submit',(e)=>{
   if(id==='lms-lesson-form')submitLMSLessonForm(e.target);
   if(id==='lms-ai-form')submitLMSAIForm(e.target);
   if(id==='lms-ai-result-form')submitLMSAIResult(e.target);
+  if(id==='ai-run-form')submitAITool(e.target);
 });
 by('mobile-back').addEventListener('click',()=>{
   const back={
