@@ -228,3 +228,5 @@ test('read-only editor function is never dispatched through the API router',()=>
   assert.doesNotMatch(backend,/case\s+['"]ngdRegistrationRecoveryPreflightReadOnly['"]/);
   assert.doesNotMatch(source,/setValues\(|appendRow\(|deleteRow\(|UrlFetchApp\.fetch\(/);
 });
+
+// This regression file intentionally runs without connected Sheets or provider secrets.
