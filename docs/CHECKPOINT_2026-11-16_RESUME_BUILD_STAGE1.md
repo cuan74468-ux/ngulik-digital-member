@@ -114,3 +114,7 @@ Peninjauan ulang Master Index, Mandat, Brief Teknis, Design System, strategi ris
 ## Verifikasi implementasi source 16 November — hasil final
 
 Source audit `RegistrationRecoveryPreflight.gs`, uji kondisi anggota/OTP duplikat dan manifest Git blob diperbaiki. Nilai manifest sekarang menggunakan ukuran **byte UTF-8**, bukan panjang karakter JavaScript. Pengujian lengkap pada commit `cae9decf78d33f2aa9e5ec7613b85b99437f1e11` [lulus 435/435](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43794320563) serta Chrome mobile/desktop, staging UI dan API baca-saja PASS; [GitHub Pages](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43794346412) sukses. **Tidak ada deploy Apps Script.** Sesi/properti, kredensial, pembayaran, aturan kredit/komisi, LMS komersial dan database tetap tidak berubah.
+
+## P0 OTP dan login — pengamanan fail-closed source, 16 November 2026
+
+Source `OtpAuth.gs` sebelumnya menggunakan perbandingan expiry yang dapat menerima `NaN`, dan mengubah attempts rusak menjadi 0. Source baru secara eksplisit menolak tanggal OTP rusak/kedaluwarsa serta counter percobaan yang bukan bilangan bulat 0–2; batas maksimal tiga percobaan dan masa berlaku lima menit tidak diubah. `authLogin_` pada source menolak nomor WhatsApp dengan lebih dari satu record `members`, bukan memilih baris pertama, dengan pesan error generik. Pengujian mencakup validasi OTP PENDING/VERIFIED, attempts malformed, akun duplikat dan login unik. Perubahan ini **belum tersinkron ke runtime GAS**; provider, PIN V2, registrasi, finance tetap OFF.

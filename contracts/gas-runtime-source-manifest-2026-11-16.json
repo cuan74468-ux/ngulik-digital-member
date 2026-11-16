@@ -4,7 +4,7 @@
   "purpose": "Source-to-runtime manifest; NOT an assertion that GAS source has been synchronized.",
   "repository": "cuan74468-ux/ngulik-digital-member",
   "source_snapshot_branch": "main",
-  "source_snapshot_commit": "cae9decf78d33f2aa9e5ec7613b85b99437f1e11",
+  "source_snapshot_commit": "f5a401f15a3b70a658c8e7ecfb1dfbeb2840e6ce",
   "source_content_hash_kind": "Git blob SHA1; not an Apps Script editor fingerprint",
   "environment": "STAGING",
   "verified_editor_functions": [
@@ -37,8 +37,8 @@
     },
     {
       "file": "Code.gs",
-      "github_blob_sha": "8bda5316d25cad5100f5f0c70a04952abb22bdcd",
-      "bytes": 107139,
+      "github_blob_sha": "fafe8035a1c559fedd4009f18f1ec4a055504316",
+      "bytes": 107408,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
@@ -79,8 +79,8 @@
     },
     {
       "file": "OtpAuth.gs",
-      "github_blob_sha": "94a15c524bd963f2fa00ab864ec46c0b5e18ed7e",
-      "bytes": 11510,
+      "github_blob_sha": "02058fa443151f359e6dd45fcb09bb35392c622a",
+      "bytes": 12019,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {

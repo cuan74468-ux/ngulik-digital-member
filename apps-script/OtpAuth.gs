@@ -112,8 +112,17 @@ function ngdOtpLatest_(rows,wa) {
   return null;
 }
 
+// Never reset a corrupt or missing counter to zero: only explicit 0
+// on a fresh record can start the maximum-three-attempt window.
+function ngdOtpAttemptCount_(row) {
+  var raw=row&&row.attempts,value=Number(raw);
+  require_(raw!==null&&raw!==undefined&&String(raw).trim()!==''&&
+    Number.isInteger(value)&&value>=0&&value<3,
+    'RATE_LIMITED','Batas percobaan OTP tercapai.');
+  return value;
+}
 function ngdOtpRecordAttempt_(row) {
-  var next=(Number(row.attempts)||0)+1;
+  var next=ngdOtpAttemptCount_(row)+1;
   ngdOtpPatch_(row._row,{attempts:next,status:next>=3?'LOCKED':String(row.status)});
 }
 
@@ -210,11 +219,13 @@ function ngdOtpVerify_(p) {
     require_(!!row &&
       ['PENDING','VERIFIED'].indexOf(String(row.status))>=0,
       'UNAUTHORIZED','Kode OTP salah atau kedaluwarsa.');
-    if(new Date(row.expires_at).getTime()<=Date.now()){
+    var expires=new Date(row.expires_at).getTime();
+    // NaN <= now is false: reject malformed timestamps explicitly.
+    if(!Number.isFinite(expires)||expires<=Date.now()){
       ngdOtpPatch_(row._row,{status:'EXPIRED'});
       throw ngdError_('UNAUTHORIZED','Kode OTP salah atau kedaluwarsa.');
     }
-    if(Number(row.attempts)>=3)throw ngdError_('RATE_LIMITED','Batas percobaan OTP tercapai.');
+    ngdOtpAttemptCount_(row);
     if(!ngdOtpEqual_(row.kode_hash,ngdOtpHash_(conf.pepper,wa,otp))){
       ngdOtpRecordAttempt_(row);
       throw ngdError_('UNAUTHORIZED','Kode OTP salah atau kedaluwarsa.');
@@ -238,11 +249,13 @@ function ngdValidateVerifiedRegistrationOtp_(p) {
   var row=ngdOtpLatest_(ngdOtpRead_(),wa);
   require_(!!row&&row.status==='VERIFIED','UNAUTHORIZED',
     'Verifikasi WhatsApp belum selesai.');
-  if(new Date(row.expires_at).getTime()<=Date.now()){
+  var expires=new Date(row.expires_at).getTime();
+    // NaN <= now is false: reject malformed timestamps explicitly.
+    if(!Number.isFinite(expires)||expires<=Date.now()){
     ngdOtpPatch_(row._row,{status:'EXPIRED'});
     throw ngdError_('UNAUTHORIZED','Kode OTP telah kedaluwarsa.');
   }
-  if(Number(row.attempts)>=3)throw ngdError_('RATE_LIMITED','Batas percobaan OTP tercapai.');
+  ngdOtpAttemptCount_(row);
   if(!ngdOtpEqual_(row.kode_hash,ngdOtpHash_(conf.pepper,wa,otp))){
     ngdOtpRecordAttempt_(row);
     throw ngdError_('UNAUTHORIZED','Kode OTP salah.');

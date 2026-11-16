@@ -267,3 +267,46 @@ test('blank starter-credit policy fails closed instead of defaulting to 10',()=>
   assert.equal(h.members.length,0);
   assert.equal(h.row.status,'VERIFIED');
 });
+
+test('corrupt expiry fails closed at verify endpoint with no verified state',()=>{
+ const x=boot(),wa='6281234567890';
+ const row={_row:2,otp_id:'OTP-BADDATE',wa,tujuan:'REGISTRATION',
+  status:'PENDING',attempts:0,expires_at:'not-a-date',
+  kode_hash:x.ngdOtpHash_('123456789abcdef0123456789abcdef01234567890',wa,'285947')};
+ x.withLock_=fn=>fn();x.ngdOtpRead_=()=>[row];
+ x.ngdOtpPatch_=(n,patch)=>Object.assign(row,patch);
+ assert.throws(()=>x.ngdOtpVerify_({wa:'081234567890',otp:'285947'}),/kedaluwarsa/);
+ assert.equal(row.status,'EXPIRED');
+});
+test('corrupt expiry fails closed before member-registration OTP consumption',()=>{
+ const x=boot(),wa='6281234567890';
+ const row={_row:2,otp_id:'OTP-BADDATE',wa,tujuan:'REGISTRATION',
+  status:'VERIFIED',attempts:0,expires_at:'',
+  kode_hash:x.ngdOtpHash_('123456789abcdef0123456789abcdef01234567890',wa,'285947')};
+ x.ngdOtpRead_=()=>[row];x.ngdOtpPatch_=(n,patch)=>Object.assign(row,patch);
+ assert.throws(()=>x.ngdValidateVerifiedRegistrationOtp_({wa:'081234567890',otp:'285947'}),/kedaluwarsa/);
+ assert.equal(row.status,'EXPIRED');
+});
+test('malformed or missing attempts cannot be reset to zero and cannot validate OTP',()=>{
+ const x=boot(),wa='6281234567890';
+ const row={_row:2,otp_id:'OTP-BAD-ATTEMPTS',wa,tujuan:'REGISTRATION',
+  status:'VERIFIED',attempts:'broken',expires_at:new Date(Date.now()+180000),
+  kode_hash:x.ngdOtpHash_('123456789abcdef0123456789abcdef01234567890',wa,'285947')};
+ x.ngdOtpRead_=()=>[row];let writes=0;x.ngdOtpPatch_=()=>writes++;
+ const p={wa:'081234567890',otp:'285947'};
+ for(const attempts of ['broken','',null,-1,3,2.5]){
+  row.attempts=attempts;
+  assert.throws(()=>x.ngdValidateVerifiedRegistrationOtp_(p),/Batas percobaan/);
+ }
+ assert.equal(writes,0);
+});
+test('PENDING OTP verification rejects corrupt attempt count without status writes',()=>{
+ const x=boot(),wa='6281234567890';
+ const row={_row:2,otp_id:'OTP-BAD-ATTEMPTS',wa,tujuan:'REGISTRATION',
+  status:'PENDING',attempts:'broken',expires_at:new Date(Date.now()+180000),
+  kode_hash:x.ngdOtpHash_('123456789abcdef0123456789abcdef01234567890',wa,'285947')};
+ x.withLock_=fn=>fn();x.ngdOtpRead_=()=>[row];
+ let writes=0;x.ngdOtpPatch_=()=>writes++;
+ assert.throws(()=>x.ngdOtpVerify_({wa:'081234567890',otp:'285947'}),/Batas percobaan/);
+ assert.equal(writes,0);
+});

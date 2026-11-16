@@ -65,3 +65,7 @@ Saat ini `pinHash_(pin,salt)` adalah SHA-256 satu kali terhadap `salt + PIN`. Sa
 ## 5. Guardrails
 
 Tidak ada PIN/token/nomor WhatsApp/API key dicatat. Tidak ada mutasi Sheets, Script Properties, deployment GAS, pembayaran, atau pengiriman WA sebagai bagian penyusunan ini. **Source CI PASS tidak sama dengan GO-LIVE.**
+
+## Koreksi P0 OTP & identitas login, 16 November 2026
+
+Perbaikan source-only menolak kedaluwarsa OTP invalid (`NaN`) dan attempt counter malformed, tanpa memperpanjang bukti OTP. Autentikasi PIN menolak duplikasi nomor WA sebelum pemeriksaan PIN maupun penerbitan sesi, mencegah pengambilan baris pertama yang ambigu. Perbaikan tidak memberi izin menghapus/menggabungkan akun dan harus melalui perbandingan source editor sebelum aktivasi STAGING.

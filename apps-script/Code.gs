@@ -860,10 +860,15 @@ function authLogin_(p,adminOnly,expectedAdminId) {
   // parallel wrong-PIN requests bypassing the per-account throttle.
   return withLock_(function(){
     loginGuard_(wa);
-    var m=byId_('members','wa',wa);
+    var matches=findRows_('members',function(row){
+      return String(row.wa)===wa;
+    });
+    var m=matches.length?matches[0]:null;
+    // Two records claiming one WhatsApp must never result in a session.
+    // Do not reveal whether an identity conflict or wrong PIN caused rejection.
     // Admin-only entry must reject ordinary member credentials BEFORE issuing
     // any session; keep the same generic error to prevent account enumeration.
-    if(!m || (adminOnly===true&&(m.role!=='ADMIN'||
+    if(matches.length!==1 || (adminOnly===true&&(m.role!=='ADMIN'||
         String(m.member_id)!==String(expectedAdminId||''))) ||
         !pinMatches_(pin,m.pin_salt,m.pin_hash)){
       noteLoginFailure_(wa,Boolean(m));

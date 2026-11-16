@@ -57,3 +57,33 @@ test('throttle is isolated by normalized number and persists only for known user
   assert.equal(h.ctx.loginGuard_(b).attempts,0);
   assert.match(source,/noteLoginFailure_\(wa,Boolean\(m\)\)/);
 });
+
+test('duplicate WhatsApp identity fails closed and never checks PIN or issues session',()=>{
+ const h=fixture(),ctx=h.ctx,wa='6281234567890';
+ const members=[
+ {member_id:'M-1',wa,role:'MEMBER',status:'AKTIF'},
+ {member_id:'M-2',wa,role:'ADMIN',status:'AKTIF'}];
+ let issued=0,checked=0,failed=0;
+ ctx.normalizeWa_=()=>wa;ctx.checkPin_=()=>{};
+ ctx.withLock_=fn=>fn();ctx.loginGuard_=()=>({attempts:0});
+ ctx.findRows_=(tab,predicate)=>tab==='members'?members.filter(predicate):[];
+ ctx.pinMatches_=()=>{checked++;return true;};
+ ctx.noteLoginFailure_=(number,persist)=>{assert.equal(number,wa);assert.equal(persist,true);failed++;};
+ ctx.extendAdminLock_=()=>{};
+ ctx.newSessionMember_=()=>{issued++;return {token:'FORBIDDEN'};};
+ assert.throws(()=>ctx.authLogin_({wa,pin:'285947'},false),/Nomor WhatsApp atau PIN salah/);
+ assert.equal(checked,0);assert.equal(issued,0);assert.equal(failed,1);
+});
+test('one matching WhatsApp with a valid PIN still produces exactly one session',()=>{
+ const h=fixture(),ctx=h.ctx,wa='6281234567890';
+ const member={member_id:'M-1',wa,role:'MEMBER',status:'AKTIF'};
+ let issued=0;
+ ctx.normalizeWa_=()=>wa;ctx.checkPin_=()=>{};
+ ctx.withLock_=fn=>fn();ctx.loginGuard_=()=>({attempts:0});
+ ctx.findRows_=(tab,predicate)=>tab==='members'?[member].filter(predicate):[];
+ ctx.pinMatches_=()=>true;ctx.clearLoginFailures_=()=>{};
+ ctx.updateActivity_=()=>{};
+ ctx.newSessionMember_=(m)=>{assert.equal(m,member);issued++;return {token:'TEST-ONLY'};};
+ assert.equal(ctx.authLogin_({wa,pin:'285947'},false).token,'TEST-ONLY');
+ assert.equal(issued,1);
+});

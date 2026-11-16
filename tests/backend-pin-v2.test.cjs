@@ -78,6 +78,7 @@ test('login does not silently migrate legacy hashes; explicit change can write V
   h.ctx.withLock_=fn=>fn();
   h.ctx.loginGuard_=()=>({attempts:0});
   h.ctx.byId_=(tab,col,id)=>tab==='members'&&m[col]===id?m:null;
+  h.ctx.findRows_=(tab,predicate)=>tab==='members'?[m].filter(predicate):[];
   h.ctx.noteLoginFailure_=()=>{};h.ctx.clearLoginFailures_=()=>{};
   h.ctx.updateActivity_=()=>{};
   let issueCount=0;
