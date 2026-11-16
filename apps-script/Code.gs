@@ -17,7 +17,7 @@ const NGD = Object.freeze({
   MAX_LOGIN_FAILURES: 5,
   HEADERS: {
     members: 'member_id,role,nama,wa,nama_usaha,pin_hash,pin_salt,kode_referral,referred_by,status,joined_at,jenis_usaha,kota,deskripsi_usaha,instagram,onboarding_at,trial_mulai,trial_berakhir,akses_3in1_sampai,sumber_akses_3in1,url_halaman_bisnis,status_pos,pos_lisensi_kode,status_canva,canva_email,canva_mulai,canva_berakhir,last_active_at,d14_active,d30_active,saldo_kredit,retensi_14,retensi_30',
-    katalog_produk: 'product_id,nama,deskripsi,tipe,harga,kredit_diberikan,durasi_hari,perlu_approval_admin,bisa_komisi,aktif,urut',
+    katalog_produk: 'product_id,nama,deskripsi,tipe,harga,kredit_diberikan,durasi_hari,perlu_approval_admin,bisa_komisi,aktif,urut,komisi_persen',
     etalase_affiliate_luar: 'item_id,judul,kategori,deskripsi_singkat,alasan_rekomendasi,harga_info,link_affiliate,gambar_url,urut,aktif,klik_total,catatan_admin',
     orders: 'order_id,member_id,product_id,nama_produk,harga_dasar,kode_unik,total_bayar,status,metode,created_at,expires_at,konfirmasi_bayar_at,paid_at,verified_by,fulfilled_at,cancelled_at,refunded_at,ref_member_id,catatan_admin,request_id',
     credits_ledger: 'entry_id,member_id,created_at,tipe,jumlah,status,ref_id,tool_id,keterangan,saldo_setelah',
@@ -392,7 +392,7 @@ function seedSettings_() {
     ['masa_tahan_hari',14,'NUMBER'], ['min_payout',50000,'NUMBER'],
     ['ref_cookie_hari',30,'NUMBER'], ['ai_base_url','https://app.sobatagent.com/','TEXT'],
     ['ai_endpoint_path','','TEXT'], ['ai_model','','TEXT'],
-    ['ai_rate_limit_per_menit',5,'NUMBER'], ['ai_max_input_char',1500,'NUMBER'],
+    ['ai_rate_limit_per_menit',5,'NUMBER'], ['ai_max_input_char',1500,'NUMBER'], ['ai_daily_limit_per_member',20,'NUMBER'],
     ['teks_disclosure_affiliate','Beberapa link di halaman ini adalah link affiliate. Kami bisa mendapat komisi tanpa biaya tambahan untukmu.','TEXT'],
     ['versi_skema',1,'NUMBER']
   ];
@@ -414,14 +414,14 @@ function seedSettings_() {
 }
 function seedCatalog_() {
   var rows = [
-    ['P-3IN1','Paket 3-in-1: Bio Link + Profil Bisnis + Katalog Checkout Kurir','Akses Bio Link, profil usaha, dan katalog selama 30 hari.','LANGGANAN_30H',99000,0,30,false,true,true,1],
-    ['P-POS','Aplikasi POS Kasir Sederhana / Linggau POS Lite','Lisensi sekali bayar; aktivasi diverifikasi admin.','LISENSI_SEKALI',149000,0,0,true,true,true,2],
-    ['P-CANVA','Seat Canva Pro 30 Hari','Undangan seat 30 hari diproses admin.','SEAT_30H',35000,0,30,true,true,true,3],
-    ['P-KREDIT-50','Top-Up 50 Kredit AI','Tambahan 50 kredit AI.','TOPUP_KREDIT',25000,50,0,false,false,true,4],
-    ['P-KREDIT-150','Top-Up 150 Kredit AI','Tambahan 150 kredit AI.','TOPUP_KREDIT',60000,150,0,false,false,true,5],
-    ['P-KREDIT-400','Top-Up 400 Kredit AI','Tambahan 400 kredit AI.','TOPUP_KREDIT',140000,400,0,false,false,true,6],
-    ['P-VIDEO-AI','Jasa Video Iklan AI - Paket Hemat','Jasa pembuatan video iklan/promosi AI untuk produk & usaha; aktivasi diproses admin.','JASA_SEKALI',50000,0,0,true,true,true,7],
-    ['P-EBOOK','Bundel Ebook Vibe Coder & Template Siap Pakai','Ebook panduan praktis Vibe Coder, bundel template siap pakai, dan bonus 10 kredit AI.','PRODUK_DIGITAL',49000,10,0,false,true,true,8]
+    ['P-3IN1','Paket 3-in-1: Bio Link + Profil Bisnis + Katalog Checkout Kurir','Akses Bio Link, profil usaha, dan katalog selama 30 hari.','LANGGANAN_30H',99000,0,30,false,true,true,1,30],
+    ['P-POS','Aplikasi POS Kasir Sederhana / Linggau POS Lite','Lisensi sekali bayar; aktivasi diverifikasi admin.','LISENSI_SEKALI',149000,0,0,true,true,true,2,25],
+    ['P-CANVA','Seat Canva Pro 30 Hari','Undangan seat 30 hari diproses admin.','SEAT_30H',35000,0,30,true,true,true,3,20],
+    ['P-KREDIT-50','Top-Up 50 Kredit AI','Tambahan 50 kredit AI.','TOPUP_KREDIT',25000,50,0,false,false,true,4,0],
+    ['P-KREDIT-150','Top-Up 150 Kredit AI','Tambahan 150 kredit AI.','TOPUP_KREDIT',60000,150,0,false,false,true,5,0],
+    ['P-KREDIT-400','Top-Up 400 Kredit AI','Tambahan 400 kredit AI.','TOPUP_KREDIT',140000,400,0,false,false,true,6,0],
+    ['P-VIDEO-AI','Jasa Video Iklan AI - Paket Hemat','Jasa pembuatan video iklan/promosi AI untuk produk & usaha; aktivasi diproses admin.','JASA_SEKALI',50000,0,0,true,true,true,7,20],
+    ['P-EBOOK','Bundel Ebook Vibe Coder & Template Siap Pakai','Ebook panduan praktis Vibe Coder, bundel template siap pakai, dan bonus 10 kredit AI.','PRODUK_DIGITAL',49000,10,0,false,true,true,8,30]
   ];
   return seedIfEmpty_('katalog_produk', rows.map(function(r) {
     var names = NGD.HEADERS.katalog_produk.split(','), o={};
@@ -946,6 +946,7 @@ function expireOrder_(o) {
   }
   return o;
 }
+var NGD_CHECKOUT_TYPES_=['TOPUP_KREDIT','LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','PRODUK_DIGITAL','JASA_SEKALI'];
 function newOrder_(m,p,requestId) {
   return withLock_(function(){
     require_(m.role==='MEMBER','FORBIDDEN','Hanya member dapat membeli.');
@@ -957,10 +958,7 @@ function newOrder_(m,p,requestId) {
         'CONFLICT','ID permintaan sudah dipakai untuk pesanan lain.');
       return orderView_(retry,m);
     }
-    // The public catalog can display exploratory offers, but the legacy
-    // QRIS order + fulfillment flow supports only these four product types.
-    // Service/ebook offers must never produce an unfulfillable order.
-    require_(['TOPUP_KREDIT','LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H'].indexOf(product.tipe)>=0,
+    require_(NGD_CHECKOUT_TYPES_.indexOf(product.tipe)>=0,
       'NOT_AVAILABLE','Produk ini belum dapat dipesan melalui checkout saat ini.');
     if(product.tipe==='LISENSI_SEKALI')
       require_(['AKTIF','DIAJUKAN'].indexOf(m.status_pos)<0,
@@ -1022,8 +1020,11 @@ function transitionOrder_(m,id,type,p) {
       var linkedProduct=byId_('katalog_produk','product_id',o.product_id);
       var linkedMember=byId_('members','member_id',o.member_id);
       require_(linkedProduct&&linkedMember,'CONFLICT','Produk atau member tidak ditemukan.');
-      require_(['TOPUP_KREDIT','LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H'].indexOf(linkedProduct.tipe)>=0,
+      require_(NGD_CHECKOUT_TYPES_.indexOf(linkedProduct.tipe)>=0,
         'CONFLICT','Tipe produk belum mendukung fulfillment.');
+      if(linkedProduct.tipe==='PRODUK_DIGITAL')
+        require_(Number.isInteger(Number(linkedProduct.kredit_diberikan||0))&&Number(linkedProduct.kredit_diberikan||0)>=0,
+          'CONFLICT','Jumlah kredit bonus produk belum valid.');
       if(linkedProduct.tipe==='LISENSI_SEKALI')
         require_(['AKTIF','DIAJUKAN'].indexOf(linkedMember.status_pos)<0,
           'RECONCILIATION_REQUIRED','Lisensi POS sudah dipenuhi atau menunggu aktivasi lain.');
@@ -1075,8 +1076,12 @@ function grantCredits_(id,amount,ref,kind) {
   logAudit_('SYSTEM','SYSTEM','CREDIT_'+(kind||'ADJUST'),'credits_ledger',ref||id,'','POSTED',{jumlah:amount});
   return {alreadyApplied:false,balance:final};
 }
-function commissionRate_(settings) {
-  var raw=settings&&settings.komisi_persen;
+// Komisi berjenjang: kolom komisi_persen pada baris produk didahulukan;
+// pengaturan_sistem.komisi_persen (default 25) hanya fallback bila kolom produk kosong.
+function commissionRate_(settings,product) {
+  var own=product&&product.komisi_persen;
+  var hasOwn=own!==undefined&&own!==null&&String(own).trim()!=='';
+  var raw=hasOwn?own:(settings&&settings.komisi_persen);
   var value=raw===undefined||raw===null||raw===''?25:Number(raw);
   require_(Number.isInteger(value)&&value>=0&&value<=50,
     'CONFLICT','Persentase komisi tidak valid.');
@@ -1086,7 +1091,7 @@ function onPaid_(o,actor) {
   var product=byId_('katalog_produk','product_id',o.product_id),member=byId_('members','member_id',o.member_id);
   require_(product&&member,'CONFLICT','Data produk atau member tidak tersedia.');
   // Read and validate finance settings BEFORE any entitlement or ledger write.
-  var s=settings_(),percent=commissionRate_(s);
+  var s=settings_(),percent=commissionRate_(s,product);
   var commissionEligible=Boolean(member.referred_by&&product.bisa_komisi===true&&percent>0);
   var commissionValue=commissionEligible?Math.floor(Number(o.harga_dasar)*percent/100):0;
   if(commissionEligible)
@@ -1099,6 +1104,12 @@ function onPaid_(o,actor) {
     var old=member.akses_3in1_sampai?new Date(member.akses_3in1_sampai).getTime():0;
     end=new Date(Math.max(Date.now(),old)+days*86400000);
     updateRow_('members',member._row,{akses_3in1_sampai:end,sumber_akses_3in1:'BERBAYAR'});fulfilled=true;
+  }else if(product.tipe==='PRODUK_DIGITAL'&&Number(product.kredit_diberikan||0)>0){
+    // Bonus kredit (mis. P-EBOOK 10 kredit) diterbitkan otomatis dan idempoten per order.
+    grantCredits_(member.member_id,Number(product.kredit_diberikan),o.order_id,'TOPUP');fulfilled=true;
+  }else if(product.tipe==='JASA_SEKALI'){
+    // Dana sudah diverifikasi: order tetap PAID dan masuk antrean admin untuk dikerjakan.
+    logAudit_(actor.member_id,actor.role,'ORDER_READY_FOR_ADMIN','orders',o.order_id,'PAID','PAID',{product_id:product.product_id});
   }else if(product.tipe==='LISENSI_SEKALI')updateRow_('members',member._row,{status_pos:'DIAJUKAN'});
   else if(product.tipe==='SEAT_30H'){
     // A renewal must not interrupt an already active Canva seat.
@@ -1120,6 +1131,100 @@ function onPaid_(o,actor) {
     }
   }
 }
+// ===== MESIN AI =====
+function aiTodayKey_(d) {return Utilities.formatDate(new Date(d),NGD.TZ,'yyyy-MM-dd');}
+// Prasyarat + potong kredit dalam satu lock. Panggilan HTTP dilakukan di luar lock.
+function aiReserve_(m,p,requestId) {
+  return withLock_(function(){
+    require_(m&&m.role==='MEMBER','FORBIDDEN','Hanya member dapat memakai alat AI.');
+    var rid=String(requestId||'');
+    require_(/^[A-Za-z0-9_-]{16,80}$/.test(rid),'VALIDATION','ID permintaan tidak valid.');
+    var tool=byId_('ai_tools','tool_id',String(p.tool_id||''));
+    require_(tool&&tool.aktif===true,'NOT_FOUND','Alat AI tidak tersedia.');
+    var s=settings_(),maxChar=Number(s.ai_max_input_char||1500);
+    var input=String(p.input==null?'':p.input).trim();
+    require_(input.length>0,'VALIDATION','Isi input terlebih dahulu.');
+    require_(input.length<=maxChar,'VALIDATION','Input maksimal '+maxChar+' karakter.');
+    var cost=Number(tool.kredit_biaya);
+    require_(Number.isInteger(cost)&&cost>0,'CONFLICT','Biaya alat AI belum valid.');
+    var ledger=readAll_('credits_ledger').filter(function(r){return r.member_id===m.member_id;});
+    require_(!ledger.some(function(r){return r.tipe==='USAGE'&&r.ref_id===rid;}),
+      'CONFLICT','Permintaan ini sudah diproses. Buat permintaan baru.');
+    var today=aiTodayKey_(now_()),minuteAgo=Date.now()-60000,used=0,recent=0;
+    ledger.forEach(function(r){
+      var t=new Date(r.created_at).getTime();
+      if(r.tipe==='USAGE'){if(aiTodayKey_(t)===today)used++;if(t>=minuteAgo)recent++;}
+      if(r.tipe==='REFUND_ERROR'){if(aiTodayKey_(t)===today)used--;}
+    });
+    var daily=Number(s.ai_daily_limit_per_member||20),perMin=Number(s.ai_rate_limit_per_menit||5);
+    require_(used<daily,'RATE_LIMIT','Batas pemakaian AI harian tercapai. Coba lagi besok.');
+    require_(recent<perMin,'RATE_LIMIT','Terlalu cepat. Tunggu sebentar lalu coba lagi.');
+    var balance=creditBalance_(m.member_id);
+    require_(balance>=cost,'INSUFFICIENT_CREDIT','Kredit tidak cukup. Silakan top-up kredit.');
+    var entryId=recordId_('L');
+    appendRow_('credits_ledger',{entry_id:entryId,member_id:m.member_id,created_at:now_(),tipe:'USAGE',
+      jumlah:-cost,status:'POSTED',ref_id:rid,tool_id:tool.tool_id,
+      keterangan:'Pemakaian alat AI '+tool.tool_id,saldo_setelah:balance-cost});
+    var prompt=String(tool.prompt_template||'')
+      .split('{{nama_usaha}}').join(String(m.nama_usaha||m.nama||'usaha saya'))
+      .split('{{input}}').join(input);
+    return {entry_id:entryId,tool:tool,cost:cost,prompt:prompt,model:String(s.ai_model||''),
+      url:String(s.ai_base_url||'').replace(/\/+$/,'')+(s.ai_endpoint_path?'/'+String(s.ai_endpoint_path).replace(/^\/+/,''):''),
+      balance:balance-cost};
+  });
+}
+function aiRefund_(m,r,rid,reason) {
+  return withLock_(function(){
+    var prior=findRows_('credits_ledger',function(x){return x.member_id===m.member_id&&x.tipe==='REFUND_ERROR'&&x.ref_id===rid;});
+    if(prior.length)return creditBalance_(m.member_id);
+    var balance=creditBalance_(m.member_id)+r.cost;
+    appendRow_('credits_ledger',{entry_id:recordId_('L'),member_id:m.member_id,created_at:now_(),tipe:'REFUND_ERROR',
+      jumlah:r.cost,status:'POSTED',ref_id:rid,tool_id:r.tool.tool_id,
+      keterangan:'Pengembalian kredit: '+String(reason||'AI gagal').slice(0,100),saldo_setelah:balance});
+    logAudit_(m.member_id,m.role,'AI_REFUND','credits_ledger',rid,'USAGE','REFUND_ERROR',{tool_id:r.tool.tool_id,amount:r.cost});
+    return balance;
+  });
+}
+function aiExtractText_(body) {
+  var j;try{j=JSON.parse(body);}catch(e){return String(body||'').trim();}
+  if(j&&j.choices&&j.choices[0]){
+    var c=j.choices[0];
+    if(c.message&&typeof c.message.content==='string')return c.message.content.trim();
+    if(typeof c.text==='string')return c.text.trim();
+  }
+  var keys=['output','text','result','response','content','message','answer'];
+  for(var i=0;i<keys.length;i++)if(j&&typeof j[keys[i]]==='string')return j[keys[i]].trim();
+  if(j&&j.data){var d=aiExtractText_(JSON.stringify(j.data));if(d)return d;}
+  return '';
+}
+function aiCall_(url,key,model,prompt) {
+  var payload={messages:[{role:'user',content:prompt}]};
+  if(model)payload.model=model;
+  var res=UrlFetchApp.fetch(url,{method:'post',contentType:'application/json',muteHttpExceptions:true,
+    headers:{Authorization:'Bearer '+key},payload:JSON.stringify(payload)});
+  var code=res.getResponseCode();
+  if(code<200||code>=300)throw new Error('HTTP '+code);
+  var text=aiExtractText_(res.getContentText());
+  if(!text)throw new Error('Respons AI kosong');
+  return text;
+}
+function runAiTool_(m,p,requestId) {
+  var r=aiReserve_(m,p,requestId),rid=String(requestId);
+  var props=PropertiesService.getScriptProperties();
+  var keys=[props.getProperty('SOBATAGENT_API_KEY'),props.getProperty('FALLBACK_AI_API_KEY')]
+    .map(function(k){return String(k||'').trim();}).filter(function(k){return k;});
+  var text='',lastError='API key AI belum diisi';
+  for(var i=0;i<keys.length&&!text;i++){
+    try{text=aiCall_(r.url,keys[i],r.model,r.prompt);}
+    catch(err){lastError=String(err&&err.message||'gagal');console.error('AI_CALL_FAILED key#'+(i+1)+' '+lastError);}
+  }
+  if(!text){
+    aiRefund_(m,r,rid,lastError);
+    throw ngdError_('AI_FAILED','Layanan AI sedang bermasalah. Kredit Anda sudah dikembalikan.');
+  }
+  logAudit_(m.member_id,m.role,'AI_USAGE','credits_ledger',r.entry_id,'','USAGE',{tool_id:r.tool.tool_id,amount:r.cost});
+  return {hasil:text,tool_id:r.tool.tool_id,kredit_terpakai:r.cost,saldo:creditBalance_(m.member_id)};
+}
 function approveFulfillment_(admin,p) {
   return withLock_(function(){
     var o=byId_('orders','order_id',p.order_id);
@@ -1132,8 +1237,9 @@ function approveFulfillment_(admin,p) {
     var product=byId_('katalog_produk','product_id',o.product_id);
     var m=byId_('members','member_id',o.member_id);
     require_(product&&m,'CONFLICT','Data produk atau member tidak tersedia.');
-    require_(['LISENSI_SEKALI','SEAT_30H'].indexOf(product.tipe)>=0,
+    require_(['LISENSI_SEKALI','SEAT_30H','JASA_SEKALI','PRODUK_DIGITAL'].indexOf(product.tipe)>=0,
       'CONFLICT','Produk tidak memerlukan aktivasi admin.');
+    var manualOnly=['JASA_SEKALI','PRODUK_DIGITAL'].indexOf(product.tipe)>=0;
     require_(p.aktivasi_terverifikasi===true,'RECONCILIATION_REQUIRED',
       'Aktivasi/undangan harus diverifikasi oleh admin.');
     var proof=safeText_(p.referensi_aktivasi,120);
@@ -1142,7 +1248,7 @@ function approveFulfillment_(admin,p) {
     if(product.tipe==='LISENSI_SEKALI'){
       require_(m.status_pos!=='AKTIF'&&!m.pos_lisensi_kode,'RECONCILIATION_REQUIRED',
         'Lisensi sudah aktif. Periksa riwayat sebelum menerbitkan lagi.');
-    } else {
+    } else if(!manualOnly){
       mail=String(p.canva_email||'').trim();
       require_(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail),
         'VALIDATION','Email undangan Canva tidak valid.');
@@ -1163,7 +1269,7 @@ function approveFulfillment_(admin,p) {
         status_pos:'AKTIF',
         pos_lisensi_kode:'POS-'+uuid_().slice(0,8)+'-'+uuid_().slice(0,8)
       });
-    } else {
+    } else if(!manualOnly){
       updateRow_('members',m._row,{
         status_canva:wasActive?'AKTIF_BULAN_2':'AKTIF_BULAN_1',
         canva_email:mail,canva_mulai:now,
@@ -1379,7 +1485,7 @@ function financeFindings_(orders,ledger,commissions,products,policy) {
       if(String(o.catatan_admin||'').indexOf('[ADMIN_FULFILLMENT_ATTEMPT]')>=0)
         reasons.push('MANUAL_FULFILLMENT_INCOMPLETE');
       var type=types[String(o.product_id)];
-      if(['LISENSI_SEKALI','SEAT_30H'].indexOf(type)>=0){
+      if(['LISENSI_SEKALI','SEAT_30H','JASA_SEKALI','PRODUK_DIGITAL'].indexOf(type)>=0){
         // Manual fulfillment is expected; only flag when overdue >48 hours.
         var paidAt=new Date(o.paid_at||o.created_at).getTime();
         if(!Number.isFinite(paidAt)||Date.now()-paidAt>48*3600000)
@@ -1572,7 +1678,7 @@ function apiRouter_(action,token,p,requestId) {
       visitor_id:p.visitor_id,item_id:p.item_id},requestId);
     case 'getAffiliateDashboard':return affiliateDashboard_(m);
     case 'requestPayout':return requestPayout_(m);
-    case 'generateAI':throw ngdError_('AI_FAILED','Layanan AI belum diaktifkan admin. Kredit tidak dipotong.');
+    case 'generateAI':return runAiTool_(m,p,requestId);
   }
   admin=admin_(token);
   switch(action){
