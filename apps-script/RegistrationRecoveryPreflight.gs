@@ -11,7 +11,7 @@
 var NGD_RECOVERY_TABLES_ = {
   members:['member_id','wa','role','status','wa_verified'],
   otp_verifications:['otp_id','wa','tujuan','status'],
-  credits_ledger:['entry_id','member_id','tipe','status'],
+  credits_ledger:['entry_id','member_id','tipe','status','jumlah'],
   pengaturan_sistem:['key','value']
 };
 
@@ -21,17 +21,27 @@ function ngdRegistrationRecoveryEvaluate_(tables) {
     member_with_verified_unconsumed_otp:0,
     verified_active_member_missing_starter_grant:0,
     waiting_member_with_starter_grant:0,
-    verified_member_without_used_otp:0
+    verified_member_without_used_otp:0,
+    duplicate_credit_policy_key:0,
+    orphan_starter_grant:0,
+    unposted_starter_grant:0,
+    duplicate_starter_grant:0,
+    unexpected_starter_grant_amount:0
   };
   function text_(v){return String(v==null?'':v).trim();}
   function normalize_(raw){
     var value=text_(raw).replace(/[\s()+-]/g,'');
     return value.charAt(0)==='0'?'62'+value.slice(1):value;
   }
-  var settings={};
+  var settings=Object.create(null),policyKeys=Object.create(null);
   tables.pengaturan_sistem.forEach(function(row){
     var key=text_(row.key);
-    if(key)settings[key]=row.value;
+    if(!key)return;
+    if(key==='kredit_awal'){
+      policyKeys[key]=(policyKeys[key]||0)+1;
+      if(policyKeys[key]>1)issues.duplicate_credit_policy_key++;
+    }
+    settings[key]=row.value;
   });
   // Do not infer a default from old blueprints: no policy change and no
   // diagnosis of "missing" starter credit without an explicit setting.
@@ -40,8 +50,9 @@ function ngdRegistrationRecoveryEvaluate_(tables) {
     String(creditRaw).trim()!=='';
   var creditAmount=creditConfigured?Number(creditRaw):NaN;
   var creditPolicyKnown=creditConfigured&&Number.isInteger(creditAmount)&&
-    creditAmount>=0&&creditAmount<=1000;
-  var membersByWa={},membersById={};
+    creditAmount>=0&&creditAmount<=1000&&
+    (policyKeys.kredit_awal||0)===1;
+  var membersByWa=Object.create(null),membersById=Object.create(null);
   tables.members.forEach(function(row){
     var id=text_(row.member_id),wa=normalize_(row.wa);
     if(text_(row.role)==='MEMBER'&&id&&wa){
@@ -49,7 +60,8 @@ function ngdRegistrationRecoveryEvaluate_(tables) {
       membersByWa[wa]=row;
     }
   });
-  var usedByWa={},verifiedByWa={},grantByMember={};
+  var usedByWa=Object.create(null),verifiedByWa=Object.create(null),
+    grantByMember=Object.create(null),allGrantsByMember=Object.create(null);
   tables.otp_verifications.forEach(function(row){
     if(text_(row.tujuan)!=='REGISTRATION')return;
     var wa=normalize_(row.wa),status=text_(row.status);
@@ -64,9 +76,24 @@ function ngdRegistrationRecoveryEvaluate_(tables) {
     }
   });
   tables.credits_ledger.forEach(function(row){
-    var id=text_(row.member_id);
-    if(id&&text_(row.tipe)==='GRANT'&&text_(row.status)==='POSTED')
-      grantByMember[id]=(grantByMember[id]||0)+1;
+    if(text_(row.tipe)!=='GRANT')return;
+    var id=text_(row.member_id),status=text_(row.status);
+    if(!id||!membersById[id])issues.orphan_starter_grant++;
+    if(id)allGrantsByMember[id]=(allGrantsByMember[id]||0)+1;
+    if(status!=='POSTED')issues.unposted_starter_grant++;
+    else if(id)grantByMember[id]=(grantByMember[id]||0)+1;
+    // The configured starter amount may have been changed historically.
+    // A mismatch is always "review required", never an authorization
+    // to rewrite past financial evidence.
+    var amount=Number(row.jumlah);
+    var valid=String(row.jumlah==null?'':row.jumlah).trim()!==''&&
+      Number.isSafeInteger(amount)&&amount>0;
+    if(!valid||(creditPolicyKnown&&amount!==creditAmount))
+      issues.unexpected_starter_grant_amount++;
+  });
+  Object.keys(allGrantsByMember).forEach(function(id){
+    if(allGrantsByMember[id]>1)
+      issues.duplicate_starter_grant+=allGrantsByMember[id]-1;
   });
   Object.keys(membersById).forEach(function(id){
     var member=membersById[id],wa=normalize_(member.wa);

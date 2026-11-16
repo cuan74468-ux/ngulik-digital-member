@@ -36,7 +36,7 @@ function fixture(tables={},opts={}){
 const member=(id,wa,status='AKTIF')=>({member_id:id,wa,role:'MEMBER',
   status,wa_verified:true});
 const otp=(wa,status)=>({otp_id:'OTP-1',wa,tujuan:'REGISTRATION',status});
-const grant=id=>({entry_id:'L-1',member_id:id,tipe:'GRANT',status:'POSTED'});
+const grant=(id,jumlah=10,status='POSTED')=>({entry_id:'L-1',member_id:id,tipe:'GRANT',status,jumlah});
 test('empty STAGING is safe and requires no database writes',()=>{
   const h=fixture();
   const result=h.run();
@@ -106,6 +106,67 @@ test('ADMIN accounts do not require a registration OTP or starter grant',()=>{
   const h=fixture({members:[{member_id:'A-1',wa:'6281231231231',
     role:'ADMIN',status:'AKTIF',wa_verified:false}]});
   const r=h.run();assert.equal(r.ready,true);
+});
+test('posted GRANT with an unexpected amount cannot pass as healthy',()=>{
+  const h=fixture({members:[member('M-1','6281231231231')],
+    otp_verifications:[otp('6281231231231','USED')],
+    credits_ledger:[grant('M-1',3)]});
+  const r=h.run();
+  assert.equal(r.ready,false);
+  assert.equal(r.issue_counts.unexpected_starter_grant_amount,1);
+  assert.equal(r.issue_counts.verified_active_member_missing_starter_grant,0);
+  assert.equal(h.metrics.writes,0);
+});
+test('two posted starter grants are reported without deducting balances',()=>{
+  const h=fixture({members:[member('M-1','6281231231231')],
+    otp_verifications:[otp('6281231231231','USED')],
+    credits_ledger:[grant('M-1'),{...grant('M-1'),entry_id:'L-2'}]});
+  const r=h.run();
+  assert.equal(r.issue_counts.duplicate_starter_grant,1);
+  assert.equal(r.issue_counts.unexpected_starter_grant_amount,0);
+  assert.equal(h.metrics.writes,0);
+});
+test('non-posted grant does not make missing POSTED starter grant disappear',()=>{
+  const h=fixture({members:[member('M-1','6281231231231')],
+    otp_verifications:[otp('6281231231231','USED')],
+    credits_ledger:[grant('M-1',10,'PENDING')]});
+  const r=h.run();
+  assert.equal(r.issue_counts.unposted_starter_grant,1);
+  assert.equal(r.issue_counts.verified_active_member_missing_starter_grant,1);
+});
+test('orphan starter GRANT always requires operator review',()=>{
+  const h=fixture({credits_ledger:[grant('M-DELETED')]});
+  const r=h.run();
+  assert.equal(r.issue_counts.orphan_starter_grant,1);
+  assert.equal(r.ready,false);
+  assert.doesNotMatch(h.logs[0],/M-DELETED/);
+});
+test('invalid, blank or fractional grant amounts are rejected as evidence',()=>{
+  for(const amount of ['',-10,1.25,'not-a-number']){
+    const h=fixture({members:[member('M-1','6281231231231')],
+      otp_verifications:[otp('6281231231231','USED')],
+      credits_ledger:[grant('M-1',amount)]});
+    const r=h.run();
+    assert.equal(r.issue_counts.unexpected_starter_grant_amount,1);
+  }
+});
+test('duplicate credit policy rows block readiness before any policy repair',()=>{
+  const h=fixture({pengaturan_sistem:[
+    {key:'kredit_awal',value:10},{key:'kredit_awal',value:0}
+  ]});
+  const r=h.run();
+  assert.equal(r.ready,false);
+  assert.equal(r.starter_policy_configured,false);
+  assert.equal(r.issue_counts.duplicate_credit_policy_key,1);
+});
+test('zero-credit policy with non-zero starter GRANT is flagged for historical review',()=>{
+  const h=fixture({members:[member('M-1','6281231231231')],
+    otp_verifications:[otp('6281231231231','USED')],
+    credits_ledger:[grant('M-1',10)],
+    pengaturan_sistem:[{key:'kredit_awal',value:0}]});
+  const r=h.run();
+  assert.equal(r.ready,false);
+  assert.equal(r.issue_counts.unexpected_starter_grant_amount,1);
 });
 test('production is rejected without opening Sheets',()=>{
   const h=fixture({}, {props:{NGD_ENVIRONMENT:'PRODUCTION'}});

@@ -68,3 +68,7 @@ Pengujian kegagalan parsial `tests/backend-otp-module.test.cjs` diperluas untuk 
 - Operator nantinya boleh menambahkan file audit baru saja setelah memastikan editor STAGING benar dan menyimpan salinan source lokal; tidak perlu menyalin `Code.gs` atau mengganti deployment untuk menjalankan fungsi editor-only. **Jangan** memasang modul/ubah registrasi langsung tanpa perbandingan diff menyeluruh.
 
 **Batas bukti:** semua pengujian dengan akun, OTP, kredit, dan sesi sintetis. Tidak ada akun/OTP/ledger STAGING maupun produksi yang dimodifikasi atau dibuat; tidak ada Fonnte/Mayar, pembayaran, mutasi, atau deployment GAS. **Tahap 1 tetap NO-GO**.
+
+## 16 November — rekonsiliasi ledger diperketat
+
+Audit lintas sumber atas `RegistrationRecoveryPreflight.gs` menunjukkan verifikasi GRANT awal belum mencakup nominal/status/duplikasi. Source-only audit ditingkatkan untuk menandai nilai GRANT yang berbeda dari kebijakan kini, unposted, orphan, duplikasi GRANT dan duplikasi kunci `kredit_awal`. Keputusan perbaikan tetap manual setelah review riwayat; **audit tidak mengubah saldo**. Dokumen rinci: [Registration Recovery Preflight](REGISTRATION_RECOVERY_PREFLIGHT_2026-11-16.md). Data sumber yang dibaca langsung bersifat terbatas, bukan seluruh rekonsiliasi runtime; Script Properties, akun dan ledger tidak disentuh.

@@ -27,3 +27,11 @@ Hasil `REVIEW_REQUIRED` **bukan alasan untuk langsung mengubah saldo**, menghapu
 Tes di `tests/backend-registration-recovery.test.cjs` menggunakan VM dan data sintetis: kasus sehat, OTP used tanpa member, otp verified pasca-append, missing grant, waiting list, policy nol/tidak ada, akun admin, produksi ditolak, identitas database salah, serta larangan mutasi dan network.
 
 Batas: tidak memvalidasi log audit REGISTER atau kebenaran isi transaksi, tidak menguji keberhasilan restore, tidak memindahkan kode otomatis ke runtime GAS. Semua kasus flagged memerlukan prosedur admin yang dapat diaudit dan persetujuan kebijakan per kasus.
+
+## Penguatan validasi ledger GRANT (16 November 2026)
+
+Pemeriksaan awal hanya melihat keberadaan GRANT POSTED dan berisiko menerima GRANT bernilai salah sebagai bukti kredit sambutan. Versi diperkuat sekarang juga membaca kolom `jumlah` yang **telah diverifikasi ada** di STAGING. Ia melaporkan: `orphan_starter_grant`, `unposted_starter_grant`, `duplicate_starter_grant`, `unexpected_starter_grant_amount` dan `duplicate_credit_policy_key`. Pemeriksaan nilai mencocokkan nominal terhadap `kredit_awal` eksplisit; jika kebijakan berubah setelah transaksi historis, mismatch adalah **indikator review, bukan bukti saldo salah**. Tidak boleh mengubah ledger atau menghitung ulang nilai transaksi tanpa bukti historis dan persetujuan owner.
+
+Skema nyata STAGING yang telah dikonfirmasi dengan range baca-saja: `members` mempunyai kolom `wa_verified`; `otp_verifications` mempunyai `tujuan,status`; `credits_ledger` mempunyai `entry_id,member_id,tipe,status,jumlah`; `pengaturan_sistem` mempunyai `key,value`. Seluruhnya masih **29 tab**. Pada pembacaan terbatas hari ini ditemukan 1 akun ADMIN dan nol baris transaksi/OTP, sedangkan `kredit_awal=10`. Pembacaan terbatas **bukan** lulus runtime preflight dan tidak membuktikan konsistensi semua data di masa depan.
+
+Fungsi tetap hanya untuk Apps Script editor STAGING. Tidak ada remediasi otomatis atau jalur API publik. Tunda pemasangan source ke GAS sampai manifest runtime dan checkpoint diverifikasi.
