@@ -32,7 +32,8 @@ function pilot(overrides={}){
   })[k]||''})};
   ctx.db_=()=>({getId:()=>id});
   ctx.settings_=()=>state.config;
-  ctx.tbl_=name=>({headers:String(ctx.NGD.HEADERS[name]||'').split(',')});
+  const schema=vm.runInContext('NGD.HEADERS',ctx);
+  ctx.tbl_=name=>({headers:String(schema[name]||'').split(',')});
   ctx.byId_=(table,key,value)=>table==='katalog_produk'&&value==='P-TOKEN-10'?state.product:null;
   ctx.readAll_=table=>table==='orders'?state.orders:[];
   for(const fn of ['appendRow_','updateRow_','sendFonnteWa_','onPaid_','grantCredits_']){
