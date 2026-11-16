@@ -1629,6 +1629,8 @@ async function confirmPayment(){
   if(/(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(String(state.lastOrder.qris_gambar_path))&&
     config.qrisOwnerImageApproved!==true)
     return toast('QRIS masih placeholder. Minta QRIS resmi via WhatsApp Admin.',true);
+  if(document.querySelector('[data-qris-image][hidden]'))
+    return toast('Gambar QRIS gagal dimuat. Minta QRIS resmi via WhatsApp Admin.',true);
   if(!confirm('Anda yakin pembayaran telah dikirim ke QRIS resmi? Konfirmasi ini bukan bukti pembayaran berhasil.'))return;
   try{
     const r=await api('confirmPayment',{order_id:state.lastOrder.order_id},state.token,{write:true});
@@ -2113,6 +2115,8 @@ document.addEventListener('error',event=>{
   img.hidden=true;
   const fallback=img.parentElement?.querySelector('[data-qris-fallback]');
   if(fallback)fallback.hidden=false;
+  const confirmButton=img.closest('.checkout-dialog')?.querySelector('[data-action="confirm-payment"]');
+  if(confirmButton){confirmButton.disabled=true;confirmButton.title='QRIS gagal dimuat. Hubungi Admin untuk meminta gambar resmi.';}
 },true);
 
 document.addEventListener('click',async(e)=>{
