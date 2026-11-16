@@ -1883,7 +1883,7 @@ function apiReadActions_() {
 function doPost(e) {
   try {
     var raw=e&&e.postData&&e.postData.contents;
-    require_(typeof raw==='string'&&raw.length<16000,'BAD_REQUEST','Permintaan tidak valid.');
+    require_(typeof raw==='string'&&raw.length<56000,'BAD_REQUEST','Permintaan tidak valid.');
     var body=JSON.parse(raw),action=String(body.action||'').trim(),payload=body.payload||{};
     require_(/^[A-Za-z][A-Za-z0-9]{1,45}$/.test(action),'BAD_REQUEST','Nama aksi tidak valid.');
     require_(payload&&typeof payload==='object'&&!Array.isArray(payload),'BAD_REQUEST','Payload tidak valid.');
