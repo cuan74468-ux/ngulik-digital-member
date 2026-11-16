@@ -19,7 +19,7 @@
       "owner_log_date": "2026-11-15"
     }
   ],
-  "unverified": "New InfrastructurePreflight.gs source has NOT yet been executed/read back in Apps Script STAGING; GitHub source hash alone does not establish runtime synchronization or deployment.",
+  "unverified": "Apps Script editor sync for the NEW InfrastructurePreflight.gs source is NOT yet verified by operator execution/readback. A GitHub source hash does not establish GAS STAGING runtime synchronization or deployment.",
   "release_gate": "OWNER_EXECUTION_AUTHORIZED",
   "external_providers": "CONFIGURATION_PENDING",
   "modules": [
