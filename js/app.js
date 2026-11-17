@@ -194,7 +194,7 @@ function activatePreview(){
 const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,qa:false,
   info:null,catalog:[],siteContent:[],adminContent:[],contentEditId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],orders:[],
-  affiliates:null,waitlist:[],members:[],adminOrders:[],adminSummary:null,
+  affiliates:null,partnerShelf:[],partnerShelfLoaded:false,waitlist:[],members:[],adminOrders:[],adminSummary:null,
   reconciliation:null,selectedProduct:null,lastOrder:null,loading:false,
   memberProducts:[],supportTickets:[],supportReleases:[],supportOverview:null,
   adminSupportTickets:[],ticketDetail:null,selectedTicketId:null,
@@ -465,6 +465,31 @@ function viewPublicMarketplace(list){
     '<p class="market-trust-note">Pembelian dan konsultasi hanya melalui kanal resmi Ngulik Digital. Ketersediaan mengikuti status layanan.</p>'+
   '</div>';
 }
+function viewPartnerShelf_(){
+  if(!logged()||isAdmin())return '';
+  const rows=Array.isArray(state.partnerShelf)?state.partnerShelf:[];
+  const cards=rows.filter(x=>urlSafe(x.link_affiliate)).map(x=>{
+    const href=urlSafe(x.link_affiliate);
+    // External partner links are NEVER routed through internal checkout.
+    const thumb=urlSafe(x.gambar_url);
+    return '<article class="ngd-partner-card">'+
+      (thumb?'<img class="ngd-partner-thumb" src="'+esc(thumb)+'" alt="" loading="lazy" decoding="async">':
+        '<span class="ngd-partner-card-icon">'+icon('book')+'</span>')+
+      '<p class="eyebrow">KELAS & TOOLS PARTNER</p>'+
+      '<h3>'+esc(x.judul||'Rekomendasi partner')+'</h3>'+
+      '<p>'+esc(x.deskripsi_singkat||x.alasan_rekomendasi||'Penawaran dari mitra eksternal.')+'</p>'+
+      '<small>'+esc(x.harga_info||'Lihat ketentuan pada penyedia')+'</small>'+
+      '<a class="btn btn-secondary" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" data-partner-out="'+esc(x.item_id||'')+'">Buka kelas di situs partner '+icon('arrow')+'</a>'+
+    '</article>';
+  }).join('');
+  return '<section class="ngd-partner-shelf section-gap" id="etalase-rekomendasi" aria-label="Etalase Rekomendasi Kelas dan Tools Partner">'+
+    '<div class="ngd-partner-header"><div><p class="eyebrow">ETALASE REKOMENDASI</p><h2>Kelas & Tools Partner</h2>'+
+    '<p>Alternatif belajar dari penyedia independen. Pembelian dan layanan purnajual berlangsung di situs partner, bukan checkout Ngulik Digital.</p></div>'+
+    '<span class="ngd-partner-disclosure">Tautan affiliate eksternal</span></div>'+
+    (cards?'<div class="ngd-partner-grid">'+cards+'</div>':
+      '<p class="ngd-partner-empty">'+(state.partnerShelfLoaded?'Belum ada rekomendasi partner yang aktif.':'Memuat rekomendasi partner…')+'</p>')+
+  '</section>';
+}
 function viewCatalog(){
   const list=Array.isArray(state.catalog)?state.catalog:[];
   if(!logged())return viewPublicMarketplace(list);
@@ -519,7 +544,8 @@ function viewCatalog(){
     ' dari '+list.length+' penawaran</p>'+cards+
     '<section class="catalog-guidance section-gap"><div><span class="card-kicker">CATATAN</span>'+
     '<h3>Butuh layanan khusus?</h3><p>Ajukan brief melalui ruang member atau konsultasikan kebutuhan melalui tautan pada produk. Konfirmasi pemesanan dan pembayaran hanya melalui kanal resmi.</p></div>'+
-    '<button type="button" class="btn btn-secondary" data-route="jasa">Ajukan brief</button></section>';
+    '<button type="button" class="btn btn-secondary" data-route="jasa">Ajukan brief</button></section>'+
+    viewPartnerShelf_();
 }
 function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
@@ -573,6 +599,15 @@ function aiToolCategory_(tool){
   const name=String(tool.nama||'').toLowerCase();
   const id=String(tool.tool_id||'').toLowerCase();
   const words=name+' '+id;
+  // Stable mapping for the 12 STAGING tools (no schema/header change).
+  const fixed={
+    'T-CAPTION':'umkm','T-DESKRIPSI':'umkm','T-BALASAN':'umkm',
+    'T-KONTEN7':'umkm','T-SKRIP-VIDEO':'kreator','T-BUNDLING':'umkm',
+    'T-AFF-REVIEW':'affiliate','T-AFF-BONUS':'affiliate',
+    'T-MEDIA-ARTIKEL':'media','T-GURU-MODUL':'edukasi',
+    'T-KREATOR-YT':'kreator','T-UMKM-MAPS':'umkm'
+  };
+  if(fixed[String(tool.tool_id||'').toUpperCase()])return fixed[String(tool.tool_id||'').toUpperCase()];
   if(/guru|kelas|kuis|ajar|pendidikan|sekolah|murid/.test(words))return 'edukasi';
   if(/affiliate|afiliasi|referral|komisi|review produk/.test(words))return 'affiliate';
   if(/berita|jurnal|liputan|redaksi|media|press release/.test(words))return 'media';
@@ -1653,6 +1688,11 @@ async function loadRoute(route){
         state.tools=data.tools||[];
       }
     }
+    if(route==='katalog'&&!isAdmin()){
+      // Member shelf is read-only and never launches internal checkout.
+      try{state.partnerShelf=await api('getEtalase',{},token);state.partnerShelfLoaded=true;}
+      catch(e){state.partnerShelfLoaded=true;state.partnerShelf=[];}
+    }
     if(route==='belajar'){
       // Legacy modules remain usable while the new GAS LMS backend is staged.
       const responses=await Promise.allSettled([
@@ -2435,7 +2475,7 @@ document.addEventListener('click',async(e)=>{
     state.marketplaceSearch='';state.catalogFilter='semua';state.marketplaceSort='default';
     render();return;
   }
-  const target=e.target.closest('[data-public-step],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin]');
+  const target=e.target.closest('[data-public-step],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin]');
   if(!target)return;
   if(target.hasAttribute('data-payment-admin')){
     if(!isAdmin()||!paymentEnabled())return toast('Aksi pembayaran belum aktif.',true);
@@ -2451,6 +2491,11 @@ document.addEventListener('click',async(e)=>{
       await api('adminVerifyOrder',isApprove?{order_id:order.order_id,keputusan:'approve',dana_diterima:true,referensi_pembayaran:reason.trim()}:{order_id:order.order_id,keputusan:'reject',alasan:reason.trim()},state.token,{write:true});
       toast(isApprove?'Pembayaran disetujui.':'Pesanan ditolak.');await loadRoute('pesanan');render();
     }catch(error){toast(error.message,true);}
+    return;
+  }
+  if(target.hasAttribute('data-partner-out')){
+    // Let browser open the verified external href unmodified. Tracking is
+    // optional and may be gated off; it must never delay partner navigation.
     return;
   }
   if(target.hasAttribute('data-public-step')){
