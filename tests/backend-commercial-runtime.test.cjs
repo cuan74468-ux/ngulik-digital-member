@@ -42,7 +42,8 @@ function aiFixture(override={}){
   const c=boot(),writes=[],calls=[];
   const entries=[{member_id:'M1',tipe:'GRANT',jumlah:10,
     created_at:new Date('2026-11-16T02:00:00Z')}];
-  const p={SOBATAGENT_API_KEY:'KEY1',FALLBACK_AI_API_KEY:'KEY2',
+  const p={NGD_MUTATIONS_ENABLED:'true',NGD_FINANCE_ENABLED:'true',
+    SOBATAGENT_API_KEY:'KEY1',FALLBACK_AI_API_KEY:'KEY2',
     AI_BASE_URL:'https://api.example.com/v1',
     AI_ENDPOINT_PATH:'chat/completions',AI_MODEL:'model-test',...override};
   c.PropertiesService={getScriptProperties(){
