@@ -193,7 +193,7 @@ function activatePreview(){
 
 const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,qa:false,
-  info:null,catalog:[],siteContent:[],adminContent:[],contentEditId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],orders:[],
+  info:null,catalog:[],siteContent:[],adminContent:[],contentEditId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
   affiliates:null,partnerShelf:[],partnerShelfLoaded:false,waitlist:[],members:[],adminOrders:[],adminSummary:null,
   reconciliation:null,selectedProduct:null,lastOrder:null,loading:false,
   memberProducts:[],supportTickets:[],supportReleases:[],supportOverview:null,
@@ -656,15 +656,13 @@ function aiCategoryOverview_(tools){
     }).join('')+'</section>';
 }
 function viewAI(){
-  const tools=logged()&&!isAdmin()&&Array.isArray(state.tools)?state.tools:[];
+  const tools=logged()&&!isAdmin()&&state.tools.length?state.tools:(Array.isArray(state.publicTools)?state.publicTools:[]);
   const category=state.aiCategory||'semua';
   const search=String(state.aiSearch||'').trim().toLocaleLowerCase('id-ID');
   const filtered=tools.filter(t=>(category==='semua'||aiToolCategory_(t)===category)&&
     (!search||[t.nama,t.deskripsi,t.tool_id,aiCategoryFor_(aiToolCategory_(t))?.title]
       .some(v=>String(v||'').toLocaleLowerCase('id-ID').includes(search))));
-  const selected=filtered.find(x=>x.tool_id===state.selectedAiToolId)||null;
   const balance=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
-  const can=isWriteEnabled();
   const publicMode=!logged()||isAdmin();
   const intro='<header class="ai-catalog-intro"><div class="ai-catalog-intro-copy">'+
     '<p class="eyebrow">NGULIK DIGITAL / STUDIO AI</p>'+
@@ -676,16 +674,10 @@ function viewAI(){
       '<button type="button" data-catalog-go="ai">+ Isi Token</button></div>')+
     '</header>';
   const navigation=aiCategoryNav_(tools,publicMode);
-  const overview=aiCategoryOverview_(tools);
-  if(publicMode)return '<div class="ai-catalog ai-catalog-public">'+intro+navigation+overview+
-    '<div class="ai-catalog-access"><div><p class="eyebrow">AKSES STUDIO</p>'+
-    '<h2>Tool yang aktif akan ditampilkan dari katalog resmi.</h2>'+
-    '<p>Masuk untuk melihat pilihan wrapper, biaya Token, dan ruang kerja yang tersedia di akun Anda.</p></div>'+
-    '<div class="actions"><button type="button" class="btn btn-primary" data-route="login">Masuk ke Studio '+icon('arrow')+'</button>'+
-    '<button type="button" class="btn btn-secondary" data-route="katalog">Lihat Paket Token</button></div></div></div>';
+  // Category chips are filters, not landing cards; show actual tool cards first.
   const cards='<section class="ai-tool-catalog" aria-labelledby="ai-tools-heading">'+
     '<div class="ai-tools-heading"><div><p class="eyebrow">KATALOG WRAPPER</p>'+
-    '<h2 id="ai-tools-heading">Tools tersedia</h2><p>Harga dan ketersediaan mengikuti data yang diaktifkan pengelola.</p></div>'+
+    '<h2 id="ai-tools-heading">Pilih tool AI</h2><p>Jelajahi alat yang aktif dan buka halaman kerjanya melalui kartu produk.</p></div>'+
     '<label class="ai-search-wrap"><span class="sr-only">Cari tool AI</span>'+
     '<input id="ai-tool-search" type="search" placeholder="Cari tools AI…" autocomplete="off" value="'+
     esc(state.aiSearch||'')+'" aria-label="Cari tools AI"></label></div>'+
@@ -698,26 +690,38 @@ function viewAI(){
           '<strong>'+esc(t.nama)+'</strong>'+
           '<small>'+esc(t.deskripsi||'Alat bantu AI untuk pekerjaan spesifik.')+'</small>'+
           '<span class="ai-product-bottom"><span>'+esc(Number(t.kredit_biaya)||0)+' Token / proses</span>'+
-          '<span class="ai-product-action">Lihat tool '+icon('arrow')+'</span></span>'+
+          '<span class="ai-product-action">Buka tool '+icon('arrow')+'</span></span>'+
         '</button>';
-      }).join(''):'<div class="ai-catalog-empty"><strong>Belum ada wrapper aktif untuk pilihan ini.</strong>'+
-        '<p>Studio terus dikembangkan berdasarkan kebutuhan nyata. Pilih kategori lain untuk melihat tools yang sudah tersedia.</p></div>')+
+      }).join(''):'<div class="ai-catalog-empty"><strong>'+
+        (!state.publicToolsLoaded&&tools.length===0?'Memuat katalog Studio AI…':'Belum ada tool pada pilihan ini.')+
+        '</strong><p>'+(!state.publicToolsLoaded&&tools.length===0?
+        'Daftar produk sedang dibaca dari sistem.':'Pilih kategori lain atau hapus kata kunci pencarian.')+'</p></div>')+
     '</div></section>';
-  return '<div class="ai-catalog">'+intro+navigation+overview+cards+'</div>';
+  return '<div class="ai-catalog">'+intro+navigation+cards+
+    (publicMode?'<div class="ai-catalog-access"><div><p class="eyebrow">MEMBER STUDIO AI</p>'+
+      '<h2>Siap mulai berkarya?</h2><p>Lihat semua alat tanpa login. Masuk sebagai member untuk menjalankan tool menggunakan Token.</p></div>'+
+      '<button type="button" class="btn btn-primary" data-route="login">Masuk untuk menggunakan</button></div>':'')+'</div>';
 }
 // Each active wrapper has its own addressable workspace page (#ai-tool/ID).
 // No client-side pricing or availability is invented: getTools is authoritative.
 function viewAITool(){
-  if(!logged()||isAdmin())return '<section class="ai-catalog-access"><div><p class="eyebrow">STUDIO AI</p>'+
-    '<h2>Masuk untuk membuka ruang tool.</h2><p>Setiap alat menggunakan akses member dan biaya Token yang tercatat di sistem.</p></div>'+
-    '<button type="button" class="btn btn-primary" data-route="login">Masuk member</button></section>';
-  const tools=Array.isArray(state.tools)?state.tools:[];
+  const tools=logged()&&!isAdmin()&&state.tools.length?state.tools:(Array.isArray(state.publicTools)?state.publicTools:[]);
   const selected=tools.find(t=>t.tool_id===state.selectedAiToolId);
   if(!selected)return '<div class="ai-tool-detail"><button class="ai-tool-back" type="button" data-route="ai">'+icon('arrow')+' Kembali ke katalog</button>'+
     '<div class="ai-catalog-empty"><strong>Tool belum tersedia.</strong><p>Alat ini tidak ditemukan dalam daftar aktif atau belum selesai dimuat. Lihat katalog untuk memilih alat lain.</p></div></div>';
-  const cost=Number(selected.kredit_biaya)||0,can=isWriteEnabled();
+  const cost=Number(selected.kredit_biaya)||0,can=logged()&&!isAdmin()&&isWriteEnabled();
   const category=aiCategoryFor_(aiToolCategory_(selected));
   const balance=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
+  if(!logged()||isAdmin())return '<div class="ai-tool-detail">'+
+    '<nav class="ai-tool-breadcrumb"><button type="button" data-route="ai">Studio AI</button><span>/</span><strong>'+esc(selected.nama)+'</strong></nav>'+
+    '<header class="ai-tool-detail-hero"><div class="ai-tool-detail-identity">'+
+    '<span class="ai-product-icon">'+icon(category?.icon||'spark')+'</span>'+
+    '<p class="eyebrow">'+esc(category?.title||'Studio AI')+'</p><h1>'+esc(selected.nama)+'</h1>'+
+    '<p>'+esc(selected.deskripsi||'Tool AI untuk kebutuhan kreatif dan produktivitas.')+'</p>'+
+    '<span class="ai-detail-cost">'+esc(cost)+' Token / proses</span></div></header>'+
+    '<div class="ai-catalog-access"><div><h2>Gunakan alat ini di ruang member.</h2>'+
+    '<p>Masuk untuk menuliskan brief dan menjalankan proses AI. Token hanya digunakan saat permintaan benar-benar dijalankan.</p></div>'+
+    '<button type="button" class="btn btn-primary" data-route="login">Masuk untuk menggunakan</button></div></div>';
   return '<div class="ai-tool-detail"><nav class="ai-tool-breadcrumb" aria-label="Navigasi Studio AI">'+
     '<button type="button" data-route="ai">Studio AI</button><span>/</span><span>'+esc(category?.short||'Tool')+'</span><span>/</span><strong>'+esc(selected.nama)+'</strong></nav>'+
     '<header class="ai-tool-detail-hero"><div class="ai-tool-detail-identity">'+
@@ -1660,11 +1664,14 @@ async function refreshPublic(){
   if(state.qa||!isConnected())return;
   // Independent public reads must not discard a valid catalogue when the
   // metadata service is briefly unavailable (or vice versa).
-  const [info,catalog,content]=await Promise.allSettled([
-    api('getPublicInfo'),api('getKatalog'),api('getPublicContent')]);
+  const [info,catalog,content,publicTools]=await Promise.allSettled([
+    api('getPublicInfo'),api('getKatalog'),api('getPublicContent'),api('getPublicTools')]);
   if(info.status==='fulfilled'&&info.value&&typeof info.value==='object')state.info=info.value;
   if(catalog.status==='fulfilled'&&Array.isArray(catalog.value))state.catalog=catalog.value;
   if(content.status==='fulfilled'&&Array.isArray(content.value))state.siteContent=content.value;
+  if(publicTools.status==='fulfilled'&&Array.isArray(publicTools.value)){
+    state.publicTools=publicTools.value;state.publicToolsLoaded=true;
+  }else state.publicToolsLoaded=true;
   render();
   if(info.status==='rejected'&&catalog.status==='rejected')
     toast('Informasi terbaru belum dapat dimuat. Coba muat ulang halaman.',true);
@@ -2359,7 +2366,7 @@ async function submitServiceQuote(form){
   render();
 }
 document.addEventListener('input',(e)=>{
-  if(e.target?.id==='ai-tool-search'&&state.route==='ai'&&logged()&&!isAdmin()){
+  if(e.target?.id==='ai-tool-search'&&state.route==='ai'){
     state.aiSearch=e.target.value;
     const start=e.target.selectionStart,end=e.target.selectionEnd;
     render();
@@ -2520,8 +2527,8 @@ document.addEventListener('click',async(e)=>{
     render();
   }
   else if(target.hasAttribute('data-ai-open')){
-    if(!logged()||isAdmin())return;
-    const tool=state.tools.find(x=>x.tool_id===target.dataset.aiOpen);
+    const tools=logged()&&!isAdmin()&&state.tools.length?state.tools:state.publicTools;
+    const tool=tools.find(x=>x.tool_id===target.dataset.aiOpen);
     if(tool){state.selectedAiToolId=tool.tool_id;go('ai-tool');}
   }
   else if(target.hasAttribute('data-hero-step')){
