@@ -293,8 +293,7 @@ function viewMore(){
       esc(descriptions[route]||'Buka fitur')+'</small></span>'+icon('arrow')+'</button>'
     ).join('')+'</nav>'+
     (!logged()?'<div class="ngd-menu-access"><p>Sudah menjadi anggota?</p>'+
-      '<button class="btn btn-primary" type="button" data-route="login">Masuk member</button>'+
-      '<button class="btn btn-secondary" type="button" data-route="admin-login">Akses administrator</button></div>':'')+
+      '<button class="btn btn-primary" type="button" data-route="login">Masuk member</button></div>':'')+
     '</section>';
 }
 const safeBadge=(s)=>'<span class="chip '+(['AKTIF','FULFILLED','PAID','APPROVED'].includes(String(s))?'green':'orange')+'">'+esc(s||'-')+'</span>';
@@ -944,7 +943,7 @@ function viewProfileEditor(){
 }
 function viewAccount(){
   if(!logged())return title('Akun member','PROFIL & KEAMANAN','Kelola akses ke akun Anda.')+
-    '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk dengan nomor WhatsApp dan PIN Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk member</button><button class="btn btn-secondary" data-route="admin-login">Masuk admin</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
+    '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk dengan nomor WhatsApp dan PIN Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk member</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
   if(isAdmin()){
     const m=state.me;
     return title('Akun administrator','PENGATURAN AKSES','Informasi pengelola dan jalur operasional akun.')+
@@ -1004,7 +1003,7 @@ function viewLogin(register=false,adminMode=false){
     '<p class="small login-other-route">'+
     (adminMode?'<button class="btn btn-ghost btn-sm" data-route="login">Kembali ke login member</button>':
       register?'Sudah punya akun? <button class="btn btn-ghost btn-sm" data-route="login">Masuk</button>':
-      'Pengelola Ngulik Digital? <button class="btn btn-ghost btn-sm" data-route="admin-login">Masuk sebagai admin</button>')+
+      '<button class="btn btn-ghost btn-sm" data-route="daftar">Belum punya akun? Daftar</button>')+
     '</p>'+
     (adminMode&&!String(config.brand||'').includes('STAGING')?
       '<section class="admin-env-notice"><strong>Database STAGING menggunakan Admin Studio terpisah.</strong>'+
