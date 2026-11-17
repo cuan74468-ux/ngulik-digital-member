@@ -260,3 +260,15 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-label span{
     opacity:1;
   }
 }
+
+/* Header-safe breathing room: keep the floating navigation out of the hero. */
+@media(min-width:901px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content{
+    padding-top:112px;
+  }
+}
+@media(max-width:900px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content{
+    padding-top:128px;
+  }
+}
