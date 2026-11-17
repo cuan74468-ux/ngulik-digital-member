@@ -667,6 +667,9 @@ function viewAffiliate(){
       '<button type="button" class="partner-btn partner-btn-primary" data-route="daftar">Jadi Mitra Ngulik Digital '+icon('arrow')+'</button></section>'+
     '</div>';
 
+  if(isAdmin())return '<section class="partner-member"><p class="partner-kicker">AKSES MEMBER</p>'+
+    '<h1>Program Mitra Ngulik Digital</h1><p>Dashboard komisi pribadi hanya tersedia untuk akun member. Pengelolaan komisi dan pembayaran tetap melalui modul administrasi resmi.</p>'+
+    '<button type="button" class="partner-btn partner-btn-outline" data-route="admin">Kembali ke admin</button></section>';
   const a=state.affiliates;
   if(!a)return '<section class="partner-member"><p class="partner-kicker">WORKSPACE MITRA</p>'+
     '<h1>Affiliate Saya</h1><p>Informasi komisi belum berhasil dimuat. Muat ulang halaman untuk mencoba kembali.</p>'+
