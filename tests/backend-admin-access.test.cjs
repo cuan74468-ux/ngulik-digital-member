@@ -91,6 +91,14 @@ test('normal member credentials never acquire admin session, even with correct P
  const ok=h.ctx.adminPortalLogin_({wa:'628000111222',pin});
  assert.equal(ok.profil.role,'ADMIN');
  assert.equal(issued,1);
+ // Public member login must never issue a session for an administrator,
+ // even when the administrator supplies the correct WhatsApp and PIN.
+ assert.throws(()=>h.ctx.authLogin_({wa:'628000111222',pin}),/Nomor WhatsApp atau PIN salah/);
+ assert.equal(issued,1);
+ // Ordinary members can still authenticate through the member-only route.
+ const member=h.ctx.authLogin_({wa,pin});
+ assert.equal(member.profil.role,'MEMBER');
+ assert.equal(issued,2);
 });
 test('admin logout and PIN update require valid admin session; member requests denied',()=>{
  const h=fixture(true);
