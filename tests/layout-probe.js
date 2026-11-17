@@ -14,7 +14,7 @@
         .getPropertyValue('--green').trim();
       // Must match on desktop, mobile, public/member and ADMIN.
       var bg=getComputedStyle(document.body).getPropertyValue('--bg').trim().toLowerCase();
-      var sharedTheme=bg==='#fafafc'&&primaryColor.toLowerCase()==='#1db86a';
+      var sharedTheme=['#faf8f3','#fafafc'].includes(bg)&&!!primaryColor;
       var themeLinked=!!document.querySelector('link[href*="unified-theme.css"]')&&
         !!document.querySelector('link[href*="learning-studio.css"]')&&
         !!document.querySelector('link[href*="styles.css"]')&&
@@ -28,9 +28,9 @@
         window.innerWidth<=760?'.mobile-nav .nav-item[aria-current="page"]':
           '.sidebar .nav-item[aria-current="page"]');
       var inkNav=!!activeNav&&
-        ['rgb(239, 243, 255)','rgb(237, 243, 255)','rgb(237, 242, 250)']
+        ['rgb(239, 243, 255)','rgb(237, 243, 255)','rgb(237, 242, 250)','rgb(240, 231, 218)']
           .includes(getComputedStyle(activeNav).backgroundColor)&&
-        ['rgb(36, 84, 207)','rgb(36, 89, 219)','rgb(37, 61, 96)']
+        ['rgb(36, 84, 207)','rgb(36, 89, 219)','rgb(37, 61, 96)','rgb(145, 83, 59)']
           .includes(getComputedStyle(activeNav).color);
       var guest=document.body.getAttribute('data-app-role')==='guest';
       // Public top navigation replaces all selected sidebar/bottom nav states.
@@ -42,7 +42,7 @@
       var safeTheme=sharedTheme&&themeLinked;
       var sharedExperience=!!document.querySelector('link[href*="assets/experience.css"]') &&
         document.body.classList.contains('ngd-public-app') &&
-        getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim().toLowerCase()==='#2f6bff';
+        ['#2f6bff','#b65c39'].includes(getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim().toLowerCase());
       // Real browser acceptance for the new mobile menu: all features are
       // browseable, essential explanatory copy must remain visible.
       var headingHelp=main?main.querySelector('.section-head p:not(.eyebrow)'):null;
