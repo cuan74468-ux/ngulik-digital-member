@@ -110,13 +110,12 @@ test('app integrates real image slots across guest home and catalogue and admin 
   const home=guest.nodes.screen.innerHTML;
   assert.equal((home.match(/class="nh-hero nh-hero-slide"/g)||[]).length,2);
   assert.match(home,/nh-carousel/);
-  assert.match(home,/assets\/media\/produk-pos.webp/);
   vm.runInContext("go('katalog')",guest.ctx,{timeout:3000});
   assert.match(guest.nodes.screen.innerHTML,/assets\/media\/sampul-katalog.webp/);
-  assert.match(guest.nodes.screen.innerHTML,/catalog-product-image/);
-  const admin=load('admin');
-  vm.runInContext("go('konten')",admin.ctx,{timeout:3000});
+  assert.match(guest.nodes.screen.innerHTML,/assets\/media\/produk-pos.webp/);
+  assert.match(guest.nodes.screen.innerHTML,/market-product-image/);
+  const admin=load();
+  vm.runInContext("state.me={role:'ADMIN',member_id:'TEST_ADMIN',nama:'Operator'};state.token='SYNTHETIC_ONLY';go('konten')",admin.ctx,{timeout:3000});
   assert.match(admin.nodes.screen.innerHTML,/id="content-editor-form"/);
   assert.match(admin.nodes['notice-slot'].innerHTML,/data-route="konten" aria-current="page"/);
-  assert.match(admin.nodes.screen.innerHTML,/Penyuntingan konten belum aktif/);
 });
