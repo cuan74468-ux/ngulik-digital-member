@@ -1,0 +1,11 @@
+/* CMS public media operations — compact, usable on Android and desktop. */
+body.ngd-public-app .ngd-media-help{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;padding:18px 20px;border:1px solid #dce7e1;border-radius:15px;background:#f6faf7;margin:12px 0 17px}
+body.ngd-public-app .ngd-media-help>div{flex:1 1 270px;min-width:0}
+body.ngd-public-app .ngd-media-help strong{display:block;font-size:.91rem;color:#1e4548;line-height:1.4;margin-bottom:5px}
+body.ngd-public-app .ngd-media-help p{font-size:.77rem;color:#526a66;line-height:1.55;margin:0}
+body.ngd-public-app .ngd-media-help code{padding:1px 4px;background:#e6f1ec;color:#285b55;border-radius:4px;overflow-wrap:anywhere}
+body.ngd-public-app .ngd-media-help .btn{flex:none}
+body.ngd-public-app .content-editor-preview{max-width:100%;max-height:240px;object-fit:contain;background:#f2f4f0;border-radius:12px;margin-top:12px}
+body.ngd-public-app .nh-home .nh-carousel{width:100%;min-width:0}
+body.ngd-public-app .member-welcome~.nh-carousel{margin-top:22px}
+@media(max-width:640px){body.ngd-public-app .ngd-media-help{padding:15px;align-items:stretch}body.ngd-public-app .ngd-media-help .btn{width:100%;justify-content:center}}
