@@ -1,0 +1,31 @@
+name: Staging Source Check
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'js/**'
+      - 'apps-script/**'
+      - 'index.html'
+      - 'staging/**'
+      - 'assets/**'
+      - '.github/workflows/staging-source-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node version
+        run: node --version
+      - name: Node syntax check (frontend and Apps Script)
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in js/*.js apps-script/*.gs staging/*.js; do
+            echo "Checking $file"
+            node --check "$file"
+          done
+          echo "NODE_CHECK_PASS"
