@@ -696,7 +696,7 @@ function viewAffiliate(){
   return '<div class="partner-member">'+
     '<header class="partner-member-header"><div><p class="partner-kicker">MEJA KERJA / AFFILIATE</p>'+
       '<h1>Affiliate Saya</h1><p>Bagikan tautan Anda, lihat perkembangan, dan pantau komisi secara transparan.</p></div>'+
-      '<button type="button" class="partner-refresh" data-affiliate-refresh aria-label="Perbarui data affiliate">'+icon('refresh')+' Perbarui</button></header>'+
+      '<button type="button" class="partner-refresh" data-affiliate-refresh aria-label="Perbarui data affiliate">'+icon('arrow')+' Perbarui</button></header>'+
     '<div class="partner-metric-grid">'+cards.map(c=>'<article class="partner-metric partner-metric-'+c[3]+'">'+
       '<span>'+c[0]+'</span><strong>'+c[1]+'</strong><small>'+c[2]+'</small></article>').join('')+'</div>'+
     '<section class="partner-link-panel" aria-label="Tautan referral pribadi">'+
@@ -2234,7 +2234,44 @@ document.addEventListener('error',event=>{
   if(confirmButton){confirmButton.disabled=true;confirmButton.title='QRIS gagal dimuat. Hubungi Admin untuk meminta gambar resmi.';}
 },true);
 
+let affiliatePayoutSubmitting_=false;
 document.addEventListener('click',async(e)=>{
+  const affiliateAction=e.target.closest?.('[data-affiliate-refresh],[data-affiliate-payout]');
+  if(affiliateAction){
+    if(!logged()||isAdmin()||state.route!=='affiliate')return;
+    if(affiliateAction.hasAttribute('data-affiliate-refresh')){
+      affiliateAction.disabled=true;
+      try{
+        state.affiliates=await api('getAffiliateDashboard',{},state.token);
+        render();
+      }catch(error){
+        affiliateAction.disabled=false;
+        toast(error.message||'Gagal memuat data affiliate.',true);
+      }
+      return;
+    }
+    if(affiliatePayoutSubmitting_||!isWriteEnabled()||config.paymentsEnabled!==true)return;
+    const rows=Array.isArray(state.affiliates?.komisi)?state.affiliates.komisi:[];
+    const amount=rows.filter(x=>x.status==='APPROVED'&&!x.payout_requested_at)
+      .reduce((sum,x)=>sum+(Number(x.nominal)||0),0);
+    if(!(amount>0))return toast('Belum ada komisi yang dapat diajukan.',true);
+    if(!confirm('Ajukan pencairan hingga '+rupiah(amount)+'? Sistem akan memeriksa minimum dan status transaksi. Pengajuan bukan bukti uang sudah ditransfer.'))return;
+    affiliatePayoutSubmitting_=true;
+    affiliateAction.disabled=true;
+    try{
+      const result=await api('requestPayout',{},state.token,{write:true});
+      state.affiliates=await api('getAffiliateDashboard',{},state.token);
+      render();
+      toast('Pengajuan pencairan tercatat'+(result?.total?' sebesar '+rupiah(result.total):'')+'. Menunggu proses berikutnya.');
+    }catch(error){
+      toast(error.message||'Pengajuan belum dapat diproses.',true);
+      try{state.affiliates=await api('getAffiliateDashboard',{},state.token);render();}
+      catch{affiliateAction.disabled=false;}
+    }finally{
+      affiliatePayoutSubmitting_=false;
+    }
+    return;
+  }
   if(e.target.closest('[data-market-reset]')){
     state.marketplaceSearch='';state.catalogFilter='semua';state.marketplaceSort='default';
     render();return;
