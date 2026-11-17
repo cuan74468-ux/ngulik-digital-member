@@ -356,12 +356,12 @@ function viewHome(){
   const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal" aria-label="Ngulik Digital">'+
     brandStage+
     '<div class="public-hero-copy">'+
-      '<p class="pf-hello">NGULIK DIGITAL · SOLUSI DIGITAL UMKM</p>'+
-      '<h1>Bangun usaha lebih mudah. <em>Berkembang lebih jauh.</em></h1>'+
-      '<p class="public-hero-lead">Tools AI, aplikasi bisnis, kelas, dan layanan kreatif dalam satu ekosistem yang sederhana.</p>'+
+      '<p class="pf-hello">NGULIK DIGITAL · BELAJAR, PRAKTIK, TUMBUH</p>'+
+      '<h1>Warung Tools AI. <em>Bengkel Kerja UMKM.</em></h1>'+
+      '<p class="public-hero-lead">Temukan alat AI yang berguna, pelajari cara pakainya, lalu terapkan langsung untuk usaha. Dari membuat konten hingga mengelola bisnis, semua bisa dimulai di sini.</p>'+
       '<div class="public-hero-buttons">'+
-        '<button type="button" class="btn btn-primary pf-button-dark" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
-        '<button type="button" class="btn btn-secondary pf-button-light" data-route="daftar">Mulai Bergabung</button>'+
+        '<button type="button" class="btn btn-primary pf-button-dark" data-route="katalog">Jelajahi Tools '+icon('arrow')+'</button>'+
+        '<button type="button" class="btn btn-secondary pf-button-light" data-route="daftar">Mulai Belajar</button>'+
       '</div>'+
     '</div>'+
   '</section>';
