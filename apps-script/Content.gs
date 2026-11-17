@@ -35,7 +35,7 @@ function contentDate_(value,label) {
 function contentPlacement_(kind,value) {
   var place=String(value||'').trim();
   var valid=false;
-  if(kind==='HERO')valid=['home','member_home'].indexOf(place)>=0;
+  if(kind==='HERO')valid=['home','catalog','member_home'].indexOf(place)>=0;
   if(kind==='FEATURE_ICON')valid=['belajar','aplikasi','ai','jasa','katalog',
     'affiliate','dukungan','login'].indexOf(place)>=0;
   if(kind==='NAV_ICON')valid=NGD_CONTENT_ROUTES_.indexOf(place)>=0;
