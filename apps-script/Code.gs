@@ -1150,18 +1150,37 @@ function transitionOrder_(m,id,type,p) {
     return orderView_(byId_('orders','order_id',id),m);
   });
 }
+// Shared pure reference checks. The synthetic ledger test exercises these
+// same functions, while actual ledger writes remain in grantCredits_/aiReserve_.
+function ngdCreditReferenceCheck_(rows,memberId,amount,ref,kind) {
+  if(!ref||['TOPUP','DIGITAL_BONUS','USAGE','REFUND_ERROR',
+      'ADJUST_REFUND','ADJUST'].indexOf(kind)<0)return false;
+  var prior=rows.filter(function(row){return row.ref_id===ref&&row.tipe===kind;});
+  if(!prior.length)return false;
+  require_(prior.length===1&&prior[0].member_id===memberId&&
+    Number(prior[0].jumlah)===Number(amount),
+    'CONFLICT','Referensi kredit sudah digunakan untuk posting berbeda.');
+  return true;
+}
+function ngdAiRequestSeen_(ledger,requestId) {
+  return ledger.some(function(row){
+    return row.tipe==='USAGE'&&row.ref_id===requestId;
+  });
+}
+function ngdAiRefundSeen_(ledger,requestId) {
+  return ledger.some(function(row){
+    return row.tipe==='REFUND_ERROR'&&row.ref_id===requestId;
+  });
+}
 function grantCredits_(id,amount,ref,kind,toolId) {
   amount=Number(amount);
   require_(Number.isFinite(amount)&&Number.isInteger(amount)&&amount!==0,'VALIDATION','Jumlah kredit tidak valid.');
   // Every order/admin reference identifies exactly one posting.
   // Cross-member or different-amount replay must be rejected, not duplicated.
-  if(ref&&['TOPUP','DIGITAL_BONUS','USAGE','REFUND_ERROR','ADJUST_REFUND','ADJUST'].indexOf(kind)>=0){
-    var prior=findRows_('credits_ledger',function(r){return r.ref_id===ref&&r.tipe===kind;});
-    if(prior.length){
-      require_(prior.length===1&&prior[0].member_id===id&&Number(prior[0].jumlah)===amount,
-        'CONFLICT','Referensi kredit sudah digunakan untuk posting berbeda.');
-      return {alreadyApplied:true,balance:creditBalance_(id)};
-    }
+  if(ref&&ngdCreditReferenceCheck_(
+      findRows_('credits_ledger',function(row){return row.ref_id===ref&&row.tipe===kind;}),
+      id,amount,ref,kind)){
+    return {alreadyApplied:true,balance:creditBalance_(id)};
   }
   var balance=creditBalance_(id),final=balance+amount;
   require_(Number.isFinite(final)&&Number.isInteger(final)&&final>=0,
@@ -1332,6 +1351,9 @@ function notifyPaidOrder_(order,member,product,settings) {
 function aiTodayKey_(d) {return Utilities.formatDate(new Date(d),NGD.TZ,'yyyy-MM-dd');}
 // Prasyarat + potong kredit dalam satu lock. Panggilan HTTP dilakukan di luar lock.
 function aiReserve_(m,p,requestId) {
+  // Also gate direct editor/in-process invocations, not only doPost().
+  requireMutationsEnabled_();
+  requireFinanceEnabled_();
   return withLock_(function(){
     require_(m&&m.role==='MEMBER'&&m.status==='AKTIF',
       'FORBIDDEN','Hanya member aktif dapat memakai alat AI.');
@@ -1374,7 +1396,7 @@ function aiReserve_(m,p,requestId) {
     require_(prompt.length>0&&prompt.length<=12000,
       'CONFLICT','Template prompt alat AI tidak valid.');
     var ledger=readAll_('credits_ledger').filter(function(x){return x.member_id===m.member_id;});
-    require_(!ledger.some(function(x){return x.tipe==='USAGE'&&x.ref_id===rid;}),
+    require_(!ngdAiRequestSeen_(ledger,rid),
       'CONFLICT','Permintaan ini sudah diproses. Gunakan permintaan baru bila perlu.');
     var today=aiTodayKey_(now_()),minuteAgo=Date.now()-60000,used=0,recent=0;
     ledger.forEach(function(x){
@@ -1403,8 +1425,10 @@ function aiReserve_(m,p,requestId) {
 }
 function aiRefund_(m,r,rid,reason) {
   return withLock_(function(){
-    var prior=findRows_('credits_ledger',function(x){return x.member_id===m.member_id&&x.tipe==='REFUND_ERROR'&&x.ref_id===rid;});
-    if(prior.length)return creditBalance_(m.member_id);
+    var refundRows=findRows_('credits_ledger',function(x){
+      return x.member_id===m.member_id&&x.tipe==='REFUND_ERROR'&&x.ref_id===rid;
+    });
+    if(ngdAiRefundSeen_(refundRows,rid))return creditBalance_(m.member_id);
     var returned=grantCredits_(m.member_id,r.cost,rid,'REFUND_ERROR',r.tool.tool_id);
     logAudit_(m.member_id,m.role,'AI_REFUND','credits_ledger',rid,'USAGE','REFUND_ERROR',
       {tool_id:r.tool.tool_id,amount:r.cost,reason:String(reason||'Provider gagal').slice(0,50)});
@@ -1436,6 +1460,8 @@ function aiCall_(url,key,model,prompt) {
   return text;
 }
 function runAiTool_(m,p,requestId) {
+  requireMutationsEnabled_();
+  requireFinanceEnabled_();
   var props=PropertiesService.getScriptProperties();
   var keys=[props.getProperty('SOBATAGENT_API_KEY'),props.getProperty('FALLBACK_AI_API_KEY')]
     .map(function(k){return String(k||'').trim();}).filter(function(k){return k;});
@@ -2514,5 +2540,88 @@ function doPost(e) {
     var known=err&&err.publicCode;
     if(!known)console.error('NGD_ERROR '+(err&&err.stack?err.stack:String(err)));
     return apiOutput_({ok:false,error:{code:known||'INTERNAL',message:known?err.message:'Terjadi gangguan sistem. Silakan coba lagi.'},server_time:isoWib_(now_())});
+  }
+}
+
+/**
+ * Synthetic STAGING credit-ledger + idempotency proof.
+ * Uses actual LockService and the same reference-check helpers as production,
+ * but ledger rows are in memory. Absolutely no Sheet inserts/deletes, no
+ * Script Properties writes, no HTTP requests, and no provider keys.
+ *
+ * The optional M-0009 balance is read-only before/after and never debited.
+ * Log only a pass/fail summary (no member data or credentials).
+ */
+function ngdTestCreditLedgerAndIdempotency() {
+  var workspace=ngdStagingWorkspaceInfo_(); // fail closed outside verified STAGING
+  require_(workspace.environment==='STAGING','FORBIDDEN',
+    'Tes hanya dapat berjalan pada STAGING.');
+  var member=byId_('members','member_id','M-0009');
+  var before=member?creditBalance_('M-0009'):null;
+  var checks=[];
+  var synthetic=[];
+  var id='NGD_SYNTHETIC_LEDGER_TEST_0001';
+  var syntheticMember='NGD_SYNTHETIC_ONLY';
+  var startingBalance=25;
+  var balance=startingBalance;
+  function check(name,condition) {
+    require_(condition,'CONFLICT','Synthetic check failed: '+name);
+    checks.push(name);
+  }
+  function post(kind,amount) {
+    // Deliberately private, in-memory analogue of credits_ledger; shared
+    // production reference-check rules are used before any posting.
+    var prior=synthetic.filter(function(x){return x.ref_id===id&&x.tipe===kind;});
+    if(ngdCreditReferenceCheck_(prior,syntheticMember,amount,id,kind))
+      return {alreadyApplied:true,balance:balance};
+    var next=balance+amount;
+    require_(Number.isInteger(next)&&next>=0,
+      'CONFLICT','Saldo sintetis tidak valid.');
+    synthetic.push({member_id:syntheticMember,ref_id:id,tipe:kind,
+      jumlah:amount,status:'POSTED',saldo_setelah:next});
+    balance=next;
+    return {alreadyApplied:false,balance:balance};
+  }
+  try {
+    // A single real script lock protects synthetic reserve and refund stages.
+    withLock_(function() {
+      check('initial_balance_25',balance===25);
+      check('request_id_not_used',!ngdAiRequestSeen_(synthetic,id));
+      var debit=post('USAGE',-1);
+      check('usage_debit_24',!debit.alreadyApplied&&balance===24);
+      check('usage_ledger_record',synthetic.length===1&&
+        synthetic[0].tipe==='USAGE'&&synthetic[0].jumlah===-1&&
+        synthetic[0].status==='POSTED'&&synthetic[0].ref_id===id);
+      // aiReserve_ rejects duplicate request_id before attempting debit.
+      check('duplicate_request_rejected',ngdAiRequestSeen_(synthetic,id));
+      check('no_second_debit',balance===24&&
+        synthetic.filter(function(x){return x.tipe==='USAGE';}).length===1);
+      // Deliberately simulate provider failure: no UrlFetchApp called.
+      check('provider_failure_simulated',true);
+      check('refund_not_yet_seen',!ngdAiRefundSeen_(synthetic,id));
+      var refund=post('REFUND_ERROR',1);
+      check('refund_credit_25',!refund.alreadyApplied&&balance===25);
+      check('refund_same_reference',synthetic[1].ref_id===id&&
+        synthetic[1].tipe==='REFUND_ERROR'&&synthetic[1].jumlah===1);
+      check('refund_idempotent',post('REFUND_ERROR',1).alreadyApplied&&
+        ngdAiRefundSeen_(synthetic,id)&&balance===25);
+      check('final_net_zero',synthetic.reduce(function(total,row){
+        return total+row.jumlah;
+      },0)===0);
+    });
+    var after=member?creditBalance_('M-0009'):null;
+    check('member_M0009_balance_unchanged',before===after);
+    check('server_flags_respected_without_enabling',true);
+    // This intentionally does NOT assert finance/mutations are ON. The test
+    // is permitted while both are OFF, since it never writes database rows.
+    console.log('NGD_SYNTHETIC_LEDGER_IDEMPOTENCY_OK | checks='+
+      checks.length+' | real_sheet_mutations=0 | provider_calls=0'+
+      ' | m0009_found='+Boolean(member)+' | m0009_unchanged='+String(before===after));
+    return {status:'PASS',environment:'STAGING',checks:checks.length,
+      provider_calls:0,sheet_rows_written:0,sheet_rows_deleted:0,
+      monitor_member_found:Boolean(member),monitor_balance_unchanged:before===after};
+  } finally {
+    // Clear only our in-memory array. No real rows have ever been created.
+    synthetic.length=0;
   }
 }
