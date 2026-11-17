@@ -30,7 +30,9 @@
         width:Math.round(b.width)
       },illustration:{left:Math.round(a.left),right:Math.round(a.right),
         top:Math.round(a.top),bottom:Math.round(a.bottom),width:Math.round(a.width)
-      },columnsClear:columnsClear,mobileOrder:mobileOrder,headerClear:headerClear,
+      },header:n?{top:Math.round(n.top),bottom:Math.round(n.bottom),height:Math.round(n.height)}:null,
+      mainPaddingTop:Math.round(parseFloat(getComputedStyle(document.getElementById('main')).paddingTop)||0),
+      columnsClear:columnsClear,mobileOrder:mobileOrder,headerClear:headerClear,
       animated:animated});
       document.body.appendChild(output);
     },900);
