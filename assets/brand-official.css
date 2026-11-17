@@ -1,0 +1,81 @@
+/*
+ Ngulik Digital: official owner-supplied symbol.
+ Applied last, preserves the existing warm editorial design while ensuring
+ correct contrast, sizing and proportions of the teal/yellow mark.
+ */
+body.ngd-public-app:not(#ngd) .ngd-brand-image{
+ display:block;
+ width:100%;
+ height:100%;
+ object-fit:contain;
+ aspect-ratio:1;
+ border:0;
+ border-radius:inherit;
+ padding:0;
+ margin:0;
+ max-width:none;
+ max-height:none;
+}
+body.ngd-public-app:not(#ngd) .brand-mark{
+ display:grid;place-items:center;
+ width:46px;height:46px;min-width:46px;
+ padding:0!important;
+ overflow:hidden;
+ border:0;
+ background:#0f4d5c;
+ color:transparent;
+ border-radius:12px;
+ box-shadow:none;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .guest-brand-icon{
+ display:grid;place-items:center;overflow:hidden;
+ width:39px;height:39px;min-width:39px;
+ padding:0;
+ border-radius:10px;
+ border:0;
+ background:#0f4d5c;
+ color:transparent;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo{
+ display:grid;
+ place-items:center;
+ background:transparent;
+ padding:0;
+ border:0;
+ overflow:hidden;
+ border-radius:23px;
+ box-shadow:0 20px 55px -34px rgba(15,77,92,.4);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo .ngd-brand-image{
+ border-radius:23px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-stage::before{
+ background:radial-gradient(circle at center,rgba(15,77,92,.075),transparent 69%);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-shadow{
+ background:rgba(15,77,92,.13);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-hero-art .partner-art-mark{
+ display:grid;place-items:center;
+ width:52%;
+ aspect-ratio:1;
+ padding:0;
+ border:0;
+ border-radius:20px;
+ background:transparent;
+ color:transparent;
+ overflow:hidden;
+ box-shadow:0 22px 40px -28px rgba(15,77,92,.33);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-hero-art .partner-art-mark .ngd-brand-image{
+ border-radius:20px;
+}
+@media(max-width:560px){
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .guest-brand-icon{
+   width:35px;height:35px;min-width:35px;border-radius:9px;
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo,
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo .ngd-brand-image{
+   border-radius:19px;
+ }
+}
