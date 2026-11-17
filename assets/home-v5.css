@@ -489,3 +489,75 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal .public-hero
     animation:none!important;
   }
 }
+
+/* V7 responsive correction: desktop split, phone logo BEFORE the hero */
+@media (min-width: 901px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home-minimal{
+    max-width:1180px;
+    min-height:calc(100svh - 170px);
+    display:grid;
+    align-items:center;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal{
+    display:grid;
+    grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
+    grid-template-areas:"copy logo";
+    align-items:center;
+    justify-items:stretch;
+    gap:clamp(12px,3vw,58px);
+    padding:clamp(55px,7vw,100px) clamp(20px,4vw,70px);
+    text-align:left;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal > .public-hero-copy{
+    grid-area:copy;
+    order:0;align-items:flex-start;
+    text-align:left;width:100%;max-width:590px;
+    justify-self:start;gap:21px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal > .pf-logo-stage{
+    grid-area:logo;
+    order:1;
+    display:grid;place-items:center;
+    justify-self:center;align-self:center;
+    width:min(100%,520px);height:clamp(320px,35vw,440px);
+    margin:0;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal .public-hero-copy h1{
+    max-width:13ch;
+    font-size:clamp(2.6rem,4.25vw,4.7rem);
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal .public-hero-lead{
+    margin:0;max-width:49ch;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal .public-hero-buttons{
+    justify-content:flex-start;
+  }
+}
+@media (max-width: 900px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal{
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:flex-start;
+    text-align:center;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal > .pf-logo-stage{
+    display:grid;order:-1;
+    position:relative;inset:auto;
+    align-self:center;flex:0 0 auto;
+    width:min(440px,100%);height:clamp(230px,38vw,320px);
+    margin:0 auto 12px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal > .public-hero-copy{
+    order:1;position:relative;z-index:2;
+    align-items:center;text-align:center;
+    width:100%;max-width:650px;margin:0;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal .public-hero-buttons{
+    justify-content:center;
+  }
+}
+@media (max-width: 700px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal > .pf-logo-stage{
+    width:min(365px,100%);height:clamp(225px,68vw,265px);
+    margin:0 auto 8px;order:-1;
+  }
+}
