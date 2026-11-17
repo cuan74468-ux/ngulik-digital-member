@@ -347,21 +347,46 @@ function viewHome(){
       '</div></section></div>'+
       (d.peringatan_kredit?'<div class="banner warning section-gap"><div><h3>Saldo kredit menipis</h3><p>Periksa penggunaan kredit sebelum memakai tools AI.</p></div><button class="btn btn-secondary" data-route="ai">Lihat saldo</button></div>':'');
   }
-  // Learning journey: the original brand sphere climbs the five pixel stairs.
-  // Animation is native CSS (no network, GIF, canvas, or extra runtime cost).
-  const brandStage='<div class="ngd-climb-stage" role="img" aria-label="Bola logo Ngulik Digital bergerak naik dari tangga satu ke tangga lima; belajar, praktik, dan tumbuh">'+
-    '<div class="ngd-climb-scene" aria-hidden="true">'+
-      '<span class="ngd-climb-floor"></span>'+
-      '<div class="ngd-climb-stairs">'+
-        Array.from({length:5},(_,i)=>'<span class="ngd-climb-step ngd-climb-step-'+(i+1)+'"></span>').join('')+
-      '</div>'+
-      '<div class="ngd-climb-ball"><span>n.</span></div>'+
-      '<span class="ngd-climb-pixel ngd-climb-pixel-1"></span>'+
-      '<span class="ngd-climb-pixel ngd-climb-pixel-2"></span>'+
-      '<span class="ngd-climb-pixel ngd-climb-pixel-3"></span>'+
-      '<span class="ngd-climb-trail"></span>'+
-    '</div>'+
-    '<p class="ngd-climb-caption">BELAJAR <span>·</span> PRAKTIK <span>·</span> TUMBUH</p>'+
+  // Premium vector illustration, not flat rectangles: shaded isometric
+  // pixel stairs with a softly rolling n. sphere. CSS animation, no external API.
+  const stairBlocks=Array.from({length:5},(_,i)=>{
+    const x=56+i*105,top=403-i*54,ground=485;
+    const left=x,right=x+108,dx=23,dy=-19;
+    return '<g class="ngd-journey-step ngd-journey-step-'+(i+1)+'">'+
+      '<path class="ngd-journey-side" d="M'+right+' '+top+' l'+dx+' '+dy+' v'+(ground-top)+' l-'+dx+' '+(-dy)+' Z"/>'+
+      '<path class="ngd-journey-front" d="M'+left+' '+top+' H'+right+' V'+ground+' H'+left+' Z"/>'+
+      '<path class="ngd-journey-top" d="M'+left+' '+top+' l'+dx+' '+dy+' h108 l-'+dx+' '+(-dy)+' Z"/>'+
+      '</g>';
+  }).join('');
+  const brandStage='<div class="ngd-journey-stage" role="img" aria-label="Bola berlogo Ngulik Digital melangkah naik pada tangga piksel tiga dimensi, simbol belajar dan bertumbuh">'+
+    '<svg class="ngd-journey-art" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 540" aria-hidden="true" focusable="false">'+
+      '<defs>'+
+        '<linearGradient id="ngd-step-front" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0df"/><stop offset=".55" stop-color="#e5baa0"/><stop offset="1" stop-color="#c28f71"/></linearGradient>'+
+        '<linearGradient id="ngd-step-side" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c28e6f"/><stop offset="1" stop-color="#a36b4a"/></linearGradient>'+
+        '<linearGradient id="ngd-step-top" x1="0" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#fffdf6"/><stop offset=".7" stop-color="#ffe7cc"/><stop offset="1" stop-color="#e8c2a7"/></linearGradient>'+
+        '<radialGradient id="ngd-ball-shade" cx="28%" cy="20%" r="83%"><stop offset="0" stop-color="#fffefa"/><stop offset=".43" stop-color="#fff4e9"/><stop offset=".78" stop-color="#e7ccb6"/><stop offset="1" stop-color="#bd8c6f"/></radialGradient>'+
+        '<radialGradient id="ngd-journey-halo"><stop offset="0" stop-color="#dfb18a" stop-opacity=".28"/><stop offset="1" stop-color="#dfb18a" stop-opacity="0"/></radialGradient>'+
+        '<filter id="ngd-journey-shadow" x="-35%" y="-45%" width="180%" height="190%"><feGaussianBlur stdDeviation="14"/></filter>'+
+        '<filter id="ngd-ball-shadow" x="-40%" y="-40%" width="190%" height="190%"><feDropShadow dx="10" dy="15" stdDeviation="13" flood-color="#72472d" flood-opacity=".28"/></filter>'+
+      '</defs>'+
+      '<ellipse cx="366" cy="332" rx="305" ry="185" fill="url(#ngd-journey-halo)"/>'+
+      '<ellipse cx="350" cy="489" rx="297" ry="23" fill="#8d6248" opacity=".13" filter="url(#ngd-journey-shadow)"/>'+
+      '<g class="ngd-journey-stairs">'+stairBlocks+'</g>'+
+      '<g class="ngd-journey-ball" filter="url(#ngd-ball-shadow)">'+
+        '<circle cx="0" cy="0" r="47" fill="url(#ngd-ball-shade)"/>'+
+        '<circle cx="-13" cy="-16" r="22" fill="#ffffff" opacity=".18"/>'+
+        '<text x="0" y="14" text-anchor="middle" fill="#945032" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="57" letter-spacing="-8">n.</text>'+
+      '</g>'+
+      '<path class="ngd-journey-arrow" d="M490 136 C548 124 592 79 616 39" fill="none" stroke="#d2a27d" stroke-width="4" stroke-linecap="round"/>'+
+      '<path class="ngd-journey-arrowhead" d="M604 44 L618 30 L620 52" fill="none" stroke="#d2a27d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'+
+      '<g class="ngd-journey-pixels">'+
+        '<rect x="621" y="108" width="19" height="19" rx="2"/>'+
+        '<rect x="655" y="75" width="13" height="13" rx="2"/>'+
+        '<rect x="633" y="151" width="12" height="12" rx="1"/>'+
+        '<rect x="582" y="189" width="11" height="11" rx="1"/>'+
+      '</g>'+
+    '</svg>'+
+    '<p class="ngd-journey-label">BELAJAR <span>·</span> PRAKTIK <span>·</span> TUMBUH</p>'+
   '</div>';
   const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal" aria-label="Ngulik Digital">'+
     brandStage+
