@@ -347,14 +347,22 @@ function viewHome(){
       '</div></section></div>'+
       (d.peringatan_kredit?'<div class="banner warning section-gap"><div><h3>Saldo kredit menipis</h3><p>Periksa penggunaan kredit sebelum memakai tools AI.</p></div><button class="btn btn-secondary" data-route="ai">Lihat saldo</button></div>':'');
   }
-  // Editorial minimal landing: 3D brand emblem first, then concise hero.
-  // Catalog, token packages and services remain available in their own routes.
-  const brandStage='<div class="pf-ring-stage pf-logo-stage" role="img" aria-label="Emblem Ngulik Digital dengan tiga cincin tiga dimensi berputar">'+
-    '<span class="pf-ring pf-ring-outer" aria-hidden="true"></span>'+
-    '<span class="pf-ring pf-ring-mid" aria-hidden="true"></span>'+
-    '<span class="pf-ring pf-ring-inner" aria-hidden="true"></span>'+
-    '<span class="pf-ring-core" aria-hidden="true"><span class="pf-core-mark">n.</span></span>'+
-    '</div>';
+  // Learning journey: the original brand sphere climbs the five pixel stairs.
+  // Animation is native CSS (no network, GIF, canvas, or extra runtime cost).
+  const brandStage='<div class="ngd-climb-stage" role="img" aria-label="Bola logo Ngulik Digital bergerak naik dari tangga satu ke tangga lima; belajar, praktik, dan tumbuh">'+
+    '<div class="ngd-climb-scene" aria-hidden="true">'+
+      '<span class="ngd-climb-floor"></span>'+
+      '<div class="ngd-climb-stairs">'+
+        Array.from({length:5},(_,i)=>'<span class="ngd-climb-step ngd-climb-step-'+(i+1)+'"></span>').join('')+
+      '</div>'+
+      '<div class="ngd-climb-ball"><span>n.</span></div>'+
+      '<span class="ngd-climb-pixel ngd-climb-pixel-1"></span>'+
+      '<span class="ngd-climb-pixel ngd-climb-pixel-2"></span>'+
+      '<span class="ngd-climb-pixel ngd-climb-pixel-3"></span>'+
+      '<span class="ngd-climb-trail"></span>'+
+    '</div>'+
+    '<p class="ngd-climb-caption">BELAJAR <span>·</span> PRAKTIK <span>·</span> TUMBUH</p>'+
+  '</div>';
   const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal" aria-label="Ngulik Digital">'+
     brandStage+
     '<div class="public-hero-copy">'+
