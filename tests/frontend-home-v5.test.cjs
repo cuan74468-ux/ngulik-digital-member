@@ -21,9 +21,13 @@ test('homepage uses a CSS 3D ring stage and no illustrated 2D mascots',()=>{
   assert.match(app,/class="pf-ring pf-ring-outer"/);
   assert.match(app,/class="pf-ring pf-ring-mid"/);
   assert.match(app,/class="pf-ring pf-ring-inner"/);
-  assert.match(app,/featuredProducts=\(Array\.isArray\(state\.catalog\)/);
+  assert.match(app,/class="pf-logo-stage"/);
+  assert.match(app,/class="nh-home nh-home-minimal"/);
   assert.match(app,/data-route="katalog"/);
-  assert.doesNotMatch(app,/pf-product-monogram/);
+  assert.doesNotMatch(app,/class="pf-product-orbit"/);
+  assert.doesNotMatch(app,/class="nh-grid"/);
+  assert.doesNotMatch(app,/class="nh-rail"/);
+  assert.doesNotMatch(app,/class="ngd-token-market"/);
   assert.match(css,/rotateX\(67deg\)/);
   assert.match(css,/@keyframes ngdRingOrbitOuter/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
