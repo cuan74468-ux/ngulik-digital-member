@@ -10,12 +10,13 @@
   const kinds=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO','PROMO','ANNOUNCEMENT'];
   // Resolve assets against the shared project root, never the current page folder.
   // Works identically for /index.html and /staging/member.html.
-  const projectRoot=new URL('../',document.currentScript?.src||new URL('js/content-ui.js',location.href));
+  const projectRoot=typeof URL==='function'&&typeof location!=='undefined' ?
+    new URL('../',document.currentScript?.src||new URL('js/content-ui.js',location.href)) : null;
   function mediaPath(raw){
     const path=String(raw||'').trim();
     if(!path)return '';
     if(path.length<=500&&/^assets\/[A-Za-z0-9_./-]+\.(?:png|jpe?g|webp|gif|avif)(?:\?[A-Za-z0-9_=&%-]+)?$/i.test(path)&&
-      !path.includes('..')&&!path.includes('//'))return new URL(path,projectRoot).href;
+      !path.includes('..')&&!path.includes('//'))return projectRoot?new URL(path,projectRoot).href:'./'+path;
     if(path.length<=2048&&/^https:\/\/[A-Za-z0-9.-]+(?::[0-9]{2,5})?(?:\/[A-Za-z0-9!$&'()*+,;=:@%_./~-]*)?(?:\?[A-Za-z0-9!$&'()*+,;=:@%_./?~-]*)?(?:#[A-Za-z0-9_.-]*)?$/i.test(path))return path;
     if(path.length<=45000&&/^data:image\/(?:png|jpeg|jpg|webp|gif|avif);base64,[A-Za-z0-9+/]+={0,2}$/i.test(path))return path;
     return '';
