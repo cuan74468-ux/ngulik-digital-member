@@ -33,7 +33,7 @@ test('public and STAGING use identical branded favicon and correct relative sour
 });
 test('all dynamic brand placements use same canonical official image',()=>{
   assert.match(app,/const brandLogoSrc=document\.querySelector\('link\[rel="icon"\]'\)\?\.href\|\|''/);
-  assert.match(app,/id='brand-mark'/);
+  assert.match(app,/by\('brand-mark'\)/);
   assert.match(app,/class="ngd-floating-logo"[^>]*><img class="ngd-brand-image"/);
   assert.match(app,/class="partner-art-mark"><img class="ngd-brand-image"/);
   assert.match(app,/class="market-hero-symbol"[^>]*><img class="ngd-brand-image"/);
