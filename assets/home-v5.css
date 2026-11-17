@@ -561,3 +561,83 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal .public-hero
     margin:0 auto 8px;order:-1;
   }
 }
+
+/*
+ V8 desktop containment fix.
+ High-specificity rules intentionally override .nh-home > .pf-portfolio-hero
+ (legacy flex-column selector) without changing mobile behavior.
+*/
+@media (min-width: 901px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .public-editorial-hero.pf-portfolio-hero.pf-home-minimal{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) minmax(0, .88fr);
+    grid-template-areas:"copy logo";
+    column-gap:clamp(32px,4.5vw,76px);
+    row-gap:0;
+    width:100%;max-width:1180px;
+    min-width:0;
+    min-height:580px;
+    margin:0 auto;
+    padding:clamp(58px,7vw,100px) clamp(26px,4.5vw,74px);
+    align-items:center;
+    justify-items:stretch;
+    overflow:hidden;
+    text-align:left;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .public-hero-copy{
+    grid-area:copy;
+    width:100%;min-width:0;max-width:100%;
+    margin:0;padding:0;
+    justify-self:stretch;align-self:center;
+    align-items:flex-start;justify-content:center;
+    text-align:left;gap:20px;
+    transform:none;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .pf-logo-stage{
+    grid-area:logo;
+    position:relative;
+    display:grid;
+    width:100%;max-width:460px;
+    min-width:0;height:420px;max-height:440px;
+    margin:0;padding:0;
+    inset:auto;
+    justify-self:center;align-self:center;
+    transform:none;overflow:visible;
+    isolation:isolate;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-copy h1{
+    max-width:12.5ch;
+    width:100%;
+    font-size:clamp(2.45rem,4vw,4.55rem);
+    line-height:1.12;
+    overflow-wrap:normal;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-lead{
+    width:100%;max-width:48ch;
+    margin:0;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-buttons{
+    justify-content:flex-start;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .pf-logo-stage .pf-ring-outer{
+    width:min(350px,90%);border-width:17px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .pf-logo-stage .pf-ring-mid{
+    width:min(248px,63%);border-width:13px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .pf-logo-stage .pf-ring-inner{
+    width:min(155px,40%);border-width:9px;
+  }
+}
+@media (min-width:901px) and (max-width:1100px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .public-editorial-hero.pf-portfolio-hero.pf-home-minimal{
+    grid-template-columns:minmax(0,1fr) minmax(0,.78fr);
+    column-gap:30px;padding-inline:24px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-copy h1{
+    font-size:clamp(2.3rem,3.7vw,3.55rem);
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .pf-logo-stage{
+    height:350px;
+  }
+}
