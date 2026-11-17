@@ -1429,10 +1429,21 @@ function aiRefund_(m,r,rid,reason) {
     var refundRows=findRows_('credits_ledger',function(x){
       return x.member_id===m.member_id&&x.tipe==='REFUND_ERROR'&&x.ref_id===rid;
     });
-    if(ngdAiRefundSeen_(refundRows,rid))return creditBalance_(m.member_id);
+    // A duplicate or mismatched refund must never silently pass as success.
+    if(ngdCreditReferenceCheck_(refundRows,m.member_id,r.cost,rid,'REFUND_ERROR'))
+      return creditBalance_(m.member_id);
+    var usage=findRows_('credits_ledger',function(x){
+      return x.member_id===m.member_id&&x.tipe==='USAGE'&&x.ref_id===rid;
+    });
+    require_(usage.length===1&&Number(usage[0].jumlah)===-Number(r.cost),
+      'RECONCILIATION_REQUIRED','Debit AI asal tidak unik atau nominalnya berbeda.');
     var returned=grantCredits_(m.member_id,r.cost,rid,'REFUND_ERROR',r.tool.tool_id);
-    logAudit_(m.member_id,m.role,'AI_REFUND','credits_ledger',rid,'USAGE','REFUND_ERROR',
-      {tool_id:r.tool.tool_id,amount:r.cost,reason:String(reason||'Provider gagal').slice(0,50)});
+    // Auditing must not transform an already-posted compensation into a
+    // failed refund; the ledger reference remains the source of truth.
+    try {
+      logAudit_(m.member_id,m.role,'AI_REFUND','credits_ledger',rid,'USAGE','REFUND_ERROR',
+        {tool_id:r.tool.tool_id,amount:r.cost,reason:String(reason||'Provider gagal').slice(0,50)});
+    }catch(auditError){console.error('AI_REFUND_AUDIT_DEFERRED ref='+rid);}
     return returned.balance;
   });
 }
@@ -1474,7 +1485,12 @@ function runAiTool_(m,p,requestId) {
     catch(err){lastError=String(err&&err.message||'gagal');console.error('AI_CALL_FAILED key#'+(i+1)+' '+lastError);}
   }
   if(!text){
-    aiRefund_(m,r,rid,lastError);
+    try{aiRefund_(m,r,rid,lastError);}
+    catch(refundError){
+      console.error('AI_REFUND_RECONCILIATION_REQUIRED ref='+rid);
+      throw ngdError_('RECONCILIATION_REQUIRED',
+        'Penyedia AI gagal dan pengembalian Token belum terkonfirmasi. Hubungi admin; jangan ulangi permintaan.');
+    }
     throw ngdError_('AI_FAILED','Layanan AI sedang bermasalah. Kredit Anda sudah dikembalikan.');
   }
   logAudit_(m.member_id,m.role,'AI_USAGE','credits_ledger',r.entry_id,'','USAGE',{tool_id:r.tool.tool_id,amount:r.cost});
@@ -2642,5 +2658,80 @@ function ngdTestCreditLedgerAndIdempotency() {
   } finally {
     // Clear only our in-memory array. No real rows have ever been created.
     synthetic.length=0;
+  }
+}
+
+
+/**
+ * STAGING operator verification. All test records live in JavaScript memory:
+ * NO Sheet insert/update/delete, NO SMS/WA, NO provider/API payment calls.
+ * It is not a substitute for live payment reconciliation or GAS source sync.
+ */
+function ngdVerifyFullStagingReadiness() {
+  var workspace=ngdStagingWorkspaceInfo_();
+  require_(workspace.environment==='STAGING','FORBIDDEN','STAGING saja.');
+  var s=settings_();
+  require_(String(s.payment_gateway_mode||'QRIS_STATIS')==='QRIS_STATIS',
+    'MAINTENANCE','Mode pembayaran bukan QRIS_STATIS.');
+  var ledgerCheck=ngdTestCreditLedgerAndIdempotency();
+  require_(ledgerCheck.status==='PASS'&&ledgerCheck.sheet_rows_written===0,
+    'CONFLICT','Simulasi ledger belum lulus.');
+  var checks=[],orders=[],ledger=[],commissions=[],member='NGD_SYNTHETIC_MEMBER';
+  var orderId='NGD_SYNTHETIC_QRIS_ORDER',requestId='NGD_SYNTHETIC_QRIS_REQUEST';
+  var balance=5;
+  function check(name,condition) {
+    require_(condition,'CONFLICT','Simulasi STAGING gagal: '+name);
+    checks.push(name);
+  }
+  function credit(kind,amount,ref) {
+    if(ngdCreditReferenceCheck_(ledger,member,amount,ref,kind))return false;
+    balance+=amount;
+    require_(Number.isSafeInteger(balance)&&balance>=0,
+      'CONFLICT','Saldo sintetis tidak valid.');
+    ledger.push({member_id:member,ref_id:ref,tipe:kind,jumlah:amount,status:'POSTED'});
+    return true;
+  }
+  try{
+    withLock_(function(){
+      var order={order_id:orderId,request_id:requestId,status:'PENDING',
+        member_id:member,metode:'QRIS_STATIS',harga_dasar:10000,total_bayar:10123};
+      orders.push(order);
+      check('qris_pending',orders.length===1&&order.status==='PENDING');
+      // A member confirmation is not payment verification.
+      order.status='MENUNGGU_VERIFIKASI';
+      check('waiting_is_not_paid',order.status!=='PAID'&&balance===5);
+      var verifiedFunds=true,proof='SYNTHETIC_SETTLEMENT_PROOF';
+      check('manual_verification_required',verifiedFunds&&proof.length>=5);
+      order.status='PAID';
+      check('paid_only_after_review',order.status==='PAID');
+      check('topup_posted_once',credit('TOPUP',10,orderId)&&balance===15);
+      check('topup_retry_idempotent',!credit('TOPUP',10,orderId)&&balance===15);
+      var percent=commissionRate_({komisi_persen:25},{komisi_persen:10});
+      var amount=Math.floor(order.harga_dasar*percent/100);
+      if(!commissions.some(function(x){return x.order_id===orderId;}))
+        commissions.push({order_id:orderId,status:'PENDING',nominal:amount});
+      check('affiliate_commission_once',commissions.length===1&&amount===1000);
+      check('affiliate_retry_idempotent',commissions.filter(function(x){
+        return x.order_id===orderId;
+      }).length===1);
+      check('usage_once',credit('USAGE',-2,requestId)&&balance===13);
+      check('usage_request_id_deduplicated',ngdAiRequestSeen_(ledger,requestId)&&
+        !credit('USAGE',-2,requestId)&&balance===13);
+      check('error_refund_once',credit('REFUND_ERROR',2,requestId)&&balance===15);
+      check('error_refund_idempotent',ngdAiRefundSeen_(ledger,requestId)&&
+        !credit('REFUND_ERROR',2,requestId)&&balance===15);
+      check('qris_and_ledger_net',ledger.reduce(function(n,r){
+        return n+Number(r.jumlah);
+      },0)===10);
+    });
+    console.log('NGD_FULL_STAGING_SYNTHETIC_OK checks='+checks.length+
+      ' real_mutations=0 provider_calls=0');
+    return {status:'PASS_SYNTHETIC_ONLY',environment:'STAGING',
+      checks:checks.length,source_runtime_sync_verified:false,
+      real_transactions_verified:false,live_ready:false,
+      real_sheet_mutations:0,provider_calls:0};
+  }finally{
+    // Cleanup is deliberately in-memory; no user records ever existed.
+    orders.length=0;ledger.length=0;commissions.length=0;
   }
 }
