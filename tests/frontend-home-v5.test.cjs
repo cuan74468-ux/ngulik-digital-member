@@ -45,3 +45,15 @@ test('design remains presentation-only and does not replace payment or auth hand
   assert.match(app,/function viewCheckout\(\)/);
   assert.doesNotMatch(css,/display:none!important/);
 });
+
+test('responsive homepage keeps logo first on phones and split columns on desktop',()=>{
+  assert.match(css,/@media\s*\(min-width:\s*901px\)/);
+  assert.match(css,/grid-template-areas:"copy logo"/);
+  assert.match(css,/> \.public-hero-copy\{\s*grid-area:copy/);
+  assert.match(css,/> \.pf-logo-stage\{\s*grid-area:logo/);
+  assert.match(css,/@media\s*\(max-width:\s*900px\)/);
+  assert.match(css,/> \.pf-logo-stage\{[\s\S]*?order:-1/);
+  assert.match(css,/> \.public-hero-copy\{[\s\S]*?order:1/);
+  assert.match(publicHtml,/home-v5\.css\?v=20261117-responsive-split-v7/);
+  assert.match(stagingHtml,/home-v5\.css\?v=20261117-responsive-split-v7/);
+});
