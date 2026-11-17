@@ -33,16 +33,18 @@ test('administrator route is explicit and does not suggest creating a second own
  assert.doesNotMatch(html,/name="setuju_kebijakan"/);
  assert.match(html,/href="\.\/staging\/member\.html#admin-login"/);
 });
-test('unauthed admin dashboard points to real administrator login rather than member registration',()=>{
+test('unauthenticated public admin route never advertises administrator entry',()=>{
  const p=preview('admin');
  const html=p.elements.screen.innerHTML;
- assert.match(html,/data-route="admin-login"/);
+ assert.doesNotMatch(html,/data-route="admin-login"/);
  assert.doesNotMatch(html,/data-route="daftar"/);
+ assert.match(html,/data-route="login"/);
 });
 test('member login stays independent and fails closed',()=>{
  const p=preview('login'),html=p.elements.screen.innerHTML;
  assert.match(html,/data-mode="login"/);
- assert.match(html,/data-route="admin-login"/);
+ assert.doesNotMatch(html,/data-route="admin-login"/);
+ assert.match(html,/data-route="daftar"/);
  assert.match(html,/type="submit" disabled/);
 });
 test('administrator PIN change verifies confirmation locally before making a request',()=>{
