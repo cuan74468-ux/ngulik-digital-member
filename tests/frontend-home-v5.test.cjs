@@ -54,6 +54,15 @@ test('responsive homepage keeps logo first on phones and split columns on deskto
   assert.match(css,/@media\s*\(max-width:\s*900px\)/);
   assert.match(css,/> \.pf-logo-stage\{[\s\S]*?order:-1/);
   assert.match(css,/> \.public-hero-copy\{[\s\S]*?order:1/);
-  assert.match(publicHtml,/home-v5\.css\?v=20261117-responsive-split-v7/);
-  assert.match(stagingHtml,/home-v5\.css\?v=20261117-responsive-split-v7/);
+  assert.match(publicHtml,/home-v5\.css\?v=20261117-desktop-grid-v8/);
+  assert.match(stagingHtml,/home-v5\.css\?v=20261117-desktop-grid-v8/);
+});
+
+test('desktop grid specifically overrides legacy home flex cascade and constrains rings',()=>{
+  assert.match(css,/\.nh-home\.nh-home-minimal > \.public-editorial-hero\.pf-portfolio-hero\.pf-home-minimal\{\s*display:grid/);
+  assert.match(css,/grid-template-columns:minmax\(0, 1fr\) minmax\(0, \.88fr\)/);
+  assert.match(css,/grid-template-areas:"copy logo"/);
+  assert.match(css,/column-gap:clamp\(32px,4\.5vw,76px\)/);
+  assert.match(css,/overflow:hidden/);
+  assert.match(css,/\.nh-home\.nh-home-minimal > \.pf-home-minimal > \.pf-logo-stage\{\s*grid-area:logo/);
 });
