@@ -86,3 +86,30 @@ body.ngd-public-app .ai-workspace .ai-result{min-width:0}
  body.ngd-public-app .ai-catalog-access .actions>.btn{flex:1 1 160px}
 }
 @media(prefers-reduced-motion:reduce){body.ngd-public-app .ai-category-card,body.ngd-public-app .ai-product-card{transition:none}}
+
+/* Dedicated workspace page opened from a catalogue product card. */
+body.ngd-public-app .ai-tool-detail{display:grid;gap:23px;max-width:1180px;width:100%;margin:0 auto;min-width:0;color:#264447}
+body.ngd-public-app .ai-tool-breadcrumb{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.74rem;color:#67807c}
+body.ngd-public-app .ai-tool-breadcrumb button{border:0;background:transparent;padding:6px 0;color:#23616b;text-decoration:underline;font-weight:740;cursor:pointer}
+body.ngd-public-app .ai-tool-breadcrumb strong{font-weight:750;color:#3b5756}
+body.ngd-public-app .ai-tool-detail-hero{background:#f5f6f1;border:1px solid #e8eee8;border-radius:24px;padding:clamp(22px,4vw,48px);display:flex;align-items:end;justify-content:space-between;gap:30px;flex-wrap:wrap}
+body.ngd-public-app .ai-tool-detail-identity{max-width:720px;display:grid;justify-items:start;gap:11px}
+body.ngd-public-app .ai-tool-detail-identity>.ai-product-icon{width:52px;height:52px;border-radius:15px}
+body.ngd-public-app .ai-tool-detail-identity h1{font-size:clamp(2rem,4.2vw,3.7rem);letter-spacing:-.045em;line-height:1.1;color:#18434a;margin:0}
+body.ngd-public-app .ai-tool-detail-identity>p:not(.eyebrow){font-size:clamp(.88rem,1.2vw,1rem);color:#617775;line-height:1.75;margin:0}
+body.ngd-public-app .ai-tool-detail .ai-wallet-mini{flex:0 1 240px;border:1px solid #dfe7e1;background:#fff;border-radius:16px;padding:20px}
+body.ngd-public-app .ai-detail-cost{display:inline-flex;background:#e8f1ec;color:#28635c;border-radius:99px;padding:8px 13px;font-size:.76rem;font-weight:780}
+body.ngd-public-app .ai-tool-detail-content{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(230px,.7fr);gap:22px;align-items:start}
+body.ngd-public-app .ai-tool-brief{min-width:0;border:1px solid #e2e9e4;background:#fff;border-radius:20px;padding:clamp(20px,3.4vw,36px)}
+body.ngd-public-app .ai-tool-brief .ai-form{display:grid;gap:16px;margin:20px 0 0}
+body.ngd-public-app .ai-tool-brief .ai-input{min-height:180px}
+body.ngd-public-app .ai-tool-detail-aside{background:#fafbf9;border-radius:18px;padding:clamp(20px,3vw,29px);border:1px solid #e7ece8}
+body.ngd-public-app .ai-tool-detail-aside h2{font-size:clamp(1.15rem,1.8vw,1.5rem);letter-spacing:-.025em;margin:10px 0;color:#23494e}
+body.ngd-public-app .ai-tool-detail-aside ol{padding-left:20px;display:grid;gap:13px;font-size:.85rem;color:#607472;line-height:1.6;margin:18px 0 25px}
+body.ngd-public-app .ai-tool-detail-aside .btn{width:100%;justify-content:center}
+body.ngd-public-app .ai-tool-back{display:inline-flex;justify-self:start;align-items:center;gap:8px;padding:9px 0;background:transparent;border:0;color:#24616a;font-weight:720;cursor:pointer}
+body.ngd-public-app .ai-tool-detail .ai-result{overflow-wrap:anywhere;min-width:0}
+body.ngd-public-app .ai-product-card{cursor:pointer}
+body.ngd-public-app .ai-product-card:focus-visible{outline:3px solid #8eaeaa;outline-offset:3px}
+@media(max-width:850px){body.ngd-public-app .ai-tool-detail-content{grid-template-columns:1fr}}
+@media(max-width:760px){body.ngd-public-app .ai-tool-detail{gap:18px}body.ngd-public-app .ai-tool-detail-hero{border-radius:18px;padding:24px 19px}body.ngd-public-app .ai-tool-detail .ai-wallet-mini{flex:1 1 100%}body.ngd-public-app .ai-tool-brief{padding:20px 17px}body.ngd-public-app .ai-tool-detail-identity h1{font-size:clamp(2rem,9vw,2.8rem)}}
