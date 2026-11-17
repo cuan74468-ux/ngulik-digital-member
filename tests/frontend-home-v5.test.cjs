@@ -17,11 +17,11 @@ test('public and STAGING load identical final warm design stylesheet after old l
   }
 });
 test('homepage uses a CSS 3D ring stage and no illustrated 2D mascots',()=>{
-  assert.match(app,/class="pf-ring-stage"/);
+  assert.match(app,/class="pf-ring-stage pf-logo-stage"/);
   assert.match(app,/class="pf-ring pf-ring-outer"/);
   assert.match(app,/class="pf-ring pf-ring-mid"/);
   assert.match(app,/class="pf-ring pf-ring-inner"/);
-  assert.match(app,/class="pf-logo-stage"/);
+  assert.match(app,/pf-logo-stage/);
   assert.match(app,/class="nh-home nh-home-minimal"/);
   assert.match(app,/data-route="katalog"/);
   assert.doesNotMatch(app,/class="pf-product-orbit"/);
