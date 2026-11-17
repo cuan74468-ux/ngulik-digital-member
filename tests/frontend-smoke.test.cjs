@@ -49,8 +49,8 @@ test('public config exposes owner-enabled features while secrets stay server-sid
 test('guest homepage renders and shows offline preview warning',()=>{
   const {nodes,document}=renderPreview();
   assert.match(nodes.screen.innerHTML,/nh-hero/);
-  assert.match(nodes.screen.innerHTML,/nh-search/);
-  assert.match(nodes.screen.innerHTML,/nh-grid/);
+  assert.match(nodes.screen.innerHTML,/nh-home-minimal/);
+  assert.match(nodes.screen.innerHTML,/ngd-journey-stage/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.match(nodes['desktop-nav'].innerHTML,/Toko &amp; Lisensi/);
   assert.equal(document.title,'Meja Kerja — Ngulik Digital');
