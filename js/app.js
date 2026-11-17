@@ -347,93 +347,27 @@ function viewHome(){
       '</div></section></div>'+
       (d.peringatan_kredit?'<div class="banner warning section-gap"><div><h3>Saldo kredit menipis</h3><p>Periksa penggunaan kredit sebelum memakai tools AI.</p></div><button class="btn btn-secondary" data-route="ai">Lihat saldo</button></div>':'');
   }
-  // Native-app style home: hero banner, search bar, feature grid, product rail. Labels only.
-  const features=[
-    ['spark','Studio AI','ai'],['store','Aplikasi','aplikasi'],['book','Belajar','belajar'],
-    ['clipboard','Jasa','jasa'],['grid','Katalog','katalog'],['link','Affiliate','affiliate'],
-    ['shield','Bantuan','dukungan'],['user','Masuk','login']
-  ];
-  const goAttr=(r)=>['aplikasi','jasa'].includes(r)?'data-catalog-go="'+r+'"':'data-route="'+r+'"';
-  const processLabels=[
-    ['01','Pilih alat'],['02','Tulis brief'],['03','Gunakan hasil']
-  ];
-  const processExplanations=[
-    'Jelajahi asisten AI yang tersedia untuk konten, deskripsi, atau pekerjaan usaha Anda.',
-    'Ceritakan produk dan kebutuhan Anda. Biaya Token ditampilkan sebelum dijalankan.',
-    'Salin hasil yang dibuat, lalu gunakan untuk promosi atau komunikasi pelanggan.'
-  ];
-  // Cards are populated exclusively by getKatalog; nothing is invented for the showcase.
-  // Product orbit: accessible live catalog buttons, no 2D character artwork.
-  const featuredProducts=(Array.isArray(state.catalog)?state.catalog:[])
-    .filter(p=>p&&p.aktif!==false)
-    .slice(0,5).map((p,i)=>{
-      const label=String(p.nama||'Produk digital');
-      const categories={
-        TOPUP_TOKEN:'Token AI',TOPUP_KREDIT:'Token AI',
-        LANGGANAN_30H:'Akses digital',LISENSI_SEKALI:'Aplikasi',
-        SEAT_30H:'Keanggotaan',PRODUK_DIGITAL:'Produk digital',
-        JASA_SEKALI:'Layanan kreatif'
-      };
-      const kind=categories[String(p.tipe)]||'Produk digital';
-      return '<button type="button" class="pf-product-card pf-tone-'+(i%5+1)+
-        '" data-route="katalog" aria-label="Lihat '+esc(label)+' di katalog">'+
-        '<span class="pf-orbit-dot" aria-hidden="true"></span>'+
-        '<span class="pf-product-info"><small>'+esc(kind)+'</small><strong>'+
-        esc(label)+'</strong><span class="pf-product-price">'+rupiah(p.harga)+
-        '</span></span></button>';
-    }).join('');
-  const tokenPackages=(Array.isArray(state.catalog)?state.catalog:[])
-    .filter(p=>p&&p.aktif!==false&&['TOPUP_TOKEN','TOPUP_KREDIT'].includes(String(p.tipe)))
-    .sort((a,b)=>Number(a.urut||0)-Number(b.urut||0))
-    .map(p=>'<button class="ngd-token-package" type="button" data-catalog-go="ai" aria-label="Lihat paket '+esc(p.nama)+' di katalog">'+
-      '<span class="ngd-token-package-count">'+esc(Number(p.kredit_diberikan)||0)+' <small>Token</small></span>'+
-      '<span class="ngd-token-package-name">'+esc(p.nama)+'</span>'+
-      '<strong>'+rupiah(p.harga)+'</strong>'+icon('arrow')+'</button>').join('');
-  const tokenRail=tokenPackages?'<section class="ngd-token-market" aria-label="Paket token dari katalog aktif">'+
-    '<div class="ngd-token-market-heading"><div><p class="eyebrow">PAKET TOKEN / BAYAR SESUAI PAKAI</p>'+
-    '<h2>Pilih saldo yang Anda butuhkan.</h2></div>'+
-    '<button type="button" class="btn btn-secondary" data-catalog-go="ai">Lihat semua paket '+icon('arrow')+'</button></div>'+
-    '<div class="ngd-token-market-grid">'+tokenPackages+'</div></section>':'';
-  const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero" aria-label="Bengkel kerja digital untuk UMKM">'+
+  // Editorial minimal landing: 3D brand emblem first, then concise hero.
+  // Catalog, token packages and services remain available in their own routes.
+  const brandStage='<div class="pf-ring-stage pf-logo-stage" role="img" aria-label="Emblem Ngulik Digital dengan tiga cincin tiga dimensi berputar">'+
+    '<span class="pf-ring pf-ring-outer" aria-hidden="true"></span>'+
+    '<span class="pf-ring pf-ring-mid" aria-hidden="true"></span>'+
+    '<span class="pf-ring pf-ring-inner" aria-hidden="true"></span>'+
+    '<span class="pf-ring-core" aria-hidden="true"><span class="pf-core-mark">n.</span></span>'+
+    '</div>';
+  const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal" aria-label="Ngulik Digital">'+
+    brandStage+
     '<div class="public-hero-copy">'+
-      '<p class="pf-hello"><span class="pf-hello-dot" aria-hidden="true"></span> Ngulik Digital <span aria-hidden="true">/</span> Alat & AI untuk UMKM</p>'+
-      '<h1>Alat digital untuk <em>usaha yang terus tumbuh.</em></h1>'+
-      '<p class="public-hero-lead">Satu tempat untuk mengembangkan usaha: alat AI, aplikasi bisnis, materi belajar, dan layanan kreatif. Praktis digunakan, jelas biayanya.</p>'+
+      '<p class="pf-hello">NGULIK DIGITAL · SOLUSI DIGITAL UMKM</p>'+
+      '<h1>Bangun usaha lebih mudah. <em>Berkembang lebih jauh.</em></h1>'+
+      '<p class="public-hero-lead">Tools AI, aplikasi bisnis, kelas, dan layanan kreatif dalam satu ekosistem yang sederhana.</p>'+
       '<div class="public-hero-buttons">'+
         '<button type="button" class="btn btn-primary pf-button-dark" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
-        '<button type="button" class="btn btn-secondary pf-button-light" data-route="daftar">Masuk / Daftar WhatsApp</button>'+
-      '</div>'+
-      '<p class="public-hero-note">Aplikasi bisnis · Token AI · Jasa kreatif · Ebook</p>'+
-    '</div>'+
-    '<div class="pf-showcase" aria-label="Produk digital dan cara kerja Studio AI">'+
-      '<div class="pf-showcase-glow" aria-hidden="true"></div>'+
-      '<div class="pf-ring-stage" aria-hidden="true"><span class="pf-ring pf-ring-outer"></span><span class="pf-ring pf-ring-mid"></span><span class="pf-ring pf-ring-inner"></span><span class="pf-ring-core"><span class="pf-core-mark">n.</span><small>NGULIK DIGITAL</small></span></div>'+ 
-      (featuredProducts?'<div class="pf-product-orbit" aria-label="Produk katalog yang tersedia">'+featuredProducts+'</div>':'')+
-      '<div class="public-workflow">'+
-        '<div class="public-workflow-top"><span>STUDIO AI / ALUR PENGGUNAAN</span><span>01—03</span></div>'+
-        '<h2>Dari ide usaha menjadi <span>hasil siap pakai.</span></h2>'+
-        '<div class="public-workflow-steps">'+processLabels.map((x,k)=>'<button type="button" class="public-workflow-step'+
-          (state.publicStep===k?' is-selected':'')+'" data-public-step="'+k+'" aria-pressed="'+(state.publicStep===k?'true':'false')+
-          '"><small>'+x[0]+'</small><strong>'+x[1]+'</strong></button>').join('')+'</div>'+
-        '<p class="public-workflow-explain">'+esc(processExplanations[state.publicStep||0])+'</p>'+
-        '<button type="button" class="public-workflow-link" data-route="ai">Kenali Studio AI '+icon('arrow')+'</button>'+
+        '<button type="button" class="btn btn-secondary pf-button-light" data-route="daftar">Mulai Bergabung</button>'+
       '</div>'+
     '</div>'+
-  '</section>'+(window.NGD_CONTENT_UI?.hero(state.siteContent)||'');
-  const search='<label class="nh-search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'+
-    '<input id="home-search" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="Cari" aria-label="Cari fitur atau produk"></label>';
-  const grid='<section class="nh-grid" aria-label="Fitur">'+features.map(f=>
-    '<button type="button" class="nh-tile" data-search="'+esc(f[1].toLowerCase())+'" '+goAttr(f[2])+'>'+
-    '<span class="nh-tile-icon nh-c'+(features.indexOf(f)%4+1)+'">'+
-    (window.NGD_CONTENT_UI?.media(state.siteContent,'FEATURE_ICON',f[2],'nh-feature-image','')||
-      '<span class="nh-feature-letter" aria-hidden="true">'+esc(f[1].slice(0,1))+'</span>')+
-    '</span><span>'+esc(f[1])+'</span></button>').join('')+'</section>';
-  const rail=state.catalog.length?'<section class="nh-rail" aria-label="Produk">'+state.catalog.map(p=>
-    '<button type="button" class="nh-card" data-route="katalog" data-search="'+esc(String(p.nama||'').toLowerCase())+'">'+
-    '<span class="nh-card-icon">'+(window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'nh-product-image','')||
-      '<span class="nh-product-letter" aria-hidden="true">'+esc(String(p.nama||'P').slice(0,1))+'</span>')+'</span>'+
-    '<strong>'+esc(p.nama)+'</strong><em>'+rupiah(p.harga)+'</em></button>').join('')+'</section>':'';
-  return '<div class="nh-home">'+hero+tokenRail+'<section class="public-discovery"><div class="public-discovery-head"><p class="eyebrow">PILIH SESUAI KEBUTUHAN</p><h2>Alat digital untuk pekerjaan nyata.</h2></div>'+search+grid+rail+'</section><p id="nh-empty" class="nh-empty" hidden>Tidak ada hasil</p></div>';
+  '</section>';
+  return '<div class="nh-home nh-home-minimal">'+hero+'</div>';
 }
 const offerCategories=[
   ['semua','Semua'],['ai','Token AI'],['aplikasi','Aplikasi Bisnis'],
