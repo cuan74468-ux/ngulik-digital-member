@@ -2253,6 +2253,15 @@ async function submitServiceQuote(form){
   render();
 }
 document.addEventListener('input',(e)=>{
+  if(e.target?.id==='ai-tool-search'&&state.route==='ai'&&logged()&&!isAdmin()){
+    state.aiSearch=e.target.value;
+    const start=e.target.selectionStart,end=e.target.selectionEnd;
+    render();
+    const next=document.getElementById('ai-tool-search');
+    if(next){next.focus({preventScroll:true});
+      if(start!==null&&end!==null)next.setSelectionRange(start,end);}
+    return;
+  }
   if(e.target?.id==='market-search'&&!logged()&&state.route==='katalog'){
     state.marketplaceSearch=e.target.value;
     const start=e.target.selectionStart,end=e.target.selectionEnd;
