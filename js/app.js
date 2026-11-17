@@ -363,17 +363,24 @@ function viewHome(){
     'Salin hasil yang dibuat, lalu gunakan untuk promosi atau komunikasi pelanggan.'
   ];
   // Cards are populated exclusively by getKatalog; nothing is invented for the showcase.
+  // Product orbit: accessible live catalog buttons, no 2D character artwork.
   const featuredProducts=(Array.isArray(state.catalog)?state.catalog:[])
     .filter(p=>p&&p.aktif!==false)
     .slice(0,5).map((p,i)=>{
-      const image=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',
-        p.product_id,'pf-product-cover','')||'<span class="pf-product-monogram" aria-hidden="true">'+
-        esc(String(p.nama||'N').slice(0,1).toUpperCase())+'</span>';
+      const label=String(p.nama||'Produk digital');
+      const categories={
+        TOPUP_TOKEN:'Token AI',TOPUP_KREDIT:'Token AI',
+        LANGGANAN_30H:'Akses digital',LISENSI_SEKALI:'Aplikasi',
+        SEAT_30H:'Keanggotaan',PRODUK_DIGITAL:'Produk digital',
+        JASA_SEKALI:'Layanan kreatif'
+      };
+      const kind=categories[String(p.tipe)]||'Produk digital';
       return '<button type="button" class="pf-product-card pf-tone-'+(i%5+1)+
-        '" data-route="katalog" aria-label="Lihat '+esc(p.nama)+' di katalog">'+
-        '<span class="pf-product-art">'+image+'</span>'+
-        '<span class="pf-product-info"><strong>'+esc(p.nama)+'</strong><small>'+
-        rupiah(p.harga)+'</small></span></button>';
+        '" data-route="katalog" aria-label="Lihat '+esc(label)+' di katalog">'+
+        '<span class="pf-orbit-dot" aria-hidden="true"></span>'+
+        '<span class="pf-product-info"><small>'+esc(kind)+'</small><strong>'+
+        esc(label)+'</strong><span class="pf-product-price">'+rupiah(p.harga)+
+        '</span></span></button>';
     }).join('');
   const tokenPackages=(Array.isArray(state.catalog)?state.catalog:[])
     .filter(p=>p&&p.aktif!==false&&['TOPUP_TOKEN','TOPUP_KREDIT'].includes(String(p.tipe)))
@@ -388,13 +395,10 @@ function viewHome(){
     '<button type="button" class="btn btn-secondary" data-catalog-go="ai">Lihat semua paket '+icon('arrow')+'</button></div>'+
     '<div class="ngd-token-market-grid">'+tokenPackages+'</div></section>':'';
   const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero" aria-label="Bengkel kerja digital untuk UMKM">'+
-    '<span class="pf-hero-spark pf-spark-one" aria-hidden="true">✦</span>'+
-    '<span class="pf-hero-spark pf-spark-two" aria-hidden="true">✧</span>'+
-    '<span class="pf-hero-spark pf-spark-three" aria-hidden="true">✦</span>'+
     '<div class="public-hero-copy">'+
       '<p class="pf-hello"><span class="pf-hello-dot" aria-hidden="true"></span> Ngulik Digital <span aria-hidden="true">/</span> Alat & AI untuk UMKM</p>'+
-      '<h1>Supermarket Tools AI. <em>Bengkel Kerja UMKM.</em></h1>'+
-      '<p class="public-hero-lead">Bengkel kerja digital untuk UMKM: pilih alat bisnis, Studio AI, lisensi, dan paket token dalam satu tempat. Mulai Rp10.000, bayar sesuai kebutuhan.</p>'+
+      '<h1>Alat digital untuk <em>usaha yang terus tumbuh.</em></h1>'+
+      '<p class="public-hero-lead">Satu tempat untuk mengembangkan usaha: alat AI, aplikasi bisnis, materi belajar, dan layanan kreatif. Praktis digunakan, jelas biayanya.</p>'+
       '<div class="public-hero-buttons">'+
         '<button type="button" class="btn btn-primary pf-button-dark" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
         '<button type="button" class="btn btn-secondary pf-button-light" data-route="daftar">Masuk / Daftar WhatsApp</button>'+
@@ -403,6 +407,7 @@ function viewHome(){
     '</div>'+
     '<div class="pf-showcase" aria-label="Produk digital dan cara kerja Studio AI">'+
       '<div class="pf-showcase-glow" aria-hidden="true"></div>'+
+      '<div class="pf-ring-stage" aria-hidden="true"><span class="pf-ring pf-ring-outer"></span><span class="pf-ring pf-ring-mid"></span><span class="pf-ring pf-ring-inner"></span><span class="pf-ring-core"><span class="pf-core-mark">n.</span><small>NGULIK DIGITAL</small></span></div>'+ 
       (featuredProducts?'<div class="pf-product-orbit" aria-label="Produk katalog yang tersedia">'+featuredProducts+'</div>':'')+
       '<div class="public-workflow">'+
         '<div class="public-workflow-top"><span>STUDIO AI / ALUR PENGGUNAAN</span><span>01—03</span></div>'+
