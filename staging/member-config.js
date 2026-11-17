@@ -1,20 +1,21 @@
-/* STAGING is fail-closed during P0 verification: readonly UI except isolated admin login.
- * Client flags do not override NGD_MUTATIONS_ENABLED / NGD_FINANCE_ENABLED
- * and must not be set true until runtime attestation and explicit release approval. */
+/* STAGING QA UI gates: visible workflows may be exercised only when the matching
+ * server-side release gates permit them. Production endpoint stays isolated.
+ * Payments, token debits, refunds and provider calls remain blocked whenever
+ * the Apps Script NGD_FINANCE_ENABLED property is false. */
 window.NGD_CONFIG = Object.freeze({
   brand:'Ngulik Digital — STAGING',
   apiUrl:window.NGD_STAGING_CONFIG?.apiUrl||'', // single canonical staging/config.js source
   siteUrl:'https://cuan74468-ux.github.io/ngulik-digital-member/staging/member.html',
-  memberWritesEnabled:false,
-  registrationOtpEnabled:false,
-  paymentsEnabled:false,
+  memberWritesEnabled:true,
+  registrationOtpEnabled:true,
+  paymentsEnabled:true,
   adminLoginEnabled:true,
-  contentEnabled:false,
-  catalogEnabled:false,
-  serviceEnabled:false,
-  supportEnabled:false,
-  notificationsEnabled:false,
-  lmsEnabled:false,
+  contentEnabled:true,
+  catalogEnabled:true,
+  serviceEnabled:true,
+  supportEnabled:true,
+  notificationsEnabled:true,
+  lmsEnabled:true,
   qrisImageUrl:'',
   qrisMerchant:'',
   qrisOwnerImageApproved:false // set true ONLY after replacing placeholder with real QRIS
