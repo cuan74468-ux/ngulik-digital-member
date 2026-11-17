@@ -318,7 +318,9 @@ function viewHome(){
       ['Paket 3-in-1',state.me.akses_3in1_sampai&&new Date(state.me.akses_3in1_sampai).getTime()>Date.now()?'AKTIF':'BELUM AKTIF'],
       ['Canva',String(state.me.status_canva||'BELUM AKTIF')]
     ];
-    return (window.NGD_CONTENT_UI?.hero(state.siteContent,'member_home')||'')+'<section class="member-welcome"><div><p class="eyebrow">DASHBOARD / MEJA KERJA</p>'+
+    return (window.NGD_CONTENT_UI?.hero(state.siteContent,'member_home')||'')+
+      (window.NGD_CONTENT_UI?.promotion(state.siteContent,'member_home')||'')+
+      '<section class="member-welcome"><div><p class="eyebrow">DASHBOARD / MEJA KERJA</p>'+
       '<h1>Selamat datang, <span class="accent">'+esc(first)+'.</span></h1>'+
       '<p class="lead">Token, alat AI, lisensi, dan aktivitas usaha dalam satu meja kerja.</p></div>'+
       '<span class="chip green">'+esc(state.me.status||'AKTIF')+'</span></section>'+
@@ -1534,8 +1536,10 @@ async function submitContentForm_(form){
   const old=id?state.adminContent.find(x=>x.content_id===id):null;
   if(id&&!old)return toast('Konten telah berubah. Muat ulang terlebih dahulu.',true);
   if(old){payload.content_id=id;payload.revision=old.revision;}
-  if(!window.NGD_CONTENT_UI?.mediaPath(payload.image_path))
-    return toast('Gunakan URL HTTPS gambar atau path assets/ (PNG, JPG, WebP, AVIF).',true);
+  if(!(payload.kind==='PROMO'||payload.kind==='ANNOUNCEMENT')||payload.image_path){
+    if(!window.NGD_CONTENT_UI?.mediaPath(payload.image_path))
+      return toast('Gunakan URL HTTPS gambar atau path assets/ (PNG, JPG, WebP, AVIF).',true);
+  }
   const btn=form.querySelector('[type=submit]');
   if(btn?.disabled)return;
   if(btn)btn.disabled=true;
@@ -1546,7 +1550,7 @@ async function submitContentForm_(form){
     state.contentRequestId=null;
     if(result?.item?.content_id)state.contentEditId=result.item.content_id;
     state.adminContent=await api('adminListContent',{},state.token);
-    render();toast('Konten tersimpan. Publikasikan setelah file gambar tersedia.');
+    render();toast('Konten tersimpan. Periksa isi dan terbitkan jika sudah sesuai.');
   }catch(e){
     toast(e.message,true);
     // Unknown network outcome: keep request ID for safe create replay.
@@ -1560,10 +1564,12 @@ async function changeContentStatus_(id,nextStatus){
   if(!old)return toast('Konten tidak ditemukan.',true);
   if(nextStatus==='PUBLISHED'){
     const src=window.NGD_CONTENT_UI?.mediaPath(old.image_path);
-    if(!src)return toast('Alamat aset tidak valid. Periksa path gambar.',true);
+    if(!src&&['PROMO','ANNOUNCEMENT'].includes(old.kind)){
+      if(!confirm('Terbitkan '+(old.kind==='PROMO'?'promosi':'pengumuman')+' tanpa gambar?'))return;
+    }else if(!src)return toast('Alamat aset tidak valid. Periksa path gambar.',true);
     // A valid path is not evidence that a file exists: verify the image loads
     // before a published CMS row can replace the homepage or product image.
-    const reachable=await new Promise(resolve=>{
+    const reachable=!src?true:await new Promise(resolve=>{
       const img=new Image();
       const guard=setTimeout(()=>{img.onload=null;img.onerror=null;resolve(false);},8000);
       img.onload=()=>{clearTimeout(guard);resolve(img.naturalWidth>0);};
@@ -1571,7 +1577,7 @@ async function changeContentStatus_(id,nextStatus){
       img.src=src;
     });
     if(!reachable)return toast('Gambar belum dapat dibuka. Pastikan file sudah tersedia di GitHub Pages atau alamat HTTPS publik.',true);
-    if(!confirm('Gambar berhasil dibuka. Terbitkan konten ini sekarang?'))return;
+    if(src&&!confirm('Gambar berhasil dibuka. Terbitkan konten ini sekarang?'))return;
   }
   try{
     await api('adminSetContentStatus',{
