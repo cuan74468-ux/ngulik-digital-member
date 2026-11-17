@@ -56,11 +56,20 @@ test('synthetic tester refuses anything outside STAGING before lock or mutation'
   assert.equal(telemetry.acquired,0);
   assert.equal(telemetry.sheetMutations,0);
 });
-test('missing monitoring member does not fabricate a real token balance',()=>{
-  const {ctx}=fixture({monitorMissing:true});
+test('missing monitoring member stays untouched and full synthetic QRIS readiness never writes',()=>{
+  const {ctx,telemetry}=fixture({monitorMissing:true});
   const result=ctx.ngdTestCreditLedgerAndIdempotency();
   assert.equal(result.monitor_member_found,false);
   assert.equal(result.monitor_balance_unchanged,true);
+  ctx.settings_=()=>({payment_gateway_mode:'QRIS_STATIS'});
+  const readiness=ctx.ngdVerifyFullStagingReadiness();
+  assert.equal(readiness.status,'PASS_SYNTHETIC_ONLY');
+  assert.equal(readiness.live_ready,false);
+  assert.equal(readiness.real_sheet_mutations,0);
+  assert.equal(readiness.provider_calls,0);
+  assert.ok(readiness.checks>=10);
+  assert.equal(telemetry.sheetMutations,0);
+  assert.equal(telemetry.httpCalls,0);
 });
 test('direct AI reservations and runs are fail-closed when mutation/finance flags OFF',()=>{
   const {ctx,telemetry}=fixture();
