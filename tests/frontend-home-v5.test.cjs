@@ -46,3 +46,9 @@ test('homepage-only CSS preserves payment and account logic',()=>{
   assert.match(app,/function viewCheckout\(\)/);
   assert.doesNotMatch(floating,/#2F6BFF|#4361ee|#0e1320/i);
 });
+
+test('both entrypoints load current homepage copy rather than cached 16 November module',()=>{
+  assert.match(app,/Warung Tools AI\. <em>Bengkel Kerja UMKM\.<\/em>/);
+  assert.match(publicHtml,/js\/app\.js\?v=20261117-warung-tools-copy-v2/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261117-warung-tools-copy-v2/);
+});
