@@ -195,7 +195,7 @@ const state={
   lmsCourses:[],lmsEnrollments:[],lmsAdminCourses:[],
   lmsCourseDetail:null,lmsAdminCourse:null,lmsSelectedCourseId:null,
   lmsSelectedLessonId:null,lmsJobs:[],lmsSelectedAIJobId:null,
-  lmsCompletion:null,notifications:{enabled:false,items:[],unread:0},catalogFilter:'semua',
+  lmsCompletion:null,notifications:{enabled:false,items:[],unread:0},catalogFilter:'semua',marketplaceSearch:'',marketplaceSort:'default',
   adminCatalog:[],catalogEditId:'',catalogRequestId:null,
   adminRuntime:null,adminRuntimeError:'',adminSettings:null,adminSettingsError:'',
   services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null,
@@ -385,8 +385,80 @@ const offerCategoryLabel=p=>{
   const category=offerCategory(p);
   return offerCategories.find(x=>x[0]===category)?.[1]||'Produk digital';
 };
+/* Public marketplace presentation only. Commerce decisions reuse the existing
+ * verified catalog, availability and checkout rules; no invented discounts. */
+function viewPublicMarketplace(list){
+  const category=state.catalogFilter||'semua';
+  const search=String(state.marketplaceSearch||'').trim().toLocaleLowerCase('id-ID');
+  const sort=state.marketplaceSort||'default';
+  let shown=list.filter(p=>(category==='semua'||offerCategory(p)===category)&&
+    (!search||String(p.nama||'').toLocaleLowerCase('id-ID').includes(search)||
+      String(p.deskripsi||'').toLocaleLowerCase('id-ID').includes(search)||
+      offerCategoryLabel(p).toLocaleLowerCase('id-ID').includes(search)));
+  if(sort==='price-asc')shown=[...shown].sort((a,b)=>(Number(a.harga)||0)-(Number(b.harga)||0));
+  if(sort==='price-desc')shown=[...shown].sort((a,b)=>(Number(b.harga)||0)-(Number(a.harga)||0));
+  if(sort==='name')shown=[...shown].sort((a,b)=>String(a.nama||'').localeCompare(String(b.nama||''),'id'));
+  const banner=window.NGD_CONTENT_UI?.hero(state.siteContent,'catalog')||
+    '<section class="market-hero-fallback" aria-label="Selamat datang di marketplace Ngulik Digital">'+
+      '<div class="market-hero-content"><span class="market-eyebrow">WARUNG TOOLS AI · BENGKEL KERJA UMKM</span>'+
+      '<h2>Temukan alat digital untuk ide besar Anda.</h2>'+
+      '<p>Pilih yang sesuai kebutuhan. Pelajari manfaatnya, lalu mulai berkarya.</p>'+
+      '<button type="button" class="market-hero-link" data-route="belajar">Mulai belajar '+icon('arrow')+'</button>'+
+      '</div><div class="market-hero-symbol" aria-hidden="true"><span>n.</span></div></section>';
+  const filterBar='<div class="market-categories" role="group" aria-label="Jelajahi kategori produk">'+
+    offerCategories.map(([id,label])=>'<button type="button" class="catalog-filter market-category" data-catalog-filter="'+esc(id)+
+      '" aria-pressed="'+(id===category?'true':'false')+'"><span class="market-category-icon" aria-hidden="true">'+
+      ({semua:'✦',ai:'✳',aplikasi:'▣',jasa:'◈',belajar:'▤'}[id]||'•')+'</span>'+esc(label)+'</button>').join('')+'</div>';
+  const controls='<div class="market-toolbar"><label class="market-search-wrap" for="market-search">'+
+    '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>'+
+    '<input id="market-search" type="search" placeholder="Cari aplikasi, tools AI, ebook..." autocomplete="off" value="'+esc(state.marketplaceSearch||'')+'" aria-label="Cari produk digital">'+
+    '</label><label class="market-sort-wrap">Urutkan <select id="market-sort" aria-label="Urutkan produk">'+
+    [['default','Relevan'],['name','Nama A–Z'],['price-asc','Harga terendah'],['price-desc','Harga tertinggi']].map(([v,t])=>
+      '<option value="'+v+'" '+(sort===v?'selected':'')+'>'+t+'</option>').join('')+
+    '</select></label></div>';
+  const cards=shown.map(p=>{
+    const kind=offerCategory(p);
+    const valid=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
+    const enabled=valid&&config.paymentsEnabled===true;
+    const consult=enabled?'':consultationUrl(p);
+    const cover=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'market-product-image',p.nama);
+    const action=enabled?
+      '<button type="button" class="market-product-action" data-buy="'+idSafe(p.product_id)+'">Beli sekarang '+icon('arrow')+'</button>':
+      consult?'<a class="market-product-action" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer">Tanya produk '+icon('arrow')+'</a>':
+      '<button type="button" class="market-product-action" disabled>Belum tersedia</button>';
+    const benefits=(Number(p.kredit_diberikan)>0?'<span>'+esc(Number(p.kredit_diberikan))+' token</span>':'')+
+      (Number(p.durasi_hari)>0?'<span>'+esc(Number(p.durasi_hari))+' hari</span>':'');
+    return '<article class="market-product-card" aria-label="'+esc(p.nama)+'">'+
+      '<div class="market-product-media">'+
+        (cover||'<div class="market-product-placeholder" aria-hidden="true"><span>'+esc(String(p.nama||'N').slice(0,1).toUpperCase())+'</span></div>')+
+        '<span class="market-product-category">'+esc(offerCategoryLabel(p))+'</span>'+
+      '</div><div class="market-product-body">'+
+        '<h3>'+esc(p.nama)+'</h3>'+
+        '<p class="market-product-description">'+esc(p.deskripsi||'Produk digital Ngulik Digital')+'</p>'+
+        (benefits?'<div class="market-product-benefits">'+benefits+'</div>':'')+
+        '<div class="market-product-bottom"><span class="market-product-price-label">Harga</span>'+
+        '<strong class="market-product-price">'+(valid?rupiah(p.harga):'Hubungi admin')+'</strong>'+action+'</div>'+
+      '</div></article>';
+  }).join('');
+  return '<div class="market-page">'+
+    '<header class="market-header"><div><p class="market-eyebrow">NGULIK DIGITAL / MARKETPLACE DIGITAL</p>'+
+    '<h1>Jelajahi Katalog</h1><p>Beragam solusi digital untuk belajar, berkarya, dan mengembangkan usaha.</p></div>'+
+    '<span class="market-header-count">'+list.length+' produk tersedia di katalog</span></header>'+
+    '<div class="market-banner-shell">'+banner+'</div>'+
+    '<section class="market-shopping" aria-label="Belanja produk digital">'+
+      '<div class="market-section-title"><h2>Belanja sesuai kebutuhan</h2><span>Kategori pilihan</span></div>'+
+      filterBar+controls+
+      '<div class="market-results-header"><h2>Pilihan produk digital</h2><span aria-live="polite">'+shown.length+' produk ditemukan</span></div>'+
+      (cards?'<div class="market-product-grid">'+cards+'</div>':
+        '<div class="market-no-results"><h3>Belum ada produk yang cocok</h3><p>Coba kata kunci atau kategori lain.</p>'+
+        '<button type="button" data-market-reset>Hapus filter</button></div>')+
+    '</section>'+
+    '<p class="market-trust-note">Pembelian dan konsultasi hanya melalui kanal resmi Ngulik Digital. Ketersediaan mengikuti status layanan.</p>'+
+  '</div>';
+}
 function viewCatalog(){
   const list=Array.isArray(state.catalog)?state.catalog:[];
+  if(!logged())return viewPublicMarketplace(list);
   if(!list.length)return title('Katalog produk & layanan','SOLUSI UNTUK UMKM',
     'Penawaran digital dikelompokkan sesuai kebutuhan usaha.')+
     empty('Katalog belum tersedia',isConnected()?
