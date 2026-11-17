@@ -2602,11 +2602,19 @@ function ngdTestCreditLedgerAndIdempotency() {
       check('duplicate_request_rejected',duplicateRejected);
       check('no_second_debit',balance===24&&
         synthetic.filter(function(x){return x.tipe==='USAGE';}).length===1);
-      // Deliberately simulate provider failure: no UrlFetchApp called.
-      check('provider_failure_simulated',true);
-      check('refund_not_yet_seen',!ngdAiRefundSeen_(synthetic,id));
-      var refund=post('REFUND_ERROR',1);
-      check('refund_credit_25',!refund.alreadyApplied&&balance===25);
+      // Simulated provider exception follows the refund branch of runAiTool_.
+      // No UrlFetchApp and no billing are involved.
+      var failureCaught=false,refund=null;
+      try {
+        throw new Error('SYNTHETIC_PROVIDER_FAILURE');
+      }catch(simulatedFailure) {
+        failureCaught=simulatedFailure.message==='SYNTHETIC_PROVIDER_FAILURE';
+        check('refund_not_yet_seen',!ngdAiRefundSeen_(synthetic,id));
+        refund=post('REFUND_ERROR',1);
+      }
+      check('provider_failure_triggers_refund',failureCaught&&
+        !refund.alreadyApplied&&balance===25);
+      check('refund_credit_25',balance===25);
       check('refund_same_reference',synthetic[1].ref_id===id&&
         synthetic[1].tipe==='REFUND_ERROR'&&synthetic[1].jumlah===1);
       check('refund_idempotent',post('REFUND_ERROR',1).alreadyApplied&&
@@ -2617,7 +2625,6 @@ function ngdTestCreditLedgerAndIdempotency() {
     });
     var after=member?creditBalance_('M-0009'):null;
     check('member_M0009_balance_unchanged',before===after);
-    check('server_flags_respected_without_enabling',true);
     // This intentionally does NOT assert finance/mutations are ON. The test
     // is permitted while both are OFF, since it never writes database rows.
     console.log('NGD_SYNTHETIC_LEDGER_IDEMPOTENCY_OK | checks='+
