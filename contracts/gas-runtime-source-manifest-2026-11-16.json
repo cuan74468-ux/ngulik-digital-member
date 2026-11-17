@@ -19,7 +19,7 @@
       "owner_log_date": "2026-11-15"
     }
   ],
-  "unverified": "Apps Script editor sync for the NEW InfrastructurePreflight.gs source is NOT yet verified by operator execution/readback. A GitHub source hash does not establish GAS STAGING runtime synchronization or deployment.",
+  "unverified": "Apps Script editor sync for the NEW InfrastructurePreflight.gs source is NOT yet verified by operator execution/readback. A GitHub source hash does not establish GAS STAGING runtime synchronization or deployment. Content.gs now allows HERO catalog in repository source only; STAGING Apps Script editor/runtime synchronization and web-app redeployment remain unverified.",
   "release_gate": "OWNER_EXECUTION_AUTHORIZED",
   "external_providers": "CONFIGURATION_PENDING",
   "modules": [
@@ -43,9 +43,9 @@
     },
     {
       "file": "Content.gs",
-      "github_blob_sha": "3c657714fbc2e22c1dfee2b82b2298336b66b81f",
-      "bytes": 11404,
-      "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
+      "github_blob_sha": "a8b5df7ee36c0d6d95f5e4545083af86b2f9542d",
+      "bytes": 11414,
+      "runtime_evidence": "SOURCE_UPDATED_CATALOG_HERO_RUNTIME_NOT_VERIFIED"
     },
     {
       "file": "DataIntegrityPreflight.gs",
