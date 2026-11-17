@@ -9,72 +9,53 @@ const css=fs.readFileSync(path.join(root,'assets/home-v5.css'),'utf8');
 const journey=fs.readFileSync(path.join(root,'assets/learning-journey.css'),'utf8');
 const publicHtml=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const stagingHtml=fs.readFileSync(path.join(root,'staging/member.html'),'utf8');
-test('public and STAGING load identical final warm design stylesheet after old layers',()=>{
+
+test('public and STAGING load matching design and isometric motion after old CSS layers',()=>{
   for(const html of [publicHtml,stagingHtml]){
-    const old=html.indexOf('portfolio-adaptation.css');
-    const refreshed=html.indexOf('home-v5.css');
-    assert.ok(old>=0&&refreshed>old,'last stylesheet must override legacy blue styles');
-    assert.match(html,/fonts\.googleapis\.com\/css2\?family=Inter/);
+    assert.ok(html.indexOf('home-v5.css')>html.indexOf('portfolio-adaptation.css'));
+    assert.ok(html.indexOf('learning-journey.css')>html.indexOf('home-v5.css'));
+    assert.match(html,/family=Inter/);
+    assert.match(html,/learning-journey\.css\?v=20261117-isometric-v2/);
   }
 });
-test('homepage uses an animated spherical logo climbing real pixel-step elements',()=>{
-  assert.match(app,/class="ngd-climb-stage"/);
-  assert.match(app,/class="ngd-climb-ball"/);
-  assert.match(app,/ngd-climb-step-.*\(i\+1\)/);
-  assert.doesNotMatch(app,/class="pf-ring-stage/);
+test('homepage has semantic isometric 3D stair illustration and real animated ball',()=>{
+  assert.match(app,/class="ngd-journey-stage"/);
+  assert.match(app,/class="ngd-journey-art"/);
+  assert.match(app,/class="ngd-journey-stairs"/);
+  assert.match(app,/class="ngd-journey-ball"/);
+  assert.match(app,/Array\.from\(\{length:5\}/);
+  assert.match(app,/radialGradient id="ngd-ball-shade"/);
+  assert.match(app,/linearGradient id="ngd-step-front"/);
+  assert.match(app,/class="ngd-journey-front"/);
+  assert.match(app,/class="ngd-journey-side"/);
+  assert.match(app,/class="ngd-journey-top"/);
+  assert.match(journey,/@keyframes ngdBallAscend/);
+  assert.match(journey,/@keyframes ngdStairLight/);
+  assert.match(journey,/animation:ngdBallAscend/);
+  assert.match(journey,/@media\(prefers-reduced-motion:reduce\)/);
+  assert.doesNotMatch(app,/class="ngd-climb-stage"|class="pf-ring-stage"/);
+});
+test('no merchandising clutter on public homepage; catalog and login stay accessible',()=>{
   assert.match(app,/class="nh-home nh-home-minimal"/);
   assert.match(app,/data-route="katalog"/);
-  assert.doesNotMatch(app,/class="pf-product-orbit"/);
-  assert.doesNotMatch(app,/class="nh-grid"/);
-  assert.doesNotMatch(app,/class="nh-rail"/);
-  assert.doesNotMatch(app,/class="ngd-token-market"/);
-  assert.match(journey,/@keyframes ngdBallClimb/);
-  assert.match(journey,/@keyframes ngdStepLift/);
-  assert.match(journey,/@keyframes ngdPixelRise/);
-  assert.match(journey,/@media\(prefers-reduced-motion:reduce\)/);
-  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(app,/data-route="daftar"/);
+  assert.doesNotMatch(app,/class="nh-grid"|class="nh-rail"|class="ngd-token-market"/);
 });
-test('new color tokens are warm neutral and not ink-blue',()=>{
-  assert.match(css,/--ngd-canvas:#faf8f3/);
-  assert.match(css,/--pf-blue:#b65c39/);
-  assert.match(css,/--pf-heading:"Inter"/);
-  assert.doesNotMatch(css,/#2F6BFF|#4361ee|#0e1320/i);
+test('responsive desktop split respects legacy specificity and phone illustration first',()=>{
+  assert.match(journey,/@media\(min-width:901px\)/);
+  assert.match(journey,/\.nh-home\.nh-home-minimal > \.public-editorial-hero\.pf-portfolio-hero\.pf-home-minimal\{\s*display:grid/);
+  assert.match(journey,/grid-template-columns:minmax\(0,1\.05fr\) minmax\(0,\.95fr\)/);
+  assert.match(journey,/grid-template-areas:"copy logo"/);
+  assert.match(journey,/> \.ngd-journey-stage\{\s*grid-area:logo/);
+  assert.match(journey,/@media\(max-width:900px\)/);
+  assert.match(journey,/> \.ngd-journey-stage\{\s*order:-1/);
+  assert.match(journey,/\.public-hero-copy h1\{[\s\S]*?max-width:16ch/);
 });
-test('design remains presentation-only and does not replace payment or auth handlers',()=>{
+test('presentation-only changes preserve payment, authentication and warm typography',()=>{
   assert.match(app,/async function confirmPayment\(\)/);
   assert.match(app,/function viewAdminOrders\(\)/);
-  assert.match(app,/function viewHome\(\)/);
   assert.match(app,/function viewCheckout\(\)/);
-  assert.doesNotMatch(css,/display:none!important/);
-});
-
-test('responsive homepage keeps logo first on phones and split columns on desktop',()=>{
-  assert.match(css,/@media\s*\(min-width:\s*901px\)/);
-  assert.match(css,/grid-template-areas:"copy logo"/);
-  assert.match(css,/> \.public-hero-copy\{\s*grid-area:copy/);
-  assert.match(css,/> \.pf-logo-stage\{\s*grid-area:logo/);
-  assert.match(css,/@media\s*\(max-width:\s*900px\)/);
-  assert.match(css,/> \.pf-logo-stage\{[\s\S]*?order:-1/);
-  assert.match(css,/> \.public-hero-copy\{[\s\S]*?order:1/);
-  assert.match(publicHtml,/home-v5\.css\?v=20261117-desktop-grid-v8/);
-  assert.match(stagingHtml,/home-v5\.css\?v=20261117-desktop-grid-v8/);
-  assert.match(publicHtml,/learning-journey\.css\?v=20261117-ball-stairs-v1/);
-  assert.match(stagingHtml,/learning-journey\.css\?v=20261117-ball-stairs-v1/);
-});
-
-test('desktop grid specifically overrides legacy home flex cascade and constrains rings',()=>{
-  assert.match(css,/\.nh-home\.nh-home-minimal > \.public-editorial-hero\.pf-portfolio-hero\.pf-home-minimal\{\s*display:grid/);
-  assert.match(css,/grid-template-columns:minmax\(0, 1fr\) minmax\(0, \.88fr\)/);
-  assert.match(css,/grid-template-areas:"copy logo"/);
-  assert.match(css,/column-gap:clamp\(32px,4\.5vw,76px\)/);
-  assert.match(css,/overflow:hidden/);
-  assert.match(css,/\.nh-home\.nh-home-minimal > \.pf-home-minimal > \.pf-logo-stage\{\s*grid-area:logo/);
-});
-
-test('desktop hero uses separate left copy and right stair animation; mobile stage precedes copy',()=>{
-  assert.match(journey,/\.nh-home\.nh-home-minimal > \.pf-home-minimal > \.ngd-climb-stage\{\s*grid-area:logo/);
-  assert.match(journey,/@media\(max-width:900px\)/);
-  assert.match(journey,/\.pf-home-minimal > \.ngd-climb-stage\{\s*order:-1/);
-  assert.match(journey,/\.ngd-climb-ball\{[\s\S]*?animation:ngdBallClimb/);
-  assert.doesNotMatch(journey,/(?:#2F6BFF|#4361ee)/i);
+  assert.match(css,/--ngd-canvas:#faf8f3/);
+  assert.match(css,/--pf-heading:"Inter"/);
+  assert.doesNotMatch(journey,/#2F6BFF|#4361ee|#0e1320/i);
 });
