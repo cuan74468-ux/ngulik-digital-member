@@ -24,8 +24,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for file in js/*.js apps-script/*.gs staging/*.js; do
+          for file in js/*.js staging/*.js; do
             echo "Checking $file"
             node --check "$file"
+          done
+          for file in apps-script/*.gs; do
+            echo "Checking GAS $file"
+            node --check --input-type=commonjs < "$file"
           done
           echo "NODE_CHECK_PASS"
