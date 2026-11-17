@@ -17,7 +17,8 @@
       var nav=document.querySelector('.topbar');
       var n=nav?nav.getBoundingClientRect():null;
       var headerClear=!n||n.bottom<=Math.min(a.top,b.top)+6;
-      var animated=getComputedStyle(art.querySelector('.ngd-journey-ball')).animationName==='ngdBallAscend';
+      var logo=art.querySelector('.ngd-floating-logo');
+      var animated=!!logo&&getComputedStyle(logo).animationName==='ngdQuietFloat';
       var output=document.createElement('output');
       output.id='qa-home-geometry';
       output.setAttribute('data-home-columns-clear',String(columnsClear));
