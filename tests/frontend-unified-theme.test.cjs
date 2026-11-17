@@ -9,12 +9,12 @@ test('Linggau V1.2 stylesheet is the final layer on public and STAGING membershi
     const src=read(file);
     assert.ok(src.indexOf('learning-studio.css')>=0);
     assert.ok(src.indexOf('styles.css')>src.indexOf('learning-studio.css'));
-    assert.match(src,/Geist:wght/);
-    assert.match(src,/Instrument\+Serif/);
-    assert.match(src,/Plus\+Jakarta\+Sans/);
+    assert.match(src,/family=Inter/);
+    assert.match(src,/assets\/styles\.css/);
+    assert.match(src,/assets\/experience\.css/);
     assert.match(src,/img-src 'self' data: https:;/);
   }
-  assert.match(html,/name="theme-color" content="#FAFAFC"/);
+  assert.match(html,/name="theme-color" content="#faf8f3"/);
 });
 test('palette and typography match the Linggau master exactly',()=>{
   for(const token of ['--lds-bg:#FAFAFC','--lds-surface:#FFFFFF',
