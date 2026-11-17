@@ -48,7 +48,7 @@ test('homepage-only CSS preserves payment and account logic',()=>{
 });
 
 test('both entrypoints load current homepage copy rather than cached 16 November module',()=>{
-  assert.match(app,/Warung Tools AI\. <em>Bengkel Kerja UMKM\.<\/em>/);
-  assert.match(publicHtml,/js\/app\.js\?v=20261117-warung-tools-copy-v2/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261117-warung-tools-copy-v2/);
+  assert.match(app,/Warung Tools AI\. <em>Bengkel Kerja Kreatif Berbasis AI\.<\/em>/);
+  assert.match(publicHtml,/js\/app\.js\?v=20261117-private-admin-v1/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261117-private-admin-v1/);
 });
