@@ -71,7 +71,7 @@ test('mobile native and custom media theme is scoped to same shared design style
     assert.ok(css.includes(key),key);
   }
   assert.match(css,/@media\(max-width:760px\)/);
-  assert.ok(html.includes('src="./js/content-ui.js?v=20261116-https-banner"'));
+  assert.ok(html.includes('src="./js/content-ui.js?v=20261117-staging-market-v2"'));
   assert.ok(html.indexOf('content-ui.js')<html.indexOf('js/app.js'));
   assert.ok(html.includes('id="brand-mark"'));
 });
@@ -109,7 +109,7 @@ test('app integrates real image slots across guest home and catalogue and admin 
   ])+';render()',guest.ctx,{timeout:3000});
   const home=guest.nodes.screen.innerHTML;
   assert.equal((home.match(/class="nh-hero nh-hero-slide"/g)||[]).length,2);
-  assert.match(home,/assets\/media\/belajar.webp/);
+  assert.match(home,/nh-carousel/);
   assert.match(home,/assets\/media\/produk-pos.webp/);
   vm.runInContext("go('katalog')",guest.ctx,{timeout:3000});
   assert.match(guest.nodes.screen.innerHTML,/assets\/media\/sampul-katalog.webp/);
