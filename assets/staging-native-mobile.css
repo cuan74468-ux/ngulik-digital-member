@@ -1,0 +1,103 @@
+/* STAGING-only native-mobile refinement. Presentation only; never modifies server gates.
+   Scoped to guest/member; administrator keeps its existing information-dense workspace. */
+body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"]){
+  --native-ink:#202a2c;--native-muted:#687476;--native-line:#e7ebe9;
+  --native-accent:#175661;--native-canvas:#fafaf7;
+  background:var(--native-canvas);color:var(--native-ink);
+}
+body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+:is(.market-page,.ai-catalog,.partner-public,.partner-member,.learning-course-grid,.learning-toolbar){min-width:0}
+body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+:is(.market-category,.ai-category-tab,.learning-filter,.partner-btn,.btn){
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+:is(.market-product-card,.ai-product-card,.lms-course-tile,.partner-step,.partner-metric){
+  box-shadow:none;transition:transform .16s ease,border-color .16s ease;
+}
+body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+:is(.market-product-card,.ai-product-card,.lms-course-tile):active{transform:scale(.985)}
+body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+:is(.market-category,.ai-category-tab,.learning-filter):focus-visible,
+body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+:is(.market-product-action,.ai-product-action,.partner-btn,.btn):focus-visible{
+  outline:3px solid #286a79;outline-offset:3px;
+}
+@media(max-width:760px){
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"]) .main-content{
+    padding-inline:clamp(14px,4vw,22px);padding-bottom:calc(100px + env(safe-area-inset-bottom,0px));
+  }
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"]) #screen{min-width:0}
+  /* Let the user find actions, not read an introductory essay. Keep copy in DOM
+     for accessibility and desktop; compact secondary text only on small screens. */
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-header,.learning-intro,.partner-member-header){
+    margin-bottom:16px;
+  }
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-header h1,.learning-intro h1,.partner-member-header h1){
+    font-size:clamp(1.45rem,6vw,1.9rem);line-height:1.13;letter-spacing:-.035em;margin-bottom:6px;
+  }
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-header p:not(.market-eyebrow),.learning-intro p,.partner-member-header p:not(.partner-kicker)){
+    max-width:50ch;font-size:.79rem;line-height:1.45;margin-bottom:0;
+  }
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-eyebrow,.partner-kicker){margin-bottom:6px}
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-categories,.ai-category-tabs,.learning-filter-group){
+    display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;
+    scrollbar-width:none;gap:8px;padding-block:3px 8px;scroll-snap-type:x proximity;
+  }
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-categories,.ai-category-tabs,.learning-filter-group)::-webkit-scrollbar{display:none}
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-category,.ai-category-tab,.learning-filter){
+    flex:0 0 auto;scroll-snap-align:start;min-height:42px;border-radius:999px;
+    padding:9px 14px;font-size:.76rem;white-space:nowrap;
+  }
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-product-grid,.ai-catalog-grid,.learning-course-grid){
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;
+  }
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-product-card,.ai-product-card,.lms-course-tile){
+    min-width:0;border:1px solid var(--native-line);border-radius:16px;overflow:hidden;background:#fff;
+  }
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-product-body h3,.ai-product-card strong,.learning-course-copy h3){
+    font-size:clamp(.83rem,3.6vw,.95rem);line-height:1.35;letter-spacing:-.015em;
+    overflow-wrap:anywhere;
+  }
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-product-description,.learning-course-copy p){
+    font-size:.72rem;line-height:1.45;display:-webkit-box;-webkit-box-orient:vertical;
+    -webkit-line-clamp:2;overflow:hidden;
+  }
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-product-action,.partner-btn,.ai-tool-brief .btn){
+    min-height:44px;border-radius:12px;font-weight:700;
+  }
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-search-wrap input,.ai-search-wrap input,.learning-search input){
+    width:100%;min-height:46px;font-size:16px;border-radius:13px;
+  }
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  .partner-hero{min-height:0;gap:14px;padding:22px 18px;border-radius:18px}
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  .partner-hero-copy h1{font-size:clamp(1.6rem,7vw,2.15rem);line-height:1.14}
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  .partner-hero-copy p{font-size:.82rem;line-height:1.5}
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.partner-step,.partner-metric,.partner-link-panel){border-radius:16px}
+}
+@media(max-width:360px){
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-product-grid,.ai-catalog-grid,.learning-course-grid){gap:8px}
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  .market-product-body{padding:9px}
+}
+@media(prefers-reduced-motion:reduce){
+  body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
+  :is(.market-product-card,.ai-product-card,.lms-course-tile){transition:none}
+}
