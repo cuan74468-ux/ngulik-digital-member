@@ -206,6 +206,8 @@ jobs:
             "http://127.0.0.1:8765/#beranda" > /tmp/ngd-guest-mobile.html 2>>/tmp/ngd-chrome.log
           echo 'GUEST_MOBILE_FLAGS:'
           grep -Eo 'data-(unified-theme|ink-navigation|mobile-nav|overflow|home-order|home-header-clear)="[^"]*"' /tmp/ngd-guest-mobile.html | tail -16 || true
+          echo 'GUEST_MOBILE_GEOMETRY:'
+          grep -oE '<output id="qa-home-geometry"[^>]*>[^<]*' /tmp/ngd-guest-mobile.html | cut -c1-1200 || true
           grep -q 'data-unified-theme="true"' /tmp/ngd-guest-mobile.html
           grep -q 'data-ink-navigation="true"' /tmp/ngd-guest-mobile.html
           grep -q 'data-mobile-nav="false"' /tmp/ngd-guest-mobile.html
