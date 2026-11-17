@@ -101,3 +101,67 @@ body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
   body.ngd-staging-app:is([data-app-role="guest"],[data-app-role="member"])
   :is(.market-product-card,.ai-product-card,.lms-course-tile){transition:none}
 }
+
+/* STAGING operational workspace: compact controls, not a new visual theme. */
+body.ngd-staging-app[data-app-role="admin"]
+:is(.surface,.admin-panel,.data-panel,.content-admin-panel){
+  min-width:0;
+}
+body.ngd-staging-app[data-app-role="admin"]
+:is(.input,input:not([type="checkbox"]),textarea,select){
+  max-width:100%;
+  box-sizing:border-box;
+}
+body.ngd-staging-app[data-app-role="admin"]
+:is(.btn,button[type="submit"],.quick-action){
+  min-height:44px;
+}
+body.ngd-staging-app[data-app-role="admin"]
+:is(.table-wrap,.data-table-scroll){
+  max-width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+/* Broken QRIS images never leave a misleading payable panel. */
+body.ngd-staging-app .checkout-qr [hidden]{display:none!important}
+body.ngd-staging-app .checkout-qr img[data-qris-image]{
+  display:block;
+  width:min(100%,260px);
+  height:auto;
+  max-height:260px;
+  object-fit:contain;
+  margin-inline:auto;
+}
+body.ngd-staging-app .checkout-qr .qris-fallback{
+  max-width:100%;
+  overflow-wrap:anywhere;
+  padding:14px;
+  border:1px solid #ded7c9;
+  border-radius:12px;
+  background:#fff9f1;
+}
+@media(max-width:760px){
+  body.ngd-staging-app .checkout-dialog{
+    box-sizing:border-box;
+    width:min(100%,540px);
+    max-width:calc(100vw - 20px);
+    max-height:calc(100dvh - 20px);
+    overflow-y:auto;
+    margin-inline:auto;
+  }
+  body.ngd-staging-app .checkout-dialog :is(.btn,button[type="submit"]){
+    min-height:46px;
+    white-space:normal;
+  }
+  body.ngd-staging-app[data-app-role="admin"]
+  :is(.grid-2,.content-admin-layout,.admin-start-actions){
+    min-width:0;
+    grid-template-columns:minmax(0,1fr);
+  }
+  body.ngd-staging-app[data-app-role="admin"] .main-content{
+    padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));
+  }
+  body.ngd-staging-app[data-app-role="admin"] :is(input,textarea,select){
+    font-size:16px;
+  }
+}
