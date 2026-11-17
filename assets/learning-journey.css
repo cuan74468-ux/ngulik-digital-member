@@ -117,7 +117,9 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-shadow{
 /* Mobile: brand first, simple balanced hero beneath it. */
 @media(max-width:900px){
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content{
-    padding-top:128px;
+    /* The wrapped guest header reaches 150px on narrow Chrome viewports.
+       Keep the hero below it without affecting desktop/member/admin routes. */
+    padding-top:152px;
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .public-editorial-hero.pf-portfolio-hero.pf-home-minimal{
     display:flex;flex-direction:column;
