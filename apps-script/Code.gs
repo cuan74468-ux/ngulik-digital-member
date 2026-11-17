@@ -928,6 +928,7 @@ function authLogin_(p,adminOnly,expectedAdminId) {
     // any session; keep the same generic error to prevent account enumeration.
     if(matches.length!==1 || (adminOnly===true&&(m.role!=='ADMIN'||
         String(m.member_id)!==String(expectedAdminId||''))) ||
+        (adminOnly!==true&&m.role==='ADMIN') ||
         !pinMatches_(pin,m.pin_salt,m.pin_hash)){
       noteLoginFailure_(wa,Boolean(m));
       if(m&&m.role==='ADMIN')extendAdminLock_(wa);
