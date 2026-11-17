@@ -2592,8 +2592,14 @@ function ngdTestCreditLedgerAndIdempotency() {
       check('usage_ledger_record',synthetic.length===1&&
         synthetic[0].tipe==='USAGE'&&synthetic[0].jumlah===-1&&
         synthetic[0].status==='POSTED'&&synthetic[0].ref_id===id);
-      // aiReserve_ rejects duplicate request_id before attempting debit.
-      check('duplicate_request_rejected',ngdAiRequestSeen_(synthetic,id));
+      // Exercise the same require_ branch used by aiReserve_ for replay.
+      var duplicateRejected=false;
+      try {
+        require_(!ngdAiRequestSeen_(synthetic,id),'CONFLICT','Duplicate request_id.');
+      }catch(duplicateError) {
+        duplicateRejected=duplicateError&&duplicateError.publicCode==='CONFLICT';
+      }
+      check('duplicate_request_rejected',duplicateRejected);
       check('no_second_debit',balance===24&&
         synthetic.filter(function(x){return x.tipe==='USAGE';}).length===1);
       // Deliberately simulate provider failure: no UrlFetchApp called.
