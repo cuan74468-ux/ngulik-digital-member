@@ -359,8 +359,8 @@ function viewHome(){
     brandStage+
     '<div class="public-hero-copy">'+
       '<p class="pf-hello">NGULIK DIGITAL · BELAJAR, PRAKTIK, TUMBUH</p>'+
-      '<h1>Warung Tools AI. <em>Bengkel Kerja UMKM.</em></h1>'+
-      '<p class="public-hero-lead">Temukan alat AI yang berguna, pelajari cara pakainya, lalu terapkan langsung untuk usaha. Dari membuat konten hingga mengelola bisnis, semua bisa dimulai di sini.</p>'+
+      '<h1>Warung Tools AI. <em>Bengkel Kerja Kreatif Berbasis AI.</em></h1>'+
+      '<p class="public-hero-lead">Jelajahi tools AI, belajar keterampilan digital, dan wujudkan ide kreatif menjadi konten, produk, atau solusi bisnis. Semua dalam satu ruang praktik yang mudah diakses.</p>'+
       '<div class="public-hero-buttons">'+
         '<button type="button" class="btn btn-primary pf-button-dark" data-route="katalog">Jelajahi Tools '+icon('arrow')+'</button>'+
         '<button type="button" class="btn btn-secondary pf-button-light" data-route="daftar">Mulai Belajar</button>'+
@@ -402,7 +402,7 @@ function viewPublicMarketplace(list){
   if(sort==='name')shown=[...shown].sort((a,b)=>String(a.nama||'').localeCompare(String(b.nama||''),'id'));
   const banner=window.NGD_CONTENT_UI?.hero(state.siteContent,'catalog')||
     '<section class="market-hero-fallback" aria-label="Selamat datang di marketplace Ngulik Digital">'+
-      '<div class="market-hero-content"><span class="market-eyebrow">WARUNG TOOLS AI · BENGKEL KERJA UMKM</span>'+
+      '<div class="market-hero-content"><span class="market-eyebrow">WARUNG TOOLS AI · BENGKEL KERJA KREATIF BERBASIS AI</span>'+
       '<h2>Temukan alat digital untuk ide besar Anda.</h2>'+
       '<p>Pilih yang sesuai kebutuhan. Pelajari manfaatnya, lalu mulai berkarya.</p>'+
       '<button type="button" class="market-hero-link" data-route="belajar">Mulai belajar '+icon('arrow')+'</button>'+
