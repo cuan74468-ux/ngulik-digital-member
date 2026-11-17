@@ -3,7 +3,12 @@ import {api, ApiError, isConnected, isWriteEnabled, createRequestId} from './api
 const config = window.NGD_CONFIG || {};
 const by = (id) => document.getElementById(id);
 // Canonical brand asset is the same favicon URL in public and STAGING pages.
-const brandLogoSrc=document.querySelector('link[rel="icon"]')?.href||'';
+const defaultBrandLogoSrc=document.querySelector('link[rel="icon"]')?.href||'';
+// Published CMS logo overrides the default on visible UI; favicon stays static.
+function brandLogoSrc_(){
+  const item=window.NGD_CONTENT_UI?.published(state.siteContent,'BRAND_LOGO','brand')?.[0];
+  return (item&&window.NGD_CONTENT_UI?.mediaPath(item.image_path))||defaultBrandLogoSrc;
+}
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g,
   (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const idSafe = (v) => esc(String(v == null ? '' : v));
@@ -249,7 +254,7 @@ function renderNav(){
     String(state.me.nama||'M').split(' ').map(v=>v[0]).join('').slice(0,2).toUpperCase():'ND';
   by('mode-indicator').textContent=isAdmin()?'ADMIN':logged()?'MEMBER':'NGULIK DIGITAL';
   const mark=by('brand-mark');
-  if(mark)mark.innerHTML='<img class="ngd-brand-image" src="'+esc(brandLogoSrc)+'" alt="" loading="eager">';
+  if(mark)mark.innerHTML='<img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt="" loading="eager">';
   const caption=by('sidebar-caption');
   if(caption)caption.textContent=isAdmin()?'Panel admin':logged()?'Menu member':'Menu';
   // The same portfolio-style navigation highlights the active public destination.
@@ -282,7 +287,8 @@ function viewMore(){
       'Pilih tujuan untuk melanjutkan. Setiap fitur mengikuti izin dan status layanan.')+
     '<nav class="ngd-menu-grid" aria-label="Daftar seluruh fitur">'+routes.map(route=>
       '<button type="button" class="ngd-menu-tile" data-route="'+route+'">'+
-      '<span class="ngd-menu-icon" aria-hidden="true">'+icon(screens[route][1])+'</span>'+
+      '<span class="ngd-menu-icon" aria-hidden="true">'+
+      (window.NGD_CONTENT_UI?.media(state.siteContent,'FEATURE_ICON',route,'nav-custom-icon','')||icon(screens[route][1]))+'</span>'+
       '<span class="ngd-menu-copy"><strong>'+esc(screens[route][0])+'</strong><small>'+
       esc(descriptions[route]||'Buka fitur')+'</small></span>'+icon('arrow')+'</button>'
     ).join('')+'</nav>'+
@@ -312,7 +318,7 @@ function viewHome(){
       ['Paket 3-in-1',state.me.akses_3in1_sampai&&new Date(state.me.akses_3in1_sampai).getTime()>Date.now()?'AKTIF':'BELUM AKTIF'],
       ['Canva',String(state.me.status_canva||'BELUM AKTIF')]
     ];
-    return '<section class="member-welcome"><div><p class="eyebrow">DASHBOARD / MEJA KERJA</p>'+
+    return (window.NGD_CONTENT_UI?.hero(state.siteContent,'member_home')||'')+'<section class="member-welcome"><div><p class="eyebrow">DASHBOARD / MEJA KERJA</p>'+
       '<h1>Selamat datang, <span class="accent">'+esc(first)+'.</span></h1>'+
       '<p class="lead">Token, alat AI, lisensi, dan aktivitas usaha dalam satu meja kerja.</p></div>'+
       '<span class="chip green">'+esc(state.me.status||'AKTIF')+'</span></section>'+
@@ -352,7 +358,7 @@ function viewHome(){
   // Quiet placeholder brand mark. Replace with the eventual 2D character later.
   // No stairs, falling pixels, or narrative animations on the homepage.
   const brandStage='<div class="ngd-journey-stage" role="img" aria-label="Logo Ngulik Digital mengambang lembut">'+
-    '<div class="ngd-floating-logo" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc)+'" alt=""></div>'+
+    '<div class="ngd-floating-logo" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></div>'+
     '<span class="ngd-floating-shadow" aria-hidden="true"></span>'+
   '</div>';
   const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal" aria-label="Ngulik Digital">'+
@@ -367,7 +373,8 @@ function viewHome(){
       '</div>'+
     '</div>'+
   '</section>';
-  return '<div class="nh-home nh-home-minimal">'+hero+'</div>';
+  return '<div class="nh-home nh-home-minimal">'+
+    (window.NGD_CONTENT_UI?.hero(state.siteContent,'home')||hero)+'</div>';
 }
 const offerCategories=[
   ['semua','Semua'],['ai','Token AI'],['aplikasi','Aplikasi Bisnis'],
@@ -406,7 +413,7 @@ function viewPublicMarketplace(list){
       '<h2>Temukan alat digital untuk ide besar Anda.</h2>'+
       '<p>Pilih yang sesuai kebutuhan. Pelajari manfaatnya, lalu mulai berkarya.</p>'+
       '<button type="button" class="market-hero-link" data-route="belajar">Mulai belajar '+icon('arrow')+'</button>'+
-      '</div><div class="market-hero-symbol" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc)+'" alt=""></div></section>';
+      '</div><div class="market-hero-symbol" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></div></section>';
   const filterBar='<div class="market-categories" role="group" aria-label="Jelajahi kategori produk">'+
     offerCategories.map(([id,label])=>'<button type="button" class="catalog-filter market-category" data-catalog-filter="'+esc(id)+
       '" aria-pressed="'+(id===category?'true':'false')+'"><span class="market-category-icon" aria-hidden="true">'+
@@ -722,7 +729,7 @@ function viewAffiliate(){
       '</div><span class="partner-note">Tidak ada janji penghasilan tetap. Besaran komisi dan kelayakan mengikuti masing-masing produk.</span></div>'+
       '<div class="partner-hero-art" role="img" aria-label="Ilustrasi simbol Ngulik Digital sebagai ruang untuk belajar, berbagi, dan berkembang">'+
         '<span class="partner-art-orbit partner-art-orbit-outer"></span><span class="partner-art-orbit partner-art-orbit-inner"></span>'+
-        '<span class="partner-art-mark"><img class="ngd-brand-image" src="'+esc(brandLogoSrc)+'" alt=""></span><span class="partner-art-label partner-art-label-one">BELAJAR</span>'+
+        '<span class="partner-art-mark"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></span><span class="partner-art-label partner-art-label-one">BELAJAR</span>'+
         '<span class="partner-art-label partner-art-label-two">BAGIKAN</span>'+
         '<span class="partner-art-label partner-art-label-three">TUMBUH</span>'+
       '</div></section>'+
