@@ -78,7 +78,7 @@ const screens={
   ['lms-lesson']:['Editor Pelajaran','book'],['lms-course']:['Ruang Kelas','book'],
   ['lms-ai']:['Review Draft AI','spark'],
   ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Toko & Lisensi','store'],
-  ai:['Studio AI','spark'],affiliate:['Komisi Affiliate','link'],akun:['Akun','user'],
+  ai:['Studio AI','spark'],['ai-tool']:['Ruang Tool AI','spark'],affiliate:['Komisi Affiliate','link'],akun:['Akun','user'],
   produk:['Kelola Katalog','store'],jasa:['Pesan Jasa','gift'],layanan:['Permintaan Jasa','gift'],
   admin:['Admin','grid'],konten:['Konten Visual','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
   antrean:['Antrean','clock'],dukungan:['Bantuan','shield'],
@@ -89,7 +89,7 @@ const memberNav=['beranda','ai','katalog','affiliate','belajar','jasa','dukungan
 const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
 const adminContextRoute=(route)=>({
   'lms-editor':'lms','lms-lesson':'lms','lms-ai':'lms',
-  'member360':'member',tiket:'dukungan'
+  'member360':'member',tiket:'dukungan','ai-tool':'ai'
 })[route]||route;
 const tokenKey='ngd_member_session';
 // Production catalogue must come from getKatalog; never invent product prices
@@ -580,6 +580,18 @@ function aiToolCategory_(tool){
   return 'umkm';
 }
 const aiCategoryFor_=id=>aiCategoryCatalog.find(c=>c.id===id);
+function aiToolRoute_(toolId){return 'ai-tool/'+encodeURIComponent(String(toolId||''));}
+function aiRouteFromHash_(){
+  const hash=location.hash.slice(1);
+  if(hash.startsWith('ai-tool/')){
+    const encoded=hash.slice(8);
+    try{const toolId=decodeURIComponent(encoded);
+      if(/^[A-Za-z0-9_-]{1,100}$/.test(toolId)){state.selectedAiToolId=toolId;return 'ai-tool';}
+    }catch(_){}
+    return 'ai';
+  }
+  return screens[hash]?hash:'beranda';
+}
 function aiCategoryNav_(tools,publicMode){
   const current=state.aiCategory||'semua';
   return '<div class="ai-category-tabs" role="group" aria-label="Kategori kebutuhan Studio AI">'+
@@ -642,38 +654,63 @@ function viewAI(){
     '<div class="ai-catalog-grid" id="ai-tool-cards">'+
       (filtered.length?filtered.map(t=>{
         const c=aiCategoryFor_(aiToolCategory_(t));
-        const active=selected?.tool_id===t.tool_id;
-        return '<button type="button" class="ai-product-card'+(active?' is-selected':'')+
-          '" data-ai-select="'+idSafe(t.tool_id)+'" aria-pressed="'+active+'">'+
+        return '<button type="button" class="ai-product-card" data-ai-open="'+idSafe(t.tool_id)+'" aria-label="Buka tool '+esc(t.nama)+'">'+
           '<span class="ai-product-icon">'+icon(c?.icon||'spark')+'</span>'+
           '<span class="ai-product-category">'+esc(c?.title||'Studio AI')+'</span>'+
           '<strong>'+esc(t.nama)+'</strong>'+
           '<small>'+esc(t.deskripsi||'Alat bantu AI untuk pekerjaan spesifik.')+'</small>'+
           '<span class="ai-product-bottom"><span>'+esc(Number(t.kredit_biaya)||0)+' Token / proses</span>'+
-          '<span class="ai-product-action">'+(active?'Dipilih':'Gunakan')+' '+icon('arrow')+'</span></span>'+
+          '<span class="ai-product-action">Lihat tool '+icon('arrow')+'</span></span>'+
         '</button>';
       }).join(''):'<div class="ai-catalog-empty"><strong>Belum ada wrapper aktif untuk pilihan ini.</strong>'+
         '<p>Studio terus dikembangkan berdasarkan kebutuhan nyata. Pilih kategori lain untuk melihat tools yang sudah tersedia.</p></div>')+
     '</div></section>';
-  const editor=selected?'<section class="ai-workspace" id="ai-workspace" aria-label="Ruang kerja tool terpilih">'+
-    '<div class="ai-workspace-title"><span class="eyebrow">RUANG KERJA / '+esc(aiCategoryFor_(aiToolCategory_(selected))?.short||'STUDIO AI')+'</span>'+
-    '<h2>'+esc(selected.nama)+'</h2><p>'+esc(selected.deskripsi||'Jelaskan kebutuhan Anda secara ringkas.')+'</p></div>'+
-    '<form class="ai-form" data-tool-id="'+idSafe(selected.tool_id)+'" data-cost="'+esc(Number(selected.kredit_biaya)||0)+'" novalidate>'+
+  return '<div class="ai-catalog">'+intro+navigation+overview+cards+'</div>';
+}
+// Each active wrapper has its own addressable workspace page (#ai-tool/ID).
+// No client-side pricing or availability is invented: getTools is authoritative.
+function viewAITool(){
+  if(!logged()||isAdmin())return '<section class="ai-catalog-access"><div><p class="eyebrow">STUDIO AI</p>'+
+    '<h2>Masuk untuk membuka ruang tool.</h2><p>Setiap alat menggunakan akses member dan biaya Token yang tercatat di sistem.</p></div>'+
+    '<button type="button" class="btn btn-primary" data-route="login">Masuk member</button></section>';
+  const tools=Array.isArray(state.tools)?state.tools:[];
+  const selected=tools.find(t=>t.tool_id===state.selectedAiToolId);
+  if(!selected)return '<div class="ai-tool-detail"><button class="ai-tool-back" type="button" data-route="ai">'+icon('arrow')+' Kembali ke katalog</button>'+
+    '<div class="ai-catalog-empty"><strong>Tool belum tersedia.</strong><p>Alat ini tidak ditemukan dalam daftar aktif atau belum selesai dimuat. Lihat katalog untuk memilih alat lain.</p></div></div>';
+  const cost=Number(selected.kredit_biaya)||0,can=isWriteEnabled();
+  const category=aiCategoryFor_(aiToolCategory_(selected));
+  const balance=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
+  return '<div class="ai-tool-detail"><nav class="ai-tool-breadcrumb" aria-label="Navigasi Studio AI">'+
+    '<button type="button" data-route="ai">Studio AI</button><span>/</span><span>'+esc(category?.short||'Tool')+'</span><span>/</span><strong>'+esc(selected.nama)+'</strong></nav>'+
+    '<header class="ai-tool-detail-hero"><div class="ai-tool-detail-identity">'+
+    '<span class="ai-product-icon">'+icon(category?.icon||'spark')+'</span>'+
+    '<p class="eyebrow">'+esc(category?.title||'STUDIO AI')+'</p>'+
+    '<h1>'+esc(selected.nama)+'</h1><p>'+esc(selected.deskripsi||'Jelaskan kebutuhan Anda untuk mulai menggunakan alat AI.')+'</p>'+
+    '<span class="ai-detail-cost">'+esc(cost)+' Token per proses</span></div>'+
+    '<div class="ai-wallet-mini"><small>SALDO TOKEN</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
+    '<button type="button" data-catalog-go="ai">+ Isi Token</button></div></header>'+
+    '<div class="ai-tool-detail-content"><section class="ai-tool-brief">'+
+    '<div class="ai-workspace-title"><p class="eyebrow">BENGKEL KERJA AI</p><h2>Siapkan brief Anda</h2>'+
+    '<p>Hasil disesuaikan dengan penjelasan kebutuhan yang Anda masukkan.</p></div>'+
+    '<form class="ai-form" data-tool-id="'+idSafe(selected.tool_id)+'" data-cost="'+esc(cost)+'" novalidate>'+
     '<div class="field"><label class="ai-label" for="ai-business-name">Nama usaha / proyek (opsional)</label>'+
     '<input class="input" id="ai-business-name" name="nama_usaha" maxlength="100" autocomplete="organization" value="'+
     esc(state.me?.nama_usaha||'')+'" placeholder="Nama usaha atau proyek"></div>'+
     '<div class="field"><label class="ai-label" for="ai-in-'+idSafe(selected.tool_id)+'">Brief atau kebutuhan Anda</label>'+
-    '<textarea class="input ai-input" id="ai-in-'+idSafe(selected.tool_id)+'" name="input" rows="6" maxlength="1500" required placeholder="'+
-    esc(selected.placeholder_input||'Jelaskan kebutuhan, target audiens, gaya, dan hasil yang diharapkan')+'"'+(can?'':' disabled')+'></textarea>'+
-    '<small class="form-hint">Maksimal 1.500 karakter. Jangan memasukkan informasi rahasia atau data pribadi pelanggan.</small></div>'+
-    '<div class="ai-foot"><span class="ai-cost"><strong>'+esc(Number(selected.kredit_biaya)||0)+' Token</strong> / eksekusi</span>'+
+    '<textarea class="input ai-input" id="ai-in-'+idSafe(selected.tool_id)+'" name="input" rows="7" maxlength="1500" required placeholder="'+
+    esc(selected.placeholder_input||'Jelaskan tujuan, target audiens, gaya, dan hasil yang diharapkan')+'"'+(can?'':' disabled')+'></textarea>'+
+    '<small class="form-hint">Maksimal 1.500 karakter. Jangan memasukkan data pribadi pelanggan atau informasi rahasia.</small></div>'+
+    '<div class="ai-foot"><span class="ai-cost"><strong>'+esc(cost)+' Token</strong> / eksekusi</span>'+
     '<button class="btn btn-primary" type="submit"'+(can?'':' disabled')+'>Proses dengan AI '+icon('arrow')+'</button></div>'+
     (!can?'<p class="ai-workspace-notice">Pemrosesan AI belum diaktifkan untuk lingkungan ini.</p>':'')+
-    '<div class="ai-result" role="status" aria-live="polite" hidden></div></form></section>':'';
-  return '<div class="ai-catalog">'+intro+navigation+overview+cards+editor+'</div>';
+    '<div class="ai-result" role="status" aria-live="polite" hidden></div></form></section>'+
+    '<aside class="ai-tool-detail-aside"><p class="eyebrow">CARA KERJA</p><h2>Mulai dalam tiga langkah.</h2>'+
+    '<ol><li>Tuliskan kebutuhan Anda dengan jelas.</li><li>Periksa biaya Token sebelum menjalankan.</li>'+
+    '<li>Gunakan atau salin hasil yang diberikan.</li></ol>'+
+    '<button class="btn btn-secondary" type="button" data-route="ai">Jelajahi tools lain '+icon('arrow')+'</button></aside></div></div>';
 }
 function aiWizardStep_(form,step){
-  const root=form.closest?.('.ai-studio');
+  const root=form.closest?.('.ai-tool-detail');
   if(!root)return;
   const steps=root.querySelectorAll?.('.ai-wizard-progress li')||[];
   steps.forEach((item,index)=>{
@@ -1539,7 +1576,7 @@ function render(){
   renderNav();
   by('notice-slot').innerHTML=notice();
   const routes={
-    beranda:viewHome,belajar:viewLearn,katalog:viewCatalog,ai:viewAI,affiliate:viewAffiliate,menu:viewMore,
+    beranda:viewHome,belajar:viewLearn,katalog:viewCatalog,ai:viewAI,'ai-tool':viewAITool,affiliate:viewAffiliate,menu:viewMore,
     lms:()=>isAdmin()&&window.NGD_LMS_UI?
       window.NGD_LMS_UI.adminCatalog(state.lmsAdminCourses,lmsWriteEnabled(),state.catalog):
       needLogin('studio LMS'),
@@ -1573,7 +1610,8 @@ function render(){
 function go(route){
   if(!screens[route])route='beranda';
   state.route=route;
-  if(location.hash.slice(1)!==route)history.replaceState(null,'','#'+route);
+  const fragment=route==='ai-tool'?aiToolRoute_(state.selectedAiToolId):route;
+  if(location.hash.slice(1)!==fragment)history.replaceState(null,'','#'+fragment);
   render();window.scrollTo({top:0,behavior:'auto'});loadRoute(route);
 }
 async function refreshPublic(){
@@ -1608,9 +1646,9 @@ async function loadRoute(route){
   if(state.qa||!isConnected()||!logged())return;
   const token=state.token;
   try{
-    if(route==='beranda'||route==='ai'){
+    if(route==='beranda'||route==='ai'||route==='ai-tool'){
       state.home=await api('getBeranda',{},token);
-      if(route==='ai'){
+      if(route==='ai'||route==='ai-tool'){
         const data=await api('getTools',{},token);
         state.tools=data.tools||[];
       }
@@ -2397,7 +2435,7 @@ document.addEventListener('click',async(e)=>{
     state.marketplaceSearch='';state.catalogFilter='semua';state.marketplaceSort='default';
     render();return;
   }
-  const target=e.target.closest('[data-public-step],[data-ai-category],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin]');
+  const target=e.target.closest('[data-public-step],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin]');
   if(!target)return;
   if(target.hasAttribute('data-payment-admin')){
     if(!isAdmin()||!paymentEnabled())return toast('Aksi pembayaran belum aktif.',true);
@@ -2425,12 +2463,10 @@ document.addEventListener('click',async(e)=>{
     state.aiCategory=next;state.selectedAiToolId='';state.aiSearch='';
     render();
   }
-  else if(target.hasAttribute('data-ai-select')){
+  else if(target.hasAttribute('data-ai-open')){
     if(!logged()||isAdmin())return;
-    const tool=state.tools.find(x=>x.tool_id===target.dataset.aiSelect);
-    if(tool){state.selectedAiToolId=tool.tool_id;render();
-      document.getElementById('ai-workspace')?.scrollIntoView({behavior:'smooth',block:'start'});
-    }
+    const tool=state.tools.find(x=>x.tool_id===target.dataset.aiOpen);
+    if(tool){state.selectedAiToolId=tool.tool_id;go('ai-tool');}
   }
   else if(target.hasAttribute('data-hero-step')){
     showHeroSlide_(state.heroIndex+Number(target.dataset.heroStep||1));syncHeroRotation_();
@@ -2572,14 +2608,17 @@ by('mobile-back').addEventListener('click',()=>{
     'lms-course':'belajar','lms-complete':'lms-course',
     tiket:'dukungan',checkout:'katalog',
     'lms-editor':'lms','lms-lesson':'lms-editor','lms-ai':'lms-editor',
+    'ai-tool':'ai',
     member360:'member'
   };
   go(back[state.route]||'beranda');
 });
 by('account-button').addEventListener('click',()=>go('akun'));
-window.addEventListener('hashchange',()=>go(location.hash.slice(1)||'beranda'));
+window.addEventListener('hashchange',()=>{
+  const route=aiRouteFromHash_();state.route=route;render();loadRoute(route);
+});
 async function init(){
-  state.route=screens[location.hash.slice(1)]?location.hash.slice(1):'beranda';
+  state.route=aiRouteFromHash_();
   state.catalog=[];
   if(!activatePreview()){
     state.info=null;
