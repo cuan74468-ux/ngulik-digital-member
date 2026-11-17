@@ -151,7 +151,8 @@ test('mobile all-menu route exposes member services and admin modules without AP
 test('guest all-menu offers sign-in links without bypassing access flags',()=>{
   const guest=preview('','menu');
   assert.match(guest.nodes.screen.innerHTML,/data-route="login"/);
-  assert.match(guest.nodes.screen.innerHTML,/data-route="admin-login"/);
+  // The administrator entry is intentionally private; use the direct URL.
+  assert.doesNotMatch(guest.nodes.screen.innerHTML,/data-route="admin-login"/);
   assert.doesNotMatch(guest.nodes.screen.innerHTML,/PRIVATE_TEST_TOKEN|FONNTE_API_KEY/);
   assert.equal(guest.apiCalls(),0);
 });
