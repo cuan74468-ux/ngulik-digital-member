@@ -1,236 +1,145 @@
-/*
- Ngulik Digital / Learning Journey V2
- Isometric SVG artwork and a genuine step-by-step ball trajectory.
- The stage is decorative; only the hero CTAs are interactive.
- Mobile is illustration-first. Desktop is a contained editorial split.
-*/
+/* Ngulik Digital / Quiet Floating Brand — temporary logo treatment.
+ * Intentionally removes every staircase/pixel animation; no external assets.
+ * Applies only to the guest home, not member/admin or commerce routes. */
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-stage{
   grid-area:logo;
   order:1;
-  position:relative;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  width:100%;
-  min-width:0;
-  min-height:0;
-  margin:0;
-  isolation:isolate;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;isolation:isolate;
+  width:100%;min-width:0;max-width:480px;
+  min-height:320px;
+  margin:0 auto;
   pointer-events:none;
 }
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-art{
-  display:block;
-  width:100%;
-  height:auto;
-  min-height:0;
-  overflow:visible;
-  filter:drop-shadow(0 8px 13px rgba(128,85,55,.08));
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-stage::before{
+  content:"";position:absolute;inset:12% 4%;
+  border-radius:50%;
+  background:radial-gradient(circle at center,rgba(202,155,117,.16),rgba(250,248,243,0) 67%);
 }
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-step{
-  transform-box:fill-box;
-  transform-origin:center bottom;
-  animation:ngdStairLight 8.4s ease-in-out infinite;
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo{
+  display:grid;place-items:center;
+  position:relative;z-index:2;
+  width:clamp(178px,23vw,258px);aspect-ratio:1;
+  border-radius:50%;
+  border:1px solid rgba(215,187,162,.66);
+  background:radial-gradient(circle at 31% 22%,#fffefa 0%,#f9efe3 43%,#e7cbb5 78%,#cba589 100%);
+  box-shadow:
+    inset 12px 14px 25px rgba(255,255,255,.84),
+    inset -14px -18px 30px rgba(151,98,61,.17),
+    0 34px 56px -36px rgba(89,59,39,.42);
+  animation:ngdQuietFloat 6.5s ease-in-out infinite;
+  will-change:transform;
 }
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-step-1{animation-delay:0s}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-step-2{animation-delay:-.4s}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-step-3{animation-delay:-.8s}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-step-4{animation-delay:-1.2s}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-step-5{animation-delay:-1.6s}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-front{
-  fill:url(#ngd-step-front);
-  stroke:#d0a789;
-  stroke-width:.7;
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo span{
+  color:#98583a;
+  font:700 clamp(5rem,10vw,7.8rem)/1 "Inter",system-ui,sans-serif;
+  letter-spacing:-.14em;
+  padding-right:.15em;
+  text-shadow:0 2px 2px rgba(255,255,255,.5);
 }
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-side{
-  fill:url(#ngd-step-side);
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-shadow{
+  position:absolute;z-index:1;
+  bottom:13%;
+  width:min(48%,190px);height:26px;
+  border-radius:50%;
+  background:rgba(126,91,66,.15);
+  filter:blur(17px);
+  animation:ngdQuietShadow 6.5s ease-in-out infinite;
 }
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-top{
-  fill:url(#ngd-step-top);
-  stroke:#f7e1cc;
-  stroke-width:.7;
+@keyframes ngdQuietFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-15px)}
 }
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-ball{
-  transform-box:view-box;
-  transform-origin:0 0;
-  animation:ngdBallAscend 8.4s cubic-bezier(.48,.02,.34,1) infinite;
-  will-change:transform,opacity;
+@keyframes ngdQuietShadow{
+  0%,100%{opacity:.75;transform:scale(1)}
+  50%{opacity:.44;transform:scale(.84)}
 }
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-pixels rect{
-  fill:#d6a481;
-  opacity:.27;
-  animation:ngdPixelDrift 4.2s ease-in-out infinite alternate;
-}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-pixels rect:nth-child(2){animation-delay:-1.2s}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-pixels rect:nth-child(3){animation-delay:-2.3s}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-pixels rect:nth-child(4){animation-delay:-3.1s}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-arrow,
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-arrowhead{
-  opacity:.42;
-  animation:ngdArrowRise 8.4s ease-in-out infinite;
-}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-label{
-  margin:-10px 0 0;
-  text-align:center;
-  color:#97765e;
-  font:600 10px/1.5 "Inter",system-ui,sans-serif;
-  letter-spacing:.19em;
-}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-label span{
-  color:#c3a48e;
-}
-@keyframes ngdBallAscend{
-  0%,6%{transform:translate(112px,337px) rotate(0deg);opacity:1}
-  13%{transform:translate(160px,245px) rotate(15deg);opacity:1}
-  22%{transform:translate(216px,283px) rotate(24deg);opacity:1}
-  32%{transform:translate(271px,189px) rotate(36deg);opacity:1}
-  42%{transform:translate(321px,229px) rotate(44deg);opacity:1}
-  52%{transform:translate(377px,139px) rotate(55deg);opacity:1}
-  62%{transform:translate(426px,175px) rotate(62deg);opacity:1}
-  71%{transform:translate(482px,83px) rotate(72deg);opacity:1}
-  79%,86%{transform:translate(531px,121px) rotate(78deg);opacity:1}
-  90%{transform:translate(531px,121px) rotate(78deg);opacity:0}
-  93%{transform:translate(112px,337px) rotate(0deg);opacity:0}
-  100%{transform:translate(112px,337px) rotate(0deg);opacity:1}
-}
-@keyframes ngdStairLight{
-  0%,100%{filter:brightness(1);transform:translateY(0)}
-  35%,47%{filter:brightness(1.09);transform:translateY(-2px)}
-  63%{filter:brightness(1.015);transform:translateY(0)}
-}
-@keyframes ngdPixelDrift{
-  from{opacity:.18;transform:translate(0,7px)}
-  to{opacity:.54;transform:translate(7px,-10px)}
-}
-@keyframes ngdArrowRise{
-  0%,100%{opacity:.25}
-  60%,80%{opacity:.76}
-}
-/* Desktop: deliberately override old .nh-home > .pf-portfolio-hero flex-column.
-   This selector is more specific than the old ones. */
+/* Stronger specificity than obsolete portfolio flex-column rules. */
 @media(min-width:901px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content{
+    padding-top:112px;
+  }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal{
-    width:100%;
-    max-width:1240px;
-    min-height:min(730px,calc(100svh - 140px));
-    display:flex;
-    align-items:center;
-    margin-inline:auto;
+    display:flex;align-items:center;justify-content:center;
+    width:100%;max-width:1190px;
+    min-height:min(700px,calc(100svh - 160px));
+    margin:0 auto;
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .public-editorial-hero.pf-portfolio-hero.pf-home-minimal{
     display:grid;
-    grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+    grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);
     grid-template-areas:"copy logo";
-    column-gap:clamp(24px,3.5vw,52px);
-    align-items:center;
-    justify-content:stretch;
-    justify-items:stretch;
-    width:100%;
-    min-height:550px;
-    margin:0;
-    padding:clamp(30px,4vw,58px) clamp(22px,4vw,60px);
-    overflow:visible;
-    text-align:left;
-    isolation:isolate;
+    align-items:center;justify-items:stretch;
+    column-gap:clamp(32px,4vw,68px);
+    width:100%;min-height:530px;
+    margin:0;padding:clamp(28px,4vw,58px) clamp(24px,4vw,62px);
+    text-align:left;overflow:visible;
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .public-hero-copy{
-    grid-area:copy;
-    order:0;
-    width:100%;
-    max-width:100%;
-    min-width:0;
-    margin:0;
-    padding:0;
-    align-items:flex-start;
-    justify-content:center;
-    justify-self:stretch;
-    text-align:left;
+    grid-area:copy;order:0;
+    width:100%;min-width:0;max-width:100%;
+    padding:0;margin:0;
+    justify-self:stretch;align-self:center;
+    align-items:flex-start;justify-content:center;
     gap:clamp(16px,2vw,23px);
+    text-align:left;
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-copy h1{
-    width:100%;
-    max-width:16ch;
-    margin:0;
-    font-size:clamp(2.45rem,3.8vw,4.2rem);
-    line-height:1.13;
-    text-wrap:balance;
-    overflow-wrap:normal;
-    word-break:normal;
+    width:100%;max-width:17ch;
+    font-size:clamp(2.45rem,3.65vw,4.25rem);
+    line-height:1.13;letter-spacing:-.065em;
+    margin:0;overflow-wrap:normal;word-break:normal;
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-lead{
-    width:100%;
-    max-width:50ch;
+    width:100%;max-width:51ch;margin:0;
+    font-size:clamp(.95rem,1.12vw,1.06rem);
     line-height:1.78;
-    font-size:clamp(.94rem,1.08vw,1.05rem);
-    margin:0;
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-buttons{
-    width:100%;
-    justify-content:flex-start;
-    margin:6px 0 0;
+    justify-content:flex-start;margin:6px 0 0;
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .ngd-journey-stage{
-    grid-area:logo;
-    order:1;
-    width:100%;
-    height:auto;
-    min-height:0;
-    min-width:0;
-    max-width:580px;
-    justify-self:center;
-    align-self:center;
-    overflow:visible;
+    grid-area:logo;order:1;
+    justify-self:center;align-self:center;
+    min-width:0;min-height:390px;
+    max-width:460px;width:100%;
   }
 }
-/* Laptop width: keep copy above the 310px readability floor. */
-@media(min-width:901px) and (max-width:1160px){
+@media(min-width:901px) and (max-width:1100px){
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .public-editorial-hero.pf-portfolio-hero.pf-home-minimal{
-    grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
-    column-gap:20px;
-    padding-inline:clamp(15px,2vw,28px);
+    column-gap:26px;
+    padding-inline:clamp(16px,2.5vw,28px);
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-copy h1{
-    font-size:clamp(2.2rem,3.5vw,3.25rem);
+    font-size:clamp(2.25rem,3.5vw,3.45rem);
   }
 }
-/* Mobile/tablet: same composition as desktop, but stage comes first. */
+/* Mobile: brand first, simple balanced hero beneath it. */
 @media(max-width:900px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content{
+    padding-top:128px;
+  }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .public-editorial-hero.pf-portfolio-hero.pf-home-minimal{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    min-height:0;
-    gap:0;
-    padding:clamp(14px,3vw,28px) clamp(12px,3vw,22px) 54px;
-    overflow:visible;
-    text-align:center;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:flex-start;
+    min-height:0;gap:0;
+    padding:clamp(12px,3vw,28px) clamp(12px,3vw,22px) 54px;
+    text-align:center;overflow:visible;
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .ngd-journey-stage{
-    order:-1;
-    flex:0 0 auto;
-    position:relative;
-    width:min(520px,100%);
-    max-width:100%;
-    margin:0 auto clamp(8px,2vw,18px);
+    order:-1;flex:0 0 auto;
+    width:min(430px,100%);
+    min-height:265px;max-width:100%;
+    margin:0 auto 8px;
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .public-hero-copy{
-    order:1;
-    position:relative;
-    z-index:2;
-    width:100%;
-    max-width:660px;
-    align-items:center;
-    text-align:center;
-    gap:16px;
-    margin:0;
-    padding:0;
+    order:1;z-index:2;
+    width:100%;max-width:640px;
+    padding:0;margin:0;
+    align-items:center;text-align:center;gap:16px;
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-copy h1{
-    width:100%;
-    max-width:19ch;
-    font-size:clamp(2.05rem,6vw,3.1rem);
-    line-height:1.14;
-    margin:0;
+    max-width:19ch;font-size:clamp(2.08rem,6vw,3.15rem);line-height:1.15;
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-buttons{
     justify-content:center;
@@ -238,37 +147,21 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-label span{
 }
 @media(max-width:560px){
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .ngd-journey-stage{
-    width:min(380px,100%);
-    margin-bottom:2px;
+    width:min(340px,100%);min-height:230px;margin-bottom:3px;
   }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-label{
-    margin:-4px 0 0;
-    font-size:9px;
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo{
+    width:clamp(148px,44vw,205px);
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo span{
+    font-size:clamp(4.4rem,20vw,6.1rem);
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-copy h1{
-    font-size:clamp(2.02rem,8.4vw,2.8rem);
-    max-width:17ch;
+    max-width:17ch;font-size:clamp(2.04rem,8.3vw,2.8rem);
   }
 }
 @media(prefers-reduced-motion:reduce){
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) :is(
-    .ngd-journey-ball,.ngd-journey-step,
-    .ngd-journey-pixels rect,.ngd-journey-arrow,.ngd-journey-arrowhead
-  ){animation:none!important}
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-ball{
-    transform:translate(321px,229px);
-    opacity:1;
-  }
-}
-
-/* Header-safe breathing room: keep the floating navigation out of the hero. */
-@media(min-width:901px){
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content{
-    padding-top:112px;
-  }
-}
-@media(max-width:900px){
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content{
-    padding-top:128px;
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo,
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-shadow{
+    animation:none!important;
   }
 }
