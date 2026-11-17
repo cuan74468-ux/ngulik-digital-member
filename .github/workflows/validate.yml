@@ -45,7 +45,7 @@ jobs:
         run: |
           set -euo pipefail
           # Add a CI-only probe; repository index.html itself remains unchanged.
-          sed -i 's#</body>#<script src="./tests/layout-probe.js" defer></script><script src="./tests/browser-readonly-api.js" defer></script></body>#' index.html
+          sed -i 's#</body>#<script src="./tests/layout-probe.js" defer></script><script src="./tests/browser-readonly-api.js" defer></script><script src="./tests/home-layout-probe.js" defer></script></body>#' index.html
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/ngd-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
@@ -63,6 +63,10 @@ jobs:
           grep -q 'class="ngd-journey-stage"' /tmp/ngd-guest.html
           grep -q 'Ngulik Digital' /tmp/ngd-guest.html
           grep -q 'data-experience-v2="true"' /tmp/ngd-guest.html
+          grep -q 'data-home-columns-clear="true"' /tmp/ngd-guest.html
+          grep -q 'data-home-header-clear="true"' /tmp/ngd-guest.html
+          grep -q 'data-home-animated="true"' /tmp/ngd-guest.html
+          echo 'DESKTOP_HERO_GEOMETRY_OK'
           echo 'GUEST_BROWSER_QA_OK'
           if grep -q 'DEMO LOKAL\|Pratinjau — bukan data transaksi' /tmp/ngd-guest.html; then
             echo 'ERROR: internal development banner leaked to public page' >&2
@@ -206,6 +210,8 @@ jobs:
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
           grep -q 'class="ngd-journey-stage"' /tmp/ngd-guest-mobile.html
+          grep -q 'data-home-order="true"' /tmp/ngd-guest-mobile.html
+          grep -q 'data-home-header-clear="true"' /tmp/ngd-guest-mobile.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#admin" > /tmp/ngd-admin-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-unified-theme="true"' /tmp/ngd-admin-mobile.html
