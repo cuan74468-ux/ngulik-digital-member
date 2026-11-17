@@ -634,12 +634,12 @@ function aiCategoryNav_(tools,publicMode){
   const current=state.aiCategory||'semua';
   return '<div class="ai-category-tabs" role="group" aria-label="Kategori kebutuhan Studio AI">'+
     '<button type="button" class="ai-category-tab'+(current==='semua'?' is-current':'')+
-    '" data-ai-category="semua" aria-pressed="'+(current==='semua')+'">Semua kebutuhan</button>'+
+    '" data-ai-category="semua" aria-pressed="'+(current==='semua')+'">Semua</button>'+
     aiCategoryCatalog.map(c=>{
       const count=tools.filter(t=>aiToolCategory_(t)===c.id).length;
       return '<button type="button" class="ai-category-tab'+(current===c.id?' is-current':'')+
         '" data-ai-category="'+c.id+'" aria-pressed="'+(current===c.id)+'">'+
-        esc(c.short)+(count&&!publicMode?' <span>'+count+'</span>':'')+'</button>';
+        esc(c.short)+(count?' <span>'+count+'</span>':'')+'</button>';
     }).join('')+'</div>';
 }
 function aiCategoryOverview_(tools){
@@ -665,32 +665,28 @@ function viewAI(){
   const balance=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
   const publicMode=!logged()||isAdmin();
   const intro='<header class="ai-catalog-intro"><div class="ai-catalog-intro-copy">'+
-    '<p class="eyebrow">NGULIK DIGITAL / STUDIO AI</p>'+
-    '<h1>Temukan tools AI untuk <em>pekerjaan Anda.</em></h1>'+
-    '<p>Pilih kebutuhan Anda, temukan alat yang tersedia, lalu kerjakan lebih cepat di satu studio. Setiap wrapper dirancang untuk tugas yang spesifik, bukan sekadar prompt umum.</p>'+
-    '</div>'+
-    (publicMode?'<div class="ai-catalog-intro-aside"><span class="ai-aside-label">RUANG KREASI DIGITAL</span><strong>Mulai dari kebutuhan. Pilih alat yang tepat.</strong><span>UMKM · Affiliate · Media · Edukasi · Kreator</span></div>':
-      '<div class="ai-wallet-mini"><small>SALDO TOKEN</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
-      '<button type="button" data-catalog-go="ai">+ Isi Token</button></div>')+
+    '<p class="eyebrow">NGULIK DIGITAL</p><h1>Studio AI</h1>'+
+    '<p>Pilih alat, masukkan kebutuhan, lalu buat hasilnya.</p></div>'+
+    (!publicMode?'<div class="ai-wallet-mini"><small>Saldo</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
+    '<button type="button" data-catalog-go="ai">Isi Token</button></div>':'')+
     '</header>';
   const navigation=aiCategoryNav_(tools,publicMode);
   // Category chips are filters, not landing cards; show actual tool cards first.
   const cards='<section class="ai-tool-catalog" aria-labelledby="ai-tools-heading">'+
-    '<div class="ai-tools-heading"><div><p class="eyebrow">KATALOG WRAPPER</p>'+
-    '<h2 id="ai-tools-heading">Pilih tool AI</h2><p>Jelajahi alat yang aktif dan buka halaman kerjanya melalui kartu produk.</p></div>'+
+    '<div class="ai-tools-heading"><div><h2 id="ai-tools-heading">Pilih alat <span class="ai-tools-count">'+filtered.length+'</span></h2></div>'+
     '<label class="ai-search-wrap"><span class="sr-only">Cari tool AI</span>'+
-    '<input id="ai-tool-search" type="search" placeholder="Cari tools AI…" autocomplete="off" value="'+
+    '<input id="ai-tool-search" type="search" placeholder="Cari alat AI" autocomplete="off" value="'+
     esc(state.aiSearch||'')+'" aria-label="Cari tools AI"></label></div>'+
     '<div class="ai-catalog-grid" id="ai-tool-cards">'+
       (filtered.length?filtered.map(t=>{
         const c=aiCategoryFor_(aiToolCategory_(t));
         return '<button type="button" class="ai-product-card" data-ai-open="'+idSafe(t.tool_id)+'" aria-label="Buka tool '+esc(t.nama)+'">'+
           '<span class="ai-product-icon">'+icon(c?.icon||'spark')+'</span>'+
-          '<span class="ai-product-category">'+esc(c?.title||'Studio AI')+'</span>'+
+          '<span class="ai-product-category">'+esc(c?.short||'AI')+'</span>'+
           '<strong>'+esc(t.nama)+'</strong>'+
-          '<small>'+esc(t.deskripsi||'Alat bantu AI untuk pekerjaan spesifik.')+'</small>'+
-          '<span class="ai-product-bottom"><span>'+esc(Number(t.kredit_biaya)||0)+' Token / proses</span>'+
-          '<span class="ai-product-action">Buka tool '+icon('arrow')+'</span></span>'+
+          '<small>'+esc(t.deskripsi||'Alat AI untuk kebutuhan Anda.')+'</small>'+
+          '<span class="ai-product-bottom"><span>'+esc(Number(t.kredit_biaya)||0)+' Token</span>'+
+          '<span class="ai-product-action">Buka '+icon('arrow')+'</span></span>'+
         '</button>';
       }).join(''):'<div class="ai-catalog-empty"><strong>'+
         (!state.publicToolsLoaded&&tools.length===0?'Memuat katalog Studio AI…':'Belum ada tool pada pilihan ini.')+
@@ -698,9 +694,8 @@ function viewAI(){
         'Daftar produk sedang dibaca dari sistem.':'Pilih kategori lain atau hapus kata kunci pencarian.')+'</p></div>')+
     '</div></section>';
   return '<div class="ai-catalog">'+intro+navigation+cards+
-    (publicMode?'<div class="ai-catalog-access"><div><p class="eyebrow">MEMBER STUDIO AI</p>'+
-      '<h2>Siap mulai berkarya?</h2><p>Lihat semua alat tanpa login. Masuk sebagai member untuk menjalankan tool menggunakan Token.</p></div>'+
-      '<button type="button" class="btn btn-primary" data-route="login">Masuk untuk menggunakan</button></div>':'')+'</div>';
+    (publicMode?'<div class="ai-catalog-access"><strong>Ingin menggunakan alat?</strong>'+
+      '<button type="button" class="btn btn-primary" data-route="login">Masuk member '+icon('arrow')+'</button></div>':'')+'</div>';
 }
 // Each active wrapper has its own addressable workspace page (#ai-tool/ID).
 // No client-side pricing or availability is invented: getTools is authoritative.
@@ -719,9 +714,8 @@ function viewAITool(){
     '<p class="eyebrow">'+esc(category?.title||'Studio AI')+'</p><h1>'+esc(selected.nama)+'</h1>'+
     '<p>'+esc(selected.deskripsi||'Tool AI untuk kebutuhan kreatif dan produktivitas.')+'</p>'+
     '<span class="ai-detail-cost">'+esc(cost)+' Token / proses</span></div></header>'+
-    '<div class="ai-catalog-access"><div><h2>Gunakan alat ini di ruang member.</h2>'+
-    '<p>Masuk untuk menuliskan brief dan menjalankan proses AI. Token hanya digunakan saat permintaan benar-benar dijalankan.</p></div>'+
-    '<button type="button" class="btn btn-primary" data-route="login">Masuk untuk menggunakan</button></div></div>';
+    '<div class="ai-catalog-access"><strong>Masuk untuk mulai</strong>'+
+    '<button type="button" class="btn btn-primary" data-route="login">Masuk member '+icon('arrow')+'</button></div></div>';
   return '<div class="ai-tool-detail"><nav class="ai-tool-breadcrumb" aria-label="Navigasi Studio AI">'+
     '<button type="button" data-route="ai">Studio AI</button><span>/</span><span>'+esc(category?.short||'Tool')+'</span><span>/</span><strong>'+esc(selected.nama)+'</strong></nav>'+
     '<header class="ai-tool-detail-hero"><div class="ai-tool-detail-identity">'+
@@ -732,24 +726,20 @@ function viewAITool(){
     '<div class="ai-wallet-mini"><small>SALDO TOKEN</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
     '<button type="button" data-catalog-go="ai">+ Isi Token</button></div></header>'+
     '<div class="ai-tool-detail-content"><section class="ai-tool-brief">'+
-    '<div class="ai-workspace-title"><p class="eyebrow">BENGKEL KERJA AI</p><h2>Siapkan brief Anda</h2>'+
-    '<p>Hasil disesuaikan dengan penjelasan kebutuhan yang Anda masukkan.</p></div>'+
+    '<div class="ai-workspace-title"><h2>1. Isi kebutuhan</h2></div>'+
     '<form class="ai-form" data-tool-id="'+idSafe(selected.tool_id)+'" data-cost="'+esc(cost)+'" novalidate>'+
-    '<div class="field"><label class="ai-label" for="ai-business-name">Nama usaha / proyek (opsional)</label>'+
+    '<div class="field"><label class="ai-label" for="ai-business-name">Usaha / proyek <small>(opsional)</small></label>'+
     '<input class="input" id="ai-business-name" name="nama_usaha" maxlength="100" autocomplete="organization" value="'+
     esc(state.me?.nama_usaha||'')+'" placeholder="Nama usaha atau proyek"></div>'+
-    '<div class="field"><label class="ai-label" for="ai-in-'+idSafe(selected.tool_id)+'">Brief atau kebutuhan Anda</label>'+
+    '<div class="field"><label class="ai-label" for="ai-in-'+idSafe(selected.tool_id)+'">2. Jelaskan kebutuhan</label>'+
     '<textarea class="input ai-input" id="ai-in-'+idSafe(selected.tool_id)+'" name="input" rows="7" maxlength="1500" required placeholder="'+
-    esc(selected.placeholder_input||'Jelaskan tujuan, target audiens, gaya, dan hasil yang diharapkan')+'"'+(can?'':' disabled')+'></textarea>'+
-    '<small class="form-hint">Maksimal 1.500 karakter. Jangan memasukkan data pribadi pelanggan atau informasi rahasia.</small></div>'+
+    esc(selected.placeholder_input||'Contoh: buat caption promosi untuk produk saya')+'"'+(can?'':' disabled')+'></textarea>'+
+    '<small class="form-hint">Jangan masukkan data pribadi pelanggan.</small></div>'+
     '<div class="ai-foot"><span class="ai-cost"><strong>'+esc(cost)+' Token</strong> / eksekusi</span>'+
-    '<button class="btn btn-primary" type="submit"'+(can?'':' disabled')+'>Proses dengan AI '+icon('arrow')+'</button></div>'+
+    '<button class="btn btn-primary" type="submit"'+(can?'':' disabled')+'>3. Buat hasil '+icon('arrow')+'</button></div>'+
     (!can?'<p class="ai-workspace-notice">Pemrosesan AI belum diaktifkan untuk lingkungan ini.</p>':'')+
     '<div class="ai-result" role="status" aria-live="polite" hidden></div></form></section>'+
-    '<aside class="ai-tool-detail-aside"><p class="eyebrow">CARA KERJA</p><h2>Mulai dalam tiga langkah.</h2>'+
-    '<ol><li>Tuliskan kebutuhan Anda dengan jelas.</li><li>Periksa biaya Token sebelum menjalankan.</li>'+
-    '<li>Gunakan atau salin hasil yang diberikan.</li></ol>'+
-    '<button class="btn btn-secondary" type="button" data-route="ai">Jelajahi tools lain '+icon('arrow')+'</button></aside></div></div>';
+    '</div></div>';
 }
 function aiWizardStep_(form,step){
   const root=form.closest?.('.ai-tool-detail');
