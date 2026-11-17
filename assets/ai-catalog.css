@@ -1,0 +1,88 @@
+/* Ngulik Digital Studio AI — demand-led catalogue, mobile first.
+   Neutral editorial surfaces, brand teal, warm amber; no external assets. */
+body.ngd-public-app .ai-catalog{display:grid;gap:clamp(20px,3vw,32px);width:100%;min-width:0;color:#22373b}
+body.ngd-public-app .ai-catalog-intro{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(220px,.65fr);gap:clamp(20px,4vw,55px);align-items:end;padding:clamp(26px,4.2vw,56px) clamp(21px,4vw,52px);border-radius:23px;background:#f5f5f0;border:1px solid #ecece4}
+body.ngd-public-app .ai-catalog-intro-copy{max-width:720px;min-width:0}
+body.ngd-public-app .ai-catalog-intro .eyebrow{font-size:.7rem;font-weight:800;letter-spacing:.13em;color:#5c7777}
+body.ngd-public-app .ai-catalog-intro h1{font-size:clamp(2.05rem,4vw,4.4rem);font-weight:780;line-height:1.07;letter-spacing:-.045em;max-width:760px;color:#193b42;margin:14px 0 18px}
+body.ngd-public-app .ai-catalog-intro h1 em{font-style:normal;color:#ba6b35}
+body.ngd-public-app .ai-catalog-intro-copy>p:last-child{color:#5a6664;max-width:590px;line-height:1.75;font-size:clamp(.9rem,1.2vw,1.02rem);margin:0}
+body.ngd-public-app .ai-catalog-intro-aside{display:grid;gap:14px;align-self:stretch;align-content:end;border-left:1px solid #d9dfda;padding:14px 0 5px 28px}
+body.ngd-public-app .ai-catalog-intro-aside .ai-aside-label{font-size:.68rem;letter-spacing:.13em;font-weight:800;color:#67807e}
+body.ngd-public-app .ai-catalog-intro-aside strong{font-size:clamp(1.15rem,1.7vw,1.65rem);line-height:1.25;color:#204951;letter-spacing:-.028em}
+body.ngd-public-app .ai-catalog-intro-aside>span:last-child{font-size:.76rem;color:#6d7877;line-height:1.7}
+body.ngd-public-app .ai-catalog-intro .ai-wallet-mini{background:#fff;border:1px solid #e0e5e1;border-radius:15px;padding:22px;min-width:0;box-shadow:none}
+body.ngd-public-app .ai-category-tabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding-bottom:4px}
+body.ngd-public-app .ai-category-tab{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #e1e7e5;border-radius:999px;background:#fff;color:#435755;padding:11px 17px;min-height:44px;font-size:.8rem;line-height:1.2;font-weight:740;transition:background .2s,border-color .2s,color .2s}
+body.ngd-public-app .ai-category-tab:hover{border-color:#aac5bf;background:#f4f8f5}
+body.ngd-public-app .ai-category-tab.is-current{background:#154d57;color:#fff;border-color:#154d57}
+body.ngd-public-app .ai-category-tab span{background:#eaf1ed;border-radius:99px;padding:2px 6px;font-size:.65rem;color:#345b59}
+body.ngd-public-app .ai-category-tab.is-current span{background:#366b72;color:#fff}
+body.ngd-public-app .ai-category-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;min-width:0}
+body.ngd-public-app .ai-category-card{text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:13px;padding:clamp(18px,2.2vw,26px);min-width:0;min-height:220px;border:1px solid #e4e9e7;border-radius:18px;background:#fff;color:#254349;transition:border-color .2s,transform .2s,box-shadow .2s}
+body.ngd-public-app .ai-category-card:hover{border-color:#a3beb8;transform:translateY(-2px);box-shadow:0 10px 26px rgba(20,65,70,.06)}
+body.ngd-public-app .ai-category-card.is-active{border-color:#92b6ad;background:#f5faf7}
+body.ngd-public-app .ai-category-card-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#edf3ef;color:#215662}
+body.ngd-public-app .ai-category-card-copy{display:grid;gap:7px;flex:1;min-width:0}
+body.ngd-public-app .ai-category-card-copy strong{font-size:clamp(.94rem,1.2vw,1.15rem);line-height:1.35;letter-spacing:-.018em}
+body.ngd-public-app .ai-category-card-copy small{font-size:.8rem;color:#647674;line-height:1.6}
+body.ngd-public-app .ai-category-card-copy em{font-size:.72rem;font-style:normal;color:#84674d;line-height:1.5}
+body.ngd-public-app .ai-category-card-end{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding-top:12px;border-top:1px solid #edf0ed;font-size:.71rem;font-weight:760;color:#3b7773}
+body.ngd-public-app .ai-category-card-end svg{width:17px;height:17px;flex:none}
+body.ngd-public-app .ai-catalog-access{display:flex;justify-content:space-between;align-items:center;gap:25px;flex-wrap:wrap;padding:clamp(22px,3.5vw,36px);border-radius:18px;background:#f7f8f5;border:1px solid #e7ebe6}
+body.ngd-public-app .ai-catalog-access>div:first-child{max-width:600px}
+body.ngd-public-app .ai-catalog-access h2{font-size:clamp(1.15rem,2.2vw,1.6rem);color:#24474b;letter-spacing:-.025em;margin:7px 0}
+body.ngd-public-app .ai-catalog-access p:not(.eyebrow){color:#5f7472;line-height:1.6;font-size:.87rem}
+body.ngd-public-app .ai-catalog-access .actions{display:flex;gap:9px;flex-wrap:wrap}
+body.ngd-public-app .ai-tool-catalog{display:grid;gap:20px;min-width:0}
+body.ngd-public-app .ai-tools-heading{display:flex;gap:15px;justify-content:space-between;align-items:end;flex-wrap:wrap}
+body.ngd-public-app .ai-tools-heading h2{font-size:clamp(1.3rem,2vw,2rem);letter-spacing:-.03em;margin:5px 0 8px;color:#213f45}
+body.ngd-public-app .ai-tools-heading p:not(.eyebrow){font-size:.83rem;color:#6a7775;line-height:1.5}
+body.ngd-public-app .ai-search-wrap input{width:min(310px,100%);min-height:44px;background:#fff;border:1px solid #dfe6e1;border-radius:12px;padding:10px 15px;color:#294a4c;font:inherit;font-size:.83rem}
+body.ngd-public-app .ai-search-wrap input:focus{outline:2px solid #a9cbc5;outline-offset:2px}
+body.ngd-public-app .ai-catalog-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;min-width:0}
+body.ngd-public-app .ai-product-card{min-width:0;min-height:235px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:23px;text-align:left;border:1px solid #e4e9e6;border-radius:17px;background:#fff;color:#26464b;transition:border-color .2s,transform .2s}
+body.ngd-public-app .ai-product-card:hover{border-color:#a9c9c1;transform:translateY(-2px)}
+body.ngd-public-app .ai-product-card.is-selected{background:#f5faf7;border-color:#6ba396}
+body.ngd-public-app .ai-product-icon{width:43px;height:43px;display:grid;place-items:center;background:#edf4ef;border-radius:12px;color:#215864}
+body.ngd-public-app .ai-product-category{font-size:.69rem;letter-spacing:.04em;font-weight:760;color:#6b817d}
+body.ngd-public-app .ai-product-card strong{font-size:1.05rem;line-height:1.3;letter-spacing:-.02em}
+body.ngd-public-app .ai-product-card small{color:#667775;line-height:1.5;font-size:.79rem}
+body.ngd-public-app .ai-product-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;width:100%;margin-top:auto;padding-top:17px;border-top:1px solid #edf1ee;font-size:.73rem;font-weight:760;color:#486966}
+body.ngd-public-app .ai-product-action{color:#155965;display:flex;gap:5px;align-items:center}
+body.ngd-public-app .ai-product-action svg{width:15px;height:15px}
+body.ngd-public-app .ai-catalog-empty{grid-column:1/-1;padding:35px 28px;border:1px dashed #c8d7d0;border-radius:17px;background:#fafbf9}
+body.ngd-public-app .ai-catalog-empty strong{color:#294d51;font-size:1rem}
+body.ngd-public-app .ai-catalog-empty p{font-size:.86rem;color:#667571;line-height:1.6;margin-top:9px}
+body.ngd-public-app .ai-workspace{scroll-margin-top:24px;display:grid;gap:21px;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);align-items:start;padding:clamp(22px,3vw,36px);border:1px solid #dce9e2;background:#f8faf7;border-radius:19px}
+body.ngd-public-app .ai-workspace-title h2{font-size:clamp(1.35rem,2.4vw,2.1rem);line-height:1.2;letter-spacing:-.03em;margin:10px 0;color:#25484a}
+body.ngd-public-app .ai-workspace-title p{line-height:1.65;font-size:.88rem;color:#647673}
+body.ngd-public-app .ai-workspace .ai-form{margin:0;background:#fff;border:1px solid #e3e8e2;border-radius:15px;padding:clamp(16px,2.5vw,25px)}
+body.ngd-public-app .ai-workspace-notice{font-size:.77rem;color:#855a35;line-height:1.5;margin:0}
+body.ngd-public-app .ai-workspace .ai-input{min-height:140px}
+body.ngd-public-app .ai-workspace .ai-result{min-width:0}
+@media(max-width:1080px){
+ body.ngd-public-app .ai-category-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body.ngd-public-app .ai-catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body.ngd-public-app .ai-workspace{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+ body.ngd-public-app .ai-catalog{gap:20px}
+ body.ngd-public-app .ai-catalog-intro{grid-template-columns:1fr;border-radius:18px;padding:27px 20px}
+ body.ngd-public-app .ai-catalog-intro h1{font-size:clamp(2rem,9vw,3rem)}
+ body.ngd-public-app .ai-catalog-intro-aside{border-left:0;border-top:1px solid #d9dfda;padding:17px 0 0;gap:9px}
+ body.ngd-public-app .ai-category-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:-20px;padding-right:20px}
+ body.ngd-public-app .ai-category-tabs::-webkit-scrollbar{display:none}
+ body.ngd-public-app .ai-category-tab{flex:none;white-space:nowrap}
+ body.ngd-public-app .ai-category-overview{grid-template-columns:1fr;gap:11px}
+ body.ngd-public-app .ai-category-card{min-height:0;padding:18px;gap:10px}
+ body.ngd-public-app .ai-category-card-copy strong{font-size:1.03rem}
+ body.ngd-public-app .ai-catalog-grid{grid-template-columns:1fr;gap:11px}
+ body.ngd-public-app .ai-product-card{min-height:205px;padding:19px}
+ body.ngd-public-app .ai-tools-heading{align-items:stretch}
+ body.ngd-public-app .ai-search-wrap input{width:100%}
+ body.ngd-public-app .ai-workspace{padding:18px;border-radius:16px}
+ body.ngd-public-app .ai-catalog-access{align-items:stretch;flex-direction:column}
+ body.ngd-public-app .ai-catalog-access .actions>.btn{flex:1 1 160px}
+}
+@media(prefers-reduced-motion:reduce){body.ngd-public-app .ai-category-card,body.ngd-public-app .ai-product-card{transition:none}}
