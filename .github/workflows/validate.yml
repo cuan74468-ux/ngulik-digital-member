@@ -58,9 +58,9 @@ jobs:
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --dump-dom \
             "http://127.0.0.1:8765/" > /tmp/ngd-guest.html 2>/tmp/ngd-chrome.log
           echo 'GUEST_BROWSE_PROBE:'
-          grep -Eo 'class="nh-hero[^"]*"|class="nh-grid"|data-experience-v2="[^"]*"|data-app-role="[^"]*"|data-overflow="[^"]*"' /tmp/ngd-guest.html | tail -12 || true
-          grep -q 'class="nh-hero public-editorial-hero pf-portfolio-hero"' /tmp/ngd-guest.html
-          grep -q 'class="nh-grid"' /tmp/ngd-guest.html
+          grep -Eo 'class="nh-hero[^"]*"|class="pf-ring-stage pf-logo-stage"|data-experience-v2="[^"]*"|data-app-role="[^"]*"|data-overflow="[^"]*"' /tmp/ngd-guest.html | tail -12 || true
+          grep -q 'class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal"' /tmp/ngd-guest.html
+          grep -q 'class="pf-ring-stage pf-logo-stage"' /tmp/ngd-guest.html
           grep -q 'Ngulik Digital' /tmp/ngd-guest.html
           grep -q 'data-experience-v2="true"' /tmp/ngd-guest.html
           echo 'GUEST_BROWSER_QA_OK'
@@ -205,7 +205,7 @@ jobs:
           grep -q 'data-mobile-nav="false"' /tmp/ngd-guest-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
-          grep -q 'class="nh-grid"' /tmp/ngd-guest-mobile.html
+          grep -q 'class="pf-ring-stage pf-logo-stage"' /tmp/ngd-guest-mobile.html
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#admin" > /tmp/ngd-admin-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-unified-theme="true"' /tmp/ngd-admin-mobile.html
