@@ -40,7 +40,7 @@ function catalogInt_(p,name,min,max) {
   // Admin form accepts whole-rupiah digits only; do not silently reinterpret
   // formatted currency, fractions, or grouping punctuation as new prices.
   if(name==='harga')require_(typeof value==='number'||/^\d+$/.test(String(value)),
-    'VALIDATION','Harga harus angka rupiah bulat tanpa simbol atau pemisah.');
+    'VALIDATION','Harga tidak valid: gunakan rupiah bulat tanpa simbol atau pemisah.');
   var n=name==='harga'?ngdPriceRupiah_(value):Number(value);
   require_(value!==undefined&&value!==null&&String(value).trim()!==''&&
     Number.isSafeInteger(n)&&n>=min&&n<=max,
