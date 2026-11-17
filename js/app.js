@@ -507,7 +507,8 @@ function viewCatalog(){
       '" aria-pressed="'+(id===current?'true':'false')+'">'+label+'</button>').join('')+'</div>';
   const header='<div class="catalog-intro"><div><p class="eyebrow">NGULIK DIGITAL / TOKO & LISENSI</p>'+
     '<h1>'+ (logged()?'Toko & Lisensi Anda.':'Alat digital yang relevan untuk usaha.')+'</h1>'+
-    '<p>Token AI, aplikasi kasir, akses digital, ebook, dan jasa kreatif. Harga diambil langsung dari katalog resmi.</p></div>'+
+    '<p>Token AI, aplikasi kasir, akses digital, ebook, dan jasa kreatif. Harga diambil langsung dari katalog resmi.</p>'+
+    '<button type="button" class="btn btn-secondary btn-sm ngd-partner-jump" data-partner-scroll>Lihat Kelas & Tools Partner '+icon('arrow')+'</button></div>'+
     '<div class="catalog-summary"><strong>'+list.length+'</strong><span>penawaran tercatat'+
     ''+'</span></div></div>';
   const cards=shown.length?'<div class="catalog-grid">'+shown.map(p=>{
@@ -2481,7 +2482,7 @@ document.addEventListener('click',async(e)=>{
     state.marketplaceSearch='';state.catalogFilter='semua';state.marketplaceSort='default';
     render();return;
   }
-  const target=e.target.closest('[data-public-step],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin]');
+  const target=e.target.closest('[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin]');
   if(!target)return;
   if(target.hasAttribute('data-payment-admin')){
     if(!isAdmin()||!paymentEnabled())return toast('Aksi pembayaran belum aktif.',true);
@@ -2497,6 +2498,10 @@ document.addEventListener('click',async(e)=>{
       await api('adminVerifyOrder',isApprove?{order_id:order.order_id,keputusan:'approve',dana_diterima:true,referensi_pembayaran:reason.trim()}:{order_id:order.order_id,keputusan:'reject',alasan:reason.trim()},state.token,{write:true});
       toast(isApprove?'Pembayaran disetujui.':'Pesanan ditolak.');await loadRoute('pesanan');render();
     }catch(error){toast(error.message,true);}
+    return;
+  }
+  if(target.hasAttribute('data-partner-scroll')){
+    document.getElementById('etalase-rekomendasi')?.scrollIntoView({behavior:'smooth',block:'start'});
     return;
   }
   if(target.hasAttribute('data-partner-out')){
