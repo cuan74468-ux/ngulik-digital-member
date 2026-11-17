@@ -8,11 +8,14 @@
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const routes=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun'];
   const kinds=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO'];
+  // Resolve assets against the shared project root, never the current page folder.
+  // Works identically for /index.html and /staging/member.html.
+  const projectRoot=new URL('../',document.currentScript?.src||new URL('js/content-ui.js',location.href));
   function mediaPath(raw){
     const path=String(raw||'').trim();
     if(!path)return '';
     if(path.length<=500&&/^assets\/[A-Za-z0-9_./-]+\.(?:png|jpe?g|webp|gif|avif)(?:\?[A-Za-z0-9_=&%-]+)?$/i.test(path)&&
-      !path.includes('..')&&!path.includes('//'))return './'+path;
+      !path.includes('..')&&!path.includes('//'))return new URL(path,projectRoot).href;
     if(path.length<=2048&&/^https:\/\/[A-Za-z0-9.-]+(?::[0-9]{2,5})?(?:\/[A-Za-z0-9!$&'()*+,;=:@%_./~-]*)?(?:\?[A-Za-z0-9!$&'()*+,;=:@%_./?~-]*)?(?:#[A-Za-z0-9_.-]*)?$/i.test(path))return path;
     if(path.length<=45000&&/^data:image\/(?:png|jpeg|jpg|webp|gif|avif);base64,[A-Za-z0-9+/]+={0,2}$/i.test(path))return path;
     return '';
@@ -28,7 +31,7 @@
       '" alt="'+h(alt||item.title||'')+'" loading="lazy" decoding="async">';
   }
   function hero(contents,placement='home'){
-    const target=placement==='catalog'?'catalog':'home';
+    const target=['catalog','member_home'].includes(placement)?placement:'home';
     const items=published(contents,'HERO',target);
     if(!items.length)return '';
     return '<section class="nh-carousel" aria-label="'+(target==='catalog'?'Banner promosi katalog':'Promosi Ngulik Digital')+'" data-hero-carousel>'+
@@ -90,8 +93,8 @@
       '<div class="content-editor-heading"><div><p class="eyebrow">EDITOR VISUAL</p><h2>'+
       (selected?'Ubah konten':'Tambah konten')+'</h2></div>'+
       (selected?'<button type="button" class="btn btn-secondary btn-sm" data-content-new>Buat baru</button>':'')+'</div>'+
-      '<p class="form-hint">Tempel URL gambar HTTPS, data URI, atau path <code>assets/...</code>. '+
-      'Contoh: https://cdn.example.com/banner.webp atau assets/media/banner-promo.webp.</p>'+
+      '<div class="ngd-media-help"><div><strong>Unggah gambar melalui GitHub (gratis)</strong><p>Unggah file ke folder <code>assets/media/</code>, lalu masukkan path <code>assets/media/nama-file.webp</code> pada kolom berikut. File publik, tidak untuk dokumen berbayar atau data pribadi.</p></div>'+ 
+      '<a class="btn btn-secondary btn-sm" href="https://github.com/cuan74468-ux/ngulik-digital-member/upload/main/assets/media" target="_blank" rel="noopener noreferrer">Upload gambar di GitHub ↗</a></div>'+
       '<form id="content-editor-form" data-content-id="'+h(selected?.content_id||'')+'" class="content-form">'+
       '<div class="grid-2"><div class="field"><label for="content-kind">Jenis visual</label>'+
       (selected?'<input class="input" value="'+h(names[draft.kind]||draft.kind)+'" disabled>'+
@@ -103,7 +106,7 @@
       '<datalist id="content-places">'+places.map(p=>'<option value="'+h(p[1])+'" label="'+h(p[2])+'"></option>').join('')+
       (Array.isArray(ctx.products)?ctx.products.map(p=>'<option value="'+h(p.product_id)+'" label="'+h(p.nama)+'"></option>').join(''):'')+
       '</datalist></div></div>'+
-      '<div class="field"><label for="content-image">URL gambar HTTPS atau path assets/</label>'+
+      '<div class="field"><label for="content-image">Alamat gambar publik / path assets/media/</label>'+
       '<input class="input" id="content-image" name="image_path" required maxlength="45000" placeholder="https://contoh.com/banner.webp" value="'+h(draft.image_path||'')+'">'+
       (mediaPath(draft.image_path)?'<img class="content-editor-preview" src="'+h(mediaPath(draft.image_path))+'" alt="Pratinjau file gambar" loading="lazy">':'')+
       '</div>'+
