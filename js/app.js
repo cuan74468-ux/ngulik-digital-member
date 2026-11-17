@@ -2071,12 +2071,27 @@ async function submitServiceQuote(form){
   render();
 }
 document.addEventListener('input',(e)=>{
+  if(e.target?.id==='market-search'&&!logged()&&state.route==='katalog'){
+    state.marketplaceSearch=e.target.value;
+    const start=e.target.selectionStart,end=e.target.selectionEnd;
+    render();
+    const next=document.getElementById('market-search');
+    if(next){next.focus({preventScroll:true});
+      if(start!==null&&end!==null)next.setSelectionRange(start,end);}
+    return;
+  }
   if(!e.target||e.target.id!=='home-search')return;
   const q=e.target.value.trim().toLowerCase();let shown=0;
   document.querySelectorAll('.nh-home [data-search]').forEach(el=>{
     const hit=!q||el.getAttribute('data-search').includes(q);el.hidden=!hit;if(hit)shown++;
   });
   const none=by('nh-empty');if(none)none.hidden=shown>0;
+});
+document.addEventListener('change',e=>{
+  if(e.target?.id!=='market-sort'||logged()||state.route!=='katalog')return;
+  const selected=String(e.target.value||'default');
+  if(!['default','name','price-asc','price-desc'].includes(selected))return;
+  state.marketplaceSort=selected;render();
 });
 document.addEventListener('visibilitychange',syncHeroRotation_);
 document.addEventListener('focusin',e=>{
@@ -2129,6 +2144,10 @@ document.addEventListener('error',event=>{
 },true);
 
 document.addEventListener('click',async(e)=>{
+  if(e.target.closest('[data-market-reset]')){
+    state.marketplaceSearch='';state.catalogFilter='semua';state.marketplaceSort='default';
+    render();return;
+  }
   const target=e.target.closest('[data-public-step],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin]');
   if(!target)return;
   if(target.hasAttribute('data-payment-admin')){
