@@ -4,13 +4,13 @@
  * session and NGD_MUTATIONS_ENABLED. No binary uploads.
  * Image paths may use assets/, external HTTPS, or small raster data URIs.
  */
-var NGD_CONTENT_KINDS_=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO'];
+var NGD_CONTENT_KINDS_=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO','PROMO','ANNOUNCEMENT'];
 var NGD_CONTENT_ROUTES_=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun'];
 var NGD_CONTENT_FIELDS_=[
   'kind','placement','title','description','image_path','cta_label','cta_route',
   'sort_order','start_date','end_date'
 ];
-function contentImagePath_(value) {
+function contentImagePath_(value,optional) {
   var path=String(value==null?'':value).trim();
   // Allow safe repository assets, HTTPS image links, and raster data URIs.
   var local=path.length<=500&&/^assets\/[a-zA-Z0-9_./-]+\.(?:png|jpe?g|webp|gif|avif)(?:\?[A-Za-z0-9_=&%-]+)?$/i.test(path)&&
@@ -19,7 +19,7 @@ function contentImagePath_(value) {
     /^https:\/\/[a-zA-Z0-9.-]+(?::[0-9]{2,5})?(?:\/[a-zA-Z0-9!$&'()*+,;=:@%_./~-]*)?(?:\?[a-zA-Z0-9!$&'()*+,;=:@%_./?~-]*)?(?:#[a-zA-Z0-9_.-]*)?$/i.test(path);
   var inline=path.length<=45000&&
     /^data:image\/(?:png|jpeg|jpg|webp|gif|avif);base64,[A-Za-z0-9+/]+={0,2}$/i.test(path);
-  require_(!!path&&(local||external||inline),'VALIDATION',
+  require_((optional&&!path)||!!path&&(local||external||inline),'VALIDATION',
     'Gunakan path assets/..., gambar HTTPS, atau data URI gambar.');
   return path;
 }
@@ -43,6 +43,8 @@ function contentPlacement_(kind,value) {
     'affiliate','dukungan'].indexOf(place)>=0;
   if(kind==='PRODUCT_IMAGE')valid=/^P-[A-Za-z0-9-]{2,60}$/.test(place);
   if(kind==='BRAND_LOGO')valid=place==='brand';
+  if(kind==='PROMO'||kind==='ANNOUNCEMENT')
+    valid=['home','catalog','member_home','ai','belajar'].indexOf(place)>=0;
   require_(valid,'VALIDATION','Lokasi gambar tidak dikenali untuk jenis konten ini.');
   return place;
 }
@@ -63,8 +65,8 @@ function contentPayload_(p,existing) {
   var draft={
     kind:p.kind,placement:contentPlacement_(p.kind,p.placement),
     title:safeText_(p.title,120),description:safeText_(p.description,400),
-    image_path:contentImagePath_(p.image_path),
-    cta_label:safeText_(p.cta_label,48),cta_route:String(p.cta_route||'').trim(),
+    image_path:contentImagePath_(p.image_path,p.kind==='PROMO'||p.kind==='ANNOUNCEMENT'),
+    cta_label:safeText_(p.cta_label,48),cta_route:String(p.cta_route||'').trim().replace(/^#/,'').toLowerCase(),
     sort_order:Number(p.sort_order),
     start_date:contentDate_(p.start_date,'mulai'),
     end_date:contentDate_(p.end_date,'akhir')
@@ -140,7 +142,7 @@ function contentCreate_(admin,p,requestId) {
 function contentUpdate_(admin,p) {
   return withLock_(function(){
     var id=String(p.content_id||'');
-    require_(/^C-[A-F0-9]{14}$/.test(id),'VALIDATION','ID konten tidak valid.');
+    require_(/^(?:C-[A-F0-9]{14}|CNT-[A-Za-z0-9_-]{2,60})$/.test(id),'VALIDATION','ID konten tidak valid.');
     var old=byId_('site_content','content_id',id);
     require_(old,'NOT_FOUND','Konten tidak ditemukan.');
     require_(old.status!=='ARCHIVED','CONFLICT','Pulihkan arsip sebelum menyunting.');
@@ -162,7 +164,7 @@ function contentSetStatus_(admin,p) {
     }),'VALIDATION','Isi perubahan status tidak valid.');
   return withLock_(function(){
     var id=String(p.content_id||'');
-    require_(/^C-[A-F0-9]{14}$/.test(id),'VALIDATION','ID konten tidak valid.');
+    require_(/^(?:C-[A-F0-9]{14}|CNT-[A-Za-z0-9_-]{2,60})$/.test(id),'VALIDATION','ID konten tidak valid.');
     require_(['DRAFT','PUBLISHED','ARCHIVED'].indexOf(p.status)>=0,
       'VALIDATION','Status konten tidak dikenali.');
     var old=byId_('site_content','content_id',id);
