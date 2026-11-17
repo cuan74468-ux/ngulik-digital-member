@@ -1102,7 +1102,7 @@ function viewAdminRuntime(){
       '</p></div>')+'</section>';
 }
 function viewAdmin(){
-  if(!isAdmin())return empty('Akses administrator','Gunakan akun administrator terdaftar untuk membuka pengelolaan Ngulik Digital.','admin-login','Masuk admin');
+  if(!isAdmin())return needLogin('ruang kerja');
   const details=state.adminSummary?.ringkasan||[];
   return '<section class="admin-operations-intro"><p class="eyebrow">ADMIN STUDIO / NGULIK DIGITAL</p><h1>Semua kebutuhan usaha, satu meja kendali.</h1><p>Atur etalase dan kelas, tangani pesanan, serta lanjutkan pekerjaan yang paling penting hari ini.</p>'+
     (config.brand?.includes('STAGING')?'<span class="chip">DATA STAGING — bukan website produksi</span>':'<span class="chip">Data sesuai layanan terhubung</span>')+'</section>'+
