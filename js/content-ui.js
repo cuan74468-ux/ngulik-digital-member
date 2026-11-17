@@ -27,10 +27,11 @@
     return '<img class="'+h(cssClass||'content-img')+'" src="'+h(mediaPath(item.image_path))+
       '" alt="'+h(alt||item.title||'')+'" loading="lazy" decoding="async">';
   }
-  function hero(contents){
-    const items=published(contents,'HERO','home');
+  function hero(contents,placement='home'){
+    const target=placement==='catalog'?'catalog':'home';
+    const items=published(contents,'HERO',target);
     if(!items.length)return '';
-    return '<section class="nh-carousel" aria-label="Promosi Ngulik Digital" data-hero-carousel>'+
+    return '<section class="nh-carousel" aria-label="'+(target==='catalog'?'Banner promosi katalog':'Promosi Ngulik Digital')+'" data-hero-carousel>'+
       '<div class="nh-carousel-viewport">'+items.map((x,i)=>{
         const route=routes.includes(x.cta_route)?x.cta_route:'';
         return '<article class="nh-hero nh-hero-slide" data-hero-panel="'+i+'" '+
@@ -70,7 +71,7 @@
   const names={HERO:'Banner hero',FEATURE_ICON:'Ikon fitur',PRODUCT_IMAGE:'Gambar produk',
     PAGE_COVER:'Sampul halaman',NAV_ICON:'Ikon navigasi',BRAND_LOGO:'Logo'};
   const places=[
-    ['HERO','home','Beranda publik'],['HERO','member_home','Beranda member'],
+    ['HERO','home','Beranda publik'],['HERO','catalog','Banner promosi marketplace publik'],['HERO','member_home','Beranda member'],
     ...['belajar','aplikasi','ai','jasa','katalog','affiliate','dukungan','login']
       .map(x=>['FEATURE_ICON',x,'Ikon fitur '+x]),
     ...routes.map(x=>['NAV_ICON',x,'Navigasi '+x]),
