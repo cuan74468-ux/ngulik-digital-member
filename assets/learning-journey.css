@@ -1,0 +1,220 @@
+/*
+ * Ngulik Digital / Learning Journey v1
+ * CSS-only, accessible brand sphere climbing pixel stairs.
+ * Applies only to guest homepage, public + STAGING. No impact on business logic.
+ */
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-stage{
+  grid-area:logo;
+  order:1;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-width:0;
+  max-width:560px;
+  height:clamp(330px,39vw,480px);
+  margin:0;
+  padding:0;
+  isolation:isolate;
+  z-index:1;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-scene{
+  position:relative;
+  width:100%;
+  aspect-ratio:1.15;
+  max-height:445px;
+  min-width:0;
+  overflow:hidden;
+  filter:drop-shadow(0 16px 20px rgba(124,83,49,.12));
+  background:radial-gradient(ellipse at 60% 71%,rgba(198,147,103,.16),transparent 61%);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-floor{
+  position:absolute;
+  left:4%;right:3%;bottom:8%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,#c8ae94 22%,#bb9375 76%,transparent);
+  opacity:.55;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-stairs{
+  position:absolute;
+  left:7%;right:7%;bottom:9%;height:77%;
+  display:block;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-step{
+  --s:0;
+  position:absolute;
+  left:calc(var(--s) * 19%);
+  bottom:0;
+  width:19.8%;
+  height:calc(19% + var(--s) * 15.5%);
+  border:1px solid rgba(157,111,77,.18);
+  background:linear-gradient(116deg,#f7e8d7 0%,#e6c7ac 48%,#c89773 100%);
+  box-shadow:inset 1px 2px 3px rgba(255,255,255,.82),
+    inset -11px -6px 15px rgba(151,98,61,.14),
+    6px 8px 12px rgba(125,83,57,.08);
+  transform-origin:bottom center;
+  animation:ngdStepLift 7.5s cubic-bezier(.2,.7,.3,1) infinite;
+  animation-delay:calc(var(--s) * -.22s);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-step::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:0;
+  height:14%;
+  background:linear-gradient(90deg,#fffaf1,#f9e3cf 56%,#e5bf9e);
+  transform:skewX(-25deg) translateY(-75%);
+  transform-origin:bottom;
+  border-radius:2px 2px 0 0;
+  box-shadow:0 -1px 8px rgba(255,245,217,.4);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-step::after{
+  content:"";
+  position:absolute;
+  top:1%;right:0;bottom:0;width:19%;
+  background:linear-gradient(90deg,rgba(188,132,88,.1),rgba(135,84,53,.25));
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-step-1{--s:0}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-step-2{--s:1}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-step-3{--s:2}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-step-4{--s:3}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-step-5{--s:4}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-ball{
+  position:absolute;
+  left:9.5%;
+  bottom:24%;
+  width:clamp(65px,8vw,106px);
+  aspect-ratio:1;
+  z-index:4;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:radial-gradient(circle at 29% 24%,#fffefa 0%,#fbf1e6 36%,#e7cbb4 72%,#c69577 100%);
+  box-shadow:inset 8px 8px 20px rgba(255,255,255,.88),
+    inset -13px -12px 19px rgba(145,89,54,.17),
+    12px 17px 19px -12px rgba(99,58,39,.36);
+  animation:ngdBallClimb 7.5s ease-in-out infinite;
+  will-change:left,bottom,transform;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-ball span{
+  font:800 clamp(2.5rem,4.5vw,4rem)/1 "Inter",system-ui,sans-serif;
+  letter-spacing:-.15em;
+  padding-right:.14em;
+  color:#9c5338;
+  text-shadow:1px 2px 1px rgba(255,255,255,.4);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-pixel{
+  position:absolute;
+  width:clamp(11px,2.2vw,22px);
+  aspect-ratio:1;
+  z-index:1;
+  opacity:.4;
+  background:linear-gradient(135deg,#e8c9ae,#c58f6c);
+  animation:ngdPixelRise 4.5s ease-in-out infinite;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-pixel-1{
+  right:5%;top:11%;animation-delay:0s
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-pixel-2{
+  right:12%;top:25%;animation-delay:-1.5s
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-pixel-3{
+  right:3%;top:38%;animation-delay:-3s
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-trail{
+  position:absolute;
+  right:7%;top:4%;
+  width:36%;height:35%;
+  z-index:0;
+  border-top:2px solid rgba(199,134,89,.5);
+  border-radius:88% 0 0 0;
+  transform:rotate(-27deg);
+  opacity:.65;
+  animation:ngdTrailGlow 7.5s ease-in-out infinite;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-caption{
+  margin:0;
+  font:650 10px/1.5 "Inter",system-ui,sans-serif;
+  letter-spacing:.19em;
+  color:#a0795d;
+  text-align:center;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-caption span{color:#b8a28d}
+@keyframes ngdBallClimb{
+  0%,5%{left:9.5%;bottom:24%;transform:translateY(0) rotate(0deg)}
+  12%{left:19%;bottom:41%;transform:translateY(-14px) rotate(32deg)}
+  21%{left:27%;bottom:35%;transform:translateY(0) rotate(55deg)}
+  31%{left:37%;bottom:56%;transform:translateY(-12px) rotate(83deg)}
+  39%{left:43%;bottom:47%;transform:translateY(0) rotate(110deg)}
+  50%{left:56%;bottom:69%;transform:translateY(-14px) rotate(135deg)}
+  58%{left:60%;bottom:59%;transform:translateY(0) rotate(160deg)}
+  69%{left:69%;bottom:84%;transform:translateY(-16px) rotate(194deg)}
+  77%,82%{left:72%;bottom:71%;transform:translateY(0) rotate(225deg)}
+  93%{left:9.5%;bottom:24%;transform:translateY(-4px) rotate(360deg);opacity:.2}
+  96%,100%{left:9.5%;bottom:24%;transform:translateY(0) rotate(360deg);opacity:1}
+}
+@keyframes ngdStepLift{
+  0%,10%,100%{filter:brightness(1);transform:translateY(0)}
+  25%,36%{filter:brightness(1.12);transform:translateY(-3px)}
+  46%,72%{filter:brightness(1.03);transform:translateY(0)}
+}
+@keyframes ngdPixelRise{
+  0%,100%{opacity:.12;transform:translate(0,10px) scale(.6)}
+  45%{opacity:.48;transform:translate(-7px,-12px) scale(1)}
+  80%{opacity:.22;transform:translate(8px,-25px) scale(.8)}
+}
+@keyframes ngdTrailGlow{
+  0%,100%{opacity:.25;filter:blur(2px)}
+  40%,80%{opacity:.82;filter:blur(0)}
+}
+@media(min-width:901px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .ngd-climb-stage{
+    grid-area:logo;
+    order:1;
+    justify-self:center;
+    align-self:center;
+    display:flex;
+    width:100%;
+    min-width:0;
+    max-width:520px;
+    height:clamp(350px,38vw,475px);
+    margin:0;
+    transform:none;
+  }
+}
+@media(max-width:900px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal > .ngd-climb-stage{
+    order:-1;
+    position:relative;
+    flex:0 0 auto;
+    width:min(440px,100%);
+    height:clamp(260px,42vw,360px);
+    margin:0 auto 6px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-ball{
+    width:clamp(67px,12vw,90px);
+  }
+}
+@media(max-width:700px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .pf-home-minimal > .ngd-climb-stage{
+    width:min(370px,100%);
+    height:clamp(245px,75vw,315px);
+    margin:0 auto 4px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-ball{
+    width:clamp(56px,17vw,78px);
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-ball span{
+    font-size:2.8rem;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) :is(
+    .ngd-climb-ball,.ngd-climb-step,.ngd-climb-pixel,.ngd-climb-trail
+  ){
+    animation:none!important;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-climb-ball{
+    left:54%;bottom:66%;transform:none;opacity:1;
+  }
+}
