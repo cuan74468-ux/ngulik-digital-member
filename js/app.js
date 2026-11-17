@@ -3,7 +3,7 @@ import {api, ApiError, isConnected, isWriteEnabled, createRequestId} from './api
 const config = window.NGD_CONFIG || {};
 const by = (id) => document.getElementById(id);
 // Canonical brand asset is the same favicon URL in public and STAGING pages.
-const defaultBrandLogoSrc=document.querySelector('link[rel="icon"]')?.href||'';
+const defaultBrandLogoSrc=document.querySelector?.('link[rel="icon"]')?.href||'';
 // Published CMS logo overrides the default on visible UI; favicon stays static.
 function brandLogoSrc_(){
   const item=window.NGD_CONTENT_UI?.published(state.siteContent,'BRAND_LOGO','brand')?.[0];
