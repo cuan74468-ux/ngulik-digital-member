@@ -36,7 +36,7 @@ function catalogAdminList_() {
   }).map(catalogAdminView_);
 }
 function catalogInt_(p,name,min,max) {
-  var value=p[name],n=Number(value);
+  var value=p[name],n=name==='harga'?ngdPriceRupiah_(value):Number(value);
   require_(value!==undefined&&value!==null&&String(value).trim()!==''&&
     Number.isSafeInteger(n)&&n>=min&&n<=max,
     'VALIDATION','Nilai '+name+' tidak valid.');
@@ -96,7 +96,7 @@ function catalogPayload_(p,existing) {
   if(['LANGGANAN_30H','SEAT_30H'].indexOf(patch.tipe)>=0)
     require_(patch.durasi_hari===30,
       'VALIDATION','Produk langganan atau seat harus berdurasi 30 hari.');
-  if(['LISENSI_SEKALI','JASA_SEKALI','PRODUK_DIGITAL'].indexOf(patch.tipe)>=0)
+  if(['LISENSI_SEKALI','PRODUK_DIGITAL'].indexOf(patch.tipe)>=0)
     require_(patch.durasi_hari===0,'VALIDATION','Jenis produk ini tidak memiliki durasi.');
   if(patch.tipe==='JASA_SEKALI'||patch.tipe==='LISENSI_SEKALI'||patch.tipe==='SEAT_30H')
     require_(patch.perlu_approval_admin===true,
