@@ -7,7 +7,7 @@
   const h=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const routes=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun'];
-  const kinds=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO'];
+  const kinds=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO','PROMO','ANNOUNCEMENT'];
   // Resolve assets against the shared project root, never the current page folder.
   // Works identically for /index.html and /staging/member.html.
   const projectRoot=new URL('../',document.currentScript?.src||new URL('js/content-ui.js',location.href));
@@ -61,6 +61,25 @@
         '<button type="button" class="nh-carousel-toggle" data-hero-pause aria-pressed="false">Jeda</button></div>':'')+
       '</section>';
   }
+  function promotion(contents,placement='member_home'){
+    const items=(Array.isArray(contents)?contents:[]).filter(x=>x&&
+      ['PROMO','ANNOUNCEMENT'].includes(String(x.kind||''))&&
+      x.placement===placement);
+    if(!items.length)return '';
+    return '<section class="ngd-promo-strip" aria-label="Pengumuman dan promosi">'+items.map(x=>{
+      const kind=x.kind==='ANNOUNCEMENT'?'PENGUMUMAN':'PROMO PILIHAN';
+      const route=String(x.cta_route||'').replace(/^#/,'');
+      const dest=routes.includes(route)?route:'';
+      const image=mediaPath(x.image_path);
+      return '<article class="ngd-promo-item">'+
+        (image?'<img class="ngd-promo-image" src="'+h(image)+'" loading="lazy" alt="'+h(x.title||'')+'">':'')+
+        '<div class="ngd-promo-copy"><span class="eyebrow">'+kind+'</span>'+
+        (x.title?'<h2>'+h(x.title)+'</h2>':'')+
+        (x.description?'<p>'+h(x.description)+'</p>':'')+
+        (dest?'<button type="button" class="btn btn-secondary btn-sm" data-route="'+h(dest)+'">'+
+          h(x.cta_label||'Lihat selengkapnya')+' ↗</button>':'')+'</div></article>';
+    }).join('')+'</section>';
+  }
   function cover(contents,route){
     const item=published(contents,'PAGE_COVER',route)[0];
     if(!item)return '';
@@ -72,7 +91,8 @@
       '</section>';
   }
   const names={HERO:'Banner hero',FEATURE_ICON:'Ikon fitur',PRODUCT_IMAGE:'Gambar produk',
-    PAGE_COVER:'Sampul halaman',NAV_ICON:'Ikon navigasi',BRAND_LOGO:'Logo'};
+    PAGE_COVER:'Sampul halaman',NAV_ICON:'Ikon navigasi',BRAND_LOGO:'Logo',
+    PROMO:'Promosi',ANNOUNCEMENT:'Pengumuman'};
   const places=[
     ['HERO','home','Beranda publik'],['HERO','catalog','Banner promosi marketplace publik'],['HERO','member_home','Beranda member'],
     ...['belajar','aplikasi','ai','jasa','katalog','affiliate','dukungan','login']
@@ -80,6 +100,8 @@
     ...routes.map(x=>['NAV_ICON',x,'Navigasi '+x]),
     ...['belajar','katalog','jasa','ai','affiliate','dukungan']
       .map(x=>['PAGE_COVER',x,'Sampul '+x]),
+    ['PROMO','member_home','Promosi beranda member'],
+    ['ANNOUNCEMENT','member_home','Pengumuman beranda member'],
     ['BRAND_LOGO','brand','Logo Ngulik Digital']
   ];
   function admin(ctx){
@@ -107,7 +129,7 @@
       (Array.isArray(ctx.products)?ctx.products.map(p=>'<option value="'+h(p.product_id)+'" label="'+h(p.nama)+'"></option>').join(''):'')+
       '</datalist></div></div>'+
       '<div class="field"><label for="content-image">Alamat gambar publik / path assets/media/</label>'+
-      '<input class="input" id="content-image" name="image_path" required maxlength="45000" placeholder="https://contoh.com/banner.webp" value="'+h(draft.image_path||'')+'">'+
+      '<input class="input" id="content-image" name="image_path" maxlength="45000" placeholder="https://contoh.com/banner.webp" value="'+h(draft.image_path||'')+'">'+
       (mediaPath(draft.image_path)?'<img class="content-editor-preview" src="'+h(mediaPath(draft.image_path))+'" alt="Pratinjau file gambar" loading="lazy">':'')+
       '</div>'+
       '<div class="field"><label for="content-title">Judul atau alt text</label>'+
@@ -154,5 +176,5 @@
       '<span class="chip">'+rows.length+' aset tercatat</span></section>'+
       '<div class="content-admin-layout">'+rowsHtml+form+'</div>';
   }
-  window.NGD_CONTENT_UI=Object.freeze({mediaPath,published,media,hero,cover,admin});
+  window.NGD_CONTENT_UI=Object.freeze({mediaPath,published,media,hero,promotion,cover,admin});
 })();
