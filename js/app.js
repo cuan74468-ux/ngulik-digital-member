@@ -1486,7 +1486,21 @@ async function changeContentStatus_(id,nextStatus){
   if(!isAdmin()||!contentWriteEnabled())return;
   const old=state.adminContent.find(x=>x.content_id===id);
   if(!old)return toast('Konten tidak ditemukan.',true);
-  if(nextStatus==='PUBLISHED'&&!confirm('Pastikan gambar telah diunggah dan link gambarnya terbuka. Terbitkan konten ini?'))return;
+  if(nextStatus==='PUBLISHED'){
+    const src=window.NGD_CONTENT_UI?.mediaPath(old.image_path);
+    if(!src)return toast('Alamat aset tidak valid. Periksa path gambar.',true);
+    // A valid path is not evidence that a file exists: verify the image loads
+    // before a published CMS row can replace the homepage or product image.
+    const reachable=await new Promise(resolve=>{
+      const img=new Image();
+      const guard=setTimeout(()=>{img.onload=null;img.onerror=null;resolve(false);},8000);
+      img.onload=()=>{clearTimeout(guard);resolve(img.naturalWidth>0);};
+      img.onerror=()=>{clearTimeout(guard);resolve(false);};
+      img.src=src;
+    });
+    if(!reachable)return toast('Gambar belum dapat dibuka. Pastikan file sudah tersedia di GitHub Pages atau alamat HTTPS publik.',true);
+    if(!confirm('Gambar berhasil dibuka. Terbitkan konten ini sekarang?'))return;
+  }
   try{
     await api('adminSetContentStatus',{
       content_id:id,status:nextStatus,revision:old.revision
