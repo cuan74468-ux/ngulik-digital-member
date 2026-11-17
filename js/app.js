@@ -621,28 +621,119 @@ async function submitAITool(form){
   }finally{btn.disabled=false;area.disabled=false;}
 }
 function viewAffiliate(){
-  if(!logged())return '<section class="affiliate-public"><p class="eyebrow">PROGRAM AFFILIATE</p>'+
-    '<h1>Bagikan produk yang relevan. Dapatkan komisi.</h1>'+
-    '<p>Tautan referral pribadi tersedia setelah Anda masuk sebagai member. Komisi mengikuti pembelian dan verifikasi pesanan yang tercatat.</p>'+
-    '<button class="btn btn-primary" type="button" data-route="login">Masuk untuk melihat affiliate</button></section>';
-  const a=state.affiliates||{},code=a.kode_referral||state.me?.kode_referral||'';
-  const site=String(config.siteUrl||location.href.split('#')[0]);
-  const url=code?site+(site.includes('?')?'&':'?')+'ref='+encodeURIComponent(code):'';
-  const stats=a.saldo||{};
-  return '<section class="affiliate-workspace"><header class="affiliate-header"><div><p class="eyebrow">WORKSPACE / AFFILIATE</p>'+
-    '<h1>Komisi Affiliate</h1><p>Bagikan tautan Anda. Pantau pendaftar, transaksi, dan komisi yang telah disetujui.</p></div></header>'+
-    '<div class="affiliate-summary-grid">'+[
-      ['Komisi tertahan',rupiah(stats.PENDING??0),'Dalam masa tahan'],
-      ['Siap cair',rupiah(stats.APPROVED??0),'Setelah disetujui'],
-      ['Pendaftar',esc(a.pendaftar??0),'Melalui tautan Anda'],
-      ['Konversi',esc(a.konversi??0),'Pembelian terverifikasi']
-    ].map(function(x){return '<article class="affiliate-summary"><small>'+x[0]+'</small><strong>'+x[1]+'</strong><span>'+x[2]+'</span></article>';}).join('')+'</div>'+
-    '<section class="affiliate-referral"><div><p class="eyebrow">TAUTAN REFERRAL ANDA</p><h2>'+esc(code||'Belum tersedia')+'</h2>'+
-    '<p>Komisi berulang mengikuti persentase masing-masing produk. Masa tahan 14 hari; minimum pengajuan pencairan Rp50.000.</p>'+
-    (url?'<div class="affiliate-referral-url">'+esc(url)+'</div>':'')+'</div>'+
-    '<button type="button" class="btn btn-primary" data-copy="'+esc(url)+'"'+(!url?' disabled':'')+'>Salin tautan '+icon('link')+'</button></section>'+
-    '<section class="affiliate-terms"><h3>Transparansi komisi</h3><p>'+esc(state.info?.disclosure||
-      'Komisi referral dihitung atas transaksi yang memenuhi syarat dan mengikuti pemeriksaan status pembayaran.')+'</p></section></section>';
+  // Two distinct experiences: a public partner invitation and a private,
+  // authenticated dashboard. Every monetary value comes from the backend.
+  if(!logged())return '<div class="partner-public">'+
+    '<section class="partner-hero" aria-label="Program Mitra Ngulik Digital">'+
+      '<div class="partner-hero-copy"><p class="partner-kicker">MITRA NGULIK DIGITAL · PROGRAM AFFILIATE</p>'+
+      '<h1>Bagikan solusi digital. <em>Tumbuh bersama.</em></h1>'+
+      '<p>Bantu lebih banyak orang menemukan tools AI, aplikasi bisnis, dan produk digital yang bermanfaat. Dapatkan komisi dari transaksi referral yang memenuhi syarat.</p>'+
+      '<div class="partner-hero-actions">'+
+        '<button type="button" class="partner-btn partner-btn-primary" data-route="daftar">Mulai bergabung '+icon('arrow')+'</button>'+
+        '<button type="button" class="partner-btn partner-btn-outline" data-route="login">Sudah punya akun?</button>'+
+      '</div><span class="partner-note">Tidak ada janji penghasilan tetap. Besaran komisi dan kelayakan mengikuti masing-masing produk.</span></div>'+
+      '<div class="partner-hero-art" role="img" aria-label="Ilustrasi simbol Ngulik Digital sebagai ruang untuk belajar, berbagi, dan berkembang">'+
+        '<span class="partner-art-orbit partner-art-orbit-outer"></span><span class="partner-art-orbit partner-art-orbit-inner"></span>'+
+        '<span class="partner-art-mark">n.</span><span class="partner-art-label partner-art-label-one">BELAJAR</span>'+
+        '<span class="partner-art-label partner-art-label-two">BAGIKAN</span>'+
+        '<span class="partner-art-label partner-art-label-three">TUMBUH</span>'+
+      '</div></section>'+
+    '<section class="partner-public-steps" aria-label="Cara kerja affiliate">'+
+      '<div class="partner-section-intro"><p class="partner-kicker">CARA KERJA</p>'+
+      '<h2>Tiga langkah sederhana.</h2><p>Mulai dari rekomendasi yang benar-benar relevan.</p></div>'+
+      '<div class="partner-step-grid">'+[
+        ['01','Bergabung sebagai member','Buat akun dan temukan tautan referral pribadi pada dashboard.'],
+        ['02','Bagikan rekomendasi','Kenalkan Ngulik Digital kepada teman, kreator, atau pelaku UMKM yang membutuhkan.'],
+        ['03','Pantau komisi','Transaksi yang memenuhi syarat dicatat dan diperiksa sebelum komisi dapat dicairkan.']
+      ].map(x=>'<article class="partner-step"><span class="partner-step-number">'+x[0]+'</span><h3>'+x[1]+'</h3><p>'+x[2]+'</p></article>').join('')+
+      '</div></section>'+
+    '<section class="partner-public-value" aria-label="Apa yang bisa direkomendasikan">'+
+      '<div><p class="partner-kicker">REKOMENDASIKAN SOLUSI YANG TEPAT</p>'+
+      '<h2>Produk digital yang dekat dengan kebutuhan usaha.</h2>'+
+      '<p>Mulai dari alat AI, aplikasi bisnis, materi belajar hingga layanan kreatif. Tidak semua produk otomatis memberikan komisi; ketentuannya ditetapkan per produk.</p>'+
+      '<button type="button" class="partner-text-link" data-route="katalog">Lihat katalog produk '+icon('arrow')+'</button></div>'+
+      '<div class="partner-value-tags"><span>Tools AI</span><span>Aplikasi Bisnis</span><span>Kelas & Ebook</span><span>Layanan Kreatif</span></div>'+
+    '</section>'+
+    '<section class="partner-public-faq" aria-label="Ketentuan program kemitraan">'+
+      '<div class="partner-section-intro"><p class="partner-kicker">PERLU DIKETAHUI</p><h2>Jelas sejak awal.</h2></div>'+
+      '<div class="partner-faq-grid">'+
+        '<div><h3>Bagaimana komisi dihitung?</h3><p>Komisi mengikuti produk yang memenuhi syarat, persentase produk, status transaksi, dan kebijakan program yang berlaku.</p></div>'+
+        '<div><h3>Kapan komisi dapat dicairkan?</h3><p>Setelah masa tahan serta verifikasi terpenuhi. Batas minimum dan ketentuan pencairan mengikuti pengaturan yang berlaku.</p></div>'+
+        '<div><h3>Apakah setiap klik menghasilkan komisi?</h3><p>Tidak. Klik dan pendaftaran bukan jaminan komisi. Hanya transaksi yang memenuhi syarat yang diperhitungkan.</p></div>'+
+        '<div><h3>Perlu promosi berbayar?</h3><p>Tidak diwajibkan oleh halaman ini. Utamakan rekomendasi jujur dan jangan membuat klaim berlebihan.</p></div>'+
+      '</div></section>'+
+    '<section class="partner-public-end"><div><p class="partner-kicker">MARI BERKOLABORASI</p>'+
+      '<h2>Temukan, bagikan, bertumbuh.</h2><p>Mulai dari satu rekomendasi yang bermanfaat.</p></div>'+
+      '<button type="button" class="partner-btn partner-btn-primary" data-route="daftar">Jadi Mitra Ngulik Digital '+icon('arrow')+'</button></section>'+
+    '</div>';
+
+  const a=state.affiliates;
+  if(!a)return '<section class="partner-member"><p class="partner-kicker">WORKSPACE MITRA</p>'+
+    '<h1>Affiliate Saya</h1><p>Informasi komisi belum berhasil dimuat. Muat ulang halaman untuk mencoba kembali.</p>'+
+    '<button type="button" class="partner-btn partner-btn-outline" data-affiliate-refresh>Muat ulang data</button></section>';
+  const code=String(a.kode_referral||state.me?.kode_referral||'');
+  // Never generate an outgoing share link pointing at STAGING.
+  const referralBase='https://cuan74468-ux.github.io/ngulik-digital-member/';
+  const url=code&&/^[A-Za-z0-9_-]{3,80}$/.test(code)?
+    referralBase+'?ref='+encodeURIComponent(code):'';
+  const all=Array.isArray(a.komisi)?a.komisi:[];
+  const totals=a.saldo||{};
+  const pending=Number(totals.PENDING)||0;
+  const paid=Number(totals.PAID)||0;
+  const requested=all.filter(x=>x.status==='APPROVED'&&!!x.payout_requested_at)
+    .reduce((sum,x)=>sum+(Number(x.nominal)||0),0);
+  const eligible=all.filter(x=>x.status==='APPROVED'&&!x.payout_requested_at)
+    .reduce((sum,x)=>sum+(Number(x.nominal)||0),0);
+  const canRequest=eligible>0&&isWriteEnabled()&&config.paymentsEnabled===true;
+  const statusLabel={PENDING:'Tertahan',APPROVED:'Disetujui',PAID:'Dibayar',REVERSED:'Dibatalkan'};
+  const rows=[...all].sort((x,y)=>String(y.created_at||'').localeCompare(String(x.created_at||''))).slice(0,50);
+  const cards=[
+    ['Komisi tertahan',rupiah(pending),'Menunggu syarat persetujuan','pending'],
+    ['Siap diajukan',rupiah(eligible),'Belum termasuk yang sudah diajukan','approved'],
+    ['Sudah diajukan',rupiah(requested),'Menunggu tindak lanjut pencairan','requested'],
+    ['Sudah dibayar',rupiah(paid),'Riwayat komisi dibayar','paid']
+  ];
+  return '<div class="partner-member">'+
+    '<header class="partner-member-header"><div><p class="partner-kicker">MEJA KERJA / AFFILIATE</p>'+
+      '<h1>Affiliate Saya</h1><p>Bagikan tautan Anda, lihat perkembangan, dan pantau komisi secara transparan.</p></div>'+
+      '<button type="button" class="partner-refresh" data-affiliate-refresh aria-label="Perbarui data affiliate">'+icon('refresh')+' Perbarui</button></header>'+
+    '<div class="partner-metric-grid">'+cards.map(c=>'<article class="partner-metric partner-metric-'+c[3]+'">'+
+      '<span>'+c[0]+'</span><strong>'+c[1]+'</strong><small>'+c[2]+'</small></article>').join('')+'</div>'+
+    '<section class="partner-link-panel" aria-label="Tautan referral pribadi">'+
+      '<div class="partner-link-copy"><p class="partner-kicker">TAUTAN REFERRAL PRIBADI</p>'+
+      '<h2>Rekomendasi yang bermanfaat, satu tautan.</h2>'+
+      '<p>Setiap pendaftaran yang menggunakan tautan ini akan mengikuti mekanisme referral sistem.</p>'+
+      '<div class="partner-link-url">'+(url?esc(url):'Kode referral belum tersedia')+'</div>'+
+      (code?'<span class="partner-code">Kode: '+esc(code)+'</span>':'')+'</div>'+
+      '<div class="partner-link-actions">'+
+        '<button type="button" class="partner-btn partner-btn-primary" data-copy="'+esc(url)+'"'+(!url?' disabled':'')+'>Salin tautan '+icon('link')+'</button>'+
+        (url?'<a class="partner-btn partner-btn-outline" href="https://wa.me/?text='+encodeURIComponent('Rekomendasi tools dan produk digital Ngulik Digital: '+url)+'" target="_blank" rel="noopener noreferrer">Bagikan via WhatsApp '+icon('arrow')+'</a>':'')+
+      '</div></section>'+
+    '<section class="partner-reach" aria-label="Aktivitas tautan referral">'+
+      '<div><span>Pengunjung yang mengklik</span><strong>'+esc(a.klik??0)+'</strong></div>'+
+      '<div><span>Pendaftar dari referral</span><strong>'+esc(a.pendaftar??0)+'</strong></div>'+
+      '<div><span>Catatan komisi</span><strong>'+esc(all.length)+'</strong></div>'+
+    '</section>'+
+    '<section class="partner-commission-panel" aria-label="Riwayat komisi">'+
+      '<div class="partner-panel-head"><div><p class="partner-kicker">AKTIVITAS KOMISI</p><h2>Riwayat komisi</h2></div>'+
+      '<span>Menampilkan hingga 50 catatan terbaru</span></div>'+
+      (rows.length?'<div class="partner-commission-list">'+rows.map(x=>
+        '<article class="partner-commission-row"><div><strong>Komisi referral</strong>'+
+        '<small>'+esc(friendlyDate(x.created_at))+
+        (x.payout_requested_at?' · Pengajuan tercatat':'')+'</small></div>'+
+        '<div class="partner-commission-amount"><strong>'+rupiah(x.nominal)+'</strong>'+
+        '<span class="partner-status partner-status-'+esc(String(x.status||'').toLowerCase())+'">'+esc(statusLabel[x.status]||'Dalam proses')+'</span></div></article>'
+      ).join('')+'</div>':
+      '<div class="partner-empty"><h3>Belum ada komisi tercatat</h3><p>Mulailah dengan membagikan tautan referral kepada orang yang membutuhkan produk digital.</p></div>')+
+    '</section>'+
+    '<section class="partner-payout" aria-label="Pengajuan pencairan">'+
+      '<div><p class="partner-kicker">PENCAIRAN</p><h2>Ajukan komisi yang tersedia.</h2>'+
+      '<p>Pengajuan diproses hanya jika mencapai batas minimum, telah melewati masa tahan, dan lolos pemeriksaan transaksi oleh sistem. Persetujuan bukan bukti dana sudah ditransfer.</p></div>'+
+      '<button type="button" class="partner-btn partner-btn-primary" data-affiliate-payout'+(canRequest?'':' disabled')+
+      '>'+(canRequest?'Ajukan pencairan':'Belum dapat diajukan')+' '+icon('arrow')+'</button></section>'+
+    '<footer class="partner-terms"><strong>Transparansi program</strong><p>'+esc(state.info?.disclosure||
+      'Besaran komisi ditetapkan per produk. Komisi dapat berubah status sesuai verifikasi, refund, dan ketentuan program. Pengajuan tidak menjamin pembayaran langsung.')+'</p></footer>'+
+  '</div>';
 }
 function viewNotificationCenter(){
   if(!logged()||isAdmin())return '';
