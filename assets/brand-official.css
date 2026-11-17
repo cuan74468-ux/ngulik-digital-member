@@ -70,6 +70,20 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-hero-art .partner-ar
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-hero-art .partner-art-mark .ngd-brand-image{
  border-radius:20px;
 }
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-hero-symbol{
+ display:grid;place-items:center;
+ padding:0;
+ width:min(220px,72%);
+ aspect-ratio:1;
+ background:transparent;
+ overflow:hidden;
+ border-radius:18px;
+ border:0;
+ box-shadow:0 20px 34px -24px rgba(15,77,92,.35);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-hero-symbol .ngd-brand-image{
+ border-radius:18px;
+}
 @media(max-width:560px){
  body.ngd-public-app[data-app-role=guest]:not(#ngd) .guest-brand-icon{
    width:35px;height:35px;min-width:35px;border-radius:9px;
