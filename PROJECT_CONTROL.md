@@ -30,6 +30,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | 2026-11-19 | GAS New Version (nomor versi belum dilaporkan) | `ngdVerifyFullStagingReadiness()` pada GAS STAGING: 17 checks PASS; ledger idempotency 13 checks PASS | RUNTIME SYNTHETIC TESTED — mutations=0, provider_calls=0; pembayaran nyata belum diuji |
 
+| 2026-11-19 | Tidak berubah (frontend GitHub) | Form Admin: pernyataan dana wajib dicentang sendiri setelah formulir dibuka; tombol Lunas baru aktif saat seluruh bukti cocok | SOURCE UPDATED; 6 skenario validasi PASS; runtime HP belum diuji |
+
 ## Aturan tetap untuk AI dan operator
 
 - **Tidak membuat/menyarankan backup, database, project, atau deployment baru** untuk tes rutin, perubahan UI, atau troubleshooting biasa.
