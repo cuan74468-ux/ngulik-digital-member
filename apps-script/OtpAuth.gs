@@ -289,3 +289,144 @@ function ngdConsumeVerifiedRegistrationOtp_(p, validatedOtpId) {
   ngdOtpPatch_(row._row,{status:'USED'});
   return true;
 }
+
+
+/**
+ * PILOT P1 — OTP LOGIN MEMBER, STAGING ONLY.
+ * Completely separate from registration OTP and Admin PIN authentication.
+ * Does not enable general mutations, registration, finance, or AI providers.
+ */
+function ngdMemberOtpLoginGuard_() {
+  var props=PropertiesService.getScriptProperties();
+  var dbId=String(props.getProperty('NGD_DB_ID')||'').trim();
+  require_(props.getProperty('NGD_ENVIRONMENT')==='STAGING' &&
+    !!dbId &&
+    dbId===String(props.getProperty('NGD_OTP_STAGING_DB_ID')||'').trim() &&
+    dbId===String(props.getProperty('NGD_MEMBER_OTP_LOGIN_DB_ID')||'').trim() &&
+    props.getProperty('NGD_MEMBER_OTP_LOGIN_ENABLED')==='true',
+    'MAINTENANCE','Login OTP Member STAGING belum diaktifkan.');
+  var pepper=String(props.getProperty('NGD_OTP_HASH_PEPPER')||'');
+  require_(pepper.length>=32,'MAINTENANCE','Secret OTP belum siap.');
+  require_(String(db_().getId())===dbId,'MAINTENANCE','Database login OTP tidak sesuai.');
+  return {props:props,pepper:pepper};
+}
+
+function ngdMemberOtpLoginHash_(pepper,wa,otp) {
+  // Domain separation: registration codes cannot authenticate a login.
+  return sha256_(pepper+'|MEMBER_LOGIN|'+wa+'|'+otp);
+}
+
+function ngdMemberOtpLoginLatest_(rows,wa) {
+  for(var i=rows.length-1;i>=0;i--)
+    if(String(rows[i].wa)===wa && String(rows[i].tujuan)==='MEMBER_LOGIN')
+      return rows[i];
+  return null;
+}
+
+function ngdMemberOtpLoginRequest_(p) {
+  p=p||{};
+  var conf=ngdMemberOtpLoginGuard_();
+  var wa=normalizeWa_(p.wa);
+  require_(p.setuju_pengiriman===true,'VALIDATION','Setujui pengiriman OTP WhatsApp.');
+  var token=String(conf.props.getProperty('FONNTE_API_TOKEN')||'').trim();
+  require_(!!token,'MAINTENANCE','Gateway WhatsApp belum siap.');
+  // Generic success for unknown, duplicate or admin numbers prevents account probing.
+  var prepared=withLock_(function(){
+    var matches=findRows_('members',function(m){return String(m.wa)===wa;});
+    if(matches.length!==1 || matches[0].role!=='MEMBER' ||
+      matches[0].status!=='AKTIF') return {skip:true};
+    var now=Date.now(),rows=ngdOtpRead_();
+    var today=Utilities.formatDate(new Date(now),'Asia/Jakarta','yyyy-MM-dd');
+    var byWa=rows.filter(function(row){
+      return String(row.wa)===wa && String(row.tujuan)==='MEMBER_LOGIN' &&
+        Number.isFinite(new Date(row.created_at).getTime()) &&
+        new Date(row.created_at).getTime()>now-86400000;
+    });
+    require_(byWa.length<5,'RATE_LIMITED','Batas permintaan OTP harian tercapai.');
+    var last=ngdMemberOtpLoginLatest_(rows,wa);
+    if(last && Number.isFinite(new Date(last.created_at).getTime()) &&
+      now-new Date(last.created_at).getTime()<60000) return {skip:true};
+    var sentToday=rows.filter(function(row){
+      var d=new Date(row.created_at);
+      return !isNaN(d.getTime()) &&
+        Utilities.formatDate(d,'Asia/Jakarta','yyyy-MM-dd')===today;
+    }).length;
+    var cap=Number(conf.props.getProperty('NGD_OTP_DAILY_SEND_CAP'));
+    if(!Number.isInteger(cap)||cap<1||cap>100)cap=50;
+    require_(sentToday<cap,'RATE_LIMITED','Kuota pengiriman OTP penuh.');
+    var code=randomPin_(),id=recordId_('OTP');
+    ngdOtpAppend_('otp_verifications',NGD_OTP_COLUMNS_,{
+      otp_id:id,wa:wa,kode_hash:ngdMemberOtpLoginHash_(conf.pepper,wa,code),
+      tujuan:'MEMBER_LOGIN',status:'SENDING',attempts:0,
+      created_at:new Date(now),expires_at:new Date(now+300000)
+    });
+    return {skip:false,id:id,otp:code};
+  });
+  if(prepared.skip)return {accepted:true};
+  var accepted=false;
+  try {
+    var response=UrlFetchApp.fetch('https://api.fonnte.com/send',{
+      method:'post',
+      headers:{Authorization:token},
+      payload:{
+        target:wa,
+        message:'Kode MASUK Ngulik Digital: '+prepared.otp+
+          '. Berlaku 5 menit. Jangan bagikan kepada siapa pun.',
+        countryCode:'0'
+      },
+      muteHttpExceptions:true
+    });
+    var data={};
+    try{data=JSON.parse(response.getContentText());}catch(ignore){}
+    accepted=response.getResponseCode()>=200 &&
+      response.getResponseCode()<300 && data.status===true;
+  }catch(ignore){accepted=false;}
+  finally{prepared.otp=null;}
+  withLock_(function(){
+    var row=ngdOtpRead_().filter(function(item){
+      return String(item.otp_id)===prepared.id;
+    })[0];
+    require_(!!row && row.status==='SENDING','CONFLICT','Status OTP berubah.');
+    ngdOtpPatch_(row._row,{status:accepted?'PENDING':'FAILED'});
+    ngdOtpAppend_('wa_notifications',NGD_OTP_NOTIFICATION_COLUMNS_,{
+      notif_id:recordId_('WA'),tujuan_wa:wa,tipe_penerima:'MEMBER',
+      template_kode:'MEMBER_LOGIN_OTP',ref_id:prepared.id,
+      pesan:'[OTP tidak disimpan]',status:accepted?'API_ACCEPTED':'API_FAILED',
+      retry_count:0,created_at:now_(),sent_at:accepted?now_():'',
+      gateway_response:''
+    });
+  });
+  require_(accepted,'MAINTENANCE','Pengiriman OTP belum berhasil.');
+  return {accepted:true};
+}
+
+function ngdMemberOtpLoginVerify_(p) {
+  p=p||{};
+  var conf=ngdMemberOtpLoginGuard_();
+  var wa=normalizeWa_(p.wa),otp=String(p.otp||'');
+  require_(/^\d{6}$/.test(otp),'VALIDATION','Kode OTP harus enam angka.');
+  return withLock_(function(){
+    // Match current member identity before creating a session. Reject ADMIN.
+    var matches=findRows_('members',function(m){return String(m.wa)===wa;});
+    require_(matches.length===1 && matches[0].role==='MEMBER' &&
+      matches[0].status==='AKTIF','UNAUTHORIZED','Kode OTP salah atau kedaluwarsa.');
+    var row=ngdMemberOtpLoginLatest_(ngdOtpRead_(),wa);
+    require_(!!row && row.status==='PENDING',
+      'UNAUTHORIZED','Kode OTP salah atau kedaluwarsa.');
+    var expiry=new Date(row.expires_at).getTime();
+    if(!Number.isFinite(expiry)||expiry<=Date.now()){
+      ngdOtpPatch_(row._row,{status:'EXPIRED'});
+      throw ngdError_('UNAUTHORIZED','Kode OTP salah atau kedaluwarsa.');
+    }
+    ngdOtpAttemptCount_(row);
+    if(!ngdOtpEqual_(row.kode_hash,ngdMemberOtpLoginHash_(conf.pepper,wa,otp))){
+      ngdOtpRecordAttempt_(row);
+      throw ngdError_('UNAUTHORIZED','Kode OTP salah atau kedaluwarsa.');
+    }
+    // Mark USED before issuing a session. If session storage fails, fail closed;
+    // request a new OTP rather than risk reusable authentication proof.
+    ngdOtpPatch_(row._row,{status:'USED',verified_at:now_()});
+    updateActivity_(matches[0]);
+    return newSessionMember_(matches[0]);
+  });
+}
