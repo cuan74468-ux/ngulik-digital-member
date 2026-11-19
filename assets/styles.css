@@ -987,3 +987,13 @@ body.ngd-public-app:not(#ngd) .admin-payment-form .verification-actions > button
     flex:1 1 100%;
   }
 }
+
+body.ngd-public-app:not(#ngd) .admin-payment-notice {
+  border:1px solid #ead9b4;
+  background:#fff8ea;
+  padding:14px 16px;
+  border-radius:12px;
+  color:#51412c;
+  font-size:.88rem;
+  line-height:1.6;
+}
