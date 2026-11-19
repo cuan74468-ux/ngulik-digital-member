@@ -22,6 +22,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | 2026-11-19 | Tidak berubah (frontend GitHub) | Riwayat pesanan: buka detail read-only, penanganan kedaluwarsa, navigasi kembali, dan cache busting | SOURCE UPDATED — menunggu uji HP | 
 
+| 2026-11-19 | Tidak berubah (frontend GitHub) | Pengaman detail pembayaran: tanggal kedaluwarsa tidak valid, status non-PENDING, dan QRIS pada order tertutup | SOURCE UPDATED; parse JS PASS; uji HP masih diperlukan |
+
 ## Aturan tetap untuk AI dan operator
 
 - **Tidak membuat/menyarankan backup, database, project, atau deployment baru** untuk tes rutin, perubahan UI, atau troubleshooting biasa.
