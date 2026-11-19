@@ -36,6 +36,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | 2026-11-19 | GAS tidak berubah | Optimasi frontend: hapus pembacaan rekonsiliasi tak terpakai di Pesanan Admin, mulai pemuatan halaman tanpa menunggu data publik, paralelkan Studio AI, dan tampilkan detail pesanan sementara secara aman | SOURCE UPDATED; sintaks dan pemeriksaan preview PASS; latensi nyata HP belum diukur ulang |
 
+| 2026-11-19 | GAS tidak berubah | Audit onboarding dan transaksi: simulasi registrasi aktif/waitlist/OTP salah/nomor duplikat PASS; konfirmasi waiting list persisten; data STAGING menunjukkan order lewat tenggat masih PENDING | FRONTEND SOURCE UPDATED; trigger expireOrders belum terverifikasi; uji registrasi nyata masih dibutuhkan |
+
 ## Aturan tetap untuk AI dan operator
 
 - **Tidak membuat/menyarankan backup, database, project, atau deployment baru** untuk tes rutin, perubahan UI, atau troubleshooting biasa.
