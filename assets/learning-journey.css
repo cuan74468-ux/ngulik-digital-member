@@ -168,39 +168,59 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-shadow{
   }
 }
 
-/* Free links belong under the floating logo in both desktop and mobile hero layouts. */
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-stage{
-  pointer-events:auto;
+/* Free resources: only two plain links directly below the header brand.
+   The public header is shared by desktop and mobile, including CMS heroes. */
+body.ngd-public-app:not([data-app-role="guest"]) .ngd-guest-brand-stack{display:none}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar .ngd-guest-brand-stack{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  flex:0 0 auto;
+  gap:2px;
+  min-width:0;
 }
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-stage::before,
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo,
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-shadow{
-  pointer-events:none;
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar .ngd-guest-brand-stack > .guest-brand{
+  padding-bottom:0;
+  border-right:0;
 }
-.ngd-free-access{
-  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
-  gap:10px 21px;margin:12px auto 0;padding:0;
-  width:100%;max-width:420px;border:0;background:transparent;
-  position:relative;z-index:4;
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-logo-free-links{
+  display:flex;
+  align-items:center;
+  flex-wrap:nowrap;
+  gap:12px;
+  margin:0 0 0 5px;
+  padding:0;
+  background:none;
+  border:0;
 }
-.ngd-free-access a{
-  display:inline-block;padding:3px 0;
-  color:#685f57;font:600 clamp(.8rem,1.1vw,.88rem)/1.5 "Inter",system-ui,sans-serif;
-  text-decoration:none;text-underline-offset:5px;
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-logo-free-links a{
+  color:#756d66;
+  font:600 10.5px/1.5 "Inter",system-ui,sans-serif;
+  text-decoration:none;
+  text-underline-offset:3px;
+  white-space:nowrap;
+  padding:0;
 }
-.ngd-free-access a:hover{text-decoration:underline;color:#252923}
-.ngd-free-access a:focus-visible{
-  outline:2px solid #485f87;outline-offset:3px;border-radius:2px;
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-logo-free-links a:hover{
+  text-decoration:underline;
+  color:#252923;
 }
-.ngd-free-footnote{font-size:.79rem;color:#77756d;margin:0 0 28px;line-height:1.6}
-@media(max-width:900px){
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-stage > .ngd-free-access{
-    flex:0 0 auto;width:100%;max-width:340px;gap:8px 19px;margin:10px auto 0;
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-logo-free-links a:focus-visible{
+  outline:2px solid #485f87;
+  outline-offset:3px;
+  border-radius:2px;
+}
+@media(max-width:760px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar .ngd-guest-brand-stack{
+    grid-column:1;
+    grid-row:1;
   }
-  .ngd-free-access a{font-size:.8rem}
-}
-@media(max-width:380px){
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-journey-stage > .ngd-free-access{
-    gap:6px 12px;
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-logo-free-links{
+    gap:10px;
+    margin-left:0;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-logo-free-links a{
+    font-size:10px;
   }
 }
