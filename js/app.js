@@ -211,6 +211,9 @@ const state={
 const isAdmin=()=>state.me?.role==='ADMIN';
 const adminLoginEnabled=()=>isConnected()&&config.adminLoginEnabled===true;
 const registrationOtpEnabled=()=>isWriteEnabled()&&config.registrationOtpEnabled===true;
+// Only STAGING member page opts in. Public and admin retain existing PIN behavior.
+const memberOtpLoginEnabled=()=>isWriteEnabled()&&config.memberOtpLoginEnabled===true&&
+  location.pathname.includes('/staging/');
 const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true;
 const qrisUrl=()=>{try{const u=new URL(String(config.qrisImageUrl||''),location.href);return u.origin===location.origin&&u.protocol==='https:'?u.href:'';}catch{return '';}};
 const logged=()=>Boolean(state.me&&state.token);
@@ -981,17 +984,21 @@ function viewAccount(){
 }
 function viewLogin(register=false,adminMode=false){
   const enabled=adminMode?adminLoginEnabled():register?registrationOtpEnabled():isWriteEnabled();
+  const memberOtp=!adminMode&&!register&&memberOtpLoginEnabled();
   return '<div class="login-shell"><p class="eyebrow">'+
     (adminMode?'AKSES PENGELOLA':register?'BERGABUNG':'SELAMAT DATANG KEMBALI')+'</p>'+
     '<h1 style="font-size:2.25rem">'+
     (adminMode?'Masuk panel administrator.':register?'Buat akun member.':'Masuk ke ruang Anda.')+'</h1>'+
     '<p class="lead">'+
-    (adminMode?'Gunakan nomor WhatsApp administrator yang sudah terdaftar dan PIN enam angka. Tidak perlu membuat akun baru.':register?'Buat akun melalui WhatsApp untuk menggunakan alat dan layanan Ngulik Digital.':'Gunakan nomor WhatsApp dan PIN enam angka yang terdaftar.')+'</p>'+
+    (adminMode?'Gunakan nomor WhatsApp administrator yang sudah terdaftar dan PIN enam angka. Tidak perlu membuat akun baru.':register?'Buat akun melalui WhatsApp untuk menggunakan alat dan layanan Ngulik Digital.':memberOtp?'Masuk dengan kode OTP yang dikirim ke WhatsApp terdaftar.':'Gunakan nomor WhatsApp dan PIN enam angka yang terdaftar.')+'</p>'+
     '<form id="auth-form" class="surface" data-mode="'+(adminMode?'admin':register?'register':'login')+'">'+
     (register?'<div class="field"><label for="nama">Nama lengkap</label><input class="input" id="nama" name="nama" autocomplete="name" required minlength="2" maxlength="80"></div>'+
       '<div class="field"><label for="usaha">Nama usaha</label><input class="input" id="usaha" name="nama_usaha" required minlength="2" maxlength="100"></div>':'')+
     '<div class="field"><label for="wa">Nomor WhatsApp</label><input class="input" id="wa" name="wa" required inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx"></div>'+
-    '<div class="field"><label for="pin">PIN 6 angka</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>'+
+    (memberOtp?'<div class="field"><label for="login-otp">Kode OTP WhatsApp</label><input class="input" id="login-otp" name="otp" required inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="6 digit OTP"></div>'+
+      '<label class="small"><input type="checkbox" name="setuju_pengiriman" required> Saya setuju menerima OTP melalui WhatsApp.</label>'+
+      '<div class="actions"><button type="button" class="btn btn-secondary" data-action="member-otp-request" '+(!enabled?'disabled':'')+'>Kirim kode OTP</button></div>':
+      '<div class="field"><label for="pin">PIN 6 angka</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>')+
     (register?'<div class="field"><label for="otp">Kode OTP WhatsApp</label><input class="input" id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" type="text" required placeholder="6 digit kode verifikasi"></div>'+
       '<div class="actions" style="margin-bottom:13px"><button type="button" class="btn btn-secondary" data-action="otp-request" '+(!enabled?'disabled':'')+'>Kirim kode OTP</button>'+
       '<button type="button" class="btn btn-ghost" data-action="otp-verify" '+(!enabled?'disabled':'')+'>Verifikasi kode</button></div>':'')+
@@ -999,7 +1006,7 @@ function viewLogin(register=false,adminMode=false){
     '<button class="btn btn-primary btn-wide" type="submit" '+(!enabled?'disabled':'')+'>'+
     (adminMode?'Masuk admin':register?'Buat akun':'Masuk')+' '+icon('arrow')+'</button>'+
     '<p class="form-hint" style="margin:13px 0 0">'+
-    (enabled?'Jaga kerahasiaan PIN Anda.':adminMode?'Akses administrator belum diaktifkan pada backend. Akun yang sudah ada tetap aman.':'Pendaftaran dan akses member sedang dipersiapkan.')+'</p></form>'+
+    (enabled?(memberOtp?'Kode berlaku 5 menit, maksimal 3 percobaan. Jangan bagikan kode.':'Jaga kerahasiaan PIN Anda.'):adminMode?'Akses administrator belum diaktifkan pada backend. Akun yang sudah ada tetap aman.':'Pendaftaran dan akses member sedang dipersiapkan.')+'</p></form>'+
     '<p class="small login-other-route">'+
     (adminMode?'<button class="btn btn-ghost btn-sm" data-route="login">Kembali ke login member</button>':
       register?'Sudah punya akun? <button class="btn btn-ghost btn-sm" data-route="login">Masuk</button>':
@@ -1833,12 +1840,35 @@ async function handleRegistrationOtp_(action){
   }catch(error){toast(error.message,true);}
   finally{if(button)button.disabled=false;}
 }
+async function requestMemberLoginOtp_(){
+  const form=document.getElementById('auth-form');
+  if(!form || form.dataset.mode!=='login' || !memberOtpLoginEnabled())
+    return toast('Login OTP Member tidak tersedia.',true);
+  const fd=new FormData(form),wa=String(fd.get('wa')||'').trim();
+  if(!/^(?:0|[+]?62)[0-9]{8,13}$/.test(wa.replace(/[ ()-]/g,'')))
+    return toast('Masukkan nomor WhatsApp yang valid.',true);
+  if(fd.get('setuju_pengiriman')!=='on')
+    return toast('Setujui pengiriman OTP WhatsApp terlebih dahulu.',true);
+  const btn=form.querySelector('[data-action="member-otp-request"]');
+  if(btn)btn.disabled=true;
+  try{
+    const res=await api('requestMemberLoginOtp',{wa,setuju_pengiriman:true},'',{write:true});
+    if(res?.accepted!==true)throw new ApiError('Permintaan OTP belum dikonfirmasi.');
+    toast('Jika nomor terdaftar dan aktif, kode OTP akan dikirim ke WhatsApp.');
+  }catch(e){toast(e.message,true);}
+  finally{if(btn)btn.disabled=false;}
+}
 async function processLogin(form,register){
   const adminMode=form.dataset.mode==='admin';
   if(!(adminMode?adminLoginEnabled():isWriteEnabled()))
     return toast(adminMode?'Login administrator belum diaktifkan.':'Layanan akun sedang tidak tersedia.',true);
   const fd=new FormData(form);
-  const payload={wa:String(fd.get('wa')||''),pin:String(fd.get('pin')||'')};
+  const otpLogin=!adminMode&&!register&&memberOtpLoginEnabled();
+  const payload=otpLogin?
+    {wa:String(fd.get('wa')||''),otp:String(fd.get('otp')||'').trim()}:
+    {wa:String(fd.get('wa')||''),pin:String(fd.get('pin')||'')};
+  if(otpLogin && (!/^[0-9]{6}$/.test(payload.otp)||fd.get('setuju_pengiriman')!=='on'))
+    return toast('Masukkan OTP enam angka dan setujui pengiriman WhatsApp.',true);
   if(register){
     payload.nama=String(fd.get('nama')||'');
     payload.nama_usaha=String(fd.get('nama_usaha')||'');
@@ -1852,7 +1882,7 @@ async function processLogin(form,register){
   }
   const btn=form.querySelector('[type=submit]');btn.disabled=true;
   try{
-    const response=await api(adminMode?'adminLogin':register?'register':'login',
+    const response=await api(adminMode?'adminLogin':register?'register':otpLogin?'verifyMemberLoginOtp':'login',
       payload,'',{write:true,adminAuth:adminMode});
     const result=register?response.sesi:response;
     if(adminMode&&result?.profil?.role!=='ADMIN')
@@ -2604,6 +2634,7 @@ document.addEventListener('click',async(e)=>{
       render();
     }catch(error){toast(error.message,true);target.disabled=false;}
   }
+  else if(target.dataset.action==='member-otp-request')await requestMemberLoginOtp_();
   else if(target.dataset.action==='otp-request'||target.dataset.action==='otp-verify')
     await handleRegistrationOtp_(target.dataset.action);
   else if(target.dataset.action==='logout')await logout();
