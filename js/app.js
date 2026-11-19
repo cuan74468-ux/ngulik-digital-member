@@ -299,6 +299,25 @@ function viewMore(){
       '<button class="btn btn-primary" type="button" data-route="login">Masuk member</button></div>':'')+
     '</section>';
 }
+// Public educational resources are intentionally independent of Member auth and billing.
+const NGD_FREE_EBOOK_URL='https://cuan74468-ux.github.io/buku-pintar-vibe-coder/buku-pintar-vibe-coder-edisi-1.html';
+const NGD_FREE_CLASSROOM_URL='https://classroom.google.com/c/ODk4MzQ4OTEwMjc5?cjc=ozzbygx3';
+function viewFreeLearningResources_(){
+  return '<section class="ngd-free-access" aria-label="Belajar gratis tanpa daftar Member">'+
+    '<div class="ngd-free-access-head"><p class="ngd-free-eyebrow">AKSES TERBUKA · GRATIS</p>'+
+    '<h2>Mulai belajar tanpa daftar Member.</h2>'+
+    '<p>Baca eBook Vibe Coder dan ikuti kelas pengantar digital UMKM. Tanpa pembayaran dan tanpa login Ngulik Digital.</p></div>'+
+    '<div class="ngd-free-access-grid">'+
+      '<a class="ngd-free-card" href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">'+
+        '<span class="ngd-free-card-number">01 / BACA</span><strong>Buku Pintar Vibe Coder</strong>'+
+        '<span>Panduan praktik dan ide membangun karya digital bersama AI, tersedia dalam PDF dan EPUB.</span>'+
+        '<span class="ngd-free-card-cta">Baca &amp; unduh gratis '+icon('arrow')+'</span></a>'+
+      '<a class="ngd-free-card" href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">'+
+        '<span class="ngd-free-card-number">02 / PRAKTIK</span><strong>Google Classroom · Chapter 1</strong>'+
+        '<span>Enam modul pengantar digitalisasi UMKM. Gratis; Google dapat meminta login akun Google untuk bergabung.</span>'+
+        '<span class="ngd-free-card-cta">Buka kelas gratis '+icon('arrow')+'</span></a>'+
+    '</div></section>';
+}
 const safeBadge=(s)=>'<span class="chip '+(['AKTIF','FULFILLED','PAID','APPROVED'].includes(String(s))?'green':'orange')+'">'+esc(s||'-')+'</span>';
 function viewHome(){
   if(isAdmin())return viewAdmin();
@@ -372,13 +391,14 @@ function viewHome(){
       '<h1>Warung Tools AI. <em>Bengkel Kerja Kreatif Berbasis AI.</em></h1>'+
       '<p class="public-hero-lead">Jelajahi tools AI, belajar keterampilan digital, dan wujudkan ide kreatif menjadi konten, produk, atau solusi bisnis. Semua dalam satu ruang praktik yang mudah diakses.</p>'+
       '<div class="public-hero-buttons">'+
-        '<button type="button" class="btn btn-primary pf-button-dark" data-route="katalog">Jelajahi Tools '+icon('arrow')+'</button>'+
-        '<button type="button" class="btn btn-secondary pf-button-light" data-route="daftar">Mulai Belajar</button>'+
+        '<a class="btn btn-primary pf-button-dark" href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">Baca eBook gratis '+icon('arrow')+'</a>'+
+        '<a class="btn btn-secondary pf-button-light" href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Buka kelas gratis</a>'+
       '</div>'+
     '</div>'+
   '</section>';
   return '<div class="nh-home nh-home-minimal">'+
-    (window.NGD_CONTENT_UI?.hero(state.siteContent,'home')||hero)+'</div>';
+    (window.NGD_CONTENT_UI?.hero(state.siteContent,'home')||hero)+
+    viewFreeLearningResources_()+'</div>';
 }
 const offerCategories=[
   ['semua','Semua'],['ai','Token AI'],['aplikasi','Aplikasi Bisnis'],
@@ -555,20 +575,19 @@ function viewCatalog(){
 function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
     return window.NGD_LMS_UI.memberCatalog(state.lmsCourses,state.lmsEnrollments,state.modules);
-  if(!logged())return title('Belajar lebih terarah','CHAPTER 1 / PENGANTAR GRATIS',
-    'Materi pengantar praktis untuk pelaku UMKM. Jelajahi jalur belajar, lalu masuk untuk melanjutkan kelas.')+
+  if(!logged())return title('Belajar gratis dari HP','CHAPTER 1 / AKSES TERBUKA',
+    'Dua bahan belajar gratis ini bisa dibuka langsung tanpa akun Ngulik Digital.')+
+    viewFreeLearningResources_()+
     '<section class="learn-guest-intro"><div><p class="card-kicker">JALUR PENGENALAN</p>'+
-    '<h3>Pelajari satu hal, praktikkan di usaha sendiri.</h3>'+
-    '<p>Chapter 1 mengenalkan Google Profil Bisnis, Gemini, Canva, WhatsApp Business, dan pencatatan promosi sederhana. Pelajaran lanjutan tersedia melalui akses kelas member yang sesuai.</p></div>'+
-    '<span class="chip">KELAS PENGANTAR</span></section>'+
+    '<h3>Belajar satu hal, praktikkan di usaha sendiri.</h3>'+
+    '<p>Chapter 1 mengenalkan Google Profil Bisnis, Gemini, Canva, WhatsApp Business, dan pencatatan promosi sederhana.</p></div>'+
+    '<span class="chip">KELAS GRATIS</span></section>'+
     '<div class="learn-path-list">'+[
       ['01','Siapkan identitas digital','Kenali profil usaha dan titik lokasi di Google.'],
       ['02','Buat konten promosi','Gunakan AI dan Canva untuk kegiatan pemasaran.'],
       ['03','Atur komunikasi pelanggan','Rapikan katalog dan balasan cepat WhatsApp Business.'],
       ['04','Catat dan evaluasi','Mulai kalender promosi serta tracking sederhana.']
-    ].map(x=>'<article class="learn-path-item"><span>'+x[0]+'</span><div><h3>'+x[1]+'</h3><p>'+x[2]+'</p></div></article>').join('')+'</div>'+
-    '<div class="learn-guest-note"><strong>Lanjutkan perjalanan di ruang member.</strong>'+
-    '<p>Masuk dengan akun Anda untuk membuka kelas yang tersedia dan menyimpan progres belajar.</p>'+'<button type="button" class="btn btn-primary btn-sm" data-route="login">Masuk ke kelas</button></div>';
+    ].map(x=>'<article class="learn-path-item"><span>'+x[0]+'</span><div><h3>'+x[1]+'</h3><p>'+x[2]+'</p></div></article>').join('')+'</div>';
   const modules=state.modules;
   return title('Perjalanan belajar Anda','KURIKULUM PRAKTIS','Modul tersedia sesuai program dan akses akun.')+
     (modules.length?'<div class="stack">'+modules.map((m,i)=>'<article class="surface list-row"><div class="left" style="display:flex;gap:15px;align-items:center"><span class="step-no">'+esc(m.urut||i+1)+'</span><div><strong>'+esc(m.judul)+'</strong><small>'+esc(m.deskripsi||'')+'</small></div></div>'+
