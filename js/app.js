@@ -206,7 +206,7 @@ const state={
   adminCatalog:[],catalogEditId:'',catalogRequestId:null,
   adminRuntime:null,adminRuntimeError:'',adminSettings:null,adminSettingsError:'',adminPaymentReviewId:'',workspaceInfo:null,
   services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null,
-  registrationOtpVerifiedWa:'',publicStep:0,selectedAiToolId:'',aiCategory:'semua',aiSearch:'',pendingPurchaseId:''
+  registrationOtpVerifiedWa:'',registrationWaitlist:null,publicStep:0,selectedAiToolId:'',aiCategory:'semua',aiSearch:'',pendingPurchaseId:''
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const adminLoginEnabled=()=>isConnected()&&config.adminLoginEnabled===true;
@@ -983,6 +983,17 @@ function viewAccount(){
     '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan bug atau usulkan fitur '+icon('arrow')+'</button></div></div>'+viewNotificationCenter()+viewProfileEditor();
 }
 function viewLogin(register=false,adminMode=false){
+  if(register&&state.registrationWaitlist){
+    const pos=Number(state.registrationWaitlist.posisi);
+    return '<section class="login-shell" role="status" aria-live="polite">'+
+      '<p class="eyebrow">PENDAFTARAN BERHASIL DICATAT</p>'+
+      '<h1>Anda masuk daftar tunggu.</h1>'+
+      '<p class="lead">Nomor WhatsApp sudah diverifikasi. Akun belum aktif karena kuota atau antrean pendaftaran. Tidak perlu mengulang pendaftaran atau meminta OTP baru.</p>'+
+      (Number.isInteger(pos)&&pos>0?'<div class="surface"><strong>Posisi antrean: '+esc(pos)+'</strong></div>':'')+
+      '<p class="card-desc">Tunggu informasi aktivasi dari pengelola. Login Member baru bisa dilakukan setelah akun berstatus aktif.</p>'+
+      '<div class="actions"><button type="button" class="btn btn-primary" data-route="beranda">Kembali ke beranda</button>'+
+      '<button type="button" class="btn btn-secondary" data-route="login">Masuk setelah aktif</button></div></section>';
+  }
   const enabled=adminMode?adminLoginEnabled():register?registrationOtpEnabled():isWriteEnabled();
   const memberOtp=!adminMode&&!register&&memberOtpLoginEnabled();
   return '<div class="login-shell"><p class="eyebrow">'+
@@ -1987,7 +1998,11 @@ async function processLogin(form,register){
     if(adminMode&&result?.profil?.role!=='ADMIN')
       throw new ApiError('Akses administrator ditolak.','FORBIDDEN');
     if(register&&response.status==='WAITING_LIST'){
-      toast('Pendaftaran tercatat dalam waiting list.');go('beranda');return;
+      state.registrationOtpVerifiedWa='';
+      state.registrationWaitlist={posisi:response.posisi};
+      go('daftar');
+      toast('Pendaftaran berhasil dicatat. Akun menunggu aktivasi.');
+      return;
     }
     if(!result?.token||!result?.profil)throw new ApiError('Respons login belum lengkap.');
     state.token=result.token;state.me=result.profil;
