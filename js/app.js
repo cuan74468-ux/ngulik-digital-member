@@ -1045,10 +1045,10 @@ function viewCheckout(){
   const timer=Number.isFinite(ms)?
     String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0'):'—';
   const readyQr=fallbackQr?qrSource:'';
-  const expired=Number.isFinite(ms)&&ms<=0;
+  const expired=!Number.isFinite(ms)||ms<=0;
   const paid=['PAID','FULFILLED'].includes(String(o.status||''));
   const finished=['CANCELLED','REFUNDED','EXPIRED'].includes(String(o.status||''));
-  const paymentClosed=paid||finished||expired;
+  const paymentClosed=paid||finished||expired||String(o.status||'')!=='PENDING';
   // The bundled qris.png is explicitly NOT a payable code. Owner approval
   // only applies after the asset has been replaced with their real QRIS.
   const bundledPlaceholder=/(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrRaw)&&
@@ -1084,7 +1084,7 @@ function viewCheckout(){
       '<p class="checkout-note">QRIS belum tersedia pada respons pesanan. Jangan mentransfer sebelum QRIS atau tautan resmi ditampilkan.</p></div>')+
     (!paymentClosed&&manual&&readyQr&&!bundledPlaceholder&&o.status==='PENDING'&&seconds>0?
       '<button class="btn btn-primary btn-wide" type="button" data-action="confirm-payment">Saya Sudah Bayar</button>':'')+
-    (adminChat?'<a class="btn btn-secondary btn-wide" href="'+esc(adminChat)+'" target="_blank" rel="noopener noreferrer">'+
+    (!paymentClosed&&adminChat?'<a class="btn btn-secondary btn-wide" href="'+esc(adminChat)+'" target="_blank" rel="noopener noreferrer">'+
       (bundledPlaceholder||!readyQr?'Konfirmasi &amp; Minta QRIS via WA Admin':'Chat Admin via WA')+'</a>':'')+
     '<p class="checkout-note">Simpan nomor pesanan untuk memantau status pada menu Pesanan.</p></section></div>'+
     '</section></div>';
