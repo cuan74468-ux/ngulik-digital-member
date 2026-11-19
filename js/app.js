@@ -1779,12 +1779,14 @@ async function loadRoute(route){
     if(route==='checkout'&&!isAdmin()&&String(config.brand||'').includes('STAGING')){
       try{state.workspaceInfo=await api('getStagingWorkspaceInfo');}catch{state.workspaceInfo=null;}
     }
-    if(route==='beranda'||route==='ai'||route==='ai-tool'){
-      state.home=await api('getBeranda',{},token);
-      if(route==='ai'||route==='ai-tool'){
-        const data=await api('getTools',{},token);
-        state.tools=data.tools||[];
-      }
+    if(route==='beranda')state.home=await api('getBeranda',{},token);
+    if(route==='ai'||route==='ai-tool'){
+      // Independent reads: avoid waiting for two full GAS round trips in series.
+      const [home,tools]=await Promise.all([
+        api('getBeranda',{},token),api('getTools',{},token)
+      ]);
+      state.home=home;
+      state.tools=tools?.tools||[];
     }
     if(route==='katalog'&&!isAdmin()){
       // Member shelf is read-only and never launches internal checkout.
