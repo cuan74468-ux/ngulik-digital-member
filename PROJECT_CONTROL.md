@@ -24,6 +24,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | 2026-11-19 | Tidak berubah (frontend GitHub) | Pengaman detail pembayaran: tanggal kedaluwarsa tidak valid, status non-PENDING, dan QRIS pada order tertutup | SOURCE UPDATED; parse JS PASS; uji HP masih diperlukan |
 
+| 2026-11-19 | Source GAS invoice diperbarui; runtime GAS belum disinkronkan | Alur manual via WA, kartu pesanan aktif, konfirmasi Member, pemeriksaan dana Admin di HP dan fulfillment yang sudah ada | Frontend SOURCE UPDATED; 6 skenario tampilan PASS; uji HP/approval nyata belum dilakukan |
+
 ## Aturan tetap untuk AI dan operator
 
 - **Tidak membuat/menyarankan backup, database, project, atau deployment baru** untuk tes rutin, perubahan UI, atau troubleshooting biasa.
