@@ -1329,9 +1329,9 @@ function viewAdminOrders(){
     (!rows.length?empty('Belum ada pesanan','Pesanan Member akan muncul di sini.'):
     '<div class="admin-payment-list">'+rows.map(o=>{
       const status=String(o.status||'');
-      const canReview=['MENUNGGU_VERIFIKASI','EXPIRED'].includes(status);
-      const reviewing=canReview&&state.adminPaymentReviewId===o.order_id;
       const overdue=status==='PENDING'&&Number.isFinite(new Date(o.expires_at).getTime())&&new Date(o.expires_at).getTime()<=Date.now();
+      const canReview=['MENUNGGU_VERIFIKASI','EXPIRED'].includes(status)||overdue;
+      const reviewing=canReview&&state.adminPaymentReviewId===o.order_id;
       const note=status==='PENDING'?
         (overdue?'Batas pembayaran sudah lewat. Periksa pembayaran terlambat sebelum menindaklanjuti.':
         'Menunggu Member mengonfirmasi bahwa transfer sudah dikirim. Jangan setujui sebelum dana benar-benar masuk.'):
@@ -1357,7 +1357,7 @@ function viewAdminOrders(){
           '<input class="input" id="admin-received-amount" name="nominal_diterima" type="number" inputmode="numeric" min="1" step="1" required placeholder="Masukkan nominal dari mutasi"></div>'+
           '<div class="field"><label for="admin-settlement-ref">Referensi transaksi pada mutasi</label>'+
           '<input class="input" id="admin-settlement-ref" name="referensi_pembayaran" required minlength="5" maxlength="120" placeholder="Nomor referensi / ID transaksi"></div>'+
-          (status==='EXPIRED'?'<div class="field"><label for="admin-late-reason">Alasan pembayaran terlambat</label>'+
+          ((status==='EXPIRED'||overdue)?'<div class="field"><label for="admin-late-reason">Alasan pembayaran terlambat</label>'+
           '<textarea class="input" name="alasan" id="admin-late-reason" maxlength="300" minlength="5" rows="2" required placeholder="Penjelasan rekonsiliasi"></textarea></div>':'')+
           '<label class="admin-payment-checkbox"><input type="checkbox" name="dana_diterima" required> Saya sudah memeriksa dana masuk sebesar '+rupiah(o.total_bayar)+' ke akun penerima resmi. Saya memahami sistem akan mengaktifkan produk dan mencatat komisi setelah persetujuan.</label>'+
           '<div class="verification-actions"><button type="submit" class="btn btn-primary">Lunas &amp; Aktifkan</button>'+
@@ -2033,8 +2033,9 @@ async function submitAdminPaymentForm_(form){
     return toast('Verifikasi pembayaran Admin belum diaktifkan.',true);
   const id=String(form.dataset.orderId||'');
   const order=state.adminOrders.find(o=>o.order_id===id);
-  if(!order||!['MENUNGGU_VERIFIKASI','EXPIRED'].includes(String(order.status)))
-    return toast('Status pesanan sudah berubah. Muat ulang daftar sebelum memverifikasi.',true);
+  const overdue=order&&order.status==='PENDING'&&Number.isFinite(new Date(order.expires_at).getTime())&&new Date(order.expires_at).getTime()<=Date.now();
+  if(!order||(!['MENUNGGU_VERIFIKASI','EXPIRED'].includes(String(order.status))&&!overdue))
+    return toast('Order belum diajukan untuk verifikasi atau belum kedaluwarsa. Minta Member mengonfirmasi pembayaran terlebih dahulu.',true);
   const fd=new FormData(form);
   const received=Number(fd.get('nominal_diterima'));
   const expected=Number(order.total_bayar);
@@ -2045,7 +2046,7 @@ async function submitAdminPaymentForm_(form){
     return toast('Jumlah yang diterima harus sama persis dengan tagihan '+rupiah(expected)+'.',true);
   if(proof.length<5||proof.length>120)
     return toast('Isi referensi mutasi yang valid (5–120 karakter).',true);
-  if(order.status==='EXPIRED'&&reason.length<5)
+  if((order.status==='EXPIRED'||overdue)&&reason.length<5)
     return toast('Jelaskan alasan rekonsiliasi pembayaran terlambat.',true);
   if(fd.get('dana_diterima')!=='on')
     return toast('Verifikasi dana masuk harus dikonfirmasi Admin.',true);
