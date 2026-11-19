@@ -204,7 +204,7 @@ const state={
   lmsSelectedLessonId:null,lmsJobs:[],lmsSelectedAIJobId:null,
   lmsCompletion:null,notifications:{enabled:false,items:[],unread:0},catalogFilter:'semua',marketplaceSearch:'',marketplaceSort:'default',
   adminCatalog:[],catalogEditId:'',catalogRequestId:null,
-  adminRuntime:null,adminRuntimeError:'',adminSettings:null,adminSettingsError:'',
+  adminRuntime:null,adminRuntimeError:'',adminSettings:null,adminSettingsError:'',adminPaymentReviewId:'',
   services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null,
   registrationOtpVerifiedWa:'',publicStep:0,selectedAiToolId:'',aiCategory:'semua',aiSearch:'',pendingPurchaseId:''
 };
@@ -2027,6 +2027,54 @@ async function openOrderDetail_(id){
   }catch(error){toast(error.message||'Gagal membuka rincian pesanan.',true);}
   finally{if(button?.isConnected)button.disabled=false;}
 }
+let adminPaymentSubmitting_=false;
+async function submitAdminPaymentForm_(form){
+  if(adminPaymentSubmitting_||!isAdmin()||!paymentEnabled())
+    return toast('Verifikasi pembayaran Admin belum diaktifkan.',true);
+  const id=String(form.dataset.orderId||'');
+  const order=state.adminOrders.find(o=>o.order_id===id);
+  if(!order||!['MENUNGGU_VERIFIKASI','EXPIRED'].includes(String(order.status)))
+    return toast('Status pesanan sudah berubah. Muat ulang daftar sebelum memverifikasi.',true);
+  const fd=new FormData(form);
+  const received=Number(fd.get('nominal_diterima'));
+  const expected=Number(order.total_bayar);
+  const proof=String(fd.get('referensi_pembayaran')||'').trim();
+  const reason=String(fd.get('alasan')||'').trim();
+  if(!Number.isSafeInteger(received)||!Number.isSafeInteger(expected)||
+     received!==expected||received<=0)
+    return toast('Jumlah yang diterima harus sama persis dengan tagihan '+rupiah(expected)+'.',true);
+  if(proof.length<5||proof.length>120)
+    return toast('Isi referensi mutasi yang valid (5–120 karakter).',true);
+  if(order.status==='EXPIRED'&&reason.length<5)
+    return toast('Jelaskan alasan rekonsiliasi pembayaran terlambat.',true);
+  if(fd.get('dana_diterima')!=='on')
+    return toast('Verifikasi dana masuk harus dikonfirmasi Admin.',true);
+  if(!confirm('KONFIRMASI FINAL: dana '+rupiah(expected)+' BENAR-BENAR masuk ke penerima resmi untuk order '+id+
+    '. Setelah disetujui, sistem akan menerbitkan token/akses dan memproses notifikasi serta komisi. Lanjutkan?'))return;
+  adminPaymentSubmitting_=true;
+  const submit=form.querySelector('[type="submit"]');
+  if(submit)submit.disabled=true;
+  try{
+    const saved=await api('adminVerifyOrder',{
+      order_id:id,keputusan:'approve',dana_diterima:true,
+      referensi_pembayaran:proof,alasan:reason,nominal_terverifikasi:received
+    },state.token,{write:true});
+    if(saved?.needs_review){
+      toast('Pembayaran tercatat, tetapi pemenuhan produk perlu rekonsiliasi Admin. Jangan approve ulang.',true);
+    }else if(saved?.status==='PAID'||saved?.status==='FULFILLED'){
+      toast(saved.status==='FULFILLED'?
+        'Dana diverifikasi. Produk/token diproses dan notifikasi lunas dijalankan.':
+        'Dana diverifikasi. Pemenuhan produk masih perlu pemeriksaan.');
+    }else{
+      toast('Respons verifikasi belum pasti. Periksa status order, jangan ulangi pembayaran.',true);
+    }
+    state.adminPaymentReviewId='';
+    await loadRoute('pesanan');
+  }catch(e){
+    toast((e?.message||'Gagal memverifikasi.')+' Periksa mutasi dan status order sebelum mencoba lagi.',true);
+    if(submit?.isConnected)submit.disabled=false;
+  }finally{adminPaymentSubmitting_=false;}
+}
 let memberConfirmSubmitting_=false;
 async function confirmPayment(){
   const order=state.lastOrder;
@@ -2613,10 +2661,18 @@ document.addEventListener('click',async(e)=>{
     state.marketplaceSearch='';state.catalogFilter='semua';state.marketplaceSort='default';
     render();return;
   }
-  const target=e.target.closest('[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-order-detail]');
+  const target=e.target.closest('[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-payment-open],[data-order-detail]');
   if(!target)return;
   if(target.hasAttribute('data-order-detail')){
     await openOrderDetail_(target.dataset.orderDetail);
+    return;
+  }
+  if(target.hasAttribute('data-payment-open')){
+    if(!isAdmin())return;
+    const id=String(target.dataset.paymentOpen||'');
+    state.adminPaymentReviewId=state.adminPaymentReviewId===id?'':id;
+    render();
+    document.getElementById('admin-payment-form')?.scrollIntoView?.({block:'nearest'});
     return;
   }
   if(target.hasAttribute('data-payment-admin')){
@@ -2773,7 +2829,7 @@ document.addEventListener('submit',(e)=>{
   const id=e.target.id||(e.target.classList?.contains('ai-form')?'ai-run-form':'');
   if(!['admin-pin-form','content-editor-form','service-brief-form','service-quote-form','admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
     'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form',
-    'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form','ai-run-form'].includes(id))return;
+    'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form','ai-run-form','admin-payment-form'].includes(id))return;
   e.preventDefault();
   if(id==='admin-pin-form')changeAdminPin_(e.target);
   if(id==='content-editor-form')submitContentForm_(e.target);
@@ -2782,6 +2838,7 @@ document.addEventListener('submit',(e)=>{
   if(id==='admin-catalog-form')submitCatalogForm(e.target);
   if(id==='profile-form')submitProfileForm(e.target);
   if(id==='auth-form')processLogin(e.target,e.target.dataset.mode==='register');
+  if(id==='admin-payment-form')submitAdminPaymentForm_(e.target);
   if(id==='support-create-form')submitTicketCreate(e.target);
   if(id==='ticket-reply-form')submitTicketReply(e.target);
   if(id==='ticket-status-form')submitTicketStatus(e.target);
