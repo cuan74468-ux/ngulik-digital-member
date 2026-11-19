@@ -1020,9 +1020,25 @@ function viewLogin(register=false,adminMode=false){
 }
 function viewMyOrders(){
   if(!logged())return title('Pesanan saya','RIWAYAT TRANSAKSI','Akses data pesanan pribadi.')+needLogin('pesanan');
-  return title('Pesanan saya','RIWAYAT TRANSAKSI','Perubahan status diperbarui oleh admin setelah verifikasi.')+
+  return title('Pesanan saya','RIWAYAT TRANSAKSI','Buka pesanan untuk melihat langkah selanjutnya. Pembayaran hanya dianggap lunas setelah dana diverifikasi Admin.')+
     (!state.orders.length?empty('Belum ada pesanan','Produk yang Anda pesan nantinya muncul di sini.','katalog','Lihat katalog'):
-    '<div class="stack">'+state.orders.map(o=>'<article class="surface order-history-item"><div class="list-row"><div class="left"><strong>'+esc(o.nama_produk)+'</strong><small>'+esc(o.order_id)+' · '+friendlyDate(o.created_at)+'</small></div><div class="right">'+safeBadge(o.status)+(o.status==='PENDING'&&Number.isFinite(new Date(o.expires_at).getTime())&&new Date(o.expires_at).getTime()<=Date.now()?'<small class="order-expiry-hint">Batas pembayaran terlewati</small>':'')+'<div class="product-meta" style="margin-top:7px">'+rupiah(o.total_bayar)+'</div></div></div><button type="button" class="btn btn-secondary btn-sm order-history-detail" data-order-detail="'+esc(o.order_id)+'" aria-label="Lihat detail pesanan '+esc(o.order_id)+'">Lihat detail '+icon('arrow')+'</button></article>').join('')+'</div>');
+    '<div class="stack order-history-list">'+state.orders.map(o=>{
+      const status=String(o.status||'');
+      const due=new Date(o.expires_at).getTime();
+      const overdue=status==='PENDING'&&(!Number.isFinite(due)||due<=Date.now());
+      const step=overdue?'Batas pembayaran lewat — minta bantuan Admin':
+        status==='PENDING'?'Lanjutkan pembayaran atau hubungi Admin':
+        status==='MENUNGGU_VERIFIKASI'?'Menunggu Admin mencocokkan dana':
+        status==='FULFILLED'?'Selesai — akses produk sudah diproses':
+        status==='PAID'?'Pembayaran diterima — pemenuhan diproses':
+        status==='EXPIRED'?'Pesanan kedaluwarsa':
+        status==='CANCELLED'?'Pesanan dibatalkan':'Lihat rincian dan tindak lanjut';
+      return '<button type="button" class="surface order-history-item order-history-open" data-order-detail="'+esc(o.order_id)+'" aria-label="Buka detail pesanan '+esc(o.order_id)+'">'+
+        '<span class="order-history-top"><strong class="order-history-name">'+esc(o.nama_produk||'Produk')+'</strong>'+safeBadge(status)+'</span>'+
+        '<span class="order-history-meta"><span>'+esc(o.order_id)+' · '+friendlyDate(o.created_at)+'</span><strong>'+rupiah(o.total_bayar)+'</strong></span>'+
+        '<span class="order-history-next">'+esc(step)+'</span>'+
+        '<span class="order-history-action">Buka detail &amp; tindak lanjut '+icon('arrow')+'</span></button>';
+    }).join('')+'</div>');
 }
 function viewCheckout(){
   const o=state.lastOrder;
