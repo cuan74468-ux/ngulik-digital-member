@@ -1107,6 +1107,10 @@ function transitionOrder_(m,id,type,p) {
         'PAYMENT_UNVERIFIED','Nominal pada mutasi harus sama persis dengan total pesanan.');
       var proof=safeText_(p.referensi_pembayaran,120);
       require_(proof.length>=5,'VALIDATION','Referensi mutasi/settlement pembayaran wajib diisi.');
+      // Persist actual settlement channel, not the initial QRIS invoice route.
+      var paidVia=String(p.metode_diterima||'').trim().toUpperCase();
+      require_(['QRIS_STATIS','TRANSFER_BANK','TRANSFER_EWALLET'].indexOf(paidVia)>=0,
+        'VALIDATION','Pilih metode pembayaran yang benar-benar digunakan.');
       // A single bank/QRIS reference cannot settle different member orders.
       var alreadyUsed=findRows_('orders',function(row){
         return row.order_id!==id&&['PAID','FULFILLED'].indexOf(String(row.status))>=0&&
@@ -1118,8 +1122,9 @@ function transitionOrder_(m,id,type,p) {
       if(from==='EXPIRED')require_(note.length>=5,'VALIDATION',
         'Alasan pembayaran terlambat wajib diisi.');
       to='PAID';patch.paid_at=now_();patch.verified_by=m.member_id;
-      patch.catatan_admin='Pembayaran ref: '+proof+(note?' | '+note:'')+
-        (from==='PENDING'?' | Dikonfirmasi langsung Admin':'');
+      patch.metode=paidVia;
+      patch.catatan_admin='Pembayaran ref: '+proof+' | Metode: '+paidVia+
+        (note?' | '+note:'')+(from==='PENDING'?' | Dikonfirmasi langsung Admin':'');
     } else if(type==='reject'&&admin&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(from)>=0){
       require_(safeText_(p.alasan,300).length>=5,'VALIDATION','Alasan penolakan diperlukan.');to='CANCELLED';patch.cancelled_at=now_();patch.catatan_admin=p.alasan;
     } else throw ngdError_('CONFLICT','Status pesanan tidak mengizinkan tindakan ini.');
