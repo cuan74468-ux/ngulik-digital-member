@@ -167,3 +167,50 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-shadow{
     animation:none!important;
   }
 }
+
+
+/* Public access to the free eBook and Chapter 1: no Member gate, both environments. */
+.ngd-free-access{
+  box-sizing:border-box;
+  width:min(1080px,calc(100% - 40px));
+  margin:clamp(26px,4vw,60px) auto clamp(38px,6vw,80px);
+  padding:clamp(22px,3.5vw,38px) 0 0;
+  border-top:1px solid rgba(21,22,28,.13);
+  color:#15161c;
+}
+.ngd-free-access-head{max-width:740px;margin:0 0 24px}
+.ngd-free-eyebrow{margin:0 0 9px;font-size:.7rem;font-weight:750;letter-spacing:.11em;color:#756d60}
+.ngd-free-access-head h2{
+  margin:0 0 10px;font-size:clamp(1.45rem,3vw,2.25rem);line-height:1.18;
+  letter-spacing:-.045em;color:inherit;
+}
+.ngd-free-access-head>p:last-child{margin:0;color:#65636b;line-height:1.65;font-size:clamp(.9rem,1.6vw,1rem)}
+.ngd-free-access-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.ngd-free-card{
+  display:flex;flex-direction:column;align-items:flex-start;gap:11px;min-width:0;
+  padding:clamp(20px,3vw,30px);border:1px solid #e9e6e1;border-radius:18px;
+  background:#fcfbf9;color:#15161c;text-decoration:none;
+  transition:border-color .18s ease,background .18s ease,transform .18s ease;
+}
+.ngd-free-card:hover,.ngd-free-card:focus-visible{
+  color:#15161c;background:#fff;border-color:#b7ada0;transform:translateY(-2px);
+}
+.ngd-free-card:focus-visible{outline:3px solid #4b76d4;outline-offset:3px}
+.ngd-free-card-number{font-size:.71rem;letter-spacing:.09em;font-weight:750;color:#756d60}
+.ngd-free-card strong{font-size:clamp(1.05rem,1.85vw,1.32rem);line-height:1.3;letter-spacing:-.025em}
+.ngd-free-card>span:nth-of-type(2){font-size:.91rem;line-height:1.6;color:#65636b}
+.ngd-free-card-cta{
+  display:inline-flex;align-items:center;gap:8px;margin-top:auto;padding-top:9px;
+  font-size:.9rem;font-weight:750;color:#242424;
+}
+.ngd-free-card-cta svg{width:17px;height:17px}
+@media(max-width:640px){
+  .ngd-free-access{width:calc(100% - 32px);margin:25px auto 52px;padding-top:23px}
+  .ngd-free-access-head{margin-bottom:19px}
+  .ngd-free-access-grid{grid-template-columns:1fr;gap:11px}
+  .ngd-free-card{gap:9px;padding:21px;border-radius:15px}
+}
+@media(prefers-reduced-motion:reduce){
+  .ngd-free-card{transition:none}
+  .ngd-free-card:hover,.ngd-free-card:focus-visible{transform:none}
+}
