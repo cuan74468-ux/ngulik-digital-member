@@ -1996,19 +1996,43 @@ async function openOrderDetail_(id){
   }catch(error){toast(error.message||'Gagal membuka rincian pesanan.',true);}
   finally{if(button?.isConnected)button.disabled=false;}
 }
+let memberConfirmSubmitting_=false;
 async function confirmPayment(){
-  if(!state.lastOrder||!paymentEnabled()||!state.lastOrder.qris_gambar_path||!state.lastOrder.qris_atas_nama)
-    return toast('QRIS untuk konfirmasi manual belum tersedia.',true);
-  if(/(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(String(state.lastOrder.qris_gambar_path))&&
-    config.qrisOwnerImageApproved!==true)
-    return toast('QRIS masih placeholder. Minta QRIS resmi via WhatsApp Admin.',true);
-  if(document.querySelector('[data-qris-image][hidden]'))
-    return toast('Gambar QRIS gagal dimuat. Minta QRIS resmi via WhatsApp Admin.',true);
-  if(!confirm('Anda yakin pembayaran telah dikirim ke QRIS resmi? Konfirmasi ini bukan bukti pembayaran berhasil.'))return;
+  const order=state.lastOrder;
+  if(memberConfirmSubmitting_)return;
+  if(!logged()||isAdmin()||!order||!paymentEnabled())
+    return toast('Konfirmasi pembayaran belum tersedia.',true);
+  if(order.status!=='PENDING')
+    return toast('Pesanan ini tidak lagi menunggu konfirmasi. Buka ulang detailnya.',true);
+  const expiry=new Date(order.expires_at).getTime();
+  if(!Number.isFinite(expiry)||expiry<=Date.now())
+    return toast('Batas pembayaran terlewati. Hubungi Admin jika sudah membayar.',true);
+  const qrRaw=String(order.qris_gambar_path||config.qrisImageUrl||'');
+  const placeholder=/(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrRaw)&&
+    config.qrisOwnerImageApproved!==true;
+  const officialQr=Boolean(qrRaw&&!placeholder);
+  const img=document.querySelector('[data-qris-image]');
+  if(officialQr&&img&&(!img.complete||!img.naturalWidth))
+    return toast('QRIS belum berhasil ditampilkan. Hubungi Admin untuk pembayaran manual.',true);
+  const evidenceText='Saya sudah BENAR-BENAR mengirim '+rupiah(order.total_bayar)+
+    ' ke rekening/QRIS tujuan resmi yang diberikan Admin untuk order '+order.order_id+
+    '. Saya paham konfirmasi ini BUKAN bukti dana diterima dan token belum otomatis ditambahkan. '+
+    'Admin akan mencocokkan mutasi pembayaran. Lanjutkan permintaan verifikasi?';
+  if(!confirm(evidenceText))return;
+  memberConfirmSubmitting_=true;
+  const btn=document.querySelector('[data-action="confirm-payment"]');
+  if(btn)btn.disabled=true;
   try{
-    const r=await api('confirmPayment',{order_id:state.lastOrder.order_id},state.token,{write:true});
-    state.lastOrder=r;toast('Konfirmasi diterima. Menunggu pemeriksaan admin.');go('pesanan');
-  }catch(e){toast(e.message,true);}
+    const result=await api('confirmPayment',{order_id:order.order_id},state.token,{write:true});
+    if(!result||!['MENUNGGU_VERIFIKASI','PAID','FULFILLED'].includes(result.status))
+      throw new ApiError('Status konfirmasi belum pasti. Periksa riwayat pesanan sebelum mencoba lagi.');
+    state.lastOrder=result;
+    toast('Permintaan verifikasi diterima. Admin akan memeriksa dana.');
+    go('pesanan');
+  }catch(e){
+    toast(e.message||'Konfirmasi belum dapat diproses. Periksa status pesanan.',true);
+    if(btn?.isConnected)btn.disabled=false;
+  }finally{memberConfirmSubmitting_=false;}
 }
 // A write may succeed on Apps Script even when its response is lost.
 // Keep the same opaque request ID for an identical retry until confirmed.
