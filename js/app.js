@@ -1318,22 +1318,53 @@ function viewAdminServices(){
 }
 function viewAdminOrders(){
   if(!isAdmin())return needLogin('pesanan admin');
+  const rank={MENUNGGU_VERIFIKASI:0,EXPIRED:1,PENDING:2,PAID:3,FULFILLED:4,CANCELLED:5,REFUNDED:6};
   const rows=[...(state.adminOrders||[])].sort((a,b)=>
-    Number(b.status==='MENUNGGU_VERIFIKASI')-Number(a.status==='MENUNGGU_VERIFIKASI')||
+    (rank[a.status]??9)-(rank[b.status]??9)||
     new Date(b.created_at)-new Date(a.created_at));
   const waiting=rows.filter(o=>o.status==='MENUNGGU_VERIFIKASI').length;
-  return title('Verifikasi pembayaran','PESANAN ADMIN','Cocokkan nominal pada mutasi DANA/QRIS sebelum menyetujui.')+
-    '<p class="verification-count">'+waiting+' pesanan menunggu verifikasi</p>'+
-    (!rows.length?empty('Belum ada order','Pesanan member akan muncul di sini.'):
-    '<div class="table-wrap"><table class="table"><thead><tr><th>Order</th><th>Produk</th><th>Nominal tepat</th><th>Status / Tindakan</th></tr></thead><tbody>'+
-    rows.map(o=>'<tr><td><strong>'+esc(o.order_id)+'</strong><small class="sub">'+esc(o.member_id)+'</small></td>'+
-      '<td>'+esc(o.nama_produk)+'</td><td>'+rupiah(o.total_bayar)+'</td><td>'+safeBadge(o.status)+
-      (o.status==='MENUNGGU_VERIFIKASI'?'<div class="verification-actions">'+
-        '<button type="button" class="btn btn-primary btn-sm" data-payment-admin="approve" data-order-id="'+esc(o.order_id)+'">Terima &amp; Aktifkan</button>'+
-        '<button type="button" class="btn btn-secondary btn-sm" data-payment-admin="reject" data-order-id="'+esc(o.order_id)+'">Tolak</button></div>':'')+
-      '</td></tr>').join('')+'</tbody></table></div>');
+  return title('Verifikasi pembayaran','PESANAN ADMIN',
+    'Periksa dana masuk melalui mutasi rekening/e-wallet resmi sebelum menyetujui. Klaim Member bukan bukti pembayaran.')+
+    '<p class="verification-count">'+waiting+' pesanan meminta verifikasi pembayaran</p>'+
+    (!rows.length?empty('Belum ada pesanan','Pesanan Member akan muncul di sini.'):
+    '<div class="admin-payment-list">'+rows.map(o=>{
+      const status=String(o.status||'');
+      const canReview=['MENUNGGU_VERIFIKASI','EXPIRED'].includes(status);
+      const reviewing=canReview&&state.adminPaymentReviewId===o.order_id;
+      const overdue=status==='PENDING'&&Number.isFinite(new Date(o.expires_at).getTime())&&new Date(o.expires_at).getTime()<=Date.now();
+      const note=status==='PENDING'?
+        (overdue?'Batas pembayaran sudah lewat. Periksa pembayaran terlambat sebelum menindaklanjuti.':
+        'Menunggu Member mengonfirmasi bahwa transfer sudah dikirim. Jangan setujui sebelum dana benar-benar masuk.'):
+        status==='MENUNGGU_VERIFIKASI'?'Member mengaku sudah transfer. Periksa mutasi dana dengan nominal tepat, bukan screenshot atau klaim saja.':
+        status==='EXPIRED'?'Order kedaluwarsa. Hanya verifikasi jika ada dana yang benar-benar telah diterima dan cocok.':
+        status==='PAID'?'Pembayaran tercatat; periksa pemenuhan jika akses belum aktif.':
+        status==='FULFILLED'?'Dana sudah diverifikasi dan pemenuhan tercatat.':'Tidak ada tindakan verifikasi pembayaran.';
+      return '<article class="surface admin-payment-card">'+
+        '<div class="admin-payment-head"><div><strong>'+esc(o.nama_produk||'Produk')+'</strong>'+
+        '<small>'+esc(o.order_id)+' · Member '+esc(o.member_id)+'</small></div>'+safeBadge(status)+'</div>'+
+        '<div class="admin-payment-amount"><span>Nominal yang harus cocok pada mutasi</span><strong>'+rupiah(o.total_bayar)+'</strong></div>'+
+        '<p class="admin-payment-note">'+esc(note)+'</p>'+
+        (canReview?
+          '<div class="verification-actions">'+
+          '<button type="button" class="btn btn-primary btn-sm" data-payment-open="'+esc(o.order_id)+'">'+
+          (reviewing?'Tutup pemeriksaan':'Periksa dana &amp; tindak lanjuti')+'</button>'+
+          (status==='MENUNGGU_VERIFIKASI'?'<button type="button" class="btn btn-secondary btn-sm" data-payment-admin="reject" data-order-id="'+esc(o.order_id)+'">Tolak klaim pembayaran</button>':'')+
+          '</div>':'')+
+        (reviewing?
+          '<form id="admin-payment-form" class="admin-payment-form" data-order-id="'+esc(o.order_id)+'">'+
+          '<h3>Konfirmasi penerimaan dana</h3><p>Periksa riwayat transaksi penerima yang sah. Jangan menandai lunas jika hanya ada pesan WhatsApp atau screenshot.</p>'+
+          '<div class="field"><label for="admin-received-amount">Jumlah dana yang benar-benar diterima (Rp)</label>'+
+          '<input class="input" id="admin-received-amount" name="nominal_diterima" type="number" inputmode="numeric" min="1" step="1" required placeholder="Masukkan nominal dari mutasi"></div>'+
+          '<div class="field"><label for="admin-settlement-ref">Referensi transaksi pada mutasi</label>'+
+          '<input class="input" id="admin-settlement-ref" name="referensi_pembayaran" required minlength="5" maxlength="120" placeholder="Nomor referensi / ID transaksi"></div>'+
+          (status==='EXPIRED'?'<div class="field"><label for="admin-late-reason">Alasan pembayaran terlambat</label>'+
+          '<textarea class="input" name="alasan" id="admin-late-reason" maxlength="300" minlength="5" rows="2" required placeholder="Penjelasan rekonsiliasi"></textarea></div>':'')+
+          '<label class="admin-payment-checkbox"><input type="checkbox" name="dana_diterima" required> Saya sudah memeriksa dana masuk sebesar '+rupiah(o.total_bayar)+' ke akun penerima resmi. Saya memahami sistem akan mengaktifkan produk dan mencatat komisi setelah persetujuan.</label>'+
+          '<div class="verification-actions"><button type="submit" class="btn btn-primary">Lunas &amp; Aktifkan</button>'+
+          '<button type="button" class="btn btn-secondary" data-payment-open="'+esc(o.order_id)+'">Batal</button></div>'+
+          '</form>':'')+'</article>';
+    }).join('')+'</div>');
 }
-
 function viewMembers(waiting=false){
   if(!isAdmin())return needLogin('data member admin');
   if(waiting){
