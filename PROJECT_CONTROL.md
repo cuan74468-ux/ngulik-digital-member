@@ -28,6 +28,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | 2026-11-19 | GAS source diperbarui; belum diverifikasi di editor/deployment | Checkout manual via WA, kartu pesanan dapat diketuk, konfirmasi Member, verifikasi dana Admin dari HP, metode transfer aktual, auto-fulfillment dan WA | Source GitHub tersimpan; 6 skenario UI + simulasi pembayaran GAS PASS; runtime/end-to-end belum diuji |
 
+| 2026-11-19 | GAS New Version (nomor versi belum dilaporkan) | `ngdVerifyFullStagingReadiness()` pada GAS STAGING: 17 checks PASS; ledger idempotency 13 checks PASS | RUNTIME SYNTHETIC TESTED — mutations=0, provider_calls=0; pembayaran nyata belum diuji |
+
 ## Aturan tetap untuk AI dan operator
 
 - **Tidak membuat/menyarankan backup, database, project, atau deployment baru** untuk tes rutin, perubahan UI, atau troubleshooting biasa.
