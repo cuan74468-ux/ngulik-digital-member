@@ -1324,15 +1324,18 @@ function viewAdminOrders(){
     (rank[a.status]??9)-(rank[b.status]??9)||
     new Date(b.created_at)-new Date(a.created_at));
   const waiting=rows.filter(o=>o.status==='MENUNGGU_VERIFIKASI').length;
+  const financeBlocked=state.workspaceInfo&&(state.workspaceInfo.finance_enabled===false||state.workspaceInfo.mutations_enabled===false);
   return title('Verifikasi pembayaran','PESANAN ADMIN',
     'Periksa dana masuk melalui mutasi rekening/e-wallet resmi sebelum menyetujui. Klaim Member bukan bukti pembayaran.')+
     '<p class="verification-count">'+waiting+' pesanan meminta verifikasi pembayaran</p>'+
+    (financeBlocked?'<p class="admin-payment-notice">Transaksi sedang dinonaktifkan pada backend. Verifikasi lunas hanya tersedia setelah Admin membuka izin keuangan yang sah.</p>':'')+
     (!rows.length?empty('Belum ada pesanan','Pesanan Member akan muncul di sini.'):
     '<div class="admin-payment-list">'+rows.map(o=>{
       const status=String(o.status||'');
       const overdue=status==='PENDING'&&Number.isFinite(new Date(o.expires_at).getTime())&&new Date(o.expires_at).getTime()<=Date.now();
-      const canReview=['MENUNGGU_VERIFIKASI','EXPIRED'].includes(status)||overdue||
-        (status==='PENDING'&&state.workspaceInfo?.manual_payment_direct_enabled===true);
+      const canReview=!financeBlocked&&(
+        ['MENUNGGU_VERIFIKASI','EXPIRED'].includes(status)||overdue||
+        (status==='PENDING'&&state.workspaceInfo?.manual_payment_direct_enabled===true));
       const reviewing=canReview&&state.adminPaymentReviewId===o.order_id;
       const note=status==='PENDING'?
         (overdue?'Batas pembayaran sudah lewat. Periksa pembayaran terlambat sebelum menindaklanjuti.':
