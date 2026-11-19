@@ -376,9 +376,10 @@ function viewHome(){
   }
   // Quiet placeholder brand mark. Replace with the eventual 2D character later.
   // No stairs, falling pixels, or narrative animations on the homepage.
-  const brandStage='<div class="ngd-journey-stage" role="img" aria-label="Logo Ngulik Digital mengambang lembut">'+
-    '<div class="ngd-floating-logo" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></div>'+
+  const brandStage='<div class="ngd-journey-stage">'+
+    '<div class="ngd-floating-logo" role="img" aria-label="Logo Ngulik Digital"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></div>'+
     '<span class="ngd-floating-shadow" aria-hidden="true"></span>'+
+    viewFreeLearningResources_()+
   '</div>';
   const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal" aria-label="Ngulik Digital">'+
     brandStage+
@@ -390,8 +391,7 @@ function viewHome(){
     '</div>'+
   '</section>';
   return '<div class="nh-home nh-home-minimal">'+
-    (window.NGD_CONTENT_UI?.hero(state.siteContent,'home')||hero)+
-    viewFreeLearningResources_()+'</div>';
+    (window.NGD_CONTENT_UI?.hero(state.siteContent,'home')||hero)+'</div>';
 }
 const offerCategories=[
   ['semua','Semua'],['ai','Token AI'],['aplikasi','Aplikasi Bisnis'],
