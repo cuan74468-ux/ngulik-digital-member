@@ -39,6 +39,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | 2026-11-20 | GAS, Sheet, dan pembayaran tidak diubah | Koreksi final akses gratis: tepat dua link teks (eBook Gratis, Kelas Gratis) ditempatkan di bawah logo header publik pada PC dan HP; hapus navigasi akses gratis tambahan di hero/Belajar; berlaku walaupun CMS HERO home aktif | SOURCE UPDATED di GitHub `main`; JS parse dan pemeriksaan DOM statis PC/HP PASS; verifikasi visual browser pengguna belum dilakukan |
 
+| 2026-11-20 | GAS/Sheet/deployment finansial tidak diubah | Koreksi penempatan akses gratis: DUA link teks dipindahkan dari header navigasi ke BAWAH LOGO HERO utama; layout hero desktop disamakan dengan HP (vertikal); banner CMS Home tidak menggantikan hero ini; konten CMS tetap disimpan | SOURCE UPDATED di `main`; mock render guest, urutan DOM, 2 URL, sintaks JS, CSS dan cache version PASS; pengujian visual browser HP/PC belum terverifikasi |
+
 ## Checkpoint penutupan hari — Kamis, 19 November 2026
 
 **Keputusan status:** jeda kerja sampai sesi berikutnya pada Jumat, 20 November 2026. Tidak ada perubahan database/Apps Script/deployment produksi atau STAGING pada sesi terakhir; hanya Google Docs dan berkas kontrol ini yang diperbarui. Tidak membuat repository, database, ataupun deployment Ngulik Tools Studio.
