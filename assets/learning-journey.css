@@ -54,112 +54,152 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-shadow{
   0%,100%{opacity:.75;transform:scale(1)}
   50%{opacity:.44;transform:scale(.84)}
 }
-/* Stronger specificity than obsolete portfolio flex-column rules. */
-@media(min-width:901px){
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content{
-    padding-top:112px;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal{
-    display:flex;align-items:center;justify-content:center;
-    width:100%;max-width:1190px;
-    min-height:min(700px,calc(100svh - 160px));
-    margin:0 auto;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .public-editorial-hero.pf-portfolio-hero.pf-home-minimal{
-    display:grid;
-    grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);
-    grid-template-areas:"copy logo";
-    align-items:center;justify-items:stretch;
-    column-gap:clamp(32px,4vw,68px);
-    width:100%;min-height:530px;
-    margin:0;padding:clamp(28px,4vw,58px) clamp(24px,4vw,62px);
-    text-align:left;overflow:visible;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .public-hero-copy{
-    grid-area:copy;order:0;
-    width:100%;min-width:0;max-width:100%;
-    padding:0;margin:0;
-    justify-self:stretch;align-self:center;
-    align-items:flex-start;justify-content:center;
-    gap:clamp(16px,2vw,23px);
-    text-align:left;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-copy h1{
-    width:100%;max-width:17ch;
-    font-size:clamp(2.45rem,3.65vw,4.25rem);
-    line-height:1.13;letter-spacing:-.065em;
-    margin:0;overflow-wrap:normal;word-break:normal;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-lead{
-    width:100%;max-width:51ch;margin:0;
-    font-size:clamp(.95rem,1.12vw,1.06rem);
-    line-height:1.78;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-buttons{
-    justify-content:flex-start;margin:6px 0 0;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .ngd-journey-stage{
-    grid-area:logo;order:1;
-    justify-self:center;align-self:center;
-    min-width:0;min-height:390px;
-    max-width:460px;width:100%;
-  }
+/* One responsive hero layout: phone and desktop share the same visual order.
+   Logo > free links > copy. No two-column split. */
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+  max-width:980px;
+  min-height:0;
+  margin:0 auto;
 }
-@media(min-width:901px) and (max-width:1100px){
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .public-editorial-hero.pf-portfolio-hero.pf-home-minimal{
-    column-gap:26px;
-    padding-inline:clamp(16px,2.5vw,28px);
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-copy h1{
-    font-size:clamp(2.25rem,3.5vw,3.45rem);
-  }
+body.ngd-public-app[data-app-role=guest]:not(#ngd)
+.nh-home.nh-home-minimal > .public-editorial-hero.pf-portfolio-hero.pf-home-minimal{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+  max-width:900px;
+  min-height:0;
+  gap:0;
+  margin:0 auto;
+  padding:clamp(15px,3vw,30px) clamp(16px,3vw,28px) clamp(42px,5vw,65px);
+  text-align:center;
+  overflow:visible;
 }
-/* Mobile: brand first, simple balanced hero beneath it. */
+body.ngd-public-app[data-app-role=guest]:not(#ngd)
+.nh-home.nh-home-minimal > .pf-home-minimal > .ngd-journey-stage{
+  display:flex;
+  order:0;
+  flex:0 0 auto;
+  align-items:center;
+  justify-content:center;
+  width:min(410px,100%);
+  max-width:100%;
+  min-height:0;
+  margin:0 auto 22px;
+  pointer-events:auto;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo{
+  width:clamp(170px,22vw,225px);
+  flex:0 0 auto;
+  pointer-events:none;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-shadow{
+  pointer-events:none;
+  bottom:34px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd)
+.nh-home.nh-home-minimal > .pf-home-minimal > .public-hero-copy{
+  display:flex;
+  order:1;
+  position:relative;
+  z-index:2;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  align-self:center;
+  width:100%;
+  max-width:720px;
+  padding:0;
+  margin:0;
+  gap:clamp(12px,2vw,17px);
+  text-align:center;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd)
+.nh-home.nh-home-minimal > .pf-home-minimal .public-hero-copy h1{
+  max-width:19ch;
+  width:100%;
+  margin:0;
+  font-size:clamp(2.15rem,4.2vw,3.5rem);
+  line-height:1.15;
+  letter-spacing:-.055em;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd)
+.nh-home.nh-home-minimal > .pf-home-minimal .public-hero-lead{
+  width:100%;
+  max-width:57ch;
+  margin:0;
+  font-size:clamp(.91rem,1.3vw,1.05rem);
+  line-height:1.7;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content{
+  padding-top:106px;
+}
+.ngd-hero-free-links{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px 22px;
+  width:100%;
+  margin:15px auto 0;
+  padding:0;
+  border:0;
+  background:none;
+  position:relative;
+  z-index:4;
+}
+.ngd-hero-free-links a{
+  display:inline-block;
+  padding:4px 1px;
+  color:#645f57;
+  font:600 .87rem/1.45 "Inter",system-ui,sans-serif;
+  text-decoration:none;
+  text-underline-offset:4px;
+}
+.ngd-hero-free-links a:hover{
+  color:#252923;
+  text-decoration:underline;
+}
+.ngd-hero-free-links a:focus-visible{
+  outline:2px solid #485f87;
+  outline-offset:4px;
+}
+.ngd-learn-direct-links{
+  display:flex;
+  gap:12px 24px;
+  flex-wrap:wrap;
+  margin:16px 0 26px;
+}
+.ngd-learn-direct-links a{
+  font-weight:650;
+  color:#2c3434;
+  text-underline-offset:4px;
+}
 @media(max-width:900px){
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content{
-    /* The wrapped guest header reaches 150px on narrow Chrome viewports.
-       Keep the hero below it without affecting desktop/member/admin routes. */
     padding-top:152px;
   }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .public-editorial-hero.pf-portfolio-hero.pf-home-minimal{
-    display:flex;flex-direction:column;
-    align-items:center;justify-content:flex-start;
-    min-height:0;gap:0;
-    padding:clamp(12px,3vw,28px) clamp(12px,3vw,22px) 54px;
-    text-align:center;overflow:visible;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .ngd-journey-stage{
-    order:-1;flex:0 0 auto;
-    width:min(430px,100%);
-    min-height:265px;max-width:100%;
-    margin:0 auto 8px;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .public-hero-copy{
-    order:1;z-index:2;
-    width:100%;max-width:640px;
-    padding:0;margin:0;
-    align-items:center;text-align:center;gap:16px;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-copy h1{
-    max-width:19ch;font-size:clamp(2.08rem,6vw,3.15rem);line-height:1.15;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-buttons{
-    justify-content:center;
-  }
-}
-@media(max-width:560px){
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal > .ngd-journey-stage{
-    width:min(340px,100%);min-height:230px;margin-bottom:3px;
+  body.ngd-public-app[data-app-role=guest]:not(#ngd)
+  .nh-home.nh-home-minimal > .pf-home-minimal > .ngd-journey-stage{
+    width:min(340px,100%);
+    margin:0 auto 18px;
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo{
     width:clamp(148px,44vw,205px);
   }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo span{
-    font-size:clamp(4.4rem,20vw,6.1rem);
+  body.ngd-public-app[data-app-role=guest]:not(#ngd)
+  .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-copy h1{
+    max-width:17ch;
+    font-size:clamp(2.04rem,8.3vw,2.8rem);
   }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .nh-home.nh-home-minimal > .pf-home-minimal .public-hero-copy h1{
-    max-width:17ch;font-size:clamp(2.04rem,8.3vw,2.8rem);
-  }
+  .ngd-hero-free-links{margin-top:12px;gap:9px 18px}
+  .ngd-hero-free-links a{font-size:.8rem}
 }
 @media(prefers-reduced-motion:reduce){
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-logo,
@@ -168,59 +208,3 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-shadow{
   }
 }
 
-/* Free resources: only two plain links directly below the header brand.
-   The public header is shared by desktop and mobile, including CMS heroes. */
-body.ngd-public-app:not([data-app-role="guest"]) .ngd-guest-brand-stack{display:none}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar .ngd-guest-brand-stack{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  justify-content:center;
-  flex:0 0 auto;
-  gap:2px;
-  min-width:0;
-}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar .ngd-guest-brand-stack > .guest-brand{
-  padding-bottom:0;
-  border-right:0;
-}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-logo-free-links{
-  display:flex;
-  align-items:center;
-  flex-wrap:nowrap;
-  gap:12px;
-  margin:0 0 0 5px;
-  padding:0;
-  background:none;
-  border:0;
-}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-logo-free-links a{
-  color:#756d66;
-  font:600 10.5px/1.5 "Inter",system-ui,sans-serif;
-  text-decoration:none;
-  text-underline-offset:3px;
-  white-space:nowrap;
-  padding:0;
-}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-logo-free-links a:hover{
-  text-decoration:underline;
-  color:#252923;
-}
-body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-logo-free-links a:focus-visible{
-  outline:2px solid #485f87;
-  outline-offset:3px;
-  border-radius:2px;
-}
-@media(max-width:760px){
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar .ngd-guest-brand-stack{
-    grid-column:1;
-    grid-row:1;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-logo-free-links{
-    gap:10px;
-    margin-left:0;
-  }
-  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-logo-free-links a{
-    font-size:10px;
-  }
-}
