@@ -807,3 +807,18 @@ body.ngd-public-app:not(#ngd) .wallet-hero .wallet-value strong{font-variant-num
 .qris-fallback p{font-size:14px;line-height:1.55;margin:0}
 .checkout-qr img[hidden],.qris-fallback[hidden]{display:none!important}
 .checkout-qr .checkout-note{max-width:340px;line-height:1.6}
+
+/* Checkout total: one authoritative amount, kept intact on narrow Android screens. */
+body.ngd-public-app:not(#ngd) .checkout-total .checkout-total-amount {
+  display:block;
+  max-width:100%;
+  white-space:nowrap;
+  overflow-wrap:normal;
+  word-break:normal;
+  font-variant-numeric:tabular-nums;
+  font-size:clamp(1.3rem,6vw,2rem);
+  line-height:1.2;
+}
+body.ngd-public-app:not(#ngd) .checkout-total .btn {
+  align-self:flex-start;
+}
