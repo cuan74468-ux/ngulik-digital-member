@@ -234,7 +234,7 @@ function notice(){
 }
 const mobileNavRoute=(route)=>({
   'lms-course':'belajar','lms-complete':'belajar',
-  tiket:'dukungan',checkout:'katalog',
+  tiket:'dukungan',checkout:'pesanan',
   'lms-editor':'lms','lms-lesson':'lms','lms-ai':'lms',
   member360:'member'
 })[route]||route;
@@ -2009,7 +2009,7 @@ async function buy(productId){
   if(!confirm('Buat pesanan '+product.nama+' seharga '+rupiah(product.harga)+'?'))return;
   try{
     const order=await api('createOrder',{product_id:productId},state.token,{write:true});
-    state.checkoutReturnRoute='katalog';state.lastOrder=order;go('checkout');toast('Pesanan berhasil dibuat.');
+    state.checkoutReturnRoute='pesanan';state.lastOrder=order;go('checkout');toast('Pesanan berhasil dibuat.');
   }catch(e){toast(e.message,true);}
 }
 async function openOrderDetail_(id){
