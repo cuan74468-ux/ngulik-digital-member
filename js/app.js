@@ -1094,7 +1094,8 @@ function viewCheckout(){
     '<a class="btn btn-secondary btn-wide" href="'+esc(adminChat)+'" target="_blank" rel="noopener noreferrer">'+
     (open?'Minta instruksi pembayaran via WhatsApp':'Hubungi Admin tentang pesanan')+' '+icon('arrow')+'</a>':
     '<p class="checkout-note">Kontak Admin belum tersedia. Gunakan menu Bantuan untuk meminta tindak lanjut.</p>';
-  const canConfirm=open&&paymentEnabled()&&!!adminChat;
+  const financeBlocked=state.workspaceInfo&&(state.workspaceInfo.finance_enabled===false||state.workspaceInfo.mutations_enabled===false);
+  const canConfirm=open&&paymentEnabled()&&!financeBlocked&&!!adminChat;
   return '<div class="checkout-backdrop"><section class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-title">'+
     '<header class="checkout-heading"><div><p class="eyebrow">NGULIK DIGITAL / PESANAN</p>'+
     '<h1 id="checkout-title">Detail &amp; tindak lanjut</h1><p>Order '+esc(o.order_id)+'</p></div>'+
@@ -1112,7 +1113,7 @@ function viewCheckout(){
     (open?'<div class="checkout-steps"><strong>Langkah selanjutnya</strong><p>Setelah transfer nyata, minta verifikasi Admin. Saldo dan hak akses hanya diberikan setelah dana diterima dan disetujui.</p></div>':'')+
     askAdmin+
     (canConfirm?'<button class="btn btn-primary btn-wide" type="button" data-action="confirm-payment">Saya sudah transfer — minta verifikasi</button>':'')+
-    (open&&!paymentEnabled()?'<p class="checkout-note">Pengajuan konfirmasi pembayaran belum diaktifkan. Hubungi Admin untuk bantuan.</p>':'')+
+    (open&&(!paymentEnabled()||financeBlocked)?'<p class="checkout-note"><strong>Verifikasi pembayaran sementara dinonaktifkan di server.</strong> Jangan transfer sebelum memperoleh konfirmasi layanan dari Admin.</p>':'')+
     (paid?'<button type="button" class="btn btn-secondary btn-wide" data-route="beranda">Lihat saldo / akses saya</button>':'')+
     '<button type="button" class="btn btn-ghost btn-wide" data-route="pesanan">Kembali ke daftar pesanan</button>'+
     '</section></div></section></div>';
@@ -1766,6 +1767,9 @@ async function loadRoute(route){
   if(state.qa||!isConnected()||!logged())return;
   const token=state.token;
   try{
+    if(route==='checkout'&&!isAdmin()&&String(config.brand||'').includes('STAGING')){
+      try{state.workspaceInfo=await api('getStagingWorkspaceInfo');}catch{state.workspaceInfo=null;}
+    }
     if(route==='beranda'||route==='ai'||route==='ai-tool'){
       state.home=await api('getBeranda',{},token);
       if(route==='ai'||route==='ai-tool'){
@@ -2040,7 +2044,8 @@ async function openOrderDetail_(id){
 }
 let adminPaymentSubmitting_=false;
 async function submitAdminPaymentForm_(form){
-  if(adminPaymentSubmitting_||!isAdmin()||!paymentEnabled())
+  if(adminPaymentSubmitting_||!isAdmin()||!paymentEnabled()||
+    state.workspaceInfo?.finance_enabled===false||state.workspaceInfo?.mutations_enabled===false)
     return toast('Verifikasi pembayaran Admin belum diaktifkan.',true);
   const id=String(form.dataset.orderId||'');
   const order=state.adminOrders.find(o=>o.order_id===id);
@@ -2096,7 +2101,8 @@ let memberConfirmSubmitting_=false;
 async function confirmPayment(){
   const order=state.lastOrder;
   if(memberConfirmSubmitting_)return;
-  if(!logged()||isAdmin()||!order||!paymentEnabled())
+  if(!logged()||isAdmin()||!order||!paymentEnabled()||
+    state.workspaceInfo?.finance_enabled===false||state.workspaceInfo?.mutations_enabled===false)
     return toast('Konfirmasi pembayaran belum tersedia.',true);
   if(order.status!=='PENDING')
     return toast('Pesanan ini tidak lagi menunggu konfirmasi. Buka ulang detailnya.',true);
