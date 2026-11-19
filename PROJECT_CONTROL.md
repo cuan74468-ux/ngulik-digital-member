@@ -37,6 +37,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | 2026-11-20 | GAS dan database tidak berubah | Koreksi UI Langkah 1: hilangkan tombol eBook/Classroom ganda di hero, dua kartu besar, dan daftar belajar tamu yang menumpuk; ganti satu baris tautan ringan pada Beranda serta halaman Belajar | SOURCE UPDATED di `main`; syntax JS dan simulasi Beranda CMS/guest PASS; verifikasi visual HP masih diperlukan |
 
+| 2026-11-20 | GAS, Sheet, dan pembayaran tidak diubah | Koreksi final akses gratis: tepat dua link teks (eBook Gratis, Kelas Gratis) ditempatkan di bawah logo header publik pada PC dan HP; hapus navigasi akses gratis tambahan di hero/Belajar; berlaku walaupun CMS HERO home aktif | SOURCE UPDATED di GitHub `main`; JS parse dan pemeriksaan DOM statis PC/HP PASS; verifikasi visual browser pengguna belum dilakukan |
+
 ## Checkpoint penutupan hari — Kamis, 19 November 2026
 
 **Keputusan status:** jeda kerja sampai sesi berikutnya pada Jumat, 20 November 2026. Tidak ada perubahan database/Apps Script/deployment produksi atau STAGING pada sesi terakhir; hanya Google Docs dan berkas kontrol ini yang diperbarui. Tidak membuat repository, database, ataupun deployment Ngulik Tools Studio.
