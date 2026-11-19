@@ -20,6 +20,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 | 2026-11-19 | Belum disinkronkan/diuji pada GAS | Simulasi read-only `ngdVerifyFullStagingReadiness()` diperkuat di `apps-script/Code.gs` | SOURCE UPDATED — belum dinyatakan runtime PASS |
 | 2026-11-19 | Tidak berubah | Menetapkan satu file kendali dan kebijakan anti-duplikasi | Tersimpan di GitHub `main` |
 
+| 2026-11-19 | Tidak berubah (frontend GitHub) | Riwayat pesanan: buka detail read-only, penanganan kedaluwarsa, navigasi kembali, dan cache busting | SOURCE UPDATED — menunggu uji HP | 
+
 ## Aturan tetap untuk AI dan operator
 
 - **Tidak membuat/menyarankan backup, database, project, atau deployment baru** untuk tes rutin, perubahan UI, atau troubleshooting biasa.
