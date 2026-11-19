@@ -299,6 +299,15 @@ function viewMore(){
       '<button class="btn btn-primary" type="button" data-route="login">Masuk member</button></div>':'')+
     '</section>';
 }
+// Free educational resources belong to the public HERO, not the top navigation.
+const NGD_FREE_EBOOK_URL='https://cuan74468-ux.github.io/buku-pintar-vibe-coder/buku-pintar-vibe-coder-edisi-1.html';
+const NGD_FREE_CLASSROOM_URL='https://classroom.google.com/c/ODk4MzQ4OTEwMjc5?cjc=ozzbygx3';
+function viewHeroFreeLinks_(){
+  return '<nav class="ngd-hero-free-links" aria-label="Belajar gratis">'+
+    '<a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">eBook Gratis</a>'+
+    '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Kelas Gratis</a>'+
+  '</nav>';
+}
 const safeBadge=(s)=>'<span class="chip '+(['AKTIF','FULFILLED','PAID','APPROVED'].includes(String(s))?'green':'orange')+'">'+esc(s||'-')+'</span>';
 function viewHome(){
   if(isAdmin())return viewAdmin();
@@ -361,9 +370,10 @@ function viewHome(){
   }
   // Quiet placeholder brand mark. Replace with the eventual 2D character later.
   // No stairs, falling pixels, or narrative animations on the homepage.
-  const brandStage='<div class="ngd-journey-stage" role="img" aria-label="Logo Ngulik Digital mengambang lembut">'+
-    '<div class="ngd-floating-logo" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></div>'+
+  const brandStage='<div class="ngd-journey-stage">'+
+    '<div class="ngd-floating-logo" role="img" aria-label="Logo Ngulik Digital"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></div>'+
     '<span class="ngd-floating-shadow" aria-hidden="true"></span>'+
+    viewHeroFreeLinks_()+
   '</div>';
   const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal" aria-label="Ngulik Digital">'+
     brandStage+
@@ -374,8 +384,9 @@ function viewHome(){
 
     '</div>'+
   '</section>';
-  return '<div class="nh-home nh-home-minimal">'+
-    (window.NGD_CONTENT_UI?.hero(state.siteContent,'home')||hero)+'</div>';
+  // Show one consistent logo-led hero on both PC and phone.
+  // Published home CMS banners remain stored but do not replace this hero.
+  return '<div class="nh-home nh-home-minimal">'+hero+'</div>';
 }
 const offerCategories=[
   ['semua','Semua'],['ai','Token AI'],['aplikasi','Aplikasi Bisnis'],
@@ -553,7 +564,11 @@ function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
     return window.NGD_LMS_UI.memberCatalog(state.lmsCourses,state.lmsEnrollments,state.modules);
   if(!logged())return title('Belajar gratis','EBOOK & KELAS UMKM',
-    'eBook Vibe Coder dan Kelas UMKM dapat dibuka dari tautan gratis di bawah logo.');
+    'Dua materi gratis, tanpa perlu daftar Member Ngulik Digital.')+
+    '<div class="ngd-learn-direct-links">'+
+      '<a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">Baca eBook Vibe Coder</a>'+
+      '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Buka Google Classroom Chapter 1</a>'+
+    '</div>';
   const modules=state.modules;
   return title('Perjalanan belajar Anda','KURIKULUM PRAKTIS','Modul tersedia sesuai program dan akses akun.')+
     (modules.length?'<div class="stack">'+modules.map((m,i)=>'<article class="surface list-row"><div class="left" style="display:flex;gap:15px;align-items:center"><span class="step-no">'+esc(m.urut||i+1)+'</span><div><strong>'+esc(m.judul)+'</strong><small>'+esc(m.deskripsi||'')+'</small></div></div>'+
