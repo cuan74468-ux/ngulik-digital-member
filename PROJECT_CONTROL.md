@@ -30,6 +30,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 | 2026-11-19 | GAS tidak berubah | Audit onboarding dan transaksi: simulasi registrasi aktif/waitlist/OTP salah/nomor duplikat PASS; konfirmasi waiting list persisten; data STAGING menunjukkan order lewat tenggat masih PENDING | FRONTEND SOURCE UPDATED; trigger expireOrders belum terverifikasi; uji registrasi nyata masih dibutuhkan |
 | 2026-11-19 | GAS STAGING: versi baru diterapkan owner, nomor versi belum tercatat | Review ulang dokumen Drive dan sumber aktif: Fase 1 pilot 50 user, QRIS statis/manual, token/affiliate, LMS Chapter 01, keamanan, dan QA | CHECKPOINT: OTP login + checkout invoice PASS; sintetik GAS 17 checks PASS; registrasi baru, uang nyata→fulfillment/komisi/WA, expired trigger, AI provider, LMS dan publikasi produksi BELUM LULUS |
 
+| 2026-11-19 | GAS tidak berubah | Gap hasil pembacaan Drive/Sheet: QA item aktif; banner pilot sudah publish; eBook STAGING Rp0 vs produksi Rp49.000; label etalase gratis tidak konsisten; 4 LMS course + 8 lessons publish | READ-ONLY FINDINGS — tidak ada harga, konten, status order, atau data produksi yang diubah |
+
 ## Aturan tetap untuk AI dan operator
 
 - **Tidak membuat/menyarankan backup, database, project, atau deployment baru** untuk tes rutin, perubahan UI, atau troubleshooting biasa.
