@@ -1358,7 +1358,7 @@ function viewAdminOrders(){
           (status==='MENUNGGU_VERIFIKASI'?'<button type="button" class="btn btn-secondary btn-sm" data-payment-admin="reject" data-order-id="'+esc(o.order_id)+'">Tolak klaim pembayaran</button>':'')+
           '</div>':'')+
         (reviewing?
-          '<form id="admin-payment-form" class="admin-payment-form" data-order-id="'+esc(o.order_id)+'">'+
+          '<form id="admin-payment-form" class="admin-payment-form" autocomplete="off" data-order-id="'+esc(o.order_id)+'">'+
           '<h3>Konfirmasi penerimaan dana</h3><p>Periksa riwayat transaksi penerima yang sah. Jangan menandai lunas jika hanya ada pesan WhatsApp atau screenshot.</p>'+
           '<div class="field"><label for="admin-received-amount">Jumlah dana yang benar-benar diterima (Rp)</label>'+
           '<input class="input" id="admin-received-amount" name="nominal_diterima" type="number" inputmode="numeric" min="1" step="1" required placeholder="Masukkan nominal dari mutasi"></div>'+
@@ -1372,8 +1372,8 @@ function viewAdminOrders(){
           '<input class="input" id="admin-settlement-ref" name="referensi_pembayaran" required minlength="5" maxlength="120" placeholder="Nomor referensi / ID transaksi"></div>'+
           ((status==='EXPIRED'||overdue)?'<div class="field"><label for="admin-late-reason">Alasan pembayaran terlambat</label>'+
           '<textarea class="input" name="alasan" id="admin-late-reason" maxlength="300" minlength="5" rows="2" required placeholder="Penjelasan rekonsiliasi"></textarea></div>':'')+
-          '<label class="admin-payment-checkbox"><input type="checkbox" name="dana_diterima" required> Saya sudah memeriksa dana masuk sebesar '+rupiah(o.total_bayar)+' ke akun penerima resmi. Saya memahami sistem akan mengaktifkan produk dan mencatat komisi setelah persetujuan.</label>'+
-          '<div class="verification-actions"><button type="submit" class="btn btn-primary">Lunas &amp; Aktifkan</button>'+
+          '<label class="admin-payment-checkbox"><input type="checkbox" name="dana_diterima" autocomplete="off" required> Saya sudah memeriksa dana masuk sebesar '+rupiah(o.total_bayar)+' ke akun penerima resmi. Saya memahami sistem akan mengaktifkan produk dan mencatat komisi setelah persetujuan.</label>'+
+          '<div class="verification-actions"><button type="submit" class="btn btn-primary" disabled>Lunas &amp; Aktifkan</button>'+
           '<button type="button" class="btn btn-secondary" data-payment-open="'+esc(o.order_id)+'">Batal</button></div>'+
           '</form>':'')+'</article>';
     }).join('')+'</div>');
@@ -2045,6 +2045,24 @@ async function openOrderDetail_(id){
   }catch(error){toast(error.message||'Gagal membuka rincian pesanan.',true);}
   finally{if(button?.isConnected)button.disabled=false;}
 }
+function syncAdminPaymentApproval_(){
+  const form=document.getElementById('admin-payment-form');
+  if(!form)return;
+  const button=form.querySelector('button[type="submit"]');
+  if(!button)return;
+  const order=state.adminOrders.find(o=>o.order_id===form.dataset.orderId);
+  const amount=Number(form.elements.namedItem('nominal_diterima')?.value);
+  const expected=Number(order?.total_bayar);
+  const method=String(form.elements.namedItem('metode_diterima')?.value||'');
+  const proof=String(form.elements.namedItem('referensi_pembayaran')?.value||'').trim();
+  const reasonInput=form.elements.namedItem('alasan');
+  const reasonOk=!reasonInput||String(reasonInput.value||'').trim().length>=5;
+  const checked=form.elements.namedItem('dana_diterima')?.checked===true;
+  button.disabled=adminPaymentSubmitting_||!order||!Number.isSafeInteger(amount)||
+    amount<=0||amount!==expected||
+    !['QRIS_STATIS','TRANSFER_BANK','TRANSFER_EWALLET'].includes(method)||
+    proof.length<5||proof.length>120||!reasonOk||!checked;
+}
 let adminPaymentSubmitting_=false;
 async function submitAdminPaymentForm_(form){
   if(adminPaymentSubmitting_||!isAdmin()||!paymentEnabled()||
@@ -2698,7 +2716,14 @@ document.addEventListener('click',async(e)=>{
     const id=String(target.dataset.paymentOpen||'');
     state.adminPaymentReviewId=state.adminPaymentReviewId===id?'':id;
     render();
-    document.getElementById('admin-payment-form')?.scrollIntoView?.({block:'nearest'});
+    const form=document.getElementById('admin-payment-form');
+    if(form){
+      form.reset(); // Browser must not restore a previously checked funds-confirmation box.
+      const verified=form.elements.namedItem('dana_diterima');
+      if(verified)verified.checked=false;
+      syncAdminPaymentApproval_();
+      form.scrollIntoView?.({block:'nearest'});
+    }
     return;
   }
   if(target.hasAttribute('data-payment-admin')){
@@ -2851,6 +2876,12 @@ async function submitProfileForm(form){
     toast(response.updated?'Profil berhasil diperbarui.':'Tidak ada perubahan profil.');
   }catch(error){btn.disabled=false;toast(error.message,true);}
 }
+document.addEventListener('input',(e)=>{
+  if(e.target.closest?.('#admin-payment-form'))syncAdminPaymentApproval_();
+});
+document.addEventListener('change',(e)=>{
+  if(e.target.closest?.('#admin-payment-form'))syncAdminPaymentApproval_();
+});
 document.addEventListener('submit',(e)=>{
   const id=e.target.id||(e.target.classList?.contains('ai-form')?'ai-run-form':'');
   if(!['admin-pin-form','content-editor-form','service-brief-form','service-quote-form','admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
