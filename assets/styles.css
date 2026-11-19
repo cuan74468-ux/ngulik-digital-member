@@ -822,3 +822,23 @@ body.ngd-public-app:not(#ngd) .checkout-total .checkout-total-amount {
 body.ngd-public-app:not(#ngd) .checkout-total .btn {
   align-self:flex-start;
 }
+
+/* Member order history: clear, keyboard-accessible detail action on mobile. */
+body.ngd-public-app:not(#ngd) .order-history-item {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-width:0;
+}
+body.ngd-public-app:not(#ngd) .order-history-item > .list-row {
+  padding:0;
+  min-width:0;
+}
+body.ngd-public-app:not(#ngd) .order-history-item .left,
+body.ngd-public-app:not(#ngd) .order-history-item .right {
+  min-width:0;
+}
+body.ngd-public-app:not(#ngd) .order-history-detail {
+  align-self:flex-start;
+  min-height:42px;
+}
