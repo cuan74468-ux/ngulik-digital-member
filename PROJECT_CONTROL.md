@@ -33,6 +33,7 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 | 2026-11-19 | GAS tidak berubah | Gap hasil pembacaan Drive/Sheet: QA item aktif; banner pilot sudah publish; eBook STAGING Rp0 vs produksi Rp49.000; label etalase gratis tidak konsisten; 4 LMS course + 8 lessons publish | READ-ONLY FINDINGS — tidak ada harga, konten, status order, atau data produksi yang diubah |
 
 | 2026-11-19 | GAS STAGING tidak diubah pada sesi dokumentasi | Empat Google Docs disinkronkan: Blueprint Workspace V1.2, Master Index, Brief Teknis, Command Center. Ngulik Tools Studio diputuskan sebagai arsitektur proyek terpisah; MVP Visual → Musik → Video, Pages/Workers/D1, Queues/R2 tidak wajib di awal, SSO sekali pakai, reserve/settle/release | DOKUMEN DIPERBARUI DAN DIBACA BALIK; Tools Studio belum dibangun; aplikasi/DB/deployment tidak diubah |
+| 2026-11-20 | GAS dan database tidak berubah | LANGKAH 1: eBook Vibe Coder & Classroom Chapter 1 ditautkan langsung dari Beranda dan halaman Belajar publik, tanpa login Member. UI responsif di CSS bersama; cache CSS/JS diperbarui di halaman publik dan STAGING | SOURCE UPDATED di GitHub `main`; JS syntax PASS; simulasi tamu Beranda/CMS dan #belajar PASS; akses riil Google Classroom/GitHub Pages dari HP masih perlu verifikasi |
 
 ## Checkpoint penutupan hari — Kamis, 19 November 2026
 
