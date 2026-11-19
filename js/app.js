@@ -204,7 +204,7 @@ const state={
   lmsSelectedLessonId:null,lmsJobs:[],lmsSelectedAIJobId:null,
   lmsCompletion:null,notifications:{enabled:false,items:[],unread:0},catalogFilter:'semua',marketplaceSearch:'',marketplaceSort:'default',
   adminCatalog:[],catalogEditId:'',catalogRequestId:null,
-  adminRuntime:null,adminRuntimeError:'',adminSettings:null,adminSettingsError:'',adminPaymentReviewId:'',
+  adminRuntime:null,adminRuntimeError:'',adminSettings:null,adminSettingsError:'',adminPaymentReviewId:'',workspaceInfo:null,
   services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null,
   registrationOtpVerifiedWa:'',publicStep:0,selectedAiToolId:'',aiCategory:'semua',aiSearch:'',pendingPurchaseId:''
 };
@@ -1330,10 +1330,13 @@ function viewAdminOrders(){
     '<div class="admin-payment-list">'+rows.map(o=>{
       const status=String(o.status||'');
       const overdue=status==='PENDING'&&Number.isFinite(new Date(o.expires_at).getTime())&&new Date(o.expires_at).getTime()<=Date.now();
-      const canReview=['MENUNGGU_VERIFIKASI','EXPIRED'].includes(status)||overdue;
+      const canReview=['MENUNGGU_VERIFIKASI','EXPIRED'].includes(status)||overdue||
+        (status==='PENDING'&&state.workspaceInfo?.manual_payment_direct_enabled===true);
       const reviewing=canReview&&state.adminPaymentReviewId===o.order_id;
       const note=status==='PENDING'?
         (overdue?'Batas pembayaran sudah lewat. Periksa pembayaran terlambat sebelum menindaklanjuti.':
+        state.workspaceInfo?.manual_payment_direct_enabled===true?
+        'Jika dana sudah diterima, Admin boleh melakukan verifikasi langsung dari mutasi meski Member belum menekan konfirmasi.':
         'Menunggu Member mengonfirmasi bahwa transfer sudah dikirim. Jangan setujui sebelum dana benar-benar masuk.'):
         status==='MENUNGGU_VERIFIKASI'?'Member mengaku sudah transfer. Periksa mutasi dana dengan nominal tepat, bukan screenshot atau klaim saja.':
         status==='EXPIRED'?'Order kedaluwarsa. Hanya verifikasi jika ada dana yang benar-benar telah diterima dan cocok.':
@@ -1801,10 +1804,12 @@ async function loadRoute(route){
     if(route==='affiliate')state.affiliates=await api('getAffiliateDashboard',{},token);
     if(route==='pesanan'){
       if(isAdmin()){
-        const [orders,review]=await Promise.all([
-          api('adminListOrders',{},token),api('adminGetReconciliation',{},token)]);
+        const [orders,review,workspace]=await Promise.all([
+          api('adminListOrders',{},token),api('adminGetReconciliation',{},token),
+          api('getStagingWorkspaceInfo').catch(()=>null)]);
         state.adminOrders=orders||[];
         state.reconciliation=review;
+        state.workspaceInfo=workspace;
       }else state.orders=await api('listMyOrders',{},token);
     }
     if(route==='admin'&&isAdmin()){
@@ -2034,7 +2039,8 @@ async function submitAdminPaymentForm_(form){
   const id=String(form.dataset.orderId||'');
   const order=state.adminOrders.find(o=>o.order_id===id);
   const overdue=order&&order.status==='PENDING'&&Number.isFinite(new Date(order.expires_at).getTime())&&new Date(order.expires_at).getTime()<=Date.now();
-  if(!order||(!['MENUNGGU_VERIFIKASI','EXPIRED'].includes(String(order.status))&&!overdue))
+  if(!order||(!['MENUNGGU_VERIFIKASI','EXPIRED'].includes(String(order.status))&&!overdue&&
+    !(order.status==='PENDING'&&state.workspaceInfo?.manual_payment_direct_enabled===true)))
     return toast('Order belum diajukan untuk verifikasi atau belum kedaluwarsa. Minta Member mengonfirmasi pembayaran terlebih dahulu.',true);
   const fd=new FormData(form);
   const received=Number(fd.get('nominal_diterima'));
