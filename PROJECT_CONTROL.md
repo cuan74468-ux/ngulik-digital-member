@@ -34,6 +34,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | 2026-11-19 | Tidak berubah (frontend GitHub) | Pesanan tanpa sesi menawarkan login Admin PIN atau Member OTP; login Member diberi jalur Admin PIN | SOURCE UPDATED; uji jalur PIN/OTP PASS |
 
+| 2026-11-19 | GAS tidak berubah | Optimasi frontend: hapus pembacaan rekonsiliasi tak terpakai di Pesanan Admin, mulai pemuatan halaman tanpa menunggu data publik, paralelkan Studio AI, dan tampilkan detail pesanan sementara secara aman | SOURCE UPDATED; sintaks dan pemeriksaan preview PASS; latensi nyata HP belum diukur ulang |
+
 ## Aturan tetap untuk AI dan operator
 
 - **Tidak membuat/menyarankan backup, database, project, atau deployment baru** untuk tes rutin, perubahan UI, atau troubleshooting biasa.
