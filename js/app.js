@@ -195,7 +195,7 @@ const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,qa:false,
   info:null,catalog:[],siteContent:[],adminContent:[],contentEditId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
   affiliates:null,partnerShelf:[],partnerShelfLoaded:false,waitlist:[],members:[],adminOrders:[],adminSummary:null,
-  reconciliation:null,selectedProduct:null,lastOrder:null,loading:false,
+  reconciliation:null,selectedProduct:null,lastOrder:null,checkoutReturnRoute:'katalog',loading:false,
   memberProducts:[],supportTickets:[],supportReleases:[],supportOverview:null,
   adminSupportTickets:[],ticketDetail:null,selectedTicketId:null,
   memberSearch:null,member360:null,selectedMemberId:null,
@@ -1058,7 +1058,7 @@ function viewCheckout(){
   return '<div class="checkout-backdrop"><section class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-title">'+
     '<header class="checkout-heading"><div><p class="eyebrow">NGULIK DIGITAL / CHECKOUT</p>'+
     '<h1 id="checkout-title">Konfirmasi pesanan</h1><p>Nomor order: '+esc(o.order_id)+'</p></div>'+
-    '<button type="button" class="checkout-close" data-route="katalog" aria-label="Tutup checkout">×</button></header>'+
+    '<button type="button" class="checkout-close" data-route="'+esc(state.checkoutReturnRoute||'katalog')+'" aria-label="Tutup checkout">×</button></header>'+
     '<div class="checkout-summary"><section><h2>Rincian pembelian</h2>'+
     '<div class="price-line"><span>Produk</span><strong>'+esc(o.nama_produk||'—')+'</strong></div>'+
     '<div class="price-line"><span>Harga</span><strong>'+rupiah(o.harga_dasar)+'</strong></div>'+
@@ -1950,7 +1950,7 @@ async function buy(productId){
   if(!confirm('Buat pesanan '+product.nama+' seharga '+rupiah(product.harga)+'?'))return;
   try{
     const order=await api('createOrder',{product_id:productId},state.token,{write:true});
-    state.lastOrder=order;go('checkout');toast('Pesanan berhasil dibuat.');
+    state.checkoutReturnRoute='katalog';state.lastOrder=order;go('checkout');toast('Pesanan berhasil dibuat.');
   }catch(e){toast(e.message,true);}
 }
 async function openOrderDetail_(id){
@@ -1963,7 +1963,7 @@ async function openOrderDetail_(id){
     // Server checks ownership; do not infer payment status from cached UI.
     const current=await api('getOrder',{order_id:id},state.token);
     if(!current||current.order_id!==id)throw new ApiError('Rincian pesanan tidak valid.');
-    state.lastOrder=current;
+    state.checkoutReturnRoute='pesanan';state.lastOrder=current;
     go('checkout');
   }catch(error){toast(error.message||'Gagal membuka rincian pesanan.',true);}
   finally{if(button?.isConnected)button.disabled=false;}
@@ -2715,7 +2715,7 @@ document.addEventListener('submit',(e)=>{
 by('mobile-back').addEventListener('click',()=>{
   const back={
     'lms-course':'belajar','lms-complete':'lms-course',
-    tiket:'dukungan',checkout:'katalog',
+    tiket:'dukungan',checkout:state.checkoutReturnRoute||'katalog',
     'lms-editor':'lms','lms-lesson':'lms-editor','lms-ai':'lms-editor',
     'ai-tool':'ai',
     member360:'member'
