@@ -1043,67 +1043,79 @@ function viewMyOrders(){
 function viewCheckout(){
   const o=state.lastOrder;
   if(!o)return title('Pembayaran','PESANAN ANDA','')+
-    empty('Pesanan belum dipilih','Pilih produk terlebih dahulu.','katalog','Buka katalog');
+    empty('Pesanan belum dipilih','Buka riwayat pesanan atau pilih produk.','pesanan','Riwayat pesanan');
+  const status=String(o.status||'PENDING');
+  const expiryMs=new Date(o.expires_at).getTime();
+  const expired=!Number.isFinite(expiryMs)||expiryMs<=Date.now();
+  const open=status==='PENDING'&&!expired;
+  const waiting=status==='MENUNGGU_VERIFIKASI';
+  const paid=status==='PAID'||status==='FULFILLED';
+  const finished=['EXPIRED','CANCELLED','REFUNDED'].includes(status);
   const qrRaw=String(o.qris_gambar_path||config.qrisImageUrl||'');
-  const qrSource=(()=>{try{const u=new URL(qrRaw,location.href);return u.protocol==='https:'&& !u.username&&!u.password?u.href:'';}catch{return '';}})();
-  const merchant=String(o.qris_atas_nama||config.qrisMerchant||'');
-  const fallbackQr=Boolean(qrSource&&merchant);
-  const adminWa=String(o.wa_admin||'').replace(/[^0-9]/g,'');
-  const adminChat=adminWa?'https://wa.me/'+adminWa+'?text='+encodeURIComponent('Halo Admin, saya perlu bantuan pembayaran order '+o.order_id+' nominal '+rupiah(o.total_bayar)):'';
-  const paymentLink=(()=>{
-    try{
-      const url=new URL(String(o.gateway_payment_url||''));
-      return url.protocol==='https:'&&url.username===''&&url.password===''?url.href:'';
-    }catch{return '';}
-  })();
-  const ms=new Date(o.expires_at).getTime()-Date.now();
-  const seconds=Number.isFinite(ms)?Math.max(0,Math.ceil(ms/1000)):0;
-  const timer=Number.isFinite(ms)?
-    String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0'):'—';
-  const readyQr=fallbackQr?qrSource:'';
-  const expired=!Number.isFinite(ms)||ms<=0;
-  const paid=['PAID','FULFILLED'].includes(String(o.status||''));
-  const finished=['CANCELLED','REFUNDED','EXPIRED'].includes(String(o.status||''));
-  const paymentClosed=paid||finished||expired||String(o.status||'')!=='PENDING';
-  // The bundled qris.png is explicitly NOT a payable code. Owner approval
-  // only applies after the asset has been replaced with their real QRIS.
   const bundledPlaceholder=/(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrRaw)&&
     config.qrisOwnerImageApproved!==true;
-  const manual=String(o.metode||'').includes('STATIS');
-  const pending=['PENDING','MENUNGGU_VERIFIKASI'].includes(String(o.status||''));
+  const qrUrl=(()=>{try{const u=new URL(qrRaw,location.href);return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';}catch{return '';}})();
+  const merchant=String(o.qris_atas_nama||config.qrisMerchant||'');
+  const officialQr=!!(qrUrl&&merchant&&!bundledPlaceholder);
+  const paymentLink=(()=>{try{const u=new URL(String(o.gateway_payment_url||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';}catch{return '';}})();
+  let adminWa=String(o.wa_admin||'').replace(/\D/g,'');
+  if(adminWa.startsWith('0'))adminWa='62'+adminWa.slice(1);
+  const adminChat=/^62\d{8,13}$/.test(adminWa)?
+    'https://wa.me/'+adminWa+'?text='+encodeURIComponent(
+      'Halo Admin Ngulik Digital. Mohon instruksi pembayaran resmi / tindak lanjut untuk order '+o.order_id+
+      ' sebesar '+rupiah(o.total_bayar)+'. Status pesanan: '+status+'.'):null;
+  const seconds=open?Math.max(0,Math.ceil((expiryMs-Date.now())/1000)):0;
+  const timer=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
+  const stateNote=status==='FULFILLED'?
+    'Pembayaran telah diverifikasi. Hak akses atau token telah diproses. Lihat saldo di Meja Kerja.':
+    status==='PAID'?'Dana telah diverifikasi oleh Admin; pemenuhan produk masih diproses.':
+    waiting?'Konfirmasi Anda sudah diterima. Admin harus memeriksa mutasi dana sebelum pesanan dinyatakan lunas. Jangan transfer ulang.':
+    finished?'Pesanan tidak lagi terbuka untuk pembayaran. Jangan mentransfer memakai nominal atau kode unik lama.':
+    expired?'Batas pembayaran telah terlewati. Hubungi Admin jika Anda sudah membayar; jangan transfer ulang.':
+    'Pesanan belum lunas. Pembayaran hanya sah setelah dana masuk dan Admin memverifikasinya.';
+  const paymentSection=!open?
+    '<div class="checkout-qr checkout-payment-closed"><strong>'+(
+      waiting?'Menunggu pemeriksaan Admin':paid?'Pembayaran dan layanan':'Pembayaran ditutup')+
+    '</strong><p class="checkout-note">'+esc(stateNote)+'</p></div>':
+    paymentLink?
+      '<div class="checkout-qr"><strong>Metode pembayaran resmi</strong>'+
+      '<a class="btn btn-primary btn-wide" href="'+esc(paymentLink)+'" target="_blank" rel="noopener noreferrer">Buka pembayaran resmi '+icon('arrow')+'</a>'+
+      '<p class="checkout-note">Pastikan penerima dan nominal benar sebelum membayar.</p></div>':
+    officialQr?
+      '<div class="checkout-qr"><strong>QRIS resmi</strong><img data-qris-image src="'+esc(qrUrl)+'" alt="QRIS penerima '+esc(merchant)+'" width="260" height="260">'+
+      '<div data-qris-fallback class="qris-fallback" hidden>Gambar QRIS gagal dimuat. Hubungi Admin sebelum membayar.</div>'+
+      '<strong>'+esc(merchant)+'</strong><p class="checkout-note">Periksa penerima dan transfer jumlah tepat.</p></div>':
+      '<div class="checkout-manual-panel" role="note"><strong>QRIS resmi belum tersedia</strong>'+
+      '<p>Gunakan konfirmasi manual melalui Admin. <strong>Jangan scan QRIS placeholder atau transfer sebelum menerima tujuan pembayaran resmi.</strong></p>'+
+      '<ol><li>Minta instruksi pembayaran lewat WhatsApp Admin.</li>'+
+      '<li>Pastikan nama penerima dan nominal '+rupiah(o.total_bayar)+' tepat.</li>'+
+      '<li>Setelah dana benar-benar dikirim, ajukan verifikasi di bawah. Admin akan memeriksa mutasi.</li></ol></div>';
+  const askAdmin=adminChat?
+    '<a class="btn btn-secondary btn-wide" href="'+esc(adminChat)+'" target="_blank" rel="noopener noreferrer">'+
+    (open?'Minta instruksi pembayaran via WhatsApp':'Hubungi Admin tentang pesanan')+' '+icon('arrow')+'</a>':
+    '<p class="checkout-note">Kontak Admin belum tersedia. Gunakan menu Bantuan untuk meminta tindak lanjut.</p>';
+  const canConfirm=open&&paymentEnabled()&&!!adminChat;
   return '<div class="checkout-backdrop"><section class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-title">'+
-    '<header class="checkout-heading"><div><p class="eyebrow">NGULIK DIGITAL / CHECKOUT</p>'+
-    '<h1 id="checkout-title">Konfirmasi pesanan</h1><p>Nomor order: '+esc(o.order_id)+'</p></div>'+
-    '<button type="button" class="checkout-close" data-route="'+esc(state.checkoutReturnRoute||'katalog')+'" aria-label="Tutup checkout">×</button></header>'+
+    '<header class="checkout-heading"><div><p class="eyebrow">NGULIK DIGITAL / PESANAN</p>'+
+    '<h1 id="checkout-title">Detail &amp; tindak lanjut</h1><p>Order '+esc(o.order_id)+'</p></div>'+
+    '<button type="button" class="checkout-close" data-route="'+esc(state.checkoutReturnRoute||'pesanan')+'" aria-label="Kembali ke riwayat">×</button></header>'+
     '<div class="checkout-summary"><section><h2>Rincian pembelian</h2>'+
     '<div class="price-line"><span>Produk</span><strong>'+esc(o.nama_produk||'—')+'</strong></div>'+
     '<div class="price-line"><span>Harga</span><strong>'+rupiah(o.harga_dasar)+'</strong></div>'+
     '<div class="price-line"><span>Kode unik</span><strong>'+rupiah(o.kode_unik)+'</strong></div>'+
-    '<div class="checkout-total"><small>Total transfer tepat (termasuk kode unik)</small><strong class="checkout-total-amount" style="white-space:nowrap;font-variant-numeric:tabular-nums;font-size:clamp(1.4rem,5vw,2.25rem)">'+rupiah(o.total_bayar)+'</strong>'+(!paymentClosed?'<button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(String(o.total_bayar))+'">Salin Nominal</button>':'')+'</div>'+
-    (paymentClosed?'<p class="checkout-note"><strong>'+(paid?'Pembayaran tercatat '+esc(o.status)+'.':finished?'Pesanan berstatus '+esc(o.status)+'.':'Batas pembayaran telah lewat.')+'</strong> Jangan melakukan transfer untuk pesanan ini tanpa arahan dan pemeriksaan Admin.</p>':
-      '<p class="checkout-countdown" id="checkout-countdown" data-expiry="'+esc(o.expires_at||'')+'">Batas pembayaran: '+timer+'</p>')+
-    '<p class="checkout-note">Status: '+esc(o.status||'PENDING')+
-    '. Pembayaran dianggap berhasil setelah terverifikasi oleh backend.</p></section>'+
-    '<section><h2>Metode pembayaran</h2>'+
-    (paymentClosed?
-      '<div class="checkout-qr"><strong>Rincian pesanan</strong><p class="checkout-note">Metode '+esc(o.metode||'QRIS_STATIS')+'. QRIS tidak ditampilkan karena pembayaran tidak lagi terbuka.</p></div>':
-     paymentLink?
-      '<div class="checkout-qr"><strong>Pembayaran QRIS</strong>'+
-      '<p class="checkout-note">Tautan pembayaran resmi tersedia dari server.</p>'+
-      '<a class="btn btn-primary" href="'+esc(paymentLink)+'" target="_blank" rel="noopener noreferrer">Buka pembayaran aman ↗</a></div>':
-      readyQr?
-      '<div class="checkout-qr"><img data-qris-image src="'+esc(readyQr)+'" alt="'+(bundledPlaceholder?'Placeholder QRIS belum bisa dibayar — ':'QRIS penerima ')+esc(merchant)+'" width="260" height="260">'+
-      '<div data-qris-fallback class="qris-fallback" hidden><strong>Gambar QRIS gagal dimuat</strong><p>Jangan transfer tanpa memastikan QRIS resmi. Minta kode QR pembayaran langsung kepada Admin melalui WhatsApp.</p></div>'+
-      '<strong>'+esc(merchant)+'</strong><p class="checkout-note">'+
-      (bundledPlaceholder?'QRIS masih placeholder pengujian. JANGAN SCAN / JANGAN TRANSFER. Minta QRIS resmi dari Admin.':'Bayar sesuai jumlah termasuk kode unik.')+'</p></div>':
-      '<div class="checkout-qr"><strong>Informasi pembayaran</strong>'+
-      '<p class="checkout-note">QRIS belum tersedia pada respons pesanan. Jangan mentransfer sebelum QRIS atau tautan resmi ditampilkan.</p></div>')+
-    (!paymentClosed&&manual&&readyQr&&!bundledPlaceholder&&o.status==='PENDING'&&seconds>0?
-      '<button class="btn btn-primary btn-wide" type="button" data-action="confirm-payment">Saya Sudah Bayar</button>':'')+
-    (!paymentClosed&&adminChat?'<a class="btn btn-secondary btn-wide" href="'+esc(adminChat)+'" target="_blank" rel="noopener noreferrer">'+
-      (bundledPlaceholder||!readyQr?'Konfirmasi &amp; Minta QRIS via WA Admin':'Chat Admin via WA')+'</a>':'')+
-    '<p class="checkout-note">Simpan nomor pesanan untuk memantau status pada menu Pesanan.</p></section></div>'+
-    '</section></div>';
+    '<div class="checkout-total"><small>Nominal tepat termasuk kode unik</small>'+
+    '<strong class="checkout-total-amount" style="white-space:nowrap;font-variant-numeric:tabular-nums">'+rupiah(o.total_bayar)+'</strong>'+
+    (open?'<button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(String(o.total_bayar))+'">Salin nominal</button>':'')+'</div>'+
+    (open?'<p class="checkout-countdown" id="checkout-countdown" data-expiry="'+esc(o.expires_at||'')+'">Batas pembayaran: '+timer+'</p>':'')+
+    '<div class="checkout-status-summary">'+safeBadge(status)+'<p>'+esc(stateNote)+'</p></div></section>'+
+    '<section><h2>'+ (open?'Langkah pembayaran':'Status dan bantuan')+'</h2>'+paymentSection+
+    (open?'<div class="checkout-steps"><strong>Langkah selanjutnya</strong><p>Setelah transfer nyata, minta verifikasi Admin. Saldo dan hak akses hanya diberikan setelah dana diterima dan disetujui.</p></div>':'')+
+    askAdmin+
+    (canConfirm?'<button class="btn btn-primary btn-wide" type="button" data-action="confirm-payment">Saya sudah transfer — minta verifikasi</button>':'')+
+    (open&&!paymentEnabled()?'<p class="checkout-note">Pengajuan konfirmasi pembayaran belum diaktifkan. Hubungi Admin untuk bantuan.</p>':'')+
+    (paid?'<button type="button" class="btn btn-secondary btn-wide" data-route="beranda">Lihat saldo / akses saya</button>':'')+
+    '<button type="button" class="btn btn-ghost btn-wide" data-route="pesanan">Kembali ke daftar pesanan</button>'+
+    '</section></div></section></div>';
 }
 function viewAdminRuntime(){
   const data=state.adminRuntime, schema=data?.schema;
