@@ -168,49 +168,41 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-floating-shadow{
   }
 }
 
-
-/* Public access to the free eBook and Chapter 1: no Member gate, both environments. */
+/* Free learning: one quiet navigational row, not a second hero or product grid. */
 .ngd-free-access{
   box-sizing:border-box;
   width:min(1080px,calc(100% - 40px));
-  margin:clamp(26px,4vw,60px) auto clamp(38px,6vw,80px);
-  padding:clamp(22px,3.5vw,38px) 0 0;
-  border-top:1px solid rgba(21,22,28,.13);
-  color:#15161c;
+  margin:10px auto 42px;
+  padding:18px 0;
+  display:flex;
+  align-items:center;
+  gap:clamp(20px,4vw,44px);
+  border-bottom:1px solid rgba(35,38,40,.13);
+  background:transparent;
+  color:#242824;
 }
-.ngd-free-access-head{max-width:740px;margin:0 0 24px}
-.ngd-free-eyebrow{margin:0 0 9px;font-size:.7rem;font-weight:750;letter-spacing:.11em;color:#756d60}
-.ngd-free-access-head h2{
-  margin:0 0 10px;font-size:clamp(1.45rem,3vw,2.25rem);line-height:1.18;
-  letter-spacing:-.045em;color:inherit;
+.ngd-free-label{
+  flex:0 0 auto;font-size:.69rem;font-weight:750;letter-spacing:.11em;
+  color:#77756d;white-space:nowrap;
 }
-.ngd-free-access-head>p:last-child{margin:0;color:#65636b;line-height:1.65;font-size:clamp(.9rem,1.6vw,1rem)}
-.ngd-free-access-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.ngd-free-card{
-  display:flex;flex-direction:column;align-items:flex-start;gap:11px;min-width:0;
-  padding:clamp(20px,3vw,30px);border:1px solid #e9e6e1;border-radius:18px;
-  background:#fcfbf9;color:#15161c;text-decoration:none;
-  transition:border-color .18s ease,background .18s ease,transform .18s ease;
+.ngd-free-links{display:flex;align-items:center;gap:clamp(16px,3vw,34px);min-width:0}
+.ngd-free-links a{
+  display:inline-flex;align-items:center;gap:7px;
+  color:inherit;font-size:.91rem;font-weight:650;line-height:1.4;
+  text-decoration:none;text-underline-offset:4px;
 }
-.ngd-free-card:hover,.ngd-free-card:focus-visible{
-  color:#15161c;background:#fff;border-color:#b7ada0;transform:translateY(-2px);
-}
-.ngd-free-card:focus-visible{outline:3px solid #4b76d4;outline-offset:3px}
-.ngd-free-card-number{font-size:.71rem;letter-spacing:.09em;font-weight:750;color:#756d60}
-.ngd-free-card strong{font-size:clamp(1.05rem,1.85vw,1.32rem);line-height:1.3;letter-spacing:-.025em}
-.ngd-free-card>span:nth-of-type(2){font-size:.91rem;line-height:1.6;color:#65636b}
-.ngd-free-card-cta{
-  display:inline-flex;align-items:center;gap:8px;margin-top:auto;padding-top:9px;
-  font-size:.9rem;font-weight:750;color:#242424;
-}
-.ngd-free-card-cta svg{width:17px;height:17px}
+.ngd-free-links a:hover{text-decoration:underline}
+.ngd-free-links a:focus-visible{outline:2px solid #485f87;outline-offset:5px;border-radius:2px}
+.ngd-free-links svg{width:15px;height:15px;flex-shrink:0}
+.ngd-free-footnote{font-size:.79rem;color:#77756d;margin:0 0 28px;line-height:1.6}
 @media(max-width:640px){
-  .ngd-free-access{width:calc(100% - 32px);margin:25px auto 52px;padding-top:23px}
-  .ngd-free-access-head{margin-bottom:19px}
-  .ngd-free-access-grid{grid-template-columns:1fr;gap:11px}
-  .ngd-free-card{gap:9px;padding:21px;border-radius:15px}
-}
-@media(prefers-reduced-motion:reduce){
-  .ngd-free-card{transition:none}
-  .ngd-free-card:hover,.ngd-free-card:focus-visible{transform:none}
+  .ngd-free-access{
+    width:calc(100% - 32px);margin:6px auto 28px;padding:13px 0;
+    gap:0;
+  }
+  .ngd-free-label{display:none}
+  .ngd-free-links{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:12px}
+  .ngd-free-links a{font-size:.83rem;gap:4px;justify-content:center;text-align:center;white-space:normal}
+  .ngd-free-links a:first-child{border-right:1px solid rgba(35,38,40,.13);padding-right:7px}
+  .ngd-free-links a:last-child{padding-left:2px}
 }
