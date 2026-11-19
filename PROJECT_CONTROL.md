@@ -35,6 +35,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 | 2026-11-19 | GAS STAGING tidak diubah pada sesi dokumentasi | Empat Google Docs disinkronkan: Blueprint Workspace V1.2, Master Index, Brief Teknis, Command Center. Ngulik Tools Studio diputuskan sebagai arsitektur proyek terpisah; MVP Visual → Musik → Video, Pages/Workers/D1, Queues/R2 tidak wajib di awal, SSO sekali pakai, reserve/settle/release | DOKUMEN DIPERBARUI DAN DIBACA BALIK; Tools Studio belum dibangun; aplikasi/DB/deployment tidak diubah |
 | 2026-11-20 | GAS dan database tidak berubah | LANGKAH 1: eBook Vibe Coder & Classroom Chapter 1 ditautkan langsung dari Beranda dan halaman Belajar publik, tanpa login Member. UI responsif di CSS bersama; cache CSS/JS diperbarui di halaman publik dan STAGING | SOURCE UPDATED di GitHub `main`; JS syntax PASS; simulasi tamu Beranda/CMS dan #belajar PASS; akses riil Google Classroom/GitHub Pages dari HP masih perlu verifikasi |
 
+| 2026-11-20 | GAS dan database tidak berubah | Koreksi UI Langkah 1: hilangkan tombol eBook/Classroom ganda di hero, dua kartu besar, dan daftar belajar tamu yang menumpuk; ganti satu baris tautan ringan pada Beranda serta halaman Belajar | SOURCE UPDATED di `main`; syntax JS dan simulasi Beranda CMS/guest PASS; verifikasi visual HP masih diperlukan |
+
 ## Checkpoint penutupan hari — Kamis, 19 November 2026
 
 **Keputusan status:** jeda kerja sampai sesi berikutnya pada Jumat, 20 November 2026. Tidak ada perubahan database/Apps Script/deployment produksi atau STAGING pada sesi terakhir; hanya Google Docs dan berkas kontrol ini yang diperbarui. Tidak membuat repository, database, ataupun deployment Ngulik Tools Studio.
