@@ -1358,6 +1358,12 @@ function viewAdminOrders(){
           '<h3>Konfirmasi penerimaan dana</h3><p>Periksa riwayat transaksi penerima yang sah. Jangan menandai lunas jika hanya ada pesan WhatsApp atau screenshot.</p>'+
           '<div class="field"><label for="admin-received-amount">Jumlah dana yang benar-benar diterima (Rp)</label>'+
           '<input class="input" id="admin-received-amount" name="nominal_diterima" type="number" inputmode="numeric" min="1" step="1" required placeholder="Masukkan nominal dari mutasi"></div>'+
+          '<div class="field"><label for="admin-payment-channel">Metode dana yang masuk</label>'+
+          '<select class="input" id="admin-payment-channel" name="metode_diterima" required>'+
+          '<option value="">Pilih sesuai bukti mutasi</option>'+
+          '<option value="QRIS_STATIS">QRIS resmi</option>'+
+          '<option value="TRANSFER_BANK">Transfer bank</option>'+
+          '<option value="TRANSFER_EWALLET">Transfer e-wallet</option></select></div>'+
           '<div class="field"><label for="admin-settlement-ref">Referensi transaksi pada mutasi</label>'+
           '<input class="input" id="admin-settlement-ref" name="referensi_pembayaran" required minlength="5" maxlength="120" placeholder="Nomor referensi / ID transaksi"></div>'+
           ((status==='EXPIRED'||overdue)?'<div class="field"><label for="admin-late-reason">Alasan pembayaran terlambat</label>'+
@@ -2046,17 +2052,20 @@ async function submitAdminPaymentForm_(form){
   const received=Number(fd.get('nominal_diterima'));
   const expected=Number(order.total_bayar);
   const proof=String(fd.get('referensi_pembayaran')||'').trim();
+  const method=String(fd.get('metode_diterima')||'');
   const reason=String(fd.get('alasan')||'').trim();
   if(!Number.isSafeInteger(received)||!Number.isSafeInteger(expected)||
      received!==expected||received<=0)
     return toast('Jumlah yang diterima harus sama persis dengan tagihan '+rupiah(expected)+'.',true);
+  if(!['QRIS_STATIS','TRANSFER_BANK','TRANSFER_EWALLET'].includes(method))
+    return toast('Pilih metode pembayaran yang benar-benar diterima.',true);
   if(proof.length<5||proof.length>120)
     return toast('Isi referensi mutasi yang valid (5–120 karakter).',true);
   if((order.status==='EXPIRED'||overdue)&&reason.length<5)
     return toast('Jelaskan alasan rekonsiliasi pembayaran terlambat.',true);
   if(fd.get('dana_diterima')!=='on')
     return toast('Verifikasi dana masuk harus dikonfirmasi Admin.',true);
-  if(!confirm('KONFIRMASI FINAL: dana '+rupiah(expected)+' BENAR-BENAR masuk ke penerima resmi untuk order '+id+
+  if(!confirm('KONFIRMASI FINAL: dana '+rupiah(expected)+' melalui '+method+' BENAR-BENAR masuk ke penerima resmi untuk order '+id+
     '. Setelah disetujui, sistem akan menerbitkan token/akses dan memproses notifikasi serta komisi. Lanjutkan?'))return;
   adminPaymentSubmitting_=true;
   const submit=form.querySelector('[type="submit"]');
@@ -2064,7 +2073,8 @@ async function submitAdminPaymentForm_(form){
   try{
     const saved=await api('adminVerifyOrder',{
       order_id:id,keputusan:'approve',dana_diterima:true,
-      referensi_pembayaran:proof,alasan:reason,nominal_terverifikasi:received
+      referensi_pembayaran:proof,alasan:reason,nominal_terverifikasi:received,
+      metode_diterima:method
     },state.token,{write:true});
     if(saved?.needs_review){
       toast('Pembayaran tercatat, tetapi pemenuhan produk perlu rekonsiliasi Admin. Jangan approve ulang.',true);
