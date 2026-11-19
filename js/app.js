@@ -1821,12 +1821,16 @@ async function loadRoute(route){
     if(route==='affiliate')state.affiliates=await api('getAffiliateDashboard',{},token);
     if(route==='pesanan'){
       if(isAdmin()){
-        const [orders,review,workspace]=await Promise.all([
-          api('adminListOrders',{},token),api('adminGetReconciliation',{},token),
-          api('getStagingWorkspaceInfo').catch(()=>null)]);
-        state.adminOrders=orders||[];
-        state.reconciliation=review;
-        state.workspaceInfo=workspace;
+        // Reconciliation is not displayed on this page; avoid an extra GAS
+        // execution and spreadsheet scan on every visit.
+        const [ordersResult,workspaceResult]=await Promise.allSettled([
+          api('adminListOrders',{},token),
+          api('getStagingWorkspaceInfo')
+        ]);
+        if(ordersResult.status==='fulfilled')state.adminOrders=ordersResult.value||[];
+        else throw ordersResult.reason;
+        if(workspaceResult.status==='fulfilled')state.workspaceInfo=workspaceResult.value;
+        else state.workspaceInfo=null;
       }else state.orders=await api('listMyOrders',{},token);
     }
     if(route==='admin'&&isAdmin()){
@@ -2933,8 +2937,12 @@ async function init(){
   if(!activatePreview()){
     state.info=null;
     render();
-    await Promise.all([refreshPublic(),restoreSession()]);
-    loadRoute(state.route);
+    // Public catalog/content and a private session are independent. Do not
+    // hold back the member/admin route behind slower public asset requests.
+    const publicLoad=refreshPublic();
+    await restoreSession();
+    if(state.token&&state.me)void loadRoute(state.route);
+    await publicLoad;
   }else render();
 }
 init();
