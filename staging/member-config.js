@@ -8,6 +8,7 @@ window.NGD_CONFIG = Object.freeze({
   siteUrl:'https://cuan74468-ux.github.io/ngulik-digital-member/staging/member.html',
   memberWritesEnabled:true,
   registrationOtpEnabled:true,
+  memberOtpLoginEnabled:true, // STAGING UI only; backend flag remains authoritative
   paymentsEnabled:true,
   adminLoginEnabled:true,
   contentEnabled:true,
