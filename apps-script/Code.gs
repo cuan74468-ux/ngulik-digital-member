@@ -1056,11 +1056,20 @@ function newOrder_(m,p,requestId) {
     var o={order_id:id,member_id:m.member_id,product_id:product.product_id,nama_produk:product.nama,harga_dasar:price,kode_unik:code,total_bayar:price+code,status:'PENDING',metode:'QRIS_STATIS',created_at:created,expires_at:new Date(created.getTime()+Number(s.order_expiry_menit||60)*60000),ref_member_id:m.referred_by||'',request_id:requestId};
     appendRow_('orders',o);logAudit_(m.member_id,m.role,'ORDER_CREATED','orders',id,'','PENDING',{product_id:product.product_id});
     if(s.followup_member_otomatis===true&&m.wa){
-      sendFonnteWa_(m.wa,'Halo '+String(m.nama||'Member').slice(0,60)+', pesanan #'+id+
-        ' untuk '+String(product.nama||'produk').slice(0,90)+' berhasil dibuat. Transfer TEPAT Rp'+
-        Number(o.total_bayar).toLocaleString('id-ID')+' sebelum '+isoWib_(o.expires_at)+
-        '. Setelah transfer tekan Saya Sudah Bayar di aplikasi.',
-        'MEMBER','ORDER_INVOICE_MEMBER',id);
+      // QRIS placeholder is not a payable destination. Member confirmation
+      // means "please verify", NOT verified funds or automatic fulfillment.
+      var qrPath=String(s.qris_gambar_path||'');
+      var qrUnavailable=!qrPath||/(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrPath);
+      var amount='Rp'+Number(o.total_bayar).toLocaleString('id-ID');
+      var invoice='Halo '+String(m.nama||'Member').slice(0,60)+', pesanan #'+id+
+        ' untuk '+String(product.nama||'produk').slice(0,90)+
+        ' sebesar '+amount+' telah dicatat. Batas pembayaran: '+isoWib_(o.expires_at)+'. ';
+      invoice+=qrUnavailable?
+        'QRIS resmi belum tersedia. JANGAN TRANSFER sebelum Admin memberikan tujuan pembayaran resmi. '+
+        'Buka Pesanan di aplikasi, minta instruksi via WhatsApp Admin, lalu ajukan verifikasi hanya jika benar-benar sudah transfer.':
+        'Periksa QRIS resmi dan nama penerima di aplikasi. Transfer tepat '+amount+
+        ', kemudian ajukan verifikasi pembayaran. Admin akan mencocokkan dana masuk.';
+      sendFonnteWa_(m.wa,invoice,'MEMBER','ORDER_INVOICE_MEMBER',id);
     }
     return orderView_(o,m);
   });
