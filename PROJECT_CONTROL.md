@@ -32,6 +32,43 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | 2026-11-19 | GAS tidak berubah | Gap hasil pembacaan Drive/Sheet: QA item aktif; banner pilot sudah publish; eBook STAGING Rp0 vs produksi Rp49.000; label etalase gratis tidak konsisten; 4 LMS course + 8 lessons publish | READ-ONLY FINDINGS — tidak ada harga, konten, status order, atau data produksi yang diubah |
 
+| 2026-11-19 | GAS STAGING tidak diubah pada sesi dokumentasi | Empat Google Docs disinkronkan: Blueprint Workspace V1.2, Master Index, Brief Teknis, Command Center. Ngulik Tools Studio diputuskan sebagai arsitektur proyek terpisah; MVP Visual → Musik → Video, Pages/Workers/D1, Queues/R2 tidak wajib di awal, SSO sekali pakai, reserve/settle/release | DOKUMEN DIPERBARUI DAN DIBACA BALIK; Tools Studio belum dibangun; aplikasi/DB/deployment tidak diubah |
+
+## Checkpoint penutupan hari — Kamis, 19 November 2026
+
+**Keputusan status:** jeda kerja sampai sesi berikutnya pada Jumat, 20 November 2026. Tidak ada perubahan database/Apps Script/deployment produksi atau STAGING pada sesi terakhir; hanya Google Docs dan berkas kontrol ini yang diperbarui. Tidak membuat repository, database, ataupun deployment Ngulik Tools Studio.
+
+### Hasil terverifikasi hari ini
+
+- Member M-0009: login OTP WhatsApp dan checkout/invoice Rp10.284 lulus uji sebelumnya di STAGING, tetapi bukan bukti penerimaan dana riil. Admin tetap masuk memakai PIN terpisah.
+- GAS STAGING: `ngdVerifyFullStagingReadiness()` 17 checks PASS dan ledger idempotency 13 checks PASS; pengujian sintetis tidak mengubah saldo nyata dan tidak memanggil provider.
+- Frontend GitHub `main`: alur pemilihan login PIN/OTP, pengaman form persetujuan dana, preview detail pesanan yang menunggu verifikasi server, optimasi pemuatan Pesanan/Studio AI, dan konfirmasi waiting list telah diperbarui. Uji regresi aktual HP terhadap versi terbaru belum lengkap.
+- Pembacaan STAGING: 29 tab; ada order Rp10.284 melewati tenggat namun masih PENDING, produk QA yang masih aktif, publikasi banner pilot yang terlalu dini, dan perbedaan harga eBook STAGING vs produksi. Belum ada perubahan harga, status order, atau konten publik.
+- Empat dokumen Drive aktif sudah diselaraskan pada 19 Nov: Blueprint Bisnis & Ekosistem Workspace **V1.2**, Dokumen Induk, Brief Eksekusi Teknis, dan Command Center. Bagian yang sudah tergantikan diberi konteks legacy/historis; tabel dan struktur dokumen lama tetap dipertahankan.
+- Keputusan arsitektur **Ngulik Tools Studio (belum dibangun)**: mesin AI terpisah dan integrasi plug-and-play; Ngulik Digital tetap memiliki Member, identitas, kredit, pembayaran dan bagi hasil. Stack MVP Pages + Workers + D1; tanpa Queues atau R2 wajib pada MVP Visual. Urutan MVP Visual/Flyer → Musik → Video. Harga/modal API baru HIPOTESIS, harus diverifikasi.
+
+### Belum terbukti dan tidak boleh diklaim selesai
+
+- Versi source `apps-script/Code.gs` belum direkonsiliasi lengkap dengan deployment GAS yang sedang aktif.
+- Trigger kedaluwarsa `expireOrders` belum diperiksa pada menu Triggers; order overdue tidak boleh diubah menjadi PAID tanpa bukti dana.
+- Hasil jadwal laporan otomatis Pilar 3 pukul 21.00 WIB pada 19 Nov **belum diterima/terverifikasi dalam sesi ini**; jangan menyimpulkan job sukses hanya dari jadwal.
+- Registrasi baru OTP → akun aktif → kredit awal, pembayaran nyata → verifikasi dana → saldo token → komisi yang memenuhi syarat → WA, serta AI provider, LMS, jasa, dan hak akses masih perlu QA end-to-end.
+- Penerapan kode unik **pengurang** (harga dasar dikurangi kode unik), paket kredit Pemula/Reguler/Hemat, dan tarif bakar output belum sesuai runtime terverifikasi; **jangan mengubah order historis** atau menjual harga baru tanpa audit modal dan persetujuan Owner.
+- Pilot 50 Member, produksi, perpindahan stack, dan Ngulik Tools Studio tidak dinyatakan live.
+
+### Urutan kerja berikutnya — Jumat, 20 November 2026
+
+1. **P0 — Rekonsiliasi kondisi aktual (read-only):** buka Apps Script STAGING → Executions dan Triggers, periksa eksekusi Pilar 3 19 Nov pukul 21.00 WIB, keberadaan/jadwal `expireOrders`, versi deployment GAS, dan error terkait. Baca Sheet orders tanpa memodifikasi data.
+2. **P0 — Tutup risiko pesanan:** analisis mengapa order yang lewat tenggat masih PENDING; rancang perbaikan idempoten untuk expiry dan uji pengaruhnya terhadap pembayaran terlambat. Hanya eksekusi mutasi setelah risiko dan instruksi spesifik jelas.
+3. **P0 — Rekonsiliasi kebijakan pembayaran:** cocokkan rumus kode unik lama (+) dengan keputusan baru (−), nominal checkout dan referensi bank; rancang perubahan hanya untuk order baru, uji benturan nilai dan komisi; minta persetujuan Owner untuk aktivasi harga/keuangan.
+4. **P0 — Uji HP satu Member baru:** pendaftaran OTP, kredit awal, sesi, dan riwayat; jangan gunakan data pribadi/test yang tidak disetujui.
+5. **P0 — Uji satu transaksi nyata nominal kecil setelah tujuan pembayaran resmi tersedia:** cek mutasi dana secara independen; Admin menyetujui manual; cocokkan ledger, saldo, status FULFILLED, notifikasi, serta komisi hanya jika ada referensi pengajak yang sah.
+6. **P1 — Bersihkan tampilan penawaran sebelum pilot:** produk QA aktif, banner 'pilot dibuka', eBook gratis vs harga produksi, etalase partner; keputusan harga dan publikasi oleh Owner.
+7. **P1 — QA fungsi pendukung:** AI provider/debit/refund terukur, LMS, jasa, affiliate, dan latensi Android; tidak membuat fitur baru sebelum jalur utama PASS.
+8. **SETELAH P0 STABIL:** audit harga/lisensi provider Visual lalu, dengan persetujuan Owner, mulai proyek baru `ngulik-tools-studio` terpisah sesuai Blueprint V1.2. Belum membuat stack/repo ini sebelumnya.
+
+**Gerbang mutlak:** produksi dan tindakan finansial tidak diubah tanpa persetujuan Owner; tanggal/harga/komisi yang masih usulan tidak boleh diberlakukan otomatis. Fokus utama besok adalah penyelesaian transaksi dan QA STAGING, bukan membangun Tools Studio paralel.
+
 ## Aturan tetap untuk AI dan operator
 
 - **Tidak membuat/menyarankan backup, database, project, atau deployment baru** untuk tes rutin, perubahan UI, atau troubleshooting biasa.
