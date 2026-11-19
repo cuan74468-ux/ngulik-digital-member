@@ -1010,7 +1010,7 @@ function viewLogin(register=false,adminMode=false){
     '<p class="small login-other-route">'+
     (adminMode?'<button class="btn btn-ghost btn-sm" data-route="login">Kembali ke login member</button>':
       register?'Sudah punya akun? <button class="btn btn-ghost btn-sm" data-route="login">Masuk</button>':
-      '<button class="btn btn-ghost btn-sm" data-route="daftar">Belum punya akun? Daftar</button>')+
+      '<button class="btn btn-ghost btn-sm" data-route="daftar">Belum punya akun? Daftar</button> <button class="btn btn-secondary btn-sm" data-route="admin-login">Masuk Admin dengan PIN</button>')+
     '</p>'+
     (adminMode&&!String(config.brand||'').includes('STAGING')?
       '<section class="admin-env-notice"><strong>Database STAGING menggunakan Admin Studio terpisah.</strong>'+
@@ -1019,7 +1019,11 @@ function viewLogin(register=false,adminMode=false){
     '</div>';
 }
 function viewMyOrders(){
-  if(!logged())return title('Pesanan saya','RIWAYAT TRANSAKSI','Akses data pesanan pribadi.')+needLogin('pesanan');
+  if(!logged())return title('Masuk untuk melihat pesanan','AKSES PESANAN','Pilih jenis akun. Admin menggunakan PIN; Member menggunakan OTP WhatsApp.')+
+    '<section class="surface"><div class="actions" style="display:flex;gap:12px;flex-wrap:wrap">'+
+    '<button type="button" class="btn btn-primary" data-route="admin-login">Saya Admin — masuk dengan PIN '+icon('arrow')+'</button>'+
+    '<button type="button" class="btn btn-secondary" data-route="login">Saya Member — masuk dengan OTP '+icon('arrow')+'</button>'+
+    '</div></section>';
   return title('Pesanan saya','RIWAYAT TRANSAKSI','Buka pesanan untuk melihat langkah selanjutnya. Pembayaran hanya dianggap lunas setelah dana diverifikasi Admin.')+
     (!state.orders.length?empty('Belum ada pesanan','Produk yang Anda pesan nantinya muncul di sini.','katalog','Lihat katalog'):
     '<div class="stack order-history-list">'+state.orders.map(o=>{
