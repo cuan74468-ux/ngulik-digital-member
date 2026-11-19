@@ -842,3 +842,148 @@ body.ngd-public-app:not(#ngd) .order-history-detail {
   align-self:flex-start;
   min-height:42px;
 }
+
+
+/* Payment follow-up: mobile-first member and admin actions, no new checkout backend. */
+body.ngd-public-app:not(#ngd) .order-history-open {
+  width:100%;
+  display:block;
+  text-align:left;
+  cursor:pointer;
+  border:1px solid #e4e7eb;
+  padding:22px;
+  color:inherit;
+  background:#fff;
+  transition:border-color .15s, box-shadow .15s;
+}
+body.ngd-public-app:not(#ngd) .order-history-open:hover {
+  border-color:#9aadd0;
+  box-shadow:0 10px 30px -22px rgba(28,51,81,.35);
+}
+body.ngd-public-app:not(#ngd) .order-history-open:focus-visible {
+  outline:3px solid #376bd1;
+  outline-offset:3px;
+}
+body.ngd-public-app:not(#ngd) .order-history-top,
+body.ngd-public-app:not(#ngd) .order-history-meta {
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:10px;flex-wrap:wrap;
+}
+body.ngd-public-app:not(#ngd) .order-history-top {
+  align-items:center;
+  margin-bottom:12px;
+}
+body.ngd-public-app:not(#ngd) .order-history-name {
+  max-width:100%;
+  font-size:1.02rem;line-height:1.4;overflow-wrap:anywhere;
+}
+body.ngd-public-app:not(#ngd) .order-history-meta {
+  font-size:.8rem;color:#606b78;
+}
+body.ngd-public-app:not(#ngd) .order-history-meta strong {
+  font-size:1rem;color:#172633;font-variant-numeric:tabular-nums;
+}
+body.ngd-public-app:not(#ngd) .order-history-next {
+  display:block;margin-top:12px;
+  font-size:.84rem;line-height:1.55;color:#4a5968;
+}
+body.ngd-public-app:not(#ngd) .order-history-action {
+  display:flex;align-items:center;gap:8px;
+  margin-top:16px;padding-top:13px;
+  border-top:1px solid #e5e9ef;
+  color:#1e4c94;font-size:.87rem;font-weight:700;
+}
+body.ngd-public-app:not(#ngd) .checkout-manual-panel {
+  background:#fff9ed;border:1px solid #eddcbd;
+  border-radius:14px;padding:18px;
+  color:#3d3225;line-height:1.6;
+}
+body.ngd-public-app:not(#ngd) .checkout-manual-panel > strong {
+  display:block;margin-bottom:8px;font-size:1rem;
+}
+body.ngd-public-app:not(#ngd) .checkout-manual-panel p {
+  margin:0 0 12px;font-size:.89rem;
+}
+body.ngd-public-app:not(#ngd) .checkout-manual-panel ol {
+  padding-left:20px;margin:0;font-size:.85rem;
+}
+body.ngd-public-app:not(#ngd) .checkout-manual-panel li+li {
+  margin-top:7px;
+}
+body.ngd-public-app:not(#ngd) .checkout-status-summary,
+body.ngd-public-app:not(#ngd) .checkout-steps {
+  margin-top:14px;padding:15px 16px;
+  background:#f5f7fa;border-radius:12px;
+}
+body.ngd-public-app:not(#ngd) .checkout-status-summary p,
+body.ngd-public-app:not(#ngd) .checkout-steps p {
+  font-size:.87rem;line-height:1.55;margin:8px 0 0;
+}
+body.ngd-public-app:not(#ngd) .checkout-payment-closed {
+  border-style:solid;text-align:left;align-items:flex-start;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-list {
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));
+  gap:16px;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-card {
+  display:flex;flex-direction:column;gap:12px;
+  padding:21px;min-width:0;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-head {
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:10px;flex-wrap:wrap;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-head strong {
+  display:block;line-height:1.4;overflow-wrap:anywhere;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-head small {
+  display:block;color:#667282;font-size:.75rem;
+  margin-top:5px;overflow-wrap:anywhere;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-amount {
+  display:flex;flex-wrap:wrap;gap:5px;
+  justify-content:space-between;align-items:baseline;
+  background:#f4f6fa;border-radius:12px;padding:12px;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-amount span {
+  font-size:.77rem;color:#566477;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-amount strong {
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+  font-size:1.3rem;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-note {
+  font-size:.84rem;line-height:1.6;color:#4b5968;margin:0;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-form {
+  display:flex;flex-direction:column;gap:12px;
+  border-top:1px solid #e3e7ed;padding-top:15px;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-form h3 {margin:0;}
+body.ngd-public-app:not(#ngd) .admin-payment-form p {
+  font-size:.82rem;line-height:1.6;margin:0;color:#596678;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-form .field {margin:0;}
+body.ngd-public-app:not(#ngd) .admin-payment-checkbox {
+  display:flex;align-items:flex-start;gap:9px;
+  border:1px solid #e2e6ec;background:#f8fafd;border-radius:12px;
+  padding:12px;font-size:.84rem;line-height:1.55;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-checkbox input {
+  flex:none;margin-top:4px;width:18px;height:18px;
+}
+body.ngd-public-app:not(#ngd) .admin-payment-form .verification-actions > button {
+  min-height:43px;
+}
+@media(max-width:600px) {
+  body.ngd-public-app:not(#ngd) .order-history-open {padding:18px;}
+  body.ngd-public-app:not(#ngd) .order-history-meta {display:block;}
+  body.ngd-public-app:not(#ngd) .order-history-meta strong {
+    display:block;margin-top:6px;
+  }
+  body.ngd-public-app:not(#ngd) .admin-payment-card {padding:18px;}
+  body.ngd-public-app:not(#ngd) .admin-payment-form .verification-actions > button {
+    flex:1 1 100%;
+  }
+}
