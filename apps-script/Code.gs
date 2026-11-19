@@ -1095,16 +1095,31 @@ function transitionOrder_(m,id,type,p) {
     var from=o.status,to='',patch={};
     if(type==='confirm'&&!admin&&from==='PENDING'){to='MENUNGGU_VERIFIKASI';patch.konfirmasi_bayar_at=now_();}
     else if(type==='cancel'&&!admin&&from==='PENDING'){to='CANCELLED';patch.cancelled_at=now_();}
-    else if(type==='approve'&&admin&&['MENUNGGU_VERIFIKASI','EXPIRED'].indexOf(from)>=0){
+    else if(type==='approve'&&admin&&['PENDING','MENUNGGU_VERIFIKASI','EXPIRED'].indexOf(from)>=0){
+      // Admin may reconcile real funds directly even without Member pressing
+      // "Saya Sudah Transfer". NEVER infer payment from a QRIS placeholder,
+      // member claim, screenshot, or a checkbox alone.
       require_(p.dana_diterima===true,'RECONCILIATION_REQUIRED',
         'Dana harus diverifikasi benar-benar masuk sebelum order dibayar.');
+      var exact=Number(o.total_bayar),received=Number(p.nominal_terverifikasi);
+      require_(Number.isSafeInteger(exact)&&exact>0&&
+        Number.isSafeInteger(received)&&received===exact,
+        'PAYMENT_UNVERIFIED','Nominal pada mutasi harus sama persis dengan total pesanan.');
       var proof=safeText_(p.referensi_pembayaran,120);
       require_(proof.length>=5,'VALIDATION','Referensi mutasi/settlement pembayaran wajib diisi.');
+      // A single bank/QRIS reference cannot settle different member orders.
+      var alreadyUsed=findRows_('orders',function(row){
+        return row.order_id!==id&&['PAID','FULFILLED'].indexOf(String(row.status))>=0&&
+          String(row.catatan_admin||'').indexOf('Pembayaran ref: '+proof)===0;
+      });
+      require_(!alreadyUsed.length,'RECONCILIATION_REQUIRED',
+        'Referensi dana ini sudah dipakai pesanan lain.');
       var note=safeText_(p.alasan,300);
       if(from==='EXPIRED')require_(note.length>=5,'VALIDATION',
         'Alasan pembayaran terlambat wajib diisi.');
       to='PAID';patch.paid_at=now_();patch.verified_by=m.member_id;
-      patch.catatan_admin='Pembayaran ref: '+proof+(note?' | '+note:'');
+      patch.catatan_admin='Pembayaran ref: '+proof+(note?' | '+note:'')+
+        (from==='PENDING'?' | Dikonfirmasi langsung Admin':'');
     } else if(type==='reject'&&admin&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(from)>=0){
       require_(safeText_(p.alasan,300).length>=5,'VALIDATION','Alasan penolakan diperlukan.');to='CANCELLED';patch.cancelled_at=now_();patch.catatan_admin=p.alasan;
     } else throw ngdError_('CONFLICT','Status pesanan tidak mengizinkan tindakan ini.');
@@ -1926,6 +1941,7 @@ function ngdStagingWorkspaceInfo_() {
     otp_enabled:props.getProperty('NGD_OTP_REGISTRATION_ENABLED')==='true',
     external_providers_enabled:props.getProperty('NGD_EXTERNAL_PROVIDERS_ENABLED')==='true',
     finance_enabled:financeEnabled_(),
+    manual_payment_direct_enabled:mutationsEnabled_()&&financeEnabled_(),
     catalog_enabled:mutationsEnabled_(),
     content_enabled:mutationsEnabled_(),
     lms_enabled:mutationsEnabled_()
