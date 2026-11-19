@@ -26,6 +26,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | 2026-11-19 | Source GAS invoice diperbarui; runtime GAS belum disinkronkan | Alur manual via WA, kartu pesanan aktif, konfirmasi Member, pemeriksaan dana Admin di HP dan fulfillment yang sudah ada | Frontend SOURCE UPDATED; 6 skenario tampilan PASS; uji HP/approval nyata belum dilakukan |
 
+| 2026-11-19 | GAS source diperbarui; belum diverifikasi di editor/deployment | Checkout manual via WA, kartu pesanan dapat diketuk, konfirmasi Member, verifikasi dana Admin dari HP, metode transfer aktual, auto-fulfillment dan WA | Source GitHub tersimpan; 6 skenario UI + simulasi pembayaran GAS PASS; runtime/end-to-end belum diuji |
+
 ## Aturan tetap untuk AI dan operator
 
 - **Tidak membuat/menyarankan backup, database, project, atau deployment baru** untuk tes rutin, perubahan UI, atau troubleshooting biasa.
