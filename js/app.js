@@ -1059,7 +1059,7 @@ function viewCheckout(){
     '<div class="price-line"><span>Produk</span><strong>'+esc(o.nama_produk||'—')+'</strong></div>'+
     '<div class="price-line"><span>Harga</span><strong>'+rupiah(o.harga_dasar)+'</strong></div>'+
     '<div class="price-line"><span>Kode unik</span><strong>'+rupiah(o.kode_unik)+'</strong></div>'+
-    '<div class="checkout-total"><small>Transfer tepat (termasuk kode unik)</small><strong>'+rupiah(o.harga_dasar)+'<mark class="unique-digits">'+esc(String(o.kode_unik||'').padStart(3,'0'))+'</mark></strong><button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(String(o.total_bayar))+'">Salin Nominal</button></div>'+
+    '<div class="checkout-total"><small>Total transfer tepat (termasuk kode unik)</small><strong class="checkout-total-amount" style="white-space:nowrap;font-variant-numeric:tabular-nums;font-size:clamp(1.4rem,5vw,2.25rem)">'+rupiah(o.total_bayar)+'</strong><button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(String(o.total_bayar))+'">Salin Nominal</button></div>'+
     '<p class="checkout-countdown" id="checkout-countdown" data-expiry="'+esc(o.expires_at||'')+'">Batas pembayaran: '+timer+'</p>'+
     '<p class="checkout-note">Status: '+esc(o.status||'PENDING')+
     '. Pembayaran dianggap berhasil setelah terverifikasi oleh backend.</p></section>'+
