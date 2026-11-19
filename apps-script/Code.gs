@@ -2162,6 +2162,8 @@ function apiRouter_(action,token,p,requestId) {
     // Both OTP actions are write-gated by doPost and STAGING-only guard.
     case 'requestRegistrationOtp':return ngdOtpRequest_(p);
     case 'verifyRegistrationOtp':return ngdOtpVerify_(p);
+    case 'requestMemberLoginOtp':return ngdMemberOtpLoginRequest_(p);
+    case 'verifyMemberLoginOtp':return ngdMemberOtpLoginVerify_(p);
     case 'register':return authRegister_(p);
     case 'login':return authLogin_(p);
     case 'adminLogin':return adminPortalLogin_(p);
@@ -2545,11 +2547,19 @@ function doPost(e) {
     var id=String(body.request_id||'');
     var reads=apiReadActions_();
     var isolatedAdmin=['adminLogin','adminLogout','adminChangePin'];
+    // Isolated STAGING member OTP: NOT a release of general writes or finance.
+    var isolatedMemberOtp=['requestMemberLoginOtp','verifyMemberLoginOtp'];
     if(isolatedAdmin.indexOf(action)>=0){
       // Authentication is released independently of registration, payments,
       // refunds, catalogue and content writes. Never add generic admin
       // mutation actions to this list.
       requireAdminPortalEnabled_();
+      require_(/^[a-zA-Z0-9_-]{16,80}$/.test(id),'VALIDATION','ID permintaan tidak valid.');
+    }else if(isolatedMemberOtp.indexOf(action)>=0){
+      // Guard also checks STAGING/DB/flag inside the OTP module.
+      require_(typeof ngdMemberOtpLoginGuard_==='function','MAINTENANCE',
+        'Login OTP Member STAGING belum tersedia.');
+      ngdMemberOtpLoginGuard_();
       require_(/^[a-zA-Z0-9_-]{16,80}$/.test(id),'VALIDATION','ID permintaan tidak valid.');
     }else if(reads.indexOf(action)<0){
       requireMutationsEnabled_();
