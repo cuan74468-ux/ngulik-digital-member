@@ -2678,70 +2678,93 @@ function ngdTestCreditLedgerAndIdempotency() {
  * It is not a substitute for live payment reconciliation or GAS source sync.
  */
 function ngdVerifyFullStagingReadiness() {
+  // STAGING ONLY: all payment, ledger and commission records below exist in memory.
+  // Does NOT call Fonnte, credit a real account, or mark an order as paid.
   var workspace=ngdStagingWorkspaceInfo_();
   require_(workspace.environment==='STAGING','FORBIDDEN','STAGING saja.');
-  var s=settings_();
-  require_(String(s.payment_gateway_mode||'QRIS_STATIS')==='QRIS_STATIS',
+  var setting=settings_();
+  require_(String(setting.payment_gateway_mode||'QRIS_STATIS')==='QRIS_STATIS',
     'MAINTENANCE','Mode pembayaran bukan QRIS_STATIS.');
   var ledgerCheck=ngdTestCreditLedgerAndIdempotency();
   require_(ledgerCheck.status==='PASS'&&ledgerCheck.sheet_rows_written===0,
     'CONFLICT','Simulasi ledger belum lulus.');
   var checks=[],orders=[],ledger=[],commissions=[],member='NGD_SYNTHETIC_MEMBER';
   var orderId='NGD_SYNTHETIC_QRIS_ORDER',requestId='NGD_SYNTHETIC_QRIS_REQUEST';
-  var balance=5;
+  var balance=35,initialBalance=balance;
   function check(name,condition) {
     require_(condition,'CONFLICT','Simulasi STAGING gagal: '+name);
     checks.push(name);
   }
   function credit(kind,amount,ref) {
     if(ngdCreditReferenceCheck_(ledger,member,amount,ref,kind))return false;
-    balance+=amount;
-    require_(Number.isSafeInteger(balance)&&balance>=0,
-      'CONFLICT','Saldo sintetis tidak valid.');
+    var next=balance+amount;
+    require_(Number.isSafeInteger(next)&&next>=0,'CONFLICT','Saldo sintetis tidak valid.');
+    balance=next;
     ledger.push({member_id:member,ref_id:ref,tipe:kind,jumlah:amount,status:'POSTED'});
     return true;
+  }
+  function approveIfFundsVerified(order,proof) {
+    // Mirror the payment evidence requirement, but never call transitionOrder_.
+    require_(order.status==='MENUNGGU_VERIFIKASI','CONFLICT',
+      'Order belum siap diverifikasi.');
+    require_(proof&&proof.dana_diterima===true,'RECONCILIATION_REQUIRED',
+      'Dana belum terverifikasi.');
+    require_(String(proof.referensi_pembayaran||'').length>=5,
+      'VALIDATION','Referensi settlement diperlukan.');
+    order.status='PAID';
   }
   try{
     withLock_(function(){
       var order={order_id:orderId,request_id:requestId,status:'PENDING',
-        member_id:member,metode:'QRIS_STATIS',harga_dasar:10000,total_bayar:10123};
+        member_id:member,metode:'QRIS_STATIS',harga_dasar:10000,
+        kode_unik:284,total_bayar:10284};
       orders.push(order);
       check('qris_pending',orders.length===1&&order.status==='PENDING');
-      // A member confirmation is not payment verification.
+      check('exact_amount_10284',order.harga_dasar+order.kode_unik===order.total_bayar);
+      check('no_credit_before_payment',balance===35&&ledger.length===0);
+      // Member clicking "Saya Sudah Bayar" is not evidence of settled funds.
       order.status='MENUNGGU_VERIFIKASI';
-      check('waiting_is_not_paid',order.status!=='PAID'&&balance===5);
-      var verifiedFunds=true,proof='SYNTHETIC_SETTLEMENT_PROOF';
-      check('manual_verification_required',verifiedFunds&&proof.length>=5);
-      order.status='PAID';
-      check('paid_only_after_review',order.status==='PAID');
-      check('topup_posted_once',credit('TOPUP',10,orderId)&&balance===15);
-      check('topup_retry_idempotent',!credit('TOPUP',10,orderId)&&balance===15);
+      check('waiting_is_not_paid',order.status!=='PAID'&&balance===35);
+      var unpaidRejected=false;
+      try{approveIfFundsVerified(order,{dana_diterima:false});}
+      catch(e){unpaidRejected=e&&e.publicCode==='RECONCILIATION_REQUIRED';}
+      check('unpaid_approval_rejected',unpaidRejected&&order.status==='MENUNGGU_VERIFIKASI');
+      var missingRefRejected=false;
+      try{approveIfFundsVerified(order,{dana_diterima:true,referensi_pembayaran:''});}
+      catch(e){missingRefRejected=e&&e.publicCode==='VALIDATION';}
+      check('missing_settlement_proof_rejected',missingRefRejected&&order.status==='MENUNGGU_VERIFIKASI');
+      // This proof exists ONLY in memory; no real funds are claimed or recorded.
+      approveIfFundsVerified(order,{dana_diterima:true,
+        referensi_pembayaran:'SYNTHETIC_ONLY_NOT_A_REAL_PAYMENT'});
+      check('synthetic_paid_after_verified_proof',order.status==='PAID');
+      check('topup_35_to_45',credit('TOPUP',10,orderId)&&balance===45);
+      check('topup_retry_idempotent',!credit('TOPUP',10,orderId)&&balance===45);
       var percent=commissionRate_({komisi_persen:25},{komisi_persen:10});
       var amount=Math.floor(order.harga_dasar*percent/100);
       if(!commissions.some(function(x){return x.order_id===orderId;}))
         commissions.push({order_id:orderId,status:'PENDING',nominal:amount});
       check('affiliate_commission_once',commissions.length===1&&amount===1000);
-      check('affiliate_retry_idempotent',commissions.filter(function(x){
-        return x.order_id===orderId;
-      }).length===1);
-      check('usage_once',credit('USAGE',-2,requestId)&&balance===13);
+      if(!commissions.some(function(x){return x.order_id===orderId;}))
+        commissions.push({order_id:orderId,status:'PENDING',nominal:amount});
+      check('affiliate_retry_idempotent',commissions.length===1);
+      check('usage_once',credit('USAGE',-2,requestId)&&balance===43);
       check('usage_request_id_deduplicated',ngdAiRequestSeen_(ledger,requestId)&&
-        !credit('USAGE',-2,requestId)&&balance===13);
-      check('error_refund_once',credit('REFUND_ERROR',2,requestId)&&balance===15);
+        !credit('USAGE',-2,requestId)&&balance===43);
+      check('error_refund_once',credit('REFUND_ERROR',2,requestId)&&balance===45);
       check('error_refund_idempotent',ngdAiRefundSeen_(ledger,requestId)&&
-        !credit('REFUND_ERROR',2,requestId)&&balance===15);
+        !credit('REFUND_ERROR',2,requestId)&&balance===45);
       check('qris_and_ledger_net',ledger.reduce(function(n,r){
         return n+Number(r.jumlah);
       },0)===10);
+      check('final_synthetic_balance_45',balance===initialBalance+10);
     });
     console.log('NGD_FULL_STAGING_SYNTHETIC_OK checks='+checks.length+
-      ' real_mutations=0 provider_calls=0');
+      ' starting_balance=35 ending_balance=45 real_mutations=0 provider_calls=0');
     return {status:'PASS_SYNTHETIC_ONLY',environment:'STAGING',
-      checks:checks.length,source_runtime_sync_verified:false,
-      real_transactions_verified:false,live_ready:false,
-      real_sheet_mutations:0,provider_calls:0};
+      checks:checks.length,starting_balance:initialBalance,ending_balance:balance,
+      source_runtime_sync_verified:false,real_transactions_verified:false,
+      live_ready:false,real_sheet_mutations:0,provider_calls:0};
   }finally{
-    // Cleanup is deliberately in-memory; no user records ever existed.
     orders.length=0;ledger.length=0;commissions.length=0;
   }
 }
