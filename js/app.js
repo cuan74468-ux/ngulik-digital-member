@@ -195,7 +195,7 @@ const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,qa:false,
   info:null,catalog:[],siteContent:[],adminContent:[],contentEditId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
   affiliates:null,partnerShelf:[],partnerShelfLoaded:false,waitlist:[],members:[],adminOrders:[],adminSummary:null,
-  reconciliation:null,selectedProduct:null,lastOrder:null,checkoutReturnRoute:'katalog',loading:false,
+  reconciliation:null,selectedProduct:null,lastOrder:null,orderDetailLoading:false,checkoutReturnRoute:'katalog',loading:false,
   memberProducts:[],supportTickets:[],supportReleases:[],supportOverview:null,
   adminSupportTickets:[],ticketDetail:null,selectedTicketId:null,
   memberSearch:null,member360:null,selectedMemberId:null,
@@ -1048,6 +1048,8 @@ function viewCheckout(){
   const o=state.lastOrder;
   if(!o)return title('Pembayaran','PESANAN ANDA','')+
     empty('Pesanan belum dipilih','Buka riwayat pesanan atau pilih produk.','pesanan','Riwayat pesanan');
+  if(state.orderDetailLoading)return title('Memeriksa pesanan','DETAIL PESANAN','Mencocokkan status terbaru dengan server.')+
+    '<section class="surface" role="status" aria-live="polite"><strong>'+esc(o.nama_produk||'Produk')+'</strong><p class="card-desc">'+esc(o.order_id)+' · '+rupiah(o.total_bayar)+'</p><p class="card-desc">Mengambil status pembayaran. Jangan transfer sebelum data terbaru berhasil dimuat.</p><button class="btn btn-secondary" data-route="pesanan" type="button">Kembali ke Pesanan</button></section>';
   const status=String(o.status||'PENDING');
   const expiryMs=new Date(o.expires_at).getTime();
   const expired=!Number.isFinite(expiryMs)||expiryMs<=Date.now();
@@ -2035,23 +2037,30 @@ async function buy(productId){
   if(!confirm('Buat pesanan '+product.nama+' seharga '+rupiah(product.harga)+'?'))return;
   try{
     const order=await api('createOrder',{product_id:productId},state.token,{write:true});
-    state.checkoutReturnRoute='pesanan';state.lastOrder=order;go('checkout');toast('Pesanan berhasil dibuat.');
+    state.checkoutReturnRoute='pesanan';state.orderDetailLoading=false;state.lastOrder=order;go('checkout');toast('Pesanan berhasil dibuat.');
   }catch(e){toast(e.message,true);}
 }
 async function openOrderDetail_(id){
   if(!logged()||isAdmin())return toast('Masuk sebagai Member untuk melihat pesanan.',true);
   const known=state.orders.find(o=>o.order_id===id);
   if(!known)return toast('Pesanan tidak ditemukan. Muat ulang riwayat.',true);
-  const button=[...document.querySelectorAll('[data-order-detail]')].find(el=>el.dataset.orderDetail===id);
-  if(button)button.disabled=true;
+  // Show a safe preview immediately. Never enable payment controls with stale data.
+  state.checkoutReturnRoute='pesanan';state.lastOrder=known;
+  state.orderDetailLoading=true;
+  go('checkout');
   try{
-    // Server checks ownership; do not infer payment status from cached UI.
     const current=await api('getOrder',{order_id:id},state.token);
     if(!current||current.order_id!==id)throw new ApiError('Rincian pesanan tidak valid.');
-    state.checkoutReturnRoute='pesanan';state.lastOrder=current;
-    go('checkout');
-  }catch(error){toast(error.message||'Gagal membuka rincian pesanan.',true);}
-  finally{if(button?.isConnected)button.disabled=false;}
+    if(state.lastOrder?.order_id!==id)return;
+    state.lastOrder=current;state.orderDetailLoading=false;
+    if(state.route==='checkout')render();
+  }catch(error){
+    if(state.lastOrder?.order_id===id){
+      state.orderDetailLoading=false;
+      if(state.route==='checkout')go('pesanan');
+    }
+    toast('Gagal memastikan status pesanan dari server: '+(error.message||'Coba lagi.'),true);
+  }
 }
 function syncAdminPaymentApproval_(){
   const form=document.getElementById('admin-payment-form');
