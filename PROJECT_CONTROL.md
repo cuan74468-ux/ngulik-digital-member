@@ -32,6 +32,8 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | 2026-11-19 | Tidak berubah (frontend GitHub) | Form Admin: pernyataan dana wajib dicentang sendiri setelah formulir dibuka; tombol Lunas baru aktif saat seluruh bukti cocok | SOURCE UPDATED; 6 skenario validasi PASS; runtime HP belum diuji |
 
+| 2026-11-19 | Tidak berubah (frontend GitHub) | Pesanan tanpa sesi menawarkan login Admin PIN atau Member OTP; login Member diberi jalur Admin PIN | SOURCE UPDATED; uji jalur PIN/OTP PASS |
+
 ## Aturan tetap untuk AI dan operator
 
 - **Tidak membuat/menyarankan backup, database, project, atau deployment baru** untuk tes rutin, perubahan UI, atau troubleshooting biasa.
