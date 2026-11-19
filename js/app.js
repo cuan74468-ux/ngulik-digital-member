@@ -303,16 +303,10 @@ function viewMore(){
 const NGD_FREE_EBOOK_URL='https://cuan74468-ux.github.io/buku-pintar-vibe-coder/buku-pintar-vibe-coder-edisi-1.html';
 const NGD_FREE_CLASSROOM_URL='https://classroom.google.com/c/ODk4MzQ4OTEwMjc5?cjc=ozzbygx3';
 function viewFreeLearningResources_(){
-  // A single compact link row; no duplicated hero buttons or stacked cards.
-  return '<nav class="ngd-free-access" aria-label="Akses materi belajar gratis">'+
-    '<span class="ngd-free-label">BELAJAR GRATIS</span>'+
-    '<div class="ngd-free-links">'+
-      '<a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">'+
-        'eBook Vibe Coder '+icon('arrow')+'</a>'+
-      '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">'+
-        'Kelas UMKM · Chapter 1 '+icon('arrow')+'</a>'+
-    '</div>'+
-    '</nav>';
+  return '<nav class="ngd-free-access" aria-label="Akses belajar gratis">'+
+    '<a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer" aria-label="Baca eBook Vibe Coder gratis">eBook Vibe Coder</a>'+
+    '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer" aria-label="Buka kelas UMKM gratis">Kelas UMKM</a>'+
+  '</nav>';
 }
 const safeBadge=(s)=>'<span class="chip '+(['AKTIF','FULFILLED','PAID','APPROVED'].includes(String(s))?'green':'orange')+'">'+esc(s||'-')+'</span>';
 function viewHome(){
