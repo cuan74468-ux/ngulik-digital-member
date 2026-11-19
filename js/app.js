@@ -1781,12 +1781,15 @@ async function loadRoute(route){
     }
     if(route==='beranda')state.home=await api('getBeranda',{},token);
     if(route==='ai'||route==='ai-tool'){
-      // Independent reads: avoid waiting for two full GAS round trips in series.
-      const [home,tools]=await Promise.all([
+      // Independent reads: two GAS calls in parallel without losing the
+      // successful result when the other service is temporarily unavailable.
+      const [homeResult,toolsResult]=await Promise.allSettled([
         api('getBeranda',{},token),api('getTools',{},token)
       ]);
-      state.home=home;
-      state.tools=tools?.tools||[];
+      if(homeResult.status==='fulfilled')state.home=homeResult.value;
+      if(toolsResult.status==='fulfilled')state.tools=toolsResult.value?.tools||[];
+      if(homeResult.status==='rejected'&&toolsResult.status==='rejected')
+        throw toolsResult.reason;
     }
     if(route==='katalog'&&!isAdmin()){
       // Member shelf is read-only and never launches internal checkout.
