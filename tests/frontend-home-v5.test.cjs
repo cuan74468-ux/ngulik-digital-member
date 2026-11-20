@@ -12,7 +12,7 @@ const stagingHtml=fs.readFileSync(path.join(root,'staging/member.html'),'utf8');
 test('public and STAGING share the same latest calm floating-brand layer',()=>{
   for(const html of [publicHtml,stagingHtml]){
     assert.ok(html.indexOf('learning-journey.css')>html.indexOf('home-v5.css'));
-    assert.match(html,/learning-journey\.css\?v=20261120-hero-unified-v4/);
+    assert.match(html,/learning-journey\.css\?v=20261120-home-services-v1/);
     assert.match(html,/family=Inter/);
   }
 });
