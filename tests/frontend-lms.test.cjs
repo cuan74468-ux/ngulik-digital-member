@@ -66,7 +66,7 @@ test('member preview shows published class and allows reading without AI or paym
   h.go('lms-course');
   assert.match(h.nodes.screen.innerHTML,/Menyiapkan Profil Usaha/);
   assert.match(h.nodes.screen.innerHTML,/Tujuan pembelajaran/);
-  assert.match(h.nodes.screen.innerHTML,/disabled title="Penyuntingan materi belum tersedia"/);
+  assert.match(h.nodes.screen.innerHTML,/disabled title="Edit materi belum tersedia"/);
 });
 test('member cannot open admin editor routes',()=>{
   const h=preview('member','lms');
