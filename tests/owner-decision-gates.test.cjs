@@ -16,9 +16,10 @@ test('owner authorizes functional source implementation without silently changin
   assert.equal(owner.ownerApprovalRequiredFor.includes('production_code_deployment'),true);
 });
 test('main public UI exposes enabled controls while staging endpoint remains distinct',()=>{
-  for(const flag of ['memberWritesEnabled','registrationOtpEnabled','paymentsEnabled',
+  for(const flag of ['memberWritesEnabled','registrationOtpEnabled',
     'lmsEnabled','supportEnabled','catalogEnabled','contentEnabled','serviceEnabled'])
     assert.match(frontend,new RegExp(flag+':\\s*true'),flag);
+  assert.match(frontend,/paymentsEnabled:\s*false/); // Official QRIS still unpublished
   const endpoint=x=>x.match(/apiUrl:\s*'([^']+)'/)?.[1];
   assert.ok(endpoint(frontend)&&endpoint(admin)&&endpoint(frontend)!==endpoint(admin));
   assert.equal(owner.environment.stagingSchemaObservedTabs,29);
