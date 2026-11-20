@@ -32,7 +32,7 @@ test('public UI strips unsafe HTML and supports authorized checkout',()=>{
   assert.match(app,/const esc\s*=/);
   assert.match(app,/const paymentEnabled\s*=/);
   assert.match(app,/data-buy=/);
-  assert.match(app,/const list=Array\.isArray\(state\.catalog\)\?state\.catalog:\[\]/);
+  assert.match(app,/const list=Array\.isArray\(state\.catalog\)\?state\.catalog\.filter\(p=>!isPublicQaOffer_\(p\)\):\[\]/);
   assert.doesNotMatch(app,/const PUBLIC_CATALOG=/);
   const api=read('js/api.js');
   assert.match(api,/credentials:\s*'omit'/);
