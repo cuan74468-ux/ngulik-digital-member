@@ -49,6 +49,6 @@ test('homepage-only CSS preserves payment and account logic',()=>{
 
 test('both entrypoints load current homepage copy rather than cached 16 November module',()=>{
   assert.match(app,/Bikin Usaha <em>Makin Mudah Ditemukan\.<\/em>/);
-  assert.match(publicHtml,/js\/app\.js\?v=20261120-hero-copy-step1/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261120-hero-copy-step1/);
+  assert.match(publicHtml,/js\/app\.js\?v=20261120-marketplace-retail-v2/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261120-marketplace-retail-v2/);
 });
