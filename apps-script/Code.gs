@@ -1096,8 +1096,8 @@ function ngdMayarInvoiceUrl_(raw) {
 }
 function createMayarOrder_(m,p,requestId) {
   var stage=ngdStagingWorkspaceInfo_();
-  require_(stage.environment==='STAGING'&&stage.external_providers_enabled===true,
-    'MAINTENANCE','Gateway hanya tersedia untuk STAGING yang terverifikasi.');
+  require_(stage.environment==='STAGING'&&stage.mayar_checkout_ready===true,
+    'MAINTENANCE','Checkout Mayar belum lolos verifikasi merchant dan pencairan.');
   requireMutationsEnabled_();
   requireFinanceEnabled_();
   require_(String(settings_().payment_gateway_mode||'')==='MAYAR',
@@ -1124,6 +1124,8 @@ function createMayarOrder_(m,p,requestId) {
     require_(product&&product.aktif===true&&
       ngdPriceRupiah_(product.harga)===allowed[sku],
       'RECONCILIATION_REQUIRED','Harga produk tidak cocok dengan katalog.');
+    if(sku==='P-POS')require_(['AKTIF','DIAJUKAN'].indexOf(m.status_pos)<0,
+      'CONFLICT','Lisensi POS sudah aktif atau sedang menunggu aktivasi.');
     var existing=byId_('orders','request_id',requestId);
     if(existing){
       require_(existing.member_id===m.member_id&&existing.product_id===sku&&
@@ -2089,6 +2091,11 @@ function ngdStagingWorkspaceInfo_() {
     registration_enabled:props.getProperty('NGD_REGISTRATION_ENABLED')==='true',
     otp_enabled:props.getProperty('NGD_OTP_REGISTRATION_ENABLED')==='true',
     external_providers_enabled:props.getProperty('NGD_EXTERNAL_PROVIDERS_ENABLED')==='true',
+    mayar_checkout_ready:mutationsEnabled_()&&financeEnabled_()&&
+      props.getProperty('NGD_EXTERNAL_PROVIDERS_ENABLED')==='true'&&
+      props.getProperty('MAYAR_PAYOUT_CONFIRMED')==='true'&&
+      String(props.getProperty('MAYAR_API_KEY')||'').trim().length>=20&&
+      String(settings_().payment_gateway_mode||'')==='MAYAR',
     finance_enabled:financeEnabled_(),
     manual_payment_direct_enabled:mutationsEnabled_()&&financeEnabled_(),
     catalog_enabled:mutationsEnabled_(),
@@ -2568,8 +2575,8 @@ function mayarWebhook_(e) {
   // Source integration is not a production release: accept only the verified
   // STAGING workspace until provider checkout, payouts and reconciliations pass.
   var stage=ngdStagingWorkspaceInfo_();
-  require_(stage.environment==='STAGING'&&stage.external_providers_enabled===true,
-    'MAINTENANCE','Webhook hanya tersedia di STAGING terverifikasi.');
+  require_(stage.environment==='STAGING'&&stage.mayar_checkout_ready===true,
+    'MAINTENANCE','Webhook Mayar belum lolos verifikasi merchant dan pencairan.');
   require_(String(settings_().payment_gateway_mode||'QRIS_STATIS')==='MAYAR',
     'NOT_AVAILABLE','Webhook Mayar tidak aktif untuk mode pembayaran ini.');
   var params=e&&e.parameter||{},multi=e&&e.parameters||{};
