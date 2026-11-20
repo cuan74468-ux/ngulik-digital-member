@@ -41,6 +41,9 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | 2026-11-20 | GAS/Sheet/deployment finansial tidak diubah | Koreksi penempatan akses gratis: DUA link teks dipindahkan dari header navigasi ke BAWAH LOGO HERO utama; layout hero desktop disamakan dengan HP (vertikal); banner CMS Home tidak menggantikan hero ini; konten CMS tetap disimpan | SOURCE UPDATED di `main`; mock render guest, urutan DOM, 2 URL, sintaks JS, CSS dan cache version PASS; pengujian visual browser HP/PC belum terverifikasi |
 
+| 2026-11-20 | GAS/database/ledger tidak diubah | P0 bisnis: tiga jasa inti (P-3IN1, P-INTEGRASI-GAS, P-VIDEO-AI) diarahkan ke konsultasi WA resmi, bukan auto-checkout, pada katalog publik & Member; sembunyikan P-B36AA0054926 / sumber QA_STAGING_TEST dari katalog pelanggan | SOURCE UPDATED `main`; mock render tamu+member PASS; nomor WA admin dikonfigurasi di STAGING/PROD; live HP belum diuji |
+| 2026-11-20 | Pemeriksaan STAGING read-only | `orders` berisi NGD-261119-61ED29966DF7 (P-TOKEN-10) total Rp10.284, melewati tenggat 19 Nov 11:59 WIB, status masih PENDING; source `expireOrders` memerlukan izin mutasi & keuangan dan trigger | DATA TERAMATI; trigger dan log runtime belum diverifikasi; tidak ada mutasi/pembayaran yang dilakukan |
+
 ## Checkpoint penutupan hari — Kamis, 19 November 2026
 
 **Keputusan status:** jeda kerja sampai sesi berikutnya pada Jumat, 20 November 2026. Tidak ada perubahan database/Apps Script/deployment produksi atau STAGING pada sesi terakhir; hanya Google Docs dan berkas kontrol ini yang diperbarui. Tidak membuat repository, database, ataupun deployment Ngulik Tools Studio.
