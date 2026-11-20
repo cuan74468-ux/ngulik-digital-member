@@ -62,7 +62,7 @@ function sandbox(sku,options={}){
   ctx.UrlFetchApp={fetch:()=>{throw Error('REAL_NETWORK_NOT_ALLOWED');}};
   ctx.grantCredits_=()=>{throw Error('UNEXPECTED_TOKEN_CREDIT_IN_THIS_LAUNCH_SKU');};
   const paid=()=>ctx.onPaid_(order,{role:'ADMIN',member_id:'TEST-ADMIN'});
-  return {member,product,order,rows,writes,audits,outbound,paid};
+  return {ctx,member,product,order,rows,writes,audits,outbound,paid};
 }
 test('STAGING SKU price, duration and referral scenario matrix is explicit',()=>{
   assert.deepEqual(launch.map(s=>[s.id,s.price,s.rate,s.duration]),[
