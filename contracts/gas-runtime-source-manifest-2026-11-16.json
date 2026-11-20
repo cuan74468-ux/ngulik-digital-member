@@ -19,7 +19,7 @@
       "owner_log_date": "2026-11-15"
     }
   ],
-  "unverified": "GitHub source fingerprints refreshed 2026-11-20. Apps Script editor sync is NOT verified by operator execution/readback. Mayar source changes are STAGING-only and NOT synchronized with any active Apps Script deployment. No merchant payout confirmation, real invoices, KYC, Google Sheets data or Script Properties were changed; finance requires separate merchant verification and runtime configuration.",
+  "unverified": "GitHub source fingerprints refreshed 2026-11-20. Apps Script editor sync is NOT yet verified by operator execution/readback. Mayar source changes are STAGING-only and NOT synchronized with any active Apps Script deployment. NOT yet verified by operator execution: Mayar merchant/payout status, real invoices and webhook confirmations. No Google Sheets data or Script Properties were changed; finance requires separate merchant verification and runtime configuration.",
   "release_gate": "OWNER_EXECUTION_AUTHORIZED",
   "external_providers": "CONFIGURATION_PENDING",
   "modules": [
