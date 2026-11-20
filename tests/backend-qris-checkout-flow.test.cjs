@@ -80,16 +80,20 @@ test('QRIS: admin approval cannot proceed without confirmed funds and reference'
   h.ctx.transitionOrder_(h.members[0],order.order_id,'confirm',{});
   const admin={role:'ADMIN',member_id:'ADM-1'};
   assert.throws(()=>h.ctx.transitionOrder_(admin,order.order_id,'approve',{}),/Dana harus diverifikasi/);
-  assert.throws(()=>h.ctx.transitionOrder_(admin,order.order_id,'approve',{dana_diterima:true}),/Referensi mutasi/);
+  assert.throws(()=>h.ctx.transitionOrder_(admin,order.order_id,'approve',{dana_diterima:true,nominal_terverifikasi:order.total_bayar,metode_diterima:'QRIS_STATIS'}),/Referensi mutasi/);
+  assert.throws(()=>h.ctx.transitionOrder_(admin,order.order_id,'approve',{
+    dana_diterima:true,nominal_terverifikasi:order.total_bayar-1,
+    metode_diterima:'QRIS_STATIS',referensi_pembayaran:'DANA-MUTASI-12345'
+  }),/Nominal pada mutasi/);
   assert.equal(h.orders[0].status,'MENUNGGU_VERIFIKASI');
   assert.equal(h.paid.length,0);
   const result=h.ctx.transitionOrder_(admin,order.order_id,'approve',{
-    dana_diterima:true,referensi_pembayaran:'DANA-MUTASI-12345'
+    dana_diterima:true,nominal_terverifikasi:order.total_bayar,metode_diterima:'QRIS_STATIS',referensi_pembayaran:'DANA-MUTASI-12345'
   });
   assert.equal(result.status,'PAID');
   assert.equal(h.paid.length,1);
   assert.throws(()=>h.ctx.transitionOrder_(admin,order.order_id,'approve',{
-    dana_diterima:true,referensi_pembayaran:'DANA-MUTASI-12345'
+    dana_diterima:true,nominal_terverifikasi:order.total_bayar,metode_diterima:'QRIS_STATIS',referensi_pembayaran:'DANA-MUTASI-12345'
   }),/Status pesanan/);
   assert.equal(h.paid.length,1);
 });
