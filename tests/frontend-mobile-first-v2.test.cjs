@@ -32,7 +32,7 @@ test('presentation-only change cannot bypass server release flags',()=>{
   assert.doesNotMatch(css,/@import|@font-face|url\(\s*['"]?https?:|<script|UrlFetchApp|apiUrl|FONNTE_API_TOKEN/i);
   const publicConfig=read('config.js');
   for(const flag of ['memberWritesEnabled: true','registrationOtpEnabled: true',
-    'paymentsEnabled: true','lmsEnabled: true']){
+    'paymentsEnabled: false','lmsEnabled: true']){
     assert.ok(publicConfig.includes(flag),flag);
   }
   assert.match(opsHTML,/name="robots" content="noindex,nofollow/);
