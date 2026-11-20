@@ -323,7 +323,7 @@ function viewHomeServices_(){
   return '<section class="ngd-home-services" aria-label="Tiga jasa utama Ngulik Digital">'+
     '<header class="ngd-home-services-heading"><p>JASA UTAMA</p><h2>Pilih Jasa untuk Usaha Anda</h2></header>'+
     '<div class="ngd-home-services-grid">'+offers.map(([id,name,description],index)=>{
-      const contact=consultationUrl({nama:name+' ('+id+')'});
+      const contact=consultationUrl({product_id:id,nama:name});
       return '<article class="ngd-home-service" data-service-product="'+esc(id)+'">'+
         '<span class="ngd-home-service-number">0'+(index+1)+'</span>'+
         '<h3>'+esc(name)+'</h3>'+
@@ -438,6 +438,14 @@ const offerCategoryLabel=p=>{
 // This is presentation routing only; original prices, backend, and ledger remain unchanged.
 const coreServiceConsultationIds=new Set(['P-3IN1','P-INTEGRASI-GAS','P-VIDEO-AI']);
 const isCoreServiceConsultation_=p=>coreServiceConsultationIds.has(String(p?.product_id||''));
+// UI wording only: keep original catalog data, prices and checkout behavior.
+const coreOfferUiCopy_={
+  'P-3IN1':{title:'Website & Katalog Online',description:'Tampilkan produk usaha Anda di website yang mudah dibagikan.'},
+  'P-INTEGRASI-GAS':{title:'Aplikasi Kasir & Catatan Usaha',description:'Catat penjualan dan pekerjaan harian lewat Google Sheets.'},
+  'P-VIDEO-AI':{title:'Jasa Video Iklan',description:'Buat video singkat untuk promosi produk Anda.'}
+};
+const offerUiTitle_=p=>coreOfferUiCopy_[String(p?.product_id||'')]?.title||p?.nama||'Produk';
+const offerUiDescription_=p=>coreOfferUiCopy_[String(p?.product_id||'')]?.description||p?.deskripsi||'';
 const isPublicQaOffer_=p=>
   String(p?.product_id||'')==='P-B36AA0054926'||
   String(p?.sumber_produk||'').toUpperCase()==='QA_STAGING_TEST';
@@ -487,13 +495,13 @@ function viewPublicMarketplace(list){
       '<button type="button" class="market-product-action" disabled>Belum tersedia</button>';
     const benefits=(Number(p.kredit_diberikan)>0?'<span>'+esc(Number(p.kredit_diberikan))+' token</span>':'')+
       (Number(p.durasi_hari)>0?'<span>'+esc(Number(p.durasi_hari))+' hari</span>':'');
-    return '<article class="market-product-card" aria-label="'+esc(p.nama)+'">'+
+    return '<article class="market-product-card" aria-label="'+esc(offerUiTitle_(p))+'">'+
       '<div class="market-product-media">'+
         (cover||'<div class="market-product-placeholder" aria-hidden="true"><span>'+esc(String(p.nama||'N').slice(0,1).toUpperCase())+'</span></div>')+
         '<span class="market-product-category">'+esc(offerCategoryLabel(p))+'</span>'+
       '</div><div class="market-product-body">'+
-        '<h3>'+esc(p.nama)+'</h3>'+
-        '<p class="market-product-description">'+esc(p.deskripsi||'Produk digital Ngulik Digital')+'</p>'+
+        '<h3>'+esc(offerUiTitle_(p))+'</h3>'+
+        '<p class="market-product-description">'+esc(offerUiDescription_(p)||'Produk pilihan Ngulik Digital')+'</p>'+
         (benefits?'<div class="market-product-benefits">'+benefits+'</div>':'')+
         '<div class="market-product-bottom"><span class="market-product-price-label">Harga</span>'+
         '<strong class="market-product-price">'+(valid?rupiah(p.harga):'Hubungi admin')+'</strong>'+action+'</div>'+
@@ -568,18 +576,18 @@ function viewCatalog(){
     const label=allowed?'Beli Sekarang':safeSale?'Checkout sedang tidak tersedia':'Produk belum tersedia';
     const tooltip=safeSale?'Checkout belum tersedia pada konfigurasi saat ini':'Periksa ketersediaan produk';
     const action=manualFirst?
-      (consult?'<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi '+esc(p.nama)+' melalui WhatsApp">Tanya via WhatsApp '+icon('arrow')+'</a>':
+      (consult?'<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi '+esc(offerUiTitle_(p))+' melalui WhatsApp">Tanya via WhatsApp '+icon('arrow')+'</a>':
        '<button class="btn btn-primary" type="button" disabled>Hubungi admin</button>'):
       allowed?
       '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'">Beli Sekarang '+icon('arrow')+'</button>':
       consult?
-        '<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi pemesanan '+esc(p.nama)+' melalui WhatsApp">Tanya pemesanan '+icon('arrow')+'</a>':
+        '<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi pemesanan '+esc(offerUiTitle_(p))+' melalui WhatsApp">Tanya pemesanan '+icon('arrow')+'</a>':
         '<button class="btn btn-primary" type="button" disabled title="'+esc(tooltip)+'">'+label+' '+icon('arrow')+'</button>';
     return '<article class="catalog-card"><div class="catalog-card-top">'+
       '<span class="catalog-card-icon">'+(window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'catalog-product-image','')||
       '<span class="catalog-product-letter" aria-hidden="true">'+esc(String(p.nama||'P').slice(0,1))+'</span>')+'</span>'+
       '<span class="catalog-card-type">'+esc(offerCategoryLabel(p))+'</span></div>'+
-      '<div class="catalog-card-copy"><h3>'+esc(p.nama)+'</h3><p>'+esc(p.deskripsi||'')+'</p>'+
+      '<div class="catalog-card-copy"><h3>'+esc(offerUiTitle_(p))+'</h3><p>'+esc(offerUiDescription_(p))+'</p>'+
       '<div class="product-benefits">'+
       (Number(p.kredit_diberikan)>0?'<span class="chip green">+'+esc(Number(p.kredit_diberikan))+' Token</span>':'')+
       (Number(p.durasi_hari)>0?'<span class="chip">'+esc(Number(p.durasi_hari))+' hari</span>':'')+
