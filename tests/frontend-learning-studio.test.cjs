@@ -27,7 +27,7 @@ test('Learning Studio loads on public, staging-member and operations after legac
 test('member LMS catalog is discovery-first and shows truthful enrolled status',()=>{
   const ui=lms();
   const html=ui.memberCatalog([course],[{course_id:'CRS-1',status:'ACTIVE'}],[]);
-  for(const token of ['Kelas dan perjalanan belajar','data-lms-filter="all"',
+  for(const token of ['Pilih Kelas yang Anda Suka','data-lms-filter="all"',
     'data-lms-filter="active"','id="learning-course-search"',
     'data-course-state="active"','Lanjutkan kelas','data-course-id="CRS-1"'])
     assert.ok(html.includes(token),token);
@@ -54,7 +54,7 @@ test('locked course does not leak lesson content',()=>{
   const ui=lms();
   const html=ui.memberCourse({course,access_granted:false,completed:0,total:1,
     lessons:[{title:'Rahasia',body:'PRIVATE_LESSON_CONTENT',completed:false}]},[],false);
-  assert.match(html,/Materi memerlukan akses produk/);
+  assert.match(html,/Kelas Ini Belum Bisa Dibuka/);
   assert.doesNotMatch(html,/PRIVATE_LESSON_CONTENT|data-lms-panel=/);
 });
 test('course names and lesson bodies remain escaped even within new card and reader',()=>{
