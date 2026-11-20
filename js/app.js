@@ -305,12 +305,12 @@ function viewMore(){
     '</section>';
 }
 // Free educational resources belong to the public HERO, not the top navigation.
-const NGD_FREE_EBOOK_URL='https://cuan74468-ux.github.io/buku-pintar-vibe-coder/buku-pintar-vibe-coder-edisi-1.html';
+const NGD_FREE_EBOOK_URL='https://cuan74468-ux.github.io/buku-pintar-vibe-coder/';
 const NGD_FREE_CLASSROOM_URL='https://classroom.google.com/c/ODk4MzQ4OTEwMjc5?cjc=ozzbygx3';
 function viewHeroFreeLinks_(){
   return '<nav class="ngd-hero-free-links" aria-label="Belajar gratis">'+
-    '<a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">Baca eBook Gratis</a>'+
-    '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Masuk Kelas Gratis</a>'+
+    '<a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">eBook Gratis</a>'+
+    '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Kelas Gratis</a>'+
   '</nav>';
 }
 // Three public service cards are sales entry points, never payment or account actions.
@@ -404,9 +404,8 @@ function viewHome(){
   const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal" aria-label="Ngulik Digital">'+
     brandStage+
     '<div class="public-hero-copy">'+
-      '<p class="pf-hello">NGULIK DIGITAL · JASA UNTUK UMKM</p>'+
-      '<h1>Bikin Usaha <em>Makin Mudah Ditemukan.</em></h1>'+
-      '<p class="public-hero-lead">Pesan website, aplikasi usaha, atau video iklan sesuai kebutuhan Anda.</p>'+
+      '<h1>Jasa Web, Aplikasi &amp; Video UMKM</h1>'+
+      '<p class="public-hero-lead">Terima beres, ringan di HP, tanpa biaya server bulanan.</p>'+
 
     '</div>'+
   '</section>';
