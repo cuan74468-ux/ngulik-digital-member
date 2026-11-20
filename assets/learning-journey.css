@@ -208,3 +208,108 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content{
   }
 }
 
+/* Three owner-operated services: simple consultation cards below the unchanged hero. */
+body.ngd-public-app[data-app-role=guest] .ngd-home-services{
+  box-sizing:border-box;
+  width:100%;
+  max-width:900px;
+  padding:0 clamp(16px,3vw,28px) 60px;
+  margin:0 auto;
+  text-align:left;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-services-heading{
+  margin:0 0 22px;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-services-heading p{
+  margin:0 0 7px;
+  font:700 .75rem/1.4 "Inter",system-ui,sans-serif;
+  letter-spacing:.12em;
+  color:#8a6f5b;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-services-heading h2{
+  margin:0;
+  font:700 clamp(1.4rem,2.4vw,2rem)/1.2 "Inter",system-ui,sans-serif;
+  letter-spacing:-.035em;
+  color:#292b29;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-services-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+  width:100%;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-service{
+  box-sizing:border-box;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  padding:23px 21px 20px;
+  border:1px solid #e9e3db;
+  border-radius:18px;
+  background:#fffdf9;
+  box-shadow:none;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-service-number{
+  display:block;
+  margin-bottom:27px;
+  font:600 .78rem/1 "Inter",system-ui,sans-serif;
+  color:#a17b60;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-service h3{
+  margin:0 0 10px;
+  font:700 1.13rem/1.3 "Inter",system-ui,sans-serif;
+  letter-spacing:-.025em;
+  color:#282b28;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-service > p{
+  margin:0 0 25px;
+  font:400 .88rem/1.6 "Inter",system-ui,sans-serif;
+  color:#666860;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-service-cta{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  justify-content:space-between;
+  min-height:44px;
+  margin-top:auto;
+  padding:10px 0;
+  font:700 .85rem/1.35 "Inter",system-ui,sans-serif;
+  color:#90512f;
+  text-decoration:none;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-service-cta svg{
+  width:16px;
+  height:16px;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-service-cta:hover{
+  color:#56311c;
+  text-decoration:underline;
+  text-underline-offset:4px;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-service-cta:focus-visible{
+  outline:2px solid #485f87;
+  outline-offset:4px;
+  border-radius:3px;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-home-service-unavailable{
+  margin-top:auto;
+  font:500 .83rem/1.6 "Inter",system-ui,sans-serif;
+  color:#7a7872;
+}
+@media(max-width:700px){
+  body.ngd-public-app[data-app-role=guest] .ngd-home-services-grid{
+    grid-template-columns:minmax(0,1fr);
+    gap:12px;
+  }
+  body.ngd-public-app[data-app-role=guest] .ngd-home-service{
+    padding:19px 19px 15px;
+  }
+  body.ngd-public-app[data-app-role=guest] .ngd-home-service-number{
+    margin-bottom:14px;
+  }
+  body.ngd-public-app[data-app-role=guest] .ngd-home-service > p{
+    margin-bottom:8px;
+  }
+}
