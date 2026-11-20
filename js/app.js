@@ -1379,7 +1379,7 @@ const contentWriteEnabled=()=>isWriteEnabled()&&config.contentEnabled===true;
 function viewAdminContent(){
   return window.NGD_CONTENT_UI?
     window.NGD_CONTENT_UI.admin({authorized:isAdmin(),items:state.adminContent,
-      selectedId:state.contentEditId,defaultPlacement:state.contentPresetProductId,products:state.catalog,enabled:contentWriteEnabled()}):
+      selectedId:state.contentEditId,defaultPlacement:state.contentPresetProductId,products:adminCatalogItems(),enabled:contentWriteEnabled()}):
     empty('Editor belum tersedia','Komponen pengelolaan konten belum termuat.');
 }
 const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
