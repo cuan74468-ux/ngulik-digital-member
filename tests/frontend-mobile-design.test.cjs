@@ -74,18 +74,18 @@ test('mobile uses exactly four transactional destinations while class routes rem
 });
 test('success screen is explicitly labeled preview, not a real stored completion',()=>{
   const h=preview('member','lms-complete'),display=h.nodes.screen.innerHTML;
-  assert.match(display,/Pelajaran selesai!/);
+  assert.match(display,/Pelajaran Selesai!/);
   assert.match(display,/progres belajar belum tercatat/i);
   assert.match(display,/BELUM TERCATAT/);
-  assert.match(display,/Kembali ke kelas/);
-  assert.match(display,/Jelajahi kelas lain/);
+  assert.match(display,/Buka kelas lagi/);
+  assert.match(display,/Lihat kelas lain/);
   assert.equal(h.apiCalls(),0);
 });
 test('success route without confirmed completion shows empty state',()=>{
   const h=preview('member','lms-complete');
   vm.runInContext('state.lmsCompletion=null;render()',h.ctx);
-  assert.doesNotMatch(h.nodes.screen.innerHTML,/Pelajaran selesai!/);
-  assert.match(h.nodes.screen.innerHTML,/Belum ada pelajaran/);
+  assert.doesNotMatch(h.nodes.screen.innerHTML,/Pelajaran Selesai!/);
+  assert.match(h.nodes.screen.innerHTML,/Belum Ada Pelajaran/);
 });
 test('success receipt safely escapes malicious lesson names',()=>{
   const h=preview('member','lms-complete');
@@ -104,7 +104,7 @@ test('read-only preview locks writes even when visual calls to action exist',()=
   const h=preview('member','lms-course');
   assert.equal(vm.runInContext('lmsWriteEnabled()',h.ctx),false);
   assert.equal(vm.runInContext('supportWriteEnabled()',h.ctx),false);
-  assert.match(h.nodes.screen.innerHTML,/disabled title="Penyuntingan materi belum tersedia"/);
+  assert.match(h.nodes.screen.innerHTML,/disabled title="Edit materi belum tersedia"/);
   assert.equal(h.apiCalls(),0);
 });
 
