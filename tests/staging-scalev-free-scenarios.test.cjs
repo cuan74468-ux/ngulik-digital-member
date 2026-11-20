@@ -33,7 +33,7 @@ function sandbox(sku,options={}){
     total_bayar:sku.price,ref_member_id:member.referred_by,
     catatan_admin:'',metode:'SCALEV_SYNTHETIC_ONLY'};
   const rows={members:[member],katalog_produk:[product],orders:[order],
-    affiliate_commissions:[],credits_ledger:[]};
+    affiliate_commissions:[],credits_ledger:[],audit_logs:[]};
   const ctx=vm.createContext({console:{log:()=>{},warn:()=>{},error:()=>{}},Date,Number,JSON});
   vm.runInContext(code,ctx,{timeout:10000});
   ctx.settings_=()=>({komisi_persen:25,masa_tahan_hari:14,
@@ -53,7 +53,10 @@ function sandbox(sku,options={}){
     rows[table].push({...row,_row:rows[table].length+2});
     writes.push({table,kind:'append'});
   };
-  ctx.logAudit_=(...args)=>audits.push(args);
+  ctx.logAudit_=(actor,role,action,entity,entityId,before,after,details)=>{
+    audits.push({actor,role,action,entity,entityId,before,after,details});
+    rows.audit_logs.push({action,entity_id:entityId,_row:rows.audit_logs.length+2});
+  };
   ctx.notifyPaidOrder_=()=>outbound.push('suppressed_notify');
   ctx.sendFonnteWa_=()=>{throw Error('REAL_WHATSAPP_NOT_ALLOWED');};
   ctx.UrlFetchApp={fetch:()=>{throw Error('REAL_NETWORK_NOT_ALLOWED');}};
@@ -98,21 +101,43 @@ for(const sku of launch){
   });
 }
 
-test('STAGING characterization: replay currently extends paid 3-in-1 twice (P0 gap)',()=>{
+test('STAGING regression: same fulfilled 3-in-1 order may be retried, but never adds another 30 days',()=>{
+  const h=sandbox(launch.find(x=>x.id==='P-3IN1'));
+  const stale={...h.order}; // Simulate delayed callback carrying old PAID snapshot.
+  h.paid();
+  const first=new Date(h.member.akses_3in1_sampai).getTime();
+  assert.equal(h.order.status,'FULFILLED');
+  assert.ok(h.order.fulfilled_at);
+  const firstFulfilled=h.writes.filter(x=>x.table==='orders'&&x.keys?.includes('fulfilled_at')).length;
+  h.paid(); // Retried same object.
+  h.ctx.onPaid_(stale,{role:'ADMIN',member_id:'TEST-ADMIN'}); // Retried stale snapshot.
+  assert.equal(new Date(h.member.akses_3in1_sampai).getTime(),first);
+  assert.equal(h.writes.filter(x=>x.table==='orders'&&x.keys?.includes('fulfilled_at')).length,firstFulfilled);
+  assert.equal(h.rows.affiliate_commissions.length,1);
+});
+test('STAGING regression: a genuinely new 3-in-1 paid order still extends the prior entitlement',()=>{
   const h=sandbox(launch.find(x=>x.id==='P-3IN1'));
   h.paid();
   const first=new Date(h.member.akses_3in1_sampai).getTime();
-  h.paid();
-  const second=new Date(h.member.akses_3in1_sampai).getTime();
-  // This detects the CURRENT defect, not the desired acceptance condition.
-  assert.ok(second-first>=29*86400000,'Unexpectedly changed 3-in-1 retry semantics');
-  assert.equal(h.rows.affiliate_commissions.length,1);
+  const renewal={...h.order,_row:3,order_id:'STG-SCALEV-SYNTHETIC-RENEWAL',status:'PAID',fulfilled_at:''};
+  h.rows.orders.push(renewal);
+  h.ctx.onPaid_(renewal,{role:'ADMIN',member_id:'TEST-ADMIN'});
+  assert.ok(new Date(h.member.akses_3in1_sampai).getTime()-first>=29*86400000);
+  assert.equal(h.rows.affiliate_commissions.length,2);
 });
-test('STAGING characterization: self-referral currently creates commission (P0 gap)',()=>{
+test('STAGING regression: self-referral blocks the commission and audits the decision once',()=>{
   const h=sandbox(launch[0],{referrer:'M-BUYER'});
+  h.paid(); h.paid();
+  assert.equal(h.rows.affiliate_commissions.length,0);
+  assert.equal(h.audits.filter(x=>x.action==='COMMISSION_SELF_REFERRAL_BLOCKED').length,1);
+  // A paid service must still enter processing; rejected referral cannot block purchase.
+  assert.match(h.order.catatan_admin,/JASA_SIAP_DIPROSES_ADMIN/);
+});
+test('STAGING regression: padded/mixed-case member self-referral is blocked',()=>{
+  const h=sandbox(launch[0],{referrer:' m-buyer '});
   h.paid();
-  assert.equal(h.rows.affiliate_commissions.length,1);
-  assert.equal(h.rows.affiliate_commissions[0].referrer_id,'M-BUYER');
+  assert.equal(h.rows.affiliate_commissions.length,0);
+  assert.equal(h.audits.filter(x=>x.action==='COMMISSION_SELF_REFERRAL_BLOCKED').length,1);
 });
 test('STAGING no referred member means no commission',()=>{
   const h=sandbox(launch[0],{referrer:''});h.paid();
