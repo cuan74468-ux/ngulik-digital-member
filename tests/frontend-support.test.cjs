@@ -46,7 +46,7 @@ test('member preview renders ticket form and locks all write actions',()=>{
   assert.match(h.nodes.screen.innerHTML,/Cetak struk gagal pada Android/);
   assert.match(h.nodes.screen.innerHTML,/disabled title="Fitur support belum diaktifkan"/);
   assert.equal(vm.runInContext('supportWriteEnabled()',h.context),false);
-  assert.match(h.nodes['desktop-nav'].innerHTML,/Pesan Jasa/);
+  assert.match(h.nodes['desktop-nav'].innerHTML,/Jasa/);
   assert.match(h.nodes['desktop-nav'].innerHTML,/Bantuan/);
 });
 test('member can inspect synthetic ticket history and update list',()=>{
@@ -59,15 +59,15 @@ test('member can inspect synthetic ticket history and update list',()=>{
 });
 test('admin preview displays support queue and Member 360 search',()=>{
   const h=preview('admin','dukungan');
-  assert.match(h.nodes.screen.innerHTML,/Antrean tiket/);
+  assert.match(h.nodes.screen.innerHTML,/Laporan Masuk/);
   assert.match(h.nodes.screen.innerHTML,/id="support-filter-form"/);
   assert.match(h.nodes.screen.innerHTML,/Cetak struk gagal pada Android/);
   h.go('member');
   assert.match(h.nodes.screen.innerHTML,/id="member-search-form"/);
   assert.match(h.nodes.screen.innerHTML,/id="member-access-status"/);
-  assert.match(h.nodes.screen.innerHTML,/Buka Member 360°/);
+  assert.match(h.nodes.screen.innerHTML,/Lihat profil/);
   h.go('member360');
-  assert.match(h.nodes.screen.innerHTML,/Hak akses produk/);
+  assert.match(h.nodes.screen.innerHTML,/Akses Produk/);
   assert.match(h.nodes.screen.innerHTML,/POS Kasir Sederhana/);
 });
 test('admin release form is disabled while support gate is off',()=>{
