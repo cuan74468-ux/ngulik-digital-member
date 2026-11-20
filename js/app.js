@@ -515,7 +515,8 @@ function viewPartnerShelf_(){
   '</section>';
 }
 function viewCatalog(){
-  const list=Array.isArray(state.catalog)?state.catalog:[];
+  // Admin CRUD retains all records. Customer views do not offer QA fixtures.
+  const list=Array.isArray(state.catalog)?state.catalog.filter(p=>!isPublicQaOffer_(p)):[];
   if(!logged())return viewPublicMarketplace(list);
   if(!list.length)return title('Katalog produk & layanan','SOLUSI UNTUK UMKM',
     'Penawaran digital dikelompokkan sesuai kebutuhan usaha.')+
@@ -535,11 +536,15 @@ function viewCatalog(){
     ''+'</span></div></div>';
   const cards=shown.length?'<div class="catalog-grid">'+shown.map(p=>{
     const kind=offerCategory(p),safeSale=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
-    const allowed=safeSale&&config.paymentsEnabled===true;
-    const consult=allowed?'':consultationUrl(p);
+    const manualFirst=isCoreServiceConsultation_(p);
+    const allowed=safeSale&&config.paymentsEnabled===true&&!manualFirst;
+    const consult=(manualFirst||!allowed)?consultationUrl(p):'';
     const label=allowed?'Beli Sekarang':safeSale?'Checkout sedang tidak tersedia':'Produk belum tersedia';
     const tooltip=safeSale?'Checkout belum tersedia pada konfigurasi saat ini':'Periksa ketersediaan produk';
-    const action=allowed?
+    const action=manualFirst?
+      (consult?'<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi '+esc(p.nama)+' melalui WhatsApp">Konsultasi WhatsApp '+icon('arrow')+'</a>':
+       '<button class="btn btn-primary" type="button" disabled>Hubungi admin</button>'):
+      allowed?
       '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'">Beli Sekarang '+icon('arrow')+'</button>':
       consult?
         '<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi pemesanan '+esc(p.nama)+' melalui WhatsApp">Tanya pemesanan '+icon('arrow')+'</a>':
@@ -555,7 +560,7 @@ function viewCatalog(){
       '</div></div>'+
       '<div class="catalog-card-bottom"><div><small>Harga penawaran</small><strong>'+rupiah(p.harga)+'</strong></div>'+
       action+'</div>'+
-      (kind==='jasa'?'<button type="button" class="service-cta" data-service-go>Ajukan brief jasa '+icon('arrow')+'</button>':'')+
+      (kind==='jasa'&&!manualFirst?'<button type="button" class="service-cta" data-service-go>Ajukan brief jasa '+icon('arrow')+'</button>':'')+
       '</article>';
   }).join('')+'</div>':
     '<div class="catalog-empty">'+empty('Belum ada penawaran di kategori ini','Pilih kategori lain untuk melihat pilihan tersedia.')+'</div>';
