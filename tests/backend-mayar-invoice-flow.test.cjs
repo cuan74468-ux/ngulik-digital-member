@@ -13,7 +13,7 @@ function harness(options={}){
   const calls=[],audits=[];
   const ctx=vm.createContext({console:{error:()=>{}},URL,Date,Number,JSON,Math});
   vm.runInContext(source,ctx,{timeout:10000});
-  ctx.ngdStagingWorkspaceInfo_=()=>({environment:'STAGING',external_providers_enabled:true});
+  ctx.ngdStagingWorkspaceInfo_=()=>({environment:'STAGING',external_providers_enabled:true,mayar_checkout_ready:true});
   ctx.requireMutationsEnabled_=()=>{};
   ctx.requireFinanceEnabled_=()=>{};
   ctx.settings_=()=>({payment_gateway_mode:options.mode||'MAYAR'});
