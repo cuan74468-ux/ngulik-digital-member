@@ -408,11 +408,19 @@ const offerCategoryLabel=p=>{
 };
 /* Public marketplace presentation only. Commerce decisions reuse the existing
  * verified catalog, availability and checkout rules; no invented discounts. */
+// Manual-first consultation for the three owner-delivered business offers.
+// This is presentation routing only; original prices, backend, and ledger remain unchanged.
+const coreServiceConsultationIds=new Set(['P-3IN1','P-INTEGRASI-GAS','P-VIDEO-AI']);
+const isCoreServiceConsultation_=p=>coreServiceConsultationIds.has(String(p?.product_id||''));
+const isPublicQaOffer_=p=>
+  String(p?.product_id||'')==='P-B36AA0054926'||
+  String(p?.sumber_produk||'').toUpperCase()==='QA_STAGING_TEST';
 function viewPublicMarketplace(list){
+  const publicList=list.filter(p=>!isPublicQaOffer_(p));
   const category=state.catalogFilter||'semua';
   const search=String(state.marketplaceSearch||'').trim().toLocaleLowerCase('id-ID');
   const sort=state.marketplaceSort||'default';
-  let shown=list.filter(p=>(category==='semua'||offerCategory(p)===category)&&
+  let shown=publicList.filter(p=>(category==='semua'||offerCategory(p)===category)&&
     (!search||String(p.nama||'').toLocaleLowerCase('id-ID').includes(search)||
       String(p.deskripsi||'').toLocaleLowerCase('id-ID').includes(search)||
       offerCategoryLabel(p).toLocaleLowerCase('id-ID').includes(search)));
@@ -440,10 +448,14 @@ function viewPublicMarketplace(list){
   const cards=shown.map(p=>{
     const kind=offerCategory(p);
     const valid=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
-    const enabled=valid&&config.paymentsEnabled===true;
-    const consult=enabled?'':consultationUrl(p);
+    const manualFirst=isCoreServiceConsultation_(p);
+    const enabled=valid&&config.paymentsEnabled===true&&!manualFirst;
+    const consult=(manualFirst||!enabled)?consultationUrl(p):'';
     const cover=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'market-product-image',p.nama);
-    const action=enabled?
+    const action=manualFirst?
+      (consult?'<a class="market-product-action" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer">Konsultasi WhatsApp '+icon('arrow')+'</a>':
+       '<button type="button" class="market-product-action" disabled>Hubungi admin</button>'):
+      enabled?
       '<button type="button" class="market-product-action" data-buy="'+idSafe(p.product_id)+'">Beli sekarang '+icon('arrow')+'</button>':
       consult?'<a class="market-product-action" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer">Tanya produk '+icon('arrow')+'</a>':
       '<button type="button" class="market-product-action" disabled>Belum tersedia</button>';
@@ -464,7 +476,7 @@ function viewPublicMarketplace(list){
   return '<div class="market-page">'+
     '<header class="market-header"><div><p class="market-eyebrow">NGULIK DIGITAL / MARKETPLACE DIGITAL</p>'+
     '<h1>Jelajahi Katalog</h1><p>Beragam solusi digital untuk belajar, berkarya, dan mengembangkan usaha.</p></div>'+
-    '<span class="market-header-count">'+list.length+' produk tersedia di katalog</span></header>'+
+    '<span class="market-header-count">'+publicList.length+' produk tersedia di katalog</span></header>'+
     '<div class="market-banner-shell">'+banner+'</div>'+
     '<section class="market-shopping" aria-label="Belanja produk digital">'+
       '<div class="market-section-title"><h2>Belanja sesuai kebutuhan</h2><span>Kategori pilihan</span></div>'+
