@@ -2915,7 +2915,7 @@ document.addEventListener('click',async(e)=>{
     const amount=rows.filter(x=>x.status==='APPROVED'&&!x.payout_requested_at)
       .reduce((sum,x)=>sum+(Number(x.nominal)||0),0);
     if(!(amount>0))return toast('Belum ada komisi untuk dicairkan.',true);
-    const nomorDana=String(document.getElementById('commission-dana-number')?.value||'').replace(/[\\s()-]/g,'');
+    const nomorDana=String(document.getElementById('commission-dana-number')?.value||'').replace(/[\s()-]/g,'');
     if(!/^08[0-9]{8,11}$/.test(nomorDana))
       return toast('Isi nomor DANA aktif dengan format 08xxxxxxxxxx.',true);
     if(!confirm('Ajukan komisi '+rupiah(amount)+' ke DANA nomor ...'+nomorDana.slice(-4)+'? Admin wajib memeriksa transfer sebelum menandai lunas.'))return;
