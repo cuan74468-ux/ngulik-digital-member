@@ -23,9 +23,9 @@ function preview(route='admin-login'){
 }
 test('administrator route is explicit and does not suggest creating a second owner account',()=>{
  const p=preview('admin-login'),html=p.elements.screen.innerHTML;
- assert.match(html,/Masuk panel administrator/);
+ assert.match(html,/Masuk sebagai Admin/);
  assert.match(html,/data-mode="admin"/);
- assert.match(html,/Tidak perlu membuat akun baru/);
+ assert.match(html,/Masuk dengan nomor WhatsApp Admin/);
  assert.match(html,/autocomplete="current-password"/);
  assert.match(html,/name="pin"[^>]*pattern="\[0-9\]\{6\}"/);
  assert.match(html,/Akses administrator belum diaktifkan pada backend/);
@@ -86,7 +86,7 @@ test('signed-in Admin dashboard prioritizes editable modules, not repeated disab
  const html=p.elements.screen.innerHTML;
  for(const route of ['konten','produk','lms','layanan'])
    assert.match(html,new RegExp('data-route="'+route+'"'));
- assert.match(html,/Mulai kelola bisnis Anda/);
+ assert.match(html,/Pilih yang Mau Dikelola/);
  assert.match(html,/Pantau dan tindak lanjuti/);
  assert.doesNotMatch(html,/Kesiapan operasional backend|Mode baca-saja|Perubahan data.*Nonaktif/);
 });
