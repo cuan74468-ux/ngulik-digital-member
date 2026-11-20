@@ -286,7 +286,7 @@ function viewMore(){
     beranda:'Mulai dari sini',belajar:'Kelas dan progres',katalog:'Jasa dan produk',
     jasa:'Pesan jasa',ai:'Buat konten',affiliate:'Bagikan tautan',
     dukungan:'Tanya dan laporkan kendala',akun:'Profil akun',admin:'Ringkasan usaha',
-    konten:'Gambar dan banner',produk:'Daftar penawaran',layanan:'Permintaan pelanggan',
+    konten:'Gambar dan banner',produk:'Daftar Produk',layanan:'Permintaan pelanggan',
     lms:'Kelas dan materi',pesanan:'Riwayat belanja',member:'Data pelanggan',
     rilis:'Versi terbaru',antrean:'Pendaftar menunggu',pengaturan:'Atur aplikasi'
   };
@@ -555,7 +555,7 @@ function viewCatalog(){
   if(!list.length)return title('Katalog Produk & Jasa','PILIHAN UNTUK USAHA',
     'Temukan produk atau jasa yang Anda butuhkan.')+
     empty('Katalog belum tersedia',isConnected()?
-      'Belum ada produk saat ini.':
+      'Belum Ada Produk saat ini.':
       'Coba lagi nanti.');
   const current=state.catalogFilter||'semua';
   const shown=current==='semua'?list:list.filter(p=>offerCategory(p)===current);
@@ -1059,10 +1059,10 @@ function viewLogin(register=false,adminMode=false){
     '<div class="field"><label for="wa">Nomor WhatsApp</label><input class="input" id="wa" name="wa" required inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx"></div>'+
     (memberOtp?'<div class="field"><label for="login-otp">Kode OTP WhatsApp</label><input class="input" id="login-otp" name="otp" required inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="6 digit OTP"></div>'+
       '<label class="small"><input type="checkbox" name="setuju_pengiriman" required> Saya setuju menerima OTP melalui WhatsApp.</label>'+
-      '<div class="actions"><button type="button" class="btn btn-secondary" data-action="member-otp-request" '+(!enabled?'disabled':'')+'>Kirim kode OTP</button></div>':
+      '<div class="actions"><button type="button" class="btn btn-secondary" data-action="member-otp-request" '+(!enabled?'disabled':'')+'>Kirim Kode</button></div>':
       '<div class="field"><label for="pin">PIN 6 angka</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>')+
     (register?'<div class="field"><label for="otp">Kode OTP WhatsApp</label><input class="input" id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" type="text" required placeholder="6 digit kode verifikasi"></div>'+
-      '<div class="actions" style="margin-bottom:13px"><button type="button" class="btn btn-secondary" data-action="otp-request" '+(!enabled?'disabled':'')+'>Kirim kode OTP</button>'+
+      '<div class="actions" style="margin-bottom:13px"><button type="button" class="btn btn-secondary" data-action="otp-request" '+(!enabled?'disabled':'')+'>Kirim Kode</button>'+
       '<button type="button" class="btn btn-ghost" data-action="otp-verify" '+(!enabled?'disabled':'')+'>Verifikasi kode</button></div>':'')+
     (register?'<div class="field"><label><input type="checkbox" name="setuju_kebijakan" required> Saya setuju dengan syarat dan kebijakan privasi.</label></div>':'')+
     '<button class="btn btn-primary btn-wide" type="submit" '+(!enabled?'disabled':'')+'>'+
@@ -1195,10 +1195,10 @@ function viewAdminRuntime(){
     ['support','Bantuan'],['lms','Studio LMS'],['notifications','Notifikasi']
   ];
   return '<section class="admin-runtime section-gap" aria-label="Kondisi sistem backend">'+
-    '<div class="section-head"><div><p class="eyebrow">STATUS TEKNIS / SERVER</p>'+
-    '<h2>Kesiapan operasional backend</h2>'+
-    '<p>Indikator berasal dari Apps Script dan tidak menggantikan audit pembayaran atau persetujuan go-live.</p></div></div>'+
-    (schema?'<div class="admin-runtime-summary"><div><small>Skema data terverifikasi</small>'+
+    '<div class="section-head"><div><p class="eyebrow">STATUS LAYANAN</p>'+
+    '<h2>Kondisi Layanan</h2>'+
+    '<p>Periksa kondisi layanan sebelum melakukan perubahan.</p></div></div>'+
+    (schema?'<div class="admin-runtime-summary"><div><small>Data tersedia</small>'+
       '<strong>'+esc(schema.ready)+' / '+esc(schema.expected)+' tab</strong></div>'+
       '<span class="chip '+(schema.ready===schema.expected?'green':'orange')+'">'+
       (schema.ready===schema.expected?'STRUKTUR SESUAI':'PERLU PENYESUAIAN')+'</span></div>'+
@@ -1215,10 +1215,10 @@ function viewAdminRuntime(){
 function viewAdmin(){
   if(!isAdmin())return needLogin('ruang kerja');
   const details=state.adminSummary?.ringkasan||[];
-  return '<section class="admin-operations-intro"><p class="eyebrow">ADMIN STUDIO / NGULIK DIGITAL</p><h1>Semua kebutuhan usaha, satu meja kendali.</h1><p>Atur etalase dan kelas, tangani pesanan, serta lanjutkan pekerjaan yang paling penting hari ini.</p>'+
+  return '<section class="admin-operations-intro"><p class="eyebrow">ADMIN STUDIO / NGULIK DIGITAL</p><h1>Kelola Usaha dari Sini</h1><p>Atur etalase dan kelas, tangani pesanan, serta lanjutkan pekerjaan yang paling penting hari ini.</p>'+
     (config.brand?.includes('STAGING')?'<span class="chip">DATA STAGING — bukan website produksi</span>':'<span class="chip">Data sesuai layanan terhubung</span>')+'</section>'+
     '<section class="admin-start-actions" aria-label="Mulai mengelola bisnis">'+
-    '<div><p class="eyebrow">PINTASAN UTAMA</p><h2>Mulai kelola bisnis Anda.</h2></div>'+
+    '<div><p class="eyebrow">PINTASAN UTAMA</p><h2>Pilih yang Mau Dikelola</h2></div>'+
     '<div class="admin-start-grid">'+[
       ['konten','Pasang banner','Atur gambar, judul dan tombol promosi.'],
       ['produk','Tambah produk','Masukkan nama, harga dan katalog.'],
@@ -1227,7 +1227,7 @@ function viewAdmin(){
     ].map(([route,heading,detail])=>'<button type="button" class="admin-start-item" data-route="'+route+'">'+
       '<strong>'+heading+' '+icon('arrow')+'</strong><small>'+detail+'</small></button>').join('')+
     '</div></section>'+
-    '<div class="admin-section-heading"><div><p class="eyebrow">OPERASIONAL</p><h2>Pantau dan tindak lanjuti</h2></div><p>Pesanan, member, tiket, rilis, dan pengaturan dalam satu tempat.</p></div>'+ 
+    '<div class="admin-section-heading"><div><p class="eyebrow">OPERASIONAL</p><h2>Pantau dan tindak lanjuti</h2></div><p>Buka menu yang ingin Anda kelola.</p></div>'+ 
     '<div class="admin-module-grid">'+[
       ['clipboard','Pesanan','Pantau status pembayaran dan pemenuhan akses.','pesanan'],
       ['users','Kelola member','Periksa akun dan status keanggotaan.','member'],
@@ -1236,9 +1236,9 @@ function viewAdmin(){
       ['grid','Rilis produk','Kelola versi dan informasi pembaruan.','rilis'],
       ['shield','Pengaturan','Tinjau konfigurasi layanan yang berlaku.','pengaturan']
     ].map(x=>'<article class="surface admin-module-card"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" data-route="'+x[3]+'">Buka materi '+icon('arrow')+'</button></article>').join('')+'</div>'+
-    '<section class="section-gap">'+title('Ringkasan data','METRIK SISTEM','Nilai berasal dari rumus Google Sheets.')+
+    '<section class="section-gap">'+title('Ringkasan','RINGKASAN','Angka diperbarui dari data usaha.')+
     (details.length?'<div class="grid-3">'+details.slice(0,12).map(x=>'<div class="stat"><div class="stat-value">'+esc(x.nilai)+'</div><div class="stat-label">'+esc(x.metrik)+'</div></div>').join('')+'</div>':
-    empty('Ringkasan belum dimuat','Periksa koneksi dan hak akses admin.'))+'</section>';
+    empty('Ringkasan Belum Tersedia','Periksa koneksi lalu coba lagi.'))+'</section>';
 }
 // Read-only configuration viewer: never enables mutations and never reveals
 // operator emails, private WhatsApp numbers or Script Properties.
@@ -1267,14 +1267,14 @@ function viewAdminSettings(){
   };
   const body=settings?
     groups.map(([heading,fields])=>
-      '<section class="section-gap">'+title(heading,'KONFIGURASI TERCATAT','Data dibaca dari pengaturan_sistem.')+
+      '<section class="section-gap">'+title(heading,'PENGATURAN','Menampilkan pengaturan yang tersimpan.')+
       '<div class="grid-3">'+fields.map(([key,label])=>cell(key,label)).join('')+'</div></section>').join(''):
-    empty('Pengaturan belum terbaca',state.adminSettingsError||
+    empty('Pengaturan Belum Tersedia',state.adminSettingsError||
       'Sesi atau koneksi ke backend belum selesai dimuat.');
   const status='Pengaturan global ditampilkan untuk referensi. Untuk input banner, katalog, dan kelas, gunakan modul Admin terkait. Status izin backend ditampilkan terpisah di bawah.';
-  return '<section class="section-head"><div><p class="eyebrow">ADMIN / PENGATURAN SISTEM</p>'+
-    '<h2>Konfigurasi Ngulik Digital</h2><p>Periksa nilai resmi, bukan contoh. Hanya data konfigurasi nonrahasia yang ditampilkan.</p></div></section>'+
-    '<div class="banner"><div><h3>Pengaturan dan data operasional</h3><p>'+esc(status)+'</p></div></div>'+
+  return '<section class="section-head"><div><p class="eyebrow">ADMIN / PENGATURAN</p>'+
+    '<h2>Pengaturan Ngulik Digital</h2><p>Lihat pengaturan layanan yang sedang digunakan.</p></div></section>'+
+    '<div class="banner"><div><h3>Pengaturan Layanan</h3><p>'+esc(status)+'</p></div></div>'+
     body+viewAdminRuntime();
 }
 
@@ -1311,13 +1311,13 @@ function viewAdminCatalog(){
   const bool=(name,label)=>
     '<label class="catalog-check"><input type="checkbox" name="'+name+'" '+
     (draft[name]===true?'checked':'')+'/><span>'+label+'</span></label>';
-  const intro='<div class="catalog-admin-intro"><div><p class="eyebrow">ADMIN / OPERASIONAL PRODUK</p>'+
-    '<h1>Katalog & penawaran</h1><p>Atur penawaran yang terlihat di publik tanpa mengubah riwayat order yang sudah ada.</p></div>'+
+  const intro='<div class="catalog-admin-intro"><div><p class="eyebrow">ADMIN / KATALOG</p>'+
+    '<h1>Kelola Katalog</h1><p>Atur nama, deskripsi, dan harga produk.</p></div>'+
     '<span class="chip">'+items.length+' produk tercatat</span></div>'+
-    '<div class="banner '+(canWrite?'info':'warning')+'"><div><h3>'+(canWrite?'Editor katalog siap digunakan':'Editor katalog tidak aktif')+'</h3>'+
-    '<p>Atur nama, harga, bonus token, masa aktif, dan komisi sesuai produk. Fulfillment tetap mengikuti konfirmasi pembayaran di server.</p></div>'+
-    '<span class="chip orange">'+(canWrite?'EDITOR PRODUK':'TIDAK DAPAT DIEDIT')+'</span></div>';
-  const entries='<section class="catalog-admin-list" aria-label="Daftar penawaran">'+
+    '<div class="banner '+(canWrite?'info':'warning')+'"><div><h3>'+(canWrite?'Katalog Siap Diedit':'Edit Katalog Belum Tersedia')+'</h3>'+
+    '<p>Periksa detail produk sebelum menayangkannya.</p></div>'+
+    '<span class="chip orange">'+(canWrite?'EDIT PRODUK':'TIDAK DAPAT DIEDIT')+'</span></div>';
+  const entries='<section class="catalog-admin-list" aria-label="Daftar Produk">'+
     items.map(p=>'<article class="catalog-admin-row">'+
       '<div class="catalog-admin-badge">'+icon(p.tipe==='TOPUP_KREDIT'?'spark':'store')+'</div>'+
       '<div class="catalog-admin-row-info"><h3>'+esc(p.nama)+'</h3>'+
@@ -1330,30 +1330,30 @@ function viewAdminCatalog(){
       'aria-label="'+(p.aktif?'Nonaktifkan':'Aktifkan')+' '+esc(p.nama)+'" '+
       (!canWrite?'disabled title="Pengelolaan katalog belum diaktifkan"':'')+'>'+
       (p.aktif?'Nonaktifkan':'Aktifkan')+'</button></div></article>').join('')+
-    (!items.length?'<div class="empty"><h3>Belum ada produk</h3><p>Produk akan muncul ketika ditambahkan oleh admin.</p></div>':'')+
+    (!items.length?'<div class="empty"><h3>Belum Ada Produk</h3><p>Produk yang ditambahkan akan muncul di sini.</p></div>':'')+
     '</section>';
   const form='<section class="catalog-admin-editor" aria-label="Editor katalog">'+
-    '<div class="catalog-admin-editor-head"><div><p class="card-kicker">EDITOR PRODUK</p><h2>'+
+    '<div class="catalog-admin-editor-head"><div><p class="card-kicker">EDIT PRODUK</p><h2>'+
     (selected?'Edit penawaran':'Tambah penawaran')+'</h2>'+
-    '<p class="card-desc">Produk baru selalu dibuat nonaktif. Aktifkan setelah meninjau isi dan harga.</p></div>'+
+    '<p class="card-desc">Produk baru disimpan tanpa ditayangkan.</p></div>'+
     (selected?'<button type="button" class="btn btn-secondary btn-sm" data-action="catalog-new">Buat baru</button>':'')+'</div>'+
     '<form id="admin-catalog-form" class="catalog-admin-form" data-product-id="'+esc(selected?.product_id||'')+'">'+
     '<div class="catalog-form-grid">'+
     input('nama','Nama produk','text',120)+input('harga','Harga (Rp)','number',0)+
-    '<div class="field"><label for="cat-tipe">Jenis penawaran</label>'+
+    '<div class="field"><label for="cat-tipe">Jenis produk</label>'+
     '<select class="input" id="cat-tipe" name="tipe" '+(selected?'disabled':'')+'>'+
     types.map(x=>'<option value="'+x[0]+'" '+(draft.tipe===x[0]?'selected':'')+'>'+x[1]+'</option>').join('')+
     '</select></div>'+
     input('urut','Urutan tampilan','number',0)+
     input('kredit_diberikan','Kredit diberikan','number',0)+
     input('durasi_hari','Durasi hari (0 atau 30)','number',0)+
-    '<div class="field"><label for="cat-komisi">Komisi produk (%) — kosong = default</label>'+
+    '<div class="field"><label for="cat-komisi">Komisi (%) — kosongkan untuk standar</label>'+
     '<input class="input" id="cat-komisi" name="komisi_persen" type="number" min="0" max="50" step="1" placeholder="Default" value="'+
     esc(draft.komisi_persen??'')+'"></div>'+
-    '<div class="field"><label for="cat-sumber">Sumber produk</label>'+
+    '<div class="field"><label for="cat-sumber">Asal produk</label>'+
     '<input class="input" id="cat-sumber" name="sumber_produk" maxlength="60" required '+
     'pattern="[A-Za-z0-9_-]{2,60}" value="'+esc(draft.sumber_produk||'INTERNAL')+'"></div></div>'+
-    '<div class="field"><label for="cat-deskripsi">Deskripsi (minimal 10 karakter)</label>'+
+    '<div class="field"><label for="cat-deskripsi">Deskripsi produk</label>'+
     '<textarea class="input" id="cat-deskripsi" name="deskripsi" maxlength="350" minlength="10" rows="4" required>'+
     esc(draft.deskripsi)+'</textarea></div>'+
     '<div class="catalog-checks">'+bool('perlu_approval_admin','Memerlukan persetujuan admin')+
@@ -1377,13 +1377,13 @@ function viewServiceRequests(){
   return window.NGD_SERVICES_UI?
     window.NGD_SERVICES_UI.member({logged:logged()&&!isAdmin(),
       items:state.services,enabled:serviceWriteEnabled(),kind:state.serviceKind}):
-    empty('Layanan belum tersedia','Halaman layanan tidak dapat ditampilkan saat ini.');
+    empty('Halaman Belum Tersedia','Coba muat ulang halaman.');
 }
 function viewAdminServices(){
   return window.NGD_SERVICES_UI?
     window.NGD_SERVICES_UI.admin({authorized:isAdmin(),items:state.services,
       enabled:serviceWriteEnabled(),selectedId:state.selectedServiceId}):
-    empty('Layanan belum tersedia','Daftar permintaan jasa tidak dapat ditampilkan saat ini.');
+    empty('Halaman Belum Tersedia','Permintaan jasa belum bisa dimuat.');
 }
 function viewAdminOrders(){
   if(!isAdmin())return needLogin('pesanan admin');
@@ -1393,11 +1393,11 @@ function viewAdminOrders(){
     new Date(b.created_at)-new Date(a.created_at));
   const waiting=rows.filter(o=>o.status==='MENUNGGU_VERIFIKASI').length;
   const financeBlocked=state.workspaceInfo&&(state.workspaceInfo.finance_enabled===false||state.workspaceInfo.mutations_enabled===false);
-  return title('Verifikasi pembayaran','PESANAN ADMIN',
+  return title('Cek Pembayaran','PEMBAYARAN',
     'Periksa dana masuk melalui mutasi rekening/e-wallet resmi sebelum menyetujui. Klaim Member bukan bukti pembayaran.')+
-    '<p class="verification-count">'+waiting+' pesanan meminta verifikasi pembayaran</p>'+
-    (financeBlocked?'<p class="admin-payment-notice">Transaksi sedang dinonaktifkan pada backend. Verifikasi lunas hanya tersedia setelah Admin membuka izin keuangan yang sah.</p>':'')+
-    (!rows.length?empty('Belum ada pesanan','Pesanan Member akan muncul di sini.'):
+    '<p class="verification-count">'+waiting+' pesanan menunggu pemeriksaan</p>'+
+    (financeBlocked?'<p class="admin-payment-notice">Konfirmasi pembayaran belum tersedia. Jangan tandai pesanan lunas.</p>':'')+
+    (!rows.length?empty('Belum ada pesanan','Pesanan pelanggan akan muncul di sini.'):
     '<div class="admin-payment-list">'+rows.map(o=>{
       const status=String(o.status||'');
       const overdue=status==='PENDING'&&Number.isFinite(new Date(o.expires_at).getTime())&&new Date(o.expires_at).getTime()<=Date.now();
@@ -1423,23 +1423,23 @@ function viewAdminOrders(){
           '<div class="verification-actions">'+
           '<button type="button" class="btn btn-primary btn-sm" data-payment-open="'+esc(o.order_id)+'">'+
           (reviewing?'Tutup pemeriksaan':'Periksa dana &amp; tindak lanjuti')+'</button>'+
-          (status==='MENUNGGU_VERIFIKASI'?'<button type="button" class="btn btn-secondary btn-sm" data-payment-admin="reject" data-order-id="'+esc(o.order_id)+'">Tolak klaim pembayaran</button>':'')+
+          (status==='MENUNGGU_VERIFIKASI'?'<button type="button" class="btn btn-secondary btn-sm" data-payment-admin="reject" data-order-id="'+esc(o.order_id)+'">Tolak konfirmasi</button>':'')+
           '</div>':'')+
         (reviewing?
           '<form id="admin-payment-form" class="admin-payment-form" autocomplete="off" data-order-id="'+esc(o.order_id)+'">'+
-          '<h3>Konfirmasi penerimaan dana</h3><p>Periksa riwayat transaksi penerima yang sah. Jangan menandai lunas jika hanya ada pesan WhatsApp atau screenshot.</p>'+
-          '<div class="field"><label for="admin-received-amount">Jumlah dana yang benar-benar diterima (Rp)</label>'+
-          '<input class="input" id="admin-received-amount" name="nominal_diterima" type="number" inputmode="numeric" min="1" step="1" required placeholder="Masukkan nominal dari mutasi"></div>'+
-          '<div class="field"><label for="admin-payment-channel">Metode dana yang masuk</label>'+
+          '<h3>Cek Dana Masuk</h3><p>Cocokkan dana masuk di rekening resmi. Screenshot saja tidak cukup.</p>'+
+          '<div class="field"><label for="admin-received-amount">Dana masuk (Rp)</label>'+
+          '<input class="input" id="admin-received-amount" name="nominal_diterima" type="number" inputmode="numeric" min="1" step="1" required placeholder="Jumlah pada mutasi rekening"></div>'+
+          '<div class="field"><label for="admin-payment-channel">Metode pembayaran</label>'+
           '<select class="input" id="admin-payment-channel" name="metode_diterima" required>'+
           '<option value="">Pilih sesuai bukti mutasi</option>'+
           '<option value="QRIS_STATIS">QRIS resmi</option>'+
           '<option value="TRANSFER_BANK">Transfer bank</option>'+
           '<option value="TRANSFER_EWALLET">Transfer e-wallet</option></select></div>'+
-          '<div class="field"><label for="admin-settlement-ref">Referensi transaksi pada mutasi</label>'+
+          '<div class="field"><label for="admin-settlement-ref">Nomor referensi transaksi</label>'+
           '<input class="input" id="admin-settlement-ref" name="referensi_pembayaran" required minlength="5" maxlength="120" placeholder="Nomor referensi / ID transaksi"></div>'+
           ((status==='EXPIRED'||overdue)?'<div class="field"><label for="admin-late-reason">Alasan pembayaran terlambat</label>'+
-          '<textarea class="input" name="alasan" id="admin-late-reason" maxlength="300" minlength="5" rows="2" required placeholder="Penjelasan rekonsiliasi"></textarea></div>':'')+
+          '<textarea class="input" name="alasan" id="admin-late-reason" maxlength="300" minlength="5" rows="2" required placeholder="Jelaskan alasan keterlambatan"></textarea></div>':'')+
           '<label class="admin-payment-checkbox"><input type="checkbox" name="dana_diterima" autocomplete="off" required> Saya sudah memeriksa dana masuk sebesar '+rupiah(o.total_bayar)+' ke akun penerima resmi. Saya memahami sistem akan mengaktifkan produk dan mencatat komisi setelah persetujuan.</label>'+
           '<div class="verification-actions"><button type="submit" class="btn btn-primary" disabled>Lunas &amp; Aktifkan</button>'+
           '<button type="button" class="btn btn-secondary" data-payment-open="'+esc(o.order_id)+'">Batal</button></div>'+
@@ -1450,13 +1450,13 @@ function viewMembers(waiting=false){
   if(!isAdmin())return needLogin('data member admin');
   if(waiting){
     const rows=state.waitlist||[];
-    return title('Waiting List','ADMIN MEMBER','Member dalam antrean pendaftaran.')+
+    return title('Daftar Tunggu','ADMIN MEMBER','Pendaftar yang belum mendapat akses.')+
       (rows.length?'<div class="table-wrap"><table class="table"><thead><tr><th>Posisi</th><th>Nama & usaha</th><th>Tanggal</th></tr></thead><tbody>'+
       rows.map((m,i)=>'<tr><td>'+esc(m.posisi||i+1)+'</td><td>'+esc(m.nama)+'<span class="sub">'+esc(m.nama_usaha)+'</span></td><td>'+friendlyDate(m.joined_at)+'</td></tr>').join('')+
-      '</tbody></table></div>':empty('Antrean kosong','Belum ada member dalam waiting list.'));
+      '</tbody></table></div>':empty('Antrean kosong','Belum ada pendaftar menunggu.'));
   }
   const results=state.memberSearch,rows=results?.items||[];
-  return title('Cari Member','MEMBER 360°','Temukan member berdasarkan ID, WhatsApp, nama usaha, status, atau produk yang dibeli.')+
+  return title('Cari Pelanggan','MEMBER 360°','Cari berdasarkan nama, WhatsApp, atau produk.')+
     '<form id="member-search-form" class="surface"><div class="support-search-grid member-search-grid">'+
     '<div class="field"><label for="member-search-text">Kata kunci</label><input id="member-search-text" class="input" name="query" maxlength="100" placeholder="Nama, WA, atau ID"></div>'+
     '<div class="field"><label for="member-search-product">Produk</label><select id="member-search-product" class="input" name="product_id"><option value="">Semua produk</option>'+
@@ -1469,10 +1469,10 @@ function viewMembers(waiting=false){
       results?'Menampilkan hingga 50 hasil dari '+results.total+' kecocokan.':'Masukkan kata kunci minimal dua karakter atau gunakan filter.')+
     (rows.length?'<div class="stack">'+rows.map(m=>'<article class="surface support-member-row">'+
       '<div><h3>'+esc(m.nama)+'</h3><p class="card-desc">'+esc(m.nama_usaha||'-')+' · '+esc(m.member_id)+' · WA •••'+esc(m.wa_akhir)+'</p>'+
-      '<p class="tiny muted">'+esc((m.produk||[]).join(', ')||'Belum ada pembelian terverifikasi')+
+      '<p class="tiny muted">'+esc((m.produk||[]).join(', ')||'Belum ada pembelian')+
       (m.akses_status?' · '+esc(m.akses_status):'')+'</p></div>'+
       '<div class="support-ticket-head">'+safeBadge(m.status)+
-      '<button class="btn btn-secondary btn-sm" data-member-id="'+esc(m.member_id)+'">Buka Member 360° '+icon('arrow')+'</button></div></article>').join('')+'</div>':
+      '<button class="btn btn-secondary btn-sm" data-member-id="'+esc(m.member_id)+'">Lihat profil '+icon('arrow')+'</button></div></article>').join('')+'</div>':
       empty(results?'Tidak ditemukan':'Belum ada pencarian',
         results?'Coba kata kunci lain atau ganti filter.':'Data hanya tampil setelah admin melakukan pencarian.'))+'</div>';
 }
@@ -1496,13 +1496,13 @@ function viewSupport(){
     'Laporan bug, permintaan fitur, dan bantuan produk.')+needLogin('layanan dukungan');
   if(isAdmin()){
     const overview=state.supportOverview||{},stats=overview.by_status||{},tickets=state.adminSupportTickets||[];
-    return title('Pusat Layanan','ADMIN / SUPPORT','Tangani keluhan dan permintaan fitur berdasarkan data member.')+
+    return title('Pusat Bantuan','ADMIN / SUPPORT','Balas laporan dan pertanyaan pelanggan.')+
       '<div class="metric-grid">'+[
         ['Tiket keseluruhan',overview.total??0],
         ['Perlu triase',stats.OPEN??0],
         ['Prioritas tinggi',overview.urgent??0]
       ].map(([k,v])=>'<div class="metric-card static"><strong>'+esc(v)+'</strong><small>'+k+'</small></div>').join('')+'</div>'+
-      '<div class="section-gap">'+title('Antrean tiket','TIKET MASUK',
+      '<div class="section-gap">'+title('Laporan Masuk','TIKET MASUK',
         'Filter menurut status, jenis laporan dan produk terkait.')+
       '<form id="support-filter-form" class="surface" style="margin-bottom:18px"><div class="support-search-grid">'+
       '<div class="field"><label for="support-filter-status">Status tiket</label><select id="support-filter-status" class="input" name="status"><option value="">Semua status</option>'+
@@ -1513,8 +1513,8 @@ function viewSupport(){
       '<button type="submit" class="btn btn-primary">Terapkan filter</button></div></form>'+
       (tickets.length?'<div class="grid-2">'+tickets.map(t=>
         supportTicketCard(t).replace('<h3>','<p class="tiny muted">'+esc(t.nama_member||'')+'</p><h3>')).join('')+'</div>':
-        empty('Belum ada tiket','Belum ada laporan dukungan.'))+'</div>'+
-      (overview.findings?.length?'<div class="banner warning section-gap"><div><h3>Kasus perlu pemeriksaan</h3><p>'+
+        empty('Belum ada tiket','Belum ada laporan masuk.'))+'</div>'+
+      (overview.findings?.length?'<div class="banner warning section-gap"><div><h3>Perlu Ditindaklanjuti</h3><p>'+
         esc(overview.findings.length)+' potensi masalah riwayat/triase terdeteksi.</p></div></div>':'');
   }
   const list=state.supportTickets||[],releases=state.supportReleases||[];
@@ -1522,29 +1522,29 @@ function viewSupport(){
     'Laporkan kendala produk, usulkan fitur baru, dan pantau progres penanganan.')+
     '<div class="grid-2"><section class="surface"><p class="card-kicker">BUAT LAPORAN</p>'+
     '<form id="support-create-form" class="stack" autocomplete="off">'+
-    '<div class="field"><label for="ticket-category">Jenis laporan</label><select id="ticket-category" class="input" name="kategori" required>'+
+    '<div class="field"><label for="ticket-category">Jenis kendala</label><select id="ticket-category" class="input" name="kategori" required>'+
     '<option value="PERTANYAAN">Pertanyaan / bantuan akun</option><option value="BUG">Laporan bug</option><option value="FITUR">Permintaan fitur</option></select></div>'+
     '<div class="field"><label for="ticket-product">Produk terkait</label><select id="ticket-product" name="product_id" class="input">'+supportProductChoices()+'</select></div>'+
     '<div class="field"><label for="ticket-title">Judul</label><input id="ticket-title" class="input" name="judul" required minlength="8" maxlength="120" placeholder="Contoh: Struk tidak tercetak"></div>'+
-    '<div class="field"><label for="ticket-detail">Penjelasan kejadian / kebutuhan</label><textarea id="ticket-detail" class="input" name="deskripsi" rows="5" required minlength="20" maxlength="2000" placeholder="Ceritakan apa yang terjadi, langkah reproduksi, dan hasil yang diharapkan. Jangan memasukkan PIN atau kata sandi."></textarea></div>'+
+    '<div class="field"><label for="ticket-detail">Ceritakan masalahnya</label><textarea id="ticket-detail" class="input" name="deskripsi" rows="5" required minlength="20" maxlength="2000" placeholder="Ceritakan apa yang terjadi, langkah reproduksi, dan hasil yang diharapkan. Jangan memasukkan PIN atau kata sandi."></textarea></div>'+
     '<div class="grid-2"><div class="field"><label for="ticket-platform">Perangkat</label><select class="input" name="platform" id="ticket-platform"><option value="ANDROID">Android</option><option value="WINDOWS">Windows</option><option value="WEB">Browser web</option><option value="LAINNYA">Lainnya</option></select></div>'+
     '<div class="field"><label for="ticket-version">Versi aplikasi (opsional)</label><input class="input" id="ticket-version" name="versi_aplikasi" placeholder="1.2.0" maxlength="32"></div></div>'+
     '<button type="submit" class="btn btn-primary btn-wide" '+(!supportWriteEnabled()?'disabled title="Fitur support belum diaktifkan"':'')+'>Kirim laporan '+icon('arrow')+'</button>'+
-    '<p class="form-hint">Hanya data teks yang dikirim. Jangan sertakan PIN, token, atau informasi pembayaran rahasia.</p></form></section>'+
+    '<p class="form-hint">Jangan tulis PIN atau data pembayaran pribadi.</p></form></section>'+
     '<section><div class="surface"><p class="card-kicker">RIWAYAT LAPORAN SAYA</p>'+
     (list.length?'<div class="stack">'+list.slice(0,8).map(supportTicketCard).join('')+'</div>':
-      empty('Belum ada laporan','Tiket yang Anda buat akan tampil di sini.'))+'</div>'+
+      empty('Belum ada laporan','Laporan Anda akan muncul di sini.'))+'</div>'+
     '<div class="surface section-gap"><p class="card-kicker">UPDATE PRODUK SAYA</p>'+
     (releases.length?'<div class="stack">'+releases.slice(0,5).map(item=>'<div class="step"><span class="step-no">'+icon('check')+'</span><div class="step-body"><h3>'+
       esc(item.judul)+' · '+esc(item.versi)+'</h3><p>'+esc(item.ringkasan)+'</p><small class="muted">'+friendlyDate(item.published_at)+'</small></div></div>').join('')+'</div>':
-      '<p class="card-desc">Pembaruan yang diterbitkan untuk produk yang Anda miliki akan muncul di sini.</p>')+
+      '<p class="card-desc">Kabar terbaru tentang produk Anda muncul di sini.</p>')+
     '</div></section></div>';
 }
 function viewTicketDetail(){
   if(!logged())return needLogin('detail tiket');
   const d=state.ticketDetail;
   if(!d||d.ticket?.ticket_id!==state.selectedTicketId)
-    return title('Detail tiket','SUPPORT','Riwayat percakapan dan penanganan.')+
+    return title('Detail tiket','SUPPORT','Lihat pesan dan status laporan.')+
       empty('Pilih tiket dari daftar','Buka menu Bantuan dan pilih tiket yang ingin ditinjau.','dukungan','Lihat tiket');
   const t=d.ticket,activities=d.activities||[];
   const options={
@@ -1565,13 +1565,13 @@ function viewTicketDetail(){
       '<div class="field"><label for="ticket-reply">Balas tiket</label><textarea class="input" id="ticket-reply" name="pesan" rows="3" maxlength="1500" minlength="2" required placeholder="Tulis informasi terbaru atau tanggapan Anda."></textarea></div>'+
       '<button class="btn btn-primary" type="submit" '+(!supportWriteEnabled()?'disabled':'')+'>Kirim balasan</button></form>':'<p class="muted small">Tiket telah ditutup. Buat tiket baru jika terjadi masalah lain.</p>')+
     '</section><aside class="surface"><p class="card-kicker">STATUS PENANGANAN</p><h3>'+esc(supportStatusLabel(t.status))+'</h3>'+
-    '<p class="card-desc">Setiap perubahan disimpan sebagai aktivitas terpisah agar dapat ditelusuri.</p>'+
+    '<p class="card-desc">Riwayat perubahan laporan tersimpan di sini.</p>'+
     (isAdmin()?'<div class="divider"></div><form id="ticket-status-form" class="stack">'+
       '<div class="field"><label for="ticket-next">Ubah status</label><select id="ticket-next" class="input" name="status" required>'+options.map(s=>'<option value="'+s+'">'+esc(supportStatusLabel(s))+'</option>').join('')+'</select></div>'+
       '<div class="field"><label for="ticket-note">Catatan penanganan</label><textarea id="ticket-note" name="catatan" class="input" minlength="8" maxlength="1000" rows="3" required></textarea></div>'+
       '<button class="btn btn-secondary" type="submit" '+(!supportWriteEnabled()||options.length===0?'disabled':'')+'>Simpan status</button></form>'+
       '<div class="divider"></div><form id="ticket-priority-form" class="stack">'+
-      '<div class="field"><label for="ticket-priority">Prioritas bug / layanan</label><select id="ticket-priority" class="input" name="prioritas" required>'+
+      '<div class="field"><label for="ticket-priority">Tingkat prioritas</label><select id="ticket-priority" class="input" name="prioritas" required>'+
       ['P0','P1','P2','P3'].filter(p=>p!==t.prioritas).map(p=>'<option value="'+p+'">'+p+' — '+
         ({P0:'Kritis',P1:'Tinggi',P2:'Normal',P3:'Rendah'})[p]+'</option>').join('')+'</select></div>'+
       '<div class="field"><label for="priority-note">Alasan prioritas</label><textarea class="input" name="catatan" id="priority-note" minlength="8" maxlength="1000" rows="2" required></textarea></div>'+
@@ -1582,8 +1582,8 @@ function viewMember360(){
   if(!isAdmin())return needLogin('profil layanan member');
   const d=state.member360;
   if(!d||d.profil?.member_id!==state.selectedMemberId)
-    return title('Member 360°','PUSAT LAYANAN','Riwayat produk dan laporan member.')+
-      empty('Belum ada profil dipilih','Cari member pada menu Member untuk membuka profil 360°.','member','Cari member');
+    return title('Member 360°','PUSAT LAYANAN','Lihat produk dan laporan pelanggan.')+
+      empty('Belum Ada Profil Dipilih','Cari pelanggan untuk melihat detailnya.','member','Cari member');
   const m=d.profil,p=d.produk||[],orders=d.pesanan||[],tickets=d.tiket||[];
   return '<div class="section-head"><div><p class="eyebrow">MEMBER 360° · '+esc(m.member_id)+'</p><h2>'+esc(m.nama)+'</h2>'+
     '<p>'+esc(m.nama_usaha||'-')+' · '+esc(m.kota||'')+' · '+esc(m.wa||'')+'</p></div>'+safeBadge(m.status)+'</div>'+
@@ -1591,43 +1591,43 @@ function viewMember360(){
       ['Produk terverifikasi',p.length],['Pesanan terbaru',orders.length],
       ['Tiket layanan',tickets.length]
     ].map(([label,value])=>'<div class="metric-card static"><strong>'+value+'</strong><small>'+label+'</small></div>').join('')+'</div>'+
-    '<div class="section-gap">'+title('Hak akses produk','PRODUK MEMBER','Dihitung dari order PAID/FULFILLED dan status layanan; bukan salinan ledger baru.')+
+    '<div class="section-gap">'+title('Akses Produk','PRODUK MEMBER','Menampilkan produk yang sudah aktif untuk pelanggan.')+
     (p.length?'<div class="grid-2">'+p.map(x=>'<article class="surface"><p class="card-kicker">'+esc(x.tipe)+'</p><h3>'+esc(x.nama)+'</h3>'+
       safeBadge(x.akses_status)+'<p class="card-desc" style="margin-top:14px">Order: '+esc(x.order_id)+
       (x.berakhir_at?' · Berakhir '+friendlyDate(x.berakhir_at):'')+'</p></article>').join('')+'</div>':
-      empty('Belum ada pembelian terverifikasi','Member belum memiliki pembelian yang berstatus PAID atau FULFILLED.'))+'</div>'+
+      empty('Belum ada pembelian','Belum ada pembelian yang selesai.'))+'</div>'+
     '<div class="grid-2 section-gap"><section>'+title('Riwayat tiket','CUSTOMER SUPPORT','')+
     (tickets.length?'<div class="stack">'+tickets.map(supportTicketCard).join('')+'</div>':empty('Belum ada tiket','Tidak ada laporan dari member ini.'))+'</section>'+
     '<section>'+title('Riwayat pesanan','PEMBELIAN','')+
     (orders.length?'<div class="surface list-rows">'+orders.map(o=>'<div class="list-row"><div><strong>'+esc(o.nama_produk||o.product_id)+'</strong>'+
       '<small>'+esc(o.order_id)+'</small></div>'+safeBadge(o.status)+'</div>').join('')+'</div>':
-    empty('Belum ada pesanan','Member belum memiliki catatan order.'))+'</section></div>';
+    empty('Belum ada pesanan','Belum ada pesanan pelanggan.'))+'</section></div>';
 }
 function viewReleases(){
   if(!logged())return needLogin('rilis produk');
   const data=state.supportReleases||[];
-  return title('Riwayat Pembaruan Produk','PRODUCT RELEASES',
+  return title('Pembaruan Produk','PEMBARUAN',
     isAdmin()?'Catat versi dan perubahan; publikasi hanya untuk member yang memiliki produk.':'Pembaruan resmi untuk produk yang Anda miliki.')+
-    (isAdmin()?'<section class="surface" style="max-width:720px"><p class="card-kicker">CATAT RILIS</p>'+
+    (isAdmin()?'<section class="surface" style="max-width:720px"><p class="card-kicker">TAMBAH PEMBARUAN</p>'+
       '<form id="release-create-form" class="stack"><div class="grid-2">'+
       '<div class="field"><label for="release-product">Produk</label><select class="input" name="product_id" id="release-product" required>'+state.catalog.map(p=>'<option value="'+esc(p.product_id)+'">'+esc(p.nama)+'</option>').join('')+'</select></div>'+
       '<div class="field"><label for="release-version">Versi baru</label><input class="input" name="versi" id="release-version" placeholder="1.2.1" pattern="v?[0-9]+\\.[0-9]+(\\.[0-9]+)?" required></div></div>'+
       '<div class="field"><label for="release-title">Judul rilis</label><input id="release-title" class="input" name="judul" required minlength="8" maxlength="120"></div>'+
-      '<div class="field"><label for="release-summary">Changelog</label><textarea id="release-summary" class="input" name="ringkasan" required minlength="20" maxlength="1500" rows="4"></textarea></div>'+
+      '<div class="field"><label for="release-summary">Rincian perubahan</label><textarea id="release-summary" class="input" name="ringkasan" required minlength="20" maxlength="1500" rows="4"></textarea></div>'+
       '<div class="field"><label for="release-type">Jenis pembaruan</label><select id="release-type" class="input" name="tipe_rilis"><option>PATCH</option><option>MINOR</option><option>MAJOR</option><option>NOTICE</option></select></div>'+
       '<button class="btn btn-primary" type="submit" '+(!supportWriteEnabled()?'disabled':'')+'>Simpan draft rilis</button></form>'+
-      '<div class="divider"></div><p class="card-kicker">ANALISIS DAMPAK PRODUK</p>'+
-      '<p class="card-desc">Hitung pembeli dan status layanan sebelum mempublikasikan changelog. Analisis ini tidak mengirim pesan.</p>'+
-      '<button type="button" class="btn btn-secondary" data-impact-action="check" '+(!isConnected()?'disabled title="Fitur ini belum tersedia"':'')+'>Periksa member terdampak</button>'+
+      '<div class="divider"></div><p class="card-kicker">PENGGUNA TERDAMPAK</p>'+
+      '<p class="card-desc">Periksa pelanggan terdampak sebelum menerbitkan perubahan.</p>'+
+      '<button type="button" class="btn btn-secondary" data-impact-action="check" '+(!isConnected()?'disabled title="Fitur ini belum tersedia"':'')+'>Cek pelanggan terdampak</button>'+
       '<div id="release-impact-slot" style="margin-top:16px" aria-live="polite"></div>'+
-      '<p class="form-hint">Draft tidak terlihat oleh member sampai admin mempublikasikannya. Publikasi tidak otomatis memperbarui aplikasi POS yang terpasang.</p></section>':'')+
+      '<p class="form-hint">Draf baru terlihat setelah diterbitkan. Aplikasi terpasang tidak otomatis diperbarui.</p></section>':'')+
     '<div class="section-gap">'+title('Daftar versi','CHANGELOG','')+
     (data.length?'<div class="stack">'+data.map(item=>'<article class="surface support-release"><div class="support-ticket-head"><span class="chip">'+esc(item.tipe_rilis)+'</span>'+safeBadge(item.status)+'</div>'+
       '<h3>'+esc(item.judul)+' <span class="muted">'+esc(item.versi)+'</span></h3>'+
       '<p class="card-desc">'+esc(item.ringkasan)+'</p><p class="tiny muted">'+esc(item.product_id)+' · '+friendlyDate(item.published_at||item.created_at)+'</p>'+
       (isAdmin()&&item.status==='DRAFT'?'<button class="btn btn-secondary btn-sm" data-publish-release="'+esc(item.release_id)+'" '+(!supportWriteEnabled()?'disabled':'')+'>Publikasikan rilis</button>':'')+
       '</article>').join('')+'</div>':
-      empty('Belum ada rilis','Pembaruan produk akan tampil di sini setelah diterbitkan.'))+'</div>';
+      empty('Belum ada rilis','Pembaruan yang terbit muncul di sini.'))+'</div>';
 }
 
 const lmsWriteEnabled=()=>isWriteEnabled()&&config.lmsEnabled===true;
@@ -1673,7 +1673,7 @@ function syncHeroRotation_(){
   },6500);
 }
 async function submitContentForm_(form){
-  if(!isAdmin()||!contentWriteEnabled())return toast('Editor konten belum diaktifkan.',true);
+  if(!isAdmin()||!contentWriteEnabled())return toast('Edit konten belum tersedia.',true);
   const fd=new FormData(form),id=String(form.dataset.contentId||'');
   const payload={};
   for(const key of ['kind','placement','title','description','image_path',
@@ -1682,7 +1682,7 @@ async function submitContentForm_(form){
   }
   payload.sort_order=Number(payload.sort_order);
   const old=id?state.adminContent.find(x=>x.content_id===id):null;
-  if(id&&!old)return toast('Konten telah berubah. Muat ulang terlebih dahulu.',true);
+  if(id&&!old)return toast('Konten berubah. Muat ulang halaman.',true);
   if(old){payload.content_id=id;payload.revision=old.revision;}
   if(!(payload.kind==='PROMO'||payload.kind==='ANNOUNCEMENT')||payload.image_path){
     if(!window.NGD_CONTENT_UI?.mediaPath(payload.image_path))
@@ -1698,7 +1698,7 @@ async function submitContentForm_(form){
     state.contentRequestId=null;
     if(result?.item?.content_id)state.contentEditId=result.item.content_id;
     state.adminContent=await api('adminListContent',{},state.token);
-    render();toast('Konten tersimpan. Periksa isi dan terbitkan jika sudah sesuai.');
+    render();toast('Konten disimpan. Periksa sebelum tayang.');
   }catch(e){
     toast(e.message,true);
     // Unknown network outcome: keep request ID for safe create replay.
@@ -1714,7 +1714,7 @@ async function changeContentStatus_(id,nextStatus){
     const src=window.NGD_CONTENT_UI?.mediaPath(old.image_path);
     if(!src&&['PROMO','ANNOUNCEMENT'].includes(old.kind)){
       if(!confirm('Terbitkan '+(old.kind==='PROMO'?'promosi':'pengumuman')+' tanpa gambar?'))return;
-    }else if(!src)return toast('Alamat aset tidak valid. Periksa path gambar.',true);
+    }else if(!src)return toast('Alamat gambar tidak valid.',true);
     // A valid path is not evidence that a file exists: verify the image loads
     // before a published CMS row can replace the homepage or product image.
     const reachable=!src?true:await new Promise(resolve=>{
@@ -1724,7 +1724,7 @@ async function changeContentStatus_(id,nextStatus){
       img.onerror=()=>{clearTimeout(guard);resolve(false);};
       img.src=src;
     });
-    if(!reachable)return toast('Gambar belum dapat dibuka. Pastikan file sudah tersedia di GitHub Pages atau alamat HTTPS publik.',true);
+    if(!reachable)return toast('Gambar tidak bisa dibuka. Periksa alamatnya.',true);
     if(src&&!confirm('Gambar berhasil dibuka. Terbitkan konten ini sekarang?'))return;
   }
   try{
@@ -1732,7 +1732,7 @@ async function changeContentStatus_(id,nextStatus){
       content_id:id,status:nextStatus,revision:old.revision
     },state.token,{write:true});
     state.adminContent=await api('adminListContent',{},state.token);
-    render();toast(nextStatus==='PUBLISHED'?'Konten telah diterbitkan.':'Status konten diperbarui.');
+    render();toast(nextStatus==='PUBLISHED'?'Konten sudah tayang.':'Status berhasil diubah.');
   }catch(e){toast(e.message,true);}
 }
 
@@ -1979,24 +1979,24 @@ async function handleRegistrationOtp_(action){
   const agreed=fd.get('setuju_kebijakan')==='on';
   const normalizedWa=wa.replace(/[ ()-]/g,'');
   if(!/^(?:0|[+]?62)[0-9]{8,13}$/.test(normalizedWa))
-    return toast('Masukkan nomor WhatsApp yang valid.',true);
+    return toast('Nomor WhatsApp tidak valid.',true);
   if(action==='otp-request'&&!agreed)
-    return toast('Persetujuan kebijakan dan pengiriman OTP diperlukan.',true);
+    return toast('Centang persetujuan terlebih dahulu.',true);
   if(action==='otp-verify'&&!/^[0-9]{6}$/.test(otp))
-    return toast('Masukkan kode OTP enam angka.',true);
+    return toast('Masukkan kode WhatsApp 6 angka.',true);
   const button=form.querySelector('[data-action="'+action+'"]');
   if(button)button.disabled=true;
   try{
     if(action==='otp-request'){
       state.registrationOtpVerifiedWa='';
       await api('requestRegistrationOtp',{wa,setuju_kebijakan:agreed},'',{write:true});
-      toast('Permintaan kode diterima. Periksa WhatsApp Anda.');
+      toast('Kode dikirim. Cek WhatsApp Anda.');
     }else if(action==='otp-verify'){
       const result=await api('verifyRegistrationOtp',{wa,otp},'',{write:true});
       if(result?.verified!==true)
         throw new ApiError('Verifikasi OTP belum dikonfirmasi backend.');
       state.registrationOtpVerifiedWa=wa;
-      toast('Nomor WhatsApp terverifikasi. Anda dapat menyelesaikan pendaftaran.');
+      toast('Nomor terverifikasi. Lanjutkan pendaftaran.');
     }
   }catch(error){toast(error.message,true);}
   finally{if(button)button.disabled=false;}
@@ -2004,25 +2004,25 @@ async function handleRegistrationOtp_(action){
 async function requestMemberLoginOtp_(){
   const form=document.getElementById('auth-form');
   if(!form || form.dataset.mode!=='login' || !memberOtpLoginEnabled())
-    return toast('Login OTP Member tidak tersedia.',true);
+    return toast('Login WhatsApp belum tersedia.',true);
   const fd=new FormData(form),wa=String(fd.get('wa')||'').trim();
   if(!/^(?:0|[+]?62)[0-9]{8,13}$/.test(wa.replace(/[ ()-]/g,'')))
-    return toast('Masukkan nomor WhatsApp yang valid.',true);
+    return toast('Nomor WhatsApp tidak valid.',true);
   if(fd.get('setuju_pengiriman')!=='on')
-    return toast('Setujui pengiriman OTP WhatsApp terlebih dahulu.',true);
+    return toast('Centang persetujuan kirim kode.',true);
   const btn=form.querySelector('[data-action="member-otp-request"]');
   if(btn)btn.disabled=true;
   try{
     const res=await api('requestMemberLoginOtp',{wa,setuju_pengiriman:true},'',{write:true});
     if(res?.accepted!==true)throw new ApiError('Permintaan OTP belum dikonfirmasi.');
-    toast('Jika nomor terdaftar dan aktif, kode OTP akan dikirim ke WhatsApp.');
+    toast('Jika terdaftar, kode akan dikirim ke WhatsApp.');
   }catch(e){toast(e.message,true);}
   finally{if(btn)btn.disabled=false;}
 }
 async function processLogin(form,register){
   const adminMode=form.dataset.mode==='admin';
   if(!(adminMode?adminLoginEnabled():isWriteEnabled()))
-    return toast(adminMode?'Login administrator belum diaktifkan.':'Layanan akun sedang tidak tersedia.',true);
+    return toast(adminMode?'Login administrator belum diaktifkan.':'Login belum tersedia.',true);
   const fd=new FormData(form);
   const otpLogin=!adminMode&&!register&&memberOtpLoginEnabled();
   const payload=otpLogin?
@@ -2052,13 +2052,13 @@ async function processLogin(form,register){
       state.registrationOtpVerifiedWa='';
       state.registrationWaitlist={posisi:response.posisi};
       go('daftar');
-      toast('Pendaftaran berhasil dicatat. Akun menunggu aktivasi.');
+      toast('Pendaftaran diterima. Tunggu kabar aktivasi.');
       return;
     }
     if(!result?.token||!result?.profil)throw new ApiError('Respons login belum lengkap.');
     state.token=result.token;state.me=result.profil;
     sessionStorage.setItem(tokenKey,result.token);
-    toast('Selamat datang di Ngulik Digital.');
+    toast('Selamat datang!');
     const resume=(!isAdmin()&&state.pendingPurchaseId)?state.pendingPurchaseId:'';
     state.pendingPurchaseId='';
     go(isAdmin()?'admin':resume?'katalog':'beranda');
@@ -2073,7 +2073,7 @@ async function logout(){
     try{await api(wasAdmin?'adminLogout':'logout',{},token,
       {write:true,adminAuth:wasAdmin});}catch{}
   }
-  toast('Anda telah keluar.');
+  toast('Anda sudah keluar.');
 }
 async function changeAdminPin_(form){
   if(!isAdmin()||!adminLoginEnabled())return toast('Perubahan PIN belum tersedia.',true);
@@ -2083,7 +2083,7 @@ async function changeAdminPin_(form){
   if(!/^\d{6}$/.test(oldPin)||!/^\d{6}$/.test(newPin)||oldPin===newPin)
     return toast('Masukkan PIN lama dan PIN baru enam angka yang berbeda.',true);
   if(newPin!==confirmation)
-    return toast('Konfirmasi PIN baru tidak sama.',true);
+    return toast('PIN baru tidak cocok.',true);
   const button=form.querySelector('[type=submit]');
   if(button)button.disabled=true;
   try{
@@ -2094,15 +2094,15 @@ async function changeAdminPin_(form){
     // Backend revokes every session on PIN change, including this device.
     state.token='';state.me=null;sessionStorage.removeItem(tokenKey);
     go('admin-login');
-    toast('PIN telah diganti. Masuk lagi menggunakan PIN baru.');
+    toast('PIN berhasil diganti. Silakan masuk lagi.');
   }catch(error){toast(error.message,true);if(button)button.disabled=false;}
 }
 async function buy(productId){
   if(!logged()){
     state.pendingPurchaseId=productId;
-    go('login');toast('Masuk dengan WhatsApp terlebih dahulu untuk membeli.');return;
+    go('login');toast('Masuk untuk melanjutkan pembelian.');return;
   }
-  if(!paymentEnabled()){toast('Checkout belum aktif pada layanan yang terhubung.',true);return;}
+  if(!paymentEnabled()){toast('Pembayaran belum tersedia.',true);return;}
   const product=state.catalog.find(p=>p.product_id===productId);
   if(!product)return toast('Produk tidak ditemukan.',true);
   if(!confirm('Buat pesanan '+product.nama+' seharga '+rupiah(product.harga)+'?'))return;
@@ -2130,7 +2130,7 @@ async function openOrderDetail_(id){
       state.orderDetailLoading=false;
       if(state.route==='checkout')go('pesanan');
     }
-    toast('Gagal memastikan status pesanan dari server: '+(error.message||'Coba lagi.'),true);
+    toast('Belum bisa memeriksa pesanan: '+(error.message||'Coba lagi.'),true);
   }
 }
 function syncAdminPaymentApproval_(){
@@ -2155,7 +2155,7 @@ let adminPaymentSubmitting_=false;
 async function submitAdminPaymentForm_(form){
   if(adminPaymentSubmitting_||!isAdmin()||!paymentEnabled()||
     state.workspaceInfo?.finance_enabled===false||state.workspaceInfo?.mutations_enabled===false)
-    return toast('Verifikasi pembayaran Admin belum diaktifkan.',true);
+    return toast('Cek Pembayaran Admin belum diaktifkan.',true);
   const id=String(form.dataset.orderId||'');
   const order=state.adminOrders.find(o=>o.order_id===id);
   const overdue=order&&order.status==='PENDING'&&Number.isFinite(new Date(order.expires_at).getTime())&&new Date(order.expires_at).getTime()<=Date.now();
@@ -2238,7 +2238,7 @@ async function confirmPayment(){
     if(!result||!['MENUNGGU_VERIFIKASI','PAID','FULFILLED'].includes(result.status))
       throw new ApiError('Status konfirmasi belum pasti. Periksa riwayat pesanan sebelum mencoba lagi.');
     state.lastOrder=result;
-    toast('Permintaan verifikasi diterima. Admin akan memeriksa dana.');
+    toast('Konfirmasi diterima. Admin akan cek pembayaran.');
     go('pesanan');
   }catch(e){
     toast(e.message||'Konfirmasi belum dapat diproses. Periksa status pesanan.',true);
@@ -2250,7 +2250,7 @@ async function confirmPayment(){
 const pendingSupportRequests = new Map();
 async function submitSupportAction(form,action,payload,after){
   if(!supportWriteEnabled()){
-    toast('Layanan bantuan sementara belum tersedia.',true);return;
+    toast('Bantuan belum tersedia. Coba lagi nanti.',true);return;
   }
   const button=form.querySelector('[type="submit"]');
   if(button?.disabled)return;
@@ -2273,10 +2273,10 @@ async function submitSupportAction(form,action,payload,after){
   }finally{
     if(button)button.disabled=false;
   }
-  toast('Permintaan berhasil dicatat.');
+  toast('Permintaan berhasil dikirim.');
   if(after){
     try{await after(result);}
-    catch(e){toast('Data tersimpan tetapi tampilan belum dapat diperbarui.',true);}
+    catch(e){toast('Data disimpan. Muat ulang untuk melihatnya.',true);}
   }
 }
 async function submitTicketCreate(form){
@@ -2424,13 +2424,13 @@ async function submitLMSWrite(action,payload,after,form){
     toast(err.message,true);
     if(err.code!=='NETWORK_ERROR'&&err.code!=='INTERNAL')
       pendingSupportRequests.delete(key);
-    else toast('Status penyimpanan belum pasti. Coba ulang dengan isi yang sama atau periksa data dahulu.',true);
+    else toast('Belum bisa memastikan perubahan. Periksa data sebelum mencoba lagi.',true);
     if(button)button.disabled=false;
     return;
   }
   if(button)button.disabled=false;
-  toast('Perubahan LMS tersimpan.');
-  if(after)try{await after(result);}catch(err){toast('Perubahan tersimpan, tetapi tampilan perlu dimuat ulang.',true);}
+  toast('Materi berhasil disimpan.');
+  if(after)try{await after(result);}catch(err){toast('Perubahan tersimpan. Muat ulang halaman.',true);}
 }
 function lmsFormData(form){
   const d=new FormData(form);
@@ -2616,7 +2616,7 @@ async function toggleCatalogItem(id){
 }
 async function submitServiceBrief(form){
   if(!logged()||isAdmin()||!serviceWriteEnabled())
-    return toast('Penerimaan brief belum diaktifkan.',true);
+    return toast('Permintaan jasa belum tersedia.',true);
   const fd=new FormData(form);
   const kind=String(fd.get('jenis_layanan')||'');
   const payload={
@@ -2628,7 +2628,7 @@ async function submitServiceBrief(form){
     anggaran:Number(fd.get('anggaran'))
   };
   if(!Number.isSafeInteger(payload.anggaran)||payload.anggaran<0)
-    return toast('Anggaran harus berupa bilangan bulat positif atau 0.',true);
+    return toast('Anggaran harus berupa angka bulat.',true);
   const requestId=state.serviceRequestId||createRequestId();
   state.serviceRequestId=requestId;
   const button=form.querySelector('[type=submit]');
@@ -2639,13 +2639,13 @@ async function submitServiceBrief(form){
     if(!saved?.item?.service_id)throw new ApiError('Respons layanan tidak lengkap.');
   }catch(error){button.disabled=false;toast(error.message,true);return;}
   state.serviceRequestId=null;
-  toast(saved.already_submitted?'Permintaan sudah tercatat.':'Brief berhasil dikirim untuk ditinjau.');
+  toast(saved.already_submitted?'Permintaan sudah dikirim.':'Permintaan berhasil dikirim.');
   try{state.services=await api('getMyServiceRequests',{},state.token);}
-  catch(error){toast('Brief tersimpan, tetapi riwayat belum dapat dimuat.',true);}
+  catch(error){toast('Permintaan tersimpan. Muat ulang riwayat.',true);}
   render();
 }
 async function submitServiceQuote(form){
-  if(!isAdmin()||!serviceWriteEnabled())return toast('Penawaran belum diaktifkan.',true);
+  if(!isAdmin()||!serviceWriteEnabled())return toast('Penawaran belum tersedia.',true);
   const current=state.services.find(x=>x.service_id===form.dataset.serviceId);
   if(!current)return toast('Permintaan tidak ditemukan. Muat ulang halaman.',true);
   const fd=new FormData(form);
@@ -2666,7 +2666,7 @@ async function submitServiceQuote(form){
   }catch(error){button.disabled=false;toast(error.message,true);return;}
   toast(response.updated?'Penawaran berhasil disimpan.':'Tidak ada perubahan.');
   try{state.services=await api('adminListServiceRequests',{},state.token);}
-  catch(error){toast('Perubahan tersimpan, tetapi antrean gagal dimuat.',true);}
+  catch(error){toast('Perubahan tersimpan. Muat ulang daftar.',true);}
   render();
 }
 document.addEventListener('input',(e)=>{
@@ -2763,7 +2763,7 @@ document.addEventListener('click',async(e)=>{
         render();
       }catch(error){
         affiliateAction.disabled=false;
-        toast(error.message||'Gagal memuat data affiliate.',true);
+        toast(error.message||'Gagal memuat komisi.',true);
       }
       return;
     }
@@ -2771,7 +2771,7 @@ document.addEventListener('click',async(e)=>{
     const rows=Array.isArray(state.affiliates?.komisi)?state.affiliates.komisi:[];
     const amount=rows.filter(x=>x.status==='APPROVED'&&!x.payout_requested_at)
       .reduce((sum,x)=>sum+(Number(x.nominal)||0),0);
-    if(!(amount>0))return toast('Belum ada komisi yang dapat diajukan.',true);
+    if(!(amount>0))return toast('Belum ada komisi untuk dicairkan.',true);
     if(!confirm('Ajukan pencairan hingga '+rupiah(amount)+'? Sistem akan memeriksa minimum dan status transaksi. Pengajuan bukan bukti uang sudah ditransfer.'))return;
     affiliatePayoutSubmitting_=true;
     affiliateAction.disabled=true;
@@ -2779,7 +2779,7 @@ document.addEventListener('click',async(e)=>{
       const result=await api('requestPayout',{},state.token,{write:true});
       state.affiliates=await api('getAffiliateDashboard',{},state.token);
       render();
-      toast('Pengajuan pencairan tercatat'+(result?.total?' sebesar '+rupiah(result.total):'')+'. Menunggu proses berikutnya.');
+      toast('Permintaan pencairan diterima'+(result?.total?' sebesar '+rupiah(result.total):'')+'. Menunggu pemeriksaan.');
     }catch(error){
       toast(error.message||'Pengajuan belum dapat diproses.',true);
       try{state.affiliates=await api('getAffiliateDashboard',{},state.token);render();}
@@ -2944,8 +2944,8 @@ document.addEventListener('click',async(e)=>{
   else if(target.dataset.action==='logout')await logout();
   else if(target.dataset.action==='confirm-payment')await confirmPayment();
   else if(target.dataset.copy){
-    try{await navigator.clipboard.writeText(target.dataset.copy);toast('Tersalin.');}
-    catch{toast('Gagal menyalin. Silakan gunakan browser HTTPS.',true);}
+    try{await navigator.clipboard.writeText(target.dataset.copy);toast('Berhasil disalin.');}
+    catch{toast('Gagal menyalin. Coba lagi.',true);}
   }
 });
 async function submitProfileForm(form){
