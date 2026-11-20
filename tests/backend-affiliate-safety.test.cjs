@@ -24,7 +24,7 @@ function fixture(orderStatus='FULFILLED',minimum=50000){
   };
   ctx.logAudit_=(...args)=>audits.push(args);
   function payout(role='MEMBER'){
-    return vm.runInContext('requestPayout_({member_id:"M-1",role:'+JSON.stringify(role)+'})',ctx,{timeout:2000});
+    return vm.runInContext('requestPayout_({member_id:"M-1",role:'+JSON.stringify(role)+'},{nomor_dana:"081234567890"})',ctx,{timeout:2000});
   }
   return {payout,commission,writes,audits};
 }
