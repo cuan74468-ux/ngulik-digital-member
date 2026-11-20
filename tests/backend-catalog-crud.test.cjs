@@ -146,3 +146,28 @@ test('Apps Script manifest requests only scopes actually exercised by current co
   assert.equal(manifest.oauthScopes.includes('https://www.googleapis.com/auth/spreadsheets'),true);
   assert.equal(manifest.oauthScopes.includes('https://www.googleapis.com/auth/script.scriptapp'),true);
 });
+
+
+test('free digital catalogue items remain editable without enabling zero-price checkout',()=>{
+  const h=fixture();
+  const created=h.create({...sample(),harga:0},'FREE_DIGITAL_OFFER_1234').item;
+  assert.equal(created.harga,0);
+  const updated=h.update({...sample(),harga:0,nama:'Ebook Gratis untuk UMKM',
+    product_id:created.product_id,revision:created.revision});
+  assert.equal(updated.updated,true);
+  assert.equal(updated.item.harga,0);
+  assert.match(backend,/require_\(Number\.isInteger\(price\)&&price>0/);
+  assert.throws(()=>h.create({...sample('JASA_SEKALI'),harga:0,perlu_approval_admin:true},
+    'FREE_JASA_OFFER_123456'),/harga tidak valid|harga/i);
+});
+
+test('existing TOPUP_TOKEN is supported in Admin CRUD with positive credit validation',()=>{
+  const h=fixture();
+  const offer={...sample('TOPUP_TOKEN'),harga:10000,kredit_diberikan:10};
+  const created=h.create(offer,'TOKEN_PRODUCT_CREATE_123456').item;
+  assert.equal(created.tipe,'TOPUP_TOKEN');
+  assert.equal(created.checkout_supported,true);
+  assert.throws(()=>h.create({...offer,kredit_diberikan:0},
+    'TOKEN_PRODUCT_BAD_12345678'),/kredit positif/);
+  assert.equal(h.rows.length,1);
+});
