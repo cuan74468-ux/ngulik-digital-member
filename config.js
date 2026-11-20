@@ -5,7 +5,7 @@ window.NGD_CONFIG = Object.freeze({
   siteUrl: 'https://cuan74468-ux.github.io/ngulik-digital-member/',
   memberWritesEnabled: true,
   registrationOtpEnabled: true,
-  paymentsEnabled: true,
+  paymentsEnabled: false, // release gate: official QRIS image 404; no checkout until verified
   adminLoginEnabled: true,
   contentEnabled: true,
   catalogEnabled: true,
