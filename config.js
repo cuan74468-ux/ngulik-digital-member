@@ -13,7 +13,7 @@ window.NGD_CONFIG = Object.freeze({
   supportEnabled: true,
   notificationsEnabled: true,
   lmsEnabled: true,
-  qrisImageUrl: 'assets/qris-linggau-ai-studio.jpg', // display only after asset verified
+  qrisImageUrl: 'assets/qris-linggau-ai-studio.svg', // display only after asset verified
   qrisMerchant: 'Linggau AI Studio',
   qrisOwnerImageApproved: false // no payment prompt until actual image is verified on Pages
 });
