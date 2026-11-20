@@ -7,7 +7,7 @@ const staging=read('staging/member.html'),publicHtml=read('index.html');
 test('Mayar buyer checkout is only exposed after backend staging payout readiness',()=>{
   assert.match(app,/function mayarCheckoutEligible_\(product\)/);
   assert.match(app,/state\.workspaceInfo\?\.mayar_checkout_ready===true/);
-  assert.match(app,/location\.pathname\.includes\('\/staging\/'\)/);
+  assert.match(app,/String\(location\.pathname\|\|''\)\.includes\('\/staging\/'\)/);
   assert.match(app,/config\.apiUrl===window\.NGD_STAGING_CONFIG\?\.apiUrl/);
   assert.match(app,/mayar\?'createMayarOrder':'createOrder'/);
   assert.match(app,/Bayar via Mayar/);
