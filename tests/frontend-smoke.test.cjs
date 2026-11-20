@@ -43,7 +43,7 @@ test('public config exposes owner-enabled features while secrets stay server-sid
   vm.runInNewContext(config,sandbox,{timeout:1000});
   assert.match(sandbox.window.NGD_CONFIG.apiUrl,/^https:\/\/script\.google\.com\/macros\/s\//);
   assert.equal(sandbox.window.NGD_CONFIG.memberWritesEnabled,true);
-  assert.equal(sandbox.window.NGD_CONFIG.paymentsEnabled,true);
+  assert.equal(sandbox.window.NGD_CONFIG.paymentsEnabled,false);
   assert.equal(sandbox.window.NGD_CONFIG.qrisImageUrl,'assets/qris-linggau-ai-studio.jpg');
   assert.equal(sandbox.window.NGD_CONFIG.qrisOwnerImageApproved,false);
 });
