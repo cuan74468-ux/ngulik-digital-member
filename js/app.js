@@ -441,6 +441,16 @@ const isCoreServiceConsultation_=p=>coreServiceConsultationIds.has(String(p?.pro
  * onboarding and fulfillment controls have been verified. This does not
  * create NGD orders, carry referrals, or prove receipt of funds.
  * Production cannot activate it through URL parameters or catalog content. */
+// Member-side Mayar checkout only becomes visible when backend STAGING
+// reports verified merchant payout readiness. Backend re-verifies every gate.
+function mayarCheckoutEligible_(product){
+  const id=String(product?.product_id||'');
+  return logged()&&!isAdmin()&&location.pathname.includes('/staging/')&&
+    config.apiUrl===window.NGD_STAGING_CONFIG?.apiUrl&&
+    state.workspaceInfo?.mayar_checkout_ready===true&&
+    ['P-VIDEO-AI','P-3IN1','P-POS','P-INTEGRASI-GAS'].includes(id)&&
+    product?.aktif===true&&moneyValue(product.harga)>0;
+}
 function scalevCheckoutFor_(product){
   if(config.paymentsEnabled!==true||!window.NGD_STAGING_CONFIG?.apiUrl||
       config.apiUrl!==window.NGD_STAGING_CONFIG.apiUrl)return null;
@@ -606,11 +616,14 @@ function viewCatalog(){
     const kind=offerCategory(p),safeSale=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
     const manualFirst=isCoreServiceConsultation_(p);
     const scalev=safeSale?scalevCheckoutFor_(p):null;
+    const mayar=safeSale&&mayarCheckoutEligible_(p);
     const allowed=safeSale&&config.paymentsEnabled===true&&!manualFirst;
     const consult=(manualFirst||!allowed)?consultationUrl(p):'';
     const label=allowed?'Beli Sekarang':safeSale?'Checkout sedang tidak tersedia':'Produk belum tersedia';
     const tooltip=safeSale?'Checkout belum tersedia pada konfigurasi saat ini':'Periksa ketersediaan produk';
-    const action=scalev?scalevCheckoutButton_(scalev,'btn btn-primary'):
+    const action=mayar?
+      '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'">Bayar via Mayar '+icon('arrow')+'</button>':
+      scalev?scalevCheckoutButton_(scalev,'btn btn-primary'):
       manualFirst?
       (consult?'<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi '+esc(offerUiTitle_(p))+' melalui WhatsApp">Tanya via WhatsApp '+icon('arrow')+'</a>':
        '<button class="btn btn-primary" type="button" disabled>Hubungi admin</button>'):
@@ -1922,6 +1935,12 @@ async function loadRoute(route){
         throw toolsResult.reason;
     }
     if(route==='katalog'&&!isAdmin()){
+      // STAGING provider readiness comes from the backend, never a URL param.
+      // A failed read must hide all Mayar checkout actions.
+      if(location.pathname.includes('/staging/')){
+        try{state.workspaceInfo=await api('getStagingWorkspaceInfo');}
+        catch(e){state.workspaceInfo=null;}
+      }
       // Member shelf is read-only and never launches internal checkout.
       try{state.partnerShelf=await api('getEtalase',{},token);state.partnerShelfLoaded=true;}
       catch(e){state.partnerShelfLoaded=true;state.partnerShelf=[];}
@@ -2181,8 +2200,19 @@ async function buy(productId){
   const product=state.catalog.find(p=>p.product_id===productId);
   if(!product)return toast('Produk tidak ditemukan.',true);
   if(!confirm('Buat pesanan '+product.nama+' seharga '+rupiah(product.harga)+'?'))return;
+  const mayar=mayarCheckoutEligible_(product);
+  let email='';
+  if(mayar){
+    const entry=prompt('Email untuk invoice Mayar (wajib, akan dikirim ke penyedia pembayaran):');
+    if(entry===null)return;
+    email=String(entry||'').trim();
+    if(!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email))
+      return toast('Masukkan alamat email invoice yang valid.',true);
+  }
   try{
-    const order=await api('createOrder',{product_id:productId},state.token,{write:true});
+    const order=await api(mayar?'createMayarOrder':'createOrder',
+      mayar?{product_id:productId,email:email}:{product_id:productId},
+      state.token,{write:true});
     state.checkoutReturnRoute='pesanan';state.orderDetailLoading=false;state.lastOrder=order;go('checkout');toast('Pesanan berhasil dibuat.');
   }catch(e){toast(e.message,true);}
 }
