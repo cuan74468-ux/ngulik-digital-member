@@ -386,8 +386,8 @@ function diagnosticFinanceScenarios() {
     'Komisi order referral yang hilang terdeteksi');
   assert_(financeFindings_([refOrder],[],[ownCommission],eligible,once).needs_review===0,
     'Order referral dengan komisi tercatat tidak diperingatkan');
-  assert_(financeFindings_([refOrder],[],[oldCommission],eligible,once).needs_review===0,
-    'Komisi order pertama yang pernah dibuat menutup kelayakan berikutnya');
+  assert_(financeFindings_([refOrder],[],[oldCommission],eligible,once).findings[0].issues.indexOf('COMMISSION_MISSING')>=0,
+    'Komisi berlaku untuk pembelian langsung berikutnya sepanjang akun aktif');
   assert_(financeFindings_([refOrder],[],[oldCommission],eligible,all).findings[0].issues.indexOf('COMMISSION_MISSING')>=0,
     'Komisi hilang terdeteksi saat program mengizinkan tiap order');
   assert_(financeFindings_([refOrder],[],[],[{product_id:'SIM-AFF',tipe:'LISENSI_SEKALI',bisa_komisi:false}],once).needs_review===0,
