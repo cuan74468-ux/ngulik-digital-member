@@ -43,7 +43,7 @@ const consultationUrl = (product) => {
   if(!/^62\d{8,13}$/.test(number))return '';
   const name=String(product?.nama||'layanan digital').slice(0,140);
   return 'https://wa.me/'+number+'?text='+encodeURIComponent(
-    'Halo Ngulik Digital, saya ingin berkonsultasi tentang '+name+'. Mohon informasi ketersediaan dan cara pemesanan resmi.'
+    'Halo Admin Ngulik Digital, saya tertarik dengan layanan '+name+'. Mohon informasi ruang lingkup, harga, estimasi pengerjaan, dan cara pemesanan resmi. Terima kasih.'
   );
 };
 const classroomUrlSafe = (raw) => {
@@ -308,6 +308,27 @@ function viewHeroFreeLinks_(){
     '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Kelas Gratis</a>'+
   '</nav>';
 }
+// Three public service cards are sales entry points, never payment or account actions.
+function viewHomeServices_(){
+  const offers=[
+    ['P-3IN1','Website & Katalog Online UMKM','Etalase digital praktis untuk memperkenalkan produk dan usaha.'],
+    ['P-INTEGRASI-GAS','Aplikasi Google Apps Script','Aplikasi ringan dan otomatisasi operasional berbasis Google Sheets.'],
+    ['P-VIDEO-AI','Video Iklan & Konten Promosi','Video singkat dan materi promosi kreatif untuk usaha Anda.']
+  ];
+  return '<section class="ngd-home-services" aria-label="Tiga jasa utama Ngulik Digital">'+
+    '<header class="ngd-home-services-heading"><p>JASA UTAMA</p><h2>Solusi praktis untuk UMKM.</h2></header>'+
+    '<div class="ngd-home-services-grid">'+offers.map(([id,name,description],index)=>{
+      const contact=consultationUrl({nama:name+' ('+id+')'});
+      return '<article class="ngd-home-service" data-service-product="'+esc(id)+'">'+
+        '<span class="ngd-home-service-number">0'+(index+1)+'</span>'+
+        '<h3>'+esc(name)+'</h3>'+
+        '<p>'+esc(description)+'</p>'+
+        (contact?'<a class="ngd-home-service-cta" href="'+esc(contact)+'" target="_blank" rel="noopener noreferrer">Konsultasi WhatsApp '+icon('arrow')+'</a>':
+          '<span class="ngd-home-service-unavailable">Kontak Admin belum tersedia</span>')+
+      '</article>';
+    }).join('')+'</div>'+
+  '</section>';
+}
 const safeBadge=(s)=>'<span class="chip '+(['AKTIF','FULFILLED','PAID','APPROVED'].includes(String(s))?'green':'orange')+'">'+esc(s||'-')+'</span>';
 function viewHome(){
   if(isAdmin())return viewAdmin();
@@ -386,7 +407,7 @@ function viewHome(){
   '</section>';
   // Show one consistent logo-led hero on both PC and phone.
   // Published home CMS banners remain stored but do not replace this hero.
-  return '<div class="nh-home nh-home-minimal">'+hero+'</div>';
+  return '<div class="nh-home nh-home-minimal">'+hero+viewHomeServices_()+'</div>';
 }
 const offerCategories=[
   ['semua','Semua'],['ai','Token AI'],['aplikasi','Aplikasi Bisnis'],
