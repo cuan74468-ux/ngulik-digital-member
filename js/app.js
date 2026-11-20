@@ -1850,7 +1850,8 @@ async function refreshMarketplaceData_(){
     if(okCatalog)state.catalog=catalog.value;
     if(okContent)state.siteContent=content.value;
     if(state.route==='katalog'&&(okCatalog||okContent))render();
-    return okCatalog&&okContent;
+    // Catalog refresh succeeds even when optional CMS images are temporarily unavailable.
+    return okCatalog;
   }finally{marketplaceUpdating_=false;}
 }
 function syncMarketplacePolling_(){
