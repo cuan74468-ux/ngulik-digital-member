@@ -20,7 +20,7 @@ function setup(){
     NGD_MUTATIONS_ENABLED:'true',NGD_FINANCE_ENABLED:'true'
   })[key]||''})};
   ctx.UrlFetchApp={fetch:(url,opts)=>{
-    assert.equal(url,'https://api.mayar.id/hl/v2/payment/pay_123456789012');
+    assert.equal(url,'https://api.mayar.id/hl/v2/transactions/pay_123456789012');
     assert.match(opts.headers.Authorization,/^Bearer /);
     return {getResponseCode:()=>200,
       getContentText:()=>JSON.stringify({data:{id:'pay_123456789012',status:'paid',amount:10100}})};
@@ -38,7 +38,8 @@ function setup(){
   ctx.appendRow_=(table,data)=>{if(table==='wa_notifications')queue.push(data);};
   ctx.logAudit_=(...a)=>audit.push(a);
   ctx.onPaid_=()=>{};
-  ctx.settings_=()=>({order_expiry_menit:60,cart_abandonment_menit:15,followup_member_otomatis:true,payment_gateway_mode:'MAYAR_QRIS_OTOMATIS'});
+  ctx.settings_=()=>({order_expiry_menit:60,cart_abandonment_menit:15,followup_member_otomatis:true,payment_gateway_mode:'MAYAR'});
+  ctx.ngdStagingWorkspaceInfo_=()=>({environment:'STAGING',external_providers_enabled:true});
   ctx.now_=()=>new Date();
   ctx.recordId_=()=>('REC-'+(queue.length+1));
   ctx.normalizeWa_=x=>x;
