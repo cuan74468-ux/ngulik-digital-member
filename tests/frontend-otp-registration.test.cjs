@@ -11,7 +11,7 @@ const otpBackend=fs.readFileSync(path.join(__dirname,'../apps-script/OtpAuth.gs'
 test('public registration OTP release gate remains OFF',()=>{
   assert.match(config,/registrationOtpEnabled:\s*true/);
   assert.match(config,/memberWritesEnabled:\s*true/);
-  assert.match(config,/paymentsEnabled:\s*true/);
+  assert.match(config,/paymentsEnabled:\s*false/);
 });
 test('member registration UI requests WhatsApp OTP and verifies it before submit',()=>{
   assert.match(app,/data-action="otp-request"/);
