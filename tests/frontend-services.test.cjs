@@ -15,7 +15,7 @@ function fixture(){
 test('member must log in before creating a real service request',()=>{
   const ui=fixture();
   const html=ui.member({logged:false,items:[],enabled:false});
-  assert.match(html,/Masuk ke akun/);
+  assert.match(html,/Masuk/);
   assert.doesNotMatch(html,/id="service-brief-form"/);
 });
 test('service briefing uses real fields and remains off without backend approval',()=>{
@@ -24,8 +24,8 @@ test('service briefing uses real fields and remains off without backend approval
   for(const name of ['jenis_layanan','judul','brief','referensi_url','anggaran'])
     assert.match(html,new RegExp('name="'+name+'"'));
   assert.match(html,/name="jenis_layanan"/);
-  assert.match(html,/Kirim brief untuk ditinjau/);
-  assert.match(html,/LINGGAU AI STUDIO/);
+  assert.match(html,/Kirim permintaan/);
+  assert.match(html,/JASA NGULIK DIGITAL/);
   assert.match(html,/disabled/);
   assert.doesNotMatch(html,/Rp0<\/strong>/);
 });
@@ -41,7 +41,7 @@ test('member view masks internal notes and safely escapes user-supplied content'
   assert.match(out,/&lt;script&gt;alert\(2\)&lt;\/script&gt;/);
   assert.doesNotMatch(out,/<img src=/);
   assert.doesNotMatch(out,/PRIVATE INTERNAL ONLY/);
-  assert.match(out,/Penawaran tersedia/);
+  assert.match(out,/Harga tersedia/);
 });
 test('admin screen is role-isolated and quote form never claims payment',()=>{
   const ui=fixture();
@@ -54,7 +54,7 @@ test('admin screen is role-isolated and quote form never claims payment',()=>{
   assert.match(html,/name="penawaran_harga"/);
   assert.match(html,/name="catatan_internal"/);
   assert.match(html,/disabled/);
-  assert.match(html,/tidak menerima uang/);
+  assert.match(html,/belum termasuk konfirmasi pembayaran/);
   assert.doesNotMatch(html,/checkout otomatis|saldo bertambah/i);
 });
 test('commercial service module is loaded on all member/admin routes',()=>{
