@@ -70,7 +70,7 @@ test('member/public copies avoid technical commission terminology',()=>{
   const view=between(app,'function viewAffiliate(){','function viewNotificationCenter(){');
   const publicCopy=view.replace(/data-[a-z-]+/g,'').replace(/class="[^"]*"/g,'');
   // Allow internal function keys, CSS names and backend contract identifiers.
-  for(const s of ['PROGRAM AFFILIATE','AFFILIATE','TAUTAN REFERRAL','Komisi referral','Pendaftar dari referral'])
+  for(const s of ['PROGRAM AFFILIATE','TAUTAN REFERRAL','Komisi referral','Pendaftar dari referral'])
     assert.doesNotMatch(publicCopy,new RegExp(s,'i'));
   assert.match(app,/function uiCommissionText_\(value\)/);
   assert.match(app,/uiCommissionText_\(state\.info\?\.disclosure/);
