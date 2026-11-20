@@ -2565,8 +2565,13 @@ function apiReadActions_() {
  * This handler never trusts webhook-supplied amounts or account IDs.
  */
 function mayarWebhook_(e) {
-  require_(String(settings_().payment_gateway_mode||'QRIS_STATIS')!=='QRIS_STATIS',
-    'NOT_AVAILABLE','Webhook Mayar tidak aktif untuk QRIS statis.');
+  // Source integration is not a production release: accept only the verified
+  // STAGING workspace until provider checkout, payouts and reconciliations pass.
+  var stage=ngdStagingWorkspaceInfo_();
+  require_(stage.environment==='STAGING'&&stage.external_providers_enabled===true,
+    'MAINTENANCE','Webhook hanya tersedia di STAGING terverifikasi.');
+  require_(String(settings_().payment_gateway_mode||'QRIS_STATIS')==='MAYAR',
+    'NOT_AVAILABLE','Webhook Mayar tidak aktif untuk mode pembayaran ini.');
   var params=e&&e.parameter||{},multi=e&&e.parameters||{};
   var supplied=String(params.webhook_token||'');
   var stored=String(PropertiesService.getScriptProperties().getProperty('MAYAR_WEBHOOK_SECRET')||'');
@@ -2635,7 +2640,9 @@ function mayarWebhook_(e) {
       'PAYMENT_UNVERIFIED','Jumlah order berubah.');
     if(['PAID','FULFILLED'].indexOf(order.status)>=0)
       return {accepted:true,duplicate:true,order_id:order.order_id};
-    require_(['PENDING','MENUNGGU_VERIFIKASI','EXPIRED'].indexOf(order.status)>=0,
+    // A late payment for an expired order is not silently revived.
+    // Hold for financial reconciliation to avoid duplicate orders/benefits.
+    require_(['PENDING','MENUNGGU_VERIFIKASI'].indexOf(order.status)>=0,
       'RECONCILIATION_REQUIRED','Status order perlu peninjauan.');
     var product=byId_('katalog_produk','product_id',order.product_id);
     var member=byId_('members','member_id',order.member_id);
