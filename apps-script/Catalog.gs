@@ -8,7 +8,7 @@
  * No payments, balance changes, fulfillment, emails or external API calls.
  */
 var NGD_CATALOG_TYPES_=[
-  'LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_KREDIT',
+  'LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_TOKEN','TOPUP_KREDIT',
   'JASA_SEKALI','PRODUK_DIGITAL'
 ];
 var NGD_CATALOG_EDIT_FIELDS_=[
@@ -26,7 +26,7 @@ function catalogAdminView_(row) {
   out.aktif=row.aktif===true;
   out.komisi_persen=row.komisi_persen===undefined||row.komisi_persen===null||row.komisi_persen===''?null:Number(row.komisi_persen);
   out.sumber_produk=String(row.sumber_produk||'INTERNAL');
-  out.checkout_supported=['LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_KREDIT',
+  out.checkout_supported=['LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_TOKEN','TOPUP_KREDIT',
     'PRODUK_DIGITAL','JASA_SEKALI'].indexOf(row.tipe)>=0;
   return out;
 }
@@ -62,7 +62,7 @@ function catalogPayload_(p,existing) {
     nama:safeText_(p.nama,120),
     deskripsi:safeText_(p.deskripsi,350),
     tipe:String(p.tipe||''),
-    harga:catalogInt_(p,'harga',1,50000000),
+    harga:catalogInt_(p,'harga',p.tipe==='PRODUK_DIGITAL'?0:1,50000000),
     kredit_diberikan:catalogInt_(p,'kredit_diberikan',0,100000),
     durasi_hari:catalogInt_(p,'durasi_hari',0,365),
     urut:catalogInt_(p,'urut',1,10000)
@@ -95,7 +95,7 @@ function catalogPayload_(p,existing) {
   if(existing)
     require_(patch.tipe===existing.tipe,
       'CONFLICT','Tipe produk tidak dapat diubah setelah dibuat.');
-  if(patch.tipe==='TOPUP_KREDIT')
+  if(['TOPUP_KREDIT','TOPUP_TOKEN'].indexOf(patch.tipe)>=0)
     require_(patch.kredit_diberikan>0&&patch.durasi_hari===0,
       'VALIDATION','Produk top-up memerlukan kredit positif tanpa durasi.');
   if(['LANGGANAN_30H','SEAT_30H'].indexOf(patch.tipe)>=0)
