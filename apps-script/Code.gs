@@ -1160,7 +1160,7 @@ function createMayarOrder_(m,p,requestId) {
       description:'Ngulik Digital '+sku+' — '+id,expiredAt:expire.toISOString(),
       items:[{quantity:1,rate:allowed[sku],description:String(product.nama).slice(0,150)}],
       extraData:{ngd_order_id:id,ngd_member_id:m.member_id,ngd_sku:sku}};
-    var response=UrlFetchApp.fetch('https://api.mayar.id/hl/v2/invoice/create',{
+    var response=UrlFetchApp.fetch('https://api.mayar.id/hl/v2/invoices/create',{
       method:'post',contentType:'application/json',
       headers:{Authorization:'Bearer '+apiKey},
       payload:JSON.stringify(payload),
@@ -2601,7 +2601,7 @@ function mayarWebhook_(e) {
   var eventType=String(event.event||event.type||'');
   require_(eventType==='payment.received','BAD_REQUEST','Event tidak didukung.');
   var payment=event.data||{},paymentId=String(
-    payment.id||payment.paymentId||payment.payment_id||event.paymentId||''
+    payment.transactionId||payment.paymentLinkTransactionId||payment.id||payment.paymentId||payment.payment_id||event.paymentId||''
   );
   require_(/^[A-Za-z0-9_-]{8,100}$/.test(paymentId),
     'BAD_REQUEST','ID pembayaran tidak valid.');
@@ -2626,7 +2626,7 @@ function mayarWebhook_(e) {
   if(Array.isArray(details))details=details.length===1?details[0]:null;
   require_(details&&typeof details==='object','PAYMENT_UNVERIFIED',
     'Detail pembayaran tidak valid.');
-  require_(String(details.id||details.uuid||details.uuId||'')===paymentId,
+  require_(String(details.paymentLinkTransactionId||details.transactionId||details.id||details.uuid||details.uuId||'')===paymentId,
     'PAYMENT_UNVERIFIED','Identitas pembayaran berbeda.');
   require_(String(details.status||'').toLowerCase()==='paid',
     'PAYMENT_UNVERIFIED','Pembayaran belum lunas.');
