@@ -843,8 +843,8 @@ function viewAffiliate(){
   if(!logged())return '<div class="partner-public">'+
     '<section class="partner-hero" aria-label="Program Mitra Ngulik Digital">'+
       '<div class="partner-hero-copy"><p class="partner-kicker">MITRA NGULIK DIGITAL · PROGRAM AFFILIATE</p>'+
-      '<h1>Bagikan solusi digital. <em>Tumbuh bersama.</em></h1>'+
-      '<p>Bantu lebih banyak orang menemukan tools AI, aplikasi bisnis, dan produk digital yang bermanfaat. Dapatkan komisi dari transaksi referral yang memenuhi syarat.</p>'+
+      '<h1>Bagikan Link. <em>Dapatkan Komisi.</em></h1>'+
+      '<p>Bagikan produk yang Anda suka. Komisi berlaku untuk pembelian yang memenuhi syarat.</p>'+
       '<div class="partner-hero-actions">'+
         '<button type="button" class="partner-btn partner-btn-primary" data-route="daftar">Mulai bergabung '+icon('arrow')+'</button>'+
         '<button type="button" class="partner-btn partner-btn-outline" data-route="login">Sudah punya akun?</button>'+
@@ -857,7 +857,7 @@ function viewAffiliate(){
       '</div></section>'+
     '<section class="partner-public-steps" aria-label="Cara kerja affiliate">'+
       '<div class="partner-section-intro"><p class="partner-kicker">CARA KERJA</p>'+
-      '<h2>Tiga langkah sederhana.</h2><p>Mulai dari rekomendasi yang benar-benar relevan.</p></div>'+
+      '<h2>Cara Dapat Komisi</h2><p>Bagikan produk yang cocok untuk teman Anda.</p></div>'+
       '<div class="partner-step-grid">'+[
         ['01','Bergabung sebagai member','Buat akun dan temukan tautan referral pribadi pada dashboard.'],
         ['02','Bagikan rekomendasi','Kenalkan Ngulik Digital kepada teman, kreator, atau pelaku UMKM yang membutuhkan.'],
@@ -866,30 +866,30 @@ function viewAffiliate(){
       '</div></section>'+
     '<section class="partner-public-value" aria-label="Apa yang bisa direkomendasikan">'+
       '<div><p class="partner-kicker">REKOMENDASIKAN SOLUSI YANG TEPAT</p>'+
-      '<h2>Produk digital yang dekat dengan kebutuhan usaha.</h2>'+
-      '<p>Mulai dari alat AI, aplikasi bisnis, materi belajar hingga layanan kreatif. Tidak semua produk otomatis memberikan komisi; ketentuannya ditetapkan per produk.</p>'+
+      '<h2>Pilih Produk untuk Dibagikan</h2>'+
+      '<p>Pilih produk yang sesuai; komisi berlaku pada produk tertentu.</p>'+
       '<button type="button" class="partner-text-link" data-route="katalog">Lihat katalog produk '+icon('arrow')+'</button></div>'+
       '<div class="partner-value-tags"><span>Tools AI</span><span>Aplikasi Bisnis</span><span>Kelas & Ebook</span><span>Layanan Kreatif</span></div>'+
     '</section>'+
     '<section class="partner-public-faq" aria-label="Ketentuan program kemitraan">'+
-      '<div class="partner-section-intro"><p class="partner-kicker">PERLU DIKETAHUI</p><h2>Jelas sejak awal.</h2></div>'+
+      '<div class="partner-section-intro"><p class="partner-kicker">PERLU DIKETAHUI</p><h2>Info Komisi</h2></div>'+
       '<div class="partner-faq-grid">'+
-        '<div><h3>Bagaimana komisi dihitung?</h3><p>Komisi mengikuti produk yang memenuhi syarat, persentase produk, status transaksi, dan kebijakan program yang berlaku.</p></div>'+
-        '<div><h3>Kapan komisi dapat dicairkan?</h3><p>Setelah masa tahan serta verifikasi terpenuhi. Batas minimum dan ketentuan pencairan mengikuti pengaturan yang berlaku.</p></div>'+
-        '<div><h3>Apakah setiap klik menghasilkan komisi?</h3><p>Tidak. Klik dan pendaftaran bukan jaminan komisi. Hanya transaksi yang memenuhi syarat yang diperhitungkan.</p></div>'+
-        '<div><h3>Perlu promosi berbayar?</h3><p>Tidak diwajibkan oleh halaman ini. Utamakan rekomendasi jujur dan jangan membuat klaim berlebihan.</p></div>'+
+        '<div><h3>Bagaimana Komisi Dihitung?</h3><p>Besarnya komisi mengikuti ketentuan setiap produk.</p></div>'+
+        '<div><h3>Kapan Bisa Dicairkan?</h3><p>Komisi bisa dicairkan setelah memenuhi batas dan verifikasi.</p></div>'+
+        '<div><h3>Apakah Setiap Klik Dapat Komisi?</h3><p>Tidak. Komisi dihitung dari pembelian yang memenuhi syarat.</p></div>'+
+        '<div><h3>Perlu Pasang Iklan?</h3><p>Tidak wajib. Cukup bagikan dengan jujur.</p></div>'+
       '</div></section>'+
     '<section class="partner-public-end"><div><p class="partner-kicker">MARI BERKOLABORASI</p>'+
-      '<h2>Temukan, bagikan, bertumbuh.</h2><p>Mulai dari satu rekomendasi yang bermanfaat.</p></div>'+
-      '<button type="button" class="partner-btn partner-btn-primary" data-route="daftar">Jadi Mitra Ngulik Digital '+icon('arrow')+'</button></section>'+
+      '<h2>Mulai Bagikan Produk</h2><p>Mulai dari produk yang sudah Anda kenal.</p></div>'+
+      '<button type="button" class="partner-btn partner-btn-primary" data-route="daftar">Mulai jadi mitra '+icon('arrow')+'</button></section>'+
     '</div>';
 
   if(isAdmin())return '<section class="partner-member"><p class="partner-kicker">AKSES MEMBER</p>'+
-    '<h1>Program Mitra Ngulik Digital</h1><p>Dashboard komisi pribadi hanya tersedia untuk akun member. Pengelolaan komisi dan pembayaran tetap melalui modul administrasi resmi.</p>'+
+    '<h1>Program Mitra Ngulik Digital</h1><p>Masuk sebagai Member untuk melihat komisi Anda.</p>'+
     '<button type="button" class="partner-btn partner-btn-outline" data-route="admin">Kembali ke admin</button></section>';
   const a=state.affiliates;
-  if(!a)return '<section class="partner-member"><p class="partner-kicker">WORKSPACE MITRA</p>'+
-    '<h1>Affiliate Saya</h1><p>Informasi komisi belum berhasil dimuat. Muat ulang halaman untuk mencoba kembali.</p>'+
+  if(!a)return '<section class="partner-member"><p class="partner-kicker">MITRA</p>'+
+    '<h1>Komisi Saya</h1><p>Komisi belum bisa ditampilkan. Coba muat ulang.</p>'+
     '<button type="button" class="partner-btn partner-btn-outline" data-affiliate-refresh>Muat ulang data</button></section>';
   const code=String(a.kode_referral||state.me?.kode_referral||'');
   // Never generate an outgoing share link pointing at STAGING.
@@ -915,14 +915,14 @@ function viewAffiliate(){
   ];
   return '<div class="partner-member">'+
     '<header class="partner-member-header"><div><p class="partner-kicker">MEJA KERJA / AFFILIATE</p>'+
-      '<h1>Affiliate Saya</h1><p>Bagikan tautan Anda, lihat perkembangan, dan pantau komisi secara transparan.</p></div>'+
+      '<h1>Komisi Saya</h1><p>Lihat tautan dan komisi Anda di sini.</p></div>'+
       '<button type="button" class="partner-refresh" data-affiliate-refresh aria-label="Perbarui data affiliate">'+icon('arrow')+' Perbarui</button></header>'+
     '<div class="partner-metric-grid">'+cards.map(c=>'<article class="partner-metric partner-metric-'+c[3]+'">'+
       '<span>'+c[0]+'</span><strong>'+c[1]+'</strong><small>'+c[2]+'</small></article>').join('')+'</div>'+
     '<section class="partner-link-panel" aria-label="Tautan referral pribadi">'+
       '<div class="partner-link-copy"><p class="partner-kicker">TAUTAN REFERRAL PRIBADI</p>'+
-      '<h2>Rekomendasi yang bermanfaat, satu tautan.</h2>'+
-      '<p>Setiap pendaftaran yang menggunakan tautan ini akan mengikuti mekanisme referral sistem.</p>'+
+      '<h2>Bagikan Tautan Anda</h2>'+
+      '<p>Bagikan tautan ini kepada calon pelanggan.</p>'+
       '<div class="partner-link-url">'+(url?esc(url):'Kode referral belum tersedia')+'</div>'+
       (code?'<span class="partner-code">Kode: '+esc(code)+'</span>':'')+'</div>'+
       '<div class="partner-link-actions">'+
@@ -944,14 +944,14 @@ function viewAffiliate(){
         '<div class="partner-commission-amount"><strong>'+rupiah(x.nominal)+'</strong>'+
         '<span class="partner-status partner-status-'+esc(String(x.status||'').toLowerCase())+'">'+esc(statusLabel[x.status]||'Dalam proses')+'</span></div></article>'
       ).join('')+'</div>':
-      '<div class="partner-empty"><h3>Belum ada komisi tercatat</h3><p>Mulailah dengan membagikan tautan referral kepada orang yang membutuhkan produk digital.</p></div>')+
+      '<div class="partner-empty"><h3>Belum Ada Komisi</h3><p>Komisi akan muncul setelah pembelian yang memenuhi syarat.</p></div>')+
     '</section>'+
     '<section class="partner-payout" aria-label="Pengajuan pencairan">'+
-      '<div><p class="partner-kicker">PENCAIRAN</p><h2>Ajukan komisi yang tersedia.</h2>'+
-      '<p>Pengajuan diproses hanya jika mencapai batas minimum, telah melewati masa tahan, dan lolos pemeriksaan transaksi oleh sistem. Persetujuan bukan bukti dana sudah ditransfer.</p></div>'+
+      '<div><p class="partner-kicker">PENCAIRAN</p><h2>Tarik Komisi Anda</h2>'+
+      '<p>Komisi dapat dicairkan setelah memenuhi batas minimum dan lolos pemeriksaan.</p></div>'+
       '<button type="button" class="partner-btn partner-btn-primary" data-affiliate-payout'+(canRequest?'':' disabled')+
       '>'+(canRequest?'Ajukan pencairan':'Belum dapat diajukan')+' '+icon('arrow')+'</button></section>'+
-    '<footer class="partner-terms"><strong>Transparansi program</strong><p>'+esc(state.info?.disclosure||
+    '<footer class="partner-terms"><strong>Aturan Komisi</strong><p>'+esc(state.info?.disclosure||
       'Besaran komisi ditetapkan per produk. Komisi dapat berubah status sesuai verifikasi, refund, dan ketentuan program. Pengajuan tidak menjamin pembayaran langsung.')+'</p></footer>'+
   '</div>';
 }
@@ -961,8 +961,8 @@ function viewNotificationCenter(){
   const inbox=state.notifications||{items:[],unread:0};
   const items=Array.isArray(inbox.items)?inbox.items:[];
   const body=!enabled?
-    '<p class="card-desc">Belum ada pembaruan akun untuk ditampilkan.</p>':
-    !items.length?'<p class="card-desc">Belum ada pembaruan untuk akun Anda.</p>':
+    '<p class="card-desc">Belum ada kabar baru.</p>':
+    !items.length?'<p class="card-desc">Belum ada kabar baru.</p>':
     '<div class="list-rows">'+items.map(n=>'<div class="list-row"><div class="left">'+
       '<small>'+esc(friendlyDate(n.created_at))+'</small><strong>'+esc(n.judul||'Pembaruan')+'</strong>'+
       '<p class="card-desc">'+esc(n.pesan||'')+'</p></div>'+
@@ -970,7 +970,7 @@ function viewNotificationCenter(){
         '<button type="button" class="btn btn-ghost btn-sm" data-action="notification-read" data-notification-id="'+
         esc(n.notification_id)+'">Tandai dibaca</button>':'')+'</div>').join('')+'</div>';
   return '<section class="surface section-gap" aria-label="Pusat notifikasi member">'+
-    '<p class="card-kicker">AKTIVITAS MEMBER</p><h3>Notifikasi'+
+    '<p class="card-kicker">KABAR TERBARU</p><h3>Notifikasi'+
     (enabled?' · '+esc(inbox.unread||0)+' baru':'')+'</h3>'+body+'</section>';
 }
 function viewProfileEditor(){
@@ -982,8 +982,8 @@ function viewProfileEditor(){
     ['Instagram','instagram',80]
   ];
   return '<form id="profile-form" class="surface section-gap">'+
-    '<p class="card-kicker">PROFIL USAHA</p><h3>Perbarui informasi</h3>'+
-    '<p class="card-desc">Nomor WhatsApp login, peran, saldo kredit, dan status membership tidak dapat diubah di sini.</p>'+
+    '<p class="card-kicker">PROFIL USAHA</p><h3>Edit Profil Usaha</h3>'+
+    '<p class="card-desc">Nomor WhatsApp dan saldo tidak dapat diubah di halaman ini.</p>'+
     '<div class="grid-2">'+fields.map(([label,name,max])=>
       '<div class="field"><label for="profile-'+name+'">'+esc(label)+'</label>'+
       '<input class="input" id="profile-'+name+'" name="'+name+'" value="'+esc(m[name]||'')+
@@ -993,14 +993,14 @@ function viewProfileEditor(){
     esc(m.deskripsi_usaha||'')+'</textarea></div>'+
     '<button type="submit" class="btn btn-primary" '+(!isWriteEnabled()?'disabled':'')+
     '>Simpan perubahan</button>'+
-    (!isWriteEnabled()?'<p class="form-hint">Penyimpanan perubahan profil saat ini belum tersedia.</p>':'')+'</form>';
+    (!isWriteEnabled()?'<p class="form-hint">Profil belum bisa diubah.</p>':'')+'</form>';
 }
 function viewAccount(){
-  if(!logged())return title('Akun member','PROFIL & KEAMANAN','Kelola akses ke akun Anda.')+
-    '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk dengan nomor WhatsApp dan PIN Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
+  if(!logged())return title('Akun member','PROFIL & KEAMANAN','Lihat dan atur profil Anda.')+
+    '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk memakai nomor WhatsApp Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
   if(isAdmin()){
     const m=state.me;
-    return title('Akun administrator','PENGATURAN AKSES','Informasi pengelola dan jalur operasional akun.')+
+    return title('Akun Admin','AKUN ADMIN','Lihat profil dan pengaturan akun Admin.')+
       '<div class="grid-2"><section class="surface"><p class="card-kicker">IDENTITAS ADMIN</p>'+
       '<div class="list-rows">'+[
         ['Nama',m.nama],['WhatsApp login',m.wa],['Peran','Administrator'],
@@ -1008,7 +1008,7 @@ function viewAccount(){
       ].map(([label,value])=>'<div class="list-row"><div class="left"><small>'+esc(label)+'</small>'+
         '<strong>'+esc(value||'-')+'</strong></div></div>').join('')+'</div></section>'+
       '<section class="surface"><p class="card-kicker">KEAMANAN & OPERASIONAL</p>'+
-      '<h3>Akses panel pengelola</h3><p class="card-desc">Jangan bagikan PIN atau token sesi. Perubahan sistem, saldo, dan pembayaran tetap diverifikasi dari backend.</p>'+
+      '<h3>Akses panel pengelola</h3><p class="card-desc">Jaga kerahasiaan PIN Admin Anda.</p>'+
       '<div class="admin-account-actions">'+[
         ['admin','Buka dasbor operasional'],['lms','Kelola kelas dan materi'],
         ['pesanan','Tinjau pesanan'],['dukungan','Buka layanan bantuan']
@@ -1016,43 +1016,43 @@ function viewAccount(){
         '<span>'+esc(label)+'</span>'+icon('arrow')+'</button>').join('')+'</div>'+
       '<button type="button" class="btn btn-secondary" data-action="logout">'+icon('logout')+
       ' Keluar dari akun</button></section>'+
-      '<section class="surface admin-password-panel"><p class="card-kicker">GANTI PIN ADMIN</p>'+
-      '<h3>Perbarui PIN keamanan</h3><p class="card-desc">PIN baru akan mengakhiri semua sesi admin termasuk perangkat ini.</p>'+
+      '<section class="surface admin-password-panel"><p class="card-kicker">UBAH PIN</p>'+
+      '<h3>Ganti PIN Admin</h3><p class="card-desc">Setelah ganti PIN, Anda perlu masuk lagi.</p>'+
       '<form id="admin-pin-form" class="stack">'+
       '<div class="field"><label for="admin-pin-old">PIN saat ini</label><input class="input" type="password" id="admin-pin-old" name="pin_lama" pattern="[0-9]{6}" inputmode="numeric" autocomplete="current-password" maxlength="6" required></div>'+
       '<div class="field"><label for="admin-pin-new">PIN baru</label><input class="input" type="password" id="admin-pin-new" name="pin_baru" pattern="[0-9]{6}" inputmode="numeric" autocomplete="new-password" maxlength="6" required></div>'+
       '<div class="field"><label for="admin-pin-confirm">Ulangi PIN baru</label><input class="input" type="password" id="admin-pin-confirm" name="pin_konfirmasi" pattern="[0-9]{6}" inputmode="numeric" autocomplete="new-password" maxlength="6" required></div>'+
       '<button type="submit" class="btn btn-primary" '+(!adminLoginEnabled()?'disabled':'')+'>Ganti PIN</button></form></section></div>';
   }
-  const m=state.me;return title('Akun Anda','PROFIL MEMBER','Data akun berasal dari server.')+
+  const m=state.me;return title('Akun Anda','PROFIL MEMBER','Periksa detail akun Anda.')+
     '<div class="grid-2"><div class="surface"><p class="card-kicker">INFORMASI AKUN</p>'+
     '<div class="list-rows">'+[
       ['Nama',m.nama],['Nama usaha',m.nama_usaha],['WhatsApp',m.wa],['Status',m.status],['Kode referral',m.kode_referral],['Bergabung',friendlyDate(m.joined_at)]
     ].map(([k,v])=>'<div class="list-row"><div class="left"><small>'+esc(k)+'</small><strong>'+esc(v||'-')+'</strong></div></div>').join('')+'</div></div>'+
-    '<div class="surface"><p class="card-kicker">AKSES & KEAMANAN</p><h3>Keamanan akun</h3><p class="card-desc">Sesi disimpan hanya di tab browser ini. Keluar untuk mengakhiri akses lokal.</p><div class="actions" style="margin-top:24px"><button class="btn btn-secondary" data-action="logout">'+icon('logout')+' Keluar dari akun</button></div>'+
+    '<div class="surface"><p class="card-kicker">AKSES & KEAMANAN</p><h3>Keamanan akun</h3><p class="card-desc">Keluar jika memakai perangkat bersama.</p><div class="actions" style="margin-top:24px"><button class="btn btn-secondary" data-action="logout">'+icon('logout')+' Keluar dari akun</button></div>'+
     '<div class="divider"></div><h3>Pesanan saya</h3><button class="btn btn-ghost" data-route="pesanan">Lihat riwayat pesanan '+icon('arrow')+'</button><div class="divider"></div><h3>Program affiliate</h3><button class="btn btn-ghost" data-route="affiliate">Lihat referral saya '+icon('arrow')+'</button>'+
-    '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan bug atau usulkan fitur '+icon('arrow')+'</button></div></div>'+viewNotificationCenter()+viewProfileEditor();
+    '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan kendala '+icon('arrow')+'</button></div></div>'+viewNotificationCenter()+viewProfileEditor();
 }
 function viewLogin(register=false,adminMode=false){
   if(register&&state.registrationWaitlist){
     const pos=Number(state.registrationWaitlist.posisi);
     return '<section class="login-shell" role="status" aria-live="polite">'+
-      '<p class="eyebrow">PENDAFTARAN BERHASIL DICATAT</p>'+
-      '<h1>Anda masuk daftar tunggu.</h1>'+
-      '<p class="lead">Nomor WhatsApp sudah diverifikasi. Akun belum aktif karena kuota atau antrean pendaftaran. Tidak perlu mengulang pendaftaran atau meminta OTP baru.</p>'+
+      '<p class="eyebrow">PENDAFTARAN DITERIMA</p>'+
+      '<h1>Anda Ada di Daftar Tunggu</h1>'+
+      '<p class="lead">Nomor WhatsApp sudah terverifikasi. Kami kabari saat akun aktif.</p>'+
       (Number.isInteger(pos)&&pos>0?'<div class="surface"><strong>Posisi antrean: '+esc(pos)+'</strong></div>':'')+
-      '<p class="card-desc">Tunggu informasi aktivasi dari pengelola. Login Member baru bisa dilakukan setelah akun berstatus aktif.</p>'+
+      '<p class="card-desc">Anda bisa masuk setelah akun aktif.</p>'+
       '<div class="actions"><button type="button" class="btn btn-primary" data-route="beranda">Kembali ke beranda</button>'+
-      '<button type="button" class="btn btn-secondary" data-route="login">Masuk setelah aktif</button></div></section>';
+      '<button type="button" class="btn btn-secondary" data-route="login">Masuk nanti</button></div></section>';
   }
   const enabled=adminMode?adminLoginEnabled():register?registrationOtpEnabled():isWriteEnabled();
   const memberOtp=!adminMode&&!register&&memberOtpLoginEnabled();
   return '<div class="login-shell"><p class="eyebrow">'+
     (adminMode?'AKSES PENGELOLA':register?'BERGABUNG':'SELAMAT DATANG KEMBALI')+'</p>'+
     '<h1 style="font-size:2.25rem">'+
-    (adminMode?'Masuk panel administrator.':register?'Buat akun member.':'Masuk ke ruang Anda.')+'</h1>'+
+    (adminMode?'Masuk sebagai Admin.':register?'Daftar akun.':'Masuk ke akun Anda.')+'</h1>'+
     '<p class="lead">'+
-    (adminMode?'Gunakan nomor WhatsApp administrator yang sudah terdaftar dan PIN enam angka. Tidak perlu membuat akun baru.':register?'Buat akun melalui WhatsApp untuk menggunakan alat dan layanan Ngulik Digital.':memberOtp?'Masuk dengan kode OTP yang dikirim ke WhatsApp terdaftar.':'Gunakan nomor WhatsApp dan PIN enam angka yang terdaftar.')+'</p>'+
+    (adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':register?'Daftar memakai nomor WhatsApp Anda.':memberOtp?'Masukkan kode dari WhatsApp Anda.':'Masukkan nomor WhatsApp dan PIN Anda.')+'</p>'+
     '<form id="auth-form" class="surface" data-mode="'+(adminMode?'admin':register?'register':'login')+'">'+
     (register?'<div class="field"><label for="nama">Nama lengkap</label><input class="input" id="nama" name="nama" autocomplete="name" required minlength="2" maxlength="80"></div>'+
       '<div class="field"><label for="usaha">Nama usaha</label><input class="input" id="usaha" name="nama_usaha" required minlength="2" maxlength="100"></div>':'')+
@@ -1064,15 +1064,15 @@ function viewLogin(register=false,adminMode=false){
     (register?'<div class="field"><label for="otp">Kode OTP WhatsApp</label><input class="input" id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" type="text" required placeholder="6 digit kode verifikasi"></div>'+
       '<div class="actions" style="margin-bottom:13px"><button type="button" class="btn btn-secondary" data-action="otp-request" '+(!enabled?'disabled':'')+'>Kirim kode OTP</button>'+
       '<button type="button" class="btn btn-ghost" data-action="otp-verify" '+(!enabled?'disabled':'')+'>Verifikasi kode</button></div>':'')+
-    (register?'<div class="field"><label><input type="checkbox" name="setuju_kebijakan" required> Saya menyetujui ketentuan program dan kebijakan privasi.</label></div>':'')+
+    (register?'<div class="field"><label><input type="checkbox" name="setuju_kebijakan" required> Saya setuju dengan syarat dan kebijakan privasi.</label></div>':'')+
     '<button class="btn btn-primary btn-wide" type="submit" '+(!enabled?'disabled':'')+'>'+
     (adminMode?'Masuk admin':register?'Buat akun':'Masuk')+' '+icon('arrow')+'</button>'+
     '<p class="form-hint" style="margin:13px 0 0">'+
     (enabled?(memberOtp?'Kode berlaku 5 menit, maksimal 3 percobaan. Jangan bagikan kode.':'Jaga kerahasiaan PIN Anda.'):adminMode?'Akses administrator belum diaktifkan pada backend. Akun yang sudah ada tetap aman.':'Pendaftaran dan akses member sedang dipersiapkan.')+'</p></form>'+
     '<p class="small login-other-route">'+
-    (adminMode?'<button class="btn btn-ghost btn-sm" data-route="login">Kembali ke login member</button>':
+    (adminMode?'<button class="btn btn-ghost btn-sm" data-route="login">Kembali ke login</button>':
       register?'Sudah punya akun? <button class="btn btn-ghost btn-sm" data-route="login">Masuk</button>':
-      '<button class="btn btn-ghost btn-sm" data-route="daftar">Belum punya akun? Daftar</button> <button class="btn btn-secondary btn-sm" data-route="admin-login">Masuk Admin dengan PIN</button>')+
+      '<button class="btn btn-ghost btn-sm" data-route="daftar">Belum punya akun? Daftar</button> <button class="btn btn-secondary btn-sm" data-route="admin-login">Masuk Admin</button>')+
     '</p>'+
     (adminMode&&!String(config.brand||'').includes('STAGING')?
       '<section class="admin-env-notice"><strong>Database STAGING menggunakan Admin Studio terpisah.</strong>'+
@@ -1086,8 +1086,8 @@ function viewMyOrders(){
     '<button type="button" class="btn btn-primary" data-route="admin-login">Saya Admin — masuk dengan PIN '+icon('arrow')+'</button>'+
     '<button type="button" class="btn btn-secondary" data-route="login">Saya Member — masuk dengan OTP '+icon('arrow')+'</button>'+
     '</div></section>';
-  return title('Pesanan saya','RIWAYAT TRANSAKSI','Buka pesanan untuk melihat langkah selanjutnya. Pembayaran hanya dianggap lunas setelah dana diverifikasi Admin.')+
-    (!state.orders.length?empty('Belum ada pesanan','Produk yang Anda pesan nantinya muncul di sini.','katalog','Lihat katalog'):
+  return title('Pesanan saya','RIWAYAT PESANAN','Lihat status dan rincian pesanan Anda.')+
+    (!state.orders.length?empty('Belum ada pesanan','Pesanan Anda akan muncul di sini.','katalog','Lihat katalog'):
     '<div class="stack order-history-list">'+state.orders.map(o=>{
       const status=String(o.status||'');
       const due=new Date(o.expires_at).getTime();
@@ -1110,7 +1110,7 @@ function viewCheckout(){
   const o=state.lastOrder;
   if(!o)return title('Pembayaran','PESANAN ANDA','')+
     empty('Pesanan belum dipilih','Buka riwayat pesanan atau pilih produk.','pesanan','Riwayat pesanan');
-  if(state.orderDetailLoading)return title('Memeriksa pesanan','DETAIL PESANAN','Mencocokkan status terbaru dengan server.')+
+  if(state.orderDetailLoading)return title('Memuat Pesanan','DETAIL PESANAN','Memuat status terbaru…')+
     '<section class="surface" role="status" aria-live="polite"><strong>'+esc(o.nama_produk||'Produk')+'</strong><p class="card-desc">'+esc(o.order_id)+' · '+rupiah(o.total_bayar)+'</p><p class="card-desc">Mengambil status pembayaran. Jangan transfer sebelum data terbaru berhasil dimuat.</p><button class="btn btn-secondary" data-route="pesanan" type="button">Kembali ke Pesanan</button></section>';
   const status=String(o.status||'PENDING');
   const expiryMs=new Date(o.expires_at).getTime();
@@ -1148,13 +1148,13 @@ function viewCheckout(){
     paymentLink?
       '<div class="checkout-qr"><strong>Metode pembayaran resmi</strong>'+
       '<a class="btn btn-primary btn-wide" href="'+esc(paymentLink)+'" target="_blank" rel="noopener noreferrer">Buka pembayaran resmi '+icon('arrow')+'</a>'+
-      '<p class="checkout-note">Pastikan penerima dan nominal benar sebelum membayar.</p></div>':
+      '<p class="checkout-note">Pastikan nama penerima dan nominal benar.</p></div>':
     officialQr?
       '<div class="checkout-qr"><strong>QRIS resmi</strong><img data-qris-image src="'+esc(qrUrl)+'" alt="QRIS penerima '+esc(merchant)+'" width="260" height="260">'+
       '<div data-qris-fallback class="qris-fallback" hidden>Gambar QRIS gagal dimuat. Hubungi Admin sebelum membayar.</div>'+
-      '<strong>'+esc(merchant)+'</strong><p class="checkout-note">Periksa penerima dan transfer jumlah tepat.</p></div>':
-      '<div class="checkout-manual-panel" role="note"><strong>QRIS resmi belum tersedia</strong>'+
-      '<p>Gunakan konfirmasi manual melalui Admin. <strong>Jangan scan QRIS placeholder atau transfer sebelum menerima tujuan pembayaran resmi.</strong></p>'+
+      '<strong>'+esc(merchant)+'</strong><p class="checkout-note">Pastikan rekening tujuan dan nominal sudah benar.</p></div>':
+      '<div class="checkout-manual-panel" role="note"><strong>QRIS Belum Tersedia</strong>'+
+      '<p>Minta petunjuk pembayaran dari Admin. <strong>Jangan transfer sebelum menerima rekening resmi dari Admin.</strong></p>'+
       '<ol><li>Minta instruksi pembayaran lewat WhatsApp Admin.</li>'+
       '<li>Pastikan nama penerima dan nominal '+rupiah(o.total_bayar)+' tepat.</li>'+
       '<li>Setelah dana benar-benar dikirim, ajukan verifikasi di bawah. Admin akan memeriksa mutasi.</li></ol></div>';
@@ -1166,24 +1166,24 @@ function viewCheckout(){
   const canConfirm=open&&paymentEnabled()&&!financeBlocked&&!!adminChat;
   return '<div class="checkout-backdrop"><section class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-title">'+
     '<header class="checkout-heading"><div><p class="eyebrow">NGULIK DIGITAL / PESANAN</p>'+
-    '<h1 id="checkout-title">Detail &amp; tindak lanjut</h1><p>Order '+esc(o.order_id)+'</p></div>'+
+    '<h1 id="checkout-title">Detail Pesanan</h1><p>Order '+esc(o.order_id)+'</p></div>'+
     '<button type="button" class="checkout-close" data-route="'+esc(state.checkoutReturnRoute||'pesanan')+'" aria-label="Kembali ke riwayat">×</button></header>'+
-    '<div class="checkout-summary"><section><h2>Rincian pembelian</h2>'+
+    '<div class="checkout-summary"><section><h2>Rincian Pesanan</h2>'+
     '<div class="price-line"><span>Produk</span><strong>'+esc(o.nama_produk||'—')+'</strong></div>'+
     '<div class="price-line"><span>Harga</span><strong>'+rupiah(o.harga_dasar)+'</strong></div>'+
     '<div class="price-line"><span>Kode unik</span><strong>'+rupiah(o.kode_unik)+'</strong></div>'+
-    '<div class="checkout-total"><small>Nominal tepat termasuk kode unik</small>'+
+    '<div class="checkout-total"><small>Total yang harus dibayar</small>'+
     '<strong class="checkout-total-amount" style="white-space:nowrap;font-variant-numeric:tabular-nums">'+rupiah(o.total_bayar)+'</strong>'+
     (open?'<button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(String(o.total_bayar))+'">Salin nominal</button>':'')+'</div>'+
     (open?'<p class="checkout-countdown" id="checkout-countdown" data-expiry="'+esc(o.expires_at||'')+'">Batas pembayaran: '+timer+'</p>':'')+
     '<div class="checkout-status-summary">'+safeBadge(status)+'<p>'+esc(stateNote)+'</p></div></section>'+
     '<section><h2>'+ (open?'Langkah pembayaran':'Status dan bantuan')+'</h2>'+paymentSection+
-    (open?'<div class="checkout-steps"><strong>Langkah selanjutnya</strong><p>Setelah transfer nyata, minta verifikasi Admin. Saldo dan hak akses hanya diberikan setelah dana diterima dan disetujui.</p></div>':'')+
+    (open?'<div class="checkout-steps"><strong>Setelah Transfer</strong><p>Setelah transfer, minta Admin memeriksa pembayaran Anda.</p></div>':'')+
     askAdmin+
-    (canConfirm?'<button class="btn btn-primary btn-wide" type="button" data-action="confirm-payment">Saya sudah transfer — minta verifikasi</button>':'')+
-    (open&&(!paymentEnabled()||financeBlocked)?'<p class="checkout-note"><strong>Verifikasi pembayaran sementara dinonaktifkan di server.</strong> Jangan transfer sebelum memperoleh konfirmasi layanan dari Admin.</p>':'')+
+    (canConfirm?'<button class="btn btn-primary btn-wide" type="button" data-action="confirm-payment">Saya Sudah Bayar</button>':'')+
+    (open&&(!paymentEnabled()||financeBlocked)?'<p class="checkout-note"><strong>Konfirmasi pembayaran belum tersedia.</strong> Jangan transfer sebelum memperoleh konfirmasi layanan dari Admin.</p>':'')+
     (paid?'<button type="button" class="btn btn-secondary btn-wide" data-route="beranda">Lihat saldo / akses saya</button>':'')+
-    '<button type="button" class="btn btn-ghost btn-wide" data-route="pesanan">Kembali ke daftar pesanan</button>'+
+    '<button type="button" class="btn btn-ghost btn-wide" data-route="pesanan">Kembali ke pesanan</button>'+
     '</section></div></section></div>';
 }
 function viewAdminRuntime(){
