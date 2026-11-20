@@ -80,12 +80,10 @@ test('fake success, duplicate order and wrong money stay HOLD without posting',(
   const dup=bridge.previewEvidence(evidence,product,['SVL-TEST-123']);
   assert.ok(dup.issues.includes('DUPLICATE_ORDER'));
 });
-test('staging-only checkout wiring cannot silently leak to production storefront',()=>{
+test('Scalev and Mayar are retired from staging checkout and cannot leak to public',()=>{
   const staging=read('staging/member.html'),publicPage=read('index.html'),app=read('js/app.js');
-  assert.match(staging,/\.\.\/js\/scalev-bridge\.js/);
-  assert.match(staging,/\.\/scalev-checkout-map\.js/);
+  assert.doesNotMatch(staging,/src="[^\"]*(?:scalev-bridge|scalev-checkout-map)\.js/);
   assert.doesNotMatch(publicPage,/scalev-bridge\.js|scalev-checkout-map\.js/);
-  assert.match(app,/config\.apiUrl!==window\.NGD_STAGING_CONFIG\.apiUrl/);
-  assert.match(app,/scalevCheckoutFor_\(p\)/);
-  assert.match(app,/Bayar via Scalev/);
+  assert.match(app,/function scalevCheckoutFor_\(\)\{return null;/);
+  assert.match(app,/function mayarCheckoutEligible_\(\)\{[\s\S]*?return false;/);
 });
