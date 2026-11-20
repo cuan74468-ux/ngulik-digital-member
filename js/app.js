@@ -508,7 +508,7 @@ function viewPublicMarketplace(list){
     return '<article class="market-product-card" aria-label="'+esc(offerUiTitle_(p))+'">'+
       '<div class="market-product-media market-media-'+esc(kind)+'">'+
         (cover||'<div class="market-product-placeholder" aria-hidden="true"><span class="market-product-placeholder-icon">'+icon(fallbackIcon)+'</span><span class="market-product-placeholder-name">'+esc(offerCategoryLabel(p))+'</span></div>')+
-        (badge?'<span class="market-product-badge">'+badge+'</span>':'')+
+        (badge?'<span class="market-product-badge">'+esc(badge)+'</span>':'')+
         '<span class="market-product-category">'+esc(offerCategoryLabel(p))+'</span>'+
       '</div><div class="market-product-body">'+
         '<span class="market-product-merchant">Ngulik Digital</span>'+
