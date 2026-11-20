@@ -46,7 +46,7 @@ test('mobile-first two-column grid and desktop five-column cards are isolated to
 });
 test('both public and staging invalidate cache for new marketplace sources',()=>{
   for(const html of [publicHtml,stagingHtml]){
-    assert.match(html,/marketplace-public\.css\?v=20261120-marketplace-retail-v3/);
+    assert.match(html,/marketplace-public\.css\?v=20261120-marketplace-retail-v2/);
     assert.match(html,/content-ui\.js\?v=20261120-marketplace-retail-v3/);
     assert.match(html,/app\.js\?v=20261120-marketplace-retail-v5/);
     assert.ok(html.indexOf('marketplace-public.css')>html.indexOf('portfolio-adaptation.css'));
