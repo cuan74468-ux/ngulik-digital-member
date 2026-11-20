@@ -1835,7 +1835,15 @@ function dashboard_(m) {
 function affiliateDashboard_(m) {
   var all=readAll_('affiliate_commissions').filter(function(r){return r.referrer_id===m.member_id;});
   var sums={PENDING:0,APPROVED:0,PAID:0,REVERSED:0};all.forEach(function(c){sums[c.status]=(sums[c.status]||0)+Number(c.nominal||0);});
-  return {kode_referral:m.kode_referral,link:'https://cuan74468-ux.github.io/ngulik-digital-member/?ref='+m.kode_referral,klik:findRows_('klik_log',function(r){return r.referrer_id===m.member_id&&r.tipe==='REFERRAL';}).length,pendaftar:findRows_('members',function(r){return r.referred_by===m.member_id;}).length,konversi:all.length,saldo:sums,komisi:all};
+  // A logged-in member only receives their own commission metadata. Never
+  // return payout_note: it contains a private DANA destination and receipt.
+  var safeRows=all.map(function(c){return {
+    komisi_id:c.komisi_id,order_id:c.order_id,nominal:c.nominal,
+    status:c.status,created_at:c.created_at,approve_after:c.approve_after,
+    approved_at:c.approved_at,payout_requested_at:c.payout_requested_at,
+    paid_at:c.paid_at
+  };});
+  return {kode_referral:m.kode_referral,link:'https://cuan74468-ux.github.io/ngulik-digital-member/?ref='+m.kode_referral,klik:findRows_('klik_log',function(r){return r.referrer_id===m.member_id&&r.tipe==='REFERRAL';}).length,pendaftar:findRows_('members',function(r){return r.referred_by===m.member_id;}).length,konversi:all.length,saldo:sums,komisi:safeRows};
 }
 function ngdDanaDestination_(raw){
   var phone=String(raw||'').replace(/[\s()+-]/g,'');
@@ -2518,6 +2526,14 @@ function apiRouter_(action,token,p,requestId) {
         var reference=safeText_(p.referensi_transfer,120),note=safeText_(p.catatan,300);
         require_(reference.length>=5,'VALIDATION','Bukti atau referensi transfer diperlukan.');
         require_(note.length>=5,'VALIDATION','Catatan pencairan diperlukan.');
+        // One provider transfer reference cannot settle two different
+        // commission records. Check under the existing script lock.
+        var referenceUsed=findRows_('affiliate_commissions',function(item){
+          return item.komisi_id!==c.komisi_id&&item.status==='PAID'&&
+            String(item.payout_note||'').indexOf(' | Ref: '+reference+' | ')>=0;
+        });
+        require_(referenceUsed.length===0,'RECONCILIATION_REQUIRED',
+          'Referensi transfer sudah digunakan. Lakukan pemeriksaan pencairan.');
         updateRow_('affiliate_commissions',c._row,{status:'PAID',paid_at:now_(),
           payout_note:destination.split(' | ')[0]+' | Ref: '+reference+' | '+note});
         logAudit_(admin.member_id,'ADMIN','COMMISSION_PAID','affiliate_commissions',c.komisi_id,
