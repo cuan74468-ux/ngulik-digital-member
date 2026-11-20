@@ -23,7 +23,7 @@ test('member registration UI requests WhatsApp OTP and verifies it before submit
 });
 test('admin login does not inherit member registration OTP gate',()=>{
   assert.match(app,/adminMode\?adminLoginEnabled\(\):register\?registrationOtpEnabled\(\)/);
-  assert.match(app,/adminMode\?'adminLogin':register\?'register':'login'/);
+  assert.match(app,/adminMode\?'adminLogin':register\?'register':otpLogin\?'verifyMemberLoginOtp':'login'/);
 });
 test('backend validates OTP, commits account and then consumes one-time proof',()=>{
   const block=backend.slice(backend.indexOf('function authRegister_('),
