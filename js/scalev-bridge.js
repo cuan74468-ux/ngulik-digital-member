@@ -42,7 +42,9 @@
     // provider details match current catalog and the documented Free policy.
     if(entry.status!=='READY'||entry.source!=='SCALEV_DASHBOARD_VERIFIED'||
        entry.commission_owner!=='NGD'||entry.scalev_affiliate!=='OFF'||
-       entry.plan!=='FREE'||product.aktif!==true||
+       entry.plan!=='FREE'||entry.merchant_name!=='Linggau AI Studio'||
+       entry.e_payment_status!=='ACTIVE'||entry.owner_release!=='STAGING_APPROVED'||
+       product.aktif!==true||
        String(product.tipe||'')!==expected.type||
        rupiah(product.harga)!==expected.price||
        rupiah(entry.price)!==expected.price)return null;
