@@ -95,7 +95,7 @@ test('QRIS path configured but unverified image must keep payment gate closed',(
   const config=fs.readFileSync(path.join(root,'config.js'),'utf8');
   const stage=fs.readFileSync(path.join(root,'staging/member-config.js'),'utf8');
   for(const c of [config,stage]){
-    assert.match(c,/qris-linggau-ai-studio\.jpg/);
+    assert.match(c,/qris-linggau-ai-studio\.svg/);
     assert.match(c,/qrisOwnerImageApproved:\s*false/);
   }
   assert.match(app,/function mayarCheckoutEligible_\(\)\{[\s\S]*?return false/);
