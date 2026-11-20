@@ -45,10 +45,10 @@ test('referral sharing uses production URL even on staging and validates code',(
 });
 test('payout action is explicit, guarded, and server-authoritative',()=>{
   assert.match(app,/if\(affiliatePayoutSubmitting_\|\|!isWriteEnabled\(\)\|\|config\.paymentsEnabled!==true\)return/);
-  assert.match(app,/if\(!confirm\('Ajukan pencairan hingga /);
-  assert.match(app,/api\('requestPayout',\{\},state\.token,\{write:true\}\)/);
+  assert.match(app,/if\(!confirm\('Ajukan komisi /);
+  assert.match(app,/api\('requestPayout',\{nomor_dana:nomorDana\},state\.token,\{write:true\}\)/);
   assert.match(app,/api\('getAffiliateDashboard',\{\},state\.token\)/);
-  assert.match(api,/function requestPayout_\(m\)/);
+  assert.match(api,/function requestPayout_\(m,p\)/);
   assert.match(api,/require_\(total>=Number\(setting_\('min_payout',50000\)\)/);
   assert.match(api,/\['PAID','FULFILLED'\]/);
 });
