@@ -114,7 +114,7 @@ test('catalogue modification uses master server-side mutation gate',()=>{
   const config=read('config.js');
   assert.match(config,/catalogEnabled:\s*true/);
   assert.match(config,/memberWritesEnabled:\s*true/);
-  assert.match(config,/paymentsEnabled:\s*true/);
+  assert.match(config,/paymentsEnabled:\s*false/);
   assert.doesNotMatch(catalog,/\bMailApp\b|\bUrlFetchApp\b|\bGmailApp\b/);
 });
 test('an ordinary member is denied catalogue admin read and mutation routes',()=>{
