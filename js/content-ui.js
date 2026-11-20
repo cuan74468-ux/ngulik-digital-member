@@ -140,8 +140,10 @@
       '</div>'+
       '<div class="field"><label for="content-title">Judul / teks gambar</label>'+
       '<input class="input" id="content-title" name="title" maxlength="120" value="'+h(draft.title||'')+'"></div>'+
-      '<div class="field"><label for="content-description">Deskripsi (opsional)</label>'+
-      '<textarea class="input" id="content-description" name="description" maxlength="400" rows="3">'+h(draft.description||'')+'</textarea></div>'+
+      '<div class="field"><label for="content-description">'+
+      (draft.kind==='PRODUCT_IMAGE'?'Badge produk (opsional, maks 24 karakter)':'Deskripsi (opsional)')+'</label>'+
+      '<textarea class="input" id="content-description" name="description" maxlength="'+
+      (draft.kind==='PRODUCT_IMAGE'?'24':'400')+'" rows="3">'+h(draft.description||'')+'</textarea></div>'+
       '<div class="grid-2"><div class="field"><label for="content-cta">Label tombol</label>'+
       '<input class="input" id="content-cta" name="cta_label" maxlength="48" value="'+h(draft.cta_label||'')+'"></div>'+
       '<div class="field"><label for="content-route">Halaman tujuan</label>'+
