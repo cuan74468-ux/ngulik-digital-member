@@ -1309,7 +1309,7 @@ function viewAdminCatalog(){
   const selected=items.find(p=>p.product_id===state.catalogEditId)||null;
   const types=[
     ['LANGGANAN_30H','Langganan 30 hari'],['LISENSI_SEKALI','Lisensi sekali bayar'],
-    ['SEAT_30H','Seat 30 hari'],['TOPUP_KREDIT','Top-up kredit'],
+    ['SEAT_30H','Seat 30 hari'],['TOPUP_TOKEN','Isi Token'],['TOPUP_KREDIT','Top-up kredit'],
     ['JASA_SEKALI','Jasa (manual)'],['PRODUK_DIGITAL','Produk digital']
   ];
   const draft=selected||{
@@ -1320,7 +1320,7 @@ function viewAdminCatalog(){
   const input=(name,label,type,max)=>
     '<div class="field"><label for="cat-'+name+'">'+label+'</label>'+
     '<input class="input" id="cat-'+name+'" name="'+name+'" type="'+type+
-    '" '+(type==='number'?'min="'+(name==='harga'||name==='urut'?'1':'0')+'" step="1"':'maxlength="'+max+'"')+
+    '" '+(type==='number'?'min="'+(name==='urut'||(name==='harga'&&draft.tipe!=='PRODUK_DIGITAL')?'1':'0')+'" step="1"':'maxlength="'+max+'"')+
     ' value="'+esc(draft[name]??'')+'" required></div>';
   const bool=(name,label)=>
     '<label class="catalog-check"><input type="checkbox" name="'+name+'" '+
