@@ -21,6 +21,8 @@ function makeHarness(){
     return null;
   };
   ctx.expireOrder_=o=>o;
+  ctx.findRows_=()=>[]; // No competing settlement in the synthetic fixture.
+  ctx.settings_=()=>({qris_gambar_path:'',qris_atas_nama:'STAGING',wa_admin:''});
   ctx.now_=()=>new Date('2026-11-14T01:00:00Z');
   ctx.isoWib_=(date)=>new Date(date).toISOString();
   ctx.updateRow_=(table,row,patch)=>{
