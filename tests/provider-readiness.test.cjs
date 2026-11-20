@@ -29,8 +29,9 @@ test('registry never embeds live API keys, bearer tokens or private credentials'
   assert.ok(data.integrations.every(p=>p.secretPropertyNames.every(x=>/^[A-Z][A-Z0-9_]+$/.test(x))));
 });
 test('public frontend is enabled by owner but credentials remain server-side',()=>{
-  for(const name of ['memberWritesEnabled','registrationOtpEnabled','paymentsEnabled'])
+  for(const name of ['memberWritesEnabled','registrationOtpEnabled'])
     assert.match(publicConfig,new RegExp(name+':\\s*true'));
+  assert.match(publicConfig,/paymentsEnabled:\s*false/); // Payment release is gated
   assert.ok(Object.values(data.releaseGates).every(Boolean));
   assert.doesNotMatch(publicConfig,/FONNTE_API_TOKEN\s*:/);
   assert.doesNotMatch(publicConfig,/SOBATAGENT_API_KEY\s*:/);
