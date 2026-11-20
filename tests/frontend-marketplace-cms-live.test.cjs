@@ -43,6 +43,7 @@ test('storefront renders the actual Admin-managed name, description, price and i
   assert.match(html,/Rp(?:\s|\u00a0|&#160;)*99\.000/);
   assert.match(html,/foto-warung\.webp/);
   assert.match(html,/market-product-image/);
+  assert.match(app,/esc\(badge\)/);
   assert.doesNotMatch(html,/\b4\.9\b|Terjual \d+|Diskon \d+%/i);
 });
 test('truthful badges only reflect price and product terms; no invented ratings',()=>{
@@ -75,6 +76,7 @@ test('Admin product-photo shortcut reuses the existing authorized CMS',()=>{
   assert.match(html,/<option value="PRODUCT_IMAGE" selected/);
   assert.match(html,/name="placement" list="content-places" maxlength="70" value="P-POS"/);
   assert.match(html,/disabled/);
+  assert.match(html,/Badge produk \(opsional, maks 24 karakter\)/);
 });
 test('marketplace refresh only reads catalog and published CMS data',()=>{
   const section=app.slice(app.indexOf('async function refreshMarketplaceData_()'),app.indexOf('function syncMarketplacePolling_()'));
