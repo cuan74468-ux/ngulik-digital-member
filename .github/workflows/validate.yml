@@ -43,7 +43,10 @@ jobs:
       - name: Smoke-test static UI in real headless Chrome (no deployment)
         shell: bash
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
+          # Report the exact browser assertion/command rather than hiding the
+          # Chrome stderr behind a truncated workflow log.
+          trap 'code=$?; echo "BROWSER_SMOKE_FAILED exit=$code line=$LINENO command=$BASH_COMMAND" >&2; if test -f /tmp/ngd-chrome.log; then tail -n 35 /tmp/ngd-chrome.log >&2; fi; if test -f /tmp/ngd-http.log; then tail -n 10 /tmp/ngd-http.log >&2; fi' ERR
           # Add a CI-only probe; repository index.html itself remains unchanged.
           sed -i 's#</body>#<script src="./tests/layout-probe.js" defer></script><script src="./tests/browser-readonly-api.js" defer></script><script src="./tests/home-layout-probe.js" defer></script></body>#' index.html
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/ngd-http.log 2>&1 &
@@ -55,7 +58,17 @@ jobs:
           done
           CHROME="$(command -v google-chrome || command -v chromium || true)"
           test -n "$CHROME"
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --dump-dom \
+          # A separate ephemeral profile per headless invocation avoids
+          # cross-run session locks/crashes. None contains production credentials.
+          run_chrome() {
+            local profile status
+            profile="$(mktemp -d)"
+            status=0
+            "$CHROME" --user-data-dir="$profile" --no-first-run --no-default-browser-check "$@" || status=$?
+            rm -rf "$profile"
+            return "$status"
+          }
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --dump-dom \
             "http://127.0.0.1:8765/" > /tmp/ngd-guest.html 2>/tmp/ngd-chrome.log
           echo 'GUEST_BROWSE_PROBE:'
           grep -Eo 'class="nh-hero[^"]*"|class="ngd-journey-stage"|data-experience-v2="[^"]*"|data-app-role="[^"]*"|data-overflow="[^"]*"' /tmp/ngd-guest.html | tail -12 || true
@@ -72,7 +85,7 @@ jobs:
             echo 'ERROR: internal development banner leaked to public page' >&2
             exit 1
           fi
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member" > /tmp/ngd-member.html 2>>/tmp/ngd-chrome.log
           echo 'MEMBER_BROWSER_PROBE:'
           grep -Eo 'data-app-role="[^"]*"|class="member-welcome"|DASHBOARD / MEJA KERJA|DOMPET TOKEN UNIVERSAL|data-overflow="[^"]*"|data-floating-nav="[^"]*"|data-mobile-nav="[^"]*"|data-v2-cascade="[^"]*"' /tmp/ngd-member.html | tail -14 || true
@@ -83,7 +96,7 @@ jobs:
           grep -q 'data-mobile-nav="true"' /tmp/ngd-member.html
           grep -q 'data-v2-cascade="true"' /tmp/ngd-member.html
           # Member uses four primary mobile tabs; all secondary routes remain accessible from the top menu.
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#menu" > /tmp/ngd-member-menu.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-menu-items="8"' /tmp/ngd-member-menu.html
           grep -q 'data-guidance-visible="true"' /tmp/ngd-member-menu.html
@@ -91,14 +104,14 @@ jobs:
           grep -q 'data-v2-cascade="true"' /tmp/ngd-member-menu.html
           grep -q 'data-route="affiliate"' /tmp/ngd-member-menu.html
           grep -q 'data-route="dukungan"' /tmp/ngd-member-menu.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#menu" > /tmp/ngd-admin-menu.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-menu-items="12"' /tmp/ngd-admin-menu.html
           grep -q 'data-guidance-visible="true"' /tmp/ngd-admin-menu.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-menu.html
           grep -q 'data-route="pengaturan"' /tmp/ngd-admin-menu.html
           echo 'MOBILE_MENU_QA_OK: 8 member routes and 12 admin modules discoverable, no overflow'
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#katalog" > /tmp/ngd-catalog.html 2>>/tmp/ngd-chrome.log
           # Runtime storefront uses only API data: no built-in test offers.
           if ! grep -Eq 'Katalog belum tersedia|Toko &amp; Lisensi Anda|Alat digital yang relevan untuk usaha' /tmp/ngd-catalog.html; then
@@ -122,35 +135,35 @@ jobs:
             exit 1
           fi
           echo 'CATALOG_BROWSER_QA_OK'
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#dukungan" > /tmp/ngd-support-member.html 2>>/tmp/ngd-chrome.log
           echo 'SUPPORT_BROWSER_QA_PROBE:'
           grep -Eo 'id="support-create-form"|Fitur support belum diaktifkan|Kirim laporan|Bantuan[^<]{0,70}|data-overflow="[^"]*"' /tmp/ngd-support-member.html | head -18 || true
           grep -q 'id="support-create-form"' /tmp/ngd-support-member.html
           grep -q 'Kirim laporan' /tmp/ngd-support-member.html
           grep -q 'data-overflow="false"' /tmp/ngd-support-member.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#member" > /tmp/ngd-support-admin.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="member-search-form"' /tmp/ngd-support-admin.html
           grep -q 'Buka Member 360°' /tmp/ngd-support-admin.html
           grep -q 'data-overflow="false"' /tmp/ngd-support-admin.html
           echo 'SUPPORT_ADMIN_BROWSER_OK'
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#belajar" > /tmp/ngd-lms-member.html 2>>/tmp/ngd-chrome.log
           grep -q 'Kelas dan perjalanan belajar' /tmp/ngd-lms-member.html
           grep -q 'Fondasi Digital untuk UMKM' /tmp/ngd-lms-member.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-member.html
           grep -q 'data-floating-nav="true"' /tmp/ngd-lms-member.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#lms-course" > /tmp/ngd-lms-reader.html 2>>/tmp/ngd-chrome.log
           grep -q 'Menyiapkan Profil Usaha' /tmp/ngd-lms-reader.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-reader.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#lms" > /tmp/ngd-lms-admin.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="lms-course-form"' /tmp/ngd-lms-admin.html
           grep -q 'id="lms-course-form"' /tmp/ngd-lms-admin.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-admin.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#lms-editor" > /tmp/ngd-lms-workspace.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="lms-ai-form"' /tmp/ngd-lms-workspace.html
           grep -q 'Ruang Materi' /tmp/ngd-lms-workspace.html
@@ -159,50 +172,50 @@ jobs:
           grep -q 'data-unified-theme="true"' /tmp/ngd-lms-member.html
           grep -q 'data-unified-theme="true"' /tmp/ngd-lms-reader.html
           echo 'LMS_BROWSER_QA_OK'
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#lms-complete" > /tmp/ngd-lms-success.html 2>>/tmp/ngd-chrome.log
           grep -q 'Pelajaran selesai!' /tmp/ngd-lms-success.html
           grep -q 'Progres belajar belum tercatat' /tmp/ngd-lms-success.html
           grep -q 'member-success-receipt' /tmp/ngd-lms-success.html
           grep -q 'data-unified-theme="true"' /tmp/ngd-lms-success.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-success.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3750 --window-size=375,812 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3750 --window-size=375,812 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#dukungan" > /tmp/ngd-support-375.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="support-create-form"' /tmp/ngd-support-375.html
           grep -q 'data-unified-theme="true"' /tmp/ngd-support-375.html
           grep -q 'data-overflow="false"' /tmp/ngd-support-375.html
           grep -q 'data-unified-theme="true"' /tmp/ngd-support-375.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#lms" > /tmp/ngd-admin-unchanged.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-member-theme="false"' /tmp/ngd-admin-unchanged.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-unchanged.html
           grep -q 'data-floating-nav="true"' /tmp/ngd-admin-unchanged.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#akun" > /tmp/ngd-member-account.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="profile-form"' /tmp/ngd-member-account.html
           grep -q 'Pusat notifikasi member' /tmp/ngd-member-account.html
           grep -q 'Simpan perubahan' /tmp/ngd-member-account.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-account.html
           echo 'ACCOUNT_BROWSER_QA_OK'
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#akun" > /tmp/ngd-admin-account.html 2>>/tmp/ngd-chrome.log
           if grep -q 'id="profile-form"' /tmp/ngd-admin-account.html; then
             echo 'ERROR: admin was shown member profile editor' >&2
             exit 1
           fi
           # Desktop/member/admin share exact color tokens and dark active nav.
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#beranda" > /tmp/ngd-member-desktop.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-unified-theme="true"' /tmp/ngd-member-desktop.html
           grep -q 'data-ink-navigation="true"' /tmp/ngd-member-desktop.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-desktop.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#admin" > /tmp/ngd-admin-desktop.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-unified-theme="true"' /tmp/ngd-admin-desktop.html
           grep -q 'data-ink-navigation="true"' /tmp/ngd-admin-desktop.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-desktop.html
           echo 'DESKTOP_BROWSER_QA_OK'
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/#beranda" > /tmp/ngd-guest-mobile.html 2>>/tmp/ngd-chrome.log
           echo 'GUEST_MOBILE_FLAGS:'
           grep -Eo 'data-(unified-theme|ink-navigation|mobile-nav|overflow|home-order|home-header-clear)="[^"]*"' /tmp/ngd-guest-mobile.html | tail -16 || true
@@ -216,45 +229,45 @@ jobs:
           grep -q 'class="ngd-journey-stage"' /tmp/ngd-guest-mobile.html
           grep -q 'data-home-order="true"' /tmp/ngd-guest-mobile.html
           grep -q 'data-home-header-clear="true"' /tmp/ngd-guest-mobile.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#admin" > /tmp/ngd-admin-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-unified-theme="true"' /tmp/ngd-admin-mobile.html
           grep -q 'data-ink-navigation="true"' /tmp/ngd-admin-mobile.html
           grep -q 'data-floating-nav="true"' /tmp/ngd-admin-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-mobile.html
           # New catalogue admin CRUD must render safely and stay locked on demo.
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#produk" > /tmp/ngd-admin-catalog-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="admin-catalog-form"' /tmp/ngd-admin-catalog-mobile.html
           grep -q 'produk tercatat' /tmp/ngd-admin-catalog-mobile.html
           grep -q 'Buat produk (nonaktif)' /tmp/ngd-admin-catalog-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-catalog-mobile.html
           grep -q 'data-ink-navigation="true"' /tmp/ngd-admin-catalog-mobile.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#produk" > /tmp/ngd-admin-catalog-desktop.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="admin-catalog-form"' /tmp/ngd-admin-catalog-desktop.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-catalog-desktop.html
           grep -q 'data-unified-theme="true"' /tmp/ngd-admin-catalog-desktop.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/#produk" > /tmp/ngd-public-no-admin.html 2>>/tmp/ngd-chrome.log
           if grep -q 'id="admin-catalog-form"' /tmp/ngd-public-no-admin.html; then
             echo 'ERROR: catalogue editor visible to public' >&2
             exit 1
           fi
           # Production-oriented service request UI is safe and responsive in both roles.
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#jasa" > /tmp/ngd-member-services.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="service-brief-form"' /tmp/ngd-member-services.html
           grep -q 'Kirim brief untuk ditinjau' /tmp/ngd-member-services.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-services.html
           grep -q 'data-floating-nav="true"' /tmp/ngd-member-services.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#layanan" > /tmp/ngd-admin-services.html 2>>/tmp/ngd-chrome.log
           grep -q 'Permintaan jasa dan penawaran' /tmp/ngd-admin-services.html
           grep -q 'Antrean kosong' /tmp/ngd-admin-services.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-services.html
           echo 'SERVICE_BROWSER_QA_OK'
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/#layanan" > /tmp/ngd-guest-services.html 2>>/tmp/ngd-chrome.log
           if grep -q 'id="service-quote-form"' /tmp/ngd-guest-services.html; then
             echo 'ERROR: service quote editor visible to visitor' >&2
@@ -262,7 +275,7 @@ jobs:
           fi
           # Live API browser check is informative only: external network/CORS is
           # independently gated from deterministic frontend tests and no writes occur.
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=17000 --window-size=900,700 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=17000 --window-size=900,700 --dump-dom \
             "http://127.0.0.1:8765/?api-check=1" > /tmp/ngd-browser-api.html 2>>/tmp/ngd-chrome.log || true
           if grep -q 'API_BROWSER_READ_OK' /tmp/ngd-browser-api.html; then
             echo 'BROWSER_API_TRANSPORT_OK: read-only POST to GAS succeeded'
@@ -273,11 +286,11 @@ jobs:
           # STAGING administrative workspace: verify real rendered DOM and layout
           # at desktop + Android viewport widths without any API write.
           sed -i 's#</body>#<script src="../tests/staging-layout-probe.js" defer></script></body>#' staging/monitor.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=4000 --window-size=1365,850 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=4000 --window-size=1365,850 --dump-dom \
             "http://127.0.0.1:8765/staging/monitor.html" > /tmp/ngd-staging-desktop.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-staging-visual-check="pass"' /tmp/ngd-staging-desktop.html
           grep -q 'data-staging-visual-count="11"' /tmp/ngd-staging-desktop.html
-          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=4000 --window-size=390,844 --dump-dom \
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=4000 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/staging/monitor.html" > /tmp/ngd-staging-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-staging-visual-check="pass"' /tmp/ngd-staging-mobile.html
           grep -q 'shared-experience-v2:PASS' /tmp/ngd-staging-mobile.html
