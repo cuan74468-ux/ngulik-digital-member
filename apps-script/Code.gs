@@ -1089,8 +1089,8 @@ function ngdMayarInvoiceUrl_(raw) {
   try {
     var u=new URL(String(raw||''));
     return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&!u.hash&&
-      (/^[a-z0-9-]+\\.myr\\.id$/i.test(u.hostname)||u.hostname==='web.mayar.id')&&
-      /^\\/invoices\\/[A-Za-z0-9_-]{6,200}\\/?$/.test(u.pathname)
+      (/^[a-z0-9-]+\.myr\.id$/i.test(u.hostname)||u.hostname==='web.mayar.id')&&
+      /^\/invoices\/[A-Za-z0-9_-]{6,200}\/?$/.test(u.pathname)
         ?u.href:'';
   }catch(err){return '';}
 }
@@ -1109,7 +1109,7 @@ function createMayarOrder_(m,p,requestId) {
   require_(Object.prototype.hasOwnProperty.call(allowed,sku),
     'NOT_AVAILABLE','Produk belum dapat dibayar melalui Mayar.');
   var email=String(p&&p.email||'').trim().toLowerCase();
-  require_(/^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$/.test(email)&&email.length<=150,
+  require_(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(email)&&email.length<=150,
     'VALIDATION','Alamat email pembeli diperlukan untuk invoice.');
   var fullName=safeText_(m.nama,120);
   require_(fullName.length>=2,'VALIDATION','Nama pembeli belum lengkap.');
