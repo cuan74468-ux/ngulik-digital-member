@@ -12,7 +12,7 @@ const stagingHtml=fs.readFileSync(path.join(root,'staging/member.html'),'utf8');
 test('public and STAGING share the same latest calm floating-brand layer',()=>{
   for(const html of [publicHtml,stagingHtml]){
     assert.ok(html.indexOf('learning-journey.css')>html.indexOf('home-v5.css'));
-    assert.match(html,/learning-journey\.css\?v=20261117-floating-logo-v3/);
+    assert.match(html,/learning-journey\.css\?v=20261120-hero-unified-v4/);
     assert.match(html,/family=Inter/);
   }
 });
@@ -49,6 +49,6 @@ test('homepage-only CSS preserves payment and account logic',()=>{
 
 test('both entrypoints load current homepage copy rather than cached 16 November module',()=>{
   assert.match(app,/Warung Tools AI\. <em>Bengkel Kerja Kreatif Berbasis AI\.<\/em>/);
-  assert.match(publicHtml,/js\/app\.js\?v=20261117-private-admin-v1/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261117-private-admin-v1/);
+  assert.match(publicHtml,/js\/app\.js\?v=20261120-ui-copy-v1/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261120-ui-copy-v1/);
 });
