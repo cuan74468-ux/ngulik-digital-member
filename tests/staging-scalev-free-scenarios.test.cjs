@@ -179,7 +179,7 @@ test('STAGING current contract requires a linked member referral, not order clai
 });
 test('STAGING a payout source must exist, and must be a valid PAID/fulfilled order',()=>{
   // This is a source-code gate, distinct from Scalev Free reconciliation.
-  assert.match(code,/function requestPayout_\(m\)/);
+  assert.match(code,/function requestPayout_\(m,p\)/);
   assert.match(code,/\['PAID','FULFILLED'\]\.indexOf\(order\.status\)/);
 });
 test('STAGING payments need verified amount, settlement reference and actual channel',()=>{
