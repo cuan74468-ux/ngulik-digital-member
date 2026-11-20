@@ -8,7 +8,9 @@
  *   checkout_url:'https://YOUR-VERIFIED-SCALEV-SHOP.scalev.id/p/REAL-SLUG',
  *   verified_host:'YOUR-VERIFIED-SCALEV-SHOP.scalev.id',
  *   price:50000, status:'READY', source:'SCALEV_DASHBOARD_VERIFIED',
- *   commission_owner:'NGD', scalev_affiliate:'OFF', plan:'FREE'
+ *   commission_owner:'NGD', scalev_affiliate:'OFF', plan:'FREE',
+ *   merchant_name:'Linggau AI Studio', e_payment_status:'ACTIVE',
+ *   owner_release:'STAGING_APPROVED'
  * })
  * All four actual items intentionally remain unconfigured at this checkpoint.
  */
