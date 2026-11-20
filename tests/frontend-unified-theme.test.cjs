@@ -31,8 +31,8 @@ test('guest has no sidebar or mobile dock; logged members have four destinations
   assert.match(css,/data-app-role=guest\]:not\(#ngd\) \.sidebar\{display:none!important\}/);
   assert.match(css,/data-app-role=guest\]:not\(#ngd\) \.mobile-nav\{display:none!important\}/);
   assert.match(html,/id="guest-nav"/);
-  assert.match(html,/Katalog Alat/);
-  assert.match(html,/Masuk \/ Daftar WA/);
+  assert.match(html,/Katalog Jasa/);
+  assert.match(html,/Masuk \/ Daftar/);
   assert.match(app,/\['beranda','ai','katalog','affiliate'\]/);
   assert.match(html,/data-route="menu"/);
   assert.doesNotMatch(html,/Bertumbuh dimulai|Belajar • Berkarya • Bertumbuh|Ruang belajar/i);
@@ -42,8 +42,8 @@ test('full commercial routes and API modules are preserved',()=>{
   for(const flag of ['memberWritesEnabled: true','paymentsEnabled: true',
     'supportEnabled: true','lmsEnabled: true','notificationsEnabled: true'])
     assert.ok(config.includes(flag),flag);
-  for(const route of ["admin:['Admin'","lms:['Studio LMS'",
-    "beranda:['Meja Kerja'","belajar:['Kelas'","katalog:['Toko & Lisensi'",
+  for(const route of ["admin:['Admin'","lms:['Kelola Kelas'",
+    "beranda:['Beranda'","belajar:['Kelas'","katalog:['Katalog'",
     "ai:['Studio AI'"]){assert.ok(app.includes(route),route);}
   for(const action of ['getKatalog','generateAI','createOrder','confirmPayment',
     'adminCreateContent','adminUpdateContent','adminListCatalog'])
