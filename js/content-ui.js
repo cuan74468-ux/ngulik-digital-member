@@ -109,7 +109,12 @@
     if(!ctx.authorized)return '<div class="empty"><h3>Khusus Admin</h3></div>';
     const rows=Array.isArray(ctx.items)?ctx.items:[];
     const selected=rows.find(x=>x.content_id===ctx.selectedId)||null;
-    const draft=selected||{kind:'HERO',placement:'home',title:'',description:'',image_path:'',
+    // Admin "Foto produk" shortcut pre-fills this existing CMS editor.
+    const product=String(ctx.defaultPlacement||'');
+    const productValid=/^P-[A-Za-z0-9-]{2,60}$/.test(product)&&
+      (Array.isArray(ctx.products)?ctx.products:[]).some(p=>p.product_id===product);
+    const draft=selected||{kind:productValid?'PRODUCT_IMAGE':'HERO',
+      placement:productValid?product:'home',title:'',description:'',image_path:'',
       cta_label:'',cta_route:'',sort_order:rows.length+1,start_date:'',end_date:''};
     const locked=ctx.enabled!==true;
     const form='<section class="surface content-editor" aria-label="Editor konten visual">'+
