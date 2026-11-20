@@ -44,7 +44,7 @@ test('public config exposes owner-enabled features while secrets stay server-sid
   assert.match(sandbox.window.NGD_CONFIG.apiUrl,/^https:\/\/script\.google\.com\/macros\/s\//);
   assert.equal(sandbox.window.NGD_CONFIG.memberWritesEnabled,true);
   assert.equal(sandbox.window.NGD_CONFIG.paymentsEnabled,false);
-  assert.equal(sandbox.window.NGD_CONFIG.qrisImageUrl,'assets/qris-linggau-ai-studio.jpg');
+  assert.equal(sandbox.window.NGD_CONFIG.qrisImageUrl,'assets/qris-linggau-ai-studio.svg');
   assert.equal(sandbox.window.NGD_CONFIG.qrisOwnerImageApproved,false);
 });
 test('guest homepage renders and shows offline preview warning',()=>{
