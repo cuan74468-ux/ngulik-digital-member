@@ -52,7 +52,7 @@ function harness(options={}){
 test('mayar staging invoice: one exact-price invoice is bound to one NGD order',()=>{
   const h=harness(),o=h.create();
   assert.equal(h.calls.length,1);
-  assert.match(h.calls[0].url,/\/hl\/v2\/invoice\/create$/);
+  assert.match(h.calls[0].url,/\/hl\/v2\/invoices\/create$/);
   const request=JSON.parse(h.calls[0].params.payload);
   assert.equal(request.items[0].rate,50000);
   assert.equal(request.extraData.ngd_member_id,h.member.member_id);
