@@ -202,6 +202,16 @@ function updateRow_(name, rowNumber, patch) {
     throw new Error('Baris tidak valid.');
   var keys=Object.keys(patch||{});
   if(!keys.length)return;
+  // Account invitation is permanent after first assignment, regardless of
+  // any later ?ref= links, profile edits, or privileged API updates.
+  if(name==='members'&&keys.indexOf('referred_by')>=0){
+    var refCol=t.headers.indexOf('referred_by')+1;
+    require_(refCol>0,'MAINTENANCE','Kolom pengajak tidak ditemukan.');
+    var locked=String(t.sheet.getRange(rowNumber,refCol).getValue()||'').trim();
+    var incoming=String(patch.referred_by||'').trim();
+    require_(!locked||locked===incoming,'FORBIDDEN',
+      'Akun sudah terhubung ke pengajak pertama dan tidak dapat diubah.');
+  }
   // Validate all columns before the first write. Single range write minimizes
   // partial status/evidence updates; it does not provide multi-sheet ACID.
   var cols=keys.map(function(key){
@@ -888,7 +898,7 @@ function authRegister_(p) {
     var initial=Number(s.kredit_awal);
     require_(Number.isInteger(initial)&&initial>=0&&initial<=1000,'VALIDATION',
       'Pengaturan kredit awal tidak valid.');
-    var ref=String(p.ref||'').toUpperCase(),referrer=ref?byId_('members','kode_referral',ref):null;
+    var ref=String(p.ref||'').trim().toUpperCase(),referrer=/^[A-Z0-9_-]{3,80}$/.test(ref)?byId_('members','kode_referral',ref):null;
     if(referrer&&referrer.wa===wa)referrer=null;
     if(referrer&&(referrer.status!=='AKTIF'||referrer.role!=='MEMBER'))referrer=null;
     var salt=newSalt_(),id=nextMemberId_(),joined=now_(),status=wait?'WAITING_LIST':'AKTIF';
@@ -1430,10 +1440,9 @@ function onPaid_(o,actor) {
     require_(existing.length<=1,'RECONCILIATION_REQUIRED',
       'Duplikat komisi pesanan memerlukan pemeriksaan.');
     if(existing.length===0){
-      var history=findRows_('affiliate_commissions',function(c){
-        return c.referred_member_id===member.member_id;
-      });
-      if(!s.komisi_hanya_order_pertama||!history.length){
+      // One level for life: every distinct PAID order from this directly
+      // invited member is eligible; prior purchase is never an exclusion.
+      {
         var when=new Date(Date.now()+Number(s.masa_tahan_hari||14)*86400000);
         var id=recordId_('K');
         appendRow_('affiliate_commissions',{
@@ -1828,8 +1837,16 @@ function affiliateDashboard_(m) {
   var sums={PENDING:0,APPROVED:0,PAID:0,REVERSED:0};all.forEach(function(c){sums[c.status]=(sums[c.status]||0)+Number(c.nominal||0);});
   return {kode_referral:m.kode_referral,link:'https://cuan74468-ux.github.io/ngulik-digital-member/?ref='+m.kode_referral,klik:findRows_('klik_log',function(r){return r.referrer_id===m.member_id&&r.tipe==='REFERRAL';}).length,pendaftar:findRows_('members',function(r){return r.referred_by===m.member_id;}).length,konversi:all.length,saldo:sums,komisi:all};
 }
-function requestPayout_(m) {
+function ngdDanaDestination_(raw){
+  var phone=String(raw||'').replace(/[\\s()+-]/g,'');
+  if(/^08[0-9]{8,11}$/.test(phone))phone='62'+phone.slice(1);
+  require_(/^628[0-9]{8,11}$/.test(phone),'VALIDATION',
+    'Masukkan nomor DANA aktif dengan format 08xxxxxxxxxx.');
+  return phone;
+}
+function requestPayout_(m,p) {
   return withLock_(function(){
+    var dana=ngdDanaDestination_(p&&p.nomor_dana);
     require_(m.role==='MEMBER','FORBIDDEN','Hanya member dapat mengajukan komisi.');
     var all=findRows_('affiliate_commissions',function(r){
       return r.referrer_id===m.member_id&&r.status==='APPROVED'&&!r.payout_requested_at;
@@ -1844,10 +1861,10 @@ function requestPayout_(m) {
     require_(Number.isInteger(total)&&total>0,'CONFLICT','Nominal komisi tidak valid.');
     require_(total>=Number(setting_('min_payout',50000)),'CONFLICT',
       'Komisi belum mencapai minimum pencairan.');
-    all.forEach(function(r){updateRow_('affiliate_commissions',r._row,{payout_requested_at:now_()});});
+    all.forEach(function(r){updateRow_('affiliate_commissions',r._row,{payout_requested_at:now_(),payout_note:'DANA:'+dana+' | MENUNGGU_TRANSFER'});});
     logAudit_(m.member_id,m.role,'PAYOUT_REQUEST','affiliate_commissions',
       m.member_id,'','REQUESTED',{amount:total,count:all.length});
-    return {total:total,jumlah_komisi:all.length};
+    return {total:total,jumlah_komisi:all.length,metode:'DANA',nomor_dana_akhir:dana.slice(-4)};
   });
 }
 function purgeExpiredSessions_() {
@@ -2000,10 +2017,7 @@ function financeFindings_(orders,ledger,commissions,products,policy) {
         &&String(o.ref_member_id||'')!==''
         &&catalog[String(o.product_id)]&&catalog[String(o.product_id)].bisa_komisi===true
         &&orderCommissions.length===0){
-      var prior=commissions.some(function(k){
-        return k.referred_member_id===o.member_id&&k.order_id!==o.order_id;
-      });
-      if(!policy.komisi_hanya_order_pertama||!prior)reasons.push('COMMISSION_MISSING');
+      reasons.push('COMMISSION_MISSING');
     }
     if(o.status==='REFUNDED'&&commissions.some(function(k){
       return k.order_id===o.order_id&&k.status==='PAID';
@@ -2400,7 +2414,7 @@ function apiRouter_(action,token,p,requestId) {
     case 'trackOutbound':return apiRouter_('trackClick',token,{tipe:'ETALASE_LUAR',
       visitor_id:p.visitor_id,item_id:p.item_id},requestId);
     case 'getAffiliateDashboard':return affiliateDashboard_(m);
-    case 'requestPayout':return requestPayout_(m);
+    case 'requestPayout':return requestPayout_(m,p);
     case 'generateAI':return runAiTool_(m,p,requestId);
   }
   admin=admin_(token);
@@ -2495,11 +2509,17 @@ function apiRouter_(action,token,p,requestId) {
           'RECONCILIATION_REQUIRED','Order asal komisi belum valid untuk pencairan.');
         require_(p.dana_sudah_ditransfer===true&&p.penerima_terverifikasi===true,
           'RECONCILIATION_REQUIRED','Transfer dan penerima harus diverifikasi sebelum dicatat lunas.');
+        var destination=String(c.payout_note||'');
+        require_(/^DANA:628[0-9]{8,11} \\| MENUNGGU_TRANSFER$/.test(destination),
+          'RECONCILIATION_REQUIRED','Tujuan DANA untuk pengajuan ini belum tercatat dengan benar.');
+        require_(String(p.nomor_dana||'').trim()&&
+          ngdDanaDestination_(p.nomor_dana)===destination.split(' | ')[0].slice(5),
+          'RECONCILIATION_REQUIRED','Nomor DANA yang ditransfer harus cocok dengan pengajuan.');
         var reference=safeText_(p.referensi_transfer,120),note=safeText_(p.catatan,300);
         require_(reference.length>=5,'VALIDATION','Bukti atau referensi transfer diperlukan.');
         require_(note.length>=5,'VALIDATION','Catatan pencairan diperlukan.');
         updateRow_('affiliate_commissions',c._row,{status:'PAID',paid_at:now_(),
-          payout_note:'Ref: '+reference+' | '+note});
+          payout_note:destination.split(' | ')[0]+' | Ref: '+reference+' | '+note});
         logAudit_(admin.member_id,'ADMIN','COMMISSION_PAID','affiliate_commissions',c.komisi_id,
           'APPROVED','PAID',{reference:reference,recipient_verified:true});
         return {success:true,komisi_id:c.komisi_id};
