@@ -1158,11 +1158,15 @@ function viewCheckout(){
   const waiting=status==='MENUNGGU_VERIFIKASI';
   const paid=status==='PAID'||status==='FULFILLED';
   const finished=['EXPIRED','CANCELLED','REFUNDED'].includes(status);
-  const qrRaw=String(o.qris_gambar_path||config.qrisImageUrl||'');
+  // Approved frontend asset is canonical; backend's historical relative path may
+  // otherwise resolve under /staging/assets rather than the repository assets.
+  const qrRaw=String(config.qrisOwnerImageApproved===true
+    ?config.qrisImageUrl:(o.qris_gambar_path||config.qrisImageUrl||''));
   const bundledPlaceholder=config.qrisOwnerImageApproved!==true||
     /(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrRaw);
   const qrUrl=(()=>{try{const u=new URL(qrRaw,location.href);return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';}catch{return '';}})();
-  const merchant=String(o.qris_atas_nama||config.qrisMerchant||'');
+  const merchant=String(config.qrisOwnerImageApproved===true
+    ?config.qrisMerchant:(o.qris_atas_nama||config.qrisMerchant||''));
   const officialQr=!!(qrUrl&&merchant&&!bundledPlaceholder&&String(o.metode)==='QRIS_STATIS');
   const paymentLink=(()=>{try{const u=new URL(String(o.gateway_payment_url||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';}catch{return '';}})();
   let adminWa=String(o.wa_admin||'').replace(/\D/g,'');
@@ -2315,7 +2319,8 @@ async function confirmPayment(){
   const expiry=new Date(order.expires_at).getTime();
   if(!Number.isFinite(expiry)||expiry<=Date.now())
     return toast('Batas pembayaran terlewati. Hubungi Admin jika sudah membayar.',true);
-  const qrRaw=String(order.qris_gambar_path||config.qrisImageUrl||'');
+  const qrRaw=String(config.qrisOwnerImageApproved===true
+    ?config.qrisImageUrl:(order.qris_gambar_path||config.qrisImageUrl||''));
   const placeholder=config.qrisOwnerImageApproved!==true||
     /(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrRaw);
   const officialQr=Boolean(qrRaw&&!placeholder&&order.metode==='QRIS_STATIS');
