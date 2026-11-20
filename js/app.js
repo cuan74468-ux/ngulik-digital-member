@@ -445,7 +445,7 @@ const isCoreServiceConsultation_=p=>coreServiceConsultationIds.has(String(p?.pro
 // reports verified merchant payout readiness. Backend re-verifies every gate.
 function mayarCheckoutEligible_(product){
   const id=String(product?.product_id||'');
-  return logged()&&!isAdmin()&&location.pathname.includes('/staging/')&&
+  return logged()&&!isAdmin()&&String(location.pathname||'').includes('/staging/')&&
     config.apiUrl===window.NGD_STAGING_CONFIG?.apiUrl&&
     state.workspaceInfo?.mayar_checkout_ready===true&&
     ['P-VIDEO-AI','P-3IN1','P-POS','P-INTEGRASI-GAS'].includes(id)&&
