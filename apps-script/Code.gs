@@ -996,6 +996,8 @@ function orderView_(order,m) {
   var o={};fields.forEach(function(k){
     o[k]=order[k] instanceof Date?isoWib_(order[k]):order[k];
   });
+  if(String(order.metode||'')==='MAYAR'&&ngdMayarInvoiceUrl_(order.gateway_payment_url))
+    o.gateway_payment_url=ngdMayarInvoiceUrl_(order.gateway_payment_url);
   if(String(order.metode||'')==='QRIS_STATIS'){
     var cfg=settings_();
     o.qris_gambar_path=String(cfg.qris_gambar_path||'');
@@ -1074,6 +1076,115 @@ function newOrder_(m,p,requestId) {
     return orderView_(o,m);
   });
 }
+
+/**
+ * Mayar v2 invoice checkout — staging-only and fail-closed.
+ * External receipt is NEVER trusted from the member/browser; the provider
+ * transaction status is re-fetched by the authenticated webhook handler.
+ * Sheets cannot atomically commit an invoice AND an external API call:
+ * persist one claim before requesting the invoice, and require operator
+ * reconciliation after any partial/ambiguous failure (never bill twice).
+ */
+function ngdMayarInvoiceUrl_(raw) {
+  try {
+    var u=new URL(String(raw||''));
+    return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&!u.hash&&
+      (/^[a-z0-9-]+\\.myr\\.id$/i.test(u.hostname)||u.hostname==='web.mayar.id')&&
+      /^\\/invoices\\/[A-Za-z0-9_-]{6,200}\\/?$/.test(u.pathname)
+        ?u.href:'';
+  }catch(err){return '';}
+}
+function createMayarOrder_(m,p,requestId) {
+  var stage=ngdStagingWorkspaceInfo_();
+  require_(stage.environment==='STAGING'&&stage.external_providers_enabled===true,
+    'MAINTENANCE','Gateway hanya tersedia untuk STAGING yang terverifikasi.');
+  requireMutationsEnabled_();
+  requireFinanceEnabled_();
+  require_(String(settings_().payment_gateway_mode||'')==='MAYAR',
+    'NOT_AVAILABLE','Metode checkout Mayar belum diaktifkan.');
+  require_(m&&m.role==='MEMBER','FORBIDDEN','Hanya member terdaftar dapat membeli.');
+  var allowed={'P-VIDEO-AI':50000,'P-3IN1':99000,
+    'P-POS':149000,'P-INTEGRASI-GAS':400000};
+  var sku=String(p&&p.product_id||'');
+  require_(Object.prototype.hasOwnProperty.call(allowed,sku),
+    'NOT_AVAILABLE','Produk belum dapat dibayar melalui Mayar.');
+  var email=String(p&&p.email||'').trim().toLowerCase();
+  require_(/^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$/.test(email)&&email.length<=150,
+    'VALIDATION','Alamat email pembeli diperlukan untuk invoice.');
+  var fullName=safeText_(m.nama,120);
+  require_(fullName.length>=2,'VALIDATION','Nama pembeli belum lengkap.');
+  var wa=String(m.wa||'').replace(/[^0-9]/g,'');
+  if(wa.indexOf('62')===0)wa='0'+wa.slice(2);
+  require_(m.wa_verified===true&&/^08[0-9]{8,11}$/.test(wa),
+    'VALIDATION','Nomor WhatsApp harus terverifikasi untuk invoice.');
+  require_(/^[A-Za-z0-9_-]{16,80}$/.test(String(requestId||'')),
+    'VALIDATION','ID permintaan tidak valid.');
+  return withLock_(function(){
+    var product=byId_('katalog_produk','product_id',sku);
+    require_(product&&product.aktif===true&&
+      ngdPriceRupiah_(product.harga)===allowed[sku],
+      'RECONCILIATION_REQUIRED','Harga produk tidak cocok dengan katalog.');
+    var existing=byId_('orders','request_id',requestId);
+    if(existing){
+      require_(existing.member_id===m.member_id&&existing.product_id===sku&&
+        existing.metode==='MAYAR','CONFLICT','ID permintaan telah dipakai.');
+      require_(ngdMayarInvoiceUrl_(existing.gateway_payment_url)&&
+        /^[A-Za-z0-9_-]{8,100}$/.test(String(existing.gateway_ref_id||'')),
+        'RECONCILIATION_REQUIRED','Invoice sebelumnya perlu ditinjau, jangan membayar dua kali.');
+      return orderView_(existing,m);
+    }
+    var mine=findRows_('orders',function(o){
+      return o.member_id===m.member_id&&o.product_id===sku&&o.metode==='MAYAR'&&
+        ['PENDING','MENUNGGU_VERIFIKASI','PAID'].indexOf(o.status)>=0;
+    });
+    require_(!mine.length,'RECONCILIATION_REQUIRED',
+      'Ada invoice Mayar yang belum selesai. Periksa pesanan sebelumnya.');
+    var apiKey=String(PropertiesService.getScriptProperties()
+      .getProperty('MAYAR_API_KEY')||'').trim();
+    require_(apiKey.length>=20,'MAINTENANCE','Kunci API merchant Mayar belum tersedia.');
+    var created=now_(),expire=new Date(created.getTime()+3600000),
+      id='NGD-'+Utilities.formatDate(created,NGD.TZ,'yyMMdd')+'-'+uuid_().slice(0,12);
+    var order={order_id:id,member_id:m.member_id,product_id:sku,
+      nama_produk:product.nama,harga_dasar:allowed[sku],
+      kode_unik:0,total_bayar:allowed[sku],status:'PENDING',metode:'MAYAR',
+      created_at:created,expires_at:expire,ref_member_id:m.referred_by||'',
+      request_id:requestId,qris_payload:'MAYAR_INVOICE_CLAIMED'};
+    appendRow_('orders',order);
+    logAudit_('SYSTEM','SYSTEM','MAYAR_INVOICE_CLAIMED','orders',id,
+      '','PROCESSING',{sku:sku,request_id:requestId});
+    // Monetary provider call: ONLY reached when separately enabled in the
+    // STAGING GAS script by its owner, with a valid API key. Never on GitHub CI.
+    var payload={name:fullName,email:email,mobile:wa,
+      description:'Ngulik Digital '+sku+' — '+id,expiredAt:expire.toISOString(),
+      items:[{quantity:1,rate:allowed[sku],description:String(product.nama).slice(0,150)}],
+      extraData:{ngd_order_id:id,ngd_member_id:m.member_id,ngd_sku:sku}};
+    var response=UrlFetchApp.fetch('https://api.mayar.id/hl/v2/invoice/create',{
+      method:'post',contentType:'application/json',
+      headers:{Authorization:'Bearer '+apiKey},
+      payload:JSON.stringify(payload),
+      muteHttpExceptions:true,followRedirects:false
+    });
+    require_([200,201].indexOf(Number(response.getResponseCode()))>=0,
+      'RECONCILIATION_REQUIRED','Mayar tidak mengonfirmasi penerbitan invoice. Periksa sebelum retry.');
+    var parsed=JSON.parse(response.getContentText()),d=parsed&&parsed.data||{};
+    var invoiceId=String(d.id||d.uuId||''),txId=String(d.transactionId||''),
+      link=ngdMayarInvoiceUrl_(d.link||d.paymentUrl||'');
+    require_(/^[A-Za-z0-9_-]{8,100}$/.test(invoiceId)&&
+      /^[A-Za-z0-9_-]{8,100}$/.test(txId)&&link,
+      'RECONCILIATION_REQUIRED','Respon invoice Mayar tidak lengkap. Periksa transaksi sebelum retry.');
+    var persisted=byId_('orders','order_id',id);
+    require_(persisted,'RECONCILIATION_REQUIRED','Order invoice tidak ditemukan setelah pembuatan.');
+    updateRow_('orders',persisted._row,{gateway_ref_id:txId,gateway_payment_url:link,
+      qris_payload:'MAYAR_INVOICE:'+invoiceId});
+    logAudit_('SYSTEM','SYSTEM','MAYAR_INVOICE_LINKED','orders',id,
+      'PROCESSING','PENDING',{invoice_id:invoiceId,transaction_id:txId});
+    persisted.gateway_ref_id=txId;
+    persisted.gateway_payment_url=link;
+    persisted.qris_payload='MAYAR_INVOICE:'+invoiceId;
+    return orderView_(persisted,m);
+  });
+}
+
 function getOrder_(m,id) {
   // Strictly read-only. Expiration writes belong to maintenance/transition
   // actions, which require the server mutation release gate.
@@ -2272,6 +2383,7 @@ function apiRouter_(action,token,p,requestId) {
     case 'getOrder':return getOrder_(m,p.order_id);
     case 'listMyOrders':return findRows_('orders',function(o){return o.member_id===m.member_id;}).slice(-50).reverse().map(function(o){return orderView_(o,m);});
     case 'createOrder':return newOrder_(m,p,requestId);
+    case 'createMayarOrder':return createMayarOrder_(m,p,requestId);
     case 'confirmPayment':return transitionOrder_(m,p.order_id,'confirm',p);
     case 'cancelOrder':return transitionOrder_(m,p.order_id,'cancel',p);
     case 'submitOnboarding3in1':return advanceTrial_(m,p);
@@ -2423,7 +2535,7 @@ function requireActionFeatureEnabled_(action) {
     // OTP verification is still mandatory in authRegister_.
     return;
   }
-  if(['createOrder','confirmPayment','cancelOrder','adminVerifyOrder',
+  if(['createOrder','createMayarOrder','confirmPayment','cancelOrder','adminVerifyOrder',
       'adminFulfillOrder','adminRefundOrder','adminAdjustCredit',
       'adminMarkCommissionPaid','requestPayout','generateAI'].indexOf(action)>=0)
     requireFinanceEnabled_();
@@ -2490,7 +2602,7 @@ function mayarWebhook_(e) {
     .getProperty('MAYAR_API_KEY')||'').trim();
   require_(apiKey.length>10,'MAINTENANCE','Kunci API Mayar belum tersedia.');
   // The provider response is the authority, NOT the webhook payload.
-  var resp=UrlFetchApp.fetch('https://api.mayar.id/hl/v2/payment/'+
+  var resp=UrlFetchApp.fetch('https://api.mayar.id/hl/v2/transactions/'+
     encodeURIComponent(paymentId),{
       method:'get',headers:{Authorization:'Bearer '+apiKey},
       followRedirects:false,muteHttpExceptions:true
