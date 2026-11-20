@@ -83,7 +83,7 @@ const screens={
   ['lms-lesson']:['Editor Pelajaran','book'],['lms-course']:['Ruang Kelas','book'],
   ['lms-ai']:['Review Draft AI','spark'],
   ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Katalog','store'],
-  ai:['Studio AI','spark'],['ai-tool']:['Ruang Tool AI','spark'],affiliate:['Ajak Teman','link'],akun:['Akun','user'],
+  ai:['Studio AI','spark'],['ai-tool']:['Ruang Alat AI','spark'],affiliate:['Ajak Teman','link'],akun:['Akun','user'],
   produk:['Katalog Admin','store'],jasa:['Jasa','gift'],layanan:['Pesanan Jasa','gift'],
   admin:['Admin','grid'],konten:['Gambar & Banner','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
   antrean:['Daftar Tunggu','clock'],dukungan:['Bantuan','shield'],
@@ -463,9 +463,9 @@ function viewPublicMarketplace(list){
   if(sort==='name')shown=[...shown].sort((a,b)=>String(a.nama||'').localeCompare(String(b.nama||''),'id'));
   const banner=window.NGD_CONTENT_UI?.hero(state.siteContent,'catalog')||
     '<section class="market-hero-fallback" aria-label="Selamat datang di marketplace Ngulik Digital">'+
-      '<div class="market-hero-content"><span class="market-eyebrow">WARUNG TOOLS AI · BENGKEL KERJA KREATIF BERBASIS AI</span>'+
-      '<h2>Temukan alat digital untuk ide besar Anda.</h2>'+
-      '<p>Pilih yang sesuai kebutuhan. Pelajari manfaatnya, lalu mulai berkarya.</p>'+
+      '<div class="market-hero-content"><span class="market-eyebrow">PRODUK & JASA NGULIK DIGITAL</span>'+
+      '<h2>Pilih yang Anda Butuhkan</h2>'+
+      '<p>Pilih produk dan jasa sesuai kebutuhan usaha.</p>'+
       '<button type="button" class="market-hero-link" data-route="belajar">Mulai belajar '+icon('arrow')+'</button>'+
       '</div><div class="market-hero-symbol" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></div></section>';
   const filterBar='<div class="market-categories" role="group" aria-label="Jelajahi kategori produk">'+
@@ -474,7 +474,7 @@ function viewPublicMarketplace(list){
       ({semua:'✦',ai:'✳',aplikasi:'▣',jasa:'◈',belajar:'▤'}[id]||'•')+'</span>'+esc(label)+'</button>').join('')+'</div>';
   const controls='<div class="market-toolbar"><label class="market-search-wrap" for="market-search">'+
     '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>'+
-    '<input id="market-search" type="search" placeholder="Cari aplikasi, tools AI, ebook..." autocomplete="off" value="'+esc(state.marketplaceSearch||'')+'" aria-label="Cari produk digital">'+
+    '<input id="market-search" type="search" placeholder="Cari produk atau jasa..." autocomplete="off" value="'+esc(state.marketplaceSearch||'')+'" aria-label="Cari produk digital">'+
     '</label><label class="market-sort-wrap">Urutkan <select id="market-sort" aria-label="Urutkan produk">'+
     [['default','Relevan'],['name','Nama A–Z'],['price-asc','Harga terendah'],['price-desc','Harga tertinggi']].map(([v,t])=>
       '<option value="'+v+'" '+(sort===v?'selected':'')+'>'+t+'</option>').join('')+
@@ -491,7 +491,7 @@ function viewPublicMarketplace(list){
        '<button type="button" class="market-product-action" disabled>Hubungi admin</button>'):
       enabled?
       '<button type="button" class="market-product-action" data-buy="'+idSafe(p.product_id)+'">Beli sekarang '+icon('arrow')+'</button>':
-      consult?'<a class="market-product-action" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer">Tanya produk '+icon('arrow')+'</a>':
+      consult?'<a class="market-product-action" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer">Tanya via WhatsApp '+icon('arrow')+'</a>':
       '<button type="button" class="market-product-action" disabled>Belum tersedia</button>';
     const benefits=(Number(p.kredit_diberikan)>0?'<span>'+esc(Number(p.kredit_diberikan))+' token</span>':'')+
       (Number(p.durasi_hari)>0?'<span>'+esc(Number(p.durasi_hari))+' hari</span>':'');
@@ -508,19 +508,19 @@ function viewPublicMarketplace(list){
       '</div></article>';
   }).join('');
   return '<div class="market-page">'+
-    '<header class="market-header"><div><p class="market-eyebrow">NGULIK DIGITAL / MARKETPLACE DIGITAL</p>'+
-    '<h1>Jelajahi Katalog</h1><p>Beragam solusi digital untuk belajar, berkarya, dan mengembangkan usaha.</p></div>'+
+    '<header class="market-header"><div><p class="market-eyebrow">NGULIK DIGITAL / KATALOG</p>'+
+    '<h1>Pilih Produk atau Jasa</h1><p>Lihat jasa, aplikasi, dan produk digital yang tersedia.</p></div>'+
     '<span class="market-header-count">'+publicList.length+' produk tersedia di katalog</span></header>'+
     '<div class="market-banner-shell">'+banner+'</div>'+
     '<section class="market-shopping" aria-label="Belanja produk digital">'+
-      '<div class="market-section-title"><h2>Belanja sesuai kebutuhan</h2><span>Kategori pilihan</span></div>'+
+      '<div class="market-section-title"><h2>Pilih sesuai kebutuhan</h2><span>Cari yang cocok</span></div>'+
       filterBar+controls+
-      '<div class="market-results-header"><h2>Pilihan produk digital</h2><span aria-live="polite">'+shown.length+' produk ditemukan</span></div>'+
+      '<div class="market-results-header"><h2>Produk dan jasa</h2><span aria-live="polite">'+shown.length+' produk ditemukan</span></div>'+
       (cards?'<div class="market-product-grid">'+cards+'</div>':
-        '<div class="market-no-results"><h3>Belum ada produk yang cocok</h3><p>Coba kata kunci atau kategori lain.</p>'+
+        '<div class="market-no-results"><h3>Produk Tidak Ditemukan</h3><p>Coba kata kunci atau kategori lain.</p>'+
         '<button type="button" data-market-reset>Hapus filter</button></div>')+
     '</section>'+
-    '<p class="market-trust-note">Pembelian dan konsultasi hanya melalui kanal resmi Ngulik Digital. Ketersediaan mengikuti status layanan.</p>'+
+    '<p class="market-trust-note">Untuk pemesanan jasa, silakan chat Admin.</p>'+
   '</div>';
 }
 function viewPartnerShelf_(){
@@ -533,39 +533,39 @@ function viewPartnerShelf_(){
     return '<article class="ngd-partner-card">'+
       (thumb?'<img class="ngd-partner-thumb" src="'+esc(thumb)+'" alt="" loading="lazy" decoding="async">':
         '<span class="ngd-partner-card-icon">'+icon('book')+'</span>')+
-      '<p class="eyebrow">KELAS & TOOLS PARTNER</p>'+
-      '<h3>'+esc(x.judul||'Rekomendasi partner')+'</h3>'+
-      '<p>'+esc(x.deskripsi_singkat||x.alasan_rekomendasi||'Penawaran dari mitra eksternal.')+'</p>'+
+      '<p class="eyebrow">KELAS & ALAT PILIHAN</p>'+
+      '<h3>'+esc(x.judul||'Rekomendasi pilihan')+'</h3>'+
+      '<p>'+esc(x.deskripsi_singkat||x.alasan_rekomendasi||'Lihat detail di situs penyedia.')+'</p>'+
       '<small>'+esc(x.harga_info||'Lihat ketentuan pada penyedia')+'</small>'+
-      '<a class="btn btn-secondary" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" data-partner-out="'+esc(x.item_id||'')+'">Buka kelas di situs partner '+icon('arrow')+'</a>'+
+      '<a class="btn btn-secondary" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" data-partner-out="'+esc(x.item_id||'')+'">Buka tautan '+icon('arrow')+'</a>'+
     '</article>';
   }).join('');
   return '<section class="ngd-partner-shelf section-gap" id="etalase-rekomendasi" aria-label="Etalase Rekomendasi Kelas dan Tools Partner">'+
-    '<div class="ngd-partner-header"><div><p class="eyebrow">ETALASE REKOMENDASI</p><h2>Kelas & Tools Partner</h2>'+
-    '<p>Alternatif belajar dari penyedia independen. Pembelian dan layanan purnajual berlangsung di situs partner, bukan checkout Ngulik Digital.</p></div>'+
-    '<span class="ngd-partner-disclosure">Tautan affiliate eksternal</span></div>'+
+    '<div class="ngd-partner-header"><div><p class="eyebrow">REKOMENDASI</p><h2>Kelas & Alat Pilihan</h2>'+
+    '<p>Lihat detail dan ketentuan di situs penyedia.</p></div>'+
+    '<span class="ngd-partner-disclosure">Tautan mitra</span></div>'+
     (cards?'<div class="ngd-partner-grid">'+cards+'</div>':
-      '<p class="ngd-partner-empty">'+(state.partnerShelfLoaded?'Belum ada rekomendasi partner yang aktif.':'Memuat rekomendasi partner…')+'</p>')+
+      '<p class="ngd-partner-empty">'+(state.partnerShelfLoaded?'Belum ada rekomendasi.':'Memuat rekomendasi…')+'</p>')+
   '</section>';
 }
 function viewCatalog(){
   // Admin CRUD retains all records. Customer views do not offer QA fixtures.
   const list=Array.isArray(state.catalog)?state.catalog.filter(p=>!isPublicQaOffer_(p)):[];
   if(!logged())return viewPublicMarketplace(list);
-  if(!list.length)return title('Katalog produk & layanan','SOLUSI UNTUK UMKM',
-    'Penawaran digital dikelompokkan sesuai kebutuhan usaha.')+
+  if(!list.length)return title('Katalog Produk & Jasa','PILIHAN UNTUK USAHA',
+    'Temukan produk atau jasa yang Anda butuhkan.')+
     empty('Katalog belum tersedia',isConnected()?
-      'Belum ada produk yang tersedia dalam katalog.':
-      'Silakan kunjungi kembali untuk melihat pilihan terbaru.');
+      'Belum ada produk saat ini.':
+      'Coba lagi nanti.');
   const current=state.catalogFilter||'semua';
   const shown=current==='semua'?list:list.filter(p=>offerCategory(p)===current);
   const filters='<div class="catalog-filters" role="group" aria-label="Filter jenis penawaran">'+
     offerCategories.map(([id,label])=>'<button class="catalog-filter" type="button" data-catalog-filter="'+id+
       '" aria-pressed="'+(id===current?'true':'false')+'">'+label+'</button>').join('')+'</div>';
-  const header='<div class="catalog-intro"><div><p class="eyebrow">NGULIK DIGITAL / TOKO & LISENSI</p>'+
-    '<h1>'+ (logged()?'Toko & Lisensi Anda.':'Alat digital yang relevan untuk usaha.')+'</h1>'+
-    '<p>Token AI, aplikasi kasir, akses digital, ebook, dan jasa kreatif. Harga diambil langsung dari katalog resmi.</p>'+
-    '<button type="button" class="btn btn-secondary btn-sm ngd-partner-jump" data-partner-scroll>Lihat Kelas & Tools Partner '+icon('arrow')+'</button></div>'+
+  const header='<div class="catalog-intro"><div><p class="eyebrow">NGULIK DIGITAL / KATALOG</p>'+
+    '<h1>'+ (logged()?'Produk & Jasa untuk Anda':'Produk & Jasa untuk Usaha')+'</h1>'+
+    '<p>Pilih layanan yang cocok untuk usaha Anda.</p>'+
+    '<button type="button" class="btn btn-secondary btn-sm ngd-partner-jump" data-partner-scroll>Lihat Kelas & Alat Pilihan '+icon('arrow')+'</button></div>'+
     '<div class="catalog-summary"><strong>'+list.length+'</strong><span>penawaran tercatat'+
     ''+'</span></div></div>';
   const cards=shown.length?'<div class="catalog-grid">'+shown.map(p=>{
@@ -581,7 +581,7 @@ function viewCatalog(){
       allowed?
       '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'">Beli Sekarang '+icon('arrow')+'</button>':
       consult?
-        '<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi pemesanan '+esc(offerUiTitle_(p))+' melalui WhatsApp">Tanya pemesanan '+icon('arrow')+'</a>':
+        '<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi pemesanan '+esc(offerUiTitle_(p))+' melalui WhatsApp">Tanya via WhatsApp '+icon('arrow')+'</a>':
         '<button class="btn btn-primary" type="button" disabled title="'+esc(tooltip)+'">'+label+' '+icon('arrow')+'</button>';
     return '<article class="catalog-card"><div class="catalog-card-top">'+
       '<span class="catalog-card-icon">'+(window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'catalog-product-image','')||
@@ -594,10 +594,10 @@ function viewCatalog(){
       '</div></div>'+
       '<div class="catalog-card-bottom"><div><small>Harga penawaran</small><strong>'+rupiah(p.harga)+'</strong></div>'+
       action+'</div>'+
-      (kind==='jasa'&&!manualFirst?'<button type="button" class="service-cta" data-service-go>Ajukan brief jasa '+icon('arrow')+'</button>':'')+
+      (kind==='jasa'&&!manualFirst?'<button type="button" class="service-cta" data-service-go>Tanya kebutuhan jasa '+icon('arrow')+'</button>':'')+
       '</article>';
   }).join('')+'</div>':
-    '<div class="catalog-empty">'+empty('Belum ada penawaran di kategori ini','Pilih kategori lain untuk melihat pilihan tersedia.')+'</div>';
+    '<div class="catalog-empty">'+empty('Belum Ada Pilihan','Coba pilih kategori lain.')+'</div>';
   const licenses=logged()&&!isAdmin()?
     '<div class="catalog-license-strip" aria-label="Status akses layanan">'+[
       ['POS Kasir',state.me?.status_pos||'Belum aktif'],
@@ -607,8 +607,8 @@ function viewCatalog(){
   return header+licenses+filters+'<p class="catalog-result-count" aria-live="polite">Menampilkan '+shown.length+
     ' dari '+list.length+' penawaran</p>'+cards+
     '<section class="catalog-guidance section-gap"><div><span class="card-kicker">CATATAN</span>'+
-    '<h3>Butuh layanan khusus?</h3><p>Ajukan brief melalui ruang member atau konsultasikan kebutuhan melalui tautan pada produk. Konfirmasi pemesanan dan pembayaran hanya melalui kanal resmi.</p></div>'+
-    '<button type="button" class="btn btn-secondary" data-route="jasa">Ajukan brief</button></section>'+
+    '<h3>Butuh Bantuan Pilih Jasa?</h3><p>Tanya Admin tentang kebutuhan usaha Anda.</p></div>'+
+    '<button type="button" class="btn btn-secondary" data-route="jasa">Kirim permintaan</button></section>'+
     viewPartnerShelf_();
 }
 function viewLearn(){
@@ -617,15 +617,15 @@ function viewLearn(){
   if(!logged())return title('Belajar gratis','EBOOK & KELAS UMKM',
     'Dua materi gratis, tanpa perlu daftar Member Ngulik Digital.')+
     '<div class="ngd-learn-direct-links">'+
-      '<a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">Baca eBook Vibe Coder</a>'+
-      '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Buka Google Classroom Chapter 1</a>'+
+      '<a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">Baca eBook Gratis</a>'+
+      '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Masuk Kelas Gratis</a>'+
     '</div>';
   const modules=state.modules;
-  return title('Perjalanan belajar Anda','KURIKULUM PRAKTIS','Modul tersedia sesuai program dan akses akun.')+
+  return title('Kelas & Materi Anda','PILIHAN KELAS','Pilih materi yang ingin Anda pelajari.')+
     (modules.length?'<div class="stack">'+modules.map((m,i)=>'<article class="surface list-row"><div class="left" style="display:flex;gap:15px;align-items:center"><span class="step-no">'+esc(m.urut||i+1)+'</span><div><strong>'+esc(m.judul)+'</strong><small>'+esc(m.deskripsi||'')+'</small></div></div>'+
-    (classroomUrlSafe(m.url_classroom)?'<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href="'+esc(classroomUrlSafe(m.url_classroom))+'">Buka modul '+icon('arrow')+'</a>':
+    (classroomUrlSafe(m.url_classroom)?'<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href="'+esc(classroomUrlSafe(m.url_classroom))+'">Buka materi '+icon('arrow')+'</a>':
     '<span class="chip">Materi menyusul</span>')+'</article>').join('')+'</div>':
-    empty('Materi belum tersedia','Materi tersedia setelah pengelola menerbitkannya.'));
+    empty('Materi belum tersedia','Materi baru akan muncul di sini.'));
 }
 // Studio AI is a demand-led catalogue. Tool availability and price always
 // come from getTools; categories without published wrappers never imply access.
@@ -719,7 +719,7 @@ function viewAI(){
   const publicMode=!logged()||isAdmin();
   const intro='<header class="ai-catalog-intro"><div class="ai-catalog-intro-copy">'+
     '<p class="eyebrow">NGULIK DIGITAL</p><h1>Studio AI</h1>'+
-    '<p>Pilih alat, masukkan kebutuhan, lalu buat hasilnya.</p></div>'+
+    '<p>Pilih alat yang ingin digunakan.</p></div>'+
     (!publicMode?'<div class="ai-wallet-mini"><small>Saldo</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
     '<button type="button" data-catalog-go="ai">Isi Token</button></div>':'')+
     '</header>';
@@ -727,9 +727,9 @@ function viewAI(){
   // Category chips are filters, not landing cards; show actual tool cards first.
   const cards='<section class="ai-tool-catalog" aria-labelledby="ai-tools-heading">'+
     '<div class="ai-tools-heading"><div><h2 id="ai-tools-heading">Pilih alat <span class="ai-tools-count">'+filtered.length+'</span></h2></div>'+
-    '<label class="ai-search-wrap"><span class="sr-only">Cari tool AI</span>'+
+    '<label class="ai-search-wrap"><span class="sr-only">Cari alat AI</span>'+
     '<input id="ai-tool-search" type="search" placeholder="Cari alat AI" autocomplete="off" value="'+
-    esc(state.aiSearch||'')+'" aria-label="Cari tools AI"></label></div>'+
+    esc(state.aiSearch||'')+'" aria-label="Cari alat AI"></label></div>'+
     '<div class="ai-catalog-grid" id="ai-tool-cards">'+
       (filtered.length?filtered.map(t=>{
         const c=aiCategoryFor_(aiToolCategory_(t));
@@ -755,8 +755,8 @@ function viewAI(){
 function viewAITool(){
   const tools=logged()&&!isAdmin()&&state.tools.length?state.tools:(Array.isArray(state.publicTools)?state.publicTools:[]);
   const selected=tools.find(t=>t.tool_id===state.selectedAiToolId);
-  if(!selected)return '<div class="ai-tool-detail"><button class="ai-tool-back" type="button" data-route="ai">'+icon('arrow')+' Kembali ke katalog</button>'+
-    '<div class="ai-catalog-empty"><strong>Tool belum tersedia.</strong><p>Alat ini tidak ditemukan dalam daftar aktif atau belum selesai dimuat. Lihat katalog untuk memilih alat lain.</p></div></div>';
+  if(!selected)return '<div class="ai-tool-detail"><button class="ai-tool-back" type="button" data-route="ai">'+icon('arrow')+' Kembali ke daftar alat</button>'+
+    '<div class="ai-catalog-empty"><strong>Alat Belum Tersedia</strong><p>Pilih alat lain dari daftar.</p></div></div>';
   const cost=Number(selected.kredit_biaya)||0,can=logged()&&!isAdmin()&&isWriteEnabled();
   const category=aiCategoryFor_(aiToolCategory_(selected));
   const balance=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
@@ -765,7 +765,7 @@ function viewAITool(){
     '<header class="ai-tool-detail-hero"><div class="ai-tool-detail-identity">'+
     '<span class="ai-product-icon">'+icon(category?.icon||'spark')+'</span>'+
     '<p class="eyebrow">'+esc(category?.title||'Studio AI')+'</p><h1>'+esc(selected.nama)+'</h1>'+
-    '<p>'+esc(selected.deskripsi||'Tool AI untuk kebutuhan kreatif dan produktivitas.')+'</p>'+
+    '<p>'+esc(selected.deskripsi||'Alat AI untuk pekerjaan harian Anda.')+'</p>'+
     '<span class="ai-detail-cost">'+esc(cost)+' Token / proses</span></div></header>'+
     '<div class="ai-catalog-access"><strong>Masuk untuk mulai</strong>'+
     '<button type="button" class="btn btn-primary" data-route="login">Masuk member '+icon('arrow')+'</button></div></div>';
@@ -774,23 +774,23 @@ function viewAITool(){
     '<header class="ai-tool-detail-hero"><div class="ai-tool-detail-identity">'+
     '<span class="ai-product-icon">'+icon(category?.icon||'spark')+'</span>'+
     '<p class="eyebrow">'+esc(category?.title||'STUDIO AI')+'</p>'+
-    '<h1>'+esc(selected.nama)+'</h1><p>'+esc(selected.deskripsi||'Jelaskan kebutuhan Anda untuk mulai menggunakan alat AI.')+'</p>'+
+    '<h1>'+esc(selected.nama)+'</h1><p>'+esc(selected.deskripsi||'Tulis kebutuhan Anda untuk mulai.')+'</p>'+
     '<span class="ai-detail-cost">'+esc(cost)+' Token per proses</span></div>'+
     '<div class="ai-wallet-mini"><small>SALDO TOKEN</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
     '<button type="button" data-catalog-go="ai">+ Isi Token</button></div></header>'+
     '<div class="ai-tool-detail-content"><section class="ai-tool-brief">'+
-    '<div class="ai-workspace-title"><h2>1. Isi kebutuhan</h2></div>'+
+    '<div class="ai-workspace-title"><h2>Isi Kebutuhan</h2></div>'+
     '<form class="ai-form" data-tool-id="'+idSafe(selected.tool_id)+'" data-cost="'+esc(cost)+'" novalidate>'+
     '<div class="field"><label class="ai-label" for="ai-business-name">Usaha / proyek <small>(opsional)</small></label>'+
     '<input class="input" id="ai-business-name" name="nama_usaha" maxlength="100" autocomplete="organization" value="'+
     esc(state.me?.nama_usaha||'')+'" placeholder="Nama usaha atau proyek"></div>'+
-    '<div class="field"><label class="ai-label" for="ai-in-'+idSafe(selected.tool_id)+'">2. Jelaskan kebutuhan</label>'+
+    '<div class="field"><label class="ai-label" for="ai-in-'+idSafe(selected.tool_id)+'">Ceritakan Kebutuhan</label>'+
     '<textarea class="input ai-input" id="ai-in-'+idSafe(selected.tool_id)+'" name="input" rows="7" maxlength="1500" required placeholder="'+
     esc(selected.placeholder_input||'Contoh: buat caption promosi untuk produk saya')+'"'+(can?'':' disabled')+'></textarea>'+
     '<small class="form-hint">Jangan masukkan data pribadi pelanggan.</small></div>'+
     '<div class="ai-foot"><span class="ai-cost"><strong>'+esc(cost)+' Token</strong> / eksekusi</span>'+
-    '<button class="btn btn-primary" type="submit"'+(can?'':' disabled')+'>3. Buat hasil '+icon('arrow')+'</button></div>'+
-    (!can?'<p class="ai-workspace-notice">Pemrosesan AI belum diaktifkan untuk lingkungan ini.</p>':'')+
+    '<button class="btn btn-primary" type="submit"'+(can?'':' disabled')+'>Buat Hasil '+icon('arrow')+'</button></div>'+
+    (!can?'<p class="ai-workspace-notice">Alat ini belum bisa digunakan.</p>':'')+
     '<div class="ai-result" role="status" aria-live="polite" hidden></div></form></section>'+
     '</div></div>';
 }
@@ -810,9 +810,9 @@ async function submitAITool(form){
   const business=String(form.elements?.nama_usaha?.value||'').trim();
   const input=(business?'Nama usaha: '+business+'\n':'')+'Detail kebutuhan: '+detail;
   if(!detail){area.focus();return toast('Isi permintaan terlebih dahulu.',true);}
-  if(input.length>1500)return toast('Brief terlalu panjang. Batasi total 1.500 karakter.',true);
+  if(input.length>1500)return toast('Teks terlalu panjang. Maksimal 1.500 karakter.',true);
   const cost=Number(form.dataset.cost)||0,saldo=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
-  if(saldo<cost)return toast('Kredit tidak cukup. Silakan top-up kredit di Katalog.',true);
+  if(saldo<cost)return toast('Saldo tidak cukup. Isi token lewat Katalog.',true);
   aiWizardStep_(form,3);
   btn.disabled=true;area.disabled=true;box.hidden=false;box.className='ai-result is-loading';box.textContent='AI sedang menyusun hasil…';
   const signature=JSON.stringify([form.dataset.toolId,input]);
@@ -824,7 +824,7 @@ async function submitAITool(form){
     state.aiPending=null;
     if(state.home)state.home.saldo_kredit=r.saldo;if(state.me)state.me.saldo_kredit=r.saldo;
     const bal=document.getElementById('ai-balance');if(bal)bal.textContent=r.saldo+' kredit';
-    box.className='ai-result';box.innerHTML='<p class="card-kicker">HASIL · '+esc(r.kredit_terpakai)+' KREDIT TERPAKAI</p><div class="ai-text">'+esc(r.hasil)+'</div>'+
+    box.className='ai-result';box.innerHTML='<p class="card-kicker">HASIL · '+esc(r.kredit_terpakai)+' TOKEN DIPAKAI</p><div class="ai-text">'+esc(r.hasil)+'</div>'+
       '<div class="ai-result-actions"><button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(r.hasil)+'">Salin teks '+icon('link')+'</button>'+
       '<a class="btn btn-secondary btn-sm" href="https://wa.me/?text='+encodeURIComponent(String(r.hasil||''))+'" target="_blank" rel="noopener noreferrer">Kirim ke WA ↗</a></div>';
     box.scrollIntoView({block:'nearest',behavior:'smooth'});
@@ -1235,7 +1235,7 @@ function viewAdmin(){
       ['clock','Antrean pendaftaran','Pantau kuota dan member menunggu.','antrean'],
       ['grid','Rilis produk','Kelola versi dan informasi pembaruan.','rilis'],
       ['shield','Pengaturan','Tinjau konfigurasi layanan yang berlaku.','pengaturan']
-    ].map(x=>'<article class="surface admin-module-card"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" data-route="'+x[3]+'">Buka modul '+icon('arrow')+'</button></article>').join('')+'</div>'+
+    ].map(x=>'<article class="surface admin-module-card"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" data-route="'+x[3]+'">Buka materi '+icon('arrow')+'</button></article>').join('')+'</div>'+
     '<section class="section-gap">'+title('Ringkasan data','METRIK SISTEM','Nilai berasal dari rumus Google Sheets.')+
     (details.length?'<div class="grid-3">'+details.slice(0,12).map(x=>'<div class="stat"><div class="stat-value">'+esc(x.nilai)+'</div><div class="stat-label">'+esc(x.metrik)+'</div></div>').join('')+'</div>':
     empty('Ringkasan belum dimuat','Periksa koneksi dan hak akses admin.'))+'</section>';
