@@ -147,7 +147,7 @@ jobs:
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#member" > /tmp/ngd-support-admin.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="member-search-form"' /tmp/ngd-support-admin.html
-          grep -q 'Buka Member 360°' /tmp/ngd-support-admin.html
+          grep -q 'Cari member' /tmp/ngd-support-admin.html
           grep -q 'data-overflow="false"' /tmp/ngd-support-admin.html
           echo 'SUPPORT_ADMIN_BROWSER_OK'
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
@@ -260,13 +260,13 @@ jobs:
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#jasa" > /tmp/ngd-member-services.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="service-brief-form"' /tmp/ngd-member-services.html
-          grep -q 'Kirim brief untuk ditinjau' /tmp/ngd-member-services.html
+          grep -q 'Kirim permintaan' /tmp/ngd-member-services.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-services.html
           grep -q 'data-floating-nav="true"' /tmp/ngd-member-services.html
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#layanan" > /tmp/ngd-admin-services.html 2>>/tmp/ngd-chrome.log
-          grep -q 'Permintaan jasa dan penawaran' /tmp/ngd-admin-services.html
-          grep -q 'Antrean kosong' /tmp/ngd-admin-services.html
+          grep -q 'Kelola Permintaan Jasa' /tmp/ngd-admin-services.html
+          grep -q 'Belum ada permintaan' /tmp/ngd-admin-services.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-services.html
           echo 'SERVICE_BROWSER_QA_OK'
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
