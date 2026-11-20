@@ -97,6 +97,32 @@ const adminContextRoute=(route)=>({
   'member360':'member',tiket:'dukungan','ai-tool':'ai'
 })[route]||route;
 const tokenKey='ngd_member_session';
+const firstInviterKey='ngd_first_inviter_v1';
+const firstInviterTtlMs=30*24*60*60*1000;
+function firstInviter_(){
+  try{
+    if(typeof localStorage==='undefined')return '';
+    const raw=localStorage.getItem(firstInviterKey);
+    if(!raw)return '';
+    const saved=JSON.parse(raw),code=String(saved?.code||'');
+    if(!/^[A-Za-z0-9_-]{3,80}$/.test(code)||!Number.isFinite(saved?.expiresAt)||
+       saved.expiresAt<=Date.now()){
+      localStorage.removeItem(firstInviterKey);return '';
+    }
+    return code;
+  }catch{return '';}
+}
+function captureFirstInviter_(){
+  const prior=firstInviter_();
+  if(prior)return prior;
+  try{
+    const code=String(new URLSearchParams(location.search).get('ref')||'').trim().toUpperCase();
+    if(!/^[A-Z0-9_-]{3,80}$/.test(code))return '';
+    if(typeof localStorage!=='undefined')
+      localStorage.setItem(firstInviterKey,JSON.stringify({code,expiresAt:Date.now()+firstInviterTtlMs}));
+    return code;
+  }catch{return '';}
+}
 // Production catalogue must come from getKatalog; never invent product prices
 // when the API is temporarily unavailable.
 const PREVIEW_MODULES=[
@@ -672,8 +698,8 @@ const aiCategoryCatalog=[
   {id:'umkm',title:'Kebutuhan UMKM',short:'UMKM',icon:'store',
    detail:'Produk, promosi, layanan pelanggan, dan operasional usaha.',
    examples:'Caption jualan · Deskripsi produk · Balasan pelanggan'},
-  {id:'affiliate',title:'Kebutuhan Affiliate',short:'Affiliate',icon:'link',
-   detail:'Materi promosi, ulasan produk, dan ide kampanye referral.',
+  {id:'affiliate',title:'Ide Bagikan Produk',short:'Komisi',icon:'link',
+   detail:'Materi promosi, ulasan produk, dan ide kampanye ajak teman.',
    examples:'Naskah review · Hook promosi · Ide konten afiliasi'},
   {id:'media',title:'Kebutuhan Media',short:'Media',icon:'grid',
    detail:'Riset, editorial, produksi berita, dan publikasi.',
@@ -880,8 +906,8 @@ function viewAffiliate(){
   // Two distinct experiences: a public partner invitation and a private,
   // authenticated dashboard. Every monetary value comes from the backend.
   if(!logged())return '<div class="partner-public">'+
-    '<section class="partner-hero" aria-label="Program Mitra Ngulik Digital">'+
-      '<div class="partner-hero-copy"><p class="partner-kicker">MITRA NGULIK DIGITAL · PROGRAM AFFILIATE</p>'+
+    '<section class="partner-hero" aria-label="Program Komisi Ngulik Digital">'+
+      '<div class="partner-hero-copy"><p class="partner-kicker">NGULIK DIGITAL · PROGRAM KOMISI</p>'+
       '<h1>Bagikan Link. <em>Dapatkan Komisi.</em></h1>'+
       '<p>Bagikan produk yang Anda suka. Komisi berlaku untuk pembelian yang memenuhi syarat.</p>'+
       '<div class="partner-hero-actions">'+
@@ -894,11 +920,11 @@ function viewAffiliate(){
         '<span class="partner-art-label partner-art-label-two">BAGIKAN</span>'+
         '<span class="partner-art-label partner-art-label-three">TUMBUH</span>'+
       '</div></section>'+
-    '<section class="partner-public-steps" aria-label="Cara kerja affiliate">'+
+    '<section class="partner-public-steps" aria-label="Cara mendapat komisi">'+
       '<div class="partner-section-intro"><p class="partner-kicker">CARA KERJA</p>'+
       '<h2>Cara Dapat Komisi</h2><p>Bagikan produk yang cocok untuk teman Anda.</p></div>'+
       '<div class="partner-step-grid">'+[
-        ['01','Bergabung sebagai member','Buat akun dan temukan tautan referral pribadi pada dashboard.'],
+        ['01','Bergabung sebagai member','Buat akun dan temukan link ajak teman pribadi pada dashboard.'],
         ['02','Bagikan rekomendasi','Kenalkan Ngulik Digital kepada teman, kreator, atau pelaku UMKM yang membutuhkan.'],
         ['03','Pantau komisi','Transaksi yang memenuhi syarat dicatat dan diperiksa sebelum komisi dapat dicairkan.']
       ].map(x=>'<article class="partner-step"><span class="partner-step-number">'+x[0]+'</span><h3>'+x[1]+'</h3><p>'+x[2]+'</p></article>').join('')+
@@ -924,7 +950,7 @@ function viewAffiliate(){
     '</div>';
 
   if(isAdmin())return '<section class="partner-member"><p class="partner-kicker">AKSES MEMBER</p>'+
-    '<h1>Program Mitra Ngulik Digital</h1><p>Masuk sebagai Member untuk melihat komisi Anda.</p>'+
+    '<h1>Program Komisi Ngulik Digital</h1><p>Masuk sebagai Member untuk melihat komisi Anda.</p>'+
     '<button type="button" class="partner-btn partner-btn-outline" data-route="admin">Kembali ke admin</button></section>';
   const a=state.affiliates;
   if(!a)return '<section class="partner-member"><p class="partner-kicker">MITRA</p>'+
@@ -935,6 +961,8 @@ function viewAffiliate(){
   const referralBase='https://cuan74468-ux.github.io/ngulik-digital-member/';
   const url=code&&/^[A-Za-z0-9_-]{3,80}$/.test(code)?
     referralBase+'?ref='+encodeURIComponent(code):'';
+  const ebookInvite=url?url+'&free=ebook':'';
+  const classInvite=url?url+'&free=kelas':'';
   const all=Array.isArray(a.komisi)?a.komisi:[];
   const totals=a.saldo||{};
   const pending=Number(totals.PENDING)||0;
@@ -947,37 +975,46 @@ function viewAffiliate(){
   const statusLabel={PENDING:'Tertahan',APPROVED:'Disetujui',PAID:'Dibayar',REVERSED:'Dibatalkan'};
   const rows=[...all].sort((x,y)=>String(y.created_at||'').localeCompare(String(x.created_at||''))).slice(0,50);
   const cards=[
-    ['Komisi tertahan',rupiah(pending),'Menunggu syarat persetujuan','pending'],
-    ['Siap diajukan',rupiah(eligible),'Belum termasuk yang sudah diajukan','approved'],
+    ['Komisi Tertahan (14 Hari)',rupiah(pending),'Menunggu masa tahan dan pemeriksaan','pending'],
+    ['Saldo Komisi Siap Tarik',rupiah(eligible),'Belum termasuk pengajuan pencairan','approved'],
     ['Sudah diajukan',rupiah(requested),'Menunggu tindak lanjut pencairan','requested'],
     ['Sudah dibayar',rupiah(paid),'Riwayat komisi dibayar','paid']
   ];
   return '<div class="partner-member">'+
-    '<header class="partner-member-header"><div><p class="partner-kicker">MEJA KERJA / AFFILIATE</p>'+
+    '<header class="partner-member-header"><div><p class="partner-kicker">MEJA KERJA / KOMISI</p>'+
       '<h1>Komisi Saya</h1><p>Lihat tautan dan komisi Anda di sini.</p></div>'+
-      '<button type="button" class="partner-refresh" data-affiliate-refresh aria-label="Perbarui data affiliate">'+icon('arrow')+' Perbarui</button></header>'+
+      '<button type="button" class="partner-refresh" data-affiliate-refresh aria-label="Perbarui data komisi">'+icon('arrow')+' Perbarui</button></header>'+
     '<div class="partner-metric-grid">'+cards.map(c=>'<article class="partner-metric partner-metric-'+c[3]+'">'+
       '<span>'+c[0]+'</span><strong>'+c[1]+'</strong><small>'+c[2]+'</small></article>').join('')+'</div>'+
-    '<section class="partner-link-panel" aria-label="Tautan referral pribadi">'+
-      '<div class="partner-link-copy"><p class="partner-kicker">TAUTAN REFERRAL PRIBADI</p>'+
+    '<section class="partner-link-panel" aria-label="Link ajak teman pribadi">'+
+      '<div class="partner-link-copy"><p class="partner-kicker">LINK AJAK TEMAN</p>'+
       '<h2>Bagikan Tautan Anda</h2>'+
       '<p>Bagikan tautan ini kepada calon pelanggan.</p>'+
-      '<div class="partner-link-url">'+(url?esc(url):'Kode referral belum tersedia')+'</div>'+
+      '<div class="partner-link-url">'+(url?esc(url):'Kode ajak teman belum tersedia')+'</div>'+
       (code?'<span class="partner-code">Kode: '+esc(code)+'</span>':'')+'</div>'+
       '<div class="partner-link-actions">'+
         '<button type="button" class="partner-btn partner-btn-primary" data-copy="'+esc(url)+'"'+(!url?' disabled':'')+'>Salin tautan '+icon('link')+'</button>'+
         (url?'<a class="partner-btn partner-btn-outline" href="https://wa.me/?text='+encodeURIComponent('Rekomendasi tools dan produk digital Ngulik Digital: '+url)+'" target="_blank" rel="noopener noreferrer">Bagikan via WhatsApp '+icon('arrow')+'</a>':'')+
       '</div></section>'+
-    '<section class="partner-reach" aria-label="Aktivitas tautan referral">'+
+    '<section class="partner-free-links" aria-label="Bagikan akses gratis">'+
+      '<h2>Bagikan Pintu Gratis</h2><p>Teman membuka tautan Ngulik Digital dahulu agar kode pengajak tersimpan sebelum masuk ke materi gratis.</p>'+
+      (url?'<div class="partner-link-actions">'+
+        '<button type="button" class="partner-btn partner-btn-outline" data-copy="'+esc(ebookInvite)+'">Salin Link eBook Gratis</button>'+
+        '<a class="partner-btn partner-btn-outline" href="https://wa.me/?text='+encodeURIComponent('Baca eBook Vibe Coder gratis di Ngulik Digital: '+ebookInvite)+'" target="_blank" rel="noopener noreferrer">Bagikan eBook ke WA</a>'+
+        '<button type="button" class="partner-btn partner-btn-outline" data-copy="'+esc(classInvite)+'">Salin Link Kelas Gratis</button>'+
+        '<a class="partner-btn partner-btn-outline" href="https://wa.me/?text='+encodeURIComponent('Ikut kelas gratis Ngulik Digital: '+classInvite)+'" target="_blank" rel="noopener noreferrer">Bagikan Kelas ke WA</a>'+
+        '</div>':'<p>Link ajak teman belum tersedia.</p>')+
+      '</section>'+
+    '<section class="partner-reach" aria-label="Aktivitas link ajak teman">'+
       '<div><span>Pengunjung yang mengklik</span><strong>'+esc(a.klik??0)+'</strong></div>'+
-      '<div><span>Pendaftar dari referral</span><strong>'+esc(a.pendaftar??0)+'</strong></div>'+
+      '<div><span>Jumlah Orang Diajak</span><strong>'+esc(a.pendaftar??0)+'</strong></div>'+
       '<div><span>Catatan komisi</span><strong>'+esc(all.length)+'</strong></div>'+
     '</section>'+
     '<section class="partner-commission-panel" aria-label="Riwayat komisi">'+
       '<div class="partner-panel-head"><div><p class="partner-kicker">AKTIVITAS KOMISI</p><h2>Riwayat komisi</h2></div>'+
       '<span>Menampilkan hingga 50 catatan terbaru</span></div>'+
       (rows.length?'<div class="partner-commission-list">'+rows.map(x=>
-        '<article class="partner-commission-row"><div><strong>Komisi referral</strong>'+
+        '<article class="partner-commission-row"><div><strong>Komisi pembelian teman</strong>'+
         '<small>'+esc(friendlyDate(x.created_at))+
         (x.payout_requested_at?' · Pengajuan tercatat':'')+'</small></div>'+
         '<div class="partner-commission-amount"><strong>'+rupiah(x.nominal)+'</strong>'+
@@ -987,9 +1024,11 @@ function viewAffiliate(){
     '</section>'+
     '<section class="partner-payout" aria-label="Pengajuan pencairan">'+
       '<div><p class="partner-kicker">PENCAIRAN</p><h2>Tarik Komisi Anda</h2>'+
-      '<p>Komisi dapat dicairkan setelah memenuhi batas minimum dan lolos pemeriksaan.</p></div>'+
+      '<p>Masukkan nomor DANA milik Anda. Admin memeriksa pencairan secara manual setelah minimum dan masa tahan 14 hari terpenuhi.</p></div>'+
+      '<label for="commission-dana-number">Nomor DANA Tujuan</label>'+
+      '<input id="commission-dana-number" class="input" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" pattern="08[0-9]{8,11}" maxlength="13"'+(!canRequest?' disabled':'')+'>'+
       '<button type="button" class="partner-btn partner-btn-primary" data-affiliate-payout'+(canRequest?'':' disabled')+
-      '>'+(canRequest?'Ajukan pencairan':'Belum dapat diajukan')+' '+icon('arrow')+'</button></section>'+
+      '>'+(canRequest?'Tarik Komisi ke DANA':'Belum dapat diajukan')+' '+icon('arrow')+'</button></section>'+
     '<footer class="partner-terms"><strong>Aturan Komisi</strong><p>'+esc(state.info?.disclosure||
       'Besaran komisi ditetapkan per produk. Komisi dapat berubah status sesuai verifikasi, refund, dan ketentuan program. Pengajuan tidak menjamin pembayaran langsung.')+'</p></footer>'+
   '</div>';
@@ -1066,10 +1105,10 @@ function viewAccount(){
   const m=state.me;return title('Akun Anda','PROFIL MEMBER','Periksa detail akun Anda.')+
     '<div class="grid-2"><div class="surface"><p class="card-kicker">INFORMASI AKUN</p>'+
     '<div class="list-rows">'+[
-      ['Nama',m.nama],['Nama usaha',m.nama_usaha],['WhatsApp',m.wa],['Status',m.status],['Kode referral',m.kode_referral],['Bergabung',friendlyDate(m.joined_at)]
+      ['Nama',m.nama],['Nama usaha',m.nama_usaha],['WhatsApp',m.wa],['Status',m.status],['Kode ajak teman',m.kode_referral],['Bergabung',friendlyDate(m.joined_at)]
     ].map(([k,v])=>'<div class="list-row"><div class="left"><small>'+esc(k)+'</small><strong>'+esc(v||'-')+'</strong></div></div>').join('')+'</div></div>'+
     '<div class="surface"><p class="card-kicker">AKSES & KEAMANAN</p><h3>Keamanan akun</h3><p class="card-desc">Keluar jika memakai perangkat bersama.</p><div class="actions" style="margin-top:24px"><button class="btn btn-secondary" data-action="logout">'+icon('logout')+' Keluar dari akun</button></div>'+
-    '<div class="divider"></div><h3>Pesanan saya</h3><button class="btn btn-ghost" data-route="pesanan">Lihat riwayat pesanan '+icon('arrow')+'</button><div class="divider"></div><h3>Program affiliate</h3><button class="btn btn-ghost" data-route="affiliate">Lihat referral saya '+icon('arrow')+'</button>'+
+    '<div class="divider"></div><h3>Pesanan saya</h3><button class="btn btn-ghost" data-route="pesanan">Lihat riwayat pesanan '+icon('arrow')+'</button><div class="divider"></div><h3>Program komisi</h3><button class="btn btn-ghost" data-route="affiliate">Lihat komisi saya '+icon('arrow')+'</button>'+
     '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan kendala '+icon('arrow')+'</button></div></div>'+viewNotificationCenter()+viewProfileEditor();
 }
 function viewLogin(register=false,adminMode=false){
@@ -1297,11 +1336,11 @@ function viewAdminSettings(){
       ['trial_hari','Durasi trial (hari)'],['link_classroom','Link Classroom']]],
     ['Program dan komisi',[
       ['kredit_awal','Kredit awal'],['kredit_peringatan_persen','Ambang peringatan kredit (%)'],
-      ['komisi_persen','Komisi afiliasi (%)'],
+      ['komisi_persen','Komisi (%)'],
       ['masa_tahan_hari','Masa tahan komisi (hari)'],
       ['min_payout','Minimum pencairan (Rp)']]],
     ['Informasi publik',[
-      ['teks_disclosure_affiliate','Keterangan afiliasi']]]
+      ['teks_disclosure_affiliate','Keterangan komisi']]]
   ];
   const cell=(key,label)=>{
     const value=settings?.[key];
@@ -1403,7 +1442,7 @@ function viewAdminCatalog(){
     '<textarea class="input" id="cat-deskripsi" name="deskripsi" maxlength="350" minlength="10" rows="4" required>'+
     esc(draft.deskripsi)+'</textarea></div>'+
     '<div class="catalog-checks">'+bool('perlu_approval_admin','Memerlukan persetujuan admin')+
-    bool('bisa_komisi','Memenuhi syarat komisi affiliate')+'</div>'+
+    bool('bisa_komisi','Memenuhi syarat komisi')+'</div>'+
     '<div class="catalog-admin-form-actions">'+
     '<button class="btn btn-primary" type="submit" '+(!canWrite?'disabled title="Pengelolaan katalog belum diaktifkan"':'')+'>'+
     (selected?'Simpan perubahan':'Buat produk (nonaktif)')+' '+icon('arrow')+'</button>'+
@@ -2128,7 +2167,7 @@ async function processLogin(form,register){
     if(!registrationOtpEnabled())return toast('Registrasi OTP belum diaktifkan.',true);
     if(!/^[0-9]{6}$/.test(payload.otp)||state.registrationOtpVerifiedWa!==payload.wa)
       return toast('Verifikasi kode OTP WhatsApp terlebih dahulu.',true);
-    const r=new URLSearchParams(location.search).get('ref');
+    const r=captureFirstInviter_();
     if(r)payload.ref=r;
   }
   const btn=form.querySelector('[type=submit]');btn.disabled=true;
@@ -2876,11 +2915,14 @@ document.addEventListener('click',async(e)=>{
     const amount=rows.filter(x=>x.status==='APPROVED'&&!x.payout_requested_at)
       .reduce((sum,x)=>sum+(Number(x.nominal)||0),0);
     if(!(amount>0))return toast('Belum ada komisi untuk dicairkan.',true);
-    if(!confirm('Ajukan pencairan hingga '+rupiah(amount)+'? Sistem akan memeriksa minimum dan status transaksi. Pengajuan bukan bukti uang sudah ditransfer.'))return;
+    const nomorDana=String(document.getElementById('commission-dana-number')?.value||'').replace(/[\\s()-]/g,'');
+    if(!/^08[0-9]{8,11}$/.test(nomorDana))
+      return toast('Isi nomor DANA aktif dengan format 08xxxxxxxxxx.',true);
+    if(!confirm('Ajukan komisi '+rupiah(amount)+' ke DANA nomor ...'+nomorDana.slice(-4)+'? Admin wajib memeriksa transfer sebelum menandai lunas.'))return;
     affiliatePayoutSubmitting_=true;
     affiliateAction.disabled=true;
     try{
-      const result=await api('requestPayout',{},state.token,{write:true});
+      const result=await api('requestPayout',{nomor_dana:nomorDana},state.token,{write:true});
       state.affiliates=await api('getAffiliateDashboard',{},state.token);
       render();
       toast('Permintaan pencairan diterima'+(result?.total?' sebesar '+rupiah(result.total):'')+'. Menunggu pemeriksaan.');
@@ -3140,6 +3182,7 @@ window.addEventListener('hashchange',()=>{
   const route=aiRouteFromHash_();state.route=route;render();loadRoute(route);
 });
 async function init(){
+  captureFirstInviter_();
   state.route=aiRouteFromHash_();
   state.catalog=[];
   if(!activatePreview()){
