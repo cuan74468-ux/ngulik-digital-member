@@ -384,3 +384,200 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-trust-note{
     transition:none;
   }
 }
+
+
+/* MARKETPLACE RETAIL V2 — mobile-first storefront, no invented sales metrics.
+   Real images and promotions still come from the published Admin CMS. */
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-page{
+  --mk-ink:#172e32;--mk-muted:#67757a;--mk-border:#e4ebeb;
+  --mk-accent:#0f5864;--mk-cream:#f9fbfa;
+  max-width:1260px;color:var(--mk-ink);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-header{
+  align-items:center;margin-bottom:18px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-header h1{
+  font-size:clamp(1.65rem,2.8vw,2.55rem);letter-spacing:-.048em;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-eyebrow{
+  color:#0f5864;letter-spacing:.075em;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-header-count{
+  background:#e9f3f1;border-color:#dcebe8;color:#185864;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-banner-shell{
+  margin-bottom:25px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-hero-fallback{
+  min-height:190px;background:#eaf2f0;border-color:#d7e7e2;
+  border-radius:18px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-hero-symbol{
+  background:#dcebe7;box-shadow:none;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-hero-content h2{
+  font-size:clamp(1.45rem,2.65vw,2.3rem);color:#173b40;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-hero-content p{
+  color:#526b6c;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-hero-link{
+  background:#0f5864;border-radius:9px;min-height:43px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-section-title{
+  margin-bottom:12px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-category{
+  min-height:43px;border:1px solid #dce7e6;background:#fff;
+  border-radius:9px;color:#476066;padding:9px 14px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-category[aria-pressed=true]{
+  background:#0f5864;color:#fff;border-color:#0f5864;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-search-wrap{
+  border:1px solid #dce7e6;border-radius:10px;height:46px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-search-wrap:focus-within{
+  border-color:#0f5864;box-shadow:0 0 0 3px rgba(15,88,100,.10);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-sort-wrap select{
+  border:1px solid #dce7e6;border-radius:9px;min-height:46px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-results-header{
+  border-color:#e6eeee;padding-top:19px;margin-bottom:14px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-grid{
+  gap:clamp(10px,1.4vw,17px);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-card{
+  border:1px solid #e4ebeb;border-radius:14px;background:#fff;
+  box-shadow:0 2px 12px rgba(11,55,63,.045);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-card:hover{
+  border-color:#b5d4d1;box-shadow:0 10px 25px rgba(11,55,63,.105);
+  transform:translateY(-2px);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-media{
+  background:#edf3f2;aspect-ratio:1/1;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-media-ai{
+  background:#e8eff5;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-media-jasa{
+  background:#f3eee9;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-media-belajar{
+  background:#f4f0e6;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-placeholder{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;background:transparent;padding:16px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-placeholder-icon{
+  display:grid;place-items:center;width:62px;height:62px;border-radius:16px;
+  background:#fff;border:1px solid rgba(15,88,100,.1);
+  color:#0f5864;box-shadow:0 4px 12px rgba(15,88,100,.06);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-placeholder-icon svg{
+  width:29px;height:29px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-placeholder-name{
+  max-width:100%;text-align:center;color:#638087;font-weight:650;
+  font-size:11px;line-height:1.35;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-badge{
+  position:absolute;left:9px;top:9px;z-index:2;
+  display:inline-flex;align-items:center;max-width:calc(100% - 18px);
+  border-radius:6px;padding:5px 8px;background:#0f5864;color:#fff;
+  font:700 10px/1.25 "Inter",sans-serif;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-category{
+  left:9px;bottom:9px;border-radius:5px;background:rgba(255,255,255,.96);
+  color:#365b60;box-shadow:none;letter-spacing:.005em;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-body{
+  padding:13px 13px 14px;gap:7px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-merchant{
+  font:550 10px/1.2 "Inter",sans-serif;color:#658184;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-body h3{
+  font:700 .88rem/1.4 "Inter",sans-serif;color:#1b363a;
+  min-height:2.8em;letter-spacing:-.025em;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-description{
+  font:.74rem/1.52 "Inter",sans-serif;color:#6c777b;
+  min-height:2.9em;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-benefits span{
+  color:#375f62;background:#ebf4f1;border-radius:5px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-bottom{
+  padding-top:9px;border-top:1px solid #f0f2f2;margin-top:auto;gap:4px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-price{
+  color:#0b535f;font-size:clamp(.99rem,1.5vw,1.18rem);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-action{
+  min-height:44px;margin-top:8px;border-radius:8px;
+  background:#0f5864;border-color:#0f5864;color:#fff;
+  font-size:.77rem;font-weight:700;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-action:not(:disabled):hover{
+  background:#0b4650;border-color:#0b4650;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-action:focus-visible,
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-category:focus-visible{
+  outline:3px solid #9bd0ca;outline-offset:2px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-action:disabled{
+  border-color:#e4eaea;background:#eef1f1;color:#819093;
+}
+@media(max-width:600px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-header h1{
+    font-size:1.68rem;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-hero-fallback{
+    min-height:190px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-hero-content{
+    max-width:88%;padding:22px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-body{
+    padding:10px;gap:6px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-body h3{
+    font-size:.78rem;min-height:2.8em;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-description{
+    font-size:.69rem;min-height:3em;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-placeholder-icon{
+    width:50px;height:50px;border-radius:12px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-placeholder-icon svg{
+    width:24px;height:24px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-placeholder-name{
+    font-size:10px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-price{
+    font-size:1.05rem;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-badge{
+    font-size:9px;padding:5px 7px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-action{
+    min-height:42px;font-size:.7rem;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-card{
+    transition:none;transform:none;
+  }
+}
