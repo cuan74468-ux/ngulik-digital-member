@@ -50,5 +50,5 @@ test('homepage-only CSS preserves payment and account logic',()=>{
 test('both entrypoints load current homepage copy rather than cached 16 November module',()=>{
   assert.match(app,/Jasa Web, Aplikasi &amp; Video UMKM/);
   assert.match(publicHtml,/js\/app\.js\?v=20261120-marketplace-retail-v5/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261120-marketplace-retail-v5/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261120-scalev-hosted-v1/);
 });
