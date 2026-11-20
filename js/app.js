@@ -492,10 +492,15 @@ function viewPublicMarketplace(list){
       '<button type="button" class="market-product-action" data-buy="'+idSafe(p.product_id)+'">Beli sekarang '+icon('arrow')+'</button>':
       consult?'<a class="market-product-action" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer">Tanya via WhatsApp '+icon('arrow')+'</a>':
       '<button type="button" class="market-product-action" disabled>Belum tersedia</button>';
-    const badge=price===0?'Gratis':manualFirst?'Konsultasi':
+    // Optional short badge is owned by the published PRODUCT_IMAGE CMS entry.
+    // Long descriptions are never converted into tiny marketing labels.
+    const imageEntry=window.NGD_CONTENT_UI?.published(state.siteContent,'PRODUCT_IMAGE',p.product_id)?.[0];
+    const badgeText=String(imageEntry?.description||'').trim();
+    const customBadge=badgeText.length<=24&&badgeText.split(/\s+/).length<=4?badgeText:'';
+    const badge=customBadge|| (price===0?'Gratis':manualFirst?'Konsultasi':
       Number(p.durasi_hari)>0?esc(Number(p.durasi_hari))+' hari':
       String(p.tipe)==='LISENSI_SEKALI'?'Sekali bayar':
-      ['TOPUP_KREDIT','TOPUP_TOKEN'].includes(String(p.tipe))?'Isi Token':'';
+      ['TOPUP_KREDIT','TOPUP_TOKEN'].includes(String(p.tipe))?'Isi Token':'');
     const benefits=(Number(p.kredit_diberikan)>0?'<span>'+esc(Number(p.kredit_diberikan))+' token</span>':'')+
       (Number(p.durasi_hari)>0?'<span>'+esc(Number(p.durasi_hari))+' hari akses</span>':'');
     const cover=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'market-product-image',offerUiTitle_(p));
