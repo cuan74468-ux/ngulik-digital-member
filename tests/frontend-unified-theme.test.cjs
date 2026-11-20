@@ -31,7 +31,9 @@ test('guest has no sidebar or mobile dock; logged members have four destinations
   assert.match(css,/data-app-role=guest\]:not\(#ngd\) \.sidebar\{display:none!important\}/);
   assert.match(css,/data-app-role=guest\]:not\(#ngd\) \.mobile-nav\{display:none!important\}/);
   assert.match(html,/id="guest-nav"/);
-  assert.match(html,/Katalog Jasa/);
+  assert.match(html,/Produk\/Jasa/);
+  assert.match(html,/>Studio AI<\/button>/);
+  assert.match(html,/>Komisi<\/button>/);
   assert.match(html,/Masuk \/ Daftar/);
   assert.match(app,/\['beranda','ai','katalog','affiliate'\]/);
   assert.match(html,/data-route="menu"/);
