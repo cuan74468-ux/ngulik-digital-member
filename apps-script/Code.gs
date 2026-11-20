@@ -1235,7 +1235,18 @@ function onPaid_(o,actor) {
   var member=byId_('members','member_id',o.member_id);
   require_(product&&member,'CONFLICT','Data produk atau member tidak tersedia.');
   var s=settings_(),percent=commissionRate_(s,product);
-  var commissionEligible=Boolean(member.referred_by&&product.bisa_komisi===true&&percent>0);
+  // Fail closed for self-referrals even if an old/bad member row points to itself.
+  // This check belongs at posting time: the registration and form UI are not trust boundaries.
+  var referrer=String(member.referred_by||'').trim();
+  var selfReferral=!!referrer&&referrer.toUpperCase()===String(member.member_id||'').trim().toUpperCase();
+  if(selfReferral){
+    var priorBlock=findRows_('audit_logs',function(a){
+      return a.action==='COMMISSION_SELF_REFERRAL_BLOCKED'&&a.entity_id===o.order_id;
+    });
+    if(!priorBlock.length)logAudit_('SYSTEM','SYSTEM','COMMISSION_SELF_REFERRAL_BLOCKED',
+      'orders',o.order_id,'','BLOCKED',{reason:'BUYER_EQUALS_REFERRER'});
+  }
+  var commissionEligible=Boolean(referrer&&!selfReferral&&product.bisa_komisi===true&&percent>0);
   var commissionValue=commissionEligible?Math.floor(Number(o.harga_dasar)*percent/100):0;
   if(commissionEligible)require_(Number.isSafeInteger(commissionValue)&&commissionValue>0,
     'CONFLICT','Nominal komisi tidak valid.');
@@ -1250,10 +1261,21 @@ function onPaid_(o,actor) {
     if(!saldoCell.getFormula())saldoCell.setValue(credited.balance);
     fulfilled=true;
   }else if(product.tipe==='LANGGANAN_30H'){
-    var old=member.akses_3in1_sampai?new Date(member.akses_3in1_sampai).getTime():0;
-    end=new Date(Math.max(Date.now(),old)+days*86400000);
-    updateRow_('members',member._row,{akses_3in1_sampai:end,sumber_akses_3in1:'BERBAYAR'});
-    fulfilled=true;
+    // Read the persisted order, not only the argument: retry callers may hold
+    // a stale PAID snapshot. Never extend the same fulfilled order twice.
+    var persisted=byId_('orders','order_id',o.order_id);
+    require_(!persisted||
+      (persisted.member_id===o.member_id&&persisted.product_id===o.product_id),
+      'RECONCILIATION_REQUIRED','Identitas order langganan tidak konsisten.');
+    var alreadyFulfilled=Boolean((persisted&&
+      (persisted.status==='FULFILLED'||persisted.fulfilled_at))||
+      o.status==='FULFILLED'||o.fulfilled_at);
+    if(!alreadyFulfilled){
+      var old=member.akses_3in1_sampai?new Date(member.akses_3in1_sampai).getTime():0;
+      end=new Date(Math.max(Date.now(),old)+days*86400000);
+      updateRow_('members',member._row,{akses_3in1_sampai:end,sumber_akses_3in1:'BERBAYAR'});
+      fulfilled=true;
+    }
   }else if(product.tipe==='PRODUK_DIGITAL'){
     var bonus=Number(product.kredit_diberikan||0);
     require_(Number.isInteger(bonus)&&bonus>=0,'CONFLICT','Bonus kredit produk tidak valid.');
