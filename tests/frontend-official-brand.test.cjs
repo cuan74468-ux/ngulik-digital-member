@@ -31,7 +31,7 @@ test('public and STAGING use identical branded favicon and correct relative sour
     assert.doesNotMatch(html,/guest-brand-icon"[^>]*>n\./);
   }
   assert.match(publicHtml,/js\/app\.js\?v=20261120-marketplace-retail-v5/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261120-scalev-hosted-v1/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261120-qris-manual-v1/);
 });
 test('all dynamic brand placements use same canonical official image',()=>{
   assert.match(app,/const defaultBrandLogoSrc=document\.querySelector\?\.\('link\[rel="icon"\]'\)\?\.href\|\|''/);
