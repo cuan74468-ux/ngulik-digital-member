@@ -11,7 +11,7 @@ const stagingHtml=source('staging/member.html');
 
 test('owner-approved QRIS configuration points to dedicated image, but fail-closed until asset verified',()=>{
   for(const cfg of [stage,publicConfig]){
-    assert.match(cfg,/qris-linggau-ai-studio\.jpg/);
+    assert.match(cfg,/qris-linggau-ai-studio\.svg/);
     assert.match(cfg,/qrisMerchant:\s*['"]Linggau AI Studio['"]/);
     assert.match(cfg,/qrisOwnerImageApproved:\s*false/);
   }
