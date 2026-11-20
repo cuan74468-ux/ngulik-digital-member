@@ -91,8 +91,8 @@ test('confirmed server write is not reported failed if UI refresh fails',async()
   const h=uiHarness();
   await vm.runInContext("submitSupportAction(form,'createTicket',payload,async()=>{throw Error('Refresh failed')})",h.ctx);
   assert.equal(h.sent.length,1);
-  assert.ok(h.toasts.some(t=>t.message.includes('berhasil dicatat')));
-  assert.ok(h.toasts.some(t=>t.message.includes('tampilan belum dapat diperbarui')));
+  assert.ok(h.toasts.some(t=>t.message.includes('berhasil dikirim')));
+  assert.ok(h.toasts.some(t=>t.message.includes('Muat ulang untuk melihatnya')));
   await h.run();
   assert.notEqual(h.sent[0].requestId,h.sent[1].requestId);
 });
