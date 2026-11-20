@@ -32,11 +32,11 @@ test('minimal homepage stays uncluttered, and catalog and login remain accessibl
   assert.doesNotMatch(app,/class="nh-grid"|class="nh-rail"|class="ngd-token-market"/);
 });
 test('desktop columns, mobile logo-first, and warm typography are retained',()=>{
-  assert.match(floating,/grid-template-columns:minmax\(0,1\.08fr\) minmax\(0,\.92fr\)/);
-  assert.match(floating,/grid-template-areas:"copy logo"/);
-  assert.match(floating,/> \.ngd-journey-stage\{\s*grid-area:logo/);
+  assert.match(floating,/\.nh-home\.nh-home-minimal > \.public-editorial-hero/);
+  assert.match(floating,/flex-direction:column;/);
+  assert.match(floating,/\.pf-home-minimal > \.ngd-journey-stage/);
+  assert.match(floating,/order:0;/);
   assert.match(floating,/@media\(max-width:900px\)/);
-  assert.match(floating,/> \.ngd-journey-stage\{\s*order:-1/);
   assert.match(css,/--ngd-canvas:#faf8f3/);
   assert.match(css,/--pf-heading:"Inter"/);
 });
@@ -48,7 +48,7 @@ test('homepage-only CSS preserves payment and account logic',()=>{
 });
 
 test('both entrypoints load current homepage copy rather than cached 16 November module',()=>{
-  assert.match(app,/Warung Tools AI\. <em>Bengkel Kerja Kreatif Berbasis AI\.<\/em>/);
+  assert.match(app,/Bikin Usaha <em>Makin Mudah Ditemukan\.<\/em>/);
   assert.match(publicHtml,/js\/app\.js\?v=20261120-ui-copy-v1/);
   assert.match(stagingHtml,/js\/app\.js\?v=20261120-ui-copy-v1/);
 });
