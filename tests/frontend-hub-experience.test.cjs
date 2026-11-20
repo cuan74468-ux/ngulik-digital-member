@@ -35,7 +35,7 @@ test('public hub is a calm mobile-first entry with accessible product navigation
   const h=preview(),html=h.nodes.screen.innerHTML;
   for(const key of ['nh-home-minimal','ngd-journey-stage','public-hero-copy','data-route="katalog"'])
     assert.ok(html.includes(key),key);
-  assert.match(html,/Bengkel Kerja Kreatif Berbasis AI/);
+  assert.match(html,/Makin Mudah Ditemukan/);
   assert.doesNotMatch(html,/class="nh-grid"|class="nh-rail"/);
   assert.equal(h.apiCalls.length,0);
 });
@@ -51,10 +51,10 @@ test('guest learning page explains Chapter 1 while leaving real LMS locked',()=>
 test('guest marketplace displays all eight official QA fixtures without pretending payment is available',()=>{
   const h=preview();h.go('katalog');const html=h.nodes.screen.innerHTML;
   assert.equal((html.match(/class="market-product-card"/g)||[]).length,8);
-  assert.match(html,/8 produk tersedia di katalog/);
+  assert.match(html,/8 produk ditemukan/);
   assert.match(html,/market-search/);
   assert.match(html,/market-sort/);
-  assert.match(html,/Jasa Video Iklan AI/);
+  assert.match(html,/Jasa Video Iklan/);
   assert.match(html,/Bundel Ebook Vibe Coder/);
   assert.doesNotMatch(html,/data-buy="/);
   assert.match(html,/disabled>Belum tersedia/);
@@ -65,7 +65,7 @@ test('guest marketplace validates official WhatsApp contact and never invents ch
   vm.runInContext("state.info={wa_admin:'081234567890'};go('katalog')",h.ctx);
   const html=h.nodes.screen.innerHTML;
   assert.match(html,/href="https:\/\/wa\.me\/6281234567890\?text=/);
-  assert.match(html,/Tanya produk/);
+  assert.match(html,/Tanya via WhatsApp/);
   assert.match(html,/rel="noopener noreferrer"/);
   assert.doesNotMatch(html,/data-buy="/);
   vm.runInContext("state.info={wa_admin:'https://evil.example'};render()",h.ctx);
@@ -76,14 +76,14 @@ test('guest category controls filter services without creating fake checkout',()
   const h=preview();
   vm.runInContext("state.catalogFilter='jasa';go('katalog')",h.ctx);
   const html=h.nodes.screen.innerHTML;
-  assert.match(html,/Jasa Video Iklan AI/);
+  assert.match(html,/Jasa Video Iklan/);
   assert.doesNotMatch(html,/Top-up 150 Kredit AI/);
   assert.match(html,/aria-pressed="true"/);
   assert.match(html,/2 produk ditemukan/);
   assert.doesNotMatch(html,/data-buy="/);
   vm.runInContext("state.catalogFilter='belajar';render()",h.ctx);
   assert.match(h.nodes.screen.innerHTML,/Bundel Ebook Vibe Coder/);
-  assert.doesNotMatch(h.nodes.screen.innerHTML,/Jasa Video Iklan AI/);
+  assert.doesNotMatch(h.nodes.screen.innerHTML,/Jasa Video Iklan/);
 });
 test('money formatting handles Indonesian Sheets format without inventing Rp0',()=>{
   const h=preview();
