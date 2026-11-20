@@ -39,7 +39,7 @@ function setup(){
   ctx.logAudit_=(...a)=>audit.push(a);
   ctx.onPaid_=()=>{};
   ctx.settings_=()=>({order_expiry_menit:60,cart_abandonment_menit:15,followup_member_otomatis:true,payment_gateway_mode:'MAYAR'});
-  ctx.ngdStagingWorkspaceInfo_=()=>({environment:'STAGING',external_providers_enabled:true});
+  ctx.ngdStagingWorkspaceInfo_=()=>({environment:'STAGING',external_providers_enabled:true,mayar_checkout_ready:true});
   ctx.now_=()=>new Date();
   ctx.recordId_=()=>('REC-'+(queue.length+1));
   ctx.normalizeWa_=x=>x;
