@@ -581,3 +581,36 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-action:disabl
     transition:none;transform:none;
   }
 }
+
+
+/* Live catalogue controls and reset for compact placeholder labels. */
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-refresh{
+  flex:none;margin-left:auto;min-height:37px;padding:7px 13px;
+  border:1px solid #c8dcda;background:#fff;color:#0f5864;
+  border-radius:9px;font:650 .75rem "Inter",sans-serif;cursor:pointer;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-refresh:hover{
+  background:#eaf4f1;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-refresh:disabled{
+  opacity:.55;cursor:wait;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-placeholder-name{
+  display:block;width:auto;max-width:100%;height:auto;aspect-ratio:auto;
+  padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;
+  font:650 11px/1.35 "Inter",sans-serif;color:#638087;text-align:center;
+}
+@media(max-width:600px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-results-header{
+    gap:9px;flex-wrap:wrap;align-items:center;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-results-header h2{
+    flex:1 1 auto;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-refresh{
+    min-height:35px;font-size:.7rem;padding:6px 10px;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-product-placeholder-name{
+    font-size:10px;
+  }
+}
