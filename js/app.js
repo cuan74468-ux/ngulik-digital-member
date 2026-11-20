@@ -127,7 +127,7 @@ function captureFirstInviter_(){
 // when the API is temporarily unavailable.
 const PREVIEW_MODULES=[
   'Orientasi dan Setup Akun','Bio Link dan Profil Bisnis','Katalog dan Checkout Kurir',
-  'Konten Cepat dengan Studio AI','Kasir POS Sederhana','Strategi Referral'
+  'Konten Cepat dengan Studio AI','Kasir POS Sederhana','Strategi Ajak Teman'
 ].map((judul,i)=>({modul_id:'MOD-0'+(i+1),urut:i+1,judul,deskripsi:'Contoh modul pratinjau — tautan materi belum tersedia.',url_classroom:''}));
 function activatePreview(){
   const params=new URLSearchParams(location.search),mode=params.get('preview');
@@ -700,7 +700,7 @@ const aiCategoryCatalog=[
    examples:'Caption jualan · Deskripsi produk · Balasan pelanggan'},
   {id:'affiliate',title:'Ide Bagikan Produk',short:'Komisi',icon:'link',
    detail:'Materi promosi, ulasan produk, dan ide kampanye ajak teman.',
-   examples:'Naskah review · Hook promosi · Ide konten afiliasi'},
+   examples:'Naskah review · Hook promosi · Ide konten komisi'},
   {id:'media',title:'Kebutuhan Media',short:'Media',icon:'grid',
    detail:'Riset, editorial, produksi berita, dan publikasi.',
    examples:'Ringkasan liputan · Judul editorial · Naskah publikasi'},
@@ -902,6 +902,9 @@ async function submitAITool(form){
     try{const d=await api('getBeranda',{},state.token);state.home=d;const bal=document.getElementById('ai-balance');if(bal)bal.textContent=(d.saldo_kredit??0)+' kredit';}catch{}
   }finally{btn.disabled=false;area.disabled=false;}
 }
+function uiCommissionText_(value){
+  return String(value||'').replace(/\b(?:affiliate|afiliator|afiliasi|referral|payout|tier)\b/gi,'komisi');
+}
 function viewAffiliate(){
   // Two distinct experiences: a public partner invitation and a private,
   // authenticated dashboard. Every monetary value comes from the backend.
@@ -1029,8 +1032,8 @@ function viewAffiliate(){
       '<input id="commission-dana-number" class="input" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" pattern="08[0-9]{8,11}" maxlength="13"'+(!canRequest?' disabled':'')+'>'+
       '<button type="button" class="partner-btn partner-btn-primary" data-affiliate-payout'+(canRequest?'':' disabled')+
       '>'+(canRequest?'Tarik Komisi ke DANA':'Belum dapat diajukan')+' '+icon('arrow')+'</button></section>'+
-    '<footer class="partner-terms"><strong>Aturan Komisi</strong><p>'+esc(state.info?.disclosure||
-      'Besaran komisi ditetapkan per produk. Komisi dapat berubah status sesuai verifikasi, refund, dan ketentuan program. Pengajuan tidak menjamin pembayaran langsung.')+'</p></footer>'+
+    '<footer class="partner-terms"><strong>Aturan Komisi</strong><p>'+esc(uiCommissionText_(state.info?.disclosure||
+      'Besaran komisi ditetapkan per produk. Komisi dapat berubah status sesuai verifikasi, refund, dan ketentuan program. Pengajuan tidak menjamin pembayaran langsung.'))+'</p></footer>'+
   '</div>';
 }
 function viewNotificationCenter(){
@@ -3181,7 +3184,21 @@ by('account-button').addEventListener('click',()=>go('akun'));
 window.addEventListener('hashchange',()=>{
   const route=aiRouteFromHash_();state.route=route;render();loadRoute(route);
 });
+// Called synchronously during initial script evaluation, before any awaited API.
+function routeFreeDoor_(){
+  const params=new URLSearchParams(location.search);
+  const door=params.get('free');
+  if(door!=='ebook'&&door!=='kelas')return false;
+  const code=captureFirstInviter_();
+  // A redirect is forbidden unless the browser has actually persisted and
+  // read back the first valid inviter with its 30-day expiry.
+  if(!code||firstInviter_()!==code)return false;
+  const target=door==='ebook'?NGD_FREE_EBOOK_URL:NGD_FREE_CLASSROOM_URL;
+  window.location.assign(target);
+  return true;
+}
 async function init(){
+  if(routeFreeDoor_())return;
   captureFirstInviter_();
   state.route=aiRouteFromHash_();
   state.catalog=[];
