@@ -4,13 +4,11 @@ const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const app=read('js/app.js'),gas=read('apps-script/Code.gs');
 const staging=read('staging/member.html'),publicHtml=read('index.html');
-test('Mayar buyer checkout is only exposed after backend staging payout readiness',()=>{
-  assert.match(app,/function mayarCheckoutEligible_\(product\)/);
-  assert.match(app,/state\.workspaceInfo\?\.mayar_checkout_ready===true/);
-  assert.match(app,/String\(location\.pathname\|\|''\)\.includes\('\/staging\/'\)/);
-  assert.match(app,/config\.apiUrl===window\.NGD_STAGING_CONFIG\?\.apiUrl/);
+test('Mayar buyer checkout is retired; source-only backend route remains gated',()=>{
+  assert.match(app,/function mayarCheckoutEligible_\(\)\{[\s\S]*?return false;/);
   assert.match(app,/mayar\?'createMayarOrder':'createOrder'/);
-  assert.match(app,/Bayar via Mayar/);
+  assert.match(gas,/MAYAR_PAYOUT_CONFIRMED/);
+  assert.doesNotMatch(staging,/js\/scalev-bridge\.js/);
 });
 test('Mayar financial actions are gated in GAS and never auto-enabled by public UI',()=>{
   assert.match(gas,/case 'createMayarOrder':return createMayarOrder_/);
