@@ -12,7 +12,7 @@
     "notifications": true,
     "externalProviders": true
   },
-  "description": "Owner authorizes implementation of all stages. This non-executable contract does not configure Script Properties, create provider credentials, prove deployment or bypass technical validation.",
+  "description": "Owner authorizes implementation of all stages. This non-executable contract does not configure Script Properties, create provider credentials, prove deployment or bypass technical validation. Mayar source-only staging adapter and regression tests are implemented on 2026-11-20. Merchant payout recovery, credential rotation, API compatibility, GAS deployment and real payments are NOT verified; the gateway is fail-closed.",
   "integrations": [
     {
       "id": "registration_whatsapp",
@@ -38,12 +38,13 @@
     },
     {
       "id": "merchant_payment",
-      "candidate": "Manual QRIS first; Mayar webhook implementation authorized but not claimed complete",
-      "status": "PAYMENT_GATEWAY_NOT_IMPLEMENTED",
-      "sourceBoundary": "future_verified_payment_adapter",
+      "candidate": "Mayar Starter (preferred for API/webhook) + single NGD affiliate ledger; Scalev Free retained only as unconfigured fallback",
+      "status": "STAGING_SOURCE_IMPLEMENTED_RUNTIME_UNVERIFIED",
+      "sourceBoundary": "apps-script/Code.gs:createMayarOrder_/mayarWebhook_ plus js/app.js STAGING",
       "secretPropertyNames": [
         "MAYAR_API_KEY",
-        "MAYAR_WEBHOOK_SECRET"
+        "MAYAR_WEBHOOK_SECRET",
+        "MAYAR_PAYOUT_CONFIRMED"
       ],
       "mustProve": [
         "merchant_authorization",
@@ -54,7 +55,15 @@
         "settlement_reconciliation",
         "refund_and_partial_failure_handling",
         "cost_fee_policy",
-        "kill_switch"
+        "kill_switch",
+        "merchant_payout_restoration_confirmed_after_2026_11_04_incident",
+        "new_api_key_rotated_after_2026_10_31",
+        "merchant_KYC_and_identity_verification",
+        "staging_only_invoice_api_compatible_schema",
+        "transaction_ID_binding_and_refund_mapping",
+        "verified_provider_hosted_invoice_URL",
+        "commission_owner_NGD_no_double_affiliate_payout",
+        "owner_approves_money_acceptance"
       ]
     },
     {
