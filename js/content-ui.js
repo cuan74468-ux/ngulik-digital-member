@@ -35,7 +35,7 @@
     const target=['catalog','member_home'].includes(placement)?placement:'home';
     const items=published(contents,'HERO',target);
     if(!items.length)return '';
-    return '<section class="nh-carousel" aria-label="'+(target==='catalog'?'Banner promosi katalog':'Promosi Ngulik Digital')+'" data-hero-carousel>'+
+    return '<section class="nh-carousel" aria-label="'+(target==='catalog'?'Banner katalog':'Info Ngulik Digital')+'" data-hero-carousel>'+
       '<div class="nh-carousel-viewport">'+items.map((x,i)=>{
         const route=routes.includes(x.cta_route)?x.cta_route:'';
         return '<article class="nh-hero nh-hero-slide" data-hero-panel="'+i+'" '+
@@ -67,7 +67,7 @@
       ['PROMO','ANNOUNCEMENT'].includes(String(x.kind||''))&&
       x.placement===placement);
     if(!items.length)return '';
-    return '<section class="ngd-promo-strip" aria-label="Pengumuman dan promosi">'+items.map(x=>{
+    return '<section class="ngd-promo-strip" aria-label="Info terbaru">'+items.map(x=>{
       const kind=x.kind==='ANNOUNCEMENT'?'PENGUMUMAN':'PROMO PILIHAN';
       const route=String(x.cta_route||'').replace(/^#/,'');
       const dest=routes.includes(route)?route:'';
@@ -84,7 +84,7 @@
   function cover(contents,route){
     const item=published(contents,'PAGE_COVER',route)[0];
     if(!item)return '';
-    return '<section class="native-page-cover" aria-label="'+h(item.title||'Ilustrasi halaman')+'">'+
+    return '<section class="native-page-cover" aria-label="'+h(item.title||'Gambar halaman')+'">'+
       '<img src="'+h(mediaPath(item.image_path))+'" alt="'+h(item.title||'')+'" loading="lazy" decoding="async">'+
       ((item.title||item.description)?'<div class="native-page-cover-caption">'+
         (item.title?'<h2>'+h(item.title)+'</h2>':'')+
@@ -106,53 +106,53 @@
     ['BRAND_LOGO','brand','Logo Ngulik Digital']
   ];
   function admin(ctx){
-    if(!ctx.authorized)return '<div class="empty"><h3>Khusus administrator</h3></div>';
+    if(!ctx.authorized)return '<div class="empty"><h3>Khusus Admin</h3></div>';
     const rows=Array.isArray(ctx.items)?ctx.items:[];
     const selected=rows.find(x=>x.content_id===ctx.selectedId)||null;
     const draft=selected||{kind:'HERO',placement:'home',title:'',description:'',image_path:'',
       cta_label:'',cta_route:'',sort_order:rows.length+1,start_date:'',end_date:''};
     const locked=ctx.enabled!==true;
     const form='<section class="surface content-editor" aria-label="Editor konten visual">'+
-      '<div class="content-editor-heading"><div><p class="eyebrow">EDITOR VISUAL</p><h2>'+
+      '<div class="content-editor-heading"><div><p class="eyebrow">EDIT KONTEN</p><h2>'+
       (selected?'Ubah konten':'Tambah konten')+'</h2></div>'+
-      (selected?'<button type="button" class="btn btn-secondary btn-sm" data-content-new>Buat baru</button>':'')+'</div>'+
-      '<div class="ngd-media-help"><div><strong>Unggah gambar melalui GitHub (gratis)</strong><p>Unggah file ke folder <code>assets/media/</code>, lalu masukkan path <code>assets/media/nama-file.webp</code> pada kolom berikut. File publik, tidak untuk dokumen berbayar atau data pribadi.</p></div>'+ 
-      '<a class="btn btn-secondary btn-sm" href="https://github.com/cuan74468-ux/ngulik-digital-member/upload/main/assets/media" target="_blank" rel="noopener noreferrer">Upload gambar di GitHub ↗</a></div>'+
+      (selected?'<button type="button" class="btn btn-secondary btn-sm" data-content-new>Tambah baru</button>':'')+'</div>'+
+      '<div class="ngd-media-help"><div><strong>Tambahkan gambar dari GitHub</strong><p>Unggah gambar ke <code>assets/media/</code>, lalu tempel alamat filenya di bawah. Jangan unggah data pribadi.</p></div>'+ 
+      '<a class="btn btn-secondary btn-sm" href="https://github.com/cuan74468-ux/ngulik-digital-member/upload/main/assets/media" target="_blank" rel="noopener noreferrer">Unggah gambar ↗</a></div>'+
       '<form id="content-editor-form" data-content-id="'+h(selected?.content_id||'')+'" class="content-form">'+
-      '<div class="grid-2"><div class="field"><label for="content-kind">Jenis visual</label>'+
+      '<div class="grid-2"><div class="field"><label for="content-kind">Jenis gambar</label>'+
       (selected?'<input class="input" value="'+h(names[draft.kind]||draft.kind)+'" disabled>'+
         '<input type="hidden" name="kind" value="'+h(draft.kind)+'">':
         '<select class="input" name="kind" id="content-kind">'+
         kinds.map(k=>'<option value="'+k+'" '+(draft.kind===k?'selected':'')+'>'+names[k]+'</option>').join('')+'</select>')+
-      '</div><div class="field"><label for="content-placement">Lokasi tampilan</label>'+
+      '</div><div class="field"><label for="content-placement">Tampil di</label>'+
       '<input class="input" id="content-placement" name="placement" list="content-places" maxlength="70" value="'+h(draft.placement||'')+'" required>'+
       '<datalist id="content-places">'+places.map(p=>'<option value="'+h(p[1])+'" label="'+h(p[2])+'"></option>').join('')+
       (Array.isArray(ctx.products)?ctx.products.map(p=>'<option value="'+h(p.product_id)+'" label="'+h(p.nama)+'"></option>').join(''):'')+
       '</datalist></div></div>'+
-      '<div class="field"><label for="content-image">Alamat gambar publik / path assets/media/</label>'+
+      '<div class="field"><label for="content-image">Alamat gambar</label>'+
       '<input class="input" id="content-image" name="image_path" maxlength="45000" placeholder="https://contoh.com/banner.webp" value="'+h(draft.image_path||'')+'">'+
       (mediaPath(draft.image_path)?'<img class="content-editor-preview" src="'+h(mediaPath(draft.image_path))+'" alt="Pratinjau file gambar" loading="lazy">':'')+
       '</div>'+
-      '<div class="field"><label for="content-title">Judul atau alt text</label>'+
+      '<div class="field"><label for="content-title">Judul / teks gambar</label>'+
       '<input class="input" id="content-title" name="title" maxlength="120" value="'+h(draft.title||'')+'"></div>'+
       '<div class="field"><label for="content-description">Deskripsi (opsional)</label>'+
       '<textarea class="input" id="content-description" name="description" maxlength="400" rows="3">'+h(draft.description||'')+'</textarea></div>'+
       '<div class="grid-2"><div class="field"><label for="content-cta">Label tombol</label>'+
       '<input class="input" id="content-cta" name="cta_label" maxlength="48" value="'+h(draft.cta_label||'')+'"></div>'+
-      '<div class="field"><label for="content-route">Tujuan tombol</label>'+
+      '<div class="field"><label for="content-route">Halaman tujuan</label>'+
       '<select class="input" id="content-route" name="cta_route"><option value="">Tanpa tombol</option>'+
       routes.map(k=>'<option value="'+k+'" '+(draft.cta_route===k?'selected':'')+'>'+k+'</option>').join('')+
       '</select></div></div>'+
       '<div class="grid-2"><div class="field"><label for="content-order">Urutan</label>'+
       '<input class="input" type="number" min="1" max="10000" step="1" name="sort_order" id="content-order" required value="'+h(draft.sort_order??1)+'"></div>'+
-      '<div class="field"><label for="content-start">Tayang mulai (opsional)</label>'+
+      '<div class="field"><label for="content-start">Mulai tayang</label>'+
       '<input class="input" type="date" name="start_date" id="content-start" value="'+h(draft.start_date||'')+'"></div></div>'+
-      '<div class="field"><label for="content-end">Tayang sampai (opsional)</label>'+
+      '<div class="field"><label for="content-end">Akhir tayang</label>'+
       '<input class="input" type="date" name="end_date" id="content-end" value="'+h(draft.end_date||'')+'"></div>'+
-      '<button class="btn btn-primary" type="submit" '+(locked?'disabled':'')+'>'+(selected?'Simpan perubahan':'Simpan draft')+'</button>'+
-      (locked?'<p class="form-hint">Penyuntingan konten belum aktif pada deployment saat ini.</p>':'')+
+      '<button class="btn btn-primary" type="submit" '+(locked?'disabled':'')+'>'+(selected?'Simpan':'Simpan draf')+'</button>'+
+      (locked?'<p class="form-hint">Edit konten belum tersedia.</p>':'')+
       '</form></section>';
-    const rowsHtml='<section class="content-admin-list" aria-label="Daftar aset dan banner">'+
+    const rowsHtml='<section class="content-admin-list" aria-label="Daftar gambar dan banner">'+
       (rows.length?rows.map(x=>{
         const url=mediaPath(x.image_path),status=String(x.status||'DRAFT');
         const action=status==='PUBLISHED'?'DRAFT':status==='ARCHIVED'?'DRAFT':'PUBLISHED';
@@ -160,7 +160,7 @@
         return '<article class="content-admin-item">'+
           (url?'<img src="'+h(url)+'" alt="'+h(x.title||'')+'" loading="lazy">':'')+
           '<div class="content-admin-copy"><span class="chip">'+h(names[x.kind]||x.kind)+' · '+h(status)+'</span>'+
-          '<strong>'+h(x.title||x.placement||'Visual tanpa judul')+'</strong>'+
+          '<strong>'+h(x.title||x.placement||'Belum ada judul')+'</strong>'+
           '<small>Lokasi: '+h(x.placement)+' · Urutan '+h(x.sort_order||'')+
           ((x.start_date||x.end_date)?' · '+h(x.start_date||'—')+' s.d. '+h(x.end_date||'—'):'')+'</small>'+
           '<div class="content-admin-actions">'+
@@ -170,11 +170,11 @@
           (status!=='ARCHIVED'?'<button type="button" class="btn btn-ghost btn-sm" data-content-id="'+
             h(x.content_id)+'" data-content-status="ARCHIVED" '+(locked?'disabled':'')+'>Arsipkan</button>':'')+
           '</div></div></article>';
-      }).join(''):'<div class="empty"><h3>Konten visual belum tersedia</h3><p>Banner dan aset baru akan dikelola di sini.</p></div>')+
+      }).join(''):'<div class="empty"><h3>Belum Ada Gambar</h3><p>Gambar dan banner yang Anda tambah akan muncul di sini.</p></div>')+
       '</section>';
-    return '<section class="content-admin-heading"><p class="eyebrow">ADMIN / KONTEN PUBLIK</p>'+
-      '<h1>Konten, gambar & banner</h1><p>Kelola urutan kampanye, jadwal tayang, gambar produk, ikon fitur dan sampul halaman tanpa mengubah template.</p>'+
-      '<span class="chip">'+rows.length+' aset tercatat</span></section>'+
+    return '<section class="content-admin-heading"><p class="eyebrow">ADMIN / KONTEN</p>'+
+      '<h1>Kelola Gambar & Banner</h1><p>Atur gambar, judul, tombol, dan jadwal tayang.</p>'+
+      '<span class="chip">'+rows.length+' gambar tersimpan</span></section>'+
       '<div class="content-admin-layout">'+rowsHtml+form+'</div>';
   }
   window.NGD_CONTENT_UI=Object.freeze({mediaPath,published,media,hero,promotion,cover,admin});
