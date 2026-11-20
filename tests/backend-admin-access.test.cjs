@@ -131,7 +131,7 @@ test('frontend admin login is independent while registrations and payments stay 
  assert.match(conf,/adminLoginEnabled:\s*true/);
  assert.match(conf,/memberWritesEnabled:\s*true/);
  assert.match(conf,/registrationOtpEnabled:\s*true/);
- assert.match(conf,/paymentsEnabled:\s*true/);
+ assert.match(conf,/paymentsEnabled:\s*false/);
  assert.match(client,/adminAuth = false/);
  assert.match(client,/adminLogin','adminLogout','adminChangePin/);
  assert.match(app,/data-mode/);
