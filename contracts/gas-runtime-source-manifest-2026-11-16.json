@@ -37,8 +37,8 @@
     },
     {
       "file": "Code.gs",
-      "github_blob_sha": "1ada512c6a17d9a983cbb8f69fece76bab904db9",
-      "bytes": 169486,
+      "github_blob_sha": "fbe6fa5f1686c50d7d0d011a39ce143053379ebf",
+      "bytes": 170833,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
@@ -55,8 +55,8 @@
     },
     {
       "file": "Diagnostics.gs",
-      "github_blob_sha": "697483258b3cbf72f8f4c522a68902f6a151deed",
-      "bytes": 22781,
+      "github_blob_sha": "ddc583a10ae5cc8d2f94d022da3891334a6b49d9",
+      "bytes": 22819,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
