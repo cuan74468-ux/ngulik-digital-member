@@ -33,7 +33,7 @@ function preview(query=''){
 }
 test('public hub is a calm mobile-first entry with accessible product navigation',()=>{
   const h=preview(),html=h.nodes.screen.innerHTML;
-  for(const key of ['nh-home-minimal','ngd-journey-stage','public-hero-copy','data-route="katalog"'])
+  for(const key of ['nh-home-minimal','ngd-journey-stage','public-hero-copy','ngd-home-service','Baca eBook Gratis','Masuk Kelas Gratis'])
     assert.ok(html.includes(key),key);
   assert.match(html,/Makin Mudah Ditemukan/);
   assert.doesNotMatch(html,/class="nh-grid"|class="nh-rail"/);
@@ -41,10 +41,10 @@ test('public hub is a calm mobile-first entry with accessible product navigation
 });
 test('guest learning page explains Chapter 1 while leaving real LMS locked',()=>{
   const h=preview();h.go('belajar');
-  assert.match(h.nodes.screen.innerHTML,/Google Profil Bisnis/);
-  assert.match(h.nodes.screen.innerHTML,/WhatsApp Business/);
-  assert.match(h.nodes.screen.innerHTML,/Lanjutkan perjalanan di ruang member/);
-  assert.match(h.nodes.screen.innerHTML,/data-route="login"/);
+  assert.match(h.nodes.screen.innerHTML,/Baca eBook Gratis/);
+  assert.match(h.nodes.screen.innerHTML,/Masuk Kelas Gratis/);
+  assert.match(h.nodes.screen.innerHTML,/ozzbygx3/);
+  assert.doesNotMatch(h.nodes.screen.innerHTML,/Masuk untuk membuka/);
   assert.doesNotMatch(h.nodes.screen.innerHTML,/data-lms-action="complete"/);
   assert.equal(h.apiCalls.length,0);
 });
