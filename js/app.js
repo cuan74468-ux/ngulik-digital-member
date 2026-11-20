@@ -437,14 +437,9 @@ const offerCategoryLabel=p=>{
 // This is presentation routing only; original prices, backend, and ledger remain unchanged.
 const coreServiceConsultationIds=new Set(['P-3IN1','P-INTEGRASI-GAS','P-VIDEO-AI']);
 const isCoreServiceConsultation_=p=>coreServiceConsultationIds.has(String(p?.product_id||''));
-// UI wording only: keep original catalog data, prices and checkout behavior.
-const coreOfferUiCopy_={
-  'P-3IN1':{title:'Website & Katalog Online',description:'Tampilkan produk usaha Anda di website yang mudah dibagikan.'},
-  'P-INTEGRASI-GAS':{title:'Aplikasi Kasir & Catatan Usaha',description:'Catat penjualan dan pekerjaan harian lewat Google Sheets.'},
-  'P-VIDEO-AI':{title:'Jasa Video Iklan',description:'Buat video singkat untuk promosi produk Anda.'}
-};
-const offerUiTitle_=p=>coreOfferUiCopy_[String(p?.product_id||'')]?.title||p?.nama||'Produk';
-const offerUiDescription_=p=>coreOfferUiCopy_[String(p?.product_id||'')]?.description||p?.deskripsi||'';
+// Product names and descriptions always come from the Admin-managed catalog.
+const offerUiTitle_=p=>String(p?.nama||'Produk');
+const offerUiDescription_=p=>String(p?.deskripsi||'');
 const isPublicQaOffer_=p=>
   String(p?.product_id||'')==='P-B36AA0054926'||
   String(p?.sumber_produk||'').toUpperCase()==='QA_STAGING_TEST';
@@ -457,8 +452,9 @@ function viewPublicMarketplace(list){
     (!search||String(p.nama||'').toLocaleLowerCase('id-ID').includes(search)||
       String(p.deskripsi||'').toLocaleLowerCase('id-ID').includes(search)||
       offerCategoryLabel(p).toLocaleLowerCase('id-ID').includes(search)));
-  if(sort==='price-asc')shown=[...shown].sort((a,b)=>(Number(a.harga)||0)-(Number(b.harga)||0));
-  if(sort==='price-desc')shown=[...shown].sort((a,b)=>(Number(b.harga)||0)-(Number(a.harga)||0));
+  // Prices may arrive as "Rp99.000" from Sheets; sort with the same safe parser used by checkout.
+  if(sort==='price-asc')shown=[...shown].sort((a,b)=>(moneyValue(a.harga)??Number.POSITIVE_INFINITY)-(moneyValue(b.harga)??Number.POSITIVE_INFINITY));
+  if(sort==='price-desc')shown=[...shown].sort((a,b)=>(moneyValue(b.harga)??Number.NEGATIVE_INFINITY)-(moneyValue(a.harga)??Number.NEGATIVE_INFINITY));
   if(sort==='name')shown=[...shown].sort((a,b)=>String(a.nama||'').localeCompare(String(b.nama||''),'id'));
   const banner=window.NGD_CONTENT_UI?.hero(state.siteContent,'catalog')||
     '<section class="market-hero-fallback" aria-label="Selamat datang di marketplace Ngulik Digital">'+
@@ -480,30 +476,43 @@ function viewPublicMarketplace(list){
     '</select></label></div>';
   const cards=shown.map(p=>{
     const kind=offerCategory(p);
-    const valid=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
+    const price=moneyValue(p.harga);
+    const valid=supportedSaleTypes.has(String(p.tipe))&&price!==null&&price>0;
     const manualFirst=isCoreServiceConsultation_(p);
     const enabled=valid&&config.paymentsEnabled===true&&!manualFirst;
     const consult=(manualFirst||!enabled)?consultationUrl(p):'';
-    const cover=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'market-product-image',p.nama);
-    const action=manualFirst?
-      (consult?'<a class="market-product-action" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer">Tanya via WhatsApp '+icon('arrow')+'</a>':
+    const freeUrl=price===0&&String(p.product_id)==='P-EBOOK'?NGD_FREE_EBOOK_URL:
+      price===0&&String(p.product_id)==='P-CLASS-CH1'?NGD_FREE_CLASSROOM_URL:'';
+    const action=freeUrl?
+      '<a class="market-product-action" href="'+esc(freeUrl)+'" target="_blank" rel="noopener noreferrer">Buka gratis '+icon('arrow')+'</a>':
+      manualFirst?
+      (consult?'<a class="market-product-action" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer">Chat WhatsApp '+icon('arrow')+'</a>':
        '<button type="button" class="market-product-action" disabled>Hubungi admin</button>'):
       enabled?
       '<button type="button" class="market-product-action" data-buy="'+idSafe(p.product_id)+'">Beli sekarang '+icon('arrow')+'</button>':
       consult?'<a class="market-product-action" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer">Tanya via WhatsApp '+icon('arrow')+'</a>':
       '<button type="button" class="market-product-action" disabled>Belum tersedia</button>';
+    const badge=price===0?'Gratis':manualFirst?'Konsultasi':
+      Number(p.durasi_hari)>0?esc(Number(p.durasi_hari))+' hari':
+      String(p.tipe)==='LISENSI_SEKALI'?'Sekali bayar':
+      ['TOPUP_KREDIT','TOPUP_TOKEN'].includes(String(p.tipe))?'Isi Token':'';
     const benefits=(Number(p.kredit_diberikan)>0?'<span>'+esc(Number(p.kredit_diberikan))+' token</span>':'')+
-      (Number(p.durasi_hari)>0?'<span>'+esc(Number(p.durasi_hari))+' hari</span>':'');
+      (Number(p.durasi_hari)>0?'<span>'+esc(Number(p.durasi_hari))+' hari akses</span>':'');
+    const cover=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'market-product-image',offerUiTitle_(p));
+    const fallbackIcon=kind==='ai'?'spark':kind==='belajar'?'book':kind==='jasa'?'gift':'store';
     return '<article class="market-product-card" aria-label="'+esc(offerUiTitle_(p))+'">'+
-      '<div class="market-product-media">'+
-        (cover||'<div class="market-product-placeholder" aria-hidden="true"><span>'+esc(String(p.nama||'N').slice(0,1).toUpperCase())+'</span></div>')+
+      '<div class="market-product-media market-media-'+esc(kind)+'">'+
+        (cover||'<div class="market-product-placeholder" aria-hidden="true"><span class="market-product-placeholder-icon">'+icon(fallbackIcon)+'</span><span class="market-product-placeholder-name">'+esc(offerCategoryLabel(p))+'</span></div>')+
+        (badge?'<span class="market-product-badge">'+badge+'</span>':'')+
         '<span class="market-product-category">'+esc(offerCategoryLabel(p))+'</span>'+
       '</div><div class="market-product-body">'+
+        '<span class="market-product-merchant">Ngulik Digital</span>'+
         '<h3>'+esc(offerUiTitle_(p))+'</h3>'+
-        '<p class="market-product-description">'+esc(offerUiDescription_(p)||'Produk pilihan Ngulik Digital')+'</p>'+
+        '<p class="market-product-description">'+esc(offerUiDescription_(p)||'Lihat pilihan produk digital kami.')+'</p>'+
         (benefits?'<div class="market-product-benefits">'+benefits+'</div>':'')+
-        '<div class="market-product-bottom"><span class="market-product-price-label">Harga</span>'+
-        '<strong class="market-product-price">'+(valid?rupiah(p.harga):'Hubungi admin')+'</strong>'+action+'</div>'+
+        '<div class="market-product-bottom"><span class="market-product-price-label">'+(manualFirst?'Harga mulai dari':'Harga')+'</span>'+
+        '<strong class="market-product-price">'+(price===0?'Gratis':price!==null&&price>0?rupiah(p.harga):'Tanya harga')+'</strong>'+
+        action+'</div>'+
       '</div></article>';
   }).join('');
   return '<div class="market-page">'+
