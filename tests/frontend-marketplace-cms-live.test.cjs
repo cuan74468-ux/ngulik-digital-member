@@ -68,6 +68,7 @@ test('Admin product-photo shortcut reuses the existing authorized CMS',()=>{
     "state.adminCatalog=[{product_id:'P-POS',nama:'Kasir',deskripsi:'Kasir sederhana',tipe:'LISENSI_SEKALI',harga:149000,aktif:false,urut:1,revision:'test'}];"+
     "state.route='produk';render()",h.ctx);
   assert.match(h.nodes.screen.innerHTML,/data-catalog-image="P-POS"/);
+  assert.match(app,/\[data-catalog-image\],\[data-catalog-active\]/);
   const html=h.ctx.window.NGD_CONTENT_UI.admin({
     authorized:true,items:[],products:[{product_id:'P-POS',nama:'Kasir'}],
     defaultPlacement:'P-POS',enabled:false
