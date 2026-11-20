@@ -52,7 +52,7 @@ test('both public and staging invalidate cache for new marketplace sources',()=>
     assert.ok(html.indexOf('marketplace-public.css')>html.indexOf('portfolio-adaptation.css'));
   }
   assert.match(publicHtml,/app\.js\?v=20261120-marketplace-retail-v5/);
-  assert.match(stagingHtml,/app\.js\?v=20261120-scalev-hosted-v1/);
+  assert.match(stagingHtml,/app\.js\?v=20261120-qris-manual-v1/);
 });
 test('existing member route and real commerce backend remain in place',()=>{
   assert.match(app,/function viewCatalog\(\)/);
