@@ -125,6 +125,35 @@ test('STAGING regression: a genuinely new 3-in-1 paid order still extends the pr
   assert.ok(new Date(h.member.akses_3in1_sampai).getTime()-first>=29*86400000);
   assert.equal(h.rows.affiliate_commissions.length,2);
 });
+test('STAGING regression: partial subscription failure after entitlement update cannot double-grant',()=>{
+  const h=sandbox(launch.find(x=>x.id==='P-3IN1'));
+  const normalUpdate=h.ctx.updateRow_;
+  h.ctx.updateRow_=(table,row,patch)=>{
+    if(table==='orders'&&patch.status==='FULFILLED')throw Error('SIMULATED_ORDER_WRITE_FAILURE');
+    return normalUpdate(table,row,patch);
+  };
+  assert.throws(()=>h.paid(),/SIMULATED_ORDER_WRITE_FAILURE/);
+  const granted=new Date(h.member.akses_3in1_sampai).getTime();
+  assert.ok(granted>Date.now());
+  assert.equal(h.order.status,'PAID');
+  assert.equal(h.audits.filter(x=>x.action==='SUBSCRIPTION_ENTITLEMENT_CLAIMED').length,1);
+  assert.throws(()=>h.paid(),/pernah diproses/i);
+  assert.equal(new Date(h.member.akses_3in1_sampai).getTime(),granted);
+  assert.equal(h.audits.filter(x=>x.action==='SUBSCRIPTION_ENTITLEMENT_CLAIMED').length,1);
+});
+test('STAGING regression: a failed member update leaves entitlement untouched and retry needs review',()=>{
+  const h=sandbox(launch.find(x=>x.id==='P-3IN1'));
+  const normalUpdate=h.ctx.updateRow_;
+  h.ctx.updateRow_=(table,row,patch)=>{
+    if(table==='members')throw Error('SIMULATED_MEMBER_WRITE_FAILURE');
+    return normalUpdate(table,row,patch);
+  };
+  assert.throws(()=>h.paid(),/SIMULATED_MEMBER_WRITE_FAILURE/);
+  assert.equal(h.member.akses_3in1_sampai,'');
+  assert.equal(h.audits.filter(x=>x.action==='SUBSCRIPTION_ENTITLEMENT_CLAIMED').length,1);
+  assert.throws(()=>h.paid(),/pernah diproses/i);
+  assert.equal(h.member.akses_3in1_sampai,'');
+});
 test('STAGING regression: self-referral blocks the commission and audits the decision once',()=>{
   const h=sandbox(launch[0],{referrer:'M-BUYER'});
   h.paid(); h.paid();
