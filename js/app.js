@@ -444,6 +444,8 @@ const isCoreServiceConsultation_=p=>coreServiceConsultationIds.has(String(p?.pro
 // Member-side Mayar checkout only becomes visible when backend STAGING
 // reports verified merchant payout readiness. Backend re-verifies every gate.
 function mayarCheckoutEligible_(product){
+  // Merchant provider checkout permanently parked: QRIS_STATIS is canonical.
+  return false;
   const id=String(product?.product_id||'');
   return logged()&&!isAdmin()&&String(location.pathname||'').includes('/staging/')&&
     config.apiUrl===window.NGD_STAGING_CONFIG?.apiUrl&&
@@ -1169,11 +1171,11 @@ function viewCheckout(){
   const paid=status==='PAID'||status==='FULFILLED';
   const finished=['EXPIRED','CANCELLED','REFUNDED'].includes(status);
   const qrRaw=String(o.qris_gambar_path||config.qrisImageUrl||'');
-  const bundledPlaceholder=/(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrRaw)&&
-    config.qrisOwnerImageApproved!==true;
+  const bundledPlaceholder=config.qrisOwnerImageApproved!==true||
+    /(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrRaw);
   const qrUrl=(()=>{try{const u=new URL(qrRaw,location.href);return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';}catch{return '';}})();
   const merchant=String(o.qris_atas_nama||config.qrisMerchant||'');
-  const officialQr=!!(qrUrl&&merchant&&!bundledPlaceholder);
+  const officialQr=!!(qrUrl&&merchant&&!bundledPlaceholder&&String(o.metode)==='QRIS_STATIS');
   const paymentLink=(()=>{try{const u=new URL(String(o.gateway_payment_url||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';}catch{return '';}})();
   let adminWa=String(o.wa_admin||'').replace(/\D/g,'');
   if(adminWa.startsWith('0'))adminWa='62'+adminWa.slice(1);
@@ -1199,9 +1201,11 @@ function viewCheckout(){
       '<a class="btn btn-primary btn-wide" href="'+esc(paymentLink)+'" target="_blank" rel="noopener noreferrer">Buka pembayaran resmi '+icon('arrow')+'</a>'+
       '<p class="checkout-note">Pastikan nama penerima dan nominal benar.</p></div>':
     officialQr?
-      '<div class="checkout-qr"><strong>QRIS resmi</strong><img data-qris-image src="'+esc(qrUrl)+'" alt="QRIS penerima '+esc(merchant)+'" width="260" height="260">'+
+      '<div class="checkout-qr"><strong>QRIS DANA Bisnis resmi</strong><img data-qris-image src="'+esc(qrUrl)+'" alt="QRIS penerima '+esc(merchant)+'" width="260" height="260">'+
       '<div data-qris-fallback class="qris-fallback" hidden>Gambar QRIS gagal dimuat. Hubungi Admin sebelum membayar.</div>'+
-      '<strong>'+esc(merchant)+'</strong><p class="checkout-note">Pastikan rekening tujuan dan nominal sudah benar.</p></div>':
+      '<strong>'+esc(merchant)+'</strong><p class="checkout-note">Bisa dibayar dari aplikasi bank atau e-wallet yang mendukung QRIS. QRIS ini statis: masukkan total pembayaran persis sesuai pesanan, termasuk kode unik. Simpan QRIS lalu pindai dari aplikasi pembayaran Anda.</p>'+ 
+      '<a class="btn btn-secondary btn-wide" href="'+esc(qrUrl)+'" download="qris-linggau-ai-studio.jpg">Simpan gambar QRIS</a>'+ 
+      '<a class="btn btn-ghost btn-wide" href="'+esc(qrUrl)+'" target="_blank" rel="noopener noreferrer">Perbesar QRIS</a></div>':
       '<div class="checkout-manual-panel" role="note"><strong>QRIS Belum Tersedia</strong>'+
       '<p>Minta petunjuk pembayaran dari Admin. <strong>Jangan transfer sebelum menerima rekening resmi dari Admin.</strong></p>'+
       '<ol><li>Minta instruksi pembayaran lewat WhatsApp Admin.</li>'+
@@ -1212,7 +1216,7 @@ function viewCheckout(){
     (open?'Minta instruksi pembayaran via WhatsApp':'Hubungi Admin tentang pesanan')+' '+icon('arrow')+'</a>':
     '<p class="checkout-note">WhatsApp belum tersedia. Gunakan menu Bantuan untuk meminta tindak lanjut.</p>';
   const financeBlocked=state.workspaceInfo&&(state.workspaceInfo.finance_enabled===false||state.workspaceInfo.mutations_enabled===false);
-  const canConfirm=open&&paymentEnabled()&&!financeBlocked&&!!adminChat;
+  const canConfirm=open&&paymentEnabled()&&!financeBlocked&&(officialQr||!!paymentLink);
   return '<div class="checkout-backdrop"><section class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-title">'+
     '<header class="checkout-heading"><div><p class="eyebrow">NGULIK DIGITAL / PESANAN</p>'+
     '<h1 id="checkout-title">Detail Pesanan</h1><p>Order '+esc(o.order_id)+'</p></div>'+
@@ -1227,7 +1231,7 @@ function viewCheckout(){
     (open?'<p class="checkout-countdown" id="checkout-countdown" data-expiry="'+esc(o.expires_at||'')+'">Batas pembayaran: '+timer+'</p>':'')+
     '<div class="checkout-status-summary">'+safeBadge(status)+'<p>'+esc(stateNote)+'</p></div></section>'+
     '<section><h2>'+ (open?'Langkah pembayaran':'Status dan bantuan')+'</h2>'+paymentSection+
-    (open?'<div class="checkout-steps"><strong>Setelah Transfer</strong><p>Setelah transfer, minta Admin memeriksa pembayaran Anda.</p></div>':'')+
+    (open&&officialQr?'<div class="checkout-steps"><strong>Setelah Bayar</strong><p>Tekan Saya Sudah Bayar. Admin akan mencocokkan mutasi DANA Bisnis dan nominal tepat sebelum pesanan diproses.</p></div>':'')+
     askAdmin+
     (canConfirm?'<button class="btn btn-primary btn-wide" type="button" data-action="confirm-payment">Saya Sudah Bayar</button>':'')+
     (open&&(!paymentEnabled()||financeBlocked)?'<p class="checkout-note"><strong>Konfirmasi pembayaran belum tersedia.</strong> Jangan transfer sebelum memperoleh konfirmasi layanan dari Admin.</p>':'')+
@@ -2324,14 +2328,16 @@ async function confirmPayment(){
   if(!Number.isFinite(expiry)||expiry<=Date.now())
     return toast('Batas pembayaran terlewati. Hubungi Admin jika sudah membayar.',true);
   const qrRaw=String(order.qris_gambar_path||config.qrisImageUrl||'');
-  const placeholder=/(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrRaw)&&
-    config.qrisOwnerImageApproved!==true;
-  const officialQr=Boolean(qrRaw&&!placeholder);
+  const placeholder=config.qrisOwnerImageApproved!==true||
+    /(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrRaw);
+  const officialQr=Boolean(qrRaw&&!placeholder&&order.metode==='QRIS_STATIS');
+  if(!officialQr&&order.metode==='QRIS_STATIS')
+    return toast('QRIS resmi belum diverifikasi untuk pembayaran. Jangan transfer.',true);
   const img=document.querySelector('[data-qris-image]');
   if(officialQr&&img&&(!img.complete||!img.naturalWidth))
     return toast('QRIS belum berhasil ditampilkan. Hubungi Admin untuk pembayaran manual.',true);
-  const evidenceText='Saya sudah BENAR-BENAR mengirim '+rupiah(order.total_bayar)+
-    ' ke rekening/QRIS tujuan resmi yang diberikan Admin untuk order '+order.order_id+
+  const evidenceText='Saya sudah BENAR-BENAR membayar '+rupiah(order.total_bayar)+
+    ' melalui QRIS DANA Bisnis Linggau AI Studio untuk order '+order.order_id+
     '. Saya paham konfirmasi ini BUKAN bukti dana diterima dan token belum otomatis ditambahkan. '+
     'Admin akan mencocokkan mutasi pembayaran. Lanjutkan permintaan verifikasi?';
   if(!confirm(evidenceText))return;
@@ -2928,6 +2934,9 @@ document.addEventListener('click',async(e)=>{
     return;
   }
   if(target.hasAttribute('data-payment-admin')){
+    // Legacy quick-approve lacks the exact amount and verified settlement channel
+    // demanded by the backend. Only the detailed review form may approve funds.
+    if(target.dataset.paymentAdmin==='approve')return toast('Gunakan formulir Periksa dana & tindak lanjuti untuk persetujuan.',true);
     if(!isAdmin()||!paymentEnabled())return toast('Aksi pembayaran belum aktif.',true);
     const order=state.adminOrders.find(o=>o.order_id===target.dataset.orderId);
     if(!order||order.status!=='MENUNGGU_VERIFIKASI')return toast('Muat ulang antrean pembayaran.',true);
