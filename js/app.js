@@ -198,7 +198,7 @@ function activatePreview(){
 
 const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,qa:false,
-  info:null,catalog:[],siteContent:[],adminContent:[],contentEditId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
+  info:null,catalog:[],siteContent:[],adminContent:[],contentEditId:'',contentPresetProductId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
   affiliates:null,partnerShelf:[],partnerShelfLoaded:false,waitlist:[],members:[],adminOrders:[],adminSummary:null,
   reconciliation:null,selectedProduct:null,lastOrder:null,orderDetailLoading:false,checkoutReturnRoute:'katalog',loading:false,
   memberProducts:[],supportTickets:[],supportReleases:[],supportOverview:null,
@@ -510,7 +510,7 @@ function viewPublicMarketplace(list){
         '<h3>'+esc(offerUiTitle_(p))+'</h3>'+
         '<p class="market-product-description">'+esc(offerUiDescription_(p)||'Lihat pilihan produk digital kami.')+'</p>'+
         (benefits?'<div class="market-product-benefits">'+benefits+'</div>':'')+
-        '<div class="market-product-bottom"><span class="market-product-price-label">'+(manualFirst?'Harga mulai dari':'Harga')+'</span>'+
+        '<div class="market-product-bottom"><span class="market-product-price-label">Harga katalog</span>'+
         '<strong class="market-product-price">'+(price===0?'Gratis':price!==null&&price>0?rupiah(p.harga):'Tanya harga')+'</strong>'+
         action+'</div>'+
       '</div></article>';
@@ -523,7 +523,8 @@ function viewPublicMarketplace(list){
     '<section class="market-shopping" aria-label="Belanja produk digital">'+
       '<div class="market-section-title"><h2>Pilih sesuai kebutuhan</h2><span>Cari yang cocok</span></div>'+
       filterBar+controls+
-      '<div class="market-results-header"><h2>Produk dan jasa</h2><span aria-live="polite">'+shown.length+' produk ditemukan</span></div>'+
+      '<div class="market-results-header"><h2>Produk dan jasa</h2><span aria-live="polite">'+shown.length+' produk ditemukan</span>'+
+      '<button type="button" class="market-refresh" data-market-refresh aria-label="Perbarui katalog">Perbarui</button></div>'+
       (cards?'<div class="market-product-grid">'+cards+'</div>':
         '<div class="market-no-results"><h3>Produk Tidak Ditemukan</h3><p>Coba kata kunci atau kategori lain.</p>'+
         '<button type="button" data-market-reset>Hapus filter</button></div>')+
@@ -1334,6 +1335,7 @@ function viewAdminCatalog(){
       (supportedSaleTypes.has(p.tipe)?'':' · Checkout belum didukung')+'</p></div>'+
       '<div class="catalog-admin-controls"><button class="btn btn-secondary btn-sm" type="button" '+
       'data-catalog-edit="'+esc(p.product_id)+'">Edit</button>'+
+      '<button class="btn btn-secondary btn-sm" type="button" data-catalog-image="'+esc(p.product_id)+'">Foto produk</button>'+
       '<button class="btn btn-ghost btn-sm" type="button" data-catalog-active="'+esc(p.product_id)+'" '+
       'aria-label="'+(p.aktif?'Nonaktifkan':'Aktifkan')+' '+esc(p.nama)+'" '+
       (!canWrite?'disabled title="Pengelolaan katalog belum diaktifkan"':'')+'>'+
@@ -1377,7 +1379,7 @@ const contentWriteEnabled=()=>isWriteEnabled()&&config.contentEnabled===true;
 function viewAdminContent(){
   return window.NGD_CONTENT_UI?
     window.NGD_CONTENT_UI.admin({authorized:isAdmin(),items:state.adminContent,
-      selectedId:state.contentEditId,products:state.catalog,enabled:contentWriteEnabled()}):
+      selectedId:state.contentEditId,defaultPlacement:state.contentPresetProductId,products:state.catalog,enabled:contentWriteEnabled()}):
     empty('Editor belum tersedia','Komponen pengelolaan konten belum termuat.');
 }
 const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
@@ -1802,6 +1804,7 @@ function render(){
     (window.NGD_CONTENT_UI?.cover(state.siteContent,state.route)||''):'')+screen;
   syncCheckoutClock_();
   syncHeroRotation_();
+  syncMarketplacePolling_();
   document.title=(screens[state.route]?.[0]||'Beranda')+' — Ngulik Digital';
 }
 function go(route){
@@ -1826,6 +1829,35 @@ async function refreshPublic(){
   render();
   if(info.status==='rejected'&&catalog.status==='rejected')
     toast('Informasi terbaru belum dapat dimuat. Coba muat ulang halaman.',true);
+}
+// Near-real-time sync: two read-only GAS calls while the catalogue is visible.
+// No order creation, member data access, or mutations.
+let marketplacePoll_=null,marketplaceUpdating_=false;
+async function refreshMarketplaceData_(){
+  if(marketplaceUpdating_||state.qa||!isConnected())return false;
+  marketplaceUpdating_=true;
+  try{
+    const [catalog,content]=await Promise.allSettled([
+      api('getKatalog'),api('getPublicContent')
+    ]);
+    const okCatalog=catalog.status==='fulfilled'&&Array.isArray(catalog.value);
+    const okContent=content.status==='fulfilled'&&Array.isArray(content.value);
+    if(okCatalog)state.catalog=catalog.value;
+    if(okContent)state.siteContent=content.value;
+    if(state.route==='katalog'&&(okCatalog||okContent))render();
+    return okCatalog&&okContent;
+  }finally{marketplaceUpdating_=false;}
+}
+function syncMarketplacePolling_(){
+  if(marketplacePoll_!==null&&typeof clearInterval==='function'){
+    clearInterval(marketplacePoll_);marketplacePoll_=null;
+  }
+  if(state.route!=='katalog'||state.qa||!isConnected()||
+    typeof setInterval!=='function')return;
+  marketplacePoll_=setInterval(()=>{
+    if(document.hidden||marketplaceUpdating_)return;
+    void refreshMarketplaceData_().catch(()=>{});
+  },90000);
 }
 async function restoreSession(){
   if(state.qa||!isConnected()||!state.token)return;
@@ -1876,7 +1908,14 @@ async function loadRoute(route){
       if(responses[1].status==='fulfilled')state.lmsCourses=responses[1].value||[];
       if(responses[2].status==='fulfilled')state.lmsEnrollments=responses[2].value||[];
     }
-    if(route==='konten'&&isAdmin())state.adminContent=await api('adminListContent',{},token);
+    if(route==='konten'&&isAdmin()){
+      state.adminContent=await api('adminListContent',{},token);
+      if(state.contentPresetProductId){
+        const photo=state.adminContent.find(x=>x.kind==='PRODUCT_IMAGE'&&
+          x.placement===state.contentPresetProductId&&x.status!=='ARCHIVED');
+        state.contentEditId=photo?.content_id||'';
+      }
+    }
     if(route==='produk'&&isAdmin())state.adminCatalog=await api('adminListCatalog',{},token);
     if(route==='jasa'&&!isAdmin())state.services=await api('getMyServiceRequests',{},token);
     if(route==='layanan'&&isAdmin())state.services=await api('adminListServiceRequests',{},token);
@@ -2797,6 +2836,14 @@ document.addEventListener('click',async(e)=>{
     }
     return;
   }
+  if(e.target.closest('[data-market-refresh]')){
+    if(!isConnected()||state.qa)return;
+    const button=e.target.closest('[data-market-refresh]');
+    button.disabled=true;
+    const ok=await refreshMarketplaceData_();
+    if(!ok){button.disabled=false;toast('Belum bisa memuat katalog terbaru.',true);}
+    return;
+  }
   if(e.target.closest('[data-market-reset]')){
     state.marketplaceSearch='';state.catalogFilter='semua';state.marketplaceSort='default';
     render();return;
@@ -2888,6 +2935,14 @@ document.addEventListener('click',async(e)=>{
     state.serviceKind='VIDEO_AI';
     go('jasa');
   }
+  else if(target.hasAttribute('data-catalog-image')){
+    if(!isAdmin())return;
+    const id=String(target.dataset.catalogImage||'');
+    if(!adminCatalogItems().some(p=>p.product_id===id))return;
+    state.contentPresetProductId=id;state.contentEditId='';
+    state.contentRequestId=null;
+    go('konten');
+  }
   else if(target.hasAttribute('data-catalog-edit')){
     if(!isAdmin())return;
     state.catalogEditId=target.dataset.catalogEdit;
@@ -2922,7 +2977,12 @@ document.addEventListener('click',async(e)=>{
     state.catalogFilter=target.dataset.catalogFilter;
     if(state.route!=='katalog')go('katalog');else render();
   }
-  else if(target.hasAttribute('data-route'))go(target.dataset.route);
+  else if(target.hasAttribute('data-route')){
+    if(target.dataset.route==='konten'){
+      state.contentPresetProductId='';state.contentEditId='';
+    }
+    go(target.dataset.route);
+  }
   else if(target.hasAttribute('data-ticket-id')){
     state.selectedTicketId=target.dataset.ticketId;
     if(isConnected())state.ticketDetail=null;
