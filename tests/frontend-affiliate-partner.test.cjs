@@ -60,7 +60,7 @@ test('responsive, light partner CSS loads last for public and staging',()=>{
   assert.doesNotMatch(css,/#2F6BFF|#4361ee/i);
   for(const html of [publicHtml,stagingHtml]){
     assert.match(html,/affiliate-partner\.css\?v=20261117-affiliate-v1/);
-    assert.match(html,/js\/app\.js\?v=20261120-marketplace-retail-v4/);
+    assert.match(html,/js\/app\.js\?v=20261120-marketplace-retail-v5/);
     assert.ok(html.indexOf('affiliate-partner.css')>html.indexOf('portfolio-adaptation.css'));
   }
 });
