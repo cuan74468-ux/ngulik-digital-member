@@ -97,6 +97,23 @@ for(const sku of launch){
     }
   });
 }
+
+test('STAGING characterization: replay currently extends paid 3-in-1 twice (P0 gap)',()=>{
+  const h=sandbox(launch.find(x=>x.id==='P-3IN1'));
+  h.paid();
+  const first=new Date(h.member.akses_3in1_sampai).getTime();
+  h.paid();
+  const second=new Date(h.member.akses_3in1_sampai).getTime();
+  // This detects the CURRENT defect, not the desired acceptance condition.
+  assert.ok(second-first>=29*86400000,'Unexpectedly changed 3-in-1 retry semantics');
+  assert.equal(h.rows.affiliate_commissions.length,1);
+});
+test('STAGING characterization: self-referral currently creates commission (P0 gap)',()=>{
+  const h=sandbox(launch[0],{referrer:'M-BUYER'});
+  h.paid();
+  assert.equal(h.rows.affiliate_commissions.length,1);
+  assert.equal(h.rows.affiliate_commissions[0].referrer_id,'M-BUYER');
+});
 test('STAGING no referred member means no commission',()=>{
   const h=sandbox(launch[0],{referrer:''});h.paid();
   assert.equal(h.rows.affiliate_commissions.length,0);
