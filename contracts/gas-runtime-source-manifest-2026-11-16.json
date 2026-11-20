@@ -4,7 +4,7 @@
   "purpose": "Source-to-runtime manifest; NOT an assertion that GAS source has been synchronized.",
   "repository": "cuan74468-ux/ngulik-digital-member",
   "source_snapshot_branch": "main",
-  "source_snapshot_commit": "c673259a46e0e0cb8114f94f87fe01dacd14c4f4",
+  "source_snapshot_commit": "574e66828a5e72aac0aa78eb47aa94b641bca6f6",
   "source_content_hash_kind": "Git blob SHA1; not an Apps Script editor fingerprint",
   "environment": "STAGING",
   "verified_editor_functions": [
@@ -19,7 +19,7 @@
       "owner_log_date": "2026-11-15"
     }
   ],
-  "unverified": "GitHub source fingerprints refreshed 2026-11-20 for all 15 GAS modules; NOT a deployed GAS proof. Apps Script editor sync is NOT yet verified by operator execution/readback. NOT yet verified by operator execution: runtime source equivalence, QA CRUD, QRIS/AI real calls, Scalev checkout/reconciliation. No Script Properties or database are changed by this manifest.",
+  "unverified": "GitHub source fingerprints refreshed 2026-11-20 for the current source code only. NOT proof of GAS editor, live STAGING, or production deployment parity. Apps Script editor sync is NOT yet verified by operator execution/readback. No database, real payment, or Script Properties changed by this manifest.",
   "release_gate": "OWNER_EXECUTION_AUTHORIZED",
   "external_providers": "CONFIGURATION_PENDING",
   "modules": [
@@ -37,8 +37,8 @@
     },
     {
       "file": "Code.gs",
-      "github_blob_sha": "bd279ed0854bc0c52eb4281280abe12c63319ab9",
-      "bytes": 159937,
+      "github_blob_sha": "1a8b5f35c30712484b1f1b11c3e4b603d33e2990",
+      "bytes": 161216,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
