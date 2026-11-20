@@ -19,7 +19,7 @@
       "owner_log_date": "2026-11-15"
     }
   ],
-  "unverified": "GitHub source fingerprints refreshed 2026-11-20. Source tests and source hash are NOT proof that Apps Script editor or GAS STAGING deployment is synchronized. No Script Properties, Google Sheets data, external provider, or financial runtime has been modified by this manifest.",
+  "unverified": "GitHub source fingerprints refreshed 2026-11-20 (source-only evidence). Apps Script editor sync is NOT yet verified by operator execution/readback. NOT yet verified by operator execution: GAS STAGING deployment parity, checkout/payment runtime, and Scalev integration. Source tests and hashes do not prove a deployed service; no Google Sheets data, Script Properties, or financial runtime were modified.",
   "release_gate": "OWNER_EXECUTION_AUTHORIZED",
   "external_providers": "CONFIGURATION_PENDING",
   "modules": [
