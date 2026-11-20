@@ -30,7 +30,7 @@ test('30-day first click retained across reload and second inviter cannot overwr
 });
 test('first inviter captured in registration payload, never URL-only at submit',()=>{
   assert.match(app,/const r=captureFirstInviter_\(\);\s*if\(r\)payload.ref=r;/);
-  assert.match(app,/async function init\(\)\{\s*captureFirstInviter_\(\);/);
+  assert.match(app,/async function init\(\)\{\s*if\(routeFreeDoor_\(\)\)return;\s*captureFirstInviter_\(\);/);
 });
 test('member first-inviter field is immutable after first assignment',()=>{
   const body=section(gas,'function updateRow_(name, rowNumber, patch) {','function findRows_');
