@@ -1838,7 +1838,7 @@ function affiliateDashboard_(m) {
   return {kode_referral:m.kode_referral,link:'https://cuan74468-ux.github.io/ngulik-digital-member/?ref='+m.kode_referral,klik:findRows_('klik_log',function(r){return r.referrer_id===m.member_id&&r.tipe==='REFERRAL';}).length,pendaftar:findRows_('members',function(r){return r.referred_by===m.member_id;}).length,konversi:all.length,saldo:sums,komisi:all};
 }
 function ngdDanaDestination_(raw){
-  var phone=String(raw||'').replace(/[\\s()+-]/g,'');
+  var phone=String(raw||'').replace(/[\s()+-]/g,'');
   if(/^08[0-9]{8,11}$/.test(phone))phone='62'+phone.slice(1);
   require_(/^628[0-9]{8,11}$/.test(phone),'VALIDATION',
     'Masukkan nomor DANA aktif dengan format 08xxxxxxxxxx.');
@@ -2510,7 +2510,7 @@ function apiRouter_(action,token,p,requestId) {
         require_(p.dana_sudah_ditransfer===true&&p.penerima_terverifikasi===true,
           'RECONCILIATION_REQUIRED','Transfer dan penerima harus diverifikasi sebelum dicatat lunas.');
         var destination=String(c.payout_note||'');
-        require_(/^DANA:628[0-9]{8,11} \\| MENUNGGU_TRANSFER$/.test(destination),
+        require_(/^DANA:628[0-9]{8,11} \| MENUNGGU_TRANSFER$/.test(destination),
           'RECONCILIATION_REQUIRED','Tujuan DANA untuk pengajuan ini belum tercatat dengan benar.');
         require_(String(p.nomor_dana||'').trim()&&
           ngdDanaDestination_(p.nomor_dana)===destination.split(' | ')[0].slice(5),
