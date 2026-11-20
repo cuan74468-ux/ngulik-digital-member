@@ -437,6 +437,21 @@ const offerCategoryLabel=p=>{
 // This is presentation routing only; original prices, backend, and ledger remain unchanged.
 const coreServiceConsultationIds=new Set(['P-3IN1','P-INTEGRASI-GAS','P-VIDEO-AI']);
 const isCoreServiceConsultation_=p=>coreServiceConsultationIds.has(String(p?.product_id||''));
+/* Hosted Scalev checkout is STAGING-only until its merchant product URLs,
+ * onboarding and fulfillment controls have been verified. This does not
+ * create NGD orders, carry referrals, or prove receipt of funds.
+ * Production cannot activate it through URL parameters or catalog content. */
+function scalevCheckoutFor_(product){
+  if(config.paymentsEnabled!==true||!window.NGD_STAGING_CONFIG?.apiUrl||
+      config.apiUrl!==window.NGD_STAGING_CONFIG.apiUrl)return null;
+  return window.NGD_SCALEV_BRIDGE?.checkout(product,window.NGD_SCALEV_OFFERS)||null;
+}
+function scalevCheckoutButton_(offer,css){
+  return '<a class="'+css+'" href="'+esc(offer.url)+
+    '" target="_blank" rel="noopener noreferrer" data-scalev-hosted="'+esc(offer.sku)+
+    '">Bayar via Scalev '+icon('arrow')+'</a>';
+}
+
 // Product names and descriptions always come from the Admin-managed catalog.
 const offerUiTitle_=p=>String(p?.nama||'Produk');
 const offerUiDescription_=p=>String(p?.deskripsi||'');
@@ -479,12 +494,14 @@ function viewPublicMarketplace(list){
     const price=moneyValue(p.harga);
     const valid=supportedSaleTypes.has(String(p.tipe))&&price!==null&&price>0;
     const manualFirst=isCoreServiceConsultation_(p);
+    const scalev=valid?scalevCheckoutFor_(p):null;
     const enabled=valid&&config.paymentsEnabled===true&&!manualFirst;
     const consult=(manualFirst||!enabled)?consultationUrl(p):'';
     const freeUrl=price===0&&String(p.product_id)==='P-EBOOK'?NGD_FREE_EBOOK_URL:
       price===0&&String(p.product_id)==='P-CLASS-CH1'?NGD_FREE_CLASSROOM_URL:'';
     const action=freeUrl?
       '<a class="market-product-action" href="'+esc(freeUrl)+'" target="_blank" rel="noopener noreferrer">Buka gratis '+icon('arrow')+'</a>':
+      scalev?scalevCheckoutButton_(scalev,'market-product-action'):
       manualFirst?
       (consult?'<a class="market-product-action" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer">Chat WhatsApp '+icon('arrow')+'</a>':
        '<button type="button" class="market-product-action" disabled>Hubungi admin</button>'):
@@ -534,7 +551,10 @@ function viewPublicMarketplace(list){
         '<div class="market-no-results"><h3>Produk Tidak Ditemukan</h3><p>Coba kata kunci atau kategori lain.</p>'+
         '<button type="button" data-market-reset>Hapus filter</button></div>')+
     '</section>'+
-    '<p class="market-trust-note">Untuk pemesanan jasa, silakan chat Admin.</p>'+
+    '<p class="market-trust-note">'+
+      (shown.some(p=>scalevCheckoutFor_(p))?
+        'Pembayaran melalui checkout resmi Scalev diverifikasi sebelum layanan diaktifkan.':
+        'Untuk pemesanan jasa, silakan chat Admin.')+'</p>'+
   '</div>';
 }
 function viewPartnerShelf_(){
@@ -585,11 +605,13 @@ function viewCatalog(){
   const cards=shown.length?'<div class="catalog-grid">'+shown.map(p=>{
     const kind=offerCategory(p),safeSale=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
     const manualFirst=isCoreServiceConsultation_(p);
+    const scalev=safeSale?scalevCheckoutFor_(p):null;
     const allowed=safeSale&&config.paymentsEnabled===true&&!manualFirst;
     const consult=(manualFirst||!allowed)?consultationUrl(p):'';
     const label=allowed?'Beli Sekarang':safeSale?'Checkout sedang tidak tersedia':'Produk belum tersedia';
     const tooltip=safeSale?'Checkout belum tersedia pada konfigurasi saat ini':'Periksa ketersediaan produk';
-    const action=manualFirst?
+    const action=scalev?scalevCheckoutButton_(scalev,'btn btn-primary'):
+      manualFirst?
       (consult?'<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi '+esc(offerUiTitle_(p))+' melalui WhatsApp">Tanya via WhatsApp '+icon('arrow')+'</a>':
        '<button class="btn btn-primary" type="button" disabled>Hubungi admin</button>'):
       allowed?
