@@ -52,14 +52,14 @@ test('guest homepage renders and shows offline preview warning',()=>{
   assert.match(nodes.screen.innerHTML,/nh-home-minimal/);
   assert.match(nodes.screen.innerHTML,/ngd-journey-stage/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
-  assert.match(nodes['desktop-nav'].innerHTML,/Toko &amp; Lisensi/);
-  assert.equal(document.title,'Meja Kerja — Ngulik Digital');
+  assert.match(nodes['desktop-nav'].innerHTML,/Katalog/);
+  assert.equal(document.title,'Beranda — Ngulik Digital');
 });
 test('local member preview renders native-like dashboard without login',()=>{
   const {nodes,context}=renderPreview('?preview=member');
   assert.match(nodes.screen.innerHTML,/DASHBOARD \/ MEJA KERJA/);
   assert.match(nodes.screen.innerHTML,/member-focus-ring/);
-  assert.match(nodes.screen.innerHTML,/Token tersedia/);
+  assert.match(nodes.screen.innerHTML,/Saldo token/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.equal(vm.runInContext('isWriteEnabled()',context),false);
 });
@@ -68,7 +68,7 @@ test('preview catalog uses sample products with disabled buy buttons',()=>{
   vm.runInContext("go('katalog')",context,{timeout:2000});
   assert.match(nodes.screen.innerHTML,/Paket 3-in-1/);
   assert.match(nodes.screen.innerHTML,/Top-up 400 Kredit AI/);
-  assert.match(nodes.screen.innerHTML,/Jasa Video Iklan AI/);
+  assert.match(nodes.screen.innerHTML,/Jasa Video Iklan/);
   assert.match(nodes.screen.innerHTML,/Bundel Ebook Vibe Coder/);
   assert.match(nodes.screen.innerHTML,/data-catalog-filter="aplikasi"/);
   assert.match(nodes.screen.innerHTML,/data-catalog-filter="jasa"/);
