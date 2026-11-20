@@ -29,7 +29,7 @@ function makePreview(mode='admin',route='produk'){
 }
 test('local QA admin catalogue renders eight isolated test records',()=>{
   const h=makePreview();
-  assert.match(h.nodes.screen.innerHTML,/Katalog & penawaran/);
+  assert.match(h.nodes.screen.innerHTML,/Kelola Katalog/);
   assert.match(h.nodes.screen.innerHTML,/Jasa Video Iklan AI/);
   assert.match(h.nodes.screen.innerHTML,/Bundel Ebook/);
   assert.match(h.nodes.screen.innerHTML,/8 produk tercatat/);
