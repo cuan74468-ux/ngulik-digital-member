@@ -33,10 +33,10 @@ test('LMS view script parses without a bundler or external dependencies',()=>{
 });
 test('admin preview shows curriculum and automatic workspace create form',()=>{
   const h=preview('admin','lms');
-  assert.match(h.nodes.screen.innerHTML,/Kelola kursus dan kurikulum/);
+  assert.match(h.nodes.screen.innerHTML,/Kelola Kelas & Materi/);
   assert.match(h.nodes.screen.innerHTML,/Buat kursus &amp; workspace/);
   assert.match(h.nodes.screen.innerHTML,/id="lms-course-form"/);
-  assert.match(h.nodes.screen.innerHTML,/disabled title="Penyuntingan kursus belum tersedia"/);
+  assert.match(h.nodes.screen.innerHTML,/disabled title="Edit kelas belum tersedia"/);
   assert.equal(vm.runInContext('lmsWriteEnabled()',h.ctx),false);
 });
 test('admin workspace displays draft editing, lessons and AI queue',()=>{
@@ -46,7 +46,7 @@ test('admin workspace displays draft editing, lessons and AI queue',()=>{
   assert.match(html,/id="lms-lesson-form"/);
   assert.match(html,/id="lms-ai-form"/);
   assert.match(html,/COURSE_OUTLINE/);
-  assert.match(html,/Ruang materi/);
+  assert.match(html,/Ruang Materi/);
   assert.equal(h.requests(),0);
 });
 test('admin lesson draft editor and AI review are read-only in demo',()=>{
@@ -60,9 +60,9 @@ test('admin lesson draft editor and AI review are read-only in demo',()=>{
 });
 test('member preview shows published class and allows reading without AI or payment',()=>{
   const h=preview('member','belajar');
-  assert.match(h.nodes.screen.innerHTML,/Kelas dan perjalanan belajar/);
+  assert.match(h.nodes.screen.innerHTML,/Pilih Kelas yang Anda Suka/);
   assert.match(h.nodes.screen.innerHTML,/Fondasi Digital untuk UMKM/);
-  assert.match(h.nodes.screen.innerHTML,/Modul pengantar/);
+  assert.match(h.nodes.screen.innerHTML,/Materi Pengantar/);
   h.go('lms-course');
   assert.match(h.nodes.screen.innerHTML,/Menyiapkan Profil Usaha/);
   assert.match(h.nodes.screen.innerHTML,/Tujuan pembelajaran/);
@@ -78,7 +78,7 @@ test('locked private course never renders lesson content in member view',()=>{
   const h=preview('member','lms-course');
   vm.runInContext("state.lmsCourseDetail.access_granted=false;render()",h.ctx);
   const html=h.nodes.screen.innerHTML;
-  assert.match(html,/Materi memerlukan akses produk/);
+  assert.match(html,/Kelas Ini Belum Bisa Dibuka/);
   assert.doesNotMatch(html,/Tujuan pembelajaran/);
 });
 test('malicious titles, lesson content and links are escaped or rejected',()=>{
