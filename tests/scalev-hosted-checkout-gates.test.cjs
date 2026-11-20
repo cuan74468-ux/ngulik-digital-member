@@ -14,7 +14,8 @@ const product={product_id:sku,harga:'Rp50.000',tipe:'JASA_SEKALI',aktif:true};
 const entry={checkout_url:'https://merchant.scalev.id/p/jasa-video',
   verified_host:'merchant.scalev.id',price:50000,status:'READY',
   source:'SCALEV_DASHBOARD_VERIFIED',commission_owner:'NGD',
-  scalev_affiliate:'OFF',plan:'FREE'};
+  scalev_affiliate:'OFF',plan:'FREE',merchant_name:'Linggau AI Studio',
+  e_payment_status:'ACTIVE',owner_release:'STAGING_APPROVED'};
 test('all four owner draft SKU/amount/type contracts are enumerated without paid activation',()=>{
   assert.deepEqual(Object.keys(bridge.products),['P-VIDEO-AI','P-3IN1','P-POS','P-INTEGRASI-GAS']);
   assert.equal(bridge.products['P-3IN1'].price,99000);
@@ -41,6 +42,8 @@ test('wrong price, inactive product and mismatched type reject before checkout',
 test('no unreviewed or invalid merchant link can become a checkout',()=>{
   for(const override of [
     {status:'PENDING'},{source:'UNVERIFIED'},{checkout_url:''},
+    {e_payment_status:'PENDING'},{owner_release:'UNAPPROVED'},
+    {merchant_name:'Other Store'},
     {checkout_url:'http://merchant.scalev.id/p/jasa-video'},
     {checkout_url:'https://merchant.scalev.id.evil.example/p/jasa-video'},
     {checkout_url:'https://username@merchant.scalev.id/p/jasa-video'},
