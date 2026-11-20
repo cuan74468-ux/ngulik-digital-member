@@ -17,7 +17,7 @@ window.NGD_CONFIG = Object.freeze({
   supportEnabled:true,
   notificationsEnabled:true,
   lmsEnabled:true,
-  qrisImageUrl:'',
-  qrisMerchant:'',
-  qrisOwnerImageApproved:false // set true ONLY after replacing placeholder with real QRIS
+  qrisImageUrl:'../assets/qris-linggau-ai-studio.jpg',
+  qrisMerchant:'Linggau AI Studio',
+  qrisOwnerImageApproved:false // remains false until verified image is present on main/Pages
 });
