@@ -64,5 +64,5 @@ test('responsive, light partner CSS loads last for public and staging',()=>{
     assert.ok(html.indexOf('affiliate-partner.css')>html.indexOf('portfolio-adaptation.css'));
   }
   assert.match(publicHtml,/js\/app\.js\?v=20261120-marketplace-retail-v5/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261120-scalev-hosted-v1/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261120-qris-manual-v1/);
 });
