@@ -41,10 +41,15 @@ const consultationUrl = (product) => {
   let number=String(state.info?.wa_admin||'').replace(/\D/g,'');
   if(number.startsWith('0'))number='62'+number.slice(1);
   if(!/^62\d{8,13}$/.test(number))return '';
+  const service=String(product?.product_id||'');
+  const messages={
+    'P-3IN1':'Halo Mas Ferry, saya mau tanya soal pembuatan Website & Katalog Online untuk usaha saya. Boleh info harga dan contohnya?',
+    'P-INTEGRASI-GAS':'Halo Mas Ferry, saya butuh Aplikasi Kasir / Catatan Usaha pakai Google Sheets. Boleh konsultasi dulu?',
+    'P-VIDEO-AI':'Halo Mas Ferry, saya mau pesan Jasa Video Iklan untuk produk saya. Boleh info paket dan harganya?'
+  };
   const name=String(product?.nama||'layanan digital').slice(0,140);
-  return 'https://wa.me/'+number+'?text='+encodeURIComponent(
-    'Halo Admin Ngulik Digital, saya tertarik dengan layanan '+name+'. Mohon informasi ruang lingkup, harga, estimasi pengerjaan, dan cara pemesanan resmi. Terima kasih.'
-  );
+  const message=messages[service]||('Halo Mas Ferry, saya mau tanya soal '+name+'. Boleh info harga dan cara pesannya?');
+  return 'https://wa.me/'+number+'?text='+encodeURIComponent(message);
 };
 const classroomUrlSafe = (raw) => {
   const normalized=urlSafe(raw);
@@ -73,17 +78,17 @@ const icons = {
 };
 const icon=(name)=>'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||icons.grid)+'</svg>';
 const screens={
-  beranda:['Meja Kerja','home'],belajar:['Kelas','book'],menu:['Menu','grid'],
-  lms:['Studio LMS','book'],['lms-editor']:['Workspace Materi','book'],
+  beranda:['Beranda','home'],belajar:['Kelas','book'],menu:['Menu','grid'],
+  lms:['Kelola Kelas','book'],['lms-editor']:['Ruang Materi','book'],
   ['lms-lesson']:['Editor Pelajaran','book'],['lms-course']:['Ruang Kelas','book'],
   ['lms-ai']:['Review Draft AI','spark'],
-  ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Toko & Lisensi','store'],
-  ai:['Studio AI','spark'],['ai-tool']:['Ruang Tool AI','spark'],affiliate:['Komisi Affiliate','link'],akun:['Akun','user'],
-  produk:['Kelola Katalog','store'],jasa:['Pesan Jasa','gift'],layanan:['Permintaan Jasa','gift'],
-  admin:['Admin','grid'],konten:['Konten Visual','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
-  antrean:['Antrean','clock'],dukungan:['Bantuan','shield'],
+  ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Katalog','store'],
+  ai:['Studio AI','spark'],['ai-tool']:['Ruang Tool AI','spark'],affiliate:['Ajak Teman','link'],akun:['Akun','user'],
+  produk:['Katalog Admin','store'],jasa:['Jasa','gift'],layanan:['Pesanan Jasa','gift'],
+  admin:['Admin','grid'],konten:['Gambar & Banner','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
+  antrean:['Daftar Tunggu','clock'],dukungan:['Bantuan','shield'],
   tiket:['Detail tiket','shield'],member360:['Member 360°','users'],
-  rilis:['Rilis Produk','check'],pengaturan:['Pengaturan','shield'],login:['Masuk','user'],['admin-login']:['Masuk Admin','shield'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
+  rilis:['Pembaruan','check'],pengaturan:['Pengaturan','shield'],login:['Masuk','user'],['admin-login']:['Masuk Admin','shield'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
 const memberNav=['beranda','ai','katalog','affiliate','belajar','jasa','dukungan','akun'];
 const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
@@ -272,22 +277,22 @@ const empty=(heading,message,action='',label='Masuk')=>
   '<div class="empty"><span class="symbol">◌</span><h3>'+esc(heading)+'</h3><p>'+esc(message)+'</p>'+
   (action?'<button class="btn btn-primary" data-route="'+action+'">'+esc(label)+' '+icon('arrow')+'</button>':'')+'</div>';
 const needLogin=(feature)=>
-  empty('Masuk untuk membuka '+feature,'Aktivitas member dan data pribadi hanya tersedia setelah login.','login','Masuk sekarang');
+  empty('Masuk untuk membuka '+feature,'Masuk untuk melanjutkan.','login','Masuk');
 // Browseable on mobile instead of hiding most routes behind a desktop-only sidebar.
 // This is a presentation route: existing auth checks still guard every action.
 function viewMore(){
   const routes=isAdmin()?adminNav:memberNav;
   const descriptions={
-    beranda:'Aktivitas dan rekomendasi',belajar:'Materi dan progres',katalog:'Produk dan lisensi',
-    jasa:'Permintaan layanan',ai:'Asisten kreativitas',affiliate:'Program referensi',
-    dukungan:'Pertanyaan dan tiket',akun:'Profil dan keamanan',admin:'Ringkasan operasional',
-    konten:'Halaman dan media',produk:'Produk dan harga',layanan:'Permintaan pelanggan',
-    lms:'Kursus dan materi',pesanan:'Status transaksi',member:'Data keanggotaan',
-    rilis:'Pembaruan produk',antrean:'Daftar menunggu',pengaturan:'Pengaturan layanan'
+    beranda:'Mulai dari sini',belajar:'Kelas dan progres',katalog:'Jasa dan produk',
+    jasa:'Pesan jasa',ai:'Buat konten',affiliate:'Bagikan tautan',
+    dukungan:'Tanya dan laporkan kendala',akun:'Profil akun',admin:'Ringkasan usaha',
+    konten:'Gambar dan banner',produk:'Daftar penawaran',layanan:'Permintaan pelanggan',
+    lms:'Kelas dan materi',pesanan:'Riwayat belanja',member:'Data pelanggan',
+    rilis:'Versi terbaru',antrean:'Pendaftar menunggu',pengaturan:'Atur aplikasi'
   };
   return '<section class="ngd-menu-page" aria-label="Semua menu">'+
-    title(isAdmin()?'Modul pengelolaan':'Jelajahi Ngulik Digital','SEMUA MENU',
-      'Pilih tujuan untuk melanjutkan. Setiap fitur mengikuti izin dan status layanan.')+
+    title(isAdmin()?'Kelola Usaha Anda':'Mau Buka Apa?','SEMUA MENU',
+      'Pilih menu yang Anda butuhkan.')+
     '<nav class="ngd-menu-grid" aria-label="Daftar seluruh fitur">'+routes.map(route=>
       '<button type="button" class="ngd-menu-tile" data-route="'+route+'">'+
       '<span class="ngd-menu-icon" aria-hidden="true">'+
@@ -295,8 +300,8 @@ function viewMore(){
       '<span class="ngd-menu-copy"><strong>'+esc(screens[route][0])+'</strong><small>'+
       esc(descriptions[route]||'Buka fitur')+'</small></span>'+icon('arrow')+'</button>'
     ).join('')+'</nav>'+
-    (!logged()?'<div class="ngd-menu-access"><p>Sudah menjadi anggota?</p>'+
-      '<button class="btn btn-primary" type="button" data-route="login">Masuk member</button></div>':'')+
+    (!logged()?'<div class="ngd-menu-access"><p>Sudah punya akun?</p>'+
+      '<button class="btn btn-primary" type="button" data-route="login">Masuk</button></div>':'')+
     '</section>';
 }
 // Free educational resources belong to the public HERO, not the top navigation.
@@ -304,27 +309,27 @@ const NGD_FREE_EBOOK_URL='https://cuan74468-ux.github.io/buku-pintar-vibe-coder/
 const NGD_FREE_CLASSROOM_URL='https://classroom.google.com/c/ODk4MzQ4OTEwMjc5?cjc=ozzbygx3';
 function viewHeroFreeLinks_(){
   return '<nav class="ngd-hero-free-links" aria-label="Belajar gratis">'+
-    '<a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">eBook Gratis</a>'+
-    '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Kelas Gratis</a>'+
+    '<a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">Baca eBook Gratis</a>'+
+    '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Masuk Kelas Gratis</a>'+
   '</nav>';
 }
 // Three public service cards are sales entry points, never payment or account actions.
 function viewHomeServices_(){
   const offers=[
-    ['P-3IN1','Website & Katalog Online UMKM','Etalase digital praktis untuk memperkenalkan produk dan usaha.'],
-    ['P-INTEGRASI-GAS','Aplikasi Google Apps Script','Aplikasi ringan dan otomatisasi operasional berbasis Google Sheets.'],
-    ['P-VIDEO-AI','Video Iklan & Konten Promosi','Video singkat dan materi promosi kreatif untuk usaha Anda.']
+    ['P-3IN1','Website & Katalog Online','Tampilkan produk usaha Anda lewat website yang mudah dibagikan.'],
+    ['P-INTEGRASI-GAS','Aplikasi Kasir & Catatan Usaha','Catat penjualan dan pekerjaan harian dengan Google Sheets.'],
+    ['P-VIDEO-AI','Jasa Video Iklan','Promosikan produk lewat video singkat yang menarik.']
   ];
   return '<section class="ngd-home-services" aria-label="Tiga jasa utama Ngulik Digital">'+
-    '<header class="ngd-home-services-heading"><p>JASA UTAMA</p><h2>Solusi praktis untuk UMKM.</h2></header>'+
+    '<header class="ngd-home-services-heading"><p>JASA UTAMA</p><h2>Pilih Jasa untuk Usaha Anda</h2></header>'+
     '<div class="ngd-home-services-grid">'+offers.map(([id,name,description],index)=>{
       const contact=consultationUrl({nama:name+' ('+id+')'});
       return '<article class="ngd-home-service" data-service-product="'+esc(id)+'">'+
         '<span class="ngd-home-service-number">0'+(index+1)+'</span>'+
         '<h3>'+esc(name)+'</h3>'+
         '<p>'+esc(description)+'</p>'+
-        (contact?'<a class="ngd-home-service-cta" href="'+esc(contact)+'" target="_blank" rel="noopener noreferrer">Konsultasi WhatsApp '+icon('arrow')+'</a>':
-          '<span class="ngd-home-service-unavailable">Kontak Admin belum tersedia</span>')+
+        (contact?'<a class="ngd-home-service-cta" href="'+esc(contact)+'" target="_blank" rel="noopener noreferrer">Tanya via WhatsApp '+icon('arrow')+'</a>':
+          '<span class="ngd-home-service-unavailable">WhatsApp belum tersedia</span>')+
       '</article>';
     }).join('')+'</div>'+
   '</section>';
@@ -354,40 +359,40 @@ function viewHome(){
       (window.NGD_CONTENT_UI?.promotion(state.siteContent,'member_home')||'')+
       '<section class="member-welcome"><div><p class="eyebrow">DASHBOARD / MEJA KERJA</p>'+
       '<h1>Selamat datang, <span class="accent">'+esc(first)+'.</span></h1>'+
-      '<p class="lead">Token, alat AI, lisensi, dan aktivitas usaha dalam satu meja kerja.</p></div>'+
+      '<p class="lead">Cek kelas, pesanan, dan saldo Anda di sini.</p></div>'+
       '<span class="chip green">'+esc(state.me.status||'AKTIF')+'</span></section>'+
       '<section class="wallet-hero" aria-label="Dompet Token Universal">'+
-      '<div class="wallet-top"><span>DOMPET TOKEN UNIVERSAL</span><span class="wallet-state">● Saldo akun</span></div>'+
+      '<div class="wallet-top"><span>SALDO TOKEN</span><span class="wallet-state">● Saldo akun</span></div>'+
       '<div class="wallet-value"><strong>'+esc(wallet.toLocaleString('id-ID'))+'</strong><span>Token</span></div>'+
-      '<p>Saldo token aktif Anda, diperbarui dari akun. Gunakan seperlunya untuk pekerjaan bisnis.</p>'+
+      '<p>Saldo untuk memakai alat AI.</p>'+
       '<div class="wallet-commands"><button type="button" class="btn btn-primary" data-catalog-go="ai">+ Isi Token (QRIS) '+icon('arrow')+'</button>'+
       '<button type="button" class="btn btn-secondary" data-route="ai">Buka Studio AI</button></div>'+
       '<div class="wallet-service-list">'+serviceBadges.map(function(x){return '<span class="wallet-service"><strong>'+esc(x[0])+'</strong><small>'+esc(x[1])+'</small></span>';}).join('')+'</div></section>'+
       '<section class="member-focus" aria-label="Pusat aktivitas bisnis">'+
         '<div class="member-focus-content"><span class="member-focus-kicker">AKTIVITAS & PRODUKTIVITAS</span>'+
-        '<h2>'+(currentCourse?'Kembali ke pekerjaan Anda.':'Semua alat bisnis, satu meja kerja.')+'</h2>'+
+        '<h2>'+(currentCourse?'Lanjutkan Belajar Anda':'Mulai dari yang Anda Butuhkan')+'</h2>'+
         '<p>'+(currentCourse?esc(currentCourse.title)+' siap Anda lanjutkan.':
           'Buka Studio AI, pilih produk, atau mulai kelas yang tersedia.')+'</p>'+
         learningCTA+'</div>'+
         '<div class="member-focus-ring" style="--member-progress:'+progress+'%" role="img" aria-label="'+progress+' persen progres modul">'+
         '<div class="member-focus-ring-core"><strong>'+progress+'%</strong><small>progres</small></div></div></section>'+
       '<div class="metric-grid">'+[
-        [icon('spark'),esc(d.saldo_kredit??state.me.saldo_kredit??0),'Token tersedia','ai'],
-        [icon('book'),esc(done)+' / '+esc(total),'Modul selesai','belajar'],
+        [icon('spark'),esc(d.saldo_kredit??state.me.saldo_kredit??0),'Saldo token','ai'],
+        [icon('book'),esc(done)+' / '+esc(total),'Pelajaran selesai','belajar'],
         [icon('clipboard'),esc(orderCount),'Pesanan aktif','pesanan']
       ].map(x=>'<button class="metric-card" data-route="'+x[3]+'"><span class="metric-icon">'+x[0]+'</span><strong>'+x[1]+'</strong><small>'+x[2]+'</small></button>').join('')+'</div>'+
       '<div class="two-col section-gap"><section class="surface"><p class="card-kicker">LANJUTKAN BELAJAR</p>'+
-      (next?'<h2>'+esc(next.judul||'Modul berikutnya')+'</h2><p class="card-desc">Lanjutkan pembelajaran dari modul yang belum selesai.</p>':
-      '<h2>'+(total?'Seluruh modul selesai':'Materi sedang disiapkan')+'</h2><p class="card-desc">'+
+      (next?'<h2>'+esc(next.judul||'Materi berikutnya')+'</h2><p class="card-desc">Lanjutkan materi terakhir Anda.</p>':
+      '<h2>'+(total?'Seluruh modul selesai':'Materi belum tersedia')+'</h2><p class="card-desc">'+
       (total?'Pertahankan progres dan jelajahi materi tambahan.':'Modul akan muncul ketika diterbitkan oleh admin.')+'</p>')+
       '<div class="progress-wrap"><div class="progress-track" role="progressbar" aria-valuenow="'+progress+'" aria-valuemin="0" aria-valuemax="100" aria-label="Progres belajar"><span style="width:'+progress+'%"></span></div>'+
-      '<span class="tiny muted">'+progress+'% selesai</span></div><button class="btn btn-primary" data-route="belajar">Buka pembelajaran '+icon('arrow')+'</button></section>'+
+      '<span class="tiny muted">'+progress+'% selesai</span></div><button class="btn btn-primary" data-route="belajar">Buka kelas '+icon('arrow')+'</button></section>'+
       '<section class="surface"><p class="card-kicker">AKSI CEPAT</p><div class="quick-actions">'+[
         ['spark','Buka Studio AI','ai'],['store','Toko & lisensi','katalog'],
-        ['link','Komisi affiliate','affiliate'],['user','Kelola akun','akun']
+        ['link','Komisi mitra','affiliate'],['user','Kelola akun','akun']
       ].map(x=>'<button class="quick-action" data-route="'+x[2]+'">'+icon(x[0])+'<span>'+x[1]+'</span>'+icon('arrow')+'</button>').join('')+
       '</div></section></div>'+
-      (d.peringatan_kredit?'<div class="banner warning section-gap"><div><h3>Saldo kredit menipis</h3><p>Periksa penggunaan kredit sebelum memakai tools AI.</p></div><button class="btn btn-secondary" data-route="ai">Lihat saldo</button></div>':'');
+      (d.peringatan_kredit?'<div class="banner warning section-gap"><div><h3>Saldo Hampir Habis</h3><p>Isi saldo sebelum memakai alat AI.</p></div><button class="btn btn-secondary" data-route="ai">Lihat saldo</button></div>':'');
   }
   // Quiet placeholder brand mark. Replace with the eventual 2D character later.
   // No stairs, falling pixels, or narrative animations on the homepage.
@@ -399,9 +404,9 @@ function viewHome(){
   const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal" aria-label="Ngulik Digital">'+
     brandStage+
     '<div class="public-hero-copy">'+
-      '<p class="pf-hello">NGULIK DIGITAL · BELAJAR, PRAKTIK, TUMBUH</p>'+
-      '<h1>Warung Tools AI. <em>Bengkel Kerja Kreatif Berbasis AI.</em></h1>'+
-      '<p class="public-hero-lead">Jelajahi tools AI, belajar keterampilan digital, dan wujudkan ide kreatif menjadi konten, produk, atau solusi bisnis. Semua dalam satu ruang praktik yang mudah diakses.</p>'+
+      '<p class="pf-hello">NGULIK DIGITAL · JASA UNTUK UMKM</p>'+
+      '<h1>Bikin Usaha <em>Makin Mudah Ditemukan.</em></h1>'+
+      '<p class="public-hero-lead">Pesan website, aplikasi usaha, atau video iklan sesuai kebutuhan Anda.</p>'+
 
     '</div>'+
   '</section>';
@@ -474,7 +479,7 @@ function viewPublicMarketplace(list){
     const consult=(manualFirst||!enabled)?consultationUrl(p):'';
     const cover=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'market-product-image',p.nama);
     const action=manualFirst?
-      (consult?'<a class="market-product-action" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer">Konsultasi WhatsApp '+icon('arrow')+'</a>':
+      (consult?'<a class="market-product-action" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer">Tanya via WhatsApp '+icon('arrow')+'</a>':
        '<button type="button" class="market-product-action" disabled>Hubungi admin</button>'):
       enabled?
       '<button type="button" class="market-product-action" data-buy="'+idSafe(p.product_id)+'">Beli sekarang '+icon('arrow')+'</button>':
@@ -563,7 +568,7 @@ function viewCatalog(){
     const label=allowed?'Beli Sekarang':safeSale?'Checkout sedang tidak tersedia':'Produk belum tersedia';
     const tooltip=safeSale?'Checkout belum tersedia pada konfigurasi saat ini':'Periksa ketersediaan produk';
     const action=manualFirst?
-      (consult?'<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi '+esc(p.nama)+' melalui WhatsApp">Konsultasi WhatsApp '+icon('arrow')+'</a>':
+      (consult?'<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi '+esc(p.nama)+' melalui WhatsApp">Tanya via WhatsApp '+icon('arrow')+'</a>':
        '<button class="btn btn-primary" type="button" disabled>Hubungi admin</button>'):
       allowed?
       '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'">Beli Sekarang '+icon('arrow')+'</button>':
@@ -984,7 +989,7 @@ function viewProfileEditor(){
 }
 function viewAccount(){
   if(!logged())return title('Akun member','PROFIL & KEAMANAN','Kelola akses ke akun Anda.')+
-    '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk dengan nomor WhatsApp dan PIN Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk member</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
+    '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk dengan nomor WhatsApp dan PIN Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
   if(isAdmin()){
     const m=state.me;
     return title('Akun administrator','PENGATURAN AKSES','Informasi pengelola dan jalur operasional akun.')+
@@ -1148,7 +1153,7 @@ function viewCheckout(){
   const askAdmin=adminChat?
     '<a class="btn btn-secondary btn-wide" href="'+esc(adminChat)+'" target="_blank" rel="noopener noreferrer">'+
     (open?'Minta instruksi pembayaran via WhatsApp':'Hubungi Admin tentang pesanan')+' '+icon('arrow')+'</a>':
-    '<p class="checkout-note">Kontak Admin belum tersedia. Gunakan menu Bantuan untuk meminta tindak lanjut.</p>';
+    '<p class="checkout-note">WhatsApp belum tersedia. Gunakan menu Bantuan untuk meminta tindak lanjut.</p>';
   const financeBlocked=state.workspaceInfo&&(state.workspaceInfo.finance_enabled===false||state.workspaceInfo.mutations_enabled===false);
   const canConfirm=open&&paymentEnabled()&&!financeBlocked&&!!adminChat;
   return '<div class="checkout-backdrop"><section class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-title">'+
