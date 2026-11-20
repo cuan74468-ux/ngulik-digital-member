@@ -8,7 +8,7 @@ const source=fs.readFileSync(path.join(__dirname,'../apps-script/Code.gs'),'utf8
 function makeHarness(){
   const writes=[],audits=[];
   const order={_row:2,order_id:'ORDER1',member_id:'M1',product_id:'P1',
-    status:'MENUNGGU_VERIFIKASI',created_at:'2026-11-14T00:00:00Z'};
+    status:'MENUNGGU_VERIFIKASI',total_bayar:10123,created_at:'2026-11-14T00:00:00Z'};
   const product={product_id:'P1',tipe:'TOPUP_KREDIT',kredit_diberikan:50,durasi_hari:0};
   const member={member_id:'M1',role:'MEMBER',status:'AKTIF'};
   const ctx=vm.createContext({console:{log(){},error(){},warn(){}},Date,Number,String});
@@ -43,12 +43,12 @@ test('admin cannot mark PAID without verified funds',()=>{
 });
 test('admin cannot mark PAID with missing settlement reference',()=>{
   const h=makeHarness();
-  assert.throws(()=>h.approve({dana_diterima:true,referensi_pembayaran:''}),/Referensi/);
+  assert.throws(()=>h.approve({dana_diterima:true,nominal_terverifikasi:10123,metode_diterima:'QRIS_STATIS',referensi_pembayaran:''}),/Referensi/);
   assert.equal(h.writes.length,0);
 });
 test('admin can mark PAID with explicit evidence, and stores evidence',()=>{
   const h=makeHarness();
-  const result=h.approve({dana_diterima:true,referensi_pembayaran:'MUTASI-000123'});
+  const result=h.approve({dana_diterima:true,nominal_terverifikasi:10123,metode_diterima:'QRIS_STATIS',referensi_pembayaran:'MUTASI-000123'});
   assert.equal(result.status,'PAID');
   assert.match(h.order.catatan_admin,/MUTASI-000123/);
   assert.equal(h.order.verified_by,'ADMIN');
@@ -57,4 +57,19 @@ test('admin can mark PAID with explicit evidence, and stores evidence',()=>{
 test('reused request id cannot silently become another product order',()=>{
   const src=source;
   assert.match(src,/retry\.product_id===product\.product_id/);
+});
+
+test('admin rejects a false settlement amount before altering status',()=>{
+  const h=makeHarness();
+  assert.throws(()=>h.approve({dana_diterima:true,nominal_terverifikasi:10122,
+    metode_diterima:'QRIS_STATIS',referensi_pembayaran:'MUTASI-000123'}),/Nominal pada mutasi/);
+  assert.equal(h.order.status,'MENUNGGU_VERIFIKASI');
+  assert.equal(h.writes.length,0);
+});
+test('admin rejects an unverified settlement channel before altering status',()=>{
+  const h=makeHarness();
+  assert.throws(()=>h.approve({dana_diterima:true,nominal_terverifikasi:10123,
+    metode_diterima:'SCALEV_FAKE',referensi_pembayaran:'MUTASI-000123'}),/Pilih metode pembayaran/);
+  assert.equal(h.order.status,'MENUNGGU_VERIFIKASI');
+  assert.equal(h.writes.length,0);
 });
