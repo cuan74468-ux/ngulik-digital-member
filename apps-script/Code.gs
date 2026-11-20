@@ -1271,6 +1271,17 @@ function onPaid_(o,actor) {
       (persisted.status==='FULFILLED'||persisted.fulfilled_at))||
       o.status==='FULFILLED'||o.fulfilled_at);
     if(!alreadyFulfilled){
+      // The claim is persisted BEFORE changing the member entitlement. Apps
+      // Script/Sheets cannot atomically write both rows; on a partial failure,
+      // a retry must stop for explicit reconciliation instead of granting
+      // another 30 days. Do not automatically clear a claim after an error.
+      var priorClaim=findRows_('audit_logs',function(a){
+        return a.action==='SUBSCRIPTION_ENTITLEMENT_CLAIMED'&&a.entity_id===o.order_id;
+      });
+      require_(!priorClaim.length,'RECONCILIATION_REQUIRED',
+        'Aktivasi langganan untuk order ini pernah diproses. Periksa pemenuhan sebelum retry.');
+      logAudit_('SYSTEM','SYSTEM','SUBSCRIPTION_ENTITLEMENT_CLAIMED',
+        'orders',o.order_id,'PAID','PROCESSING',{product_id:product.product_id});
       var old=member.akses_3in1_sampai?new Date(member.akses_3in1_sampai).getTime():0;
       end=new Date(Math.max(Date.now(),old)+days*86400000);
       updateRow_('members',member._row,{akses_3in1_sampai:end,sumber_akses_3in1:'BERBAYAR'});
