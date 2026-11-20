@@ -443,21 +443,11 @@ const isCoreServiceConsultation_=p=>coreServiceConsultationIds.has(String(p?.pro
  * Production cannot activate it through URL parameters or catalog content. */
 // Member-side Mayar checkout only becomes visible when backend STAGING
 // reports verified merchant payout readiness. Backend re-verifies every gate.
-function mayarCheckoutEligible_(product){
-  // Merchant provider checkout permanently parked: QRIS_STATIS is canonical.
+function mayarCheckoutEligible_(){
+  // Mayar is retired: checkout always creates internal QRIS_STATIS orders.
   return false;
-  const id=String(product?.product_id||'');
-  return logged()&&!isAdmin()&&String(location.pathname||'').includes('/staging/')&&
-    config.apiUrl===window.NGD_STAGING_CONFIG?.apiUrl&&
-    state.workspaceInfo?.mayar_checkout_ready===true&&
-    ['P-VIDEO-AI','P-3IN1','P-POS','P-INTEGRASI-GAS'].includes(id)&&
-    product?.aktif===true&&moneyValue(product.harga)>0;
 }
-function scalevCheckoutFor_(product){
-  if(config.paymentsEnabled!==true||!window.NGD_STAGING_CONFIG?.apiUrl||
-      config.apiUrl!==window.NGD_STAGING_CONFIG.apiUrl)return null;
-  return window.NGD_SCALEV_BRIDGE?.checkout(product,window.NGD_SCALEV_OFFERS)||null;
-}
+function scalevCheckoutFor_(){return null;} // Scalev is retired.
 function scalevCheckoutButton_(offer,css){
   return '<a class="'+css+'" href="'+esc(offer.url)+
     '" target="_blank" rel="noopener noreferrer" data-scalev-hosted="'+esc(offer.sku)+
@@ -505,7 +495,7 @@ function viewPublicMarketplace(list){
     const kind=offerCategory(p);
     const price=moneyValue(p.harga);
     const valid=supportedSaleTypes.has(String(p.tipe))&&price!==null&&price>0;
-    const manualFirst=isCoreServiceConsultation_(p);
+    const manualFirst=isCoreServiceConsultation_(p)&&config.qrisOwnerImageApproved!==true;
     const scalev=valid?scalevCheckoutFor_(p):null;
     const enabled=valid&&config.paymentsEnabled===true&&!manualFirst;
     const consult=(manualFirst||!enabled)?consultationUrl(p):'';
@@ -564,9 +554,7 @@ function viewPublicMarketplace(list){
         '<button type="button" data-market-reset>Hapus filter</button></div>')+
     '</section>'+
     '<p class="market-trust-note">'+
-      (shown.some(p=>scalevCheckoutFor_(p))?
-        'Pembayaran melalui checkout resmi Scalev diverifikasi sebelum layanan diaktifkan.':
-        'Untuk pemesanan jasa, silakan chat Admin.')+'</p>'+
+      'Pembayaran QRIS DANA Bisnis diperiksa secara manual oleh Admin sebelum layanan diaktifkan.'+'</p>'+
   '</div>';
 }
 function viewPartnerShelf_(){
@@ -616,7 +604,7 @@ function viewCatalog(){
     ''+'</span></div></div>';
   const cards=shown.length?'<div class="catalog-grid">'+shown.map(p=>{
     const kind=offerCategory(p),safeSale=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
-    const manualFirst=isCoreServiceConsultation_(p);
+    const manualFirst=isCoreServiceConsultation_(p)&&config.qrisOwnerImageApproved!==true;
     const scalev=safeSale?scalevCheckoutFor_(p):null;
     const mayar=safeSale&&mayarCheckoutEligible_(p);
     const allowed=safeSale&&config.paymentsEnabled===true&&!manualFirst;
