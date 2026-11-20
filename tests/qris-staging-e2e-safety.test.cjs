@@ -38,7 +38,7 @@ test('frontend modules parse and QRIS images fail closed with WhatsApp fallback'
   assert.match(app,/document\.addEventListener\('error'/);
   assert.match(app,/confirmButton\.disabled=true/);
   assert.match(app,/qrisOwnerImageApproved!==true/);
-  assert.match(app,/Minta QRIS via WA Admin/);
+  assert.match(app,/Minta instruksi pembayaran via WhatsApp/);
 });
 test('GAS staging E2E uses isolated scratch and cleanup with no real WhatsApp',()=>{
   assert.doesNotThrow(()=>new vm.Script(code));
