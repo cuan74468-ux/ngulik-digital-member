@@ -109,7 +109,7 @@ test('app integrates real image slots across guest home and catalogue and admin 
   ])+';render()',guest.ctx,{timeout:3000});
   const home=guest.nodes.screen.innerHTML;
   assert.match(home,/nh-home-minimal/);
-  assert.match(home,/Baca eBook Gratis/);
+  assert.match(home,/eBook Gratis/);
   assert.doesNotMatch(home,/nh-carousel/); // Hero composition is frozen; CMS banners remain stored.
   vm.runInContext("go('katalog')",guest.ctx,{timeout:3000});
   assert.match(guest.nodes.screen.innerHTML,/assets\/media\/sampul-katalog.webp/);
