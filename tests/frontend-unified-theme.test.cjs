@@ -26,7 +26,7 @@ test('palette and typography match the Linggau master exactly',()=>{
   assert.ok(css.includes("font-variant-numeric:tabular-nums"));
   assert.ok(css.includes("focus-visible"));
 });
-test('guest and member use a single sticky header with accessible hamburger drawer and no bottom dock',()=>{
+test('guest retains header navigation while member phone uses one dock and More sheet',()=>{
   assert.match(html,/data-app-role="guest"/);
   assert.match(css,/data-app-role=guest\]:not\(#ngd\) \.sidebar\{display:none!important\}/);
   const market=read('assets/marketplace-ref-v5.css');
@@ -38,9 +38,16 @@ test('guest and member use a single sticky header with accessible hamburger draw
   assert.match(html,/id="guest-nav"/);
   for(const name of ['Beranda','Katalog','Studio AI','Layanan','Afiliasi','Bantuan','Masuk','Daftar Member'])
     assert.ok(html.includes('>'+name+'</button>'),name);
-  assert.match(app,/const routes=isAdmin\(\)\?adminNav:logged\(\)\?memberNav:guestNav/);
+  const memberCss=read('assets/member-native-dashboard-v1.css');
+  assert.match(app,/const memberDockRoutes=\['beranda','katalog','ai','pesanan'\]/);
+  assert.match(app,/const memberExtraRoutes=\['jasa','belajar','affiliate','dukungan','akun'\]/);
+  assert.match(html,/id="member-mobile-nav"/);
   assert.match(html,/id="top-nav-trigger"/);
   assert.match(html,/id="header-order"/);
+  assert.match(memberCss,/#member-mobile-nav:not\(\[hidden\]\)/);
+  assert.match(memberCss,/#top-nav-trigger/);
+  assert.match(memberCss,/#guest-nav/);
+  assert.match(memberCss,/@media\(max-width:760px\)/);
   assert.doesNotMatch(html,/id="mobile-nav"|data-route="menu"/);
   assert.doesNotMatch(html,/Bertumbuh dimulai|Belajar • Berkarya • Bertumbuh|Ruang belajar/i);
 });
