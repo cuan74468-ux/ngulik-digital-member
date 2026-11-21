@@ -26,18 +26,18 @@ test('published CMS cover and reliable local fallback are both present',()=>{
  assert.match(app,/document\.addEventListener\('error'/);
  assert.doesNotMatch(app,/onerror="/);
 });
-test('guest Affiliate, Help, Login and Katalog share violet marketplace system',()=>{
- assert.match(app,/class="ngd-public-help"/);
- assert.match(app,/ngd-help-question/);
+test('public Help uses a readable purchase guide while member routes remain private',()=>{
+ const sales=read('assets/guest-sales-trust-v1.css');
+ assert.match(app,/class="ngd-buyer-help"/);
+ assert.match(app,/class="ngdb-questions"/);
+ assert.match(app,/data-route="login"/);
+ assert.match(sales,/\.ngdb-help-intro/);
+ assert.match(sales,/-webkit-text-fill-color:#241d38!important/);
  assert.match(css,/\.partner-public-intro/);
- assert.match(css,/\.ngd-help-faq/);
- assert.match(css,/\.ngd-public-services-hero/);
  assert.match(css,/\.ai-catalog-intro/);
  assert.match(css,/\.login-shell/);
  assert.match(css,/\.market-product-media/);
- for(const page of ['index.html','staging/member.html']){
-   const html=read(page);
-   assert.match(html,/public-experience-v8\.css\?v=20261121-public-v8-2/);
-   assert.match(html,/app\.js\?v=20261121-p0-mobile-v16-2/);
- }
+ const html=read('index.html');
+ assert.match(html,/guest-sales-trust-v1\.css\?v=20261121-sales-trust-v1/);
+ assert.match(html,/js\/app\.js\?v=20261121-sales-trust-v1/);
 });
