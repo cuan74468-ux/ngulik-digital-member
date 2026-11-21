@@ -6,6 +6,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const code=fs.readFileSync(path.join(__dirname,'../apps-script/Code.gs'),'utf8');
 const staging=fs.readFileSync(path.join(__dirname,'../staging/member-config.js'),'utf8');
+const app=fs.readFileSync(path.join(__dirname,'../js/app.js'),'utf8');
 function fixture(options={}){
   const telemetry={acquired:0,released:0,sheetMutations:0,httpCalls:0,logs:[]};
   const props={
@@ -85,7 +86,8 @@ test('STAGING exposes QA UI controls but backend retains independent finance and
     'notificationsEnabled','lmsEnabled']){
       assert.match(staging,new RegExp(key+':true'));
   }
-  assert.match(staging,/registrationOtpEnabled:true/);\n  assert.match(app,/state\\.workspaceInfo\\?\\.registration_enabled===true/);
+  assert.match(staging,/registrationOtpEnabled:true/);
+  assert.match(app,/state\.workspaceInfo\?\.registration_enabled===true/);
   assert.match(staging,/memberOtpLoginEnabled:true/);
   assert.match(staging,/paymentsEnabled:false/);
   assert.match(staging,/qrisOwnerImageApproved:false/);
