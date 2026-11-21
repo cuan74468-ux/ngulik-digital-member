@@ -208,7 +208,7 @@
       '<div class="content-editor-heading"><div><p class="eyebrow">EDIT KONTEN</p><h2>'+
       (selected?'Ubah konten':'Tambah konten')+'</h2></div>'+
       (selected?'<button type="button" class="btn btn-secondary btn-sm" data-content-new>Tambah baru</button>':'')+'</div>'+
-      '<div class="ngd-media-help"><div><strong>Pilih artwork atau unggah gambar baru</strong><p>Gunakan gambar katalog 3:1 tanpa tulisan/harga dalam gambar. Lokasi <code>assets/media/</code> disimpan di GitHub; Admin mengatur konten & jadwal di sini.</p></div>'+ 
+      '<div class="ngd-media-help"><div><strong>Panduan gambar menurut fungsi halaman</strong><p>Hero Beranda: artwork lanskap 1600 × 900 px, subjek di kanan dan ruang teks di kiri. Banner Katalog: 1600 × 640 px; versi seluler menata teks dan gambar bertumpuk sehingga artwork tidak terpotong. Produk: 1200 × 1000 px, fokus produk di tengah. Sampul halaman: ilustrasi relevan, bukan salinan banner Beranda. Jangan masukkan harga, testimoni, atau tombol palsu ke gambar.</p><p>CMS saat ini menggunakan satu gambar per penempatan untuk HP dan desktop. Periksa keduanya pada pratinjau sebelum terbit.</p></div>'+ 
       '<a class="btn btn-secondary btn-sm" href="https://github.com/cuan74468-ux/ngulik-digital-member/upload/main/assets/media" target="_blank" rel="noopener noreferrer">Unggah gambar ↗</a></div>'+
       '<form id="content-editor-form" data-content-id="'+h(selected?.content_id||'')+'" class="content-form">'+
       '<div class="grid-2"><div class="field"><label for="content-kind">Jenis gambar</label>'+
@@ -260,7 +260,7 @@
               '<span data-content-preview-title>'+h(draft.title||'Judul banner Anda')+'</span>'+
             '</div><figcaption>'+h(device==='desktop'?'Tampilan PC':'Tampilan HP')+'</figcaption></figure>'
         ).join('')+'</div>'+
-        '<p class="form-hint">Periksa ruang teks, fokus gambar, dan keterbacaan pada kedua ukuran.</p>'+
+        '<p class="form-hint">Desktop memakai ruang lanskap; HP memisahkan teks dan gambar agar pesan tidak terpotong. Periksa subjek, kontras, panjang judul, dan tombol sebelum terbit. Jangan menerbitkan gambar yang belum teruji.</p>'+
       '</div>'+
       (selected?.status==='PUBLISHED'?'<p class="ngd-cms-published-warning">Konten sedang tayang. Pilih Tarik tayang pada daftar, kemudian edit draf dan terbitkan ulang setelah pratinjau.</p>':'')+
       (legacy?'<p class="ngd-cms-legacy-warning">Konten lama tipe '+h(selected.kind)+' tidak mendukung penyuntingan. Tarik/arsipkan lalu buat banner HERO baru.</p>':'')+
