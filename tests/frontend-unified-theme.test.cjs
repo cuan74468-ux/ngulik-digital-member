@@ -32,7 +32,7 @@ test('guest has native five-tab mobile dock, compact marketplace header, and mem
   const market=read('assets/marketplace-ref-v5.css');
   assert.match(market,/\.mobile-nav\{/);
   assert.match(market,/display:flex!important/);
-  assert.match(market,/@media\(max-width:760px\)/);
+  assert.match(market,/@media\(max-width:920px\)/);
   assert.match(html,/id="guest-nav"/);
   for(const name of ['Beranda','Katalog','Layanan','Afiliasi','Bantuan','Masuk','Daftar Member'])
     assert.ok(html.includes('>'+name+'</button>'),name);
