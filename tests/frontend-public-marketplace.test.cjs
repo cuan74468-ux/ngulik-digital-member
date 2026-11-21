@@ -8,16 +8,16 @@ const read=x=>fs.readFileSync(path.join(root,x),'utf8');
 const app=read('js/app.js'),cms=read('js/content-ui.js'),css=read('assets/marketplace-public.css');
 const publicHtml=read('index.html'),stagingHtml=read('staging/member.html');
 
-test('guest marketplace uses existing catalog, not fictitious product prices or ratings',()=>{
+test('guest and member use the same truthful product data and internal checkout',()=>{
   assert.match(app,/function viewPublicMarketplace\(list\)/);
-  assert.match(app,/if\(!logged\(\)\)return viewPublicMarketplace\(list\);/);
+  assert.match(app,/const storefront=viewPublicMarketplace\(list\)/);
   assert.match(app,/window\.NGD_CONTENT_UI\?\.media\(state\.siteContent,'PRODUCT_IMAGE',p\.product_id/);
   assert.match(app,/rupiah\(p\.harga\)/);
-  assert.match(app,/esc\(p\.nama\)/);
+  assert.match(app,/esc\(offerUiTitle_\(p\)\)/);
+  assert.match(app,/data-checkout-product/);
   assert.match(app,/supportedSaleTypes\.has\(String\(p\.tipe\)\)/);
-  assert.match(app,/config\.paymentsEnabled===true/);
-  assert.match(app,/consultationUrl\(p\)/);
-  assert.doesNotMatch(app.slice(app.indexOf('function viewPublicMarketplace'),app.indexOf('function viewCatalog')),/4\.9|terjual|50% OFF|diskon palsu/i);
+  assert.match(app,/config\.qrisOwnerImageApproved===true/);
+  assert.doesNotMatch(app.slice(app.indexOf('function viewPublicMarketplace'),app.indexOf('function viewCatalog')),/4\.9|terjual|50% OFF|diskon palsu|Tanya via WhatsApp/i);
 });
 test('CMS published banner is scoped to catalog and can be configured by admin',()=>{
   assert.match(app,/hero\(state\.siteContent,'catalog'\)/);
@@ -36,23 +36,25 @@ test('public marketplace search, category, sorting and reset are actually wired'
   assert.match(app,/sort==='price-asc'/);
   assert.match(app,/sort==='price-desc'/);
 });
-test('mobile-first two-column grid and desktop five-column cards are isolated to guests',()=>{
-  assert.match(css,/body\.ngd-public-app\[data-app-role=guest\]/);
-  assert.match(css,/grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
-  assert.match(css,/@media\(max-width:600px\)/);
-  assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(css,/aspect-ratio:1\/1/);
-  assert.match(css,/\.market-product-action:disabled/);
+test('mobile-first two-column cards and restrained desktop grid apply to guest and member',()=>{
+  const newer=read('assets/catalog-experience-v3.css');
+  assert.match(newer,/\.market-product-grid/);
+  assert.match(newer,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(newer,/@media \(max-width:640px\)/);
+  assert.match(newer,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(newer,/\.market-product-action:disabled/);
+  assert.match(newer,/prefers-reduced-motion/);
+  assert.match(css,/\.market-product-grid/);
 });
-test('both public and staging invalidate cache for new marketplace sources',()=>{
+test('published entrypoints both load current marketplace and checkout sources in safe order',()=>{
   for(const html of [publicHtml,stagingHtml]){
     assert.match(html,/marketplace-public\.css\?v=20261120-marketplace-retail-v2/);
     assert.match(html,/content-ui\.js\?v=20261120-marketplace-retail-v3/);
-    // STAGING-only checkout must not require changing public script cache keys.
-    assert.ok(html.indexOf('marketplace-public.css')>html.indexOf('portfolio-adaptation.css'));
+    assert.match(html,/catalog-experience-v3\.css/);
+    assert.match(html,/checkout-qris-unified\.css/);
+    assert.match(html,/app\.js\?v=20261121-qris-checkout-v2/);
+    assert.ok(html.indexOf('checkout-qris-unified.css')>html.indexOf('catalog-experience-v3.css'));
   }
-  assert.match(publicHtml,/app\.js\?v=20261120-marketplace-retail-v5/);
-  assert.match(stagingHtml,/app\.js\?v=20261120-qris-manual-v1/);
 });
 test('existing member route and real commerce backend remain in place',()=>{
   assert.match(app,/function viewCatalog\(\)/);
