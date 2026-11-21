@@ -373,3 +373,11 @@ jobs:
           grep -q 'shared-experience-v2:PASS' /tmp/ngd-staging-mobile.html
           echo 'STAGING_VISUAL_SMOKE_OK: desktop and mobile login shell'
           echo 'BROWSER_UI_OK: membership public, member, admin, catalog and service flows'
+      - name: Upload real Chrome mobile 360 screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ngd-mobile-360-${{ github.sha }}
+          path: mobile-qa-artifacts/*.png
+          if-no-files-found: warn
+          retention-days: 7
