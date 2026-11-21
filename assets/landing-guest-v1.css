@@ -86,3 +86,9 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-offer-i
     padding:16px;
   }
 }
+
+/* Guest catalog detail disclosure stays read-only until member sign-in. */
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-card-public-detail{flex:1 1 100%;min-width:0;color:#2c2450;font-size:13px;line-height:1.6}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-card-public-detail summary{display:inline-flex;align-items:center;min-height:42px;cursor:pointer;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-card-public-detail p{margin:8px 0;color:#554f66}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-card-public-detail strong{display:block;margin:5px 0 10px;font-size:14px}
