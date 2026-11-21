@@ -57,3 +57,8 @@ Status: NO-GO for live payments until gates below pass.
 - Historical `ORD-STG-0001` remains `PAID`, flagged `TOPUP_PAID_LEDGER_POSTED_STATUS_REVIEW` and `COMMISSION_REFERRER_NOT_ELIGIBLE`. These are correct review flags, **not a reason to re-credit tokens or retroactively authorize a commission**.
 - The reconciliation diagnostics were read-only. Historical balances, referral links, commission and order status were not modified by this step.
 - Go-live remains **NO-GO**; payment feature remains OFF. Next verify infrastructure and DB integrity in STAGING editor, then update existing GAS deployment only after validation and authorized decision on historical anomaly.
+
+## Verified operator preflight — 2026-11-21 10:46 local
+- `ngdInfrastructurePreflightReadOnly` PASS: 29 tables, environment STAGING, `mutations_flag=true`, `preflight_writes=false`, `providers_flag=false`.
+- `ngdDataIntegrityPreflightReadOnly` PASS: 8 tables, empty issues, `writes=false`.
+- STAGING diagnostic success does not imply GAS web app has been updated. Existing deployment must be updated in-place and verified while financial payments remain OFF. Historical order `ORD-STG-0001` remains under review.
