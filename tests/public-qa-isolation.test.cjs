@@ -41,7 +41,7 @@ test('public host refuses synthetic member session even with preview URL',()=>{
 });
 test('public frontend controls expose owner-authorized features',()=>{
   const cfg=fs.readFileSync(path.join(__dirname,'../config.js'),'utf8');
-  assert.match(cfg,/memberWritesEnabled:\s*true/);
+  assert.match(cfg,/memberWritesEnabled:\s*false/);
   assert.match(cfg,/paymentsEnabled:\s*false/);
   assert.match(cfg,/apiUrl:\s*'https:\/\/script\.google\.com\/macros\/s\//);
   assert.doesNotMatch(cfg,/demoMode/);
