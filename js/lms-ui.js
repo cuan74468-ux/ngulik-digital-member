@@ -66,9 +66,9 @@ function memberCatalog(courses,enrollments,legacy){
   var next=active[0]||null;
   return '<div class="learning-dashboard">'+
     '<section class="learning-intro"><div class="learning-intro-copy">'+
-    '<span class="learning-overline"><span class="learning-overline-dot"></span> KELAS NGULIK DIGITAL</span>'+
-    '<h2>Pilih Kelas yang Anda Suka</h2>'+
-    '<p>Pilih kelas, pelajari materinya, lalu praktikkan.</p>'+
+    '<span class="learning-overline"><span class="learning-overline-dot"></span> RUANG MEMBER / KELAS SAYA</span>'+
+    '<h2>'+(next?'Lanjutkan pembelajaran Anda.':'Bangun keterampilan, satu kelas demi satu.')+'</h2>'+
+    '<p>'+(next?'Anda sudah mengikuti kelas. Lanjutkan dari materi berikutnya dan simpan progres belajar.':'Temukan materi yang berguna bagi usaha Anda, mulai belajar, lalu praktikkan secara bertahap.')+'</p>'+
     '<div class="learning-intro-actions">'+
     (next?btn('open-course','Lanjutkan kelas',false,' data-course-id="'+e(next.course_id)+'"','btn-primary')+
       '<span class="learning-next-hint">'+e(next.title)+'</span>':
