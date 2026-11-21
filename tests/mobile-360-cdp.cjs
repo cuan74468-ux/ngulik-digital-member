@@ -109,6 +109,22 @@ async function visit(url,label){
       fromSurface:true});
     writeFileSync('mobile-qa-artifacts/'+label+'-360x800.png',Buffer.from(shot.data,'base64'));
   }
+  if(label==='member-home'){
+    const click=await request('Runtime.evaluate',{expression:`(()=>{
+      const toggle=document.getElementById('top-nav-trigger');
+      toggle.click();
+      const drawer=document.getElementById('top-nav-drawer');
+      const opened=!drawer.hidden&&toggle.getAttribute('aria-expanded')==='true';
+      const order=drawer.querySelector('[data-route="pesanan"]');
+      const exists=Boolean(order);
+      if(opened&&exists)order.click();
+      return {opened,exists,closed:drawer.hidden,hash:location.hash};
+    })()`,returnByValue:true});
+    const m=click.result.value;
+    console.log('MOBILE_360_DRAWER '+JSON.stringify(m));
+    assert.ok(m.opened&&m.exists&&m.closed,label+' drawer toggles and closes on navigation');
+    assert.equal(m.hash,'#pesanan',label+' drawer navigates to Pesanan');
+  }
   if(label==='member-home'||label==='member-services'){
     assert.ok(x.colors,label+' hero text missing');
     // WCAG 2.x normal-text contrast, using actual computed CSS colors.
