@@ -719,8 +719,8 @@ function viewPublicMarketplace(list){
     const cover=cmsImage?cmsImage.replace('<img ',
       '<img data-market-fallback="'+esc(localSource)+'" '):fallbackCover;
     const commissionLabel=ngdCommissionLabel_(p);
-    return '<article class="market-product-card" data-market-product="'+idSafe(p.product_id)+
-      '" data-market-kind="'+esc(kind)+'" aria-label="'+esc(offerUiTitle_(p))+'">'+
+    return '<article class="market-product-card" data-market-kind="'+esc(kind)+
+      '" data-market-product="'+idSafe(p.product_id)+'" aria-label="'+esc(offerUiTitle_(p))+'">'+
       '<a class="market-product-media market-media-'+esc(kind)+'" href="'+esc(detailHash)+
         '" data-product-detail="'+idSafe(p.product_id)+'" aria-label="Lihat detail '+esc(offerUiTitle_(p))+'">'+
         (cover||fallbackCover)+
