@@ -1664,30 +1664,77 @@ function viewAdminContent(){
 const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
 function viewServiceRequests(){
   if(!logged()&&!isAdmin()){
-    // The public services page is a service guide, NOT another marketplace renderer.
-    // Removing catalog dependencies here also protects the page while API data loads.
-    const entries=[
-      ['Website & Katalog Online','Tampilkan produk, harga, dan informasi usaha dalam katalog yang mudah dibagikan.'],
-      ['Aplikasi Kasir & Pencatatan','Bantu operasional penjualan dan pencatatan dengan sistem yang sesuai skala usaha.'],
-      ['Video & Visual Promosi','Buat materi pemasaran untuk memperkenalkan produk dan layanan Anda.'],
-      ['Integrasi & Otomasi','Hubungkan formulir, pesanan dan proses kerja dengan alur yang lebih efisien.']
+    // A sales-facing page uses actual published catalogue items and backend prices.
+    // No synthetic portfolio, fixed price, or guest order creation.
+    const services=(Array.isArray(state.catalog)?state.catalog:[])
+      .filter(p=>String(p.tipe)==='JASA_SEKALI'&&!isPublicQaOffer_(p));
+    const packages=services.map(p=>{
+      const price=moneyValue(p.harga);
+      const imageSrc=ngdPremiumArtSrc_(ngdProductArtId_(p,'jasa'));
+      const detail=offerUiDescription_(p)||'Rincian paket mengikuti informasi produk yang diterbitkan.';
+      return '<article class="ngdb-package">'+
+        '<div class="ngdb-package-media"><img src="'+esc(imageSrc)+'" alt="Visual '+esc(offerUiTitle_(p))+
+          '" loading="lazy" decoding="async"></div>'+
+        '<div class="ngdb-package-main">'+
+          '<p class="ngdb-overline">PAKET JASA TERSEDIA</p>'+
+          '<h3>'+esc(offerUiTitle_(p))+'</h3>'+
+          '<p>'+esc(detail)+'</p>'+
+          '<details class="ngdb-package-detail"><summary>Lihat informasi paket</summary>'+
+            '<p>Rincian pekerjaan dan ketentuan mengikuti deskripsi paket. Pastikan pilihan sesuai kebutuhan sebelum memesan.</p>'+
+          '</details>'+
+        '</div>'+
+        '<div class="ngdb-package-buy">'+
+          '<span>Harga katalog</span><strong>'+rupiah(price)+'</strong>'+
+          (price!==null&&price>0?
+            '<button type="button" data-checkout-product="'+idSafe(p.product_id)+
+            '">Masuk untuk pesan '+icon('arrow')+'</button>':
+            '<span class="ngdb-unavailable">Belum dapat dipesan</span>')+
+        '</div></article>';
+    }).join('');
+    const examples=[
+      ['Video & Konten Promosi','Untuk materi visual jualan dan konten pendek.','ngd-v8-video.webp'],
+      ['Katalog & Website Usaha','Supaya informasi produk dan usaha lebih mudah dibagikan.','ngd-v8-templates.webp'],
+      ['Otomasi Pekerjaan','Untuk pekerjaan berulang yang bisa dibantu alur digital.','ngd-v8-gas.webp']
     ];
-    return '<div class="ngd-public-services ngd-service-guide">'+
-      '<header class="ngd-service-guide-head"><p class="eyebrow">JASA DIGITAL / UMKM</p>'+
-        '<h1>Layanan praktis untuk kebutuhan usaha Anda.</h1>'+
-        '<p>Mulai dari katalog online dan kasir sampai video promosi. Pilih kategori untuk melihat produk dan layanan yang memang tersedia.</p>'+
-        '<div class="ngd-service-guide-actions">'+
-          '<button type="button" class="btn btn-primary" data-route="katalog">Lihat Katalog '+icon('arrow')+'</button>'+
-          '<button type="button" class="btn btn-secondary" data-route="login">Ajukan Kebutuhan Kustom</button>'+
-        '</div></header>'+
-      '<section class="ngd-service-guide-list" aria-label="Jenis layanan">'+entries.map((x,i)=>
-        '<article class="ngd-service-guide-row"><span class="ngd-service-guide-index">0'+(i+1)+'</span>'+
-        '<div><h2>'+esc(x[0])+'</h2><p>'+esc(x[1])+'</p></div>'+
-        '<button type="button" class="ngd-service-guide-link" data-route="katalog">Lihat pilihan '+icon('arrow')+'</button>'+
-        '</article>').join('')+'</section>'+
-      '<footer class="ngd-service-guide-foot"><strong>Punya kebutuhan khusus?</strong>'+
-        '<p>Masuk sebagai member untuk mengirim brief, menerima penawaran, dan memantau pengerjaan.</p>'+
-        '<button type="button" class="btn btn-secondary" data-route="login">Masuk Member '+icon('arrow')+'</button></footer>'+
+    return '<div class="ngd-buyer-services">'+
+      '<header class="ngdb-hero">'+
+        '<div class="ngdb-hero-copy"><p class="ngdb-overline">BENGKEL KREATIF · NGULIK DIGITAL</p>'+
+          '<h1>Butuh yang jadi, bukan tambah kerjaan?</h1>'+
+          '<p>Video promosi, katalog usaha, atau pekerjaan digital yang terus tertunda. Ceritakan kebutuhannya, lalu pilih paket yang memang tersedia atau kirim permintaan khusus.</p>'+
+          '<div class="ngdb-actions"><button type="button" class="ngdb-button ngdb-primary" data-services-packages>Lihat paket & harga</button>'+
+          '<button type="button" class="ngdb-button ngdb-outline" data-service-request>Ajukan kebutuhan khusus</button></div>'+
+          '<small>Harga paket mengikuti katalog. Permintaan khusus perlu dibahas terlebih dahulu.</small>'+
+        '</div>'+
+        '<div class="ngdb-hero-visual"><img src="./assets/media/ngd-v8-video.webp" alt="Ilustrasi layanan produksi materi promosi digital" width="800" height="800" decoding="async"></div>'+
+      '</header>'+
+      '<section class="ngdb-capabilities" aria-labelledby="ngdb-capabilities-title">'+
+        '<div class="ngdb-heading"><p class="ngdb-overline">APA YANG BISA DIBANTU?</p>'+
+          '<h2 id="ngdb-capabilities-title">Mulai dari pekerjaan yang paling menyita waktu.</h2></div>'+
+        '<div class="ngdb-capability-list">'+examples.map(x=>
+          '<article class="ngdb-capability"><img src="./assets/media/'+x[2]+'" alt="" loading="lazy" decoding="async">'+
+            '<div><h3>'+x[0]+'</h3><p>'+x[1]+'</p></div></article>').join('')+'</div>'+
+      '</section>'+
+      '<section id="ngdb-packages" class="ngdb-packages" aria-labelledby="ngdb-packages-title">'+
+        '<div class="ngdb-heading"><p class="ngdb-overline">HARGA NYATA, BUKAN TEBAK-TEBAKAN</p>'+
+          '<h2 id="ngdb-packages-title">Paket yang dapat dipilih.</h2>'+
+          '<p>Daftar dan harga ini diambil dari katalog. Untuk membeli, masuk atau daftar akun WhatsApp terlebih dahulu.</p></div>'+
+        (packages?'<div class="ngdb-package-list">'+packages+'</div>':
+         '<div class="ngdb-no-packages"><strong>Paket jasa belum dapat ditampilkan.</strong>'+
+         '<p>Cek katalog untuk pilihan terbaru, atau masuk sebagai member untuk menyampaikan kebutuhan khusus.</p>'+
+         '<button type="button" class="ngdb-button ngdb-outline" data-route="katalog">Buka Katalog</button></div>')+
+      '</section>'+
+      '<section class="ngdb-process" aria-labelledby="ngdb-process-title">'+
+        '<div class="ngdb-heading"><p class="ngdb-overline">CARA PESAN</p><h2 id="ngdb-process-title">Alurnya sederhana.</h2></div>'+
+        '<div class="ngdb-process-steps">'+
+          '<div><span>01</span><h3>Pilih paket</h3><p>Baca rincian layanan dan harga yang tersedia.</p></div>'+
+          '<div><span>02</span><h3>Masuk sebagai member</h3><p>Daftar gratis dengan WhatsApp agar pesanan tercatat.</p></div>'+
+          '<div><span>03</span><h3>Ikuti prosesnya</h3><p>Bayar jika checkout tersedia, lalu pantau status melalui akun.</p></div>'+
+        '</div>'+
+      '</section>'+
+      '<footer class="ngdb-final"><div><h2>Pekerjaannya tidak cocok dengan paket yang ada?</h2>'+
+        '<p>Member bisa mengirim brief untuk dibahas sebelum ada penawaran.</p></div>'+
+        '<button type="button" class="ngdb-button ngdb-primary" data-service-request>Ajukan brief '+icon('arrow')+'</button>'+
+      '</footer>'+
     '</div>';
   }
   return window.NGD_SERVICES_UI?
