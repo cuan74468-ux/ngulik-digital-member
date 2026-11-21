@@ -87,3 +87,20 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 - Source GitHub, runtime Apps Script, dan deployment tidak otomatis identik; tulis status secara jujur: **SOURCE UPDATED**, **RUNTIME DEPLOYED**, atau **TESTED**.
 - Semua perubahan menyebutkan lingkungan; **produksi tidak disentuh** tanpa persetujuan.
 - Setelah kontrol ini dibuat, fokus pekerjaan kembali ke aplikasi dan hasil QA; cukup perbarui tabel log di sini saat memang ada perubahan.
+
+
+## Rekonsiliasi lintas stack — 21 November 2026 (baca-saja)
+
+**Bukti terverifikasi langsung lewat konektor (21 Nov 2026):**
+- GitHub `main` sebelum catatan ini: `b8016ae727c58036f73fa8d6d34996b737409afc`. GitHub Pages run [44869653532](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/44869653532) telah `completed/success` untuk commit tersebut; laporan lama `waiting` telah superseded. CI/source check commit sebelumnya selesai sukses; keberhasilan deploy HTML tidak menyatakan GAS runtime baru.
+- Google Sheets PRODUCTION `Ngulik Digital DB` diverifikasi **16 tab**; STAGING `STAGING Ngulik Digital - Migrasi 27 Tab - 15 November 2026` diverifikasi **29 tab** (judul STAGING historis menyebut 27). Backup STAGING 19 Nov berisi 29 tab. Tidak ada migrasi atau penulisan database dalam audit ini.
+- Katalog PRODUCTION: `P-EBOOK` **Rp49.000**; STAGING: `P-EBOOK` **Rp0**. Pemisahan ini belum diadjudikasi untuk rilis. Tidak mengubah harga.
+- STAGING `P-STARTER-15` **Rp15.000 dengan komisi_persen=50**, sedangkan keputusan bisnis Drive 20 Nov menyebut komisi tetap **Rp5.000** (~33,33%). STAGING `P-3IN1` **30%** versus keputusan **25%**, `P-POS` **30%** versus **25%**, `P-VIDEO-AI` **25%** versus **20%**. Semua selisih wajib keputusan tertulis Owner sebelum order baru/komisi nyata.
+- **Kontrak pembayaran produksi BELUM SELARAS di database:** `pengaturan_sistem.payment_gateway_mode=MAYAR_QRIS_OTOMATIS` dan `qris_atas_nama=Bakso Len 1 / Ngulik Digital`, bertentangan dengan keputusan akhir Drive untuk QRIS Statis DANA Bisnis Linggau AI Studio. STAGING sudah mencatat `QRIS_STATIS` dan `Linggau AI Studio`. Frontend produksi tetap `paymentsEnabled=false` dan `memberWritesEnabled=false`; STAGING tetap `paymentsEnabled=false`, `registrationOtpEnabled=false`. **Jangan mengubah nilai DB produksi sebelum rencana rollback, bukti penerima QRIS, uji transaksi terkontrol, dan persetujuan Owner.**
+- STAGING `orders`: `ORD-STG-0001` masih `PAID` dan `NGD-261119-61ED29966DF7` masih `PENDING`. `affiliate_commissions` mempunyai `KOM-STG-0001` sebesar Rp1.000 `PENDING` ke `M-0001` (ADMIN menurut checkpoint rekonsiliasi sebelumnya). Perlu review status, eligibility dan idempotensi, **tanpa mengubah transaksi historis**.
+- Kontrak `contracts/provider-readiness.json` menyatakan izin **implementasi source**, bukan izin mengaktifkan flag pembayaran. Rilis komersial transaksi **NO-GO** sampai pemeriksaan Apps Script editor/deployment, verifikasi penerima QRIS via aplikasi pembayaran independen, histori order, siklus pembayaran aktual, refund/komisi/payout lulus.
+- Konektor Supabase & Vercel yang tersedia **hanya** mencakup `pos-sederhana-bakso-len`; tidak terkait backend NGD (Google Sheets + GAS). Supabase POS ini memiliki 16 RPC `SECURITY DEFINER` `authenticated` callable dan 27 foreign key tak terindeks menurut advisors 21 Nov. Tidak ada SQL atau privilege yang diubah. Repositori lainnya tidak boleh disatukan arsitektur/data hanya karena memakai akun GitHub yang sama.
+
+**Sumber keputusan final:** [Master Index Drive](https://docs.google.com/document/d/1Vy2OPrhhk1nOMNQ_nrz5pcNmklpMQvd0hZ9k83RGh1Q/edit), [Keputusan QRIS 20 Nov](https://docs.google.com/document/d/1ovN2xl7UB1R0NN1_O3rJArJRolvZC1ar3yPxrFTpX8U/edit), dan [GO_LIVE_GATE_2026-11-21](docs/GO_LIVE_GATE_2026-11-21.md).
+
+**Langkah lanjutan prioritas:** (1) inspeksi runtime GAS STAGING dan bukti parity source; (2) penyelesaian konflik merchant/mode QRIS dan harga/komisi; (3) rekonsiliasi order historis; (4) uji pembayaran kecil dengan verifikasi mutasi independen dan kontrol idempoten; (5) review go-live. Tidak membuat project, backup, atau database baru untuk audit rutin.
