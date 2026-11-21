@@ -142,7 +142,8 @@ test('digital purchase grants bonus once, closes order and repeats commissions p
     harga_dasar:25000,total_bayar:25100,status:'PAID',_row:2};
   records.members.push(member,{member_id:'M1',role:'MEMBER',status:'AKTIF',referred_by:''});
   records.katalog_produk.push(product);
-  records.orders.push(order);
+  records.orders.push(order,{_row:3,order_id:'SPONSOR-STARTER',member_id:'M1',
+    product_id:'P-STARTER-15',status:'FULFILLED'});
   let n=0,notifications=0;
   c.byId_=(table,key,val)=>(records[table]||[]).find(x=>String(x[key])===String(val))||null;
   c.findRows_=(table,pred)=>(records[table]||[]).filter(pred);
