@@ -224,7 +224,7 @@ const state={
   info:null,catalog:[],catalogLoaded:false,productDetailId:'',productDetailReturnRoute:'katalog',siteContent:[],adminContent:[],contentEditId:'',contentPresetProductId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
   affiliates:null,partnerShelf:[],partnerShelfLoaded:false,waitlist:[],members:[],adminOrders:[],adminSummary:null,
   reconciliation:null,selectedProduct:null,lastOrder:null,checkoutProductId:'',checkoutRequestId:null,orderDetailLoading:false,checkoutReturnRoute:'katalog',loading:false,
-  memberProducts:[],creditHistory:[],supportTickets:[],supportReleases:[],supportOverview:null,
+  memberProducts:[],creditHistory:[],memberDashboardReads:null,supportTickets:[],supportReleases:[],supportOverview:null,
   adminSupportTickets:[],ticketDetail:null,selectedTicketId:null,
   memberSearch:null,member360:null,selectedMemberId:null,
   lmsCourses:[],lmsEnrollments:[],lmsAdminCourses:[],
@@ -427,107 +427,161 @@ function viewHomeServices_(){
   '</section>';
 }
 const safeBadge=(s)=>'<span class="chip '+(['AKTIF','FULFILLED','PAID','APPROVED'].includes(String(s))?'green':'orange')+'">'+esc(s||'-')+'</span>';
+// Actual wallet history only. Never draw a fabricated "growth" trend.
+function memberTokenTrend_(history,balance){
+  const records=(Array.isArray(history)?history:[]).filter(x=>
+    Number.isFinite(Number(x.saldo_setelah))&&Number.isFinite(new Date(x.created_at).getTime()))
+    .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-9);
+  if(records.length<2){
+    return '<div class="ngdm-chart-empty">'+icon('chart')+
+      '<span>Grafik akan tampil setelah ada setidaknya dua aktivitas token tercatat.</span></div>';
+  }
+  const values=records.map(x=>Number(x.saldo_setelah));
+  const low=Math.min(...values),high=Math.max(...values),span=Math.max(1,high-low);
+  const coords=values.map((v,i)=>[
+    Math.round((i/(values.length-1))*320),
+    Math.round(93-(v-low)/span*70)
+  ]);
+  const line=coords.map(([x,y],i)=>(i?'L':'M')+x+' '+y).join(' ');
+  const fill=line+' L320 106 L0 106 Z';
+  const last=coords[coords.length-1];
+  return '<div class="ngdm-chart-plot" role="img" aria-label="Grafik saldo setelah '+
+    records.length+' aktivitas token terakhir, dari '+esc(values[0])+
+    ' menjadi '+esc(values[values.length-1])+' token">'+
+    '<svg viewBox="0 0 320 112" preserveAspectRatio="none" aria-hidden="true" focusable="false">'+
+      '<path d="'+fill+'" fill="rgba(163,137,246,.14)"></path>'+
+      '<path d="'+line+'" fill="none" stroke="#bfaeff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path>'+
+      '<circle cx="'+last[0]+'" cy="'+last[1]+'" r="4.5" fill="#f5e6b1" stroke="#5740a6" stroke-width="1.5"></circle>'+
+    '</svg>'+
+    '</div>';
+}
 function viewHome(){
   if(isAdmin())return viewAdmin();
   if(logged()){
-    const first=String(state.me.nama||'Member').trim().split(/\s+/)[0];
+    const first=String(state.me?.nama||'Member').trim().split(/\s+/)[0];
+    const initial=first.charAt(0).toUpperCase()||'M';
     const d=state.home||{};
-    const safeBalance=Math.max(0,Number(d.saldo_kredit??state.me.saldo_kredit??0)||0);
+    const reads=state.memberDashboardReads||{};
+    const balanceValue=Number(d.saldo_kredit??state.me?.saldo_kredit);
+    const balanceKnown=Number.isFinite(balanceValue)&&balanceValue>=0;
+    const balance=balanceKnown?balanceValue:0;
     const orders=Array.isArray(state.orders)?state.orders:[];
-    const waiting=orders.filter(o=>['PENDING','MENUNGGU_VERIFIKASI'].includes(String(o.status))).length;
-    const completed=orders.filter(o=>['PAID','FULFILLED'].includes(String(o.status))).length;
+    const pending=orders.filter(x=>['PENDING','MENUNGGU_VERIFIKASI'].includes(String(x.status))).length;
+    const completed=orders.filter(x=>['PAID','FULFILLED'].includes(String(x.status))).length;
     const products=Array.isArray(state.memberProducts)?state.memberProducts:[];
-    const activeProducts=products.filter(x=>['AKTIF','ACTIVE','FULFILLED'].includes(
-      String(x.akses_status||x.status||'').toUpperCase()));
-    const enrollments=Array.isArray(state.lmsEnrollments)?state.lmsEnrollments:[];
-    const activeClasses=enrollments.filter(x=>['ACTIVE','AKTIF'].includes(
-      String(x.status||'').toUpperCase())).length;
-    const approved=Array.isArray(state.affiliates?.komisi)?
-      state.affiliates.komisi.filter(c=>c.status==='APPROVED'&&!c.payout_requested_at)
-        .reduce((n,c)=>n+(Number(c.nominal)||0),0):0;
+    const usable=products.filter(x=>
+      ['AKTIF','ACTIVE','FULFILLED','KREDIT_TERCATAT'].includes(
+        String(x.akses_status||'').toUpperCase()));
+    const classes=Array.isArray(state.lmsEnrollments)?state.lmsEnrollments.filter(x=>
+      ['ACTIVE','AKTIF'].includes(String(x.status||'').toUpperCase())).length:0;
+    const commissions=Array.isArray(state.affiliates?.komisi)?state.affiliates.komisi:[];
+    const approved=commissions.filter(x=>x.status==='APPROVED'&&!x.payout_requested_at)
+      .reduce((sum,x)=>sum+(Number(x.nominal)||0),0);
+    const number=(key,value)=>reads[key]===true?esc(value):'—';
+    const allOrders=orders.length,paidPercent=allOrders>0?
+      Math.round(completed/allOrders*100):0;
     const partnerActive=state.affiliates?.mitra_aktif===true;
     const activities=[
-      ...orders.map(o=>({at:o.created_at||o.paid_at,label:'Pesanan '+String(o.order_id||''),
-        detail:String(o.nama_produk||'Produk')+' · '+String(o.status||''),
-        route:'pesanan'})),
-      ...(Array.isArray(state.creditHistory)?state.creditHistory:[]).map(l=>({
-        at:l.created_at,label:'Aktivitas token',
-        detail:(Number(l.jumlah||0)>0?'+':'')+String(l.jumlah||0)+' token · '+String(l.tipe||''),
-        route:'ai'})),
-      ...(Array.isArray(state.affiliates?.komisi)?state.affiliates.komisi:[]).map(c=>({
-        at:c.created_at,label:'Komisi '+String(c.status||''),
-        detail:rupiah(c.nominal||0),route:'affiliate'}))
-    ].filter(x=>x.at&&!Number.isNaN(new Date(x.at).getTime()))
-      .sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,5);
-    const access=[
-      ...activeProducts.slice(0,3).map(p=>({
-        label:String(p.nama||p.nama_produk||p.product_id||'Produk aktif'),route:'dukungan',
-        detail:'Akses produk aktif · kelola di Bantuan'})),
-      ...(activeClasses?[{label:activeClasses+' kelas aktif',route:'belajar',detail:'Lanjutkan materi Anda'}]:[])
-    ];
-    if(!access.length)access.push({label:'Studio AI',route:'ai',detail:'Mulai menggunakan alat AI yang tersedia'});
-    const metrics=[
-      ['Saldo Token',safeBalance.toLocaleString('id-ID')+' Token','ai','Buka Studio AI'],
-      ['Akses Aktif',String(activeProducts.length+activeClasses),'belajar','Lihat akses & kelas'],
-      ['Pesanan',waiting+' menunggu','pesanan',completed+' diproses / selesai'],
-      ['Komisi Siap Tarik',rupiah(approved),'affiliate','Pantau ajak teman']
-    ];
-    return '<div class="ngd-member-home ngd-member-command">'+
-      '<section class="member-welcome ngd-member-hero" aria-label="Dashboard Ngulik Digital Member">'+
-        '<div class="ngd-member-hero-copy">'+
-          '<p class="eyebrow">RUANG MEMBER / AKTIVITAS SAYA</p>'+
-          '<h1>Halo, <span class="accent">'+esc(first)+'</span>.</h1>'+
-          '<p class="lead">Ringkasan akun, akses digital, dan aktivitas terbaru Anda.</p>'+
-          '<div class="ngd-member-badges"><span class="ngd-member-status">'+icon('check')+
-            ' Akun '+esc(state.me.status||'Member')+'</span>'+
-            '<button type="button" class="ngd-member-partner-status" data-route="affiliate">'+
-              (partnerActive?'Link komisi aktif':'Link komisi belum aktif · Starter Rp15.000')+
-            '</button></div>'+
+      ...orders.map(x=>({at:x.created_at||x.paid_at,primary:x.nama_produk||'Pesanan produk',
+        detail:String(x.status||'Menunggu status'),route:'pesanan',symbol:'clipboard'})),
+      ...(Array.isArray(state.creditHistory)?state.creditHistory:[]).map(x=>({
+        at:x.created_at,primary:'Aktivitas token',
+        detail:(Number(x.jumlah)>0?'+':'')+String(Number(x.jumlah)||0)+' token',
+        route:'ai',symbol:'spark'})),
+      ...commissions.map(x=>({at:x.created_at,primary:'Komisi',
+        detail:rupiah(x.nominal||0)+' · '+String(x.status||''),
+        route:'affiliate',symbol:'link'}))
+    ].filter(x=>x.at&&Number.isFinite(new Date(x.at).getTime()))
+      .sort((x,y)=>new Date(y.at)-new Date(x.at)).slice(0,4);
+    const greeting=(()=>{
+      const h=new Date().getHours();
+      return h<11?'Selamat pagi':h<15?'Selamat siang':h<19?'Selamat sore':'Selamat malam';
+    })();
+    const format=balanceKnown?balance.toLocaleString('id-ID'):'—';
+    return '<div class="ngdm-dashboard" aria-label="Beranda member">'+
+      '<header class="ngdm-greeting">'+
+        '<div><p class="ngdm-kicker">RUANG MEMBER <span aria-hidden="true">·</span> '+esc(greeting)+'</p>'+
+          '<h1>Halo, '+esc(first)+'<span class="ngdm-wave" aria-hidden="true"> ✦</span></h1>'+
+          '<p>Semua aktivitas digital Anda, dalam satu tempat.</p></div>'+
+        '<button type="button" class="ngdm-avatar" data-route="akun" aria-label="Buka profil member">'+esc(initial)+'</button>'+
+      '</header>'+
+      '<section class="ngdm-wallet" aria-labelledby="ngdm-wallet-heading">'+
+        '<div class="ngdm-wallet-top"><span>'+icon('wallet')+' DOMPET TOKEN</span>'+
+          '<span class="ngdm-live"><i></i>'+esc(state.me?.status||'Member')+'</span></div>'+
+        '<div class="ngdm-wallet-grid"><div class="ngdm-wallet-numbers">'+
+          '<p id="ngdm-wallet-heading">Saldo tersedia</p>'+
+          '<div class="ngdm-wallet-number"><strong>'+esc(format)+'</strong><span>token</span></div>'+
+          '<p class="ngdm-wallet-hint">Saldo sesuai data akun. Token dipakai untuk fitur AI yang mendukung.</p>'+
+          '<button type="button" class="ngdm-wallet-cta" data-route="ai">Gunakan Studio AI '+icon('arrow')+'</button>'+
+        '</div><div class="ngdm-wallet-chart">'+
+          '<div><strong>Riwayat saldo</strong><small>Aktivitas token terakhir</small></div>'+
+          (reads.credits===true?memberTokenTrend_(state.creditHistory,balance):
+            '<div class="ngdm-chart-empty">Riwayat token belum tersedia.</div>')+
+        '</div></div>'+
+      '</section>'+
+      '<section class="ngdm-metrics" aria-label="Ringkasan akun">'+
+        '<div class="ngdm-metric ngdm-metric-order"><div class="ngdm-metric-label">'+icon('clipboard')+' Pesanan</div>'+
+          '<strong>'+number('orders',String(allOrders))+'</strong>'+
+          '<small>'+number('orders',String(pending))+' menunggu verifikasi</small></div>'+
+        '<div class="ngdm-metric"><div class="ngdm-metric-label">'+icon('book')+' Akses aktif</div>'+
+          '<strong>'+number('products',String(usable.length))+'</strong>'+
+          '<small>'+number('classes',String(classes))+' kelas terdaftar</small></div>'+
+        '<div class="ngdm-metric"><div class="ngdm-metric-label">'+icon('link')+' Komisi tersedia</div>'+
+          '<strong class="ngdm-metric-money">'+number('affiliate',rupiah(approved))+'</strong>'+
+          '<small>'+(!reads.affiliate?'Data belum tersedia':partnerActive?'Program Ajak Teman aktif':'Lihat syarat Ajak Teman')+'</small></div>'+
+      '</section>'+
+      '<section class="ngdm-quick" aria-labelledby="ngdm-quick-title">'+
+        '<div class="ngdm-section-head"><div><p class="ngdm-kicker">PINTASAN</p>'+
+        '<h2 id="ngdm-quick-title">Mau ngulik apa hari ini?</h2></div></div>'+
+        '<div class="ngdm-shortcuts">'+[
+          ['spark','Studio AI','Buat konten','ai'],
+          ['store','Katalog','Cari produk','katalog'],
+          ['book','Kelas saya','Lanjut belajar','belajar'],
+          ['gift','Jasa digital','Pesan bantuan','jasa']
+        ].map(([symbol,label,description,route])=>
+          '<button type="button" class="ngdm-shortcut" data-route="'+route+'">'+
+            '<span class="ngdm-shortcut-icon">'+icon(symbol)+'</span>'+
+            '<strong>'+label+'</strong><small>'+description+'</small></button>').join('')+
         '</div></section>'+
-      '<div class="metric-grid ngd-member-stats" aria-label="Ringkasan akun">'+
-        metrics.map((m,i)=>i===0?
-          '<section class="wallet-hero" aria-label="Dompet Token Universal">'+
-            '<div class="wallet-top"><span>'+esc(m[0])+'</span>'+icon('wallet')+'</div>'+
-            '<div class="wallet-value"><strong>'+esc(safeBalance.toLocaleString('id-ID'))+
-              '</strong><span>Token</span></div>'+
-            '<button type="button" class="ngd-member-stat-link" data-route="ai">'+esc(m[3])+
-              ' '+icon('arrow')+'</button></section>':
-          '<button type="button" class="metric-card" data-route="'+m[2]+'">'+
-            '<small>'+esc(m[0])+'</small><strong>'+esc(m[1])+'</strong>'+
-            '<span>'+esc(m[3])+' '+icon('arrow')+'</span></button>').join('')+
+      '<div class="ngdm-lower">'+
+        '<section class="ngdm-orders" aria-labelledby="ngdm-orders-title">'+
+          '<div class="ngdm-section-head"><div><p class="ngdm-kicker">PEMBELIAN</p>'+
+            '<h2 id="ngdm-orders-title">Status pesanan</h2></div>'+
+            '<button type="button" data-route="pesanan">Lihat semua '+icon('arrow')+'</button></div>'+
+          '<div class="ngdm-orders-body">'+
+            (reads.orders===true?
+              '<div class="ngdm-progress" role="img" aria-label="'+esc(completed)+' dari '+esc(allOrders)+' pesanan telah dibayar atau dipenuhi" style="--ngdm-done:'+paidPercent+'%">'+
+                '<div><strong>'+esc(allOrders?paidPercent+'%':'0')+'</strong><span>dibayar</span></div></div>'+
+              '<div class="ngdm-progress ngdm-progress-unknown"><div><strong>—</strong><span>data</span></div></div>')+
+            '<div class="ngdm-order-legend">'+
+              '<div><span class="ngdm-indicator ngdm-indicator-finished"></span><span>Selesai / dibayar</span><strong>'+number('orders',String(completed))+'</strong></div>'+
+              '<div><span class="ngdm-indicator ngdm-indicator-pending"></span><span>Menunggu</span><strong>'+number('orders',String(pending))+'</strong></div>'+
+              '<p>Grafik berdasarkan status pesanan yang tercatat, bukan estimasi penjualan.</p>'+
+            '</div>'+
+          '</div></section>'+
+        '<section class="ngdm-recent" aria-labelledby="ngdm-recent-title">'+
+          '<div class="ngdm-section-head"><div><p class="ngdm-kicker">TERBARU</p>'+
+            '<h2 id="ngdm-recent-title">Aktivitas Anda</h2></div></div>'+
+          (activities.length?'<div class="ngdm-recent-list">'+activities.map(x=>
+            '<button type="button" data-route="'+x.route+'" class="ngdm-activity-row">'+
+              '<span class="ngdm-activity-icon">'+icon(x.symbol)+'</span>'+
+              '<span class="ngdm-activity-copy"><strong>'+esc(x.primary)+'</strong><small>'+esc(x.detail)+'</small></span>'+
+              '<time>'+esc(friendlyDate(x.at))+'</time></button>').join('')+'</div>':
+            '<div class="ngdm-no-activity">'+icon('clock')+
+              '<p>'+(state.memberDashboardReads?
+                'Belum ada aktivitas terbaru yang tercatat.':'Sedang menyiapkan aktivitas akun…')+'</p></div>')+
+        '</section>'+
       '</div>'+
-      '<section class="ngd-member-access" aria-label="Akses produk dan kelas">'+
-        '<header class="ngd-member-section-head"><div><p class="eyebrow">AKSES SAYA</p>'+
+      (usable.length?'<section class="ngdm-owned">'+
+        '<div class="ngdm-section-head"><div><p class="ngdm-kicker">AKSES PRODUK</p>'+
           '<h2>Siap digunakan</h2></div>'+
-          '<button type="button" data-route="dukungan">Kelola Akses '+icon('arrow')+'</button></header>'+
-        '<div class="ngd-member-access-list">'+access.map(x=>
-          '<button type="button" data-route="'+x.route+'"><span><strong>'+esc(x.label)+
-            '</strong><small>'+esc(x.detail)+'</small></span>'+icon('arrow')+'</button>').join('')+
-        '</div></section>'+
-      '<section class="ngd-member-shortcuts" aria-label="Akses cepat member">'+
-        '<header class="ngd-member-section-head"><div><p class="eyebrow">AKSI CEPAT</p>'+
-          '<h2>Lanjutkan pekerjaan</h2></div></header>'+
-        '<div class="ngd-member-shortcut-grid">'+[
-          ['spark','Studio AI','ai'],['clipboard','Pesanan','pesanan'],
-          ['store','Katalog & Jasa','katalog']].map(x=>
-          '<button type="button" class="ngd-member-shortcut" data-route="'+x[2]+'">'+
-            '<span class="ngd-member-shortcut-icon">'+icon(x[0])+'</span>'+
-            '<strong>'+x[1]+'</strong>'+icon('arrow')+'</button>').join('')+'</div>'+
-      '</section>'+
-      '<section class="ngd-member-activity" aria-label="Riwayat aktivitas terbaru">'+
-        '<header class="ngd-member-section-head"><div><p class="eyebrow">RIWAYAT TERBARU</p>'+
-          '<h2>Aktivitas akun</h2></div>'+
-          '<button type="button" data-route="pesanan">Semua Pesanan '+icon('arrow')+'</button></header>'+
-        (activities.length?'<ol class="ngd-member-activity-list">'+activities.map(x=>
-          '<li><button type="button" data-route="'+x.route+'"><span><strong>'+
-            esc(x.label)+'</strong><small>'+esc(x.detail)+'</small></span>'+
-            '<time>'+esc(friendlyDate(x.at))+'</time></button></li>').join('')+'</ol>':
-          '<p class="ngd-member-empty-activity">Belum ada aktivitas transaksi atau token yang tercatat.</p>')+
-      '</section>'+
-      (d.peringatan_kredit?'<p class="ngd-member-credit-notice">Saldo token hampir habis. Periksa sebelum menjalankan Studio AI.</p>':'')+
+          '<button type="button" data-route="dukungan">Lihat akses '+icon('arrow')+'</button></div>'+
+        '<div class="ngdm-owned-list">'+usable.slice(0,3).map(p=>
+          '<button type="button" data-route="dukungan">'+icon('check')+
+            '<span>'+esc(p.nama||p.product_id||'Produk')+'</span>'+icon('arrow')+'</button>').join('')+'</div></section>':'')+
+      (d.peringatan_kredit===true?'<p class="ngdm-low-credit" role="status">Token hampir habis. Periksa saldo sebelum menjalankan Studio AI.</p>':'')+
     '</div>';
   }
-
   // The buyer-facing home is a compact digital storefront; no synthetic
   // orders, prices, ratings or affiliate earnings are rendered here.
   // Public front door: concise value proposition, without a duplicate product grid.
@@ -2499,6 +2553,11 @@ async function loadRoute(route){
       if(tasks[3].status==='fulfilled')state.memberProducts=tasks[3].value||[];
       if(tasks[4].status==='fulfilled')state.creditHistory=tasks[4].value?.riwayat||[];
       if(tasks[5].status==='fulfilled')state.lmsEnrollments=tasks[5].value||[];
+      state.memberDashboardReads={
+        balance:tasks[0].status==='fulfilled',orders:tasks[1].status==='fulfilled',
+        affiliate:tasks[2].status==='fulfilled',products:tasks[3].status==='fulfilled',
+        credits:tasks[4].status==='fulfilled',classes:tasks[5].status==='fulfilled'
+      };
       if(tasks.every(t=>t.status==='rejected'))throw tasks[0].reason;
     }
     if(route==='ai'||route==='ai-tool'){
@@ -2741,7 +2800,7 @@ async function processLogin(form,register){
 }
 function clearPrivateCommandCenter_(){
   state.home=null;state.orders=[];state.creditHistory=[];state.affiliates=null;
-  state.memberProducts=[];state.lmsEnrollments=[];state.notifications={enabled:false,items:[],unread:0};
+  state.memberProducts=[];state.lmsEnrollments=[];state.memberDashboardReads=null;state.notifications={enabled:false,items:[],unread:0};
 }
 async function logout(){
   const token=state.token,wasAdmin=isAdmin();
