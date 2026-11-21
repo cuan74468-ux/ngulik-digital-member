@@ -49,10 +49,10 @@ test('mobile-first two-column cards and restrained desktop grid apply to guest a
 test('published entrypoints both load current marketplace and checkout sources in safe order',()=>{
   for(const html of [publicHtml,stagingHtml]){
     assert.match(html,/marketplace-public\.css\?v=20261120-marketplace-retail-v2/);
-    assert.match(html,/content-ui\.js\?v=20261121-proportions-v13-1/);
+    assert.match(html,/content-ui\.js\?v=20261121-quiet-home-v14-1/);
     assert.match(html,/catalog-experience-v3\.css/);
     assert.match(html,/checkout-qris-unified\.css/);
-    assert.match(html,/app\.js\?v=20261121-proportions-v13-2/);
+    assert.match(html,/app\.js\?v=20261121-quiet-home-v14-1/);
     assert.ok(html.indexOf('checkout-qris-unified.css')>html.indexOf('catalog-experience-v3.css'));
   }
 });
