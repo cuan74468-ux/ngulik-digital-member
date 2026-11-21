@@ -2027,7 +2027,7 @@ function financeFindings_(orders,ledger,commissions,products,policy,members) {
   orders.forEach(function(o){
     var reasons=[],entries=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='TOPUP';});
     var reversals=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='ADJUST_REFUND';});
-    var isTopup=types[String(o.product_id)]==='TOPUP_KREDIT';
+    var isTopup=['TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(types[String(o.product_id)])>=0;
     if(o.status==='PAID'){
       // A persisted fulfillment attempt means some entitlement writes may
       // already have happened; surface this immediately, not after 48h.
