@@ -271,9 +271,11 @@ function renderNav(){
   // navigation surface, never a fixed bottom bar or a duplicated Menu page.
   const drawer=by('top-nav-drawer');
   if(drawer){
-    const routes=isAdmin()?adminNav:logged()?memberNav:guestNav;
-    const names={beranda:'Beranda',katalog:'Katalog',ai:'Studio AI',
-      jasa:'Jasa',belajar:'Kelas',affiliate:'Ajak Teman',pesanan:'Pesanan',
+    const routes=isAdmin()?adminNav:logged()?
+      ['beranda','katalog','jasa','ai','belajar','affiliate','pesanan']:guestNav;
+    const names={beranda:logged()&&!isAdmin()?'Beranda Member':'Beranda',
+      katalog:'Katalog',ai:'Studio AI',jasa:'Jasa',belajar:'Akses & Kelas',
+      affiliate:'Ajak Teman',pesanan:'Pesanan',
       dukungan:'Bantuan',akun:'Profil',admin:'Dashboard'};
     drawer.innerHTML='<div class="top-nav-drawer-inner">'+
       '<p class="top-nav-drawer-label">'+(isAdmin()?'OPERASIONAL':logged()?'RUANG MEMBER':'JELAJAH')+'</p>'+
@@ -281,7 +283,7 @@ function renderNav(){
         '<button type="button" data-route="'+route+'"'+
         (route===state.route?' aria-current="page"':'')+'>'+
         (names[route]||screens[route][0])+icon('arrow')+'</button>').join('')+
-      '</nav>'+(logged()?'<button type="button" class="top-nav-drawer-signout" data-route="akun">Akun & keluar</button>':
+      '</nav>'+(logged()?'<button type="button" class="top-nav-drawer-signout" data-action="logout">Keluar</button>':
       '<button type="button" class="top-nav-drawer-signout" data-route="login">Masuk / Daftar Member</button>')+
       '</div>';
   }
