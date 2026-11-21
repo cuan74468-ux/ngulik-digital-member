@@ -36,9 +36,10 @@ function preview(query=''){
 }
 test('public hub is a calm mobile-first entry with accessible product navigation',()=>{
   const h=preview(),html=h.nodes.screen.innerHTML;
-  for(const key of ['nh-home-minimal','ngd-journey-stage','public-hero-copy','ngd-shop-featured','ngd-shop-signup','eBook Gratis','Kelas Gratis'])
+  for(const key of ['nh-home-minimal','ngd-home-quiet-hero','public-hero-copy','ngd-home-direct-links','eBook Gratis','Kelas Gratis'])
     assert.ok(html.includes(key),key);
-  assert.match(html,/Jasa Web, Aplikasi &amp; Video UMKM/);
+  assert.match(html,/Solusi digital yang benar-benar membantu/);
+  assert.doesNotMatch(html,/market-product-card|ngd-shop-featured|ngd-shop-signup/);
   assert.doesNotMatch(html,/class="ngd-home-services"/); // No duplicate tall service cards.
   assert.doesNotMatch(html,/class="nh-grid"|class="nh-rail"/);
   assert.equal(h.apiCalls.length,0);
@@ -151,7 +152,8 @@ test('broken published artwork falls back to curated local WebP once',()=>{
 test('guest services displays real catalog checkout cards and no unlocked quote form',()=>{
   const h=preview();h.go('jasa');const html=h.nodes.screen.innerHTML;
   assert.match(html,/class="ngd-public-services"/);
-  assert.match(html,/class="ngd-public-services-hero"/);
+  assert.match(html,/class="ngd-service-guide-head"/);
+  assert.doesNotMatch(html,/market-product-card|ngd-service-main-art/);
   assert.match(html,/data-checkout-product=/);
   assert.doesNotMatch(html,/id="service-brief-form"|Tanya via WhatsApp/);
   assert.equal(h.apiCalls.length,0);
