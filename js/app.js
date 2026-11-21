@@ -515,7 +515,6 @@ function viewHome(){
           <button type="button" class="ngdl-btn ngdl-btn-gold" data-route="katalog">Lihat Produk & Layanan <span aria-hidden="true">↗</span></button>
           <button type="button" class="ngdl-btn ngdl-btn-ghost" data-route="daftar">Masuk atau Daftar</button>
         </div>
-        <p class="ngdl-hero-caption">Mulai dari yang diperlukan dulu. Nggak perlu borong semuanya.</p>
       </div>
     </section>
     <div class="ngdl-trust" aria-label="Cara pakai Ngulik Digital">
