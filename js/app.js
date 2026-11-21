@@ -476,68 +476,34 @@ function viewHome(){
 
   // The buyer-facing home is a compact digital storefront; no synthetic
   // orders, prices, ratings or affiliate earnings are rendered here.
+  // Public front door: concise value proposition, without a duplicate product grid.
+  // The full catalog owns product cards, prices, filtering and checkout.
   const homeCampaign=window.NGD_CONTENT_UI?.published(state.siteContent,'HERO','home')?.[0];
-  const homeArt=homeCampaign?
-    window.NGD_CONTENT_UI.mediaPath(homeCampaign.image_path):ngdPremiumArtSrc_('hero');
-  const homeHeadline=homeCampaign?.title?
-    esc(homeCampaign.title):'Bikin usaha lebih mudah dengan <em>solusi digital.</em>';
-  const homeLead=homeCampaign?.description?
-    esc(homeCampaign.description):'Katalog online, aplikasi kasir, otomasi order, dan konten promosi yang bisa membantu pekerjaan UMKM sehari-hari.';
-  const homeRouteCandidate=String(homeCampaign?.cta_route||'');
-  const homeRouteAllowed=['katalog','jasa','ai','belajar','affiliate','dukungan','login','daftar'];
-  const homeRoute=homeRouteAllowed.includes(homeRouteCandidate)&&
-    (homeRouteCandidate!=='daftar'||registrationOtpEnabled())?homeRouteCandidate:'katalog';
-  const homeCta=homeRouteCandidate==='daftar'&&!registrationOtpEnabled()?
-    'Jelajahi Produk':homeCampaign?.cta_label?esc(homeCampaign.cta_label):'Jelajahi Produk';
-  const curatedIds=['P-3IN1','P-POS','P-INTEGRASI-GAS','P-VIDEO-AI',
-    'P-STARTER-15K','P-STARTER-15','P-EBOOK'];
-  const curated=curatedIds.map(id=>(state.catalog||[]).find(p=>
-    String(p.product_id)===id&&!isPublicQaOffer_(p))).filter(Boolean);
-  const brandStage='<div class="ngd-journey-stage ngd-shop-brand-stage">'+
-    '<div class="ngd-floating-logo" role="img" aria-label="Logo resmi Ngulik Digital">'+
-    '<img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></div>'+
-    '<span class="ngd-floating-shadow" aria-hidden="true"></span>'+
-    viewHeroFreeLinks_()+'</div>';
-  const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal ngd-shop-hero" aria-label="Marketplace Ngulik Digital">'+
-    '<div class="ngd-shop-hero-content">'+
-      '<p class="ngd-shop-kicker">MARKETPLACE PRODUK DIGITAL</p>'+
-      '<div class="public-hero-copy">'+
-        '<h1>'+homeHeadline+'</h1>'+
-        '<p class="public-hero-lead">'+homeLead+'</p>'+
-        '<p class="ngd-shop-service-keywords">Jasa Web, Aplikasi &amp; Video UMKM</p>'+
+  const homeHeadline='Solusi digital yang benar-benar membantu <em>usaha Anda.</em>';
+  const homeLead='Buat katalog online, gunakan sistem kasir, dan hasilkan materi promosi. Pilih layanan yang dibutuhkan tanpa harus mencari-cari di banyak halaman.';
+  const benefitLinks=[
+    ['katalog','Temukan produk & aplikasi','Template, kasir, katalog usaha dan solusi siap pakai'],
+    ['jasa','Pesan layanan digital','Website, katalog online, video promosi dan aplikasi kustom'],
+    ['ai','Jelajahi Studio AI','Alat bantu untuk konten dan pekerjaan digital']
+  ];
+  return '<div class="nh-home nh-home-minimal ngd-shop-home ngd-home-quiet">'+
+    '<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal ngd-shop-hero ngd-home-quiet-hero" aria-label="Beranda Ngulik Digital">'+
+      '<div class="ngd-shop-hero-content"><p class="ngd-shop-kicker">NGULIK DIGITAL · SOLUSI UMKM</p>'+
+        '<div class="public-hero-copy"><h1>'+homeHeadline+'</h1>'+
+          '<p class="public-hero-lead">'+homeLead+'</p></div>'+
+        '<div class="ngd-shop-hero-actions">'+
+          '<button type="button" class="ngd-shop-yellow-btn" data-route="katalog">Lihat Katalog '+icon('arrow')+'</button>'+
+          '<button type="button" class="ngd-shop-outline-btn" data-route="jasa">Jelajahi Layanan</button>'+
+        '</div>'+
+        '<div class="ngd-shop-brand-stage">'+viewHeroFreeLinks_()+'</div>'+
       '</div>'+
-      '<div class="ngd-shop-hero-actions">'+
-        '<button type="button" class="ngd-shop-yellow-btn" data-route="'+esc(homeRoute)+'">'+homeCta+' '+icon('arrow')+'</button>'+
-        (registrationOtpEnabled()?'<button type="button" class="ngd-shop-outline-btn" data-route="daftar">Daftar Member</button>':
-          '<button type="button" class="ngd-shop-outline-btn" data-route="jasa">Lihat Layanan</button>')+
-      '</div>'+
-      brandStage+
-    '</div>'+
-    '<div class="ngd-shop-hero-art" aria-hidden="true">'+
-      '<img class="ngd-home-artwork" src="'+esc(homeArt)+'" data-home-fallback="'+esc(ngdPremiumArtSrc_('hero'))+'" alt="" decoding="async" fetchpriority="high">'+
-    '</div>'+
-  '</section>';
-  const trust='<section class="ngd-shop-trust" aria-label="Informasi layanan">'+[
-    ['spark','Produk digital','Lihat rincian produk sebelum membeli'],
-    ['shield','QRIS DANA Bisnis',config.paymentsEnabled&&config.qrisOwnerImageApproved?'Verifikasi pembayaran oleh admin':'Aktif setelah verifikasi merchant'],
-    ['users','Program afiliasi','Komisi hanya untuk referral yang sah'],
-    ['clock','Bantuan member','Riwayat order dan dukungan']
-  ].map(x=>'<div class="ngd-shop-trust-item">'+
-    '<span class="ngd-shop-trust-icon">'+icon(x[0])+'</span>'+
-    '<div><strong>'+esc(x[1])+'</strong><small>'+esc(x[2])+'</small></div>'+
-    '</div>').join('')+'</section>';
-  const showcase='<section class="ngd-shop-featured" aria-label="Pilihan produk digital">'+
-    '<header class="ngd-shop-featured-head"><div><span>PRODUK PILIHAN</span>'+
-    '<h2>Temukan solusi digital untuk usaha Anda</h2></div>'+
-    '<button type="button" data-route="katalog">Lihat Semua Produk '+icon('arrow')+'</button></header>'+
-    viewPublicMarketplace(curated,{showCampaign:false})+'</section>';
-  const signup='<section class="ngd-shop-signup" aria-label="Keanggotaan Ngulik Digital">'+
-    '<div><strong>Jadi Member Ngulik Digital Sekarang!</strong>'+
-    '<p>Belajar, akses produk digital, dan ikuti program afiliasi sesuai syarat.</p></div>'+
-    '<button type="button" data-route="daftar">Daftar Member '+icon('arrow')+'</button>'+
-    '</section>';
-  return '<div class="nh-home nh-home-minimal ngd-shop-home">'+
-    hero+trust+showcase+signup+'</div>';
+    '</section>'+
+    '<nav class="ngd-home-direct-links" aria-label="Pilihan layanan Ngulik Digital">'+
+      benefitLinks.map(x=>'<button type="button" class="ngd-home-direct-link" data-route="'+x[0]+'">'+
+        '<span><strong>'+esc(x[1])+'</strong><small>'+esc(x[2])+'</small></span>'+
+        icon('arrow')+'</button>').join('')+
+    '</nav>'+
+    '</div>';
 }
 const offerCategories=[
   ['semua','Semua Produk'],['belajar','eBook & Panduan'],
@@ -1637,29 +1603,30 @@ function viewAdminContent(){
 const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
 function viewServiceRequests(){
   if(!logged()&&!isAdmin()){
-    const items=(Array.isArray(state.catalog)?state.catalog:[]).filter(p=>
-      !isPublicQaOffer_(p)&&['JASA_SEKALI','SEAT_30H'].includes(String(p.tipe||'')));
-    const cards=items.length?viewPublicMarketplace(items,{category:'semua',search:'',sort:'default',showCampaign:false}):
-      '<p class="ngd-public-services-empty">Katalog layanan sedang dimuat atau belum tersedia. Lihat katalog lengkap untuk pilihan lain.</p>';
-    return '<div class="ngd-public-services">'+
-      '<section class="ngd-public-services-hero" aria-label="Layanan Ngulik Digital">'+
-        '<div><p class="eyebrow">LAYANAN DIGITAL NGULIK DIGITAL</p>'+
-          '<h1>Solusi praktis untuk mengembangkan usaha Anda.</h1>'+
-          '<p>Dari video promosi hingga website dan aplikasi usaha. Pilih layanan yang sesuai kebutuhan, lihat rinciannya, lalu ajukan pesanan.</p>'+
-          '<div class="ngd-services-hero-actions">'+
-            '<button type="button" class="btn btn-primary" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
-            '<button type="button" class="btn btn-secondary" data-route="login">Permintaan Kustom</button>'+
-          '</div></div>'+
-        '<div class="ngd-service-media" aria-hidden="true"><img class="ngd-service-main-art" src="'+esc(cmsPageArt_('jasa')||ngdPremiumArtSrc_('video'))+'" alt="" decoding="async" loading="lazy"><img class="ngd-service-secondary-art" src="'+esc(ngdPremiumArtSrc_('pos'))+'" alt="" decoding="async" loading="lazy"></div>'+
-      '</section>'+
-      '<section class="ngd-public-services-shelf" aria-label="Daftar layanan digital">'+
-        '<header class="ngd-public-services-heading"><div><p class="eyebrow">LAYANAN PILIHAN</p>'+
-          '<h2>Pilih sesuai kebutuhan usaha</h2></div>'+
-          '<button type="button" data-route="katalog">Semua Produk '+icon('arrow')+'</button></header>'+
-        cards+'</section>'+
-      '<section class="ngd-public-services-cta"><div><strong>Butuh solusi yang lebih khusus?</strong>'+
-        '<p>Masuk sebagai member untuk mengajukan kebutuhan dan menerima penawaran.</p></div>'+
-        '<button type="button" data-route="login">Masuk Member '+icon('arrow')+'</button></section>'+
+    // The public services page is a service guide, NOT another marketplace renderer.
+    // Removing catalog dependencies here also protects the page while API data loads.
+    const entries=[
+      ['Website & Katalog Online','Tampilkan produk, harga, dan informasi usaha dalam katalog yang mudah dibagikan.'],
+      ['Aplikasi Kasir & Pencatatan','Bantu operasional penjualan dan pencatatan dengan sistem yang sesuai skala usaha.'],
+      ['Video & Visual Promosi','Buat materi pemasaran untuk memperkenalkan produk dan layanan Anda.'],
+      ['Integrasi & Otomasi','Hubungkan formulir, pesanan dan proses kerja dengan alur yang lebih efisien.']
+    ];
+    return '<div class="ngd-public-services ngd-service-guide">'+
+      '<header class="ngd-service-guide-head"><p class="eyebrow">JASA DIGITAL / UMKM</p>'+
+        '<h1>Layanan praktis untuk kebutuhan usaha Anda.</h1>'+
+        '<p>Mulai dari katalog online dan kasir sampai video promosi. Pilih kategori untuk melihat produk dan layanan yang memang tersedia.</p>'+
+        '<div class="ngd-service-guide-actions">'+
+          '<button type="button" class="btn btn-primary" data-route="katalog">Lihat Katalog '+icon('arrow')+'</button>'+
+          '<button type="button" class="btn btn-secondary" data-route="login">Ajukan Kebutuhan Kustom</button>'+
+        '</div></header>'+
+      '<section class="ngd-service-guide-list" aria-label="Jenis layanan">'+entries.map((x,i)=>
+        '<article class="ngd-service-guide-row"><span class="ngd-service-guide-index">0'+(i+1)+'</span>'+
+        '<div><h2>'+esc(x[0])+'</h2><p>'+esc(x[1])+'</p></div>'+
+        '<button type="button" class="ngd-service-guide-link" data-route="katalog">Lihat pilihan '+icon('arrow')+'</button>'+
+        '</article>').join('')+'</section>'+
+      '<footer class="ngd-service-guide-foot"><strong>Punya kebutuhan khusus?</strong>'+
+        '<p>Masuk sebagai member untuk mengirim brief, menerima penawaran, dan memantau pengerjaan.</p>'+
+        '<button type="button" class="btn btn-secondary" data-route="login">Masuk Member '+icon('arrow')+'</button></footer>'+
     '</div>';
   }
   return window.NGD_SERVICES_UI?
