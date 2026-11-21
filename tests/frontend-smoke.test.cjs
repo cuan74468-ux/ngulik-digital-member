@@ -179,7 +179,7 @@ test('public login is fail-closed while member preview and staging source keep s
   assert.doesNotMatch(nodes.screen.innerHTML,/id="auth-form"/);
   assert.match(app,/location\.pathname\.includes\('\/staging\/'\)/);
   const page=fs.readFileSync(path.join(base,'staging/member.html'),'utf8');
-  assert.match(page,/app\.js\?v=20261122-member-desktop-nav-1/);
+  assert.match(page,/app\.js\?v=20261122-fintech-member-v2/);
 });
 test('guest Jasa shows actual backend-catalog prices and gates checkout behind login',()=>{
   const {nodes,context}=renderPreview();
@@ -215,6 +215,7 @@ test('local member preview renders premium native-like dashboard without login',
   const {nodes,context}=renderPreview('?preview=member');
   assert.match(nodes.screen.innerHTML,/ngdm-dashboard/);
   assert.match(nodes.screen.innerHTML,/DOMPET TOKEN/);
+  assert.match(nodes.screen.innerHTML,/ngdm-wallet-actions/);
   assert.match(nodes.screen.innerHTML,/ngdm-wallet-chart/);
   assert.match(nodes.screen.innerHTML,/Status pesanan/);
   assert.match(nodes.screen.innerHTML,/ngdm-recent/);

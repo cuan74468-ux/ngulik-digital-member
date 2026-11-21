@@ -489,9 +489,9 @@ function memberTokenTrend_(history,balance){
     records.length+' aktivitas token terakhir, dari '+esc(values[0])+
     ' menjadi '+esc(values[values.length-1])+' token">'+
     '<svg viewBox="0 0 320 112" preserveAspectRatio="none" aria-hidden="true" focusable="false">'+
-      '<path d="'+fill+'" fill="rgba(163,137,246,.14)"></path>'+
-      '<path d="'+line+'" fill="none" stroke="#bfaeff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path>'+
-      '<circle cx="'+last[0]+'" cy="'+last[1]+'" r="4.5" fill="#f5e6b1" stroke="#5740a6" stroke-width="1.5"></circle>'+
+      '<path d="'+fill+'" fill="rgba(25,132,106,.09)"></path>'+
+      '<path d="'+line+'" fill="none" stroke="#19886d" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path>'+
+      '<circle cx="'+last[0]+'" cy="'+last[1]+'" r="4.5" fill="#19886d" stroke="#ffffff" stroke-width="1.5"></circle>'+
     '</svg>'+
     '</div>';
 }
@@ -540,8 +540,8 @@ function viewHome(){
     return '<div class="ngdm-dashboard" aria-label="Beranda member">'+
       '<header class="ngdm-greeting">'+
         '<div><p class="ngdm-kicker">RUANG MEMBER <span aria-hidden="true">·</span> '+esc(greeting)+'</p>'+
-          '<h1>Halo, '+esc(first)+'<span class="ngdm-wave" aria-hidden="true"> ✦</span></h1>'+
-          '<p>Semua aktivitas digital Anda, dalam satu tempat.</p></div>'+
+          '<h1>'+esc(greeting)+', '+esc(first)+'</h1>'+
+          '<p>Token, layanan, dan aktivitas akun Anda.</p></div>'+
       '</header>'+
       '<section class="ngdm-wallet" aria-labelledby="ngdm-wallet-heading">'+
         '<div class="ngdm-wallet-top"><span>'+icon('wallet')+' DOMPET TOKEN</span>'+
@@ -549,8 +549,10 @@ function viewHome(){
         '<div class="ngdm-wallet-grid"><div class="ngdm-wallet-numbers">'+
           '<p id="ngdm-wallet-heading">Saldo tersedia</p>'+
           '<div class="ngdm-wallet-number"><strong>'+esc(format)+'</strong><span>token</span></div>'+
-          '<p class="ngdm-wallet-hint">Saldo sesuai data akun. Token dipakai untuk fitur AI yang mendukung.</p>'+
-          '<button type="button" class="ngdm-wallet-cta" data-route="ai">Gunakan Studio AI '+icon('arrow')+'</button>'+
+          '<p class="ngdm-wallet-hint">Gunakan token untuk fitur Studio AI.</p>'+
+          '<div class="ngdm-wallet-actions">'+
+             '<button type="button" class="ngdm-wallet-cta" data-route="ai">Pakai token '+icon('arrow')+'</button>'+
+             '<button type="button" class="ngdm-wallet-secondary" data-route="katalog">Lihat paket</button></div>'+
         '</div><div class="ngdm-wallet-chart">'+
           '<div><strong>Riwayat saldo</strong><small>Aktivitas token terakhir</small></div>'+
           (reads.credits===true?memberTokenTrend_(state.creditHistory,balance):
@@ -570,7 +572,7 @@ function viewHome(){
       '</section>'+
       '<section class="ngdm-quick" aria-labelledby="ngdm-quick-title">'+
         '<div class="ngdm-section-head"><div><p class="ngdm-kicker">PINTASAN</p>'+
-        '<h2 id="ngdm-quick-title">Mau ngulik apa hari ini?</h2></div></div>'+
+        '<h2 id="ngdm-quick-title">Layanan untuk Anda</h2></div></div>'+
         '<div class="ngdm-shortcuts">'+[
           ['spark','Studio AI','Buat konten','ai'],
           ['store','Katalog','Cari produk','katalog'],
