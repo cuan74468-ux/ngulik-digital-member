@@ -161,6 +161,36 @@ async function visit(url,label){
       ['member-orders','?preview=member#pesanan']
     ])await visit(host+part,label);
     console.log('MOBILE_360_ALL_ROUTES_OK');
+    // Also verify the real signed-in PC header; mobile-only QA previously missed it.
+    await request('Emulation.setDeviceMetricsOverride',{
+      width:1366,height:800,deviceScaleFactor:1,mobile:false,
+      screenWidth:1366,screenHeight:800
+    });
+    await request('Page.navigate',{url:host+'?preview=member#beranda'});
+    await pause(1800);
+    const pc=await request('Runtime.evaluate',{
+      expression:"(()=>{const nav=document.getElementById('guest-nav');const more=document.getElementById('top-nav-trigger');const visible=x=>!!x&&getComputedStyle(x).display!=='none';return {width:innerWidth,scrollWidth:document.documentElement.scrollWidth,routes:[...nav.querySelectorAll('[data-route]')].filter(visible).map(x=>x.dataset.route),nav:visible(nav),more:visible(more),burger:visible(more.querySelector('svg')),label:visible(more.querySelector('.ngdm-desktop-more-text')),order:visible(document.getElementById('header-order')),badge:visible(document.getElementById('mode-indicator')),dashboard:visible(document.querySelector('.ngdm-dashboard'))};})()",
+      returnByValue:true
+    });
+    assert.ok(!pc.exceptionDetails,'desktop Chrome runtime error');
+    const desktop=pc.result.value;
+    console.log('MEMBER_DESKTOP_1366 '+JSON.stringify(desktop));
+    assert.equal(desktop.width,1366);
+    assert.ok(desktop.scrollWidth<=1366,'desktop horizontal overflow '+desktop.scrollWidth);
+    assert.deepEqual(desktop.routes,['beranda','katalog','ai','jasa','belajar']);
+    assert.equal(desktop.nav,true);
+    assert.equal(desktop.more,true);
+    assert.equal(desktop.burger,false,'mobile hamburger visible on desktop');
+    assert.equal(desktop.label,true,'desktop Lainnya text not visible');
+    assert.equal(desktop.order,false,'duplicated order header');
+    assert.equal(desktop.badge,false,'redundant role badge');
+    assert.equal(desktop.dashboard,true);
+    const dropdown=await request('Runtime.evaluate',{
+      expression:"(()=>{document.getElementById('top-nav-trigger').click();const pane=document.getElementById('top-nav-drawer');const routes=[...pane.querySelectorAll('nav [data-route]')].filter(x=>getComputedStyle(x).display!=='none').map(x=>x.dataset.route);return {open:!pane.hidden,routes};})()",
+      returnByValue:true
+    });
+    assert.deepEqual(dropdown.result.value,{open:true,routes:['pesanan','affiliate','dukungan','akun']});
+    console.log('MEMBER_DESKTOP_NAV_OK');
   }finally{
     try{ws?.close();}catch(e){}
     child.kill('SIGTERM');
