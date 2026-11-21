@@ -135,8 +135,8 @@ jobs:
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member" > /tmp/ngd-member.html 2>>/tmp/ngd-chrome.log
           echo 'MEMBER_BROWSER_PROBE:'
-          grep -Eo 'data-app-role="[^"]*"|class="member-welcome"|DASHBOARD / MEJA KERJA|DOMPET TOKEN UNIVERSAL|data-overflow="[^"]*"|data-floating-nav="[^"]*"|data-mobile-nav="[^"]*"|data-v2-cascade="[^"]*"' /tmp/ngd-member.html | tail -14 || true
-          grep -q 'DASHBOARD / MEJA KERJA' /tmp/ngd-member.html
+          grep -Eo 'data-app-role="[^"]*"|class="member-welcome"|RUANG MEMBER / AKTIVITAS SAYA|DOMPET TOKEN UNIVERSAL|data-overflow="[^"]*"|data-floating-nav="[^"]*"|data-mobile-nav="[^"]*"|data-v2-cascade="[^"]*"' /tmp/ngd-member.html | tail -14 || true
+          grep -q 'RUANG MEMBER / AKTIVITAS SAYA' /tmp/ngd-member.html
           # The accessible wallet heading is title-case in the actual member UI.
           # Check the rendered semantic element, not an obsolete uppercase copy.
           grep -q 'class="wallet-hero" aria-label="Dompet Token Universal"' /tmp/ngd-member.html
@@ -168,10 +168,12 @@ jobs:
           # Runtime storefront uses only API data: no built-in test offers.
           grep -q 'data-v8-broken-images="0"' /tmp/ngd-catalog.html
           grep -q 'data-v8-archived-visible="false"' /tmp/ngd-catalog.html
-          grep -q 'data-v9-campaign-source="default"' /tmp/ngd-catalog.html
-          grep -q 'data-v9-campaign-art-loaded="true"' /tmp/ngd-catalog.html
-          grep -q 'data-v9-campaign-has-headline="true"' /tmp/ngd-catalog.html
-          if ! grep -Eq 'Katalog Produk &amp; Jasa|Katalog belum tersedia' /tmp/ngd-catalog.html; then
+          # Member's personal catalog must not duplicate the public retail campaign.
+          if grep -q 'class="ngd-catalog-campaign"' /tmp/ngd-catalog.html; then
+            echo 'CATALOG_BROWSER_FAIL: public sales hero leaked into member workspace' >&2
+            exit 1
+          fi
+          if ! grep -Eq 'Katalog untuk kebutuhan Anda|Katalog belum tersedia' /tmp/ngd-catalog.html; then
             echo 'CATALOG_BROWSER_FAIL: expected catalogue heading missing' >&2
             grep -o -E '<h1[^>]*>[^<]*|<h2[^>]*>[^<]*|Katalog[^<]*|<section id="screen"[^>]*' /tmp/ngd-catalog.html | head -12 || true
             exit 1
@@ -217,7 +219,7 @@ jobs:
           echo 'SUPPORT_ADMIN_BROWSER_OK'
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#belajar" > /tmp/ngd-lms-member.html 2>>/tmp/ngd-chrome.log
-          grep -q 'Pilih Kelas yang Anda Suka' /tmp/ngd-lms-member.html
+          grep -q 'RUANG MEMBER / KELAS SAYA' /tmp/ngd-lms-member.html
           grep -q 'Fondasi Digital untuk UMKM' /tmp/ngd-lms-member.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-member.html
           grep -q 'data-native-member-nav="true"' /tmp/ngd-lms-member.html
