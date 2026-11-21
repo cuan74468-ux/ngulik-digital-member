@@ -1265,6 +1265,17 @@ function viewLogin(register=false,adminMode=false){
       '<div class="actions"><button type="button" class="btn btn-primary" data-route="beranda">Kembali ke beranda</button>'+
       '<button type="button" class="btn btn-secondary" data-route="login">Masuk nanti</button></div></section>';
   }
+  // Public OTP access is intentionally gated: do not collect WhatsApp numbers
+  // behind an unavailable submit button or imply that a guest can finish checkout.
+  if(!register&&!adminMode&&!memberOtpLoginEnabled()){
+    return '<section class="ngd-role-gate ngd-member-login-closed" role="status">'+
+      '<p class="eyebrow">AKSES MEMBER</p><h1>Login member belum tersedia di halaman publik.</h1>'+
+      '<p>Anda tetap bisa melihat katalog, harga, dan cara kerjanya. Pendaftaran dan login WhatsApp dibuka setelah layanan akun siap digunakan.</p>'+
+      (state.pendingPurchaseId?'<p>Produk yang dipilih belum dipesan atau ditagihkan.</p>':'')+
+      '<div class="ngd-role-actions"><button type="button" class="btn btn-primary" data-route="katalog">Lihat Katalog '+icon('arrow')+'</button>'+
+      '<button type="button" class="btn btn-secondary" data-route="dukungan">Cara Kerja &amp; Bantuan</button></div>'+
+    '</section>';
+  }
   const memberOtp=!adminMode&&!register;
   // Member authentication is WhatsApp OTP, never an assumed PIN.
   // Backend and environment release gates still apply.
