@@ -26,7 +26,7 @@ test('palette and typography match the Linggau master exactly',()=>{
   assert.ok(css.includes("font-variant-numeric:tabular-nums"));
   assert.ok(css.includes("focus-visible"));
 });
-test('guest has native five-tab mobile dock, compact marketplace header, and member retains four destinations',()=>{
+test('guest has native five-tab mobile dock, compact marketplace header, and member gets five transactional destinations',()=>{
   assert.match(html,/data-app-role="guest"/);
   assert.match(css,/data-app-role=guest\]:not\(#ngd\) \.sidebar\{display:none!important\}/);
   const market=read('assets/marketplace-ref-v5.css');
@@ -37,7 +37,7 @@ test('guest has native five-tab mobile dock, compact marketplace header, and mem
   for(const name of ['Beranda','Katalog','Layanan','Afiliasi','Bantuan','Masuk','Daftar Member'])
     assert.ok(html.includes('>'+name+'</button>'),name);
   assert.match(app,/\['beranda','katalog','jasa','affiliate','dukungan'\]/);
-  assert.match(app,/\['beranda','ai','katalog','affiliate'\]/);
+  assert.match(app,/\['beranda','katalog','ai','pesanan','menu'\]/);
   assert.match(html,/data-route="menu"/);
   assert.doesNotMatch(html,/Bertumbuh dimulai|Belajar • Berkarya • Bertumbuh|Ruang belajar/i);
 });
