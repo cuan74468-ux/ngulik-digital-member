@@ -31,7 +31,9 @@ test('public UI strips unsafe HTML and supports authorized checkout',()=>{
   const app=read('js/app.js');
   assert.match(app,/const esc\s*=/);
   assert.match(app,/const paymentEnabled\s*=/);
-  assert.match(app,/data-buy=/);
+  assert.match(app,/data-checkout-product=/);
+  assert.match(app,/function viewCheckoutDraft_\(\)/);
+  assert.match(app,/const canConfirm=open&&paymentEnabled\(\)&&!financeBlocked&&officialQr/);
   assert.match(app,/const list=Array\.isArray\(state\.catalog\)\?state\.catalog\.filter\(p=>!isPublicQaOffer_\(p\)\):\[\]/);
   assert.doesNotMatch(app,/const PUBLIC_CATALOG=/);
   const api=read('js/api.js');
