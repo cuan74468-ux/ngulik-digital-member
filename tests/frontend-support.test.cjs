@@ -34,10 +34,12 @@ test('support pages parse with no build step',()=>{
 test('guest cannot access member ticket form or admin data',()=>{
   const h=preview();
   h.go('dukungan');
-  assert.match(h.nodes.screen.innerHTML,/class="ngd-public-help"/);
-  assert.match(h.nodes.screen.innerHTML,/class="ngd-help-hero"/);
-  assert.match(h.nodes.screen.innerHTML,/Pertanyaan yang sering ditanyakan/);
-  assert.match(h.nodes.screen.innerHTML,/Masuk untuk bantuan pribadi/);
+  assert.match(h.nodes.screen.innerHTML,/class="ngd-buyer-help"/);
+  assert.match(h.nodes.screen.innerHTML,/class="ngdb-help-intro"/);
+  assert.match(h.nodes.screen.innerHTML,/Cara kerja/i);
+  assert.match(h.nodes.screen.innerHTML,/Yang biasanya ditanyakan/);
+  assert.match(h.nodes.screen.innerHTML,/Masuk \/ Daftar Member/);
+  assert.match(h.nodes.screen.innerHTML,/Harus daftar dulu untuk membeli/);
   assert.doesNotMatch(h.nodes.screen.innerHTML,/id="support-create-form"/);
   h.go('member360');
   assert.doesNotMatch(h.nodes.screen.innerHTML,/MEMBER 360° · PREVIEW/);
