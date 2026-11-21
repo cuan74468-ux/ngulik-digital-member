@@ -356,6 +356,10 @@ function diagnosticFinanceScenarios() {
     status:'FULFILLED'}],[],[],[{product_id:'SIM-TOKEN-10',tipe:'TOPUP_TOKEN'}])
     .findings[0].issues.indexOf('TOPUP_LEDGER_COUNT_0')>=0,
     'Topup Token tanpa ledger terdeteksi');
+  assert_(financeFindings_([{order_id:'SIM-TOKEN',product_id:'SIM-TOKEN-10',
+    status:'FULFILLED'}],[{ref_id:'SIM-TOKEN',tipe:'TOPUP_TOKEN'}],[],
+    [{product_id:'SIM-TOKEN-10',tipe:'TOPUP_TOKEN'}]).needs_review===0,
+    'Ledger historis TOPUP_TOKEN tetap dikenali');
   assert_(issues(run(paid,[])).indexOf('TOPUP_LEDGER_COUNT_0')>=0,'Fulfilled tanpa ledger terdeteksi');
   assert_(issues(run(paid,[credit,credit])).indexOf('TOPUP_LEDGER_COUNT_2')>=0,'Topup ganda terdeteksi');
   var refunded={order_id:'SIM-1',product_id:'SIM-CREDIT',status:'REFUNDED'};
