@@ -395,12 +395,6 @@ function viewHome(){
       ['Paket 3-in-1',state.me.akses_3in1_sampai&&new Date(state.me.akses_3in1_sampai).getTime()>Date.now()?'AKTIF':'BELUM AKTIF'],
       ['Canva',String(state.me.status_canva||'BELUM AKTIF')]
     ];
-    // Member homepage is the same retail design system as the public
-    // marketplace. Numbers and access statuses remain server supplied.
-    const featuredIds=['P-EBOOK','P-STARTER-15K','P-STARTER-15',
-      'P-3IN1','P-POS','P-VIDEO-AI','P-INTEGRASI-GAS'];
-    const featured=featuredIds.map(id=>state.catalog.find(p=>
-      String(p.product_id)===id&&!isPublicQaOffer_(p))).filter(Boolean);
     const safeBalance=Number.isFinite(wallet)?Math.max(0,wallet):0;
     const campaign=(window.NGD_CONTENT_UI?.hero(state.siteContent,'member_home')||'')+
       (window.NGD_CONTENT_UI?.promotion(state.siteContent,'member_home')||'');
@@ -424,7 +418,6 @@ function viewHome(){
             '<button type="button" class="btn btn-secondary" data-route="belajar">Lanjutkan Belajar</button>'+
           '</div>'+
         '</div>'+
-        '<img class="ngd-member-hero-art" src="'+esc(cmsPageArt_('member_home')||ngdPremiumArtSrc_('templates'))+'" alt="" decoding="async">'+
       '</section>'+
       '<div class="metric-grid ngd-member-stats" aria-label="Ringkasan akun">'+
         '<section class="wallet-hero" aria-label="Dompet Token Universal">'+
@@ -460,14 +453,6 @@ function viewHome(){
           '<div class="member-focus-ring-core"><strong>'+progress+'%</strong><small>selesai</small></div></div>'+
       '</section>'+
       (campaign?'<section class="ngd-member-campaign" aria-label="Informasi khusus member">'+campaign+'</section>':'')+
-      '<section class="ngd-member-featured" aria-label="Katalog pilihan member">'+
-        '<header class="ngd-member-section-head"><div><p class="eyebrow">MARKETPLACE PRODUK DIGITAL</p>'+
-        '<h2>Produk pilihan untuk Anda</h2></div>'+
-        '<button type="button" data-route="katalog">Lihat Katalog '+icon('arrow')+'</button></header>'+
-        (featured.length?viewPublicMarketplace(featured):
-          '<div class="ngd-member-empty-catalog"><p>Katalog belum dimuat dari server.</p>'+
-          '<button type="button" data-route="katalog">Buka katalog</button></div>')+
-      '</section>'+
       (d.peringatan_kredit?'<div class="banner warning section-gap"><div><h3>Saldo Token Hampir Habis</h3>'+
         '<p>Periksa saldo sebelum menjalankan alat AI.</p></div>'+
         '<button type="button" class="btn btn-secondary" data-route="ai">Lihat saldo</button></div>':'')+
@@ -478,7 +463,6 @@ function viewHome(){
   // orders, prices, ratings or affiliate earnings are rendered here.
   // Public front door: concise value proposition, without a duplicate product grid.
   // The full catalog owns product cards, prices, filtering and checkout.
-  const homeCampaign=window.NGD_CONTENT_UI?.published(state.siteContent,'HERO','home')?.[0];
   const homeHeadline='Solusi digital yang benar-benar membantu <em>usaha Anda.</em>';
   const homeLead='Buat katalog online, gunakan sistem kasir, dan hasilkan materi promosi. Pilih layanan yang dibutuhkan tanpa harus mencari-cari di banyak halaman.';
   const benefitLinks=[
