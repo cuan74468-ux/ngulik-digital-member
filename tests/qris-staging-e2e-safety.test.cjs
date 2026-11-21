@@ -31,14 +31,17 @@ test('STAGING member uses only pinned STAGING backend from staging/config.js',()
   assert.ok(!stageMemberCfg.includes('https://script.google.com/macros/s/'));
   assert.match(stageMemberHtml,/noindex,nofollow/);
 });
-test('frontend modules parse and QRIS images fail closed with WhatsApp fallback',()=>{
+test('frontend modules parse and QRIS images fail closed without a manual payment fallback',()=>{
   // app.js is an ES module; existing browser/ESM smoke checks its syntax.
   assert.match(app,/data-qris-image/);
   assert.match(app,/data-qris-fallback/);
   assert.match(app,/document\.addEventListener\('error'/);
   assert.match(app,/confirmButton\.disabled=true/);
   assert.match(app,/qrisOwnerImageApproved!==true/);
-  assert.match(app,/Minta instruksi pembayaran via WhatsApp/);
+  assert.match(app,/QRIS belum diaktifkan/);
+  assert.match(app,/const canConfirm=open&&paymentEnabled\(\)&&!financeBlocked&&officialQr/);
+  const checkout=app.slice(app.indexOf('function viewCheckout(){'),app.indexOf('function viewAdminRuntime(){'));
+  assert.doesNotMatch(checkout,/wa\.me|Chat WhatsApp|gateway_payment_url/);
 });
 test('GAS staging E2E uses isolated scratch and cleanup with no real WhatsApp',()=>{
   assert.doesNotThrow(()=>new vm.Script(code));
