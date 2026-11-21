@@ -115,7 +115,7 @@ test('Back and Forward apply product-specific routes once without duplicate load
     addEventListener(type,fn){handlers[type]=fn;}
   };
   const routes=new Function('state','screens','location','history','window',
-    'render','loadRoute','aiToolRoute_','aiRouteFromHash_',
+    'render','loadRoute','aiToolRoute_','aiRouteFromHash_','logged','isAdmin',
     app.slice(begin,end)+'\n'+app.slice(syncBegin,syncEnd)+
     '\nreturn {go,syncBrowserRoute_};'
   )(state,screens,location,history,window,
@@ -123,7 +123,7 @@ test('Back and Forward apply product-specific routes once without duplicate load
     id=>'ai-tool/'+id,()=>{
       const slug=location.hash.slice(1);
       return slug.startsWith('checkout/')?'checkout':slug;
-    });
+    },()=>true,()=>false);
   routes.go('checkout');
   assert.equal(location.hash,'#checkout/P-TEST');
   assert.equal(state.route,'checkout');
