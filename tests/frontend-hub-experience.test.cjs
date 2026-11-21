@@ -149,13 +149,13 @@ test('broken published artwork falls back to curated local WebP once',()=>{
   assert.equal(img.src,'./assets/media/ngd-v8-video.webp');
 });
 
-test('guest services displays real catalog checkout cards and no unlocked quote form',()=>{
+test('guest services offers clearly routed categories without a second marketplace or unlocked quote form',()=>{
   const h=preview();h.go('jasa');const html=h.nodes.screen.innerHTML;
   assert.match(html,/class="ngd-public-services"/);
   assert.match(html,/class="ngd-service-guide-head"/);
   assert.doesNotMatch(html,/market-product-card|ngd-service-main-art/);
-  assert.match(html,/data-checkout-product=/);
-  assert.doesNotMatch(html,/id="service-brief-form"|Tanya via WhatsApp/);
+  assert.match(html,/data-route="katalog"/);
+  assert.doesNotMatch(html,/data-checkout-product|id="service-brief-form"|Tanya via WhatsApp/);
   assert.equal(h.apiCalls.length,0);
 });
 
