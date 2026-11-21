@@ -128,7 +128,11 @@ test('an ordinary member is denied catalogue admin read and mutation routes',()=
 });
 
 test('new install seeds nine documented commercial offers, including 10-token topup',()=>{
-  const ids=[...backend.matchAll(/\['(P-(?:3IN1|POS|INTEGRASI-GAS|TOKEN-10|TOKEN-35|TOKEN-100|STARTER-15|VIDEO-AI|EBOOK))','/g)]
+  // Only parse the nine fresh-database seeds, not audit contract fixtures elsewhere
+  // in Code.gs (which intentionally repeat the same SKU identifiers).
+  const seed=backend.slice(backend.indexOf('function seedCatalog_()'),
+    backend.indexOf('function seedAiTools_()'));
+  const ids=[...seed.matchAll(/\['(P-(?:3IN1|POS|INTEGRASI-GAS|TOKEN-10|TOKEN-35|TOKEN-100|STARTER-15|VIDEO-AI|EBOOK))','/g)]
     .map(m=>m[1]);
   assert.equal(ids.length,9);
   assert.equal(new Set(ids).size,9);
