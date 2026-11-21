@@ -618,3 +618,14 @@ html body.ngd-public-app[data-app-role="member"]:not(#ngd) #member-mobile-nav{
   html body.ngd-public-app[data-app-role="member"]:not(#ngd) #top-nav-drawer nav [data-route="ai"],
   html body.ngd-public-app[data-app-role="member"]:not(#ngd) #top-nav-drawer nav [data-route="pesanan"]{display:none!important}
 }
+
+
+/* The desktop-only More label must never enlarge public/admin or phone headers. */
+html body.ngd-public-app:not([data-app-role="member"]) .topbar #top-nav-trigger .ngdm-desktop-more-text{
+  display:none!important;
+}
+@media(max-width:980px){
+  html body.ngd-public-app .topbar #top-nav-trigger .ngdm-desktop-more-text{
+    display:none!important;
+  }
+}
