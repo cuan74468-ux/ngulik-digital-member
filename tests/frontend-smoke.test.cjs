@@ -52,7 +52,8 @@ test('guest homepage renders and shows offline preview warning',()=>{
   const {nodes,document}=renderPreview();
   assert.match(nodes.screen.innerHTML,/nh-hero/);
   assert.match(nodes.screen.innerHTML,/nh-home-minimal/);
-  assert.match(nodes.screen.innerHTML,/ngd-journey-stage/);
+  assert.match(nodes.screen.innerHTML,/ngd-home-quiet-hero/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/market-product-card|ngd-home-artwork/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.match(nodes['desktop-nav'].innerHTML,/Katalog/);
   assert.equal(document.title,'Beranda — Ngulik Digital');
