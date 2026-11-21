@@ -9,8 +9,8 @@ const backend=fs.readFileSync(path.join(__dirname,'../apps-script/Code.gs'),'utf
 const otpBackend=fs.readFileSync(path.join(__dirname,'../apps-script/OtpAuth.gs'),'utf8');
 
 test('public registration OTP release gate remains OFF',()=>{
-  assert.match(config,/registrationOtpEnabled:\s*true/);
-  assert.match(config,/memberWritesEnabled:\s*true/);
+  assert.match(config,/registrationOtpEnabled:\s*false/);
+  assert.match(config,/memberWritesEnabled:\s*false/);
   assert.match(config,/paymentsEnabled:\s*false/);
 });
 test('member registration UI requests WhatsApp OTP and verifies it before submit',()=>{
