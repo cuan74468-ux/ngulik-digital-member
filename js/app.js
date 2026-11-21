@@ -73,7 +73,7 @@ const screens={
   lms:['Kelola Kelas','book'],['lms-editor']:['Ruang Materi','book'],
   ['lms-lesson']:['Editor Pelajaran','book'],['lms-course']:['Ruang Kelas','book'],
   ['lms-ai']:['Review Draft AI','spark'],
-  ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Katalog','store'],
+  ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Katalog','store'],['detail-produk']:['Detail Produk','store'],
   ai:['Studio AI','spark'],['ai-tool']:['Ruang Alat AI','spark'],affiliate:['Ajak Teman','link'],akun:['Akun','user'],
   produk:['Katalog Admin','store'],jasa:['Jasa','gift'],layanan:['Pesanan Jasa','gift'],
   admin:['Admin','grid'],konten:['Gambar & Banner','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
@@ -217,7 +217,7 @@ function activatePreview(){
 
 const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,qa:false,
-  info:null,catalog:[],siteContent:[],adminContent:[],contentEditId:'',contentPresetProductId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
+  info:null,catalog:[],catalogLoaded:false,productDetailId:'',productDetailReturnRoute:'katalog',siteContent:[],adminContent:[],contentEditId:'',contentPresetProductId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
   affiliates:null,partnerShelf:[],partnerShelfLoaded:false,waitlist:[],members:[],adminOrders:[],adminSummary:null,
   reconciliation:null,selectedProduct:null,lastOrder:null,checkoutProductId:'',checkoutRequestId:null,orderDetailLoading:false,checkoutReturnRoute:'katalog',loading:false,
   memberProducts:[],creditHistory:[],supportTickets:[],supportReleases:[],supportOverview:null,
@@ -691,13 +691,11 @@ function viewPublicMarketplace(list){
   const cards=shown.map(p=>{
     const kind=offerCategory(p);
     const price=moneyValue(p.harga);
-    // Every catalog item opens the same internal checkout details first.
-    // No WhatsApp commerce CTA, no direct money movement on card click.
-    const detailAction=logged()?
-      '<button type="button" class="ngd-card-detail" data-checkout-product="'+idSafe(p.product_id)+'">Detail checkout</button>':
-      '<details class="ngd-card-public-detail"><summary>Detail produk</summary>'+
-        '<p>'+esc(offerUiDescription_(p)||'Lihat informasi produk dan harga sebelum membeli.')+'</p>'+
-        '<strong>'+rupiah(price)+'</strong></details>';
+    // Product information has its own bookmarkable route. Never expand cards
+    // inline or confuse product details with checkout.
+    const detailHash='#detail-produk/'+encodeURIComponent(String(p.product_id||''));
+    const detailAction='<a class="ngd-card-detail" href="'+esc(detailHash)+
+      '" data-product-detail="'+idSafe(p.product_id)+'">Detail produk '+icon('arrow')+'</a>';
     const action='<div class="ngd-card-actions">'+detailAction+
       '<button type="button" class="market-product-action" data-checkout-product="'+idSafe(p.product_id)+'">'+
       (price===0?'Akses Gratis':'Beli Sekarang')+' '+icon('arrow')+'</button></div>';
@@ -721,14 +719,17 @@ function viewPublicMarketplace(list){
     const cover=cmsImage?cmsImage.replace('<img ',
       '<img data-market-fallback="'+esc(localSource)+'" '):fallbackCover;
     const commissionLabel=ngdCommissionLabel_(p);
-    return '<article class="market-product-card" data-market-kind="'+esc(kind)+'" aria-label="'+esc(offerUiTitle_(p))+'">'+
-      '<div class="market-product-media market-media-'+esc(kind)+'">'+
+    return '<article class="market-product-card" data-market-product="'+idSafe(p.product_id)+
+      '" data-market-kind="'+esc(kind)+'" aria-label="'+esc(offerUiTitle_(p))+'">'+
+      '<a class="market-product-media market-media-'+esc(kind)+'" href="'+esc(detailHash)+
+        '" data-product-detail="'+idSafe(p.product_id)+'" aria-label="Lihat detail '+esc(offerUiTitle_(p))+'">'+
         (cover||fallbackCover)+
         (badge?'<span class="market-product-badge">'+esc(badge)+'</span>':'')+
         '<span class="market-product-category">'+esc(offerCategoryLabel(p))+'</span>'+
-      '</div><div class="market-product-body">'+
+      '</a><div class="market-product-body">'+
         '<span class="market-product-merchant">'+esc(ngdOfferCategoryLabel_(p))+'</span>'+
-        '<h3>'+esc(offerUiTitle_(p))+'</h3>'+
+        '<h3><a class="market-product-title-link" href="'+esc(detailHash)+
+          '" data-product-detail="'+idSafe(p.product_id)+'">'+esc(offerUiTitle_(p))+'</a></h3>'+
         '<p class="market-product-description">'+esc(offerUiDescription_(p)||'Lihat pilihan produk digital kami.')+'</p>'+
         (benefits?'<div class="market-product-benefits">'+benefits+'</div>':'')+
         '<div class="market-product-bottom"><span class="market-product-price-label">Harga</span>'+
@@ -780,6 +781,105 @@ function viewPartnerShelf_(){
       '<p class="ngd-partner-empty">'+(state.partnerShelfLoaded?'Belum ada rekomendasi.':'Memuat rekomendasi…')+'</p>')+
   '</section>';
 }
+
+function openProductDetail_(rawId){
+  const id=String(rawId||'').trim();
+  if(!/^[A-Za-z0-9_-]{1,100}$/.test(id))return;
+  if(!Array.isArray(state.catalog)||!state.catalog.some(p=>
+      String(p.product_id)===id&&!isPublicQaOffer_(p)))return;
+  if(state.route!=='detail-produk')
+    state.productDetailReturnRoute=state.route==='jasa'?'jasa':'katalog';
+  state.productDetailId=id;
+  go('detail-produk');
+}
+function viewProductDetail(){
+  const id=String(state.productDetailId||'');
+  const product=Array.isArray(state.catalog)?state.catalog.find(p=>
+    String(p.product_id)===id&&!isPublicQaOffer_(p)):null;
+  const back=state.productDetailReturnRoute==='jasa'?'jasa':'katalog';
+  if(!product){
+    const waiting=!state.catalogLoaded&&isConnected()&&!state.qa;
+    return '<section class="ngdp-shell ngdp-empty">'+
+      '<p class="ngdp-eyebrow">NGULIK DIGITAL / DETAIL PRODUK</p>'+
+      '<h1>'+(waiting?'Memuat informasi produk…':'Produk tidak tersedia.')+'</h1>'+
+      '<p>'+(waiting?'Data produk sedang diambil dari katalog.':'Produk mungkin sudah tidak diterbitkan atau tautannya kurang tepat.')+'</p>'+
+      '<button type="button" class="ngdp-button ngdp-secondary" data-route="katalog">Kembali ke Katalog</button>'+
+      '</section>';
+  }
+  const kind=offerCategory(product);
+  const price=moneyValue(product.harga);
+  const validPrice=price!==null&&price>=0&&Number.isSafeInteger(price);
+  const description=offerUiDescription_(product).trim();
+  const excerpt=description.length>145?description.slice(0,142).trimEnd()+'…':description;
+  const label=offerCategoryLabel(product);
+  const fallback=ngdPremiumArtSrc_(ngdProductArtId_(product,kind));
+  const customImage=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',product.product_id,
+    'ngdp-cover',offerUiTitle_(product));
+  const cover=customImage?customImage.replace('<img ',
+      '<img data-market-fallback="'+esc(fallback)+'" '):
+      '<img class="ngdp-cover" src="'+esc(fallback)+'" alt="Sampul '+esc(offerUiTitle_(product))+'" loading="eager" decoding="async">';
+  const credits=Number(product.kredit_diberikan)||0;
+  const days=Number(product.durasi_hari)||0;
+  const facts=[
+    '<span><strong>'+esc(label)+'</strong>Jenis produk</span>',
+    credits>0?'<span><strong>'+esc(credits)+' token</strong>Jumlah kredit</span>':'',
+    days>0?'<span><strong>'+esc(days)+' hari</strong>Masa akses</span>':''
+  ].filter(Boolean).join('');
+  const buyButton=validPrice?
+    '<button type="button" class="ngdp-button ngdp-primary" data-checkout-product="'+idSafe(id)+'">'+
+      (logged()?(price===0?'Lanjutkan Akses Gratis':'Lanjut ke Checkout'):(price===0?'Masuk untuk Akses':'Masuk untuk Membeli'))+
+      ' '+icon('arrow')+'</button>':
+    '<span class="ngdp-unavailable">Harga belum tersedia. Produk belum dapat dipesan.</span>';
+  const related=state.catalog.filter(p=>!isPublicQaOffer_(p)&&String(p.product_id)!==id&&
+      offerCategory(p)===kind).slice(0,3);
+  const relatedItems=related.map(p=>{
+    const pid=String(p.product_id),href='#detail-produk/'+encodeURIComponent(pid);
+    const image=ngdPremiumArtSrc_(ngdProductArtId_(p,offerCategory(p)));
+    const amt=moneyValue(p.harga);
+    return '<a class="ngdp-related-item" href="'+esc(href)+'" data-product-detail="'+idSafe(pid)+'">'+
+      '<img src="'+esc(image)+'" alt="" loading="lazy" decoding="async">'+
+      '<span><strong>'+esc(offerUiTitle_(p))+'</strong><small>'+
+      (amt===0?'Gratis':amt!==null&&amt>0?rupiah(p.harga):'Harga belum tersedia')+
+      '</small></span>'+icon('arrow')+'</a>';
+  }).join('');
+  return '<div class="ngdp-shell">'+
+    '<nav class="ngdp-breadcrumb" aria-label="Navigasi produk"><button type="button" data-route="'+back+'">← '+(back==='jasa'?'Kembali ke Jasa':'Kembali ke Katalog')+'</button>'+
+      '<span aria-hidden="true">/</span><span>'+esc(label)+'</span></nav>'+
+    '<section class="ngdp-hero" aria-labelledby="ngdp-product-title">'+
+      '<div class="ngdp-artwork">'+cover+'</div>'+
+      '<div class="ngdp-pitch"><p class="ngdp-eyebrow">PRODUK NGULIK DIGITAL · '+esc(label)+'</p>'+
+        '<h1 id="ngdp-product-title">'+esc(offerUiTitle_(product))+'</h1>'+
+        (excerpt?'<p class="ngdp-lead">'+esc(excerpt)+'</p>':
+          '<p class="ngdp-lead">Lihat informasi dan harga produk sebelum melanjutkan pembelian.</p>')+
+        (facts?'<div class="ngdp-facts">'+facts+'</div>':'')+
+        '<div class="ngdp-purchase"><p>Harga katalog</p><strong>'+
+          (price===0?'Gratis':price!==null&&price>0?rupiah(product.harga):'Belum tersedia')+'</strong>'+
+          buyButton+
+          '<small>'+(logged()?'Periksa kembali produk dan nominal sebelum membuat pesanan.':
+            'Anda perlu masuk sebagai member untuk memesan dan menyimpan akses produk.')+'</small>'+
+        '</div>'+
+      '</div>'+
+    '</section>'+
+    '<div class="ngdp-information">'+
+      '<section class="ngdp-description" aria-labelledby="ngdp-about-title">'+
+        '<p class="ngdp-eyebrow">INFORMASI PRODUK</p><h2 id="ngdp-about-title">Tentang produk ini</h2>'+
+        (description?'<p class="ngdp-description-text">'+esc(description)+'</p>':
+        '<p class="ngdp-description-text">Deskripsi lengkap belum diterbitkan. Periksa kembali sebelum melakukan pembelian.</p>')+
+      '</section>'+
+      '<aside class="ngdp-order-guide" aria-labelledby="ngdp-order-title">'+
+        '<p class="ngdp-eyebrow">SEBELUM MEMESAN</p><h2 id="ngdp-order-title">Langkah berikutnya</h2>'+
+        '<ol><li>Pastikan produk dan harga sesuai kebutuhan.</li>'+
+        '<li>Masuk atau daftar member untuk menyimpan riwayat pesanan.</li>'+
+        '<li>Ikuti instruksi checkout dan tunggu verifikasi akses sesuai ketentuan.</li></ol>'+
+        '<button type="button" class="ngdp-guide-help" data-route="dukungan">Baca Cara Kerja & Bantuan '+icon('arrow')+'</button>'+
+      '</aside>'+
+    '</div>'+
+    (relatedItems?'<section class="ngdp-related" aria-labelledby="ngdp-related-title">'+
+      '<div class="ngdp-related-head"><p class="ngdp-eyebrow">JELAJAHI LAGI</p><h2 id="ngdp-related-title">Pilihan lain dalam kategori ini</h2></div>'+
+      '<div class="ngdp-related-grid">'+relatedItems+'</div></section>':'')+
+  '</div>';
+}
+
 function viewCatalog(){
   // One catalog presentation for guests and signed-in members.
   // Existing server-side payment and role gates remain authoritative.
@@ -862,6 +962,16 @@ const aiCategoryFor_=id=>aiCategoryCatalog.find(c=>c.id===id);
 function aiToolRoute_(toolId){return 'ai-tool/'+encodeURIComponent(String(toolId||''));}
 function aiRouteFromHash_(){
   const hash=location.hash.slice(1);
+  if(hash.startsWith('detail-produk/')){
+    try{
+      const id=decodeURIComponent(hash.slice('detail-produk/'.length));
+      if(/^[A-Za-z0-9_-]{1,100}$/.test(id)){
+        state.productDetailId=id;
+        return 'detail-produk';
+      }
+    }catch(_){}
+    return 'katalog';
+  }
   if(hash.startsWith('checkout/')){
     try{
       const id=decodeURIComponent(hash.slice('checkout/'.length));
@@ -1347,12 +1457,14 @@ function openProductCheckout_(id){
     String(p.product_id)===String(id)&&!isPublicQaOffer_(p)):null;
   if(!product){toast('Produk belum tersedia. Muat ulang katalog.',true);return;}
   state.checkoutProductId=String(product.product_id);
+  if(state.route==='detail-produk')state.checkoutReturnRoute='detail-produk';
+  else if(state.route!=='login')state.checkoutReturnRoute='katalog';
   if(!logged()){
     state.pendingPurchaseId=state.checkoutProductId;
     go('login');return;
   }
   state.checkoutRequestId=null;state.lastOrder=null;
-  state.orderDetailLoading=false;state.checkoutReturnRoute='katalog';
+  state.orderDetailLoading=false;
   go('checkout');
 }
 function viewCheckoutDraft_(){
@@ -1379,7 +1491,7 @@ function viewCheckoutDraft_(){
   return '<div class="checkout-backdrop"><section class="checkout-dialog checkout-product-preview" role="dialog" aria-modal="true" aria-labelledby="checkout-title">'+
     '<header class="checkout-heading"><div><p class="eyebrow">NGULIK DIGITAL / CHECKOUT</p>'+
       '<h1 id="checkout-title">Rincian Checkout</h1><p>Periksa produk sebelum membuat pesanan.</p></div>'+
-      '<button type="button" class="checkout-close" data-route="katalog" aria-label="Kembali ke katalog">×</button></header>'+
+      '<button type="button" class="checkout-close" data-route="'+esc(state.checkoutReturnRoute||'katalog')+'" aria-label="Kembali ke halaman sebelumnya">×</button></header>'+
     '<div class="checkout-summary"><section><h2>Produk pilihan</h2>'+
       '<div class="price-line"><span>Nama produk</span><strong>'+esc(offerUiTitle_(p))+'</strong></div>'+
       '<p class="checkout-note">'+esc(offerUiDescription_(p))+'</p>'+
@@ -1398,7 +1510,7 @@ function viewCheckoutDraft_(){
          'Pembayaran belum aktif. QRIS tidak ditampilkan sampai diverifikasi.')+'</p></div>')+
       (reason?'<p class="checkout-note" role="status">'+esc(reason)+'</p>':'')+
       cta+
-      '<button type="button" class="btn btn-ghost btn-wide" data-route="katalog">Kembali ke katalog</button>'+
+      '<button type="button" class="btn btn-ghost btn-wide" data-route="'+esc(state.checkoutReturnRoute||'katalog')+'">Kembali ke produk</button>'+
     '</section></div></section></div>';
 }
 function viewCheckout(){
@@ -2194,7 +2306,7 @@ function render(){
   renderNav();
   by('notice-slot').innerHTML=notice();
   const routes={
-    beranda:viewHome,belajar:viewLearn,katalog:viewCatalog,ai:viewAI,'ai-tool':viewAITool,affiliate:viewAffiliate,menu:viewMore,
+    beranda:viewHome,belajar:viewLearn,katalog:viewCatalog,'detail-produk':viewProductDetail,ai:viewAI,'ai-tool':viewAITool,affiliate:viewAffiliate,menu:viewMore,
     lms:()=>isAdmin()&&window.NGD_LMS_UI?
       window.NGD_LMS_UI.adminCatalog(state.lmsAdminCourses,lmsWriteEnabled(),state.catalog):
       needLogin('studio LMS'),
@@ -2248,7 +2360,9 @@ function go(route){
   route=guestRoute_(route);
   if(!screens[route])route='beranda';
   state.route=route;
-  const fragment=route==='ai-tool'?aiToolRoute_(state.selectedAiToolId):
+  const fragment=route==='detail-produk'&&/^[A-Za-z0-9_-]{1,100}$/.test(String(state.productDetailId||''))?
+    'detail-produk/'+encodeURIComponent(state.productDetailId):
+    route==='ai-tool'?aiToolRoute_(state.selectedAiToolId):
     route==='checkout'&&!state.lastOrder&&/^[A-Za-z0-9_-]{1,100}$/.test(String(state.checkoutProductId||''))?
       'checkout/'+encodeURIComponent(state.checkoutProductId):route;
   const next='#'+fragment;
@@ -2267,6 +2381,7 @@ async function refreshPublic(){
     api('getPublicInfo'),api('getKatalog'),api('getPublicContent'),api('getPublicTools')]);
   if(info.status==='fulfilled'&&info.value&&typeof info.value==='object')state.info=info.value;
   if(catalog.status==='fulfilled'&&Array.isArray(catalog.value))state.catalog=catalog.value;
+  state.catalogLoaded=true;
   if(content.status==='fulfilled'&&Array.isArray(content.value))state.siteContent=content.value;
   if(publicTools.status==='fulfilled'&&Array.isArray(publicTools.value)){
     state.publicTools=publicTools.value;state.publicToolsLoaded=true;
@@ -3419,10 +3534,18 @@ document.addEventListener('click',async(e)=>{
     state.marketplaceSearch='';state.catalogFilter='semua';state.marketplaceSort='default';
     render();return;
   }
-  const target=e.target.closest('[data-checkout-product],[data-checkout-create],[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-create],[data-content-asset],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-image],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-payment-open],[data-order-detail]');
+  const target=e.target.closest('[data-product-detail],[data-market-product],[data-checkout-product],[data-checkout-create],[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-create],[data-content-asset],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-image],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-payment-open],[data-order-detail]');
   if(!target)return;
   if(target.hasAttribute('data-checkout-product')){
     openProductCheckout_(target.dataset.checkoutProduct);return;
+  }
+  if(target.hasAttribute('data-product-detail')){
+    e.preventDefault();
+    openProductDetail_(target.dataset.productDetail);return;
+  }
+  if(target.hasAttribute('data-market-product')){
+    if(e.target.closest?.('a,button,input,select,textarea,summary,details'))return;
+    openProductDetail_(target.dataset.marketProduct);return;
   }
   if(target.hasAttribute('data-checkout-create')){
     await buy(target.dataset.checkoutCreate);return;
@@ -3665,6 +3788,7 @@ by('mobile-back').addEventListener('click',()=>{
   const back={
     'lms-course':'belajar','lms-complete':'lms-course',
     tiket:'dukungan',checkout:state.checkoutReturnRoute||'katalog',
+    'detail-produk':state.productDetailReturnRoute||'katalog',
     'lms-editor':'lms','lms-lesson':'lms-editor','lms-ai':'lms-editor',
     'ai-tool':'ai',
     member360:'member'
