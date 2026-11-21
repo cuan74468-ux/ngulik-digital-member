@@ -64,11 +64,11 @@ test('existing member route and real commerce backend remain in place',()=>{
 });
 
 test('P0 mobile result counter is valid HTML and refresh is a separate button',()=>{
-  assert.match(app,/produk<\\/span>'\\+/);
-  assert.doesNotMatch(app,/produk<\\/span'\\+/);
+  assert.ok(app.includes("produk</span>'+"));
+  assert.ok(!app.includes("produk</span'+"));
   assert.match(app,/class="market-results-header"/);
   assert.match(app,/class="market-refresh" data-market-refresh/);
   const mobile=read('assets/mobile-critical-v16.css');
-  assert.match(mobile,/\\.market-results-header\\{/);
-  assert.match(mobile,/gap:10px!important/);
+  assert.ok(mobile.includes('.market-results-header{'));
+  assert.ok(mobile.includes('gap:10px!important'));
 });
