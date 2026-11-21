@@ -85,7 +85,7 @@ test('STAGING exposes QA UI controls but backend retains independent finance and
     'notificationsEnabled','lmsEnabled']){
       assert.match(staging,new RegExp(key+':true'));
   }
-  assert.match(staging,/registrationOtpEnabled:false/);
+  assert.match(staging,/registrationOtpEnabled:true/);\n  assert.match(app,/state\\.workspaceInfo\\?\\.registration_enabled===true/);
   assert.match(staging,/memberOtpLoginEnabled:true/);
   assert.match(staging,/paymentsEnabled:false/);
   assert.match(staging,/qrisOwnerImageApproved:false/);
