@@ -39,3 +39,14 @@ Status: NO-GO for live payments until gates below pass.
 - Whether legacy ADMIN M-0001 should be treated as a separate exceptional business arrangement; code currently follows the member-only affiliate policy.
 - Confirm QRIS identity from actual payment application.
 - Confirm real funds in DANA and authorize opening financial transactions.
+
+## Checkpoint: reconciliation triage — 2026-11-21
+- Operator executed diagnosticFinanceScenarios: 26/26 PASS (memory-only, before latest classification changes).
+- Operator executed diagnosticFinanceReadOnly: FINANCE_AUDIT_OK (orders=2, ledger=10, commissions=1, members=9, products=15, errors=0, warnings=0). This basic integrity audit does NOT replace reconciliation.
+- Operator executed diagnosticReconciliationReadOnly: checked=2, needs_review=1. ORD-STG-0001 flagged PAID_PENDING_FULFILLMENT_REVIEW and COMMISSION_REFERRER_NOT_ELIGIBLE.
+- Transaction ORD-STG-0001 has historical TOPUP_TOKEN credit of 10 to M-0009 (balance previously confirmed 35), but order status PAID. Do NOT credit again or silently mark FULFILLED.
+- M-0001 is ADMIN and historically receives commission KOM-STG-0001 PENDING. Keep historical evidence intact pending policy decision.
+- Latest Code.gs improves classifications: TOPUP_PAID_LEDGER_POSTED_STATUS_REVIEW, TOPUP_PAID_LEDGER_COUNT_0, TOPUP_LEDGER_WRONG_MEMBER, and avoids COMMISSION_MISSING for an ineligible ADMIN inviter. Diagnostic scenarios expanded (expected 29 after syncing latest Diagnostics.gs).
+- Latest source edits have been committed to GitHub main, but NOT YET confirmed synced into GAS. No backend deployment or public payment enabling authorized.
+- **Next step:** sync BOTH latest Code.gs and Diagnostics.gs into the same STAGING GAS project and save. Run diagnosticFinanceScenarios, diagnosticFinanceReadOnly, diagnosticReconciliationReadOnly. Expected reconciliation: existing historic order still needs review, with more precise reason codes; no automatic data mutation.
+- Operator must determine disposition of historic ADMIN commissions and order status only after independent evidence of payment/fulfillment.
