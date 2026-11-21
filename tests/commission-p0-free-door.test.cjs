@@ -79,7 +79,7 @@ test('member/public copies avoid technical commission terminology',()=>{
 test('member dashboard strips DANA destination and transfer evidence',()=>{
   const section=between(gas,'function affiliateDashboard_(m) {','function ngdDanaDestination_');
   assert.match(section,/komisi:safeRows/);
-  const safeMap=between(section,'var safeRows=all.map','return {kode_referral');
+  const safeMap=between(section,'var safeRows=all.map','var partnerUnlocked=ngdStarterUnlocked_');
   assert.doesNotMatch(safeMap,/payout_note|nomor_dana/);
 });
 test('admin payout only after proof and exact DANA match; reference not reused',()=>{
