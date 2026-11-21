@@ -109,6 +109,9 @@ const screens={
 };
 const guestNav=['beranda','katalog','jasa','dukungan'];
 const memberNav=['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun'];
+// Keep desktop focused: five destinations; remaining features live in More.
+const memberDesktopNav=['beranda','katalog','ai','jasa','belajar'];
+const memberDesktopExtraRoutes=memberNav.filter(route=>!memberDesktopNav.includes(route));
 // One native navigation system on phones: four primary tabs plus a More sheet.
 // The existing header nav remains available on wide screens only.
 const memberDockRoutes=['beranda','katalog','ai','pesanan'];
@@ -317,7 +320,7 @@ function renderNav(){
   // navigation surface, never a fixed bottom bar or a duplicated Menu page.
   const drawer=by('top-nav-drawer');
   if(drawer){
-    const routes=isAdmin()?adminNav:logged()?memberExtraRoutes:guestNav;
+    const routes=isAdmin()?adminNav:logged()?memberNav:guestNav;
     const names={beranda:logged()&&!isAdmin()?'Beranda Member':'Beranda',
       katalog:'Katalog',ai:'Studio AI',jasa:'Jasa',belajar:'Akses & Kelas',
       affiliate:'Ajak Teman',pesanan:'Pesanan',
@@ -340,6 +343,12 @@ function renderNav(){
   }
   const orderLink=by('header-order');
   if(orderLink)orderLink.hidden=!logged()||isAdmin();
+  const moreButton=by('top-nav-trigger');
+  if(moreButton){
+    moreButton.setAttribute('aria-label',logged()&&!isAdmin()?'Buka menu lainnya':'Buka navigasi utama');
+    moreButton.setAttribute('data-overflow-active',String(logged()&&!isAdmin()&&
+      memberDesktopExtraRoutes.includes(state.route)));
+  }
   by('page-label').textContent=screens[state.route]?.[0]||'Beranda';
   by('account-avatar').textContent=logged()?
     String(state.me.nama||'M').split(' ').map(v=>v[0]).join('').slice(0,2).toUpperCase():'ND';
@@ -352,9 +361,7 @@ function renderNav(){
   // continues using its private workspace and does not expose these routes.
   const publicNav=by('guest-nav');
   if(publicNav){
-    const navRoutes=isAdmin()?[]:logged()?
-      ['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan']:
-      ['beranda','katalog','jasa','dukungan'];
+    const navRoutes=isAdmin()?[]:logged()?memberDesktopNav:guestNav;
     const navNames={beranda:'Beranda',katalog:'Katalog',belajar:'Kelas',
       ai:'Studio AI',pesanan:'Pesanan',affiliate:'Ajak Teman',jasa:'Jasa',
       dukungan:'Bantuan'};
@@ -492,7 +499,6 @@ function viewHome(){
   if(isAdmin())return viewAdmin();
   if(logged()){
     const first=String(state.me?.nama||'Member').trim().split(/\s+/)[0];
-    const initial=first.charAt(0).toUpperCase()||'M';
     const d=state.home||{};
     const reads=state.memberDashboardReads||{};
     const balanceValue=Number(d.saldo_kredit??state.me?.saldo_kredit);
@@ -536,7 +542,6 @@ function viewHome(){
         '<div><p class="ngdm-kicker">RUANG MEMBER <span aria-hidden="true">·</span> '+esc(greeting)+'</p>'+
           '<h1>Halo, '+esc(first)+'<span class="ngdm-wave" aria-hidden="true"> ✦</span></h1>'+
           '<p>Semua aktivitas digital Anda, dalam satu tempat.</p></div>'+
-        '<button type="button" class="ngdm-avatar" data-route="akun" aria-label="Buka profil member">'+esc(initial)+'</button>'+
       '</header>'+
       '<section class="ngdm-wallet" aria-labelledby="ngdm-wallet-heading">'+
         '<div class="ngdm-wallet-top"><span>'+icon('wallet')+' DOMPET TOKEN</span>'+

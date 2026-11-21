@@ -541,3 +541,80 @@ html body.ngd-public-app[data-app-role="member"]:not(#ngd) #member-mobile-nav{
     transition:none!important;
   }
 }
+
+/* MEMBER DESKTOP: focused nav, no hamburger in PC header.
+   Other roles and the already working native mobile dock are untouched. */
+@media(min-width:981px){
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar{
+    justify-content:space-between!important;gap:clamp(10px,1.2vw,20px)!important;
+    padding:8px clamp(16px,2vw,30px)!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .guest-brand{
+    flex:0 0 auto!important;min-width:0!important;max-width:220px!important;gap:8px!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .guest-brand-icon{
+    flex:0 0 44px!important;width:44px!important;min-width:44px!important;height:44px!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .guest-brand strong{
+    font-size:clamp(16px,1.3vw,19px)!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #guest-nav{
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    flex:1 1 0!important;gap:2px!important;min-width:0!important;margin:0!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #guest-nav button{
+    white-space:nowrap!important;min-width:0!important;min-height:42px!important;
+    padding:8px clamp(5px,.55vw,10px)!important;font-size:clamp(10px,.8vw,12px)!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .top-actions{
+    gap:clamp(6px,.7vw,11px)!important;flex:0 0 auto!important;min-width:0!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar :is(#mode-indicator,#header-order){
+    display:none!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .ngd-header-search{
+    width:clamp(130px,12.7vw,190px)!important;min-width:0!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #top-nav-trigger{
+    display:inline-flex!important;align-items:center!important;justify-content:center!important;
+    flex:0 0 auto!important;min-width:78px!important;min-height:42px!important;
+    padding:7px 11px!important;gap:5px!important;
+    background:transparent!important;border:1px solid transparent!important;
+    border-radius:10px!important;color:#443660!important;
+    font:750 12px/1.15 Inter,system-ui,sans-serif!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #top-nav-trigger svg{display:none!important}
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #top-nav-trigger .ngdm-desktop-more-text{display:inline!important}
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #top-nav-trigger::after{
+    content:"⌄";font-size:17px;line-height:1;transform:translateY(-2px);
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #top-nav-trigger:is(:hover,[aria-expanded="true"],[data-overflow-active="true"]){
+    background:#f1edfa!important;color:#4b2cac!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #top-nav-drawer nav [data-route="beranda"],
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #top-nav-drawer nav [data-route="katalog"],
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #top-nav-drawer nav [data-route="ai"],
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #top-nav-drawer nav [data-route="jasa"],
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #top-nav-drawer nav [data-route="belajar"]{display:none!important}
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-dashboard{
+    gap:20px!important;padding-top:2px!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-greeting{padding-top:0!important}
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-wallet{
+    padding:26px clamp(23px,2.3vw,32px)!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-wallet-grid{
+    margin-top:18px!important;gap:28px!important;
+  }
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-chart-plot{height:100px!important}
+}
+@media(max-width:980px){
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .ngdm-desktop-more-text{display:none!important}
+}
+@media(max-width:760px){
+  /* Primary phone destinations are on the dock; do not repeat inside More. */
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #top-nav-drawer nav [data-route="beranda"],
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #top-nav-drawer nav [data-route="katalog"],
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #top-nav-drawer nav [data-route="ai"],
+  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #top-nav-drawer nav [data-route="pesanan"]{display:none!important}
+}

@@ -240,7 +240,7 @@ test('mobile member dock is native, complementary, and does not appear for guest
   assert.deepEqual([...dock.matchAll(/data-route="([^"]+)"/g)].map(m=>m[1]),
     ['beranda','katalog','ai','pesanan']);
   assert.deepEqual([...more.matchAll(/data-route="([^"]+)"/g)].map(m=>m[1]),
-    ['jasa','belajar','affiliate','dukungan','akun']);
+    ['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun']);
   assert.match(dock,/member-more-toggle/);
   const guest=renderPreview();
   assert.equal(guest.nodes['member-mobile-nav'].hidden,true);
