@@ -28,13 +28,13 @@ test('public and STAGING use identical branded favicon and correct relative sour
   for(const html of [publicHtml,stagingHtml]){
     assert.match(html,/id="brand-mark"[^>]*><img class="ngd-brand-image"/);
     assert.match(html,/guest-brand-icon"[^>]*><img class="ngd-brand-image"/);
-    assert.match(html,/assets\/brand-experience-v10\.css\?v=20261121-proportions-v13-1/);
+    assert.match(html,/assets\/brand-experience-v10\.css\?v=20261121-proportions-v13-2/);
     // The STAGING app cache key advances separately for Scalev checks.
     assert.ok(html.indexOf('brand-official.css')>html.indexOf('affiliate-partner.css'));
     assert.doesNotMatch(html,/guest-brand-icon"[^>]*>n\./);
   }
-  assert.match(publicHtml,/js\/app\.js\?v=20261121-proportions-v13-1/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261121-proportions-v13-1/);
+  assert.match(publicHtml,/js\/app\.js\?v=20261121-proportions-v13-2/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261121-proportions-v13-2/);
 });
 test('all dynamic brand placements use same canonical official image',()=>{
   assert.match(app,/const defaultBrandLogoSrc=document\.querySelector\?\.\('\.guest-brand-icon \.ngd-brand-image'\)/);
