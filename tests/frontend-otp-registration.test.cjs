@@ -13,6 +13,20 @@ test('public registration OTP release gate remains OFF',()=>{
   assert.match(config,/memberWritesEnabled:\s*false/);
   assert.match(config,/paymentsEnabled:\s*false/);
 });
+test('STAGING signup readiness requires verified backend flags, not just UI opt-in',()=>{
+  const staging=fs.readFileSync(path.join(__dirname,'../staging/member-config.js'),'utf8');
+  const stagePage=fs.readFileSync(path.join(__dirname,'../staging/member.html'),'utf8');
+  assert.match(staging,/registrationOtpEnabled:\s*true/);
+  assert.match(staging,/paymentsEnabled:\s*false/);
+  assert.match(staging,/qrisOwnerImageApproved:\s*false/);
+  assert.match(app,/state\.workspaceInfo\?\.workspace==='NGD_STAGING'/);
+  for(const flag of ['mutations_enabled','registration_enabled','otp_enabled','external_providers_enabled'])
+    assert.match(app,new RegExp('state\\.workspaceInfo\\?\\.'+flag+'===true'));
+  assert.match(app,/api\('getStagingWorkspaceInfo'\)/);
+  assert.match(app,/const readinessLoad=refreshStagingReadiness_\(\)/);
+  assert.match(stagePage,/member-config\.js\?v=20261121-signup-readiness-v1/);
+  assert.match(stagePage,/app\.js\?v=20261121-staging-signup-readiness-v1/);
+});
 test('member registration UI requests WhatsApp OTP and verifies it before submit',()=>{
   assert.match(app,/data-action="otp-request"/);
   assert.match(app,/data-action="otp-verify"/);
