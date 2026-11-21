@@ -480,14 +480,14 @@ function viewHome(){
   const homeArt=homeCampaign?
     window.NGD_CONTENT_UI.mediaPath(homeCampaign.image_path):ngdPremiumArtSrc_('hero');
   const homeHeadline=homeCampaign?.title?
-    esc(homeCampaign.title):'Belajar, Berkarya, dan <em>Ngulik Bareng AI</em>';
+    esc(homeCampaign.title):'Bikin usaha lebih mudah dengan <em>solusi digital.</em>';
   const homeLead=homeCampaign?.description?
-    esc(homeCampaign.description):'eBook, paket belajar, aplikasi usaha, video AI, dan integrasi praktis untuk UMKM.';
+    esc(homeCampaign.description):'Katalog online, aplikasi kasir, otomasi order, dan konten promosi yang bisa membantu pekerjaan UMKM sehari-hari.';
   const homeRoute=homeCampaign&&screens[String(homeCampaign.cta_route||'')]?
     String(homeCampaign.cta_route):'katalog';
   const homeCta=homeCampaign?.cta_label?esc(homeCampaign.cta_label):'Jelajahi Produk';
-  const curatedIds=['P-EBOOK','P-STARTER-15K','P-STARTER-15',
-    'P-3IN1','P-POS','P-VIDEO-AI','P-INTEGRASI-GAS'];
+  const curatedIds=['P-3IN1','P-POS','P-INTEGRASI-GAS','P-VIDEO-AI',
+    'P-STARTER-15K','P-STARTER-15','P-EBOOK'];
   const curated=curatedIds.map(id=>(state.catalog||[]).find(p=>
     String(p.product_id)===id&&!isPublicQaOffer_(p))).filter(Boolean);
   const brandStage='<div class="ngd-journey-stage ngd-shop-brand-stage">'+
