@@ -100,9 +100,18 @@ async function visit(url,label){
   }
   if(label==='member-home'||label==='member-services'){
     assert.ok(x.colors,label+' hero text missing');
-    // Dark ink on a light surface: text is never white-on-white.
-    assert.ok(/rgb\\(\s*(?:0|[1-9][0-9]?)\s*,/.test(x.colors.text),
-      label+' hero text must be dark: '+x.colors.text);
+    // WCAG 2.x normal-text contrast, using actual computed CSS colors.
+    const rgb=value=>(String(value).match(/[0-9]+/g)||[]).slice(0,3).map(Number);
+    const luminance=arr=>arr.slice(0,3).map(v=>{
+      const x=v/255;return x<=.04045?x/12.92:Math.pow((x+.055)/1.055,2.4);
+    }).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+    const ink=rgb(x.colors.text),surface=rgb(x.colors.background);
+    assert.equal(ink.length,3,label+' text CSS rgb');
+    assert.equal(surface.length,3,label+' surface CSS rgb');
+    const a=luminance(ink),b=luminance(surface);
+    const contrast=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+    console.log('MOBILE_360_CONTRAST '+label+' '+contrast.toFixed(2));
+    assert.ok(contrast>=4.5,label+' fails 4.5:1 contrast ('+contrast.toFixed(2)+')');
   }
 }
 (async()=>{
