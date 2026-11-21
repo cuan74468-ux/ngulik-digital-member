@@ -42,6 +42,29 @@ const urlSafe = (raw) => {
     return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';
   }catch{return '';}
 };
+// External shelf links must carry a referral/affiliate identifier; vendor URLs are not eligible.
+const partnerAffiliateUrl_=(item)=>{
+  const href=urlSafe(item?.link_affiliate);
+  if(!href)return '';
+  try{
+    const u=new URL(href);
+    const referralPath=/\/aff\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+\/?$/.test(u.pathname);
+    const referralQuery=[...u.searchParams].some(([key,value])=>
+      ['ref','referral','aff','affiliate','aff_id','affiliate_id','partner_id'].includes(key.toLowerCase())&&
+      /^[A-Za-z0-9_-]{3,120}$/.test(value));
+    return referralPath||referralQuery?href:'';
+  }catch{return '';}
+};
+function partnerVisitorId_(){
+  const key='ngd_partner_visitor_v1';
+  try{
+    const saved=sessionStorage.getItem(key);
+    if(/^[A-Za-z0-9_-]{8,90}$/.test(String(saved||'')))return saved;
+    const visitor='visit-'+Date.now()+'-'+Math.random().toString(36).slice(2,11);
+    sessionStorage.setItem(key,visitor);
+    return visitor;
+  }catch{return 'visit-'+Date.now()+'-'+Math.random().toString(36).slice(2,11);}
+}
 const classroomUrlSafe = (raw) => {
   const normalized=urlSafe(raw);
   if(!normalized)return '';
@@ -604,7 +627,7 @@ function viewHome(){
   return `<div class="ngd-landing-v1">
     <section class="ngdl-hero" aria-labelledby="ngdl-title">
       <div class="ngdl-hero-copy">
-        <p class="ngdl-eyebrow"><span class="ngdl-spark" aria-hidden="true">✦</span> TOOLS AI, PRODUK DIGITAL & JASA KREATIF</p>
+        <p class="ngdl-eyebrow"><span class="ngdl-spark" aria-hidden="true">✦</span> WARUNG TOOLS AI & BENGKEL KREATIF</p>
         <h1 id="ngdl-title">Punya usaha? <span>Ngulik digitalnya</span> di sini aja.</h1>
         <p class="ngdl-hero-lead">Bikin konten jualan, coba AI, atau rapikan usaha? Di sini ada alat, produk, dan orang yang bisa bantu. Bisa dari HP juga.</p>
         <div class="ngdl-actions">
@@ -850,8 +873,8 @@ function viewPublicMarketplace(list){
 function viewPartnerShelf_(){
   if(!logged()||isAdmin())return '';
   const rows=Array.isArray(state.partnerShelf)?state.partnerShelf:[];
-  const cards=rows.filter(x=>urlSafe(x.link_affiliate)).map(x=>{
-    const href=urlSafe(x.link_affiliate);
+  const cards=rows.filter(x=>partnerAffiliateUrl_(x)).map(x=>{
+    const href=partnerAffiliateUrl_(x);
     // External partner links are NEVER routed through internal checkout.
     const thumb=urlSafe(x.gambar_url);
     return '<article class="ngd-partner-card">'+
@@ -865,8 +888,8 @@ function viewPartnerShelf_(){
     '</article>';
   }).join('');
   return '<section class="ngd-partner-shelf section-gap" id="etalase-rekomendasi" aria-label="Etalase Rekomendasi Kelas dan Tools Partner">'+
-    '<div class="ngd-partner-header"><div><p class="eyebrow">REKOMENDASI</p><h2>Kelas & Alat Pilihan</h2>'+
-    '<p>Lihat detail dan ketentuan di situs penyedia.</p></div>'+
+    '<div class="ngd-partner-header"><div><p class="eyebrow">REKOMENDASI</p><h2>Etalase Partner & Affiliate</h2>'+
+    '<p>Khusus tautan mitra berkomisi. Portal gratis ada di menu Kelas, tanpa checkout.</p></div>'+
     '<span class="ngd-partner-disclosure">Tautan mitra</span></div>'+
     (cards?'<div class="ngd-partner-grid">'+cards+'</div>':
       '<p class="ngd-partner-empty">'+(state.partnerShelfLoaded?'Belum ada rekomendasi.':'Memuat rekomendasi…')+'</p>')+
@@ -1290,7 +1313,7 @@ function viewAffiliate(){
     '<p class="partner-kicker">AKSES AJAK TEMAN</p><h1>Aktifkan link komisi Anda.</h1>'+
     '<p>Starter Pack Rp15.000 membuka akses mitra seumur hidup, bonus 15 token AI, dan ruang kurasi. '+ 
     'Komisi hanya berlaku untuk pembelian yang memenuhi ketentuan setelah pembayaran diverifikasi.</p>'+
-    '<button type="button" class="partner-btn partner-btn-primary" data-checkout-product="P-STARTER-15">Lihat Starter Pack '+icon('arrow')+'</button>'+
+    '<button type="button" class="partner-btn partner-btn-primary" data-checkout-product="P-STARTER-15K">Lihat Starter Pack '+icon('arrow')+'</button>'+
     '<button type="button" class="partner-btn partner-btn-outline" data-route="katalog">Lihat Katalog</button>'+
     '</section>';
   const all=Array.isArray(a.komisi)?a.komisi:[];
@@ -3723,8 +3746,12 @@ document.addEventListener('click',async(e)=>{
     return;
   }
   if(target.hasAttribute('data-partner-out')){
-    // Let browser open the verified external href unmodified. Tracking is
-    // optional and may be gated off; it must never delay partner navigation.
+    // Preserve direct external navigation. A separate asynchronous write logs
+    // member clicks when the STAGING tracking gate is enabled in GAS.
+    const id=String(target.dataset.partnerOut||'');
+    if(logged()&&!isAdmin()&&isWriteEnabled()&&/^[A-Za-z0-9_-]{1,100}$/.test(id))
+      api('trackOutbound',{visitor_id:partnerVisitorId_(),item_id:id},
+        state.token,{write:true}).catch(()=>{});
     return;
   }
   if(target.hasAttribute('data-public-step')){
