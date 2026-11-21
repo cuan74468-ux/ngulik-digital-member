@@ -3644,10 +3644,8 @@ function routeFreeDoor_(){
 async function init(){
   if(routeFreeDoor_())return;
   captureFirstInviter_();
-  state.route=aiRouteFromHash_();
-  if(state.route==='menu')state.route='beranda';
-  // Before session restoration, a private bookmark shows login instead of the private page.
-  if(!state.token)state.route=guestRoute_(state.route);
+  const requestedRoute=aiRouteFromHash_();
+  state.route=guestRoute_(requestedRoute==='menu'?'beranda':requestedRoute);
   state.catalog=[];
   if(!activatePreview()){
     state.info=null;
@@ -3656,7 +3654,10 @@ async function init(){
     // hold back the member/admin route behind slower public asset requests.
     const publicLoad=refreshPublic();
     await restoreSession();
-    if(state.token&&state.me)void loadRoute(state.route);
+    if(logged()&&guestPrivateRoutes_.has(requestedRoute)&&!isAdmin()){
+      // Only resume a bookmarked private route after the server confirms the session.
+      go(requestedRoute);
+    }else if(logged())void loadRoute(state.route);
     await publicLoad;
   }else render();
 }
