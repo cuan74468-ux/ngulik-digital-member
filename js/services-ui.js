@@ -42,10 +42,15 @@
         (x.penawaran_pesan?'<p>'+h(x.penawaran_pesan)+'</p>':'')+'</article>').join(''):
         '<div class="empty"><h3>Belum ada pesanan jasa</h3><p>Permintaan yang Anda kirim akan muncul di sini.</p></div>')+
       '</section>';
-    return '<header class="service-heading"><p class="eyebrow">JASA NGULIK DIGITAL</p>'+
-      '<h1>Jasa untuk kebutuhan usaha Anda</h1>'+
-      '<p>Ceritakan kebutuhan Anda dan lihat penawaran dari kami.</p></header>'+
-      '<div class="service-columns">'+form+history+'</div>';
+    return '<div class="ngd-member-services">'+
+      '<header class="service-heading"><p class="eyebrow">JASA NGULIK DIGITAL / RUANG MEMBER</p>'+
+      '<h1>Ajukan pekerjaan, pantau hasilnya.</h1>'+
+      '<p>Sampaikan kebutuhan yang spesifik. Pantau status permintaan dan penawaran Anda dari halaman yang sama.</p></header>'+
+      '<div class="ngd-service-workflow" aria-label="Alur permintaan jasa">'+
+        '<div><span>01</span><strong>Kirim kebutuhan</strong><small>Jenis layanan, brief, dan anggaran</small></div>'+
+        '<div><span>02</span><strong>Tinjau penawaran</strong><small>Harga dan ruang lingkup pekerjaan</small></div>'+
+        '<div><span>03</span><strong>Pantau pekerjaan</strong><small>Proses setelah kesepakatan dan verifikasi</small></div>'+
+      '</div><div class="service-columns">'+form+history+'</div></div>';
   }
   function admin(ctx){
     if(!ctx.authorized)return '<div class="empty"><h3>Khusus Admin</h3><p>Masuk sebagai Admin untuk membuka halaman ini.</p></div>';
