@@ -127,3 +127,17 @@ body.ngd-public-app:not(#ngd) .checkout-product-preview .checkout-summary{
     animation:none;transition:none;transform:none;
   }
 }
+/* The three homepage service CTA elements are buttons now, not WhatsApp anchors. */
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-home-service-cta{
+  display:inline-flex;align-items:center;justify-content:space-between;
+  gap:8px;width:100%;min-height:44px;margin-top:auto;padding:10px 0;
+  background:transparent;border:0;border-radius:0;box-shadow:none;
+  color:#17565b;font:700 .82rem/1.35 Inter,system-ui,sans-serif;
+  text-align:left;text-decoration:none;cursor:pointer;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-home-service-cta:hover{
+  color:#0c4046;text-decoration:underline;text-underline-offset:4px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-home-service-cta:focus-visible{
+  outline:3px solid #9acdc2;outline-offset:3px;border-radius:3px;
+}
