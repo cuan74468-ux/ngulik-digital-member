@@ -63,7 +63,7 @@ test('local member preview renders native-like dashboard without login',()=>{
   assert.match(nodes.screen.innerHTML,/RUANG MEMBER \/ AKTIVITAS SAYA/);
   assert.match(nodes.screen.innerHTML,/ngd-member-activity/);
   assert.match(nodes.screen.innerHTML,/Komisi Siap Tarik/);
-  assert.match(nodes.screen.innerHTML,/Saldo token/);
+  assert.match(nodes.screen.innerHTML,/Saldo Token/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.equal(vm.runInContext('isWriteEnabled()',context),false);
 });
