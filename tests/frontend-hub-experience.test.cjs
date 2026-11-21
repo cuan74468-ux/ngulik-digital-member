@@ -13,7 +13,10 @@ function preview(query=''){
     addEventListener(type,fn){listeners[id+':'+type]=fn;}
   });
   const doc={body:{classList:{toggle(){}},setAttribute(){}},
-    getElementById:el,addEventListener(type,fn){listeners[type]=fn;},title:''};
+    getElementById:el,addEventListener(type,fn){
+      if(type==='error'&&listeners.error)listeners.productImageError=listeners.error;
+      listeners[type]=fn;
+    },title:''};
   const win={NGD_CONFIG:{demoMode:true,apiUrl:'',siteUrl:'https://example.invalid/',
     paymentsEnabled:false,supportEnabled:false,notificationsEnabled:false,
     lmsEnabled:false,qrisMerchant:'',qrisImageUrl:''},
@@ -134,7 +137,7 @@ test('archived and QA products are excluded from public listing and checkout',()
   assert.equal(h.apiCalls.length,0);
 });
 test('broken published artwork falls back to curated local WebP once',()=>{
-  const h=preview(),onError=h.listeners.error;
+  const h=preview(),onError=h.listeners.productImageError;
   assert.equal(typeof onError,'function');
   const img={tagName:'IMG',dataset:{marketFallback:'./assets/media/ngd-v8-video.webp'},
     src:'https://cdn.invalid/missing.webp',classList:{contains:n=>n==='market-product-image',add(){}}};
