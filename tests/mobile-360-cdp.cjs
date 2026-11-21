@@ -59,6 +59,9 @@ async function connect(){
 }
 const jsCheck=`(()=>{
   const doc=document.documentElement,screen=document.querySelector('#screen');
+  // Existing CI-only QA <output> nodes contain unbroken JSON, not app UI.
+  // Hide only these probe diagnostics before measuring real application geometry.
+  document.querySelectorAll('output[id^="qa-"]').forEach(el=>{el.style.display='none';});
   const h=document.querySelector('.ngd-member-hero h1')||
     document.querySelector('.ngd-member-services .service-heading h1');
   const colors=h?(()=>{
