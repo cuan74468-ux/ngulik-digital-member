@@ -392,6 +392,28 @@ function diagnosticFinanceScenarios() {
     'Komisi hilang terdeteksi saat program mengizinkan tiap order');
   assert_(financeFindings_([refOrder],[],[],[{product_id:'SIM-AFF',tipe:'LISENSI_SEKALI',bisa_komisi:false}],once).needs_review===0,
     'Produk tanpa komisi tidak memunculkan peringatan');
+  var buyer={member_id:'SIM-BUYER',role:'MEMBER',referred_by:'SIM-SPONSOR'};
+  var validInviter={member_id:'SIM-SPONSOR',role:'MEMBER',status:'AKTIF'};
+  var adminInviter={member_id:'SIM-SPONSOR',role:'ADMIN',status:'AKTIF'};
+  var inactiveInviter={member_id:'SIM-SPONSOR',role:'MEMBER',status:'NONAKTIF'};
+  assert_(ngdEligibleReferrer_(buyer,validInviter),
+    'Pengajak member aktif berhak komisi');
+  assert_(!ngdEligibleReferrer_(buyer,adminInviter),
+    'Pengajak role ADMIN tidak otomatis berhak komisi');
+  assert_(!ngdEligibleReferrer_(buyer,inactiveInviter),
+    'Pengajak nonaktif tidak berhak komisi');
+  assert_(!ngdEligibleReferrer_({member_id:'SIM-SPONSOR',role:'MEMBER',
+    referred_by:'SIM-SPONSOR'},validInviter),
+    'Self referral ditolak');
+  var syntheticCommission={order_id:'AFF-NEW',referred_member_id:'SIM-BUYER',
+    referrer_id:'SIM-SPONSOR',status:'PENDING'};
+  var mismatched=financeFindings_([refOrder],[],[syntheticCommission],eligible,all,
+    [buyer,adminInviter]);
+  assert_(mismatched.findings[0].issues.indexOf('COMMISSION_REFERRER_NOT_ELIGIBLE')>=0,
+    'Komisi historis ke ADMIN ditandai untuk rekonsiliasi');
+  assert_(financeFindings_([refOrder],[],[syntheticCommission],eligible,all,
+    [buyer,validInviter]).needs_review===0,
+    'Komisi pengajak MEMBER aktif tetap valid');
   console.log('FINANCE_SCENARIOS_OK | cases='+pass+' | mode=MEMORY_ONLY');
   return 'FINANCE_SCENARIOS_OK';
 }
