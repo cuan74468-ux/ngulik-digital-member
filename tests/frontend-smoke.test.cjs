@@ -56,11 +56,23 @@ test('guest homepage renders the guest-only visual landing',()=>{
   assert.doesNotMatch(nodes.screen.innerHTML,/ngdl-hero-art|ngdl-art-main|ngdl-art-caption/);
   assert.equal((nodes.screen.innerHTML.match(/class="ngdl-offer"/g)||[]).length,4);
   assert.match(nodes.screen.innerHTML,/data-route="daftar"/);
-  assert.match(nodes.screen.innerHTML,/Baca eBook Gratis/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/Baca eBook Gratis|Ikut Kelas Gratis|ngdl-free/);
   assert.doesNotMatch(nodes.screen.innerHTML,/market-product-card|ngd-home-artwork/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.match(nodes['desktop-nav'].innerHTML,/Katalog/);
   assert.equal(document.title,'Beranda — Ngulik Digital');
+});
+test('free ebook and classroom links only render in authenticated member learning',()=>{
+  const guest=renderPreview();
+  assert.doesNotMatch(guest.nodes.screen.innerHTML,/buku-pintar-vibe-coder|classroom\.google\.com|ngdl-free/);
+  vm.runInContext("go('dukungan')",guest.context,{timeout:2000});
+  assert.doesNotMatch(guest.nodes.screen.innerHTML,/buku-pintar-vibe-coder|classroom\.google\.com|ngdb-help-free/);
+  assert.doesNotMatch(app,/function routeFreeDoor_\(|viewHeroFreeLinks_\(|free=ebook|free=kelas/);
+  const member=renderPreview('?preview=member');
+  vm.runInContext("go('belajar')",member.context,{timeout:2000});
+  assert.match(member.nodes.screen.innerHTML,/ngd-member-learning-links/);
+  assert.match(member.nodes.screen.innerHTML,/Baca eBook Gratis/);
+  assert.match(member.nodes.screen.innerHTML,/Buka Kelas Gratis/);
 });
 test('guest hero image is a layered background, not a small inline artwork card',()=>{
   const source=fs.readFileSync(path.join(base,'assets/landing-guest-v1.css'),'utf8');
