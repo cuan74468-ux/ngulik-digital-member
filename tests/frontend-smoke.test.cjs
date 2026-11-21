@@ -51,8 +51,9 @@ test('public config exposes owner-enabled features while secrets stay server-sid
 test('guest homepage renders the guest-only visual landing',()=>{
   const {nodes,document}=renderPreview();
   assert.match(nodes.screen.innerHTML,/ngd-landing-v1/);
-  assert.match(nodes.screen.innerHTML,/Warung Tools AI/);
-  assert.match(nodes.screen.innerHTML,/ngdl-hero-art/);
+  assert.match(nodes.screen.innerHTML,/Punya usaha\?/);
+  assert.match(nodes.screen.innerHTML,/ngdl-hero-copy/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/ngdl-hero-art|ngdl-art-main|ngdl-art-caption/);
   assert.equal((nodes.screen.innerHTML.match(/class="ngdl-offer"/g)||[]).length,4);
   assert.match(nodes.screen.innerHTML,/data-route="daftar"/);
   assert.match(nodes.screen.innerHTML,/Baca eBook Gratis/);
@@ -60,6 +61,15 @@ test('guest homepage renders the guest-only visual landing',()=>{
   assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.match(nodes['desktop-nav'].innerHTML,/Katalog/);
   assert.equal(document.title,'Beranda — Ngulik Digital');
+});
+test('guest hero image is a layered background, not a small inline artwork card',()=>{
+  const source=fs.readFileSync(path.join(base,'assets/landing-guest-v1.css'),'utf8');
+  const markup=renderPreview().nodes.screen.innerHTML;
+  assert.match(source,/url\("\.\/media\/ngd-catalog-v9-wide\.webp"\)/);
+  assert.match(source,/\.ngdl-hero::after/);
+  assert.match(source,/linear-gradient/);
+  assert.match(source,/@media\(max-width:600px\)/);
+  assert.doesNotMatch(markup,/ngdl-hero-art|ngdl-art-caption/);
 });
 test('guest drawer exposes four public routes and a single member entrance',()=>{
   const {nodes,context}=renderPreview();
