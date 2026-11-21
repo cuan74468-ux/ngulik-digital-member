@@ -743,3 +743,44 @@ body.ngd-public-app:not(#ngd) .admin-env-notice strong{color:var(--studio-forest
 body.ngd-public-app:not(#ngd) .admin-env-notice p{font-size:.86rem;line-height:1.65;color:#536c5b;margin:0}
 body.ngd-public-app:not(#ngd) .admin-env-notice a{justify-self:start}
 @media(max-width:600px){body.ngd-public-app:not(#ngd) .admin-env-notice a{width:100%;justify-content:center}}
+
+
+/* Member portal: compact categorized resources, readable on 360px Android. */
+body.ngd-public-app:not(#ngd) .learning-portal{min-width:0}
+body.ngd-public-app:not(#ngd) .learning-portal-disclaimer{
+  max-width:100%;margin:16px 0 22px;padding:16px 18px;
+  border:1px solid #d6e4d8;border-left:4px solid #2d7151;border-radius:12px;
+  background:#f4faf5;color:#244433;line-height:1.65;font-size:.85rem;overflow-wrap:anywhere
+}
+body.ngd-public-app:not(#ngd) .learning-portal-groups{display:grid;gap:14px;min-width:0}
+body.ngd-public-app:not(#ngd) .learning-portal-group{
+  min-width:0;overflow:hidden;border:1px solid #dee7de;border-radius:17px;background:#fff
+}
+body.ngd-public-app:not(#ngd) .learning-portal-summary{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;
+  padding:18px 20px;color:#22392d;list-style:none
+}
+body.ngd-public-app:not(#ngd) .learning-portal-summary::-webkit-details-marker{display:none}
+body.ngd-public-app:not(#ngd) .learning-portal-summary span:first-child{min-width:0}
+body.ngd-public-app:not(#ngd) .learning-portal-summary strong{display:block;font-weight:800;font-size:1rem;line-height:1.35}
+body.ngd-public-app:not(#ngd) .learning-portal-summary small{display:block;color:#526557;margin-top:5px;font-size:.8rem}
+body.ngd-public-app:not(#ngd) .learning-portal-chevron{font-size:1.3rem;color:#355c44}
+body.ngd-public-app:not(#ngd) .learning-portal-group:not([open]) .learning-portal-chevron{transform:rotate(-90deg)}
+body.ngd-public-app:not(#ngd) .learning-portal-group .learning-legacy-list{border:0;border-top:1px solid #e9eee9;border-radius:0}
+body.ngd-public-app:not(#ngd) .learning-portal-group .learning-legacy-row{min-width:0}
+body.ngd-public-app:not(#ngd) .learning-portal-group .learning-legacy-copy h4{
+  overflow-wrap:anywhere;color:#24372c
+}
+body.ngd-public-app:not(#ngd) .learning-portal-group .learning-legacy-copy p{overflow-wrap:anywhere;color:#536156}
+body.ngd-public-app:not(#ngd) .learning-portal-group .btn{max-width:100%;white-space:normal;text-align:center}
+@media(max-width:600px){
+  body.ngd-public-app:not(#ngd) .learning-portal-summary{padding:15px 16px}
+  body.ngd-public-app:not(#ngd) .learning-portal-group .learning-legacy-row{
+    padding:15px;gap:10px;flex-wrap:wrap
+  }
+  body.ngd-public-app:not(#ngd) .learning-portal-group .learning-legacy-no{width:36px;height:36px;flex:none}
+  body.ngd-public-app:not(#ngd) .learning-portal-group .learning-legacy-copy{flex:1 1 calc(100% - 50px);min-width:0}
+  body.ngd-public-app:not(#ngd) .learning-portal-group .btn{
+    margin-left:46px;max-width:calc(100% - 46px)
+  }
+}
