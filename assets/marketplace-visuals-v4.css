@@ -96,3 +96,24 @@ body.ngd-public-app .market-product-media .market-product-category{display:none}
     transform:none;transition:none;
   }
 }
+
+/* Retain the canonical official mark in the hero while the cover stack
+   supplies the richer visual; avoids a second/fake brand identity. */
+body.ngd-public-app .market-page .market-hero-fallback > .market-hero-symbol{
+  position:relative;display:block;width:100%;height:100%;max-width:none;
+  aspect-ratio:auto;background:none;box-shadow:none;border:none;border-radius:0;overflow:visible;
+}
+body.ngd-public-app .market-page .market-hero-fallback > .market-hero-symbol > img.ngd-brand-image{
+  position:absolute;z-index:5;right:15px;top:15px;
+  width:38px;height:38px;object-fit:contain;
+  background:#fff;border-radius:11px;padding:6px;
+  box-shadow:0 3px 14px rgba(25,65,57,.13);
+}
+@media(max-width:650px){
+  body.ngd-public-app .market-page .market-hero-fallback > .market-hero-symbol{
+    height:150px;min-height:150px;
+  }
+  body.ngd-public-app .market-page .market-hero-fallback > .market-hero-symbol > img.ngd-brand-image{
+    width:30px;height:30px;top:9px;right:9px;
+  }
+}

@@ -472,7 +472,7 @@ function ngdProductArtId_(p,kind){
   return ({ai:'token',aplikasi:'pos',jasa:'video',belajar:'ebook'})[kind]||'template';
 }
 function ngdLocalArtSrc_(name){
-  const root=String(window.location.pathname||'').includes('/staging/')?'../':'./';
+  const root=String(window.location?.pathname||'').includes('/staging/')?'../':'./';
   return root+'assets/media/ngd-cover-'+name+'.svg';
 }
 function ngdProductImageFallback_(p,kind){
@@ -500,11 +500,12 @@ function viewPublicMarketplace(list){
       '<h2>Solusi digital untuk usaha Anda</h2>'+
       '<p>Temukan alat, aplikasi, dan layanan sesuai kebutuhan.</p>'+
       '<button type="button" class="market-hero-link" data-route="belajar">Mulai belajar '+icon('arrow')+'</button>'+
-      '</div><div class="market-hero-symbol ngd-market-hero-products" aria-hidden="true">'+
+      '</div><div class="market-hero-symbol" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt="">'+
+      '<div class="ngd-market-hero-products">'+
       '<img src="'+esc(ngdLocalArtSrc_('bundle'))+'" alt="" decoding="async">'+
       '<img src="'+esc(ngdLocalArtSrc_('pos'))+'" alt="" decoding="async">'+
       '<img src="'+esc(ngdLocalArtSrc_('video'))+'" alt="" decoding="async">'+
-      '</div></section>';
+      '</div></div></section>';
   const filterBar='<div class="market-categories" role="group" aria-label="Jelajahi kategori produk">'+
     offerCategories.map(([id,label])=>'<button type="button" class="catalog-filter market-category" data-catalog-filter="'+esc(id)+
       '" aria-pressed="'+(id===category?'true':'false')+'"><span class="market-category-icon" aria-hidden="true">'+
