@@ -451,3 +451,30 @@ body.ngd-public-app .ngd-role-gate .btn{margin-top:12px;min-height:45px}
   body.ngd-public-app[data-app-role=member] .ai-catalog .ai-catalog-intro{padding:12px 0 20px!important}
   body.ngd-public-app[data-app-role=admin] .admin-operations-intro{border-radius:14px!important;padding:24px 19px!important}
 }
+
+/* Member services: a guided request workflow, not a brochure. */
+body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading{
+  background:#fff!important;border:0!important;border-bottom:1px solid #e5e3eb!important;
+  border-radius:0!important;box-shadow:none!important;padding:15px 0 24px!important;
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading .eyebrow{color:#487480!important}
+body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading h1{
+  color:#203f4a!important;font:800 clamp(25px,2.7vw,39px)/1.18 "Plus Jakarta Sans",Inter,sans-serif!important;
+  letter-spacing:-.045em!important
+}
+body.ngd-public-app[data-app-role=member] .ngd-service-workflow{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:25px 0 30px
+}
+body.ngd-public-app[data-app-role=member] .ngd-service-workflow>div{
+  display:grid;align-content:start;gap:6px;border-top:2px solid #b8d6d7;padding:15px 4px 10px
+}
+body.ngd-public-app[data-app-role=member] .ngd-service-workflow span{color:#34737a;font-weight:800;font-size:11px}
+body.ngd-public-app[data-app-role=member] .ngd-service-workflow strong{color:#243f49;font-weight:750;font-size:15px}
+body.ngd-public-app[data-app-role=member] .ngd-service-workflow small{color:#687c80;font-size:12px;line-height:1.5}
+body.ngd-public-app .ngd-role-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+@media(max-width:640px){
+  body.ngd-public-app[data-app-role=member] .ngd-service-workflow{grid-template-columns:1fr;gap:8px}
+  body.ngd-public-app[data-app-role=member] .ngd-service-workflow>div{padding:11px 4px}
+  body.ngd-public-app .ngd-role-actions{flex-direction:column}
+  body.ngd-public-app .ngd-role-actions .btn{width:100%;justify-content:center}
+}
