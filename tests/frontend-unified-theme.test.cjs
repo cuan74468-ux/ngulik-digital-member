@@ -26,19 +26,22 @@ test('palette and typography match the Linggau master exactly',()=>{
   assert.ok(css.includes("font-variant-numeric:tabular-nums"));
   assert.ok(css.includes("focus-visible"));
 });
-test('guest has native five-tab mobile dock, compact marketplace header, and member gets five transactional destinations',()=>{
+test('guest and member use a single sticky header with accessible hamburger drawer and no bottom dock',()=>{
   assert.match(html,/data-app-role="guest"/);
   assert.match(css,/data-app-role=guest\]:not\(#ngd\) \.sidebar\{display:none!important\}/);
   const market=read('assets/marketplace-ref-v5.css');
-  assert.match(market,/#mobile-nav\{/);
-  assert.match(market,/display:flex!important/);
+  const finalCss=read('assets/mobile-critical-v16.css');
+  assert.match(finalCss,/#mobile-nav/);
+  assert.match(finalCss,/display:none!important/);
+  assert.match(finalCss,/\.top-nav-drawer/);
   assert.match(market,/@media\(max-width:920px\)/);
   assert.match(html,/id="guest-nav"/);
   for(const name of ['Beranda','Katalog','Studio AI','Layanan','Afiliasi','Bantuan','Masuk','Daftar Member'])
     assert.ok(html.includes('>'+name+'</button>'),name);
-  assert.match(app,/\['beranda','katalog','ai','jasa','menu'\]/);
-  assert.match(app,/\['beranda','katalog','ai','pesanan','menu'\]/);
-  assert.match(html,/data-route="menu"/);
+  assert.match(app,/const routes=isAdmin\(\)\?adminNav:logged\(\)\?memberNav:guestNav/);
+  assert.match(html,/id="top-nav-trigger"/);
+  assert.match(html,/id="header-order"/);
+  assert.doesNotMatch(html,/id="mobile-nav"|data-route="menu"/);
   assert.doesNotMatch(html,/Bertumbuh dimulai|Belajar • Berkarya • Bertumbuh|Ruang belajar/i);
 });
 test('full commercial routes and API modules are preserved',()=>{
