@@ -2030,13 +2030,15 @@ function financeFindings_(orders,ledger,commissions,products,policy,members) {
     var reversals=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='ADJUST_REFUND';});
     var isTopup=['TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(types[String(o.product_id)])>=0;
     if(o.status==='PAID'){
-      // A persisted fulfillment attempt means some entitlement writes may
-      // already have happened; surface this immediately, not after 48h.
+      // PAID is not synonymous with FULFILLED. Classify top-ups using the
+      // *persisted* ledger; never auto-credit or auto-change an old order.
       if(String(o.catatan_admin||'').indexOf('[ADMIN_FULFILLMENT_ATTEMPT]')>=0)
         reasons.push('MANUAL_FULFILLMENT_INCOMPLETE');
       var type=types[String(o.product_id)];
-      if(['LISENSI_SEKALI','SEAT_30H','JASA_SEKALI','PRODUK_DIGITAL'].indexOf(type)>=0){
-        // Manual fulfillment is expected; only flag when overdue >48 hours.
+      if(isTopup){
+        if(entries.length===1)reasons.push('TOPUP_PAID_LEDGER_POSTED_STATUS_REVIEW');
+        else reasons.push('TOPUP_PAID_LEDGER_COUNT_'+entries.length);
+      }else if(['LISENSI_SEKALI','SEAT_30H','JASA_SEKALI','PRODUK_DIGITAL'].indexOf(type)>=0){
         var paidAt=new Date(o.paid_at||o.created_at).getTime();
         if(!Number.isFinite(paidAt)||Date.now()-paidAt>48*3600000)
           reasons.push('ADMIN_FULFILLMENT_OVERDUE');
@@ -2044,6 +2046,9 @@ function financeFindings_(orders,ledger,commissions,products,policy,members) {
     }
     if(isTopup&&['FULFILLED','REFUNDED'].indexOf(o.status)>=0&&entries.length!==1)
       reasons.push('TOPUP_LEDGER_COUNT_'+entries.length);
+    // Detect ledger rows credited to someone other than the order's buyer.
+    if(isTopup&&entries.some(function(l){return String(l.member_id)!==String(o.member_id);}))
+      reasons.push('TOPUP_LEDGER_WRONG_MEMBER');
     if(isTopup&&o.status==='REFUNDED'&&reversals.length!==1)
       reasons.push('TOPUP_REFUND_ADJUST_COUNT_'+reversals.length);
     if(isTopup&&o.status!=='REFUNDED'&&reversals.length>0)
@@ -2059,10 +2064,16 @@ function financeFindings_(orders,ledger,commissions,products,policy,members) {
     }))reasons.push('COMMISSION_REFERRER_NOT_ELIGIBLE');
     // Only the admin's configured audit checks commission expectations.
     // Previous commissions (including reversed) consume the once-only grant.
-    if(policy&&commissionRate_(policy,catalog[String(o.product_id)])>0&&['PAID','FULFILLED'].indexOf(o.status)>=0
-        &&String(o.ref_member_id||'')!==''
-        &&catalog[String(o.product_id)]&&catalog[String(o.product_id)].bisa_komisi===true
-        &&orderCommissions.length===0){
+    var expectedBuyer=memberIndex[String(o.member_id)];
+    var expectedInviter=memberIndex[String(o.ref_member_id)];
+    var inviterEligibleForAudit=!members||
+      ngdEligibleReferrer_(expectedBuyer,expectedInviter);
+    if(policy&&catalog[String(o.product_id)]&&
+        commissionRate_(policy,catalog[String(o.product_id)])>0&&
+        ['PAID','FULFILLED'].indexOf(o.status)>=0&&
+        String(o.ref_member_id||'')!==''&&inviterEligibleForAudit&&
+        catalog[String(o.product_id)].bisa_komisi===true&&
+        orderCommissions.length===0){
       reasons.push('COMMISSION_MISSING');
     }
     if(o.status==='REFUNDED'&&commissions.some(function(k){
