@@ -24,7 +24,8 @@ body.ngd-public-app:not(#ngd) .guest-brand-icon{
   flex:0 0 56px!important;width:56px!important;height:56px!important;
   min-width:56px!important;border-radius:0!important;padding:0!important;
 }
-body.ngd-public-app:not(#ngd) .topbar .guest-brand{
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar .guest-brand,
+body.ngd-public-app[data-app-role=member]:not(#ngd) .topbar .guest-brand{
   display:flex!important;align-items:center!important;gap:11px!important;
   flex:0 0 auto!important;max-width:none!important;min-width:0;
   text-decoration:none!important;
@@ -73,6 +74,10 @@ body.ngd-public-app:not(#ngd) .brand-copy strong{
 }
 body.ngd-public-app:not(#ngd) .brand-copy small{
   color:#72628e!important;font:650 10px/1.28 Inter,sans-serif!important;
+}
+/* Admin has its own operational topbar. Never force public brand into it. */
+body.ngd-public-app[data-app-role=admin]:not(#ngd) .topbar .guest-brand{
+  display:none!important;
 }
 /* Login is a calm, clear workspace gate. No fake PIN requirement for Member. */
 body.ngd-public-app:not(#ngd) .login-shell.ngd-auth-v10{
