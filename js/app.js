@@ -632,6 +632,16 @@ const aiCategoryFor_=id=>aiCategoryCatalog.find(c=>c.id===id);
 function aiToolRoute_(toolId){return 'ai-tool/'+encodeURIComponent(String(toolId||''));}
 function aiRouteFromHash_(){
   const hash=location.hash.slice(1);
+  if(hash.startsWith('checkout/')){
+    try{
+      const id=decodeURIComponent(hash.slice('checkout/'.length));
+      if(/^[A-Za-z0-9_-]{1,100}$/.test(id)){
+        state.checkoutProductId=id;state.lastOrder=null;
+        state.checkoutReturnRoute='katalog';return 'checkout';
+      }
+    }catch(_){}
+    return 'katalog';
+  }
   if(hash.startsWith('ai-tool/')){
     const encoded=hash.slice(8);
     try{const toolId=decodeURIComponent(encoded);
@@ -1812,7 +1822,9 @@ function render(){
 function go(route){
   if(!screens[route])route='beranda';
   state.route=route;
-  const fragment=route==='ai-tool'?aiToolRoute_(state.selectedAiToolId):route;
+  const fragment=route==='ai-tool'?aiToolRoute_(state.selectedAiToolId):
+    route==='checkout'&&!state.lastOrder&&/^[A-Za-z0-9_-]{1,100}$/.test(String(state.checkoutProductId||''))?
+      'checkout/'+encodeURIComponent(state.checkoutProductId):route;
   if(location.hash.slice(1)!==fragment)history.replaceState(null,'','#'+fragment);
   render();window.scrollTo({top:0,behavior:'auto'});loadRoute(route);
 }
