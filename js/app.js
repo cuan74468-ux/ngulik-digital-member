@@ -335,8 +335,9 @@ function viewHomeServices_(){
     '<header class="ngd-home-services-heading"><p>JASA UTAMA</p><h2>Pilih Jasa untuk Usaha Anda</h2></header>'+
     '<div class="ngd-home-services-grid">'+offers.map(([id,name,description],index)=>{
       const product=Array.isArray(state.catalog)?state.catalog.find(p=>
-        String(p.product_id)===id&&p.aktif===true&&!isPublicQaOffer_(p)):null;
-      // Never promise a checkout for an unpublished/archived catalog entry.
+        String(p.product_id)===id&&!isPublicQaOffer_(p)):null;
+      // getKatalog is already an active-only projection and omits `aktif`.
+      // Only product IDs actually returned by the public API can be checked out.
       const label=product?offerUiTitle_(product):name;
       const detail=product?offerUiDescription_(product)||description:description;
       return '<article class="ngd-home-service" data-service-product="'+esc(id)+'">'+
