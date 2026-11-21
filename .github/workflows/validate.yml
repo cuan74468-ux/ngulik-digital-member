@@ -83,6 +83,8 @@ jobs:
           grep -q 'data-home-columns-clear="true"' /tmp/ngd-guest.html
           grep -q 'data-home-header-clear="true"' /tmp/ngd-guest.html
           grep -q 'data-home-art-loaded="true"' /tmp/ngd-guest.html
+          echo 'DESKTOP_HOME_GEOMETRY:'
+          grep -oE '<output id="qa-home-geometry"[^>]*>[^<]*' /tmp/ngd-guest.html | cut -c1-1400 || true
           grep -q 'data-home-header-anchored="true"' /tmp/ngd-guest.html
           grep -q 'data-home-hero-wide="true"' /tmp/ngd-guest.html
           echo 'DESKTOP_MARKETPLACE_LAYOUT:'

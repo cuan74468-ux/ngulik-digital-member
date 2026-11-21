@@ -19,8 +19,9 @@
       var n=nav?nav.getBoundingClientRect():null;
       var banner=hero.getBoundingClientRect();
       var headerClear=!n||n.bottom<=banner.top+8;
-      var headerAnchored=!!n&&n.left>=-1&&n.right<=window.innerWidth+1&&
-        n.width>=window.innerWidth-3;
+      var viewportWidth=document.documentElement.clientWidth||window.innerWidth;
+      var headerAnchored=!!n&&n.left>=-1&&n.right<=viewportWidth+1&&
+        n.width>=viewportWidth-3;
       var heroWide=banner.width>=Math.min(1180,window.innerWidth-80);
       var artLoaded=!!image&&image.complete&&image.naturalWidth>0;
       var output=document.createElement('output');
