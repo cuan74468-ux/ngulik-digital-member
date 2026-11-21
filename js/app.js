@@ -230,7 +230,7 @@ const state={
   adminCatalog:[],catalogEditId:'',catalogRequestId:null,
   adminRuntime:null,adminRuntimeError:'',adminSettings:null,adminSettingsError:'',adminPaymentReviewId:'',workspaceInfo:null,
   services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null,
-  registrationOtpVerifiedWa:'',registrationWaitlist:null,publicStep:0,selectedAiToolId:'',aiCategory:'semua',aiSearch:'',pendingPurchaseId:''
+  registrationOtpVerifiedWa:'',registrationWaitlist:null,publicStep:0,selectedAiToolId:'',aiCategory:'semua',aiSearch:'',pendingPurchaseId:'',pendingServiceRequest:false
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const adminLoginEnabled=()=>isConnected()&&config.adminLoginEnabled===true;
@@ -1707,13 +1707,6 @@ function viewServiceRequests(){
         '</div>'+
         '<div class="ngdb-hero-visual"><img src="./assets/media/ngd-v8-video.webp" alt="Ilustrasi layanan produksi materi promosi digital" width="800" height="800" decoding="async"></div>'+
       '</header>'+
-      '<section class="ngdb-capabilities" aria-labelledby="ngdb-capabilities-title">'+
-        '<div class="ngdb-heading"><p class="ngdb-overline">APA YANG BISA DIBANTU?</p>'+
-          '<h2 id="ngdb-capabilities-title">Mulai dari pekerjaan yang paling menyita waktu.</h2></div>'+
-        '<div class="ngdb-capability-list">'+examples.map(x=>
-          '<article class="ngdb-capability"><img src="./assets/media/'+x[2]+'" alt="" loading="lazy" decoding="async">'+
-            '<div><h3>'+x[0]+'</h3><p>'+x[1]+'</p></div></article>').join('')+'</div>'+
-      '</section>'+
       '<section id="ngdb-packages" class="ngdb-packages" aria-labelledby="ngdb-packages-title">'+
         '<div class="ngdb-heading"><p class="ngdb-overline">HARGA NYATA, BUKAN TEBAK-TEBAKAN</p>'+
           '<h2 id="ngdb-packages-title">Paket yang dapat dipilih.</h2>'+
@@ -1722,6 +1715,13 @@ function viewServiceRequests(){
          '<div class="ngdb-no-packages"><strong>Paket jasa belum dapat ditampilkan.</strong>'+
          '<p>Cek katalog untuk pilihan terbaru, atau masuk sebagai member untuk menyampaikan kebutuhan khusus.</p>'+
          '<button type="button" class="ngdb-button ngdb-outline" data-route="katalog">Buka Katalog</button></div>')+
+      '</section>'+
+      '<section class="ngdb-capabilities" aria-labelledby="ngdb-capabilities-title">'+
+        '<div class="ngdb-heading"><p class="ngdb-overline">APA YANG BISA DIBANTU?</p>'+
+          '<h2 id="ngdb-capabilities-title">Mulai dari pekerjaan yang paling menyita waktu.</h2></div>'+
+        '<div class="ngdb-capability-list">'+examples.map(x=>
+          '<article class="ngdb-capability"><img src="./assets/media/'+x[2]+'" alt="" loading="lazy" decoding="async">'+
+            '<div><h3>'+x[0]+'</h3><p>'+x[1]+'</p></div></article>').join('')+'</div>'+
       '</section>'+
       '<section class="ngdb-process" aria-labelledby="ngdb-process-title">'+
         '<div class="ngdb-heading"><p class="ngdb-overline">CARA PESAN</p><h2 id="ngdb-process-title">Alurnya sederhana.</h2></div>'+
@@ -2579,9 +2579,10 @@ async function processLogin(form,register){
     sessionStorage.setItem(tokenKey,result.token);
     toast('Selamat datang!');
     const resume=(!isAdmin()&&state.pendingPurchaseId)?state.pendingPurchaseId:'';
-    state.pendingPurchaseId='';
+    const resumeService=!isAdmin()&&state.pendingServiceRequest===true;
+    state.pendingPurchaseId='';state.pendingServiceRequest=false;
     if(resume){openProductCheckout_(resume);}
-    else go(isAdmin()?'admin':'beranda');
+    else go(isAdmin()?'admin':resumeService?'jasa':'beranda');
   }catch(e){toast(e.message,true);}finally{btn.disabled=false;}
 }
 function clearPrivateCommandCenter_(){
@@ -2590,7 +2591,7 @@ function clearPrivateCommandCenter_(){
 }
 async function logout(){
   const token=state.token,wasAdmin=isAdmin();
-  state.token='';state.me=null;state.pendingPurchaseId='';sessionStorage.removeItem(tokenKey);
+  state.token='';state.me=null;state.pendingPurchaseId='';state.pendingServiceRequest=false;sessionStorage.removeItem(tokenKey);
   clearPrivateCommandCenter_();
   go('beranda');
   if(token&&isConnected()){
@@ -3392,6 +3393,17 @@ document.addEventListener('click',async(e)=>{
     }finally{
       affiliatePayoutSubmitting_=false;
     }
+    return;
+  }
+  if(e.target.closest('[data-services-packages]')){
+    document.getElementById('ngdb-packages')?.scrollIntoView?.({behavior:'smooth',block:'start'});
+    return;
+  }
+  if(e.target.closest('[data-service-request]')){
+    if(!logged()){
+      state.pendingServiceRequest=true;
+      go('login');
+    }else go('jasa');
     return;
   }
   if(e.target.closest('[data-market-browse]')){
