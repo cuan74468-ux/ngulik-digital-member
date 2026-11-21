@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const app=fs.readFileSync(path.join(root,'js/app.js'),'utf8');
-const css=fs.readFileSync(path.join(root,'assets/affiliate-partner.css'),'utf8');
+const css=fs.readFileSync(path.join(root,'assets/commission-experience-v2.css'),'utf8');
 const publicHtml=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const stagingHtml=fs.readFileSync(path.join(root,'staging/member.html'),'utf8');
 const api=fs.readFileSync(path.join(root,'apps-script/Code.gs'),'utf8');
@@ -16,11 +16,13 @@ test('affiliate landing separates public and authenticated member experience',()
   const section=app.slice(begin,end);
   assert.ok(begin>=0&&end>begin);
   assert.match(section,/if\(!logged\(\)\)return '<div class="partner-public"/);
-  assert.match(section,/class="partner-member"/);
+  assert.match(section,/class="partner-member/);
   assert.match(section,/data-route="daftar"/);
   assert.match(section,/data-route="login"/);
   assert.match(section,/data-route="katalog"/);
-  assert.match(section,/Tidak ada janji penghasilan tetap/);
+  assert.match(section,/Tidak ada jaminan penghasilan/);
+  assert.match(section,/class="partner-steps-compact"/);
+  assert.match(section,/class="partner-faq-item"/);
 });
 test('member dashboard uses real backend data and distinguishes requested from approved balances',()=>{
   assert.match(app,/state\.affiliates/);
@@ -52,17 +54,30 @@ test('payout action is explicit, guarded, and server-authoritative',()=>{
   assert.match(api,/require_\(total>=Number\(setting_\('min_payout',50000\)\)/);
   assert.match(api,/\['PAID','FULFILLED'\]/);
 });
-test('responsive, light partner CSS loads last for public and staging',()=>{
+test('responsive, light commission CSS loads last for public and staging',()=>{
   assert.match(css,/\.partner-public/);
   assert.match(css,/\.partner-member/);
   assert.match(css,/@media\(max-width:600px\)/);
   assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.doesNotMatch(css,/#2F6BFF|#4361ee/i);
   for(const html of [publicHtml,stagingHtml]){
-    assert.match(html,/affiliate-partner\.css\?v=20261117-affiliate-v1/);
-    // App version is deliberately newer only on STAGING, where Scalev is isolated.
-    assert.ok(html.indexOf('affiliate-partner.css')>html.indexOf('portfolio-adaptation.css'));
+    assert.match(html,/commission-experience-v2\.css\?v=20261121-member-public-v2/);
+    assert.ok(html.indexOf('commission-experience-v2.css')>html.indexOf('affiliate-partner.css'));
+    assert.ok(html.indexOf('commission-experience-v2.css')>html.indexOf('catalog-experience-v3.css'));
+    assert.match(html,/app\.js\?v=20261121-commission-v2/);
   }
-  assert.match(publicHtml,/js\/app\.js\?v=20261120-marketplace-retail-v5/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261120-qris-manual-v1/);
+});
+test('affiliate dashboard prioritizes verified referral link and hides payout while finance is OFF',()=>{
+  const begin=app.indexOf('function viewAffiliate(){');
+  const end=app.indexOf('function viewNotificationCenter(){',begin);
+  const section=app.slice(begin,end);
+  assert.match(section,/const referralBase='https:\/\/cuan74468-ux\.github\.io\/ngulik-digital-member\/'/);
+  assert.match(section,/data-copy=/);
+  assert.match(section,/partner-link-panel/);
+  assert.match(section,/partner-metric-grid/);
+  assert.ok(section.indexOf('partner-link-panel')<section.indexOf('partner-metric-grid'));
+  assert.match(section,/const canRequest=eligible>0&&isWriteEnabled\(\)&&config\.paymentsEnabled===true/);
+  assert.match(section,/canRequest\?'<div class="partner-payout-form">/);
+  assert.match(section,/Pencairan belum dibuka/);
+  assert.match(section,/partner-free-links/);
 });
