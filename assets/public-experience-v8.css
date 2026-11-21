@@ -1,0 +1,329 @@
+/* Ngulik Digital — Public Experience V8
+   Unified guest design for commission, help, catalog, learning & auth.
+   Presentation only; no change to live payments, member identity or prices. */
+body.ngd-public-app[data-app-role=guest]:not(#ngd){
+  --ngd-public-purple:#5b28d6;--ngd-public-indigo:#4f46e5;
+  --ngd-public-gold:#ffe34d;--ngd-public-ink:#221a49;
+  --brand-blue:#5b28d6;--brand-soft:#f0ebff;--lds-blue:#5b28d6;
+  background:#fbfaff!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) #screen :is(h1,h2,h3){
+  font-family:Inter,system-ui,sans-serif;letter-spacing:-.038em;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) #screen .eyebrow,
+body.ngd-public-app[data-app-role=guest]:not(#ngd) #screen .card-kicker{
+  color:#6330d4;letter-spacing:.085em;font-weight:800;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) #screen :is(button,a,input,select,summary):focus-visible{
+  outline:3px solid #e3ad21;outline-offset:3px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) #screen :is(.btn-primary,.partner-btn-primary){
+  background:#5b28d6;border-color:#5b28d6;color:#fff;
+  box-shadow:none;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) #screen :is(.btn-secondary,.partner-btn-outline){
+  border-color:#d0bdf6;color:#5b28d6;background:#fff;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public{
+  --com-ink:#241c50;--com-muted:#6d6788;--com-main:#5b28d6;
+  --com-line:#e8e2f5;--com-soft:#f0ebff;
+  --partner-text:#241c50;--partner-secondary:#6d6788;
+  --partner-copper:#5b28d6;--partner-border:#e8e2f5;
+  width:100%!important;max-width:none!important;margin:0!important;
+  padding:0 0 34px!important;color:#241c50;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro{
+  position:relative;isolation:isolate;display:flex;align-items:center;
+  width:100%!important;max-width:none!important;
+  min-height:347px;margin:0 0 19px!important;
+  padding:clamp(28px,4.3vw,58px) clamp(26px,5vw,72px)!important;
+  overflow:hidden;border:0!important;border-radius:22px!important;
+  background-color:#1a0b59!important;
+  background-image:
+   linear-gradient(90deg,#1a0b59 0%,#2a1078 42%,rgba(37,17,113,.83) 59%,rgba(30,12,106,.12) 100%),
+   url("media/ngd-v6-hero.webp")!important;
+  background-position:center,right 45% center!important;
+  background-repeat:no-repeat!important;background-size:cover,auto 116%!important;
+  box-shadow:0 12px 35px rgba(40,19,112,.10);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro:before{
+  content:"";position:absolute;z-index:-1;inset:0;
+  background:radial-gradient(ellipse 42% 80% at 49% 20%,rgba(122,37,232,.4),transparent 75%);
+  pointer-events:none;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro .partner-kicker{
+  color:#d6c6ff!important;font:800 10px/1.45 Inter,sans-serif!important;
+  letter-spacing:.09em;margin:0 0 17px!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro h1{
+  max-width:15ch;margin:0 0 14px!important;color:#fff!important;
+  font:850 clamp(30px,3.3vw,50px)/1.09 Inter,sans-serif!important;
+  letter-spacing:-.048em;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro h1 span{
+  color:#ffe34d!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro>p:not(.partner-kicker){
+  max-width:51ch;margin:0!important;color:#e8e3ff!important;
+  font:500 clamp(12px,1.05vw,15px)/1.56 Inter,sans-serif!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro .partner-hero-actions{
+  display:flex;align-items:center;flex-wrap:wrap;gap:9px!important;
+  margin:21px 0 11px!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro .partner-btn{
+  min-height:43px;border-radius:11px!important;
+  padding:10px 16px!important;font:800 12px/1.2 Inter,sans-serif!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro .partner-btn-primary{
+  background:#ffe34d!important;border-color:#ffe34d!important;color:#271548!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro .partner-btn-outline{
+  background:transparent!important;border-color:#e6dbff80!important;color:#fff!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro>small{
+  display:block;max-width:57ch;color:#d1c7eb!important;
+  font:550 11px/1.42 Inter,sans-serif!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-steps-compact{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:13px;margin:0 0 24px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-step-compact{
+  display:flex;align-items:flex-start;gap:13px;
+  padding:20px!important;border:1px solid #e9e2f6!important;
+  border-radius:15px!important;background:#fff!important;box-shadow:0 3px 10px #29156108;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-step-compact>span{
+  display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;
+  border-radius:10px;background:#f0ebff!important;color:#5b28d6!important;
+  font:850 12px/1 Inter,sans-serif;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-step-compact h2{
+  color:#261d50!important;font-size:15px;margin:0 0 6px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-step-compact p{
+  color:#6d6881!important;font-size:12px;line-height:1.55!important;margin:0;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-pick-products{
+  display:flex;justify-content:space-between;align-items:center;gap:18px;
+  border:1px solid #e8e0f5!important;border-radius:16px!important;
+  padding:24px!important;margin:0 0 26px!important;background:#f3f0ff!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-pick-products h2{
+  color:#211b47!important;margin:0 0 5px;font-size:20px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-pick-products p{
+  font-size:12px;color:#625a81!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-faq{
+  padding:0!important;border:0!important;background:transparent;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-faq h2{
+  color:#211b47!important;font-size:23px;margin:0 0 12px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-faq-item{
+  border:1px solid #e8e1f5!important;border-radius:12px!important;
+  background:#fff!important;margin:0 0 8px!important;padding:0 16px!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-faq-item summary{
+  color:#29204e!important;min-height:51px;font-size:13px!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-note{
+  margin:14px 0 0;color:#756e8d!important;font-size:11px!important;
+}
+/* Informative public Help Center. Personal tickets remain behind member auth. */
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-public-help{
+  width:100%;max-width:none;min-width:0;margin:0 auto;
+  display:flex;flex-direction:column;gap:24px;padding:0 0 20px;
+  color:#221b49;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero{
+  display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
+  gap:14px;align-items:center;isolation:isolate;overflow:hidden;
+  min-height:290px;padding:clamp(27px,3.8vw,48px) clamp(26px,4.3vw,56px);
+  border:0;border-radius:21px;
+  background:radial-gradient(ellipse 54% 87% at 86% 43%,#245be688,transparent 70%),
+   linear-gradient(110deg,#1d0d62,#5124c5 66%,#3134c4);
+  color:#fff;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero>div{position:relative;z-index:2;min-width:0}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero .eyebrow{
+  color:#ded3ff!important;margin:0 0 12px;font-size:10px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero h1{
+  color:#fff!important;font:850 clamp(28px,3.2vw,47px)/1.12 Inter,sans-serif!important;
+  letter-spacing:-.046em;margin:0 0 14px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero p:not(.eyebrow){
+  color:#e9e1ff!important;font:500 13px/1.59 Inter,sans-serif!important;
+  max-width:57ch;margin:0;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero img{
+  display:block;width:100%;max-width:400px;height:235px;min-width:0;
+  object-fit:contain;object-position:center;margin:auto;
+  border-radius:18px;mix-blend-mode:screen;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero-actions{
+  display:flex;gap:9px;flex-wrap:wrap;margin:19px 0 0;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero-actions button{
+  min-height:43px;border-radius:10px!important;padding:10px 14px;
+  font:800 12px/1.2 Inter,sans-serif!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero-actions .btn-primary{
+  color:#241445!important;background:#ffe34d!important;border-color:#ffe34d!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero-actions .btn-secondary{
+  color:#fff!important;background:transparent!important;border-color:#ffffff8c!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-topics{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-topic{
+  min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+  padding:20px;border:1px solid #e8e1f5;border-radius:15px;background:#fff;
+  box-shadow:0 3px 12px #29156107;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-topic>span{
+  display:grid;place-items:center;width:37px;height:37px;
+  color:#6030d5;background:#f1ebff;border-radius:11px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-topic>span svg{width:19px;height:19px}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-topic h2{
+  margin:0;color:#241c50!important;font-size:15px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-topic p{
+  margin:0;color:#746e87;font:500 12px/1.55 Inter,sans-serif!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-faq{
+  width:100%;max-width:950px;margin:5px auto 0;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-faq header{margin:0 0 18px}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-faq header .eyebrow{
+  margin:0 0 7px;font-size:10px;color:#6633cf!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-faq h2{
+  color:#231a4a!important;font-size:clamp(22px,2.2vw,29px);margin:0;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-question{
+  margin:0 0 9px;padding:0 18px;
+  background:#fff;border:1px solid #e8e1f5;border-radius:12px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-question summary{
+  position:relative;display:flex;align-items:center;justify-content:space-between;
+  min-height:56px;padding:13px 0;list-style:none;cursor:pointer;
+  color:#2a204f;font:760 13px/1.45 Inter,sans-serif;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-question summary::-webkit-details-marker{display:none}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-question summary:after{
+  content:"+";color:#6430d5;font-size:23px;margin-left:13px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-question[open] summary:after{content:"−"}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-question p{
+  margin:0 0 16px;font:500 12px/1.7 Inter,sans-serif;
+  color:#69637e;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-last-cta{
+  display:flex;justify-content:space-between;align-items:center;gap:18px;
+  padding:21px 27px;border-radius:15px;background:linear-gradient(110deg,#5429cc,#7625cb);
+  color:#fff;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-last-cta strong{
+  color:#fff;font-size:17px;font-weight:820;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-last-cta p{
+  color:#eee6ff;font-size:12px;margin:4px 0 0;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-last-cta button{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;
+  min-height:43px;padding:10px 18px;border:0;border-radius:10px;
+  background:#ffe34d;color:#241549;font:800 12px/1.2 Inter,sans-serif;
+}
+/* Shared controls with the marketplace across all guest pages. */
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .login-shell{
+  width:min(100%,650px);margin:15px auto 40px;min-width:0;
+  padding:clamp(22px,3vw,40px);
+  background:#fff;border:1px solid #e8e2f5;border-radius:19px;
+  box-shadow:0 14px 36px #311d8510;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .login-shell h1{
+  color:#211847!important;font-size:clamp(26px,3vw,36px)!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .login-shell .surface{
+  border:0!important;box-shadow:none!important;padding:4px 0 0!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .login-shell .input{
+  border-color:#e4dcf5;border-radius:10px;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-learn-direct-links{
+  gap:12px;display:flex;flex-wrap:wrap;margin:20px 0;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-learn-direct-links a{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:12px 17px;border:1px solid #d9c9f6;border-radius:11px;
+  background:#f1ebff;color:#5025b5;font-weight:800;text-decoration:none;
+}
+body.ngd-public-app[data-app-role]:not(#ngd) .market-product-media{
+  background:#f0edfb!important;
+}
+body.ngd-public-app[data-app-role]:not(#ngd) .market-product-media img.market-product-image{
+  width:100%;height:100%;object-fit:cover;object-position:center;display:block;
+  background:#f0edfb;
+}
+body.ngd-public-app[data-app-role]:not(#ngd) .market-product-media img.ngd-image-unavailable{
+  opacity:0;
+}
+body.ngd-public-app[data-app-role]:not(#ngd) .market-product-media:has(img.ngd-image-unavailable){
+  background:linear-gradient(135deg,#e9e3fa,#dfe6ff)!important;
+}
+/* Tablet and mobile storefront: readable cards, compact marketing banners. */
+@media(max-width:1020px){
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro{
+   background-size:cover,auto 95%!important;
+   background-position:center,right -55px center!important;
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-topics{
+   grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+}
+@media(max-width:720px){
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro{
+   min-height:0;padding:28px 22px 150px!important;border-radius:17px!important;
+   background-image:linear-gradient(180deg,#201061 0%,#2b117b 52%,rgba(32,11,94,.52) 100%),
+     url("media/ngd-v6-hero.webp")!important;
+   background-position:center,right bottom!important;
+   background-size:cover,auto 54%!important;
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro h1{
+   font-size:clamp(30px,8.4vw,40px)!important;
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-steps-compact{
+   grid-template-columns:minmax(0,1fr)!important;gap:9px!important;
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-pick-products{
+   flex-direction:column;align-items:flex-start;padding:18px!important;
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero{
+   grid-template-columns:minmax(0,1fr);gap:8px;min-height:0;
+   padding:24px 20px 6px;border-radius:17px;
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero h1{font-size:clamp(28px,7.5vw,35px)!important}
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero img{
+   height:122px;max-width:270px;object-fit:cover;
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-topic{padding:14px}
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-last-cta{
+   flex-direction:column;align-items:stretch;padding:18px;
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-last-cta button{justify-content:center}
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-faq{margin:0}
+}
+@media(max-width:360px){
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-topics{
+   grid-template-columns:1fr;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) :is(.partner-step-compact,.ngd-help-topic){transition:none}
+}

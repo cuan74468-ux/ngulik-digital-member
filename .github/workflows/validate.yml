@@ -52,7 +52,7 @@ jobs:
           # Chrome stderr behind a truncated workflow log.
           trap 'code=$?; echo "BROWSER_SMOKE_FAILED exit=$code line=$LINENO command=$BASH_COMMAND" >&2; if test -f /tmp/ngd-chrome.log; then tail -n 35 /tmp/ngd-chrome.log >&2; fi; if test -f /tmp/ngd-http.log; then tail -n 10 /tmp/ngd-http.log >&2; fi' ERR
           # Add a CI-only probe; repository index.html itself remains unchanged.
-          sed -i 's#</body>#<script src="./tests/layout-probe.js" defer></script><script src="./tests/browser-readonly-api.js" defer></script><script src="./tests/home-layout-probe.js" defer></script></body>#' index.html
+          sed -i 's#</body>#<script src="./tests/layout-probe.js" defer></script><script src="./tests/browser-readonly-api.js" defer></script><script src="./tests/home-layout-probe.js" defer></script><script src="./tests/public-v8-browser-probe.js" defer></script></body>#' index.html
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/ngd-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
@@ -92,6 +92,19 @@ jobs:
           grep -q 'data-overflow="false"' /tmp/ngd-guest.html
           echo 'DESKTOP_HERO_GEOMETRY_OK'
           echo 'GUEST_BROWSER_QA_OK'
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1440,900 --dump-dom "http://127.0.0.1:8765/#affiliate" > /tmp/ngd-affiliate-v8.html 2>>/tmp/ngd-chrome.log
+          grep -q 'class="partner-public"' /tmp/ngd-affiliate-v8.html
+          grep -q 'data-v8-affiliate-cohesive="true"' /tmp/ngd-affiliate-v8.html
+          grep -q 'data-overflow="false"' /tmp/ngd-affiliate-v8.html
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom "http://127.0.0.1:8765/#dukungan" > /tmp/ngd-help-v8.html 2>>/tmp/ngd-chrome.log
+          grep -q 'class="ngd-public-help"' /tmp/ngd-help-v8.html
+          grep -q 'data-v8-help-faq="5"' /tmp/ngd-help-v8.html
+          grep -q 'data-overflow="false"' /tmp/ngd-help-v8.html
+          if grep -q 'id="support-create-form"' /tmp/ngd-help-v8.html; then
+            echo 'ERROR: public Help exposed a member-only ticket form' >&2
+            exit 1
+          fi
+          echo 'PUBLIC_V8_AFFILIATE_HELP_OK'
           if grep -q 'DEMO LOKAL\|Pratinjau — bukan data transaksi' /tmp/ngd-guest.html; then
             echo 'ERROR: internal development banner leaked to public page' >&2
             exit 1
@@ -130,6 +143,8 @@ jobs:
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#katalog" > /tmp/ngd-catalog.html 2>>/tmp/ngd-chrome.log
           # Runtime storefront uses only API data: no built-in test offers.
+          grep -q 'data-v8-broken-images="0"' /tmp/ngd-catalog.html
+          grep -q 'data-v8-archived-visible="false"' /tmp/ngd-catalog.html
           if ! grep -Eq 'Katalog Produk &amp; Jasa|Katalog belum tersedia' /tmp/ngd-catalog.html; then
             echo 'CATALOG_BROWSER_FAIL: expected catalogue heading missing' >&2
             grep -o -E '<h1[^>]*>[^<]*|<h2[^>]*>[^<]*|Katalog[^<]*|<section id="screen"[^>]*' /tmp/ngd-catalog.html | head -12 || true

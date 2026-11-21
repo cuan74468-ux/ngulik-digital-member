@@ -122,3 +122,25 @@ test('digital and service checkout paths reach server order validation',()=>{
   assert.equal(checks,2);
   assert.equal(writes,0);
 });
+
+test('archived and QA products are excluded from public listing and checkout',()=>{
+  const h=preview();
+  vm.runInContext("state.catalog=[{product_id:'P-TEST-OLD',nama:'[ARCHIVED] Produk Uji QA',tipe:'PRODUK_DIGITAL',harga:15000},{product_id:'P-ACTIVE',nama:'Produk Aktif',tipe:'PRODUK_DIGITAL',harga:15000}];state.catalogFilter='semua';go('katalog')",h.ctx);
+  const html=h.nodes.screen.innerHTML;
+  assert.match(html,/Produk Aktif/);
+  assert.doesNotMatch(html,/\[ARCHIVED\] Produk Uji QA/);
+  assert.match(html,/1 dari 1 produk/);
+  assert.doesNotMatch(html,/data-checkout-product="P-TEST-OLD"/);
+  assert.equal(h.apiCalls.length,0);
+});
+test('broken published artwork falls back to curated local WebP once',()=>{
+  const h=preview(),onError=h.listeners.error;
+  assert.equal(typeof onError,'function');
+  const img={tagName:'IMG',dataset:{marketFallback:'./assets/media/ngd-v8-video.webp'},
+    src:'https://cdn.invalid/missing.webp',classList:{contains:n=>n==='market-product-image',add(){}}};
+  onError({target:img});
+  assert.equal(img.dataset.marketFallbackUsed,'1');
+  assert.equal(img.src,'./assets/media/ngd-v8-video.webp');
+  onError({target:img});
+  assert.equal(img.src,'./assets/media/ngd-v8-video.webp');
+});

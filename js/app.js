@@ -565,22 +565,38 @@ const offerUiTitle_=p=>String(p?.nama||'Produk');
 const offerUiDescription_=p=>String(p?.deskripsi||'');
 const isPublicQaOffer_=p=>
   String(p?.product_id||'')==='P-B36AA0054926'||
-  String(p?.sumber_produk||'').toUpperCase()==='QA_STAGING_TEST';
+  String(p?.sumber_produk||'').toUpperCase()==='QA_STAGING_TEST'||
+  /^\s*\[(?:ARCHIVED|ARSIP|QA)\]/i.test(String(p?.nama||''));
 
 /* Local editorial cover artwork is a safe fallback when a CMS PRODUCT_IMAGE
  * has not been published. Product price, availability and checkout remain
  * exclusively sourced from the existing catalog/backend. */
 function ngdProductArtId_(p,kind){
+  // One visual inventory for all active SKUs; long labels stay in HTML.
+  // No seller prices, commissions, or claims are embedded in image assets.
   const id=String(p?.product_id||'').toUpperCase();
-  if(id==='P-EBOOK'||id.startsWith('P-CLASS'))return 'ebook';
+  const title=String(p?.nama||'').toLocaleLowerCase('id-ID');
+  if(id==='P-EBOOK'||/vibe coder|bundel ebook/.test(title))return 'ebook';
   if(id.startsWith('P-STARTER'))return 'starter';
-  if(id==='P-3IN1')return 'bundle';
-  if(id==='P-POS')return 'pos';
-  if(id==='P-VIDEO-AI'||id.startsWith('P-PRIVAT'))return 'video';
-  if(id.startsWith('P-INTEGRASI'))return 'integrasi';
-  if(id.startsWith('P-TOKEN')||id.startsWith('P-KREDIT'))return 'token';
-  if(id.startsWith('P-KIT')||id.startsWith('P-CANVA'))return 'template';
-  return ({ai:'token',aplikasi:'pos',jasa:'video',belajar:'ebook'})[kind]||'template';
+  if(id==='P-3IN1'||/akselerasi umkm 3in1/.test(title))return 'bundle';
+  if(id==='P-POS'||/sistem kasir|pos sederhana/.test(title))return 'pos';
+  if(/supabase|webhook/.test(title)&&!/google sheets/.test(title))return 'supabase';
+  if(id.startsWith('P-INTEGRASI')||/apps script|otomasi google sheets/.test(title))return 'gas';
+  if(id==='P-VIDEO-AI'||/video promosi ai siap/.test(title))return 'video';
+  if(/kelas private|ternak akun youtube/.test(title))return 'youtube';
+  if(id.startsWith('P-CLASS')||/google classroom|kelas gratis/.test(title))return 'class';
+  if(/canva/.test(title))return 'canva';
+  if(/template webapp|template.*konten/.test(title))return 'templates';
+  if(id.startsWith('P-TOKEN')||id.startsWith('P-KREDIT')||
+      /top-up|token ai|kredit ai/.test(title)){
+    const num=Number((title.match(/(?:top-up|isi ulang)\s*(\d+)/)||[])[1]||0);
+    if(num>=150)return 'ai-large';
+    if(num>=25)return 'ai-pack';
+    return 'ai-small';
+  }
+  if(id.startsWith('P-KIT'))return 'templates';
+  if(id.startsWith('P-CANVA'))return 'canva';
+  return ({ai:'ai-small',aplikasi:'pos',jasa:'video',belajar:'ebook'})[kind]||'templates';
 }
 function ngdLocalArtSrc_(name){
   const root=String(window.location?.pathname||'').includes('/staging/')?'../':'./';
@@ -588,13 +604,17 @@ function ngdLocalArtSrc_(name){
 }
 function ngdPremiumArtSrc_(name){
   const root=String(window.location?.pathname||'').includes('/staging/')?'../':'./';
-  const supported=new Set(['hero','ebook','starter','bundle','pos','video','integrasi']);
-  return supported.has(name)?root+'assets/media/ngd-v6-'+name+'.webp':ngdLocalArtSrc_(name);
+  const v8=new Set(['ai-small','ai-pack','ai-large','templates','canva',
+    'code','class','youtube','supabase','pos','video','gas']);
+  if(v8.has(name))return root+'assets/media/ngd-v8-'+name+'.webp';
+  const v6=new Set(['hero','ebook','starter','bundle','integrasi']);
+  return v6.has(name)?root+'assets/media/ngd-v6-'+name+'.webp':
+    ngdLocalArtSrc_(name);
 }
 function ngdProductImageFallback_(p,kind){
   const name=ngdProductArtId_(p,kind);
   return '<img class="market-product-image ngd-product-cover" src="'+esc(ngdPremiumArtSrc_(name))+
-    '" alt="Visual produk digital: '+esc(offerUiTitle_(p))+'" loading="lazy" decoding="async">';
+    '" alt="Sampul '+esc(offerUiTitle_(p))+'" loading="lazy" decoding="async">';
 }
 
 function viewPublicMarketplace(list){
@@ -653,8 +673,14 @@ function viewPublicMarketplace(list){
       ['TOPUP_KREDIT','TOPUP_TOKEN'].includes(String(p.tipe))?'Isi Token':'');
     const benefits=(Number(p.kredit_diberikan)>0?'<span>'+esc(Number(p.kredit_diberikan))+' token</span>':'')+
       (Number(p.durasi_hari)>0?'<span>'+esc(Number(p.durasi_hari))+' hari akses</span>':'');
-    const cover=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'market-product-image',offerUiTitle_(p));
     const fallbackCover=ngdProductImageFallback_(p,kind);
+    const cmsImage=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,
+      'market-product-image',offerUiTitle_(p));
+    // Editors can publish a custom product image; if its URL fails, recover
+    // to a stable locally deployed cover instead of exposing broken alt text.
+    const localSource=ngdPremiumArtSrc_(ngdProductArtId_(p,kind));
+    const cover=cmsImage?cmsImage.replace('<img ',
+      '<img data-market-fallback="'+esc(localSource)+'" '):fallbackCover;
     const commissionLabel=ngdCommissionLabel_(p);
     return '<article class="market-product-card" data-market-kind="'+esc(kind)+'" aria-label="'+esc(offerUiTitle_(p))+'">'+
       '<div class="market-product-media market-media-'+esc(kind)+'">'+
@@ -1674,8 +1700,40 @@ function supportTicketCard(t){
     '<button type="button" class="btn btn-secondary btn-sm" style="margin-top:15px" data-ticket-id="'+esc(t.ticket_id)+'">Buka tiket '+icon('arrow')+'</button></article>';
 }
 function viewSupport(){
-  if(!logged())return title('Bantuan & Dukungan','PUSAT LAYANAN',
-    'Laporan bug, permintaan fitur, dan bantuan produk.')+needLogin('layanan dukungan');
+  if(!logged())return '<div class="ngd-public-help">'+
+    '<section class="ngd-help-hero" aria-label="Pusat Bantuan Ngulik Digital">'+
+      '<div><p class="eyebrow">PUSAT BANTUAN · NGULIK DIGITAL</p>'+
+      '<h1>Ada yang bisa kami bantu?</h1>'+
+      '<p>Temukan informasi pembelian produk digital, pembayaran, akses member, dan program komisi.</p>'+
+      '<div class="ngd-help-hero-actions">'+
+        '<button type="button" class="btn btn-primary" data-route="login">Masuk untuk bantuan pribadi</button>'+
+        '<button type="button" class="btn btn-secondary" data-route="katalog">Lihat Katalog</button>'+
+      '</div></div>'+
+      '<img src="'+esc(ngdPremiumArtSrc_('class'))+'" alt="" loading="lazy" decoding="async">'+
+    '</section>'+
+    '<section class="ngd-help-topics" aria-label="Topik bantuan">'+
+      [['clipboard','Pesanan','Lihat detail checkout, batas pembayaran, dan status melalui akun member.'],
+       ['wallet','Pembayaran QRIS','Gunakan instruksi resmi pada checkout. Verifikasi dana dilakukan oleh admin.'],
+       ['book','Akses produk','Akses digital mengikuti status dan ketentuan produk setelah pembayaran terverifikasi.'],
+       ['link','Program afiliasi','Komisi hanya untuk pembelian referral yang memenuhi syarat.']].map(x=>
+        '<article class="ngd-help-topic"><span>'+icon(x[0])+'</span>'+
+        '<h2>'+esc(x[1])+'</h2><p>'+esc(x[2])+'</p></article>').join('')+
+    '</section>'+
+    '<section class="ngd-help-faq" aria-label="Pertanyaan umum">'+
+      '<header><p class="eyebrow">PANDUAN</p><h2>Pertanyaan yang sering ditanyakan</h2></header>'+
+      [['Bagaimana membeli produk digital?','Buka katalog, pilih Detail atau Beli Sekarang, lalu ikuti instruksi checkout. Ketersediaan pembayaran mengikuti status aktivasi resmi.'],
+       ['Apakah klik Sudah Bayar langsung mengaktifkan produk?','Tidak. Admin harus mencocokkan penerimaan dana dengan order sebelum pesanan disetujui dan akses diproses.'],
+       ['Di mana melihat pesanan dan produk saya?','Masuk ke akun member dan buka Pesanan untuk melihat status serta rincian pembelian.'],
+       ['Bagaimana cara memperoleh komisi?','Bagikan tautan referral pribadi. Komisi hanya dicatat jika pembelian memenuhi syarat dan pembayaran diverifikasi.'],
+       ['Bagaimana mengirim tiket bantuan?','Masuk sebagai member, lalu buka Bantuan untuk membuat atau memantau tiket sesuai ketersediaan layanan.']].map(x=>
+        '<details class="ngd-help-question"><summary>'+esc(x[0])+'</summary>'+
+        '<p>'+esc(x[1])+'</p></details>').join('')+
+    '</section>'+
+    '<section class="ngd-help-last-cta"><div><strong>Perlu bantuan untuk pesanan Anda?</strong>'+
+      '<p>Masuk agar laporan terhubung ke akun dan riwayat pesanan.</p></div>'+
+      '<button type="button" data-route="login">Masuk Member '+icon('arrow')+'</button>'+
+    '</section>'+
+  '</div>';
   if(isAdmin()){
     const overview=state.supportOverview||{},stats=overview.by_status||{},tickets=state.adminSupportTickets||[];
     return title('Pusat Bantuan','ADMIN / SUPPORT','Balas laporan dan pertanyaan pelanggan.')+
@@ -2920,6 +2978,18 @@ async function submitServiceQuote(form){
   catch(error){toast('Perubahan tersimpan. Muat ulang daftar.',true);}
   render();
 }
+document.addEventListener('error',(event)=>{
+  const img=event.target;
+  if(img?.tagName!=='IMG'||!img.classList?.contains('market-product-image'))return;
+  const fallback=String(img.dataset?.marketFallback||'');
+  if(fallback&&img.dataset.marketFallbackUsed!=='1'){
+    img.dataset.marketFallbackUsed='1';
+    img.src=fallback;
+    return;
+  }
+  // Do not show a raw alt string across the product photo slot.
+  img.classList.add('ngd-image-unavailable');
+},true);
 document.addEventListener('submit',(e)=>{
   if(e.target?.id!=='guest-header-search-form')return;
   e.preventDefault();
