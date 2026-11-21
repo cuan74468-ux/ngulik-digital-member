@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" role="img" aria-label="Ilustrasi laptop dan koleksi produk digital">
+<defs>
+<linearGradient id="l" x2=".9" y2="1"><stop stop-color="#e8eaff"/><stop offset=".5" stop-color="#7aa0ff"/><stop offset="1" stop-color="#9271fd"/></linearGradient>
+<linearGradient id="screen" x2="1" y2="1"><stop stop-color="#221463"/><stop offset=".55" stop-color="#3821b1"/><stop offset="1" stop-color="#092faa"/></linearGradient>
+<linearGradient id="purple" x2="1" y2="1"><stop stop-color="#6546f1"/><stop offset="1" stop-color="#281458"/></linearGradient>
+<linearGradient id="blue" x2="1" y2="1"><stop stop-color="#45d4ff"/><stop offset="1" stop-color="#112777"/></linearGradient>
+<linearGradient id="pink" x2="1" y2="1"><stop stop-color="#d34dff"/><stop offset="1" stop-color="#3c155e"/></linearGradient>
+<filter id="drop"><feGaussianBlur stdDeviation="15"/></filter>
+</defs>
+<ellipse cx="539" cy="530" rx="380" ry="42" fill="#08073b" opacity=".34" filter="url(#drop)"/>
+<path d="M166 113L232 91L300 113L300 456L166 474Z" fill="url(#pink)" stroke="#9b78ff" stroke-width="4"/>
+<path d="M300 113L317 129V447L300 456Z" fill="#24104a"/>
+<text x="187" y="204" font-size="31" font-weight="800" fill="white" font-family="Arial">Paket</text>
+<text x="180" y="242" font-size="31" font-weight="800" fill="#ffe75b" font-family="Arial">3-in-1</text>
+<rect x="190" y="294" width="90" height="79" rx="11" fill="#fff" opacity=".15"/><path d="M215 315L242 335L215 355Z" fill="white"/>
+<path d="M310 58L379 33L464 59L464 440L310 463Z" fill="url(#blue)" stroke="#70d8ff" stroke-width="4"/>
+<path d="M464 59L481 75V432L464 440Z" fill="#092566"/>
+<text x="326" y="165" font-size="33" font-weight="800" fill="#fff" font-family="Arial">Starter</text>
+<text x="332" y="208" font-size="31" font-weight="800" fill="#ffe75b" font-family="Arial">Pack</text>
+<path d="M361 286L385 244L410 287L400 311H372Z" fill="#fff"/><circle cx="385" cy="281" r="9" fill="#04a6e8"/>
+<path d="M370 316L348 345M397 316L416 345" fill="none" stroke="#fff" stroke-width="8"/>
+<g transform="translate(448 110)">
+ <path d="M28 24L396 11L419 38L421 320L35 333L11 309L11 52Z" fill="#7f9dfd"/>
+ <path d="M27 38L406 27V309L27 320Z" fill="#17164e" stroke="#a3c6ff" stroke-width="7"/>
+ <path d="M42 57L392 47V293L42 305Z" fill="url(#screen)"/>
+ <path d="M65 90L370 79" stroke="#c3aaff" stroke-opacity=".52" stroke-width="3"/>
+ <rect x="75" y="114" width="265" height="64" rx="15" fill="#403bb1"/>
+ <text x="99" y="158" font-family="Arial,sans-serif" font-weight="800" font-size="31" fill="#fff">Ngulik Digital</text>
+ <rect x="76" y="196" width="77" height="62" rx="10" fill="#7777eb"/>
+ <rect x="162" y="196" width="77" height="62" rx="10" fill="#bb77e7"/>
+ <rect x="249" y="196" width="78" height="62" rx="10" fill="#56c6f5"/>
+ <path d="M12 323L420 309L481 358L79 387Z" fill="url(#l)" stroke="#a1caff" stroke-width="4"/>
+ <path d="M79 387L481 358L458 373L92 403Z" fill="#5150a3"/>
+ <path d="M112 345L398 332" stroke="#545cb7" stroke-width="7" stroke-dasharray="19 9"/>
+</g>
+<path d="M856 146L912 132L967 147V421L856 441Z" fill="url(#purple)" stroke="#b59dff" stroke-width="4"/>
+<path d="M967 147L984 162V413L967 421Z" fill="#23114f"/>
+<text x="862" y="230" font-family="Arial" font-size="27" fill="#fff" font-weight="800">eBOOK</text>
+<text x="861" y="263" font-family="Arial" font-size="21" fill="#fff">Vibe Coder</text>
+<path d="M871 324Q899 302 915 327Q938 301 954 324V385Q931 368 915 389Q892 368 871 385Z" fill="none" stroke="#fff" stroke-width="6"/>
+<path d="M915 327V390" stroke="white" stroke-width="4"/>
+<g transform="translate(87 220)">
+ <rect x="0" y="0" width="130" height="105" rx="44" fill="#ecebff" stroke="#a9a3ff" stroke-width="8"/>
+ <rect x="16" y="15" width="96" height="66" rx="28" fill="#131952"/>
+ <path d="M40 51Q50 39 59 51 M70 51Q80 39 89 51" stroke="#36d7ff" stroke-width="7" fill="none" stroke-linecap="round"/>
+ <path d="M57 67Q65 75 74 67" stroke="#5ce8ff" stroke-width="6" fill="none" stroke-linecap="round"/>
+ <path d="M34 107L20 154M100 107L110 154" stroke="#e5e2ff" stroke-width="20" stroke-linecap="round"/>
+ <path d="M0 48L-18 78M131 48L154 21" stroke="#e5e2ff" stroke-width="18" stroke-linecap="round"/>
+ <circle cx="65" cy="-6" r="10" fill="#ffdb59"/>
+</g>
+<path d="M89 170l8-19m-28 34l-16-6M763 74l10-24M803 94l26-9" stroke="#ffe763" stroke-width="10" stroke-linecap="round"/>
+</svg>

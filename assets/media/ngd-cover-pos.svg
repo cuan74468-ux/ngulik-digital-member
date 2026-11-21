@@ -1,19 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-label="Ilustrasi POS Lite">
- <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#e8ebe5"/><stop offset="1" stop-color="#e6d6bc"/></linearGradient><linearGradient id="cover" x2="1" y2="1"><stop stop-color="#173a35"/><stop offset="1" stop-color="#408475"/></linearGradient><filter id="s"><feGaussianBlur stdDeviation="20"/></filter></defs>
- <rect width="900" height="600" fill="url(#bg)"/>
- <circle cx="760" cy="95" r="205" fill="#ffffff" opacity=".24"/>
- <circle cx="93" cy="520" r="230" fill="#ffffff" opacity=".17"/>
- <ellipse cx="440" cy="501" rx="308" ry="40" fill="#28312e" opacity=".22" filter="url(#s)"/>
- <g transform="translate(140 70)">
-  <path d="M112 28 L574 3 L621 57 L159 85Z" fill="#173a35" opacity=".8"/>
-  <path d="M112 28 L159 85 V398 L112 361Z" fill="#173a35"/>
-  <path d="M159 85 L621 57 V398 L159 421Z" fill="url(#cover)"/>
-  <path d="M159 85 L621 57" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="5"/>
-  <path d="M180 119 L600 93" stroke="#fff" stroke-opacity=".1" stroke-width="2"/>
-  <text x="190" y="143" font-size="22" fill="#fff" opacity=".8" font-family="Arial,sans-serif" font-weight="700" letter-spacing="3">NGULIK DIGITAL</text>
-  <text x="190" y="215" font-size="53" fill="#fff" font-family="Arial,sans-serif" font-weight="800">POS Lite</text>
-  <text x="192" y="261" font-size="25" fill="#fff" opacity=".88" font-family="Arial,sans-serif" font-weight="500">Aplikasi Kasir</text>
-  <path d="M190 354 H375" stroke="#fff" stroke-opacity=".44" stroke-width="4"/>
-  <text x="190" y="390" font-size="18" fill="#fff" opacity=".75" font-family="Arial,sans-serif" font-weight="700" letter-spacing="2">PENCATATAN BISNIS</text>
-  <g transform="translate(520 238)"><rect x="0" y="0" width="198" height="135" rx="15" fill="#f4fff9" opacity=".93"/><rect x="12" y="12" width="174" height="19" rx="5" fill="#408475" opacity=".18"/><rect x="14" y="46" width="74" height="72" rx="9" fill="#408475" opacity=".38"/><rect x="101" y="46" width="75" height="20" rx="5" fill="#408475" opacity=".24"/><rect x="101" y="77" width="75" height="18" rx="5" fill="#408475" opacity=".16"/></g>
- </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" aria-label="POS Lite - Kasir UMKM" role="img">
+ <defs>
+ <linearGradient id="bg" x1="0" x2="1" y2="1"><stop stop-color="#fae5d5"/><stop offset="1" stop-color="#eee0ff"/></linearGradient>
+ <linearGradient id="box" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#173f55"/><stop offset="1" stop-color="#2786ab"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#fff" stop-opacity=".65"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+ <filter id="shadow"><feGaussianBlur stdDeviation="22"/></filter>
+ </defs>
+ <rect width="900" height="640" fill="url(#bg)"/>
+ <circle cx="740" cy="95" r="320" fill="url(#glow)"/>
+ <circle cx="90" cy="565" r="165" fill="#fff" opacity=".17"/>
+ <ellipse cx="461" cy="560" rx="270" ry="38" fill="#202052" opacity=".20" filter="url(#shadow)"/>
+ <g transform="translate(125 70)">
+  <path d="M120 67L177 18L612 1L565 62Z" fill="#2786ab"/>
+  <path d="M120 67L177 18V458L120 505Z" fill="#173f55"/>
+  <path d="M177 18L612 1V458L177 477Z" fill="url(#box)"/>
+  <path d="M177 18L612 1" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="5"/>
+  <path d="M200 67H565" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="3"/>
+  <text x="215" y="100" font-family="Arial,sans-serif" font-size="21" font-weight="700" letter-spacing="4" fill="#edeafa">NGULIK DIGITAL</text>
+  <text x="212" y="166" font-family="Arial,sans-serif" font-size="52" font-weight="800" letter-spacing="-1" fill="#fff">POS Lite</text>
+  <text x="215" y="211" font-family="Arial,sans-serif" font-size="27" font-weight="600" fill="#ecedff">Kasir UMKM</text>
+  <path d="M220 426H434" stroke="#fff" stroke-opacity=".35" stroke-width="3"/>
+  <text x="216" y="455" font-family="Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="2" fill="#dfe5ff">SISTEM &amp; APLIKASI</text>
+  <rect x="372" y="240" width="214" height="154" rx="16" fill="#d9f4ff"/><rect x="384" y="254" width="190" height="22" rx="6" fill="#2786ab"/><rect x="386" y="288" width="79" height="87" rx="9" fill="#a7d9f9"/><path d="M483 303H558M483 328H554M483 353H538" stroke="#2786ab" stroke-width="11" stroke-linecap="round"/>
+ </g>
+ <circle cx="725" cy="485" r="9" fill="#fff" opacity=".62"/>
+ <circle cx="195" cy="132" r="6" fill="#fff" opacity=".45"/>
+ </svg>
