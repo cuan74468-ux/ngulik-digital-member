@@ -2231,6 +2231,7 @@ async function restoreSession(){
     // Network errors are not evidence that the server revoked the session.
     if(e?.code==='UNAUTHORIZED'||e?.code==='FORBIDDEN'){
       state.token='';state.me=null;sessionStorage.removeItem(tokenKey);
+      clearPrivateCommandCenter_();
     }
     render();
     if(e?.code!=='UNAUTHORIZED'&&e?.code!=='FORBIDDEN')
@@ -2497,9 +2498,14 @@ async function processLogin(form,register){
     if(resume)await buy(resume);
   }catch(e){toast(e.message,true);}finally{btn.disabled=false;}
 }
+function clearPrivateCommandCenter_(){
+  state.home=null;state.orders=[];state.creditHistory=[];state.affiliates=null;
+  state.memberProducts=[];state.lmsEnrollments=[];state.notifications={enabled:false,items:[],unread:0};
+}
 async function logout(){
   const token=state.token,wasAdmin=isAdmin();
   state.token='';state.me=null;sessionStorage.removeItem(tokenKey);
+  clearPrivateCommandCenter_();
   go('beranda');
   if(token&&isConnected()){
     try{await api(wasAdmin?'adminLogout':'logout',{},token,
