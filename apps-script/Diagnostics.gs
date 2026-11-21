@@ -367,7 +367,15 @@ function diagnosticFinanceScenarios() {
   assert_(issues(run(refunded,[credit])).indexOf('TOPUP_REFUND_ADJUST_COUNT_0')>=0,'Refund tanpa reversal terdeteksi');
   assert_(issues(run(refunded,[credit,reversed,reversed])).indexOf('TOPUP_REFUND_ADJUST_COUNT_2')>=0,'Reversal ganda terdeteksi');
   assert_(issues(run(paid,[credit,reversed])).indexOf('REFUND_ADJUST_WITHOUT_REFUNDED_STATUS')>=0,'Reversal tanpa refund terdeteksi');
-  assert_(issues(run({order_id:'SIM-1',product_id:'SIM-CREDIT',status:'PAID'},[credit])).indexOf('PAID_PENDING_FULFILLMENT_REVIEW')>=0,'PAID butuh review');
+  assert_(issues(run({order_id:'SIM-1',member_id:'SIM-MEMBER',product_id:'SIM-CREDIT',status:'PAID'},[credit]))
+    .indexOf('TOPUP_PAID_LEDGER_POSTED_STATUS_REVIEW')>=0,
+    'Order PAID dengan ledger ada tetap butuh review status, bukan kredit ulang');
+  assert_(issues(run({order_id:'SIM-1',member_id:'SIM-MEMBER',product_id:'SIM-CREDIT',status:'PAID'},[]))
+    .indexOf('TOPUP_PAID_LEDGER_COUNT_0')>=0,
+    'Order PAID tanpa ledger dikenali sebagai masalah kredit');
+  assert_(issues(run({order_id:'SIM-1',member_id:'SIM-OTHER',product_id:'SIM-CREDIT',status:'FULFILLED'},[credit]))
+    .indexOf('TOPUP_LEDGER_WRONG_MEMBER')>=0,
+    'Topup kredit ke member lain terdeteksi');
   assert_(issues(run(paid,[credit],[{order_id:'SIM-1'},{order_id:'SIM-1'}])).indexOf('COMMISSION_DUPLICATE')>=0,'Komisi ganda terdeteksi');
   assert_(issues(run(refunded,[credit,reversed],[{order_id:'SIM-1',status:'PAID'}])).indexOf('PAID_COMMISSION_ON_REFUNDED_ORDER')>=0,'Refund dengan komisi tercairkan terdeteksi');
   var manualProducts=products.concat([{product_id:'SIM-POS',tipe:'LISENSI_SEKALI'}]);
@@ -422,6 +430,9 @@ function diagnosticFinanceScenarios() {
   assert_(financeFindings_([refOrder],[],[syntheticCommission],eligible,all,
     [buyer,validInviter]).needs_review===0,
     'Komisi pengajak MEMBER aktif tetap valid');
+  assert_(financeFindings_([refOrder],[],[],eligible,all,
+    [buyer,adminInviter]).needs_review===0,
+    'Tidak menagih komisi fiktif untuk pengajak ADMIN');
   console.log('FINANCE_SCENARIOS_OK | cases='+pass+' | mode=MEMORY_ONLY');
   return 'FINANCE_SCENARIOS_OK';
 }
