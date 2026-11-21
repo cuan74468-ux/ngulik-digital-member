@@ -3237,6 +3237,16 @@ document.addEventListener('error',event=>{
 },true);
 
 let affiliatePayoutSubmitting_=false;
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    const drawer=by('top-nav-drawer');
+    if(drawer&&!drawer.hidden){
+      drawer.hidden=true;
+      by('top-nav-trigger')?.setAttribute('aria-expanded','false');
+      by('top-nav-trigger')?.focus();
+    }
+  }
+});
 document.addEventListener('click',async(e)=>{
   const trigger=e.target.closest?.('#top-nav-trigger');
   if(trigger){
@@ -3567,16 +3577,6 @@ function syncBrowserRoute_(){
   lastRouteHash_=location.hash;
   const route=aiRouteFromHash_()==='menu'?'beranda':aiRouteFromHash_();state.route=route;render();loadRoute(route);
 }
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){
-    const drawer=by('top-nav-drawer');
-    if(drawer&&!drawer.hidden){
-      drawer.hidden=true;
-      by('top-nav-trigger')?.setAttribute('aria-expanded','false');
-      by('top-nav-trigger')?.focus();
-    }
-  }
-});
 window.addEventListener('popstate',syncBrowserRoute_);
 window.addEventListener('hashchange',syncBrowserRoute_);
 // Called synchronously during initial script evaluation, before any awaited API.
