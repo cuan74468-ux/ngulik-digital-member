@@ -19,7 +19,7 @@ function pilot(overrides={}){
     environment:overrides.environment||'STAGING',
     orders:overrides.orders||[],
     product:overrides.product||{
-      product_id:'P-TOKEN-10',tipe:'TOPUP_TOKEN',harga:'Rp10.000',kredit_diberikan:10
+      product_id:'P-TOKEN-10',tipe:'TOPUP_TOKEN',harga:'Rp7.000',kredit_diberikan:10
     }
   };
   const ctx=vm.createContext({console:{log:m=>messages.push(m),error:()=>{}},Date,Number,JSON});
