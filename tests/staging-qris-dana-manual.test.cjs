@@ -18,13 +18,13 @@ test('owner-approved QRIS configuration points to dedicated image, but fail-clos
   // Do NOT mark this image payment-ready if a GitHub upload has not been verified.
 });
 
-test('Mayar and Scalev catalog/checkout are parked',()=>{
-  assert.match(app,/function mayarCheckoutEligible_\(\)\{[\s\S]*?return false;/);
-  assert.match(app,/function scalevCheckoutFor_\(\)\{return null;/);
+test('browser checkout is QRIS-only, and unverified payment paths are parked',()=>{
+  const buyer=app.slice(app.indexOf('async function buy(productId)'),app.indexOf('async function openOrderDetail_'));
+  assert.match(buyer,/api\('createOrder',\{product_id:productId\}/);
+  assert.doesNotMatch(buyer,/createMayarOrder|scalevCheckout|wa\.me/);
   assert.doesNotMatch(stagingHtml,/<script[^>]+scalev-bridge/);
   assert.doesNotMatch(stagingHtml,/<script[^>]+scalev-checkout-map/);
 });
-
 test('checkout amount uniqueness, three digits and real-funds review remain backend authoritative',()=>{
   assert.match(gas,/min>=100&&max<=999/);
   assert.match(gas,/taken\[price\+n\]/);
@@ -35,14 +35,15 @@ test('checkout amount uniqueness, three digits and real-funds review remain back
   assert.match(gas,/referensi_pembayaran/);
 });
 
-test('QRIS checkout provides download/zoom and blocks unverified image',()=>{
-  assert.match(app,/Simpan gambar QRIS/);
+test('QRIS checkout offers image actions only after merchant verification',()=>{
+  assert.match(app,/Simpan QRIS/);
   assert.match(app,/Perbesar QRIS/);
   assert.match(app,/qrisOwnerImageApproved!==true/);
   assert.match(app,/QRIS resmi belum diverifikasi/);
-  assert.match(app,/const canConfirm=open&&paymentEnabled\(\)&&!financeBlocked&&\(officialQr\|\|!!paymentLink\)/);
+  assert.match(app,/const canConfirm=open&&paymentEnabled\(\)&&!financeBlocked&&officialQr/);
+  const section=app.slice(app.indexOf('function viewCheckout(){'),app.indexOf('function viewAdminRuntime(){'));
+  assert.doesNotMatch(section,/wa\.me|gateway_payment_url|Tanya via WhatsApp/);
 });
-
 test('manual payment confirmation and admin approval do not equate buyer claims with paid status',()=>{
   assert.match(app,/api\('confirmPayment'/);
   assert.match(app,/data-payment-open/);
