@@ -74,7 +74,7 @@ test('guest hero image is a layered background, not a small inline artwork card'
 test('mobile hero reveals background art and closing CTA is compact',()=>{
   const source=fs.readFileSync(path.join(base,'assets/landing-guest-v1.css'),'utf8');
   const markup=renderPreview().nodes.screen.innerHTML;
-  assert.match(source,/\.ngdl-hero::before\{inset:0;height:auto;background-position:88% 58%;background-size:cover;opacity:1/);
+  assert.match(source,/\.ngdl-hero::before\{inset:0;height:auto;background-position:98% 49%;background-size:cover;opacity:1/);
   assert.match(source,/\.ngdl-story\{display:grid;grid-template-columns:1fr;padding:23px 2% 20px;gap:8px/);
   assert.match(source,/-webkit-text-fill-color:#241d38!important/);
   assert.match(markup,/Urusan digital, nggak harus bikin repot/);
