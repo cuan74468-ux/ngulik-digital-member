@@ -95,6 +95,27 @@ test('STAGING Starter Pack pays exactly Rp5.000, not rounded 33%',()=>{
   h.perform();
   assert.equal(h.commissions.length,1);
 });
+test('paid legacy Starter Pack unlocks inviter and uses instant commission timing',()=>{
+  const h=fixture(25);
+  h.ctx.findRows_=(name,predicate)=>name==='orders'?
+    [{member_id:'SPONSOR',product_id:'P-STARTER-15K',status:'FULFILLED'}].filter(predicate):[];
+  assert.equal(h.ctx.ngdStarterUnlocked_('SPONSOR'),true);
+  assert.equal(h.ctx.ngdCommissionTiming_({product_id:'P-STARTER-15K',tipe:'PRODUK_DIGITAL'}),'INSTANT_ON_PAID');
+  assert.equal(h.ctx.ngdCommissionTiming_({product_id:'P-STARTER-15',tipe:'PRODUK_DIGITAL'}),'INSTANT_ON_PAID');
+  h.perform();
+  assert.equal(h.commissions.length,1);
+  assert.equal(h.commissions[0].nominal,2500);
+});
+test('unpaid, refunded, and unrelated products never unlock referrals',()=>{
+  const h=fixture(25);
+  for(const row of [
+    {member_id:'SPONSOR',product_id:'P-STARTER-15K',status:'PENDING'},
+    {member_id:'SPONSOR',product_id:'P-STARTER-15K',status:'REFUNDED'},
+    {member_id:'SPONSOR',product_id:'P-3IN1',status:'FULFILLED'}]){
+    h.ctx.findRows_=(name,predicate)=>name==='orders'?[row].filter(predicate):[];
+    assert.equal(h.ctx.ngdStarterUnlocked_('SPONSOR'),false);
+  }
+});
 test('catalogue returns the fixed commission dynamically and validates contradictory terms',()=>{
   const h=fixture(25,15000);
   const fixed={harga:15000,bisa_komisi:true,komisi_nominal_tetap:5000,komisi_persen:0};
