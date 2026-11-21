@@ -38,6 +38,6 @@ test('guest Affiliate, Help, Login and Katalog share violet marketplace system',
  for(const page of ['index.html','staging/member.html']){
    const html=read(page);
    assert.match(html,/public-experience-v8\.css\?v=20261121-public-v8-2/);
-   assert.match(html,/app\.js\?v=20261121-qris-checkout-v4-market-v9/);
+   assert.match(html,/app\.js\?v=20261121-qris-checkout-v4-market-v9-2/);
  }
 });

@@ -58,10 +58,10 @@ test('historical BANNER cannot be re-created but can be found for archival',()=>
 test('both page entrypoints load the campaign CSS after all older marketing styles',()=>{
   for(const path of ['index.html','staging/member.html']){
     const html=read(path);
-    assert.match(html,/catalog-campaign-v9\.css\?v=20261121-catalog-v9-1/);
+    assert.match(html,/catalog-campaign-v9\.css\?v=20261121-catalog-v9-2/);
     const idx=html.indexOf('catalog-campaign-v9.css');
     assert.ok(idx>html.indexOf('public-experience-v8.css'));
-    assert.match(html,/content-ui\.js\?v=20261121-catalog-v9-1/);
+    assert.match(html,/content-ui\.js\?v=20261121-catalog-v9-2/);
   }
   assert.match(css,/\.ngd-catalog-campaign-copy/);
   assert.match(css,/@media\(max-width:700px\)/);
@@ -71,4 +71,16 @@ test('both page entrypoints load the campaign CSS after all older marketing styl
     assert.equal(b.toString('ascii',8,12),'WEBP');
     assert.ok(b.length<120000);
   }
+});
+
+test('home campaigns and other public page artwork reuse the CMS within existing heroes',()=>{
+  assert.match(app,/published\(state\.siteContent,'HERO','home'\)/);
+  assert.match(app,/cmsPageArt_\('affiliate'\)/);
+  assert.match(app,/cmsPageArt_\('jasa'\)/);
+  assert.match(app,/cmsPageArt_\('ai'\)/);
+  assert.match(app,/cmsPageArt_\('dukungan'\)/);
+  assert.match(app,/state\.route==='belajar'/);
+  const css=read('assets/catalog-campaign-v9.css');
+  assert.match(css,/\.ngd-cms-affiliate-art/);
+  assert.match(css,/\.ngd-ai-hero-art/);
 });

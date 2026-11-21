@@ -71,7 +71,7 @@ test('mobile native and custom media theme is scoped to same shared design style
     assert.ok(css.includes(key),key);
   }
   assert.match(css,/@media\(max-width:760px\)/);
-  assert.ok(html.includes('src="./js/content-ui.js?v=20261121-catalog-v9-1"'));
+  assert.ok(html.includes('src="./js/content-ui.js?v=20261121-catalog-v9-2"'));
   assert.ok(html.indexOf('content-ui.js')<html.indexOf('js/app.js'));
   assert.ok(html.includes('id="brand-mark"'));
 });

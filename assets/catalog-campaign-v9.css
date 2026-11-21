@@ -282,3 +282,49 @@ body.ngd-public-app[data-app-role=admin]:not(#ngd) .ngd-cms-legacy-warning{
 @media(prefers-reduced-motion:reduce){
  body.ngd-public-app[data-app-role]:not(#ngd) .ngd-catalog-campaign *{scroll-behavior:auto}
 }
+
+/* Page covers enrich the existing V8 hero rather than inserting a second banner. */
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro{
+  display:flex!important;flex-direction:column;align-items:flex-start!important;
+  justify-content:center!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro > :not(.ngd-cms-affiliate-art){
+  position:relative;z-index:2;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-cms-affiliate-art{
+  position:absolute;z-index:1;top:0;right:0;
+  width:56%;height:100%;object-fit:cover;
+  object-position:center center;pointer-events:none;
+  -webkit-mask-image:linear-gradient(90deg,transparent,black 31%);
+  mask-image:linear-gradient(90deg,transparent,black 31%);
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ai-catalog-intro{
+  isolation:isolate;position:relative!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ai-catalog-intro .ai-catalog-intro-copy{
+  position:relative;z-index:2;max-width:60%;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-ai-hero-art{
+  position:absolute;right:1.7%;bottom:0;z-index:1;
+  width:37%;max-height:205px;height:auto;object-fit:contain;
+  border-radius:12px;mix-blend-mode:screen;
+}
+@media(max-width:700px){
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro{
+  justify-content:flex-start!important;align-items:flex-start!important;
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-cms-affiliate-art{
+  width:100%;height:38%;top:auto;bottom:0;object-position:center;
+  -webkit-mask-image:linear-gradient(180deg,transparent,black 28%);
+  mask-image:linear-gradient(180deg,transparent,black 28%);
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ai-catalog-intro{
+  min-height:230px;overflow:hidden;
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ai-catalog-intro .ai-catalog-intro-copy{
+  max-width:100%;padding:0 0 94px;
+ }
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-ai-hero-art{
+  width:46%;max-height:120px;right:8px;bottom:0;
+ }
+}

@@ -9,6 +9,11 @@ function brandLogoSrc_(){
   const item=window.NGD_CONTENT_UI?.published(state.siteContent,'BRAND_LOGO','brand')?.[0];
   return (item&&window.NGD_CONTENT_UI?.mediaPath(item.image_path))||defaultBrandLogoSrc;
 }
+// PAGE_COVER is art within a pre-existing hero, never a second stacked hero.
+function cmsPageArt_(route){
+  const item=window.NGD_CONTENT_UI?.published(state.siteContent,'PAGE_COVER',route)?.[0];
+  return item?window.NGD_CONTENT_UI.mediaPath(item.image_path):'';
+}
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g,
   (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const idSafe = (v) => esc(String(v == null ? '' : v));
@@ -468,6 +473,16 @@ function viewHome(){
 
   // The buyer-facing home is a compact digital storefront; no synthetic
   // orders, prices, ratings or affiliate earnings are rendered here.
+  const homeCampaign=window.NGD_CONTENT_UI?.published(state.siteContent,'HERO','home')?.[0];
+  const homeArt=homeCampaign?
+    window.NGD_CONTENT_UI.mediaPath(homeCampaign.image_path):ngdPremiumArtSrc_('hero');
+  const homeHeadline=homeCampaign?.title?
+    esc(homeCampaign.title):'Belajar, Berkarya, dan <em>Ngulik Bareng AI</em>';
+  const homeLead=homeCampaign?.description?
+    esc(homeCampaign.description):'eBook, paket belajar, aplikasi usaha, video AI, dan integrasi praktis untuk UMKM.';
+  const homeRoute=homeCampaign&&screens[String(homeCampaign.cta_route||'')]?
+    String(homeCampaign.cta_route):'katalog';
+  const homeCta=homeCampaign?.cta_label?esc(homeCampaign.cta_label):'Jelajahi Produk';
   const curatedIds=['P-EBOOK','P-STARTER-15K','P-STARTER-15',
     'P-3IN1','P-POS','P-VIDEO-AI','P-INTEGRASI-GAS'];
   const curated=curatedIds.map(id=>(state.catalog||[]).find(p=>
@@ -481,18 +496,18 @@ function viewHome(){
     '<div class="ngd-shop-hero-content">'+
       '<p class="ngd-shop-kicker">MARKETPLACE PRODUK DIGITAL</p>'+
       '<div class="public-hero-copy">'+
-        '<h1>Belajar, Berkarya, dan <em>Ngulik Bareng AI</em></h1>'+
-        '<p class="public-hero-lead">eBook, paket belajar, aplikasi usaha, video AI, dan integrasi praktis untuk UMKM.</p>'+
+        '<h1>'+homeHeadline+'</h1>'+
+        '<p class="public-hero-lead">'+homeLead+'</p>'+
         '<p class="ngd-shop-service-keywords">Jasa Web, Aplikasi &amp; Video UMKM</p>'+
       '</div>'+
       '<div class="ngd-shop-hero-actions">'+
-        '<button type="button" class="ngd-shop-yellow-btn" data-route="katalog">Jelajahi Produk '+icon('arrow')+'</button>'+
+        '<button type="button" class="ngd-shop-yellow-btn" data-route="'+esc(homeRoute)+'">'+homeCta+' '+icon('arrow')+'</button>'+
         '<button type="button" class="ngd-shop-outline-btn" data-route="daftar">Daftar Member</button>'+
       '</div>'+
       brandStage+
     '</div>'+
     '<div class="ngd-shop-hero-art" aria-hidden="true">'+
-      '<img src="'+esc(ngdPremiumArtSrc_('hero'))+'" alt="" decoding="async" fetchpriority="high">'+
+      '<img src="'+esc(homeArt)+'" alt="" decoding="async" fetchpriority="high">'+
     '</div>'+
   '</section>';
   const trust='<section class="ngd-shop-trust" aria-label="Informasi layanan">'+[
@@ -876,6 +891,7 @@ function viewAI(){
   const intro='<header class="ai-catalog-intro"><div class="ai-catalog-intro-copy">'+
     '<p class="eyebrow">NGULIK DIGITAL</p><h1>Studio AI</h1>'+
     '<p>Pilih alat yang ingin digunakan.</p></div>'+
+    (publicMode?'<img class="ngd-ai-hero-art" src="'+esc(cmsPageArt_('ai')||ngdPremiumArtSrc_('ai-pack'))+'" alt="" loading="lazy" decoding="async">':'')+
     (!publicMode?'<div class="ai-wallet-mini"><small>Saldo</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
     '<button type="button" data-catalog-go="ai">Isi Token</button></div>':'')+
     '</header>';
@@ -1000,7 +1016,9 @@ function viewAffiliate(){
   // Read-only presentation of the member's own backend-provided commission data.
   // Financial actions keep their existing client + server feature gates.
   if(!logged())return '<div class="partner-public">'+
-    '<header class="partner-public-intro"><p class="partner-kicker">NGULIK DIGITAL · PROGRAM KOMISI</p>'+
+    '<header class="partner-public-intro">'+
+      (cmsPageArt_('affiliate')?'<img class="ngd-cms-affiliate-art" src="'+esc(cmsPageArt_('affiliate'))+'" alt="" loading="lazy" decoding="async">':'')+
+      '<p class="partner-kicker">NGULIK DIGITAL · PROGRAM KOMISI</p>'+
       '<h1>Bagikan manfaat.<br><span>Dapatkan komisi.</span></h1>'+
       '<p>Rekomendasikan produk digital yang sesuai kebutuhan teman. Komisi hanya tercatat untuk transaksi yang memenuhi ketentuan.</p>'+
       '<div class="partner-hero-actions">'+
@@ -1598,7 +1616,7 @@ function viewServiceRequests(){
             '<button type="button" class="btn btn-primary" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
             '<button type="button" class="btn btn-secondary" data-route="login">Permintaan Kustom</button>'+
           '</div></div>'+
-        '<img src="'+esc(ngdPremiumArtSrc_('gas'))+'" alt="" decoding="async" loading="lazy">'+
+        '<img src="'+esc(cmsPageArt_('jasa')||ngdPremiumArtSrc_('gas'))+'" alt="" decoding="async" loading="lazy">'+
       '</section>'+
       '<section class="ngd-public-services-shelf" aria-label="Daftar layanan digital">'+
         '<header class="ngd-public-services-heading"><div><p class="eyebrow">LAYANAN PILIHAN</p>'+
@@ -1737,7 +1755,7 @@ function viewSupport(){
         '<button type="button" class="btn btn-primary" data-route="login">Masuk untuk bantuan pribadi</button>'+
         '<button type="button" class="btn btn-secondary" data-route="katalog">Lihat Katalog</button>'+
       '</div></div>'+
-      '<img src="'+esc(ngdPremiumArtSrc_('class'))+'" alt="" loading="lazy" decoding="async">'+
+      '<img src="'+esc(cmsPageArt_('dukungan')||ngdPremiumArtSrc_('class'))+'" alt="" loading="lazy" decoding="async">'+
     '</section>'+
     '<section class="ngd-help-topics" aria-label="Topik bantuan">'+
       [['clipboard','Pesanan','Lihat detail checkout, batas pembayaran, dan status melalui akun member.'],
@@ -2095,7 +2113,7 @@ function render(){
   };
   const screen=(routes[state.route]||viewHome)();
   // Catalog has a single authoritative HERO slot; do not stack PAGE_COVER above it.
-  by('screen').innerHTML=(!logged()&&['belajar','jasa','ai','affiliate','dukungan'].includes(state.route)?
+  by('screen').innerHTML=(!logged()&&state.route==='belajar'?
     (window.NGD_CONTENT_UI?.cover(state.siteContent,state.route)||''):'')+screen;
   syncCheckoutClock_();
   syncHeroRotation_();

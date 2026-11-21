@@ -157,7 +157,7 @@
     ...['belajar','aplikasi','ai','jasa','katalog','affiliate','dukungan','login']
       .map(x=>['FEATURE_ICON',x,'Ikon fitur '+x]),
     ...routes.map(x=>['NAV_ICON',x,'Navigasi '+x]),
-    ...['belajar','katalog','jasa','ai','affiliate','dukungan']
+    ...['belajar','jasa','ai','affiliate','dukungan']
       .map(x=>['PAGE_COVER',x,'Sampul '+x]),
     ['PROMO','member_home','Promosi beranda member'],
     ['ANNOUNCEMENT','member_home','Pengumuman beranda member'],
