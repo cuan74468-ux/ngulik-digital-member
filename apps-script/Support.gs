@@ -56,7 +56,7 @@ function supportMemberProducts_(member,orders,products) {
     } else if(p.tipe==='LISENSI_SEKALI'){
       state=member.status_pos==='AKTIF'?'AKTIF':
         o.status==='FULFILLED'?'PERLU_REKONSILIASI':'MENUNGGU_AKTIVASI';
-    } else if(p.tipe==='TOPUP_KREDIT')
+    } else if(['TOPUP_KREDIT','TOPUP_TOKEN'].indexOf(String(p.tipe))>=0)
       state=o.status==='FULFILLED'?'KREDIT_TERCATAT':'MENUNGGU_PEMENUHAN';
     return {product_id:id,nama:p.nama,tipe:p.tipe,order_id:o.order_id,
       order_status:o.status,paid_at:supportDate_(o.paid_at),
