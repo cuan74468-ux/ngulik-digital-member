@@ -16,10 +16,10 @@ test('public and STAGING share the same latest calm floating-brand layer',()=>{
     assert.match(html,/family=Inter/);
   }
 });
-test('marketplace hero keeps official brand and no stair/pixel animation',()=>{
-  assert.match(app,/class="ngd-journey-stage ngd-shop-brand-stage"/);
-  assert.match(app,/class="ngd-floating-logo" role="img"/);
-  assert.match(app,/class="ngd-floating-shadow"/);
+test('quiet public hero uses text first, with accessible links and no decorative product collage',()=>{
+  assert.match(app,/class="ngd-shop-brand-stage"/);
+  assert.match(app,/class="ngd-home-quiet-hero"|ngd-home-quiet-hero/);
+  assert.doesNotMatch(app.slice(app.indexOf('  \/\/ Public front door:'),app.indexOf('const offerCategories=')),/ngd-home-artwork|ngd-floating-shadow|market-product-card/);
   assert.doesNotMatch(app,/ngd-journey-step|ngd-climb-step|ngd-journey-stairs|ngd-journey-art/);
   assert.match(floating,/@keyframes ngdQuietFloat/);
   assert.match(floating,/@media\(prefers-reduced-motion:reduce\)/);
@@ -28,8 +28,8 @@ test('marketplace hero keeps official brand and no stair/pixel animation',()=>{
 test('homepage routes to the live catalog and member registration without fake commerce',()=>{
   assert.match(app,/class="nh-home nh-home-minimal ngd-shop-home"/);
   assert.match(app,/class="ngd-shop-hero"|ngd-shop-hero/);
-  assert.match(app,/ngd-shop-featured/);
-  assert.match(app,/ngd-shop-signup/);
+  assert.match(app,/ngd-home-direct-links/);
+  assert.doesNotMatch(app.slice(app.indexOf('  \/\/ Public front door:'),app.indexOf('const offerCategories=')),/ngd-shop-featured|ngd-shop-signup/);
   assert.match(app,/data-route="katalog"/);
   assert.match(app,/data-route="daftar"/);
   assert.doesNotMatch(app,/class="nh-grid"|class="nh-rail"|class="ngd-token-market"/);
@@ -51,7 +51,7 @@ test('homepage-only CSS preserves payment and account logic',()=>{
 });
 
 test('both entrypoints load current homepage copy rather than cached 16 November module',()=>{
-  assert.match(app,/Jasa Web, Aplikasi &amp; Video UMKM/);
+  assert.match(app,/Solusi digital yang benar-benar membantu/);
   assert.match(publicHtml,/js\/app\.js\?v=20261121-proportions-v13-2/);
   assert.match(stagingHtml,/js\/app\.js\?v=20261121-proportions-v13-2/);
 });
