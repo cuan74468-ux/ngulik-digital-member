@@ -344,7 +344,7 @@ function diagnosticFinanceScenarios() {
     pass++;console.log('PASS: '+label);
   }
   var products=[{product_id:'SIM-CREDIT',tipe:'TOPUP_KREDIT'}];
-  var paid={order_id:'SIM-1',product_id:'SIM-CREDIT',status:'FULFILLED'};
+  var paid={order_id:'SIM-1',member_id:'SIM-MEMBER',product_id:'SIM-CREDIT',status:'FULFILLED'};
   var credit={member_id:'SIM-MEMBER',ref_id:'SIM-1',tipe:'TOPUP',jumlah:50};
   var reversed={member_id:'SIM-MEMBER',ref_id:'SIM-1',tipe:'ADJUST_REFUND',jumlah:-50};
   function run(order,ledger,commission){
@@ -352,17 +352,17 @@ function diagnosticFinanceScenarios() {
   }
   function issues(result){return result.findings.length?result.findings[0].issues:[];}
   assert_(run(paid,[credit]).needs_review===0,'Topup fulfilled dengan satu ledger');
-  assert_(financeFindings_([{order_id:'SIM-TOKEN',product_id:'SIM-TOKEN-10',
+  assert_(financeFindings_([{order_id:'SIM-TOKEN',member_id:'SIM-MEMBER',product_id:'SIM-TOKEN-10',
     status:'FULFILLED'}],[],[],[{product_id:'SIM-TOKEN-10',tipe:'TOPUP_TOKEN'}])
     .findings[0].issues.indexOf('TOPUP_LEDGER_COUNT_0')>=0,
     'Topup Token tanpa ledger terdeteksi');
-  assert_(financeFindings_([{order_id:'SIM-TOKEN',product_id:'SIM-TOKEN-10',
-    status:'FULFILLED'}],[{ref_id:'SIM-TOKEN',tipe:'TOPUP_TOKEN'}],[],
+  assert_(financeFindings_([{order_id:'SIM-TOKEN',member_id:'SIM-MEMBER',product_id:'SIM-TOKEN-10',
+    status:'FULFILLED'}],[{member_id:'SIM-MEMBER',ref_id:'SIM-TOKEN',tipe:'TOPUP_TOKEN'}],[],
     [{product_id:'SIM-TOKEN-10',tipe:'TOPUP_TOKEN'}]).needs_review===0,
     'Ledger historis TOPUP_TOKEN tetap dikenali');
   assert_(issues(run(paid,[])).indexOf('TOPUP_LEDGER_COUNT_0')>=0,'Fulfilled tanpa ledger terdeteksi');
   assert_(issues(run(paid,[credit,credit])).indexOf('TOPUP_LEDGER_COUNT_2')>=0,'Topup ganda terdeteksi');
-  var refunded={order_id:'SIM-1',product_id:'SIM-CREDIT',status:'REFUNDED'};
+  var refunded={order_id:'SIM-1',member_id:'SIM-MEMBER',product_id:'SIM-CREDIT',status:'REFUNDED'};
   assert_(run(refunded,[credit,reversed]).needs_review===0,'Refund dengan satu reversal');
   assert_(issues(run(refunded,[credit])).indexOf('TOPUP_REFUND_ADJUST_COUNT_0')>=0,'Refund tanpa reversal terdeteksi');
   assert_(issues(run(refunded,[credit,reversed,reversed])).indexOf('TOPUP_REFUND_ADJUST_COUNT_2')>=0,'Reversal ganda terdeteksi');
