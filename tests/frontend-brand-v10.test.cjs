@@ -18,10 +18,10 @@ test('both real pages use larger accessible Ngulik Digital wordmark consistently
     const html=read(file);
     assert.match(html,/ngd-icon-v10-64\.png\?v=20261121-v10-1/);
     assert.match(html,/ngd-icon-v10-192\.png\?v=20261121-v10-1/);
-    assert.match(html,/brand-experience-v10\.css\?v=20261121-proportions-v13-1/);
+    assert.match(html,/brand-experience-v10\.css\?v=20261121-proportions-v13-2/);
     assert.match(html,/Plus\+Jakarta\+Sans/);
     assert.match(html,/data-route="ai">Studio AI<\/button>/);
-    assert.match(html,/20261121-proportions-v13-1/);
+    assert.match(html,/20261121-proportions-v13-2/);
   }
   assert.match(styling,/\.guest-brand strong/);
   assert.match(styling,/font-size:clamp\(19px,1\.46vw,23px\)/);
