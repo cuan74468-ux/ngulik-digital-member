@@ -222,3 +222,110 @@ body.ngd-public-app:not(#ngd) .ngd-floating-logo{
  display:grid!important;place-items:center!important;overflow:visible!important;
  background:transparent!important;border:0!important;box-shadow:none!important;
 }
+
+
+/* V11 page missions: one visual language, contextual art, responsive and accessible.
+   CMS published artwork always takes priority over bundled fallback artwork. */
+body.ngd-public-app .ngd-purpose-hero{
+  display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);
+  align-items:center;gap:clamp(28px,5vw,72px);
+  padding:clamp(28px,5vw,72px);
+  border:1px solid #e9e4f1;border-radius:26px;background:#f7f5fd;
+  overflow:hidden;isolation:isolate
+}
+body.ngd-public-app .ngd-purpose-copy{min-width:0;max-width:650px}
+body.ngd-public-app .ngd-purpose-copy .eyebrow{color:#6146aa;font-size:11px;letter-spacing:.13em;font-weight:800}
+body.ngd-public-app .ngd-purpose-copy h1{
+  font-family:"Plus Jakarta Sans",Inter,system-ui,sans-serif;
+  font-size:clamp(31px,3.65vw,56px);font-weight:800;letter-spacing:-.055em;line-height:1.12;
+  color:#221b45;margin:14px 0 18px
+}
+body.ngd-public-app .ngd-purpose-copy>p:not(.eyebrow){max-width:54ch;color:#625d77;font-size:clamp(14px,1.12vw,17px);line-height:1.68}
+body.ngd-public-app .ngd-purpose-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:25px}
+body.ngd-public-app .ngd-purpose-actions .btn{text-decoration:none;min-height:46px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:11px}
+body.ngd-public-app .ngd-purpose-media{min-width:0;display:grid;place-items:center;position:relative}
+body.ngd-public-app .ngd-purpose-media img{display:block;width:100%;max-width:475px;height:auto;max-height:380px;object-fit:contain;filter:drop-shadow(0 22px 24px rgba(41,29,84,.12))}
+body.ngd-public-app .ngd-learning-path{padding:clamp(30px,4vw,60px) 0}
+body.ngd-public-app .ngd-learning-path>.eyebrow{font-size:11px;letter-spacing:.13em;font-weight:800;color:#6146aa}
+body.ngd-public-app .ngd-learning-path h2{font-family:"Plus Jakarta Sans",Inter,sans-serif;font-size:clamp(23px,2.4vw,34px);letter-spacing:-.04em;color:#251d46;margin:8px 0 25px}
+body.ngd-public-app .ngd-learning-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+body.ngd-public-app .ngd-learning-steps article{border-top:2px solid #d6c9f7;padding:20px 4px;min-width:0}
+body.ngd-public-app .ngd-learning-steps span{display:block;font-size:12px;font-weight:800;color:#7254c8;margin-bottom:13px}
+body.ngd-public-app .ngd-learning-steps strong{display:block;color:#262044;font-size:17px;letter-spacing:-.02em}
+body.ngd-public-app .ngd-learning-steps p{color:#68617d;font-size:14px;line-height:1.65;max-width:35ch;margin:6px 0 0}
+
+/* AI is a workspace: don't render its product browser as another retail hero. */
+body.ngd-public-app .ai-catalog .ai-catalog-intro{
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(210px,36%);
+  align-items:center!important;gap:clamp(16px,3.5vw,52px)!important;
+  padding:clamp(25px,4vw,52px)!important;
+  background:#f4f1fc!important;border:1px solid #e8e0f4!important;
+  border-radius:24px!important;min-height:225px
+}
+body.ngd-public-app .ai-catalog-intro h1{font-family:"Plus Jakarta Sans",Inter,sans-serif!important;color:#241b4b!important;letter-spacing:-.045em}
+body.ngd-public-app .ai-catalog-intro-copy>p:last-child{font-size:clamp(13px,1.1vw,16px)!important;color:#625d77!important;line-height:1.65!important;max-width:56ch}
+body.ngd-public-app .ai-catalog .ngd-ai-hero-art{width:100%;max-width:350px;max-height:250px;object-fit:contain;justify-self:center;filter:drop-shadow(0 16px 22px rgba(49,28,109,.12))}
+body.ngd-public-app .ai-catalog-intro .ai-wallet-mini{width:100%;max-width:310px;justify-self:end;box-shadow:0 12px 28px rgba(43,27,84,.05)!important}
+
+/* Service hero: visualize actual offered work (video + POS), not random marketing stock. */
+body.ngd-public-app[data-app-role=guest] .ngd-public-services-hero{overflow:hidden;gap:clamp(20px,3vw,50px)}
+body.ngd-public-app[data-app-role=guest] .ngd-public-services-hero>.ngd-service-media{
+  width:100%;min-width:0;position:relative;display:grid;place-items:center;
+  min-height:270px;max-width:500px;justify-self:end
+}
+body.ngd-public-app .ngd-service-media img{display:block;object-fit:contain;box-shadow:none!important;border:0!important;background:transparent!important}
+body.ngd-public-app .ngd-service-media .ngd-service-main-art{width:80%;max-height:320px;filter:drop-shadow(0 18px 24px rgba(32,25,74,.13))}
+body.ngd-public-app .ngd-service-media .ngd-service-secondary-art{
+  position:absolute;right:0;bottom:-5px;width:39%;max-height:170px;
+  filter:drop-shadow(0 11px 15px rgba(37,27,81,.15))
+}
+
+/* Help should feel like support: structured topics, no unrelated training cover. */
+body.ngd-public-app[data-app-role=guest] .ngd-help-hero>.ngd-help-media{
+  display:grid;align-content:center;justify-items:start;gap:10px;padding:24px;
+  border:1px solid #e6dff3;border-radius:20px;background:#fff;
+  box-shadow:0 16px 34px rgba(40,25,91,.06);max-width:390px;width:100%;
+  min-width:0;position:relative;z-index:2
+}
+body.ngd-public-app .ngd-help-media svg{width:34px;height:34px;color:#6338ca;margin-bottom:4px}
+body.ngd-public-app .ngd-help-media span{
+  width:100%;border-bottom:1px solid #ece7f4;padding:9px 0;
+  color:#30264b;font-size:14px;font-weight:650;line-height:1.45
+}
+body.ngd-public-app .ngd-help-media span:last-child{border-bottom:0}
+
+/* Affiliate visual belongs behind its own narrative and must not intercept CTAs. */
+body.ngd-public-app .partner-public-intro .ngd-cms-affiliate-art{
+  position:absolute;right:clamp(12px,3vw,45px);top:50%;transform:translateY(-50%);
+  display:block;width:min(33%,300px);max-height:275px;object-fit:contain;
+  pointer-events:none;opacity:.93;filter:drop-shadow(0 12px 16px rgba(22,17,67,.12))
+}
+body.ngd-public-app .partner-public-intro>*:not(.ngd-cms-affiliate-art){position:relative;z-index:1}
+body.ngd-public-app .partner-public-intro>p:not(.partner-kicker){max-width:53ch}
+
+/* Personal member welcome avoids the same hero image as the storefront. */
+body.ngd-public-app[data-app-role=member] .ngd-member-hero .ngd-member-hero-art{object-fit:contain;max-height:285px}
+@media(max-width:840px){
+  body.ngd-public-app .ngd-purpose-hero{grid-template-columns:1fr;gap:22px;padding:30px 23px}
+  body.ngd-public-app .ngd-purpose-media img{max-height:240px}
+  body.ngd-public-app .ai-catalog .ai-catalog-intro{grid-template-columns:1fr;min-height:0}
+  body.ngd-public-app .ai-catalog .ngd-ai-hero-art{max-height:180px;max-width:260px}
+  body.ngd-public-app .ai-catalog-intro .ai-wallet-mini{justify-self:stretch;max-width:none}
+  body.ngd-public-app .ngd-service-media .ngd-service-main-art{max-height:250px}
+}
+@media(max-width:640px){
+  body.ngd-public-app .ngd-purpose-hero{border-radius:18px;padding:25px 19px;gap:12px}
+  body.ngd-public-app .ngd-purpose-copy h1{font-size:clamp(28px,8vw,38px);line-height:1.15}
+  body.ngd-public-app .ngd-purpose-actions{align-items:stretch}
+  body.ngd-public-app .ngd-purpose-actions .btn{flex:1 1 100%}
+  body.ngd-public-app .ngd-learning-steps{grid-template-columns:1fr;gap:6px}
+  body.ngd-public-app .ngd-learning-steps article{padding:15px 3px}
+  body.ngd-public-app .ai-catalog .ai-catalog-intro{border-radius:18px!important;padding:24px 19px!important}
+  body.ngd-public-app .ngd-service-media .ngd-service-main-art{max-height:210px}
+  body.ngd-public-app[data-app-role=guest] .ngd-public-services-hero>.ngd-service-media{min-height:205px;margin:auto}
+  body.ngd-public-app[data-app-role=guest] .ngd-help-hero>.ngd-help-media{max-width:none;padding:18px;margin-top:12px}
+  body.ngd-public-app .partner-public-intro .ngd-cms-affiliate-art{position:static;transform:none;width:min(70%,230px);max-height:175px;margin:10px auto 0}
+}
+@media(prefers-reduced-motion:reduce){
+  body.ngd-public-app .ngd-purpose-hero *,body.ngd-public-app .ngd-service-media *{animation:none!important;transition:none!important}
+}
