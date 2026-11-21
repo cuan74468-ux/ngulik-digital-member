@@ -65,7 +65,7 @@ font-size:11px;line-height:1.4;color:#f0eaff!important;
 
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-trust{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:25px 0;border-bottom:1px solid #e7e2ed}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-trust span{font-size:12px;line-height:1.55;font-weight:700;color:#463b66;min-width:0}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:18px 50px;align-items:start;padding:clamp(52px,7vw,96px) 2%}
+body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:12px clamp(24px,4vw,45px);align-items:start;padding:clamp(30px,4vw,55px) 2% clamp(24px,3vw,42px)}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-kicker{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.14em;color:#5641a1}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story h2,body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top h2,body.ngd-public-app[data-app-role="guest"] #screen .ngdl-benefits h2,body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end h2{
   grid-column:1;grid-row:1;
@@ -76,8 +76,8 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story h2,body.ngd-publi
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story h2 em{font-style:normal;color:#5740a8}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story>p:last-child{font-size:clamp(14px,1.4vw,17px);line-height:1.85;color:#514b60}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offers{padding:30px 0 70px}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:25px}
+body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offers{padding:0 0 clamp(36px,5vw,64px)}
+body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:18px}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top>div{display:grid;gap:10px}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top>p{max-width:260px;color:#655f72;font-size:14px;line-height:1.6}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
@@ -143,10 +143,10 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 :focus-visibl
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-trust{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:600px){
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero{min-height:0;padding:25px 18px 160px;border-radius:18px;align-items:flex-start}
+  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero{min-height:0;padding:24px 18px 155px;border-radius:18px;align-items:flex-start}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero-copy{max-width:100%;width:100%;gap:11px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::before{inset:auto 0 0 0;height:178px;background-position:center 54%;background-size:cover;opacity:1;-webkit-mask-image:none;mask-image:none}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::after{background:linear-gradient(180deg,#161238 0%,rgba(22,18,56,.98) 54%,rgba(22,18,56,.82) 68%,rgba(22,18,56,.10) 94%,rgba(22,18,56,0) 100%)}
+  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::before{inset:0;height:auto;background-position:88% 58%;background-size:cover;opacity:1;-webkit-mask-image:none;mask-image:none}
+  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::after{background:linear-gradient(180deg,#161238 0%,rgba(22,18,56,.98) 38%,rgba(22,18,56,.87) 58%,rgba(22,18,56,.38) 78%,rgba(22,18,56,.03) 100%)}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-eyebrow{font-size:9px;letter-spacing:.07em}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero h1{font-size:clamp(29px,8.1vw,37px)!important;line-height:1.13!important;max-width:18ch}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero-lead{font-size:13px;line-height:1.58;max-width:100%}
@@ -156,12 +156,12 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 :focus-visibl
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero .ngdl-btn{font-size:11.5px;gap:5px;padding-inline:6px}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-trust{gap:12px 14px;padding:22px 4px}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-trust span{font-size:11px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story{display:grid;grid-template-columns:1fr;padding:54px 3% 48px;gap:14px}
+  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story{display:grid;grid-template-columns:1fr;padding:23px 2% 20px;gap:8px}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story h2,body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top h2,body.ngd-public-app[data-app-role="guest"] #screen .ngdl-benefits h2,body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end h2{font-size:27px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story>p:last-child{font-size:14px;line-height:1.75}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offers{padding:0 0 50px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top{display:grid;gap:9px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top>p{font-size:13px}
+  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story>p:last-child{font-size:13px;line-height:1.62;color:#514b60}
+  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offers{padding:0 0 34px}
+  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top{display:grid;gap:6px;margin-bottom:15px}
+  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top>p{font-size:12px;line-height:1.5}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-grid{grid-template-columns:1fr;gap:16px}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offer-image{aspect-ratio:1.85}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offer-body{padding:18px;gap:9px}
@@ -208,3 +208,33 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-card-public-detail{flex:
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-card-public-detail summary{display:inline-flex;align-items:center;min-height:42px;cursor:pointer;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-card-public-detail p{margin:8px 0;color:#554f66}
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-card-public-detail strong{display:block;margin:5px 0 10px;font-size:14px}
+
+/* Public editorial headings must remain ink-dark on the light canvas.
+   Explicit text-fill overrides legacy gradient/white headings. */
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-story h2,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-section-top h2,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-benefits h2 {
+  color:#241d38!important;
+  -webkit-text-fill-color:#241d38!important;
+  background:none!important;
+  -webkit-background-clip:border-box!important;
+  background-clip:border-box!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-story .ngdl-kicker,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-section-top .ngdl-kicker {
+  color:#59429a!important;
+  -webkit-text-fill-color:#59429a!important;
+}
+@media(max-width:600px){
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-story h2,
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-section-top h2 {
+    font-size:clamp(22px,6.25vw,27px)!important;
+    line-height:1.22!important;
+    letter-spacing:-.035em!important;
+  }
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-story h2 {
+    margin:0!important;
+  }
+}
