@@ -1389,7 +1389,7 @@ function onPaid_(o,actor) {
   var product=byId_('katalog_produk','product_id',o.product_id);
   var member=byId_('members','member_id',o.member_id);
   require_(product&&member,'CONFLICT','Data produk atau member tidak tersedia.');
-  var s=settings_(),terms=ngdCommissionTerms_(s,product,o.harga_dasar),percent=terms.persen;
+  var s=settings_(),percent=commissionRate_(s,product);
   // Fail closed for self-referrals even if an old/bad member row points to itself.
   // This check belongs at posting time: the registration and form UI are not trust boundaries.
   var referrer=String(member.referred_by||'').trim();
@@ -1403,6 +1403,8 @@ function onPaid_(o,actor) {
   }
   var inviter=referrer?byId_('members','member_id',referrer):null;
   var eligibleInviter=!selfReferral&&ngdEligibleReferrer_(member,inviter);
+  var terms=referrer&&product.bisa_komisi===true?
+    ngdCommissionTerms_(s,product,o.harga_dasar):{persen:percent,nominal:0};
   // Legacy MEMBER -> ADMIN references may exist. Do not rewrite historical
   // ownership or create a new liability against an ineligible inviter.
   if(referrer&&!eligibleInviter&&product.bisa_komisi===true&&terms.nominal>0){
@@ -1412,7 +1414,8 @@ function onPaid_(o,actor) {
     if(!reviewLogged.length)logAudit_('SYSTEM','SYSTEM','COMMISSION_REFERRER_REVIEW_REQUIRED',
       'orders',o.order_id,'','BLOCKED',{reason:'INVITER_NOT_ACTIVE_MEMBER'});
   }
-  var commissionEligible=Boolean(eligibleInviter&&product.bisa_komisi===true&&terms.nominal>0);
+  var commissionEligible=Boolean(eligibleInviter&&product.bisa_komisi===true&&
+    (terms.nominal>0||terms.persen>0));
   var commissionValue=commissionEligible?terms.nominal:0;
   if(commissionEligible)require_(Number.isSafeInteger(commissionValue)&&commissionValue>0,
     'CONFLICT','Nominal komisi tidak valid.');
@@ -1868,20 +1871,20 @@ function advanceTrial_(m,p) {
     return {trial_berakhir:isoWib_(trialEnd),paid_access_preserved:paidActive};
   });
 }
-function publicCatalog_() {
-  var s=settings_();
-  return readAll_('katalog_produk').filter(function(r){return r.aktif===true;})
-    .sort(function(a,b){return Number(a.urut||0)-Number(b.urut||0);})
-    .map(function(r){
-      var enabled=r.bisa_komisi===true;
-      var fixed=enabled?ngdFixedCommission_(r):0;
-      var rate=enabled&&!fixed?commissionRate_(s,r):0;
-      return {product_id:r.product_id,nama:r.nama,deskripsi:r.deskripsi,
-        tipe:r.tipe,harga:r.harga,kredit_diberikan:r.kredit_diberikan,
-        durasi_hari:r.durasi_hari,bisa_komisi:enabled,
-        komisi_persen:rate,komisi_nominal_tetap:fixed};
-    });
+function ngdPublicCatalogItem_(r) {
+  var s=settings_(),enabled=r.bisa_komisi===true;
+  var fixed=enabled?ngdFixedCommission_(r):0;
+  var rate=enabled&&!fixed?commissionRate_(s,r):0;
+  return {product_id:r.product_id,nama:r.nama,deskripsi:r.deskripsi,
+    tipe:r.tipe,harga:r.harga,kredit_diberikan:r.kredit_diberikan,
+    durasi_hari:r.durasi_hari,bisa_komisi:enabled,
+    komisi_persen:rate,komisi_nominal_tetap:fixed};
 }
+function publicCatalog_() {return readAll_('katalog_produk').filter(function(r){
+  return r.aktif===true;
+}).sort(function(a,b){
+  return Number(a.urut||0)-Number(b.urut||0);
+}).map(ngdPublicCatalogItem_);}
 function dashboard_(m) {
   var modules=modules_(),done=findRows_('progress_member',function(r){return r.member_id===m.member_id;});
   var next=modules.filter(function(x){return !done.some(function(y){return x.modul_id===y.modul_id;});})[0]||null;
