@@ -59,7 +59,7 @@ test('QRIS: two equal-price checkouts receive collision-free amount and invoice 
   assert.equal(h.orders.length,2);
   assert.notEqual(a.total_bayar,b.total_bayar);
   assert.ok(a.kode_unik>=100&&a.kode_unik<=999);
-  assert.equal(a.total_bayar,10000+a.kode_unik);
+  assert.equal(a.total_bayar,10000-a.kode_unik);
   assert.equal(h.notices.filter(n=>n.template==='ORDER_INVOICE_MEMBER').length,2);
   assert.equal(a.qris_atas_nama,'Owner');
 });
