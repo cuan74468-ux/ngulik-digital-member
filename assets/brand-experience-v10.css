@@ -478,3 +478,105 @@ body.ngd-public-app .ngd-role-actions{display:flex;flex-wrap:wrap;gap:10px;margi
   body.ngd-public-app .ngd-role-actions{flex-direction:column}
   body.ngd-public-app .ngd-role-actions .btn{width:100%;justify-content:center}
 }
+
+
+/* V13 | Proportion audit: readable copy + safe artwork, no forced 510px phone banner.
+ * All measurements respond to actual content rather than fixed poster height.
+ * Desktop assets may be wide; mobile artwork moves into its own visual region.
+ */
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-banner-shell .ngd-catalog-campaign{
+  max-width:100%;border-radius:clamp(15px,1.6vw,21px)!important;
+  box-shadow:0 9px 25px rgba(28,16,85,.09)!important
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-slide{
+  min-height:clamp(300px,28vw,410px);max-height:none
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-copy{
+  max-width:min(680px,58%);width:58%;padding:clamp(26px,3.6vw,52px) clamp(24px,4.1vw,65px)
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-copy h2{
+  font-family:"Plus Jakarta Sans",Inter,system-ui,sans-serif!important;
+  font-size:clamp(27px,3vw,45px)!important;
+  line-height:1.16!important;max-width:22ch;letter-spacing:-.045em!important
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-description{
+  max-width:48ch;line-height:1.6!important
+}
+/* A small landing hero and a campaign aren't the same: the landing art stays in its
+ * second column and is never cropped merely to fill the available box. */
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-shop-hero-art img{
+  width:min(100%,760px)!important;max-height:min(440px,43vw)!important;
+  object-fit:contain!important;object-position:center!important
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-service-media .ngd-service-main-art,
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-service-media .ngd-service-secondary-art,
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-purpose-media img{
+  object-fit:contain!important;object-position:center!important
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-cms-art{
+  display:block;max-width:100%;max-height:130px;object-fit:contain;object-position:left center
+}
+/* Cards have their own consistent crop and do not inherit hero aspect ratios. */
+body.ngd-public-app .market-product-media{
+  overflow:hidden;aspect-ratio:6/5;min-height:0
+}
+body.ngd-public-app .market-product-media img.market-product-image{
+  display:block;width:100%;height:100%;max-width:100%;
+  object-fit:cover;object-position:center
+}
+body.ngd-public-app[data-app-role=admin] .ngd-cms-preview-desktop .ngd-cms-preview-image{
+  aspect-ratio:8/3;height:auto;min-height:145px
+}
+body.ngd-public-app[data-app-role=admin] .ngd-cms-preview-mobile .ngd-cms-preview-image{
+  aspect-ratio:4/5;height:auto;min-height:185px
+}
+body.ngd-public-app[data-app-role=admin] .ngd-cms-preview-mobile .ngd-cms-preview-image img{
+  object-fit:contain;object-position:center bottom
+}
+body.ngd-public-app[data-app-role=admin] .ngd-cms-preview-mobile .ngd-cms-preview-image::before{
+  background:linear-gradient(180deg,rgba(24,10,75,.91) 0%,rgba(24,10,75,.7) 48%,rgba(24,10,75,.02) 85%)
+}
+@media(max-width:700px){
+  /* The old fixed 485/510px billboard gave phones an oversized campaign with
+     text painted over cropped artwork; layout now measures its content. */
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-slide{
+    display:flex!important;flex-direction:column!important;align-items:stretch!important;
+    min-height:0!important;height:auto!important;max-height:none!important
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-copy{
+    order:0;position:relative;max-width:none;width:100%!important;
+    min-width:0;flex:0 0 auto;padding:clamp(22px,5vw,30px) clamp(18px,5vw,27px) 13px!important
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-copy h2{
+    font-size:clamp(24px,6.4vw,33px)!important;line-height:1.16!important;
+    max-width:26ch
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-description{
+    font-size:clamp(12px,3vw,14px)!important;max-width:45ch
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-actions{
+    gap:8px;margin-top:15px!important;flex-direction:row;align-items:center
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-picture{
+    order:1;position:relative!important;inset:auto!important;
+    width:100%!important;height:clamp(145px,38vw,235px)!important;flex:0 0 auto;
+    background:#201066;overflow:hidden
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-picture img{
+    width:100%;height:100%;object-fit:contain!important;object-position:center!important
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-slide::before{
+    background:linear-gradient(180deg,rgba(25,10,83,.22),transparent 52%)!important;
+    pointer-events:none
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-shop-hero-art img{
+    max-height:clamp(140px,39vw,240px)!important;max-width:100%!important;
+    transform:none!important
+  }
+}
+@media(max-width:390px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-copy h2{font-size:25px!important}
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-copy{padding:21px 18px 12px!important}
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-picture{height:155px!important}
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-cta{min-height:42px}
+}
