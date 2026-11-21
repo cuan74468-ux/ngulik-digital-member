@@ -50,27 +50,28 @@ test('guest learning page explains Chapter 1 while leaving real LMS locked',()=>
 });
 test('guest marketplace displays all eight official QA fixtures without pretending payment is available',()=>{
   const h=preview();h.go('katalog');const html=h.nodes.screen.innerHTML;
-  assert.equal((html.match(/class="market-product-card"/g)||[]).length,8);
-  assert.match(html,/8 produk ditemukan/);
+  assert.equal((html.match(/class="market-product-card" data-market-kind=/g)||[]).length,8);
+  assert.match(html,/8 dari 8 produk/);
   assert.match(html,/market-search/);
   assert.match(html,/market-sort/);
   assert.match(html,/Jasa Video Iklan/);
   assert.match(html,/Bundel Ebook Vibe Coder/);
   assert.doesNotMatch(html,/data-buy="/);
-  assert.match(html,/disabled>Belum tersedia/);
+  assert.match(html,/data-checkout-product=/);
+  assert.doesNotMatch(html,/Tanya via WhatsApp|Chat WhatsApp/);
   assert.equal(h.apiCalls.length,0);
 });
-test('guest marketplace validates official WhatsApp contact and never invents checkout',()=>{
-  const h=preview();
-  vm.runInContext("state.info={wa_admin:'081234567890'};go('katalog')",h.ctx);
+test('guest marketplace routes every owned offer internally and keeps QRIS OFF',()=>{
+  const h=preview();h.go('katalog');
   const html=h.nodes.screen.innerHTML;
-  assert.match(html,/href="https:\/\/wa\.me\/6281234567890\?text=/);
-  assert.match(html,/Tanya via WhatsApp/);
-  assert.match(html,/rel="noopener noreferrer"/);
-  assert.doesNotMatch(html,/data-buy="/);
-  vm.runInContext("state.info={wa_admin:'https://evil.example'};render()",h.ctx);
-  assert.doesNotMatch(h.nodes.screen.innerHTML,/href="https:\/\/wa\.me\//);
-  assert.match(h.nodes.screen.innerHTML,/disabled>Belum tersedia/);
+  assert.match(html,/data-checkout-product=/);
+  assert.doesNotMatch(html,/wa\.me|Tanya via WhatsApp|Chat WhatsApp/);
+  vm.runInContext("state.checkoutProductId='P-VIDEO-AI';state.lastOrder=null;go('checkout')",h.ctx);
+  const detail=h.nodes.screen.innerHTML;
+  assert.match(detail,/Rincian Checkout/);
+  assert.match(detail,/Pembayaran belum dibuka/);
+  assert.doesNotMatch(detail,/data-qris-image|data-checkout-create/);
+  assert.equal(h.apiCalls.length,0);
 });
 test('guest category controls filter services without creating fake checkout',()=>{
   const h=preview();
@@ -79,7 +80,7 @@ test('guest category controls filter services without creating fake checkout',()
   assert.match(html,/Jasa Video Iklan/);
   assert.doesNotMatch(html,/Top-up 150 Kredit AI/);
   assert.match(html,/aria-pressed="true"/);
-  assert.match(html,/2 produk ditemukan/);
+  assert.match(html,/2 dari 8 produk/);
   assert.doesNotMatch(html,/data-buy="/);
   vm.runInContext("state.catalogFilter='belajar';render()",h.ctx);
   assert.match(h.nodes.screen.innerHTML,/Bundel Ebook Vibe Coder/);
