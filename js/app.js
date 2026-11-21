@@ -334,11 +334,18 @@ function viewHomeServices_(){
   return '<section class="ngd-home-services" aria-label="Tiga jasa utama Ngulik Digital">'+
     '<header class="ngd-home-services-heading"><p>JASA UTAMA</p><h2>Pilih Jasa untuk Usaha Anda</h2></header>'+
     '<div class="ngd-home-services-grid">'+offers.map(([id,name,description],index)=>{
+      const product=Array.isArray(state.catalog)?state.catalog.find(p=>
+        String(p.product_id)===id&&p.aktif===true&&!isPublicQaOffer_(p)):null;
+      // Never promise a checkout for an unpublished/archived catalog entry.
+      const label=product?offerUiTitle_(product):name;
+      const detail=product?offerUiDescription_(product)||description:description;
       return '<article class="ngd-home-service" data-service-product="'+esc(id)+'">'+
         '<span class="ngd-home-service-number">0'+(index+1)+'</span>'+
-        '<h3>'+esc(name)+'</h3>'+
-        '<p>'+esc(description)+'</p>'+
-        '<button type="button" class="ngd-home-service-cta" data-checkout-product="'+idSafe(id)+'">Lihat checkout '+icon('arrow')+'</button>'+
+        '<h3>'+esc(label)+'</h3>'+
+        '<p>'+esc(detail)+'</p>'+
+        (product?
+          '<button type="button" class="ngd-home-service-cta" data-checkout-product="'+idSafe(id)+'">Lihat checkout '+icon('arrow')+'</button>':
+          '<button type="button" class="ngd-home-service-cta" data-route="katalog">Lihat katalog '+icon('arrow')+'</button>')+
       '</article>';
     }).join('')+'</div>'+
   '</section>';
