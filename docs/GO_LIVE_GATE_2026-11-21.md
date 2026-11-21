@@ -74,3 +74,12 @@ Status: NO-GO for live payments until gates below pass.
 - QRIS SVG external extractor returned empty_content, which is neither proof of 404 nor verified QRIS validity. Real independent merchant scan is pending.
 - Result: STAGING payment gate OFF, infrastructure and data-integrity checks PASS, memory-only finance tests 29/29 PASS, historical reconciliation needs_review=1, live payment GO-LIVE remains NO-GO.
 - Next: non-mutating post-deploy API smoke tests plus optional operator browser admin/member checks. Never enable money flows until controlled test and owner authorization.
+
+## Public API smoke test and catalog UX pass — 2026-11-21
+- GAS STAGING operator run `diagnosticApiPublic`: `API_PUBLIC_OK`, 9/9 checks passed; public info, brand, quota, public-safe catalog, no PIN hashes leaked, unauthenticated admin/member requests rejected. No writes (operator log, 10:51 WIB).
+- Frontend source updated on GitHub main: shared `viewPublicMarketplace` for both guests and authenticated members, replacing the previous divergent member-only catalog layout. Member entitlement snapshot retained in expandable `Akses layanan saya`; partner shelf retained for signed-in members.
+- Search, sort and category filtering now work for signed-in members as well as guests. No new product, media, price, payment, affiliate or fulfillment records created.
+- New `assets/catalog-experience-v3.css` loaded after legacy CSS on public index.html and staging/member.html, with compact page intro, white-space, de-cluttered hero, horizontal category tabs, responsive 2-column phone and 3-column desktop grid, coherent product card typography and image fallbacks, accessible focus states and reduced-motion rules.
+- Product catalog actions continue to use `config.paymentsEnabled`; payment-disabled message now explicitly states online checkout is not enabled. No payment gate or backend edits.
+- App JS syntax parser PASS with module import stripped solely for parsing; stylesheet braces balanced 125/125. Published JS and CSS asset URLs read successfully from Pages. This is source/static smoke verification, NOT a visual interactive browser certification.
+- **UAT pending:** operator inspect `#katalog` on Android and desktop for guest and signed-in MEMBER; test search, category, sort, cards, direct free resources, consultation links; verify admin pages unchanged and checkout remains blocked. No live payment attempted.
