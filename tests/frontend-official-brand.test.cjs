@@ -30,14 +30,16 @@ test('public and STAGING use identical branded favicon and correct relative sour
     assert.ok(html.indexOf('brand-official.css')>html.indexOf('affiliate-partner.css'));
     assert.doesNotMatch(html,/guest-brand-icon"[^>]*>n\./);
   }
-  assert.match(publicHtml,/js\/app\.js\?v=20261120-marketplace-retail-v5/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261120-qris-manual-v1/);
+  assert.match(publicHtml,/js\/app\.js\?v=20261121-qris-checkout-v2/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261121-qris-checkout-v2/);
 });
 test('all dynamic brand placements use same canonical official image',()=>{
   assert.match(app,/const defaultBrandLogoSrc=document\.querySelector\?\.\('link\[rel="icon"\]'\)\?\.href\|\|''/);
   assert.match(app,/by\('brand-mark'\)/);
   assert.match(app,/class="ngd-floating-logo"[^>]*><img class="ngd-brand-image"/);
-  assert.match(app,/class="partner-art-mark"><img class="ngd-brand-image"/);
+  // The compact commission page intentionally removed its decorative logo art.
+  assert.match(app,/function viewAffiliate\(\)/);
+  assert.doesNotMatch(app.slice(app.indexOf('function viewAffiliate(){'),app.indexOf('function viewNotificationCenter(){')),/partner-art-mark/);
   assert.match(app,/class="market-hero-symbol"[^>]*><img class="ngd-brand-image"/);
   assert.doesNotMatch(app,/class="ngd-floating-logo"[^>]*><span>n\./);
 });
