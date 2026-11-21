@@ -517,11 +517,6 @@ function viewHome(){
         </div>
         <p class="ngdl-hero-caption">Mulai dari yang diperlukan dulu. Nggak perlu borong semuanya.</p>
       </div>
-      <div class="ngdl-hero-art" aria-label="Ilustrasi koleksi produk digital Ngulik Digital">
-        <div class="ngdl-art-halo" aria-hidden="true"></div>
-        <img class="ngdl-art-main" src="./assets/media/ngd-catalog-v9-wide.webp" alt="Showcase produk digital dan alat bantu untuk UMKM" width="960" height="600" fetchpriority="high">
-        <div class="ngdl-art-caption"><span>NGULIK DIGITAL</span><strong>Tools • Produk • Jasa</strong></div>
-      </div>
     </section>
     <div class="ngdl-trust" aria-label="Cara pakai Ngulik Digital">
       <span>✦ Tools AI pakai kredit</span><span>✦ Bayar dengan QRIS DANA Bisnis</span><span>✦ Bisa dibuka lewat HP</span><span>✦ Ada komisi untuk referal yang berhasil</span>
