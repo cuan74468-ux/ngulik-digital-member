@@ -30,7 +30,7 @@ test('30-day first click retained across reload and second inviter cannot overwr
 });
 test('first inviter captured in registration payload, never URL-only at submit',()=>{
   assert.match(app,/const r=captureFirstInviter_\(\);\s*if\(r\)payload.ref=r;/);
-  assert.match(app,/async function init\(\)\{\s*if\(routeFreeDoor_\(\)\)return;\s*captureFirstInviter_\(\);/);
+  assert.match(app,/async function init\(\)\{\s*captureFirstInviter_\(\);/);
 });
 test('member first-inviter field is immutable after first assignment',()=>{
   const body=section(gas,'function updateRow_(name, rowNumber, patch) {','function findRows_');
@@ -78,13 +78,11 @@ test('DANA destination required and no automatic payout or bank requirement',()=
   assert.match(gas,/nomor_dana\)===destination\.split/);
   assert.match(app,/Ajukan pencairan/);
 });
-test('public and member wording uses Komisi / Ajak Teman and free doors',()=>{
+test('public and member use Komisi / Ajak Teman without public free-resource doors',()=>{
   assert.match(app,/Dalam masa tahan/);
   assert.match(app,/Siap diajukan/);
-  assert.match(app,/Salin tautan eBook/);
-  assert.match(app,/Salin tautan kelas/);
-  assert.match(app,/Bagikan via WA/);
+  assert.doesNotMatch(app,/Salin tautan eBook|Salin tautan kelas|routeFreeDoor_/);
+  assert.match(app,/function viewMemberFreeResources_\(\)/);
   assert.match(app,/firstInviterTtlMs=30\*24\*60\*60\*1000/);
-  assert.match(app,/free=ebook/);
-  assert.match(app,/free=kelas/);
+  assert.doesNotMatch(app,/free=ebook|free=kelas/);
 });
