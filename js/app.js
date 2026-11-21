@@ -695,8 +695,12 @@ function viewPublicMarketplace(list){
     const price=moneyValue(p.harga);
     // Every catalog item opens the same internal checkout details first.
     // No WhatsApp commerce CTA, no direct money movement on card click.
-    const action='<div class="ngd-card-actions">'+
-      '<button type="button" class="ngd-card-detail" data-checkout-product="'+idSafe(p.product_id)+'">Detail</button>'+
+    const detailAction=logged()?
+      '<button type="button" class="ngd-card-detail" data-checkout-product="'+idSafe(p.product_id)+'">Detail checkout</button>':
+      '<details class="ngd-card-public-detail"><summary>Detail produk</summary>'+
+        '<p>'+esc(offerUiDescription_(p)||'Lihat informasi produk dan harga sebelum membeli.')+'</p>'+
+        '<strong>'+rupiah(price)+'</strong></details>';
+    const action='<div class="ngd-card-actions">'+detailAction+
       '<button type="button" class="market-product-action" data-checkout-product="'+idSafe(p.product_id)+'">'+
       (price===0?'Akses Gratis':'Beli Sekarang')+' '+icon('arrow')+'</button></div>';
     // Optional short badge is owned by the published PRODUCT_IMAGE CMS entry.
