@@ -1819,13 +1819,21 @@ function render(){
   syncMarketplacePolling_();
   document.title=(screens[state.route]?.[0]||'Beranda')+' — Ngulik Digital';
 }
+// Navigation is a small predictable state machine. A product checkout can be
+// bookmarked, and Android/browser Back returns to the previous screen.
+let lastRouteHash_=location.hash;
 function go(route){
   if(!screens[route])route='beranda';
   state.route=route;
   const fragment=route==='ai-tool'?aiToolRoute_(state.selectedAiToolId):
     route==='checkout'&&!state.lastOrder&&/^[A-Za-z0-9_-]{1,100}$/.test(String(state.checkoutProductId||''))?
       'checkout/'+encodeURIComponent(state.checkoutProductId):route;
-  if(location.hash.slice(1)!==fragment)history.replaceState(null,'','#'+fragment);
+  const next='#'+fragment;
+  if(location.hash!==next){
+    if(typeof history.pushState==='function')history.pushState(null,'',next);
+    else history.replaceState(null,'',next); // offline/legacy preview harness
+  }
+  lastRouteHash_=location.hash;
   render();window.scrollTo({top:0,behavior:'auto'});loadRoute(route);
 }
 async function refreshPublic(){
@@ -3124,9 +3132,14 @@ by('mobile-back').addEventListener('click',()=>{
   go(back[state.route]||'beranda');
 });
 by('account-button').addEventListener('click',()=>go('akun'));
-window.addEventListener('hashchange',()=>{
+function syncBrowserRoute_(){
+  // Back/Forward may emit both popstate and hashchange; render/load only once.
+  if(location.hash===lastRouteHash_)return;
+  lastRouteHash_=location.hash;
   const route=aiRouteFromHash_();state.route=route;render();loadRoute(route);
-});
+}
+window.addEventListener('popstate',syncBrowserRoute_);
+window.addEventListener('hashchange',syncBrowserRoute_);
 // Called synchronously during initial script evaluation, before any awaited API.
 function routeFreeDoor_(){
   const params=new URLSearchParams(location.search);
