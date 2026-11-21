@@ -85,3 +85,18 @@ test('home campaigns and other public page artwork reuse the CMS within existing
   assert.match(css,/\.ngd-cms-affiliate-art/);
   assert.match(css,/\.ngd-ai-hero-art/);
 });
+
+test('V13 public banner maintains proportional desktop layout and content-driven mobile art',()=>{
+  const ui=read('assets/brand-experience-v10.css');
+  const app=read('js/app.js');
+  const content=read('js/content-ui.js');
+  assert.match(ui,/\.ngd-catalog-campaign-slide\{[\s\S]*?min-height:clamp\(300px,28vw,410px\)/);
+  assert.match(ui,/@media\(max-width:700px\)[\s\S]*?\.ngd-catalog-campaign-slide\{[\s\S]*?min-height:0!important/);
+  assert.match(ui,/\.ngd-catalog-campaign-picture\{[\s\S]*?height:clamp\(145px,38vw,235px\)/);
+  assert.match(ui,/\.ngd-catalog-campaign-picture img\{[\s\S]*?object-fit:contain!important/);
+  assert.match(ui,/\.market-product-media\{[\s\S]*?aspect-ratio:6\/5/);
+  assert.match(ui,/\.ngd-cms-preview-desktop \.ngd-cms-preview-image\{[\s\S]*?aspect-ratio:8\/3/);
+  assert.match(ui,/\.ngd-cms-preview-mobile \.ngd-cms-preview-image\{[\s\S]*?aspect-ratio:4\/5/);
+  assert.match(app,/Katalog online, aplikasi kasir, otomasi order/);
+  assert.match(content,/CMS saat ini menggunakan satu gambar per penempatan/);
+});
