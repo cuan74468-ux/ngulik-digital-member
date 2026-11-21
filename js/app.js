@@ -75,7 +75,7 @@ const screens={
   tiket:['Detail tiket','shield'],member360:['Member 360°','users'],
   rilis:['Pembaruan','check'],pengaturan:['Pengaturan','shield'],login:['Masuk','user'],['admin-login']:['Masuk Admin','shield'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
-const memberNav=['beranda','ai','katalog','affiliate','belajar','jasa','dukungan','akun'];
+const memberNav=['beranda','katalog','ai','belajar','pesanan','affiliate','jasa','dukungan','akun'];
 const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
 const adminContextRoute=(route)=>({
   'lms-editor':'lms','lms-lesson':'lms','lms-ai':'lms',
@@ -262,7 +262,7 @@ function renderNav(){
   // Four high-frequency destinations + a full, discoverable menu. The topbar
   // account button stays available on every viewport, including mobile.
   const mobileItems=isAdmin()?['admin','produk','pesanan','lms','menu']:
-    logged()?['beranda','ai','katalog','affiliate']:
+    logged()?['beranda','katalog','ai','pesanan','menu']:
     ['beranda','katalog','jasa','affiliate','dukungan'];
   const context=mobileNavRoute(state.route);
   const selectedMobile=mobileItems.includes(context)?context:'menu';
@@ -278,7 +278,20 @@ function renderNav(){
   if(mark)mark.innerHTML='<img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt="" loading="eager">';
   const caption=by('sidebar-caption');
   if(caption)caption.textContent=isAdmin()?'Panel admin':logged()?'Menu member':'Menu';
-  // The same portfolio-style navigation highlights the active public destination.
+  // A single commerce navigation also serves signed-in members; admin
+  // continues using its private workspace and does not expose these routes.
+  const publicNav=by('guest-nav');
+  if(publicNav){
+    const navRoutes=logged()&&!isAdmin()?
+      ['beranda','katalog','belajar','ai','pesanan','affiliate','dukungan']:
+      ['beranda','katalog','jasa','affiliate','dukungan'];
+    const navNames={beranda:'Beranda',katalog:'Katalog',belajar:'Kelas',
+      ai:'Studio AI',pesanan:'Pesanan',affiliate:'Afiliasi',jasa:'Layanan',
+      dukungan:'Bantuan'};
+    publicNav.innerHTML=navRoutes.map(route=>
+      '<button type="button" data-route="'+route+'">'+esc(navNames[route])+'</button>'
+    ).join('');
+  }
   const publicLinks=typeof document.querySelectorAll==='function'
     ?document.querySelectorAll('#guest-nav [data-route]'):[];
   publicLinks.forEach(btn=>{
@@ -374,44 +387,83 @@ function viewHome(){
       ['Paket 3-in-1',state.me.akses_3in1_sampai&&new Date(state.me.akses_3in1_sampai).getTime()>Date.now()?'AKTIF':'BELUM AKTIF'],
       ['Canva',String(state.me.status_canva||'BELUM AKTIF')]
     ];
-    return (window.NGD_CONTENT_UI?.hero(state.siteContent,'member_home')||'')+
-      (window.NGD_CONTENT_UI?.promotion(state.siteContent,'member_home')||'')+
-      '<section class="member-welcome"><div><p class="eyebrow">DASHBOARD / MEJA KERJA</p>'+
-      '<h1>Selamat datang, <span class="accent">'+esc(first)+'.</span></h1>'+
-      '<p class="lead">Cek kelas, pesanan, dan saldo Anda di sini.</p></div>'+
-      '<span class="chip green">'+esc(state.me.status||'AKTIF')+'</span></section>'+
-      '<section class="wallet-hero" aria-label="Dompet Token Universal">'+
-      '<div class="wallet-top"><span>SALDO TOKEN</span><span class="wallet-state">● Saldo akun</span></div>'+
-      '<div class="wallet-value"><strong>'+esc(wallet.toLocaleString('id-ID'))+'</strong><span>Token</span></div>'+
-      '<p>Saldo untuk memakai alat AI.</p>'+
-      '<div class="wallet-commands"><button type="button" class="btn btn-primary" data-catalog-go="ai">+ Isi Token (QRIS) '+icon('arrow')+'</button>'+
-      '<button type="button" class="btn btn-secondary" data-route="ai">Buka Studio AI</button></div>'+
-      '<div class="wallet-service-list">'+serviceBadges.map(function(x){return '<span class="wallet-service"><strong>'+esc(x[0])+'</strong><small>'+esc(x[1])+'</small></span>';}).join('')+'</div></section>'+
-      '<section class="member-focus" aria-label="Pusat aktivitas bisnis">'+
-        '<div class="member-focus-content"><span class="member-focus-kicker">AKTIVITAS & PRODUKTIVITAS</span>'+
-        '<h2>'+(currentCourse?'Lanjutkan Belajar Anda':'Mulai dari yang Anda Butuhkan')+'</h2>'+
-        '<p>'+(currentCourse?esc(currentCourse.title)+' siap Anda lanjutkan.':
-          'Buka Studio AI, pilih produk, atau mulai kelas yang tersedia.')+'</p>'+
-        learningCTA+'</div>'+
+    // Member homepage is the same retail design system as the public
+    // marketplace. Numbers and access statuses remain server supplied.
+    const featuredIds=['P-EBOOK','P-STARTER-15K','P-STARTER-15',
+      'P-3IN1','P-POS','P-VIDEO-AI','P-INTEGRASI-GAS'];
+    const featured=featuredIds.map(id=>state.catalog.find(p=>
+      String(p.product_id)===id&&!isPublicQaOffer_(p))).filter(Boolean);
+    const safeBalance=Number.isFinite(wallet)?Math.max(0,wallet):0;
+    const campaign=(window.NGD_CONTENT_UI?.hero(state.siteContent,'member_home')||'')+
+      (window.NGD_CONTENT_UI?.promotion(state.siteContent,'member_home')||'');
+    const quickLinks=[
+      ['store','Jelajahi katalog','katalog','Produk digital dan lisensi'],
+      ['spark','Studio AI','ai','Alat AI dan saldo token'],
+      ['book','Kelas belajar','belajar','Materi dan progres Anda'],
+      ['clipboard','Pesanan saya','pesanan','Cek pembelian dan status'],
+      ['link','Program afiliasi','affiliate','Bagikan tautan dan cek komisi'],
+      ['shield','Pusat bantuan','dukungan','Laporkan kendala layanan']
+    ];
+    return '<div class="ngd-member-home">'+
+      '<section class="member-welcome ngd-member-hero" aria-label="Dashboard Ngulik Digital Member">'+
+        '<div class="ngd-member-hero-copy">'+
+          '<p class="eyebrow">DASHBOARD / MEJA KERJA</p>'+
+          '<h1>Halo, <span class="accent">'+esc(first)+'.</span><br>Semua kebutuhan digital di sini.</h1>'+
+          '<p class="lead">Belajar, belanja produk digital, gunakan Studio AI, dan pantau pesanan dari satu akun.</p>'+
+          '<span class="ngd-member-status">'+icon('check')+' Akun '+esc(state.me.status||'Member')+'</span>'+
+          '<div class="ngd-member-hero-actions">'+
+            '<button type="button" class="btn btn-primary" data-route="katalog">Jelajahi Produk '+icon('arrow')+'</button>'+
+            '<button type="button" class="btn btn-secondary" data-route="pesanan">Pesanan Saya</button>'+
+          '</div>'+
+        '</div>'+
+        '<img class="ngd-member-hero-art" src="'+esc(ngdPremiumArtSrc_('hero'))+'" alt="" decoding="async">'+
+      '</section>'+
+      '<div class="metric-grid ngd-member-stats" aria-label="Ringkasan akun">'+
+        '<section class="wallet-hero" aria-label="Dompet Token Universal">'+
+          '<div class="wallet-top"><span>Saldo token</span>'+icon('wallet')+'</div>'+
+          '<div class="wallet-value"><strong>'+esc(safeBalance.toLocaleString('id-ID'))+'</strong><span>Token</span></div>'+
+          '<p>Saldo sesuai data akun.</p><button type="button" class="ngd-member-stat-link" data-route="ai">Buka Studio AI '+icon('arrow')+'</button>'+
+        '</section>'+
+        '<button type="button" class="metric-card" data-route="pesanan">'+
+          '<span class="metric-icon">'+icon('clipboard')+'</span><small>Pesanan aktif</small>'+
+          '<strong>'+esc(orderCount)+'</strong><span>Lihat status pesanan '+icon('arrow')+'</span></button>'+
+        '<button type="button" class="metric-card" data-route="belajar">'+
+          '<span class="metric-icon">'+icon('book')+'</span><small>Progres belajar</small>'+
+          '<strong>'+esc(done)+' / '+esc(total)+'</strong><span>Modul selesai '+icon('arrow')+'</span></button>'+
+      '</div>'+
+      '<section class="ngd-member-shortcuts" aria-label="Akses cepat member">'+
+        '<header class="ngd-member-section-head"><div><p class="eyebrow">MENU MEMBER</p>'+
+        '<h2>Apa yang ingin Anda lakukan?</h2></div>'+
+        '<button type="button" data-route="menu">Semua Menu '+icon('arrow')+'</button></header>'+
+        '<div class="ngd-member-shortcut-grid">'+quickLinks.map(x=>
+          '<button type="button" class="ngd-member-shortcut" data-route="'+x[2]+'">'+
+          '<span class="ngd-member-shortcut-icon">'+icon(x[0])+'</span>'+
+          '<strong>'+esc(x[1])+'</strong><small>'+esc(x[3])+'</small>'+
+          '<span class="ngd-member-shortcut-arrow">'+icon('arrow')+'</span></button>'
+        ).join('')+'</div></section>'+
+      '<section class="member-focus ngd-member-learning" aria-label="Progres pembelajaran">'+
+        '<div class="member-focus-content"><p class="member-focus-kicker">RUANG BELAJAR</p>'+
+          '<h2>'+(currentCourse?'Lanjutkan Belajar Anda':'Mulai Belajar Sesuai Kebutuhan')+'</h2>'+
+          '<p>'+(currentCourse?esc(currentCourse.title)+' siap dilanjutkan.':
+            next?esc(next.judul||'Materi berikutnya')+' tersedia untuk dipelajari.':
+            'Temukan materi praktis untuk membangun usaha dan keterampilan digital.')+'</p>'+
+          learningCTA+'</div>'+
         '<div class="member-focus-ring" style="--member-progress:'+progress+'%" role="img" aria-label="'+progress+' persen progres modul">'+
-        '<div class="member-focus-ring-core"><strong>'+progress+'%</strong><small>progres</small></div></div></section>'+
-      '<div class="metric-grid">'+[
-        [icon('spark'),esc(d.saldo_kredit??state.me.saldo_kredit??0),'Saldo token','ai'],
-        [icon('book'),esc(done)+' / '+esc(total),'Pelajaran selesai','belajar'],
-        [icon('clipboard'),esc(orderCount),'Pesanan aktif','pesanan']
-      ].map(x=>'<button class="metric-card" data-route="'+x[3]+'"><span class="metric-icon">'+x[0]+'</span><strong>'+x[1]+'</strong><small>'+x[2]+'</small></button>').join('')+'</div>'+
-      '<div class="two-col section-gap"><section class="surface"><p class="card-kicker">LANJUTKAN BELAJAR</p>'+
-      (next?'<h2>'+esc(next.judul||'Materi berikutnya')+'</h2><p class="card-desc">Lanjutkan materi terakhir Anda.</p>':
-      '<h2>'+(total?'Seluruh modul selesai':'Materi belum tersedia')+'</h2><p class="card-desc">'+
-      (total?'Pertahankan progres dan jelajahi materi tambahan.':'Modul akan muncul ketika diterbitkan oleh admin.')+'</p>')+
-      '<div class="progress-wrap"><div class="progress-track" role="progressbar" aria-valuenow="'+progress+'" aria-valuemin="0" aria-valuemax="100" aria-label="Progres belajar"><span style="width:'+progress+'%"></span></div>'+
-      '<span class="tiny muted">'+progress+'% selesai</span></div><button class="btn btn-primary" data-route="belajar">Buka kelas '+icon('arrow')+'</button></section>'+
-      '<section class="surface"><p class="card-kicker">AKSI CEPAT</p><div class="quick-actions">'+[
-        ['spark','Buka Studio AI','ai'],['store','Toko & lisensi','katalog'],
-        ['link','Komisi mitra','affiliate'],['user','Kelola akun','akun']
-      ].map(x=>'<button class="quick-action" data-route="'+x[2]+'">'+icon(x[0])+'<span>'+x[1]+'</span>'+icon('arrow')+'</button>').join('')+
-      '</div></section></div>'+
-      (d.peringatan_kredit?'<div class="banner warning section-gap"><div><h3>Saldo Hampir Habis</h3><p>Isi saldo sebelum memakai alat AI.</p></div><button class="btn btn-secondary" data-route="ai">Lihat saldo</button></div>':'');
+          '<div class="member-focus-ring-core"><strong>'+progress+'%</strong><small>selesai</small></div></div>'+
+      '</section>'+
+      (campaign?'<section class="ngd-member-campaign" aria-label="Informasi khusus member">'+campaign+'</section>':'')+
+      '<section class="ngd-member-featured" aria-label="Katalog pilihan member">'+
+        '<header class="ngd-member-section-head"><div><p class="eyebrow">MARKETPLACE PRODUK DIGITAL</p>'+
+        '<h2>Produk pilihan untuk Anda</h2></div>'+
+        '<button type="button" data-route="katalog">Lihat Katalog '+icon('arrow')+'</button></header>'+
+        (featured.length?viewPublicMarketplace(featured):
+          '<div class="ngd-member-empty-catalog"><p>Katalog belum dimuat dari server.</p>'+
+          '<button type="button" data-route="katalog">Buka katalog</button></div>')+
+      '</section>'+
+      (d.peringatan_kredit?'<div class="banner warning section-gap"><div><h3>Saldo Token Hampir Habis</h3>'+
+        '<p>Periksa saldo sebelum menjalankan alat AI.</p></div>'+
+        '<button type="button" class="btn btn-secondary" data-route="ai">Lihat saldo</button></div>':'')+
+    '</div>';
   }
 
   // The buyer-facing home is a compact digital storefront; no synthetic
@@ -2871,7 +2923,7 @@ async function submitServiceQuote(form){
 document.addEventListener('submit',(e)=>{
   if(e.target?.id!=='guest-header-search-form')return;
   e.preventDefault();
-  if(logged()||isAdmin())return;
+  if(isAdmin())return;
   const query=String(e.target.elements?.namedItem?.('query')?.value||'').trim().slice(0,80);
   state.marketplaceSearch=query;
   state.catalogFilter='semua';

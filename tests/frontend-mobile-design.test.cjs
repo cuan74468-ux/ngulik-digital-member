@@ -61,12 +61,12 @@ test('redesigned member dashboard shows a bounded real progress ring and navigat
   assert.match(h.nodes['mobile-nav'].innerHTML,/aria-current="page"/);
   assert.equal(h.attributes['data-member-route'],'beranda');
 });
-test('mobile uses exactly four transactional destinations while class routes remain accessible',()=>{
+test('member mobile has five native destinations and the full menu remains discoverable',()=>{
   const h=preview('member','lms-course');
   const nav=h.nodes['mobile-nav'].innerHTML;
-  for(const route of ['beranda','ai','katalog','affiliate'])
+  for(const route of ['beranda','katalog','ai','pesanan','menu'])
     assert.match(nav,new RegExp('data-route="'+route+'"'));
-  assert.doesNotMatch(nav,/data-route="belajar"|data-route="menu"/);
+  assert.doesNotMatch(nav,/data-route="belajar"|data-route="affiliate"/);
   h.go('lms-complete');
   assert.equal(h.attributes['data-member-route'],'lms-complete');
   h.go('menu');
@@ -137,11 +137,11 @@ test('administrator account has operational controls without member-only affilia
 
 test('mobile all-menu route exposes member services and admin modules without API',()=>{
   const member=preview('member','menu');
-  assert.doesNotMatch(member.nodes['mobile-nav'].innerHTML,/data-route="menu"/);
+  assert.match(member.nodes['mobile-nav'].innerHTML,/data-route="menu"/);
   for(const route of ['ai','affiliate','dukungan','akun'])
     assert.match(member.nodes.screen.innerHTML,new RegExp('data-route="'+route+'"'));
   member.go('affiliate');
-  assert.match(member.nodes['mobile-nav'].innerHTML,/data-route="affiliate" aria-current="page"/);
+  assert.match(member.nodes['mobile-nav'].innerHTML,/data-route="menu" aria-current="page"/);
   const admin=preview('admin','menu');
   for(const route of ['konten','layanan','member','rilis','antrean','pengaturan','akun'])
     assert.match(admin.nodes.screen.innerHTML,new RegExp('data-route="'+route+'"'));

@@ -32,6 +32,12 @@
       var main=document.getElementById('screen');
       var navRect=nav?nav.getBoundingClientRect():null;
       var guest=document.body.getAttribute('data-app-role')==='guest';
+      var member=document.body.getAttribute('data-app-role')==='member';
+      var viewportWidth=document.documentElement.clientWidth||window.innerWidth;
+      var nativeMemberNav=!!member&&window.innerWidth<=980&&visible&&!!navRect&&
+        navRect.left>=-1&&navRect.right<=viewportWidth+1&&
+        Math.abs(navRect.width-viewportWidth)<=2&&
+        getComputedStyle(nav).position==='fixed';
       var floatingNav=window.innerWidth<=760&&visible&&navRect&&
         (guest?
           (navRect.left>=-1&&navRect.right<=window.innerWidth+1&&navRect.width>=280):
@@ -56,13 +62,22 @@
         }else inkNav=sideHidden&&!visible&&
           getComputedStyle(document.querySelector('.guest-nav')).display!=='none';
       }
+      if(member){
+        var memberSelected=window.innerWidth<=980?
+          nav?.querySelector('.nav-item[aria-current="page"]'):
+          document.querySelector('#guest-nav button[aria-current="page"]');
+        var selectedStyle=memberSelected?getComputedStyle(memberSelected):null;
+        inkNav=!!selectedStyle&&
+          selectedStyle.color==='rgb(91, 40, 214)'&&
+          selectedStyle.backgroundColor!=='rgba(0, 0, 0, 0)';
+      }
       var activeSurface=main?main.querySelector('.surface,.metric-card,.member-focus'):null;
       var surfaceReady=!!activeSurface&&
         getComputedStyle(activeSurface).backgroundColor!=='rgba(0, 0, 0, 0)';
       var safeTheme=sharedTheme&&themeLinked;
       var sharedExperience=!!document.querySelector('link[href*="assets/experience.css"]') &&
         document.body.classList.contains('ngd-public-app') &&
-        ['#2f6bff','#b65c39'].includes(getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim().toLowerCase());
+        ['#2f6bff','#b65c39','#5b28d6'].includes(getComputedStyle(document.body).getPropertyValue('--ngd-blue').trim().toLowerCase());
       // Real browser acceptance for the new mobile menu: all features are
       // browseable, essential explanatory copy must remain visible.
       var headingHelp=main?main.querySelector('.section-head p:not(.eyebrow)'):null;
@@ -91,6 +106,7 @@
       output.setAttribute('data-floating-nav',String(Boolean(floatingNav)));
       output.setAttribute('data-surface-ready',String(surfaceReady));
       output.setAttribute('data-mobile-nav',String(visible));
+      output.setAttribute('data-native-member-nav',String(nativeMemberNav));
       output.setAttribute('data-buy-buttons',String(buys.length));
       output.setAttribute('data-buys-disabled',String(buys.every(function(b){return b.disabled;})));
       output.setAttribute('data-checkout-safe',String(checkoutSafe));
@@ -98,7 +114,7 @@
         viewportWidth:window.innerWidth,
         scrollWidth:document.documentElement.scrollWidth,
         overflow:overflow,memberTheme:memberTheme,sharedTheme:safeTheme,inkNavigation:inkNav,
-        mobileNavigationVisible:visible,floatingNavigation:Boolean(floatingNav),
+        mobileNavigationVisible:visible,floatingNavigation:Boolean(floatingNav),nativeMemberNavigation:nativeMemberNav,
         checkoutSafe:checkoutSafe,disabledBuyButtons:buys.length,
         overflowers:overflowers
       });
