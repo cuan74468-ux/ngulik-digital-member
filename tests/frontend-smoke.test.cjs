@@ -61,7 +61,8 @@ test('guest homepage renders and shows offline preview warning',()=>{
 test('local member preview renders native-like dashboard without login',()=>{
   const {nodes,context}=renderPreview('?preview=member');
   assert.match(nodes.screen.innerHTML,/RUANG MEMBER \/ AKTIVITAS SAYA/);
-  assert.match(nodes.screen.innerHTML,/member-focus-ring/);
+  assert.match(nodes.screen.innerHTML,/ngd-member-activity/);
+  assert.match(nodes.screen.innerHTML,/Komisi Siap Tarik/);
   assert.match(nodes.screen.innerHTML,/Saldo token/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.equal(vm.runInContext('isWriteEnabled()',context),false);
