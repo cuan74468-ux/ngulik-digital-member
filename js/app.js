@@ -523,9 +523,9 @@ function viewHome(){
         '<div class="ngdm-metric ngdm-metric-order"><div class="ngdm-metric-label">'+icon('clipboard')+' Pesanan</div>'+
           '<strong>'+number('orders',String(allOrders))+'</strong>'+
           '<small>'+number('orders',String(pending))+' menunggu verifikasi</small></div>'+
-        '<div class="ngdm-metric"><div class="ngdm-metric-label">'+icon('book')+' Akses aktif</div>'+
-          '<strong>'+number('products',String(usable.length))+'</strong>'+
-          '<small>'+number('classes',String(classes))+' kelas terdaftar</small></div>'+
+        '<div class="ngdm-metric"><div class="ngdm-metric-label">'+icon('book')+' Produk saya</div>'+
+          '<strong>'+number('products',String(products.length))+'</strong>'+
+          '<small>'+number('products',String(usable.length))+' akses siap · '+number('classes',String(classes))+' kelas</small></div>'+
         '<div class="ngdm-metric"><div class="ngdm-metric-label">'+icon('link')+' Komisi tersedia</div>'+
           '<strong class="ngdm-metric-money">'+number('affiliate',rupiah(approved))+'</strong>'+
           '<small>'+(!reads.affiliate?'Data belum tersedia':partnerActive?'Program Ajak Teman aktif':'Lihat syarat Ajak Teman')+'</small></div>'+
@@ -572,13 +572,14 @@ function viewHome(){
                 'Belum ada aktivitas terbaru yang tercatat.':'Sedang menyiapkan aktivitas akun…')+'</p></div>')+
         '</section>'+
       '</div>'+
-      (usable.length?'<section class="ngdm-owned">'+
-        '<div class="ngdm-section-head"><div><p class="ngdm-kicker">AKSES PRODUK</p>'+
-          '<h2>Siap digunakan</h2></div>'+
+      (products.length?'<section class="ngdm-owned">'+
+        '<div class="ngdm-section-head"><div><p class="ngdm-kicker">PEMBELIAN MEMBER</p>'+
+          '<h2>Koleksi produk saya</h2></div>'+
           '<button type="button" data-route="dukungan">Lihat akses '+icon('arrow')+'</button></div>'+
-        '<div class="ngdm-owned-list">'+usable.slice(0,3).map(p=>
+        '<div class="ngdm-owned-list">'+products.slice(0,3).map(p=>
           '<button type="button" data-route="dukungan">'+icon('check')+
-            '<span>'+esc(p.nama||p.product_id||'Produk')+'</span>'+icon('arrow')+'</button>').join('')+'</div></section>':'')+
+            '<span>'+esc(p.nama||p.product_id||'Produk')+
+              ' <small>· '+esc(p.akses_status||'Status belum tersedia')+'</small></span>'+icon('arrow')+'</button>').join('')+'</div></section>':'')+
       (d.peringatan_kredit===true?'<p class="ngdm-low-credit" role="status">Token hampir habis. Periksa saldo sebelum menjalankan Studio AI.</p>':'')+
     '</div>';
   }
