@@ -120,7 +120,7 @@ jobs:
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#katalog" > /tmp/ngd-catalog.html 2>>/tmp/ngd-chrome.log
           # Runtime storefront uses only API data: no built-in test offers.
-          if ! grep -Eq 'Katalog belum tersedia|Toko &amp; Lisensi Anda|Alat digital yang relevan untuk usaha' /tmp/ngd-catalog.html; then
+          if ! grep -Eq 'Katalog Produk &amp; Jasa|Katalog belum tersedia' /tmp/ngd-catalog.html; then
             echo 'CATALOG_BROWSER_FAIL: expected catalogue heading missing' >&2
             grep -o -E '<h1[^>]*>[^<]*|<h2[^>]*>[^<]*|Katalog[^<]*|<section id="screen"[^>]*' /tmp/ngd-catalog.html | head -12 || true
             exit 1
@@ -135,9 +135,9 @@ jobs:
             grep -o -E 'data-overflow="[^"]*"' /tmp/ngd-catalog.html | tail -3 || true
             exit 1
           fi
-          if ! grep -q 'data-buys-disabled="true"' /tmp/ngd-catalog.html; then
-            echo 'CATALOG_BROWSER_FAIL: checkout rendering probe mismatch' >&2
-            grep -o -E 'data-buys-disabled="[^"]*"' /tmp/ngd-catalog.html | tail -3 || true
+          if ! grep -q 'data-checkout-safe="true"' /tmp/ngd-catalog.html; then
+            echo 'CATALOG_BROWSER_FAIL: unverified QRIS payment controls appeared while finance OFF' >&2
+            grep -o -E 'data-checkout-safe="[^"]*"' /tmp/ngd-catalog.html | tail -3 || true
             exit 1
           fi
           echo 'CATALOG_BROWSER_QA_OK'
