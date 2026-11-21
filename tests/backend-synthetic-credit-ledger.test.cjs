@@ -80,11 +80,13 @@ test('direct AI reservations and runs are fail-closed when mutation/finance flag
   assert.equal(telemetry.sheetMutations,0);
 });
 test('STAGING exposes QA UI controls but backend retains independent finance and mutation gates',()=>{
-  for(const key of ['memberWritesEnabled','registrationOtpEnabled','paymentsEnabled',
+  for(const key of ['memberWritesEnabled','registrationOtpEnabled',
     'contentEnabled','catalogEnabled','serviceEnabled','supportEnabled',
     'notificationsEnabled','lmsEnabled']){
       assert.match(staging,new RegExp(key+':true'));
   }
+  assert.match(staging,/paymentsEnabled:false/);
+  assert.match(staging,/qrisOwnerImageApproved:false/);
   assert.match(staging,/adminLoginEnabled:true/);
   assert.match(code,/requireMutationsEnabled_\(\);\s*requireActionFeatureEnabled_\(action\);/);
   assert.match(code,/function requireActionFeatureEnabled_\(action\)/);
