@@ -480,15 +480,15 @@ function seedSettings_() {
 function seedCatalog_() {
   // Only a fresh database is seeded. Never overwrite live prices.
   var rows=[
-    ['P-EBOOK','Ebook Panduan Workflow AI','Panduan workflow AI untuk kebutuhan praktis UMKM.','PRODUK_DIGITAL',25000,0,0,false,true,40,'INTERNAL',true,1],
-    ['P-3IN1','Paket Akses 3-in-1 Tools','Akses produk digital untuk UMKM selama 30 hari.','LANGGANAN_30H',100000,0,30,false,true,25,'INTERNAL',true,2],
-    ['P-POS','Lisensi POS Kasir Digital','Lisensi kasir satu kali bayar, diproses admin.','LISENSI_SEKALI',150000,0,0,true,true,25,'INTERNAL',true,3],
+    ['P-EBOOK','Ebook Panduan Workflow AI','Panduan workflow AI untuk kebutuhan praktis UMKM.','PRODUK_DIGITAL',0,0,0,false,false,0,'INTERNAL',false,1],
+    ['P-3IN1','Paket Akses 3-in-1 Tools','Akses produk digital untuk UMKM selama 30 hari.','LANGGANAN_30H',99000,0,30,false,true,25,'INTERNAL',true,2],
+    ['P-POS','Lisensi POS Kasir Digital','Lisensi kasir satu kali bayar, diproses admin.','LISENSI_SEKALI',149000,0,0,true,true,25,'INTERNAL',true,3],
     ['P-VIDEO-AI','Layanan Generasi Video AI','Produksi video iklan menggunakan AI, dikerjakan admin.','JASA_SEKALI',50000,0,0,true,true,20,'INTERNAL',true,4],
-    ['P-CANVA','Akses Canva Pro Tim','Akses tim Canva selama 30 hari, diproses admin.','SEAT_30H',35000,0,30,true,true,15,'INTERNAL',true,5],
-    ['P-TOKEN-10','Top-Up 10 Token Universal','Tambahan 10 token universal.','TOPUP_KREDIT',10000,10,0,false,true,10,'INTERNAL',true,6],
-    ['P-KREDIT-50','Top-Up 50 Token Universal','Tambahan 50 token universal.','TOPUP_KREDIT',50000,50,0,false,true,10,'INTERNAL',true,7],
-    ['P-KREDIT-150','Top-Up 150 Token Universal','Tambahan 150 token universal.','TOPUP_KREDIT',150000,150,0,false,true,10,'INTERNAL',true,8],
-    ['P-KREDIT-400','Top-Up 400 Token Universal','Tambahan 400 token universal.','TOPUP_KREDIT',400000,400,0,false,true,10,'INTERNAL',true,9]
+    ['P-INTEGRASI-GAS','Integrasi Google Sheets dan GAS','Otomasi proses usaha, diproses admin.','JASA_SEKALI',400000,0,0,true,true,20,'INTERNAL',true,5],
+    ['P-TOKEN-10','Top-Up 10 Token Universal','Tambahan 10 token universal.','TOPUP_KREDIT',7000,10,0,false,true,10,'INTERNAL',true,6],
+    ['P-TOKEN-35','Top-Up 35 Token Universal','Tambahan 35 token universal.','TOPUP_KREDIT',20000,35,0,false,true,10,'INTERNAL',true,7],
+    ['P-TOKEN-100','Top-Up 100 Token Universal','Tambahan 100 token universal.','TOPUP_KREDIT',50000,100,0,false,true,10,'INTERNAL',true,8],
+    ['P-STARTER-15','Starter Pack Ngulik Digital','15 token dan akses mitra seumur hidup setelah pembayaran sah.','PRODUK_DIGITAL',15000,15,0,false,true,0,'INTERNAL',true,9]
   ];
   return seedIfEmpty_('katalog_produk',rows.map(function(row){
     var obj={},columns=NGD.HEADERS.katalog_produk.split(',');
@@ -1056,16 +1056,17 @@ function newOrder_(m,p,requestId) {
     require_(String(s.payment_gateway_mode||'QRIS_STATIS')==='QRIS_STATIS','NOT_AVAILABLE','Metode pembayaran saat ini tidak tersedia.');
     require_(Number.isInteger(price)&&price>0,'VALIDATION','Harga produk belum valid.');
     require_(Number.isInteger(min)&&Number.isInteger(max)&&min>=100&&max<=999&&min<=max,'VALIDATION','Rentang kode unik tidak valid.');
+    require_(price>max,'VALIDATION','Harga harus lebih besar dari kode diskon maksimum.');
     var open=readAll_('orders').filter(function(o){return ['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0&&
       (o.status==='MENUNGGU_VERIFIKASI'||new Date(o.expires_at).getTime()>Date.now());});
     var taken={};open.forEach(function(o){taken[Number(o.total_bayar)]=true;});
     // Scan the entire unique-code range from a random starting point.
     // Unlike 25 random trials, this only fails when every amount is occupied.
     var range=max-min+1,start=Math.floor(Math.random()*range),code=null;
-    for(var k=0;k<range;k++){var n=min+(start+k)%range;if(!taken[price+n]){code=n;break;}}
+    for(var k=0;k<range;k++){var n=min+(start+k)%range;if(price>n&&!taken[price-n]){code=n;break;}}
     require_(code!==null,'CONFLICT','Kode pembayaran sedang penuh. Coba lagi nanti.');
     var created=now_(),id='NGD-'+Utilities.formatDate(created,NGD.TZ,'yyMMdd')+'-'+uuid_().slice(0,12);
-    var o={order_id:id,member_id:m.member_id,product_id:product.product_id,nama_produk:product.nama,harga_dasar:price,kode_unik:code,total_bayar:price+code,status:'PENDING',metode:'QRIS_STATIS',created_at:created,expires_at:new Date(created.getTime()+Number(s.order_expiry_menit||60)*60000),ref_member_id:m.referred_by||'',request_id:requestId};
+    var o={order_id:id,member_id:m.member_id,product_id:product.product_id,nama_produk:product.nama,harga_dasar:price,kode_unik:code,total_bayar:price-code,status:'PENDING',metode:'QRIS_STATIS',created_at:created,expires_at:new Date(created.getTime()+Number(s.order_expiry_menit||60)*60000),ref_member_id:m.referred_by||'',request_id:requestId};
     appendRow_('orders',o);logAudit_(m.member_id,m.role,'ORDER_CREATED','orders',id,'','PENDING',{product_id:product.product_id});
     if(s.followup_member_otomatis===true&&m.wa){
       // QRIS placeholder is not a payable destination. Member confirmation
@@ -2265,8 +2266,8 @@ function ngdPilotSelfTestReadOnly() {
     'Path atau URL gambar QRIS tidak valid; ketersediaan gambar diperiksa di browser.');
   try {
     var product=byId_('katalog_produk','product_id','P-TOKEN-10');
-    check('token10_product',!!product&&product.tipe==='TOPUP_TOKEN'&&
-      ngdPriceRupiah_(product.harga)===10000&&Number(product.kredit_diberikan)===10,
+    check('token10_product',!!product&&['TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(product.tipe)>=0&&
+      ngdPriceRupiah_(product.harga)===7000&&Number(product.kredit_diberikan)===10,
       'Produk top-up 10 Token tidak sesuai.');
   }catch(e){check('token10_product',false,'Produk belum terbaca.');}
   try {
