@@ -1353,6 +1353,14 @@ function commissionRate_(settings,product) {
     'CONFLICT','Persentase komisi tidak valid.');
   return value;
 }
+// A referral is payout-eligible only when the inviter is an active MEMBER.
+// Keep historical rows unchanged: ineligible legacy commissions need review.
+function ngdEligibleReferrer_(buyer,inviter) {
+  return Boolean(buyer&&buyer.role==='MEMBER'&&inviter&&
+    inviter.role==='MEMBER'&&inviter.status==='AKTIF'&&
+    String(buyer.referred_by||'').trim()===String(inviter.member_id||'').trim()&&
+    String(buyer.member_id||'').trim()!==String(inviter.member_id||'').trim());
+}
 function onPaid_(o,actor) {
   var product=byId_('katalog_produk','product_id',o.product_id);
   var member=byId_('members','member_id',o.member_id);
@@ -1369,7 +1377,18 @@ function onPaid_(o,actor) {
     if(!priorBlock.length)logAudit_('SYSTEM','SYSTEM','COMMISSION_SELF_REFERRAL_BLOCKED',
       'orders',o.order_id,'','BLOCKED',{reason:'BUYER_EQUALS_REFERRER'});
   }
-  var commissionEligible=Boolean(referrer&&!selfReferral&&product.bisa_komisi===true&&percent>0);
+  var inviter=referrer?byId_('members','member_id',referrer):null;
+  var eligibleInviter=!selfReferral&&ngdEligibleReferrer_(member,inviter);
+  // Legacy MEMBER -> ADMIN references may exist. Do not rewrite historical
+  // ownership or create a new liability against an ineligible inviter.
+  if(referrer&&!eligibleInviter&&product.bisa_komisi===true&&percent>0){
+    var reviewLogged=findRows_('audit_logs',function(a){
+      return a.action==='COMMISSION_REFERRER_REVIEW_REQUIRED'&&a.entity_id===o.order_id;
+    });
+    if(!reviewLogged.length)logAudit_('SYSTEM','SYSTEM','COMMISSION_REFERRER_REVIEW_REQUIRED',
+      'orders',o.order_id,'','BLOCKED',{reason:'INVITER_NOT_ACTIVE_MEMBER'});
+  }
+  var commissionEligible=Boolean(eligibleInviter&&product.bisa_komisi===true&&percent>0);
   var commissionValue=commissionEligible?Math.floor(Number(o.harga_dasar)*percent/100):0;
   if(commissionEligible)require_(Number.isSafeInteger(commissionValue)&&commissionValue>0,
     'CONFLICT','Nominal komisi tidak valid.');
@@ -1916,7 +1935,17 @@ function maintenance_() {
     readAll_('affiliate_commissions').forEach(function(c){
       if(c.status==='PENDING'&&new Date(c.approve_after).getTime()<=now){
         var o=byId_('orders','order_id',c.order_id);
-        if(o&&['PAID','FULFILLED'].indexOf(o.status)>=0){updateRow_('affiliate_commissions',c._row,{status:'APPROVED',approved_at:now_()});logAudit_('SYSTEM','SYSTEM','COMMISSION_APPROVED','affiliate_commissions',c.komisi_id,'PENDING','APPROVED',{});changed.commissions++;}
+        var buyer=byId_('members','member_id',c.referred_member_id);
+        var inviter=byId_('members','member_id',c.referrer_id);
+        if(o&&['PAID','FULFILLED'].indexOf(o.status)>=0&&
+            buyer&&ngdEligibleReferrer_(buyer,inviter)&&
+            String(o.member_id||'')===String(buyer.member_id||'')&&
+            String(o.ref_member_id||'')===String(inviter.member_id||'')){
+          updateRow_('affiliate_commissions',c._row,{status:'APPROVED',approved_at:now_()});
+          logAudit_('SYSTEM','SYSTEM','COMMISSION_APPROVED','affiliate_commissions',
+            c.komisi_id,'PENDING','APPROVED',{});
+          changed.commissions++;
+        }
       }
     });
     readAll_('members').forEach(function(m){
@@ -1991,8 +2020,9 @@ function installTriggers() {
 // Tidak menjalankan ulang pembayaran, fulfillment, atau mutasi ledger.
 // Engine rekonsiliasi murni. Bisa diuji menggunakan data simulasi
 // tanpa SpreadsheetApp, tanpa akses akun, dan tanpa mutasi database.
-function financeFindings_(orders,ledger,commissions,products,policy) {
-  var findings=[],types={},catalog={};
+function financeFindings_(orders,ledger,commissions,products,policy,members) {
+  var findings=[],types={},catalog={},memberIndex={};
+  (members||[]).forEach(function(m){memberIndex[String(m.member_id)]=m;});
   products.forEach(function(p){types[String(p.product_id)]=p.tipe;catalog[String(p.product_id)]=p;});
   orders.forEach(function(o){
     var reasons=[],entries=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='TOPUP';});
@@ -2019,6 +2049,13 @@ function financeFindings_(orders,ledger,commissions,products,policy) {
       reasons.push('REFUND_ADJUST_WITHOUT_REFUNDED_STATUS');
     var orderCommissions=commissions.filter(function(k){return k.order_id===o.order_id;});
     if(orderCommissions.length>1)reasons.push('COMMISSION_DUPLICATE');
+    if(members&&orderCommissions.some(function(c){
+      var buyer=memberIndex[String(c.referred_member_id)];
+      var inviter=memberIndex[String(c.referrer_id)];
+      return !ngdEligibleReferrer_(buyer,inviter)||
+        String(o.member_id||'')!==String(c.referred_member_id||'')||
+        String(o.ref_member_id||'')!==String(c.referrer_id||'');
+    }))reasons.push('COMMISSION_REFERRER_NOT_ELIGIBLE');
     // Only the admin's configured audit checks commission expectations.
     // Previous commissions (including reversed) consume the once-only grant.
     if(policy&&commissionRate_(policy,catalog[String(o.product_id)])>0&&['PAID','FULFILLED'].indexOf(o.status)>=0
@@ -2040,7 +2077,7 @@ function adminReconciliation_(admin) {
   return financeFindings_(readAll_('orders'),readAll_('credits_ledger'),
     readAll_('affiliate_commissions'),readAll_('katalog_produk'),
     {komisi_hanya_order_pertama:s.komisi_hanya_order_pertama===true,
-     komisi_persen:Number(s.komisi_persen||0)});
+     komisi_persen:Number(s.komisi_persen||0)},readAll_('members'));
 }
 // Admin-only operational visibility. Read-only: never exposes DB IDs, keys,
  // credentials, member records or the values of Script Properties.
@@ -2512,6 +2549,11 @@ function apiRouter_(action,token,p,requestId) {
         var c=byId_('affiliate_commissions','komisi_id',p.komisi_id);
         require_(c&&c.status==='APPROVED'&&c.payout_requested_at,
           'CONFLICT','Komisi belum diajukan atau disetujui.');
+        var payoutBuyer=byId_('members','member_id',c.referred_member_id);
+        var payoutInviter=byId_('members','member_id',c.referrer_id);
+        require_(ngdEligibleReferrer_(payoutBuyer,payoutInviter),
+          'RECONCILIATION_REQUIRED',
+          'Pengajak historis tidak memenuhi kebijakan komisi. Perlu pemeriksaan manual.');
         var linkedOrder=byId_('orders','order_id',c.order_id);
         require_(linkedOrder&&['PAID','FULFILLED'].indexOf(linkedOrder.status)>=0,
           'RECONCILIATION_REQUIRED','Order asal komisi belum valid untuk pencairan.');
