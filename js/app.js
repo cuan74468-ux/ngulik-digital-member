@@ -2383,7 +2383,7 @@ function go(route){
   render();window.scrollTo({top:0,behavior:'auto'});loadRoute(route);
 }
 async function refreshStagingReadiness_(){
-  if(state.qa||!isConnected()||!location.pathname.includes('/staging/'))return;
+  if(state.qa||!isConnected()||!String(location.pathname||'').includes('/staging/'))return;
   try{
     const workspace=await api('getStagingWorkspaceInfo');
     // Rejection and unexpected environment responses fail closed.
