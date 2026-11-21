@@ -9,8 +9,8 @@ position:relative;
   align-items:center;
   width:100%;
   min-width:0;
-  min-height:clamp(350px,31vw,410px);
-  padding:clamp(28px,3.8vw,48px);
+  min-height:clamp(342px,29vw,396px);
+  padding:clamp(28px,3.3vw,43px);
   border-radius:23px;
   isolation:isolate;
   overflow:hidden;
@@ -32,21 +32,21 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::after{
 }
 
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero-copy{
-position:relative;z-index:2;display:grid;justify-items:start;gap:clamp(11px,1.25vw,15px);
-  width:min(100%,640px);max-width:60%;min-width:0;
+position:relative;z-index:2;display:grid;justify-items:start;gap:clamp(11px,1.1vw,13px);
+  width:min(100%,640px);max-width:61%;min-width:0;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-eyebrow{display:inline-flex;align-items:center;gap:9px;letter-spacing:.095em;font-size:11px;font-weight:800;line-height:1.5;color:#f8e9ad}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-spark{font-size:19px;color:var(--gold)}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero h1{
 font-family:"Plus Jakarta Sans",Inter,sans-serif;
-  font-size:clamp(34px,3.8vw,49px);
+  font-size:clamp(34px,3.6vw,46px);
   font-weight:800;line-height:1.1;letter-spacing:-.052em;
   color:#fff!important;-webkit-text-fill-color:#fff!important;
-  max-width:19ch;
+  max-width:23ch;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero h1 span{color:var(--gold)!important;-webkit-text-fill-color:var(--gold)!important}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero-lead{
-font-size:clamp(14px,1.12vw,16px);line-height:1.67;
+font-size:clamp(14px,1.1vw,16px);line-height:1.62;
   color:#f8f5ff!important;max-width:56ch;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdl-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;width:100%}
