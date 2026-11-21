@@ -81,8 +81,9 @@ const screens={
   tiket:['Detail tiket','shield'],member360:['Member 360°','users'],
   rilis:['Pembaruan','check'],pengaturan:['Pengaturan','shield'],login:['Masuk','user'],['admin-login']:['Masuk Admin','shield'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
-const guestNav=['beranda','katalog','ai','jasa','affiliate','belajar','dukungan','login','daftar'];
+const guestNav=['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'];
 const memberNav=['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun'];
+const adminOnlyRoutes=new Set(['admin','konten','produk','layanan','lms','lms-editor','lms-lesson','lms-ai','member','antrean','rilis','pengaturan']);
 const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
 const adminContextRoute=(route)=>({
   'lms-editor':'lms','lms-lesson':'lms','lms-ai':'lms',
@@ -279,7 +280,7 @@ function renderNav(){
   by('page-label').textContent=screens[state.route]?.[0]||'Beranda';
   by('account-avatar').textContent=logged()?
     String(state.me.nama||'M').split(' ').map(v=>v[0]).join('').slice(0,2).toUpperCase():'ND';
-  by('mode-indicator').textContent=isAdmin()?'ADMIN':logged()?'MEMBER':'NGULIK DIGITAL';
+  by('mode-indicator').textContent=isAdmin()?'PENGELOLA':logged()?'RUANG MEMBER':'NGULIK DIGITAL';
   const mark=by('brand-mark');
   if(mark)mark.innerHTML='<img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt="" loading="eager">';
   const caption=by('sidebar-caption');
@@ -288,7 +289,7 @@ function renderNav(){
   // continues using its private workspace and does not expose these routes.
   const publicNav=by('guest-nav');
   if(publicNav){
-    const navRoutes=logged()&&!isAdmin()?
+    const navRoutes=isAdmin()?[]:logged()?
       ['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan']:
       ['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'];
     const navNames={beranda:'Beranda',katalog:'Katalog',belajar:'Kelas',
@@ -313,7 +314,7 @@ const needLogin=(feature)=>
 // Browseable on mobile instead of hiding most routes behind a desktop-only sidebar.
 // This is a presentation route: existing auth checks still guard every action.
 function viewMore(){
-  const routes=isAdmin()?adminNav:logged()?memberNav:guestNav;
+  const routes=isAdmin()?adminNav:logged()?memberNav:[...guestNav,'login','daftar'];
   const descriptions={
     beranda:'Mulai dari sini',belajar:'Kelas dan progres',katalog:'Jasa dan produk',
     jasa:'Pesan jasa',ai:'Buat konten',affiliate:'Bagikan tautan',
@@ -763,7 +764,7 @@ function viewCatalog(){
   // One catalog presentation for guests and signed-in members.
   // Existing server-side payment and role gates remain authoritative.
   const list=Array.isArray(state.catalog)?state.catalog.filter(p=>!isPublicQaOffer_(p)):[];
-  const storefront=viewPublicMarketplace(list);
+  const storefront=viewPublicMarketplace(list,{showCampaign:!logged()&&!isAdmin()});
   if(!logged()||isAdmin())return storefront;
   const access='<details class="market-member-access"><summary>Akses layanan saya</summary>'+
     '<div class="market-member-access-list">'+[
@@ -771,7 +772,11 @@ function viewCatalog(){
       ['Paket 3-in-1',state.me?.akses_3in1_sampai&&new Date(state.me.akses_3in1_sampai).getTime()>Date.now()?'Aktif':'Belum aktif'],
       ['Canva',state.me?.status_canva||'Belum aktif']
     ].map(([name,status])=>'<span><strong>'+esc(name)+'</strong><small>'+esc(status)+'</small></span>').join('')+'</div></details>';
-  return storefront+access+viewPartnerShelf_();
+  return '<div class="ngd-member-catalog">'+
+    '<header class="ngd-member-page-intro"><div><p class="eyebrow">RUANG MEMBER / BELANJA</p><h1>Temukan kebutuhan berikutnya.</h1>'+
+    '<p>Pilih produk dan layanan untuk usaha Anda. Akses yang sudah dimiliki tetap bisa diperiksa di bawah.</p></div>'+
+    '<button type="button" class="btn btn-secondary" data-route="pesanan">Pesanan Saya '+icon('arrow')+'</button></header>'+
+    access+storefront+viewPartnerShelf_()+'</div>';
 }
 function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
@@ -898,7 +903,7 @@ function viewAI(){
   const balance=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
   const publicMode=!logged()||isAdmin();
   const intro='<header class="ai-catalog-intro"><div class="ai-catalog-intro-copy">'+
-    '<p class="eyebrow">NGULIK DIGITAL</p><h1>Studio AI</h1>'+
+    '<p class="eyebrow">'+(publicMode?'JELAJAH PUBLIK / STUDIO AI':'RUANG MEMBER / STUDIO AI')+'</p><h1>'+(publicMode?'Kenali alat AI untuk pekerjaan nyata.':'Pilih alat. Mulai berkarya.')+'</h1>'+
     '<p>'+(publicMode?'Jelajahi alat untuk menulis, merencanakan konten, dan mendukung pekerjaan usaha. Masuk sebagai member untuk menjalankannya.':'Pilih alat, periksa kebutuhan token, lalu mulai bekerja dari satu tempat.')+'</p></div>'+
     (publicMode?'<img class="ngd-ai-hero-art" src="'+esc(cmsPageArt_('ai')||ngdPremiumArtSrc_('ai-pack'))+'" alt="" loading="lazy" decoding="async">':'')+
     (!publicMode?'<div class="ai-wallet-mini"><small>Saldo</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
@@ -1461,7 +1466,7 @@ function viewAdminRuntime(){
 function viewAdmin(){
   if(!isAdmin())return needLogin('ruang kerja');
   const details=state.adminSummary?.ringkasan||[];
-  return '<section class="admin-operations-intro"><p class="eyebrow">ADMIN STUDIO / NGULIK DIGITAL</p><h1>Kelola Usaha dari Sini</h1><p>Atur etalase dan kelas, tangani pesanan, serta lanjutkan pekerjaan yang paling penting hari ini.</p>'+
+  return '<section class="admin-operations-intro"><p class="eyebrow">PUSAT OPERASIONAL / ADMIN</p><h1>Prioritas pengelolaan hari ini.</h1><p>Tinjau pesanan dan dukungan, kemudian kelola katalog, konten, kelas, serta anggota. Data operasional tetap mengikuti izin backend.</p>'+
     (config.brand?.includes('STAGING')?'<span class="chip">DATA STAGING — bukan website produksi</span>':'<span class="chip">Data sesuai layanan terhubung</span>')+'</section>'+
     '<section class="admin-start-actions" aria-label="Mulai mengelola bisnis">'+
     '<div><p class="eyebrow">PINTASAN UTAMA</p><h2>Pilih yang Mau Dikelola</h2></div>'+
@@ -2132,10 +2137,15 @@ function render(){
     checkout:viewCheckout,admin:viewAdmin,konten:viewAdminContent,produk:viewAdminCatalog,jasa:viewServiceRequests,layanan:viewAdminServices,member:()=>viewMembers(false),antrean:()=>viewMembers(true),
     dukungan:viewSupport,tiket:viewTicketDetail,member360:viewMember360,rilis:viewReleases,pengaturan:viewAdminSettings
   };
-  const screen=(routes[state.route]||viewHome)();
+  const routeBlocked=adminOnlyRoutes.has(state.route)&&!isAdmin();
+  const adminOutOfScope=isAdmin()&&!adminOnlyRoutes.has(state.route)&&!['beranda','menu','pesanan','dukungan','akun','tiket','member360','admin-login'].includes(state.route);
+  const screen=routeBlocked?
+    '<section class="ngd-role-gate"><p class="eyebrow">AKSES PENGELOLA</p><h1>Halaman khusus Admin</h1><p>Halaman operasional hanya tersedia untuk Admin yang telah masuk dan terverifikasi.</p><button type="button" class="btn btn-primary" data-route="admin-login">Masuk sebagai Admin</button></section>':
+    adminOutOfScope?
+    '<section class="ngd-role-gate"><p class="eyebrow">RUANG PENGELOLA</p><h1>Anda berada di mode Admin.</h1><p>Untuk mengelola produk dan pesanan, gunakan modul Admin. Etalase pembeli tidak ditampilkan dalam ruang operasional.</p><button type="button" class="btn btn-primary" data-route="admin">Kembali ke Panel Admin</button></section>':
+    (routes[state.route]||viewHome)();
   // Catalog has a single authoritative HERO slot; do not stack PAGE_COVER above it.
-  by('screen').innerHTML=(!logged()&&state.route==='belajar'?
-    (window.NGD_CONTENT_UI?.cover(state.siteContent,state.route)||''):'')+screen;
+  by('screen').innerHTML=screen;
   syncCheckoutClock_();
   syncHeroRotation_();
   syncMarketplacePolling_();
