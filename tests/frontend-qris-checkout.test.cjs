@@ -96,3 +96,57 @@ test('checkout deep link keeps the validated product ID on refresh',()=>{
   assert.match(app,/checkout\/'\+encodeURIComponent\(state\.checkoutProductId\)/);
   assert.match(app,/return 'katalog';/);
 });
+
+test('Back and Forward apply product-specific routes once without duplicate loads',()=>{
+  const begin=app.indexOf('let lastRouteHash_=location.hash;');
+  const end=app.indexOf('async function refreshPublic(){',begin);
+  const syncBegin=app.indexOf('function syncBrowserRoute_(){');
+  const syncEnd=app.indexOf('// Called synchronously during initial script evaluation',syncBegin);
+  assert.ok(begin>=0&&end>begin&&syncBegin>=0&&syncEnd>syncBegin);
+  const location={hash:'#katalog'},state={route:'katalog',lastOrder:null,checkoutProductId:'P-TEST'};
+  const screens={beranda:1,katalog:1,checkout:1};
+  const handlers={},renders=[],loads=[];
+  const history={
+    pushState(_a,_b,target){location.hash=target;},
+    replaceState(_a,_b,target){location.hash=target;}
+  };
+  const window={
+    scrollTo(){},
+    addEventListener(type,fn){handlers[type]=fn;}
+  };
+  const routes=new Function('state','screens','location','history','window',
+    'render','loadRoute','aiToolRoute_','aiRouteFromHash_',
+    app.slice(begin,end)+'\n'+app.slice(syncBegin,syncEnd)+
+    '\nreturn {go,syncBrowserRoute_};'
+  )(state,screens,location,history,window,
+    ()=>renders.push(state.route),route=>loads.push(route),
+    id=>'ai-tool/'+id,()=>{
+      const slug=location.hash.slice(1);
+      return slug.startsWith('checkout/')?'checkout':slug;
+    });
+  routes.go('checkout');
+  assert.equal(location.hash,'#checkout/P-TEST');
+  assert.equal(state.route,'checkout');
+  location.hash='#katalog';
+  handlers.popstate();handlers.hashchange();
+  assert.equal(state.route,'katalog');
+  assert.deepEqual(loads,['checkout','katalog']);
+  assert.equal(renders.length,2);
+});
+test('homepage services use live catalog names and never link unpublished offers to checkout',()=>{
+  const begin=app.indexOf('function viewHomeServices_(){');
+  const end=app.indexOf('const safeBadge=',begin);
+  assert.ok(begin>=0&&end>begin);
+  const state={catalog:[]};
+  const create=new Function('state','esc','idSafe','icon','isPublicQaOffer_',
+    'offerUiTitle_','offerUiDescription_',
+    app.slice(begin,end)+'\nreturn viewHomeServices_();');
+  const html=()=>create(state,String,String,()=>'',()=>false,p=>p.nama,p=>p.deskripsi);
+  assert.doesNotMatch(html(),/data-checkout-product=/);
+  assert.match(html(),/data-route="katalog"/);
+  state.catalog=[{product_id:'P-3IN1',aktif:true,nama:'Paket Baru',deskripsi:'Sesuai katalog'}];
+  assert.match(html(),/data-checkout-product="P-3IN1"/);
+  assert.match(html(),/Paket Baru/);
+  assert.match(html(),/Sesuai katalog/);
+  assert.doesNotMatch(html(),/data-checkout-product="P-VIDEO-AI"/);
+});
