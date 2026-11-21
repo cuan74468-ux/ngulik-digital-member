@@ -41,7 +41,8 @@ test('all dynamic brand placements use same canonical official image',()=>{
   // The compact commission page intentionally removed its decorative logo art.
   assert.match(app,/function viewAffiliate\(\)/);
   assert.doesNotMatch(app.slice(app.indexOf('function viewAffiliate(){'),app.indexOf('function viewNotificationCenter(){')),/partner-art-mark/);
-  assert.match(app,/class="market-hero-symbol"[^>]*><img class="ngd-brand-image"/);
+  // Katalog intentionally uses dedicated art instead of a duplicate official logo overlay.
+  assert.match(app,/ngd-catalog-campaign/);
   assert.doesNotMatch(app,/class="ngd-floating-logo"[^>]*><span>n\./);
 });
 test('brand remains readable and responsive without disturbing membership',()=>{
