@@ -1855,41 +1855,40 @@ function supportTicketCard(t){
     '<button type="button" class="btn btn-secondary btn-sm" style="margin-top:15px" data-ticket-id="'+esc(t.ticket_id)+'">Buka tiket '+icon('arrow')+'</button></article>';
 }
 function viewSupport(){
-  if(!logged())return '<div class="ngd-public-help">'+
-    '<section class="ngd-help-hero" aria-label="Pusat Bantuan Ngulik Digital">'+
-      '<div><p class="eyebrow">PUSAT BANTUAN · NGULIK DIGITAL</p>'+
-      '<h1>Ada yang bisa kami bantu?</h1>'+
-      '<p>Temukan informasi pembelian produk digital, pembayaran, akses member, dan program komisi.</p>'+
-      '<div class="ngd-help-hero-actions">'+
-        '<button type="button" class="btn btn-primary" data-route="login">Masuk untuk bantuan pribadi</button>'+
-        '<button type="button" class="btn btn-secondary" data-route="katalog">Lihat Katalog</button>'+
-      '</div></div>'+
-      '<div class="ngd-help-media" aria-hidden="true">'+
-        (cmsPageArt_('dukungan')?'<img class="ngd-help-cms-art" src="'+esc(cmsPageArt_('dukungan'))+'" alt="" loading="lazy" decoding="async">':icon('shield'))+
-        '<span>Bantuan produk</span><span>Pesanan &amp; pembayaran</span><span>Akun &amp; akses</span></div>'+
+  if(!logged())return '<div class="ngd-buyer-help">'+
+    '<header class="ngdb-help-intro">'+
+      '<p class="ngdb-overline">CARA KERJA & BANTUAN</p>'+
+      '<h1>Sebelum pesan, boleh tahu dulu cara kerjanya.</h1>'+
+      '<p>Cari tahu soal akun, pembayaran, dan cara menerima produk atau jasa. Baca dulu supaya tidak bingung setelah membeli.</p>'+
+      '<div class="ngdb-actions"><button type="button" class="ngdb-button ngdb-primary" data-route="katalog">Lihat Katalog '+icon('arrow')+'</button>'+
+        '<button type="button" class="ngdb-button ngdb-outline" data-route="login">Masuk / Daftar Member</button></div>'+
+    '</header>'+
+    '<section class="ngdb-help-steps" aria-labelledby="ngdb-help-steps-title">'+
+      '<div class="ngdb-heading"><p class="ngdb-overline">TIGA LANGKAH</p><h2 id="ngdb-help-steps-title">Dari lihat-lihat sampai punya akses.</h2></div>'+
+      '<div class="ngdb-process-steps">'+
+        '<div><span>01</span><h3>Cek isi & harga</h3><p>Katalog bisa dibuka tanpa akun. Baca detail sebelum memilih.</p></div>'+
+        '<div><span>02</span><h3>Masuk dengan WhatsApp</h3><p>Akun member diperlukan untuk membuat pesanan dan menyimpan akses.</p></div>'+
+        '<div><span>03</span><h3>Bayar, lalu cek status</h3><p>Ikuti instruksi checkout yang tersedia. Akses mengikuti verifikasi pembayaran.</p></div>'+
+      '</div>'+
     '</section>'+
-    '<section class="ngd-help-topics" aria-label="Topik bantuan">'+
-      [['clipboard','Pesanan','Lihat detail checkout, batas pembayaran, dan status melalui akun member.'],
-       ['wallet','Pembayaran QRIS','Gunakan instruksi resmi pada checkout. Verifikasi dana dilakukan oleh admin.'],
-       ['book','Akses produk','Akses digital mengikuti status dan ketentuan produk setelah pembayaran terverifikasi.'],
-       ['link','Program afiliasi','Komisi hanya untuk pembelian referral yang memenuhi syarat.']].map(x=>
-        '<article class="ngd-help-topic"><span>'+icon(x[0])+'</span>'+
-        '<h2>'+esc(x[1])+'</h2><p>'+esc(x[2])+'</p></article>').join('')+
+    '<section class="ngdb-help-answers" aria-labelledby="ngdb-help-answers-title">'+
+      '<div class="ngdb-heading"><p class="ngdb-overline">PERTANYAAN UMUM</p><h2 id="ngdb-help-answers-title">Yang biasanya ditanyakan.</h2></div>'+
+      '<div class="ngdb-questions">'+
+      [
+        ['Harus daftar dulu untuk membeli?','Ya. Melihat katalog tidak perlu login, tetapi checkout dan akses produk memerlukan akun member yang terverifikasi. Daftar akun tidak dikenakan biaya.'],
+        ['Bagaimana cara membayar?','Gunakan metode yang ditampilkan di halaman checkout saat pembayaran aktif. Jika QRIS DANA Bisnis tersedia, ikuti nominal dan instruksi pesanan. Jangan membayar dari QR yang dikirim di luar alur resmi.'],
+        ['Setelah membayar, apakah akses langsung aktif?','Belum tentu. Pembayaran perlu diverifikasi sesuai proses yang berlaku. Status pesanan dan akses dapat diperiksa di akun member.'],
+        ['Kalau ingin jasa yang berbeda dari paket?','Masuk sebagai member, buka menu Jasa, lalu kirim brief. Kebutuhan dan penawaran dibahas sebelum pengerjaan.'],
+        ['Bagaimana kalau ada kendala pada pesanan?','Masuk ke akun member, buka Bantuan, lalu kirim laporan agar bisa dikaitkan dengan produk dan riwayat pesanan.']
+      ].map(q=>'<details class="ngdb-question"><summary>'+esc(q[0])+'</summary><p>'+esc(q[1])+'</p></details>').join('')+
+      '</div>'+
     '</section>'+
-    '<section class="ngd-help-faq" aria-label="Pertanyaan umum">'+
-      '<header><p class="eyebrow">PANDUAN</p><h2>Pertanyaan yang sering ditanyakan</h2></header>'+
-      [['Bagaimana membeli produk digital?','Buka katalog, pilih Detail atau Beli Sekarang, lalu ikuti instruksi checkout. Ketersediaan pembayaran mengikuti status aktivasi resmi.'],
-       ['Apakah klik Sudah Bayar langsung mengaktifkan produk?','Tidak. Admin harus mencocokkan penerimaan dana dengan order sebelum pesanan disetujui dan akses diproses.'],
-       ['Di mana melihat pesanan dan produk saya?','Masuk ke akun member dan buka Pesanan untuk melihat status serta rincian pembelian.'],
-       ['Bagaimana cara memperoleh komisi?','Bagikan tautan referral pribadi. Komisi hanya dicatat jika pembelian memenuhi syarat dan pembayaran diverifikasi.'],
-       ['Bagaimana mengirim tiket bantuan?','Masuk sebagai member, lalu buka Bantuan untuk membuat atau memantau tiket sesuai ketersediaan layanan.']].map(x=>
-        '<details class="ngd-help-question"><summary>'+esc(x[0])+'</summary>'+
-        '<p>'+esc(x[1])+'</p></details>').join('')+
-    '</section>'+
-    '<section class="ngd-help-last-cta"><div><strong>Perlu bantuan untuk pesanan Anda?</strong>'+
-      '<p>Masuk agar laporan terhubung ke akun dan riwayat pesanan.</p></div>'+
-      '<button type="button" data-route="login">Masuk Member '+icon('arrow')+'</button>'+
-    '</section>'+
+    '<footer class="ngdb-help-foot"><div><h2>Mau lihat-lihat dulu? Silakan.</h2>'+
+      '<p>Mulai dari katalog, atau buka materi gratis kalau masih ingin belajar.</p>'+
+      '<div class="ngdb-help-free"><a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">Baca eBook Gratis ↗</a>'+
+      '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Ikut Kelas Gratis ↗</a></div></div>'+
+      '<button type="button" class="ngdb-button ngdb-primary" data-route="katalog">Buka Katalog '+icon('arrow')+'</button>'+
+    '</footer>'+
   '</div>';
   if(isAdmin()){
     const overview=state.supportOverview||{},stats=overview.by_status||{},tickets=state.adminSupportTickets||[];
