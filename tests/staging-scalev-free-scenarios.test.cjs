@@ -33,7 +33,9 @@ function sandbox(sku,options={}){
     total_bayar:sku.price,ref_member_id:member.referred_by,
     catatan_admin:'',metode:'SCALEV_SYNTHETIC_ONLY'};
   const inviter={_row:3,member_id:'M-AFF',role:'MEMBER',status:'AKTIF',referred_by:''};
-  const rows={members:[member,inviter],katalog_produk:[product],orders:[order],
+  const sponsorStarter={_row:3,order_id:'SPONSOR-STARTER',member_id:'M-AFF',
+    product_id:'P-STARTER-15',status:'FULFILLED'};
+  const rows={members:[member,inviter],katalog_produk:[product],orders:[order,sponsorStarter],
     affiliate_commissions:[],credits_ledger:[],audit_logs:[]};
   const ctx=vm.createContext({console:{log:()=>{},warn:()=>{},error:()=>{}},Date,Number,JSON});
   vm.runInContext(code,ctx,{timeout:10000});
