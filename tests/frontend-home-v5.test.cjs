@@ -16,17 +16,20 @@ test('public and STAGING share the same latest calm floating-brand layer',()=>{
     assert.match(html,/family=Inter/);
   }
 });
-test('guest homepage has floating brand mark, not stairs or animated pixels',()=>{
-  assert.match(app,/class="ngd-journey-stage"/);
-  assert.match(app,/class="ngd-floating-logo"/);
+test('marketplace hero keeps official brand and no stair/pixel animation',()=>{
+  assert.match(app,/class="ngd-journey-stage ngd-shop-brand-stage"/);
+  assert.match(app,/class="ngd-floating-logo" role="img"/);
   assert.match(app,/class="ngd-floating-shadow"/);
   assert.doesNotMatch(app,/ngd-journey-step|ngd-climb-step|ngd-journey-stairs|ngd-journey-art/);
   assert.match(floating,/@keyframes ngdQuietFloat/);
   assert.match(floating,/@media\(prefers-reduced-motion:reduce\)/);
   assert.doesNotMatch(floating,/@keyframes ngdBallAscend|@keyframes ngdStairLight|ngdPixelDrift/);
 });
-test('minimal homepage stays uncluttered, and catalog and login remain accessible',()=>{
-  assert.match(app,/class="nh-home nh-home-minimal"/);
+test('homepage routes to the live catalog and member registration without fake commerce',()=>{
+  assert.match(app,/class="nh-home nh-home-minimal ngd-shop-home"/);
+  assert.match(app,/class="ngd-shop-hero"|ngd-shop-hero/);
+  assert.match(app,/ngd-shop-featured/);
+  assert.match(app,/ngd-shop-signup/);
   assert.match(app,/data-route="katalog"/);
   assert.match(app,/data-route="daftar"/);
   assert.doesNotMatch(app,/class="nh-grid"|class="nh-rail"|class="ngd-token-market"/);
