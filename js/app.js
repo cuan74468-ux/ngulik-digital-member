@@ -440,8 +440,8 @@ function viewHome(){
   return '<div class="nh-home nh-home-minimal">'+hero+viewHomeServices_()+'</div>';
 }
 const offerCategories=[
-  ['semua','Semua'],['ai','Token AI'],['aplikasi','Aplikasi Bisnis'],
-  ['jasa','Jasa & Seat'],['belajar','Bundel & Ebook']
+  ['semua','Semua'],['ai','Token AI'],['aplikasi','Aplikasi'],
+  ['jasa','Jasa & Seat'],['belajar','Ebook & Kelas']
 ];
 const supportedSaleTypes=new Set(['LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_TOKEN','TOPUP_KREDIT','PRODUK_DIGITAL','JASA_SEKALI']);
 function offerCategory(p){
@@ -502,8 +502,8 @@ function viewPublicMarketplace(list){
   const banner=window.NGD_CONTENT_UI?.hero(state.siteContent,'catalog')||
     '<section class="market-hero-fallback" aria-label="Selamat datang di marketplace Ngulik Digital">'+
       '<div class="market-hero-content"><span class="market-eyebrow">PRODUK & JASA NGULIK DIGITAL</span>'+
-      '<h2>Pilih yang Anda Butuhkan</h2>'+
-      '<p>Pilih produk dan jasa sesuai kebutuhan usaha.</p>'+
+      '<h2>Solusi digital untuk usaha Anda</h2>'+
+      '<p>Temukan alat, aplikasi, dan layanan sesuai kebutuhan.</p>'+
       '<button type="button" class="market-hero-link" data-route="belajar">Mulai belajar '+icon('arrow')+'</button>'+
       '</div><div class="market-hero-symbol" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></div></section>';
   const filterBar='<div class="market-categories" role="group" aria-label="Jelajahi kategori produk">'+
@@ -550,37 +550,36 @@ function viewPublicMarketplace(list){
       (Number(p.durasi_hari)>0?'<span>'+esc(Number(p.durasi_hari))+' hari akses</span>':'');
     const cover=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'market-product-image',offerUiTitle_(p));
     const fallbackIcon=kind==='ai'?'spark':kind==='belajar'?'book':kind==='jasa'?'gift':'store';
-    return '<article class="market-product-card" aria-label="'+esc(offerUiTitle_(p))+'">'+
+    return '<article class="market-product-card" data-market-kind="'+esc(kind)+'" aria-label="'+esc(offerUiTitle_(p))+'">'+
       '<div class="market-product-media market-media-'+esc(kind)+'">'+
         (cover||'<div class="market-product-placeholder" aria-hidden="true"><span class="market-product-placeholder-icon">'+icon(fallbackIcon)+'</span><span class="market-product-placeholder-name">'+esc(offerCategoryLabel(p))+'</span></div>')+
         (badge?'<span class="market-product-badge">'+esc(badge)+'</span>':'')+
         '<span class="market-product-category">'+esc(offerCategoryLabel(p))+'</span>'+
       '</div><div class="market-product-body">'+
-        '<span class="market-product-merchant">Ngulik Digital</span>'+
+        '<span class="market-product-merchant">'+esc(offerCategoryLabel(p))+'</span>'+
         '<h3>'+esc(offerUiTitle_(p))+'</h3>'+
         '<p class="market-product-description">'+esc(offerUiDescription_(p)||'Lihat pilihan produk digital kami.')+'</p>'+
         (benefits?'<div class="market-product-benefits">'+benefits+'</div>':'')+
-        '<div class="market-product-bottom"><span class="market-product-price-label">Harga katalog</span>'+
+        '<div class="market-product-bottom"><span class="market-product-price-label">Harga</span>'+
         '<strong class="market-product-price">'+(price===0?'Gratis':price!==null&&price>0?rupiah(p.harga):'Tanya harga')+'</strong>'+
         action+'</div>'+
       '</div></article>';
   }).join('');
   return '<div class="market-page">'+
-    '<header class="market-header"><div><p class="market-eyebrow">NGULIK DIGITAL / KATALOG</p>'+
-    '<h1>Pilih Produk atau Jasa</h1><p>Lihat jasa, aplikasi, dan produk digital yang tersedia.</p></div>'+
-    '<span class="market-header-count">'+publicList.length+' produk tersedia di katalog</span></header>'+
+    '<header class="market-header"><div><p class="market-eyebrow">NGULIK DIGITAL / PILIHAN UNTUK USAHA</p>'+
+    '<h1>Katalog Produk & Jasa</h1><p>Cari solusi yang cocok, lihat harga, dan pilih langkah berikutnya.</p></div>'+
+    '</header>'+
     '<div class="market-banner-shell">'+banner+'</div>'+
     '<section class="market-shopping" aria-label="Belanja produk digital">'+
-      '<div class="market-section-title"><h2>Pilih sesuai kebutuhan</h2><span>Cari yang cocok</span></div>'+
-      filterBar+controls+
-      '<div class="market-results-header"><h2>Produk dan jasa</h2><span aria-live="polite">'+shown.length+' produk ditemukan</span>'+
+      controls+filterBar+
+      '<div class="market-results-header"><h2>Jelajahi pilihan</h2><span aria-live="polite">'+shown.length+' dari '+publicList.length+' produk</span>'+
       '<button type="button" class="market-refresh" data-market-refresh aria-label="Perbarui katalog">Perbarui</button></div>'+
       (cards?'<div class="market-product-grid">'+cards+'</div>':
         '<div class="market-no-results"><h3>Produk Tidak Ditemukan</h3><p>Coba kata kunci atau kategori lain.</p>'+
         '<button type="button" data-market-reset>Hapus filter</button></div>')+
     '</section>'+
     '<p class="market-trust-note">'+
-      'Pembayaran QRIS DANA Bisnis diperiksa secara manual oleh Admin sebelum layanan diaktifkan.'+'</p>'+
+      (config.paymentsEnabled===true?'Pembayaran diproses setelah verifikasi admin.':'Pembayaran online belum dibuka. Untuk produk tertentu, silakan konsultasi terlebih dahulu.')+'</p>'+
   '</div>';
 }
 function viewPartnerShelf_(){
@@ -609,72 +608,18 @@ function viewPartnerShelf_(){
   '</section>';
 }
 function viewCatalog(){
-  // Admin CRUD retains all records. Customer views do not offer QA fixtures.
+  // One catalog presentation for guests and signed-in members.
+  // Existing server-side payment and role gates remain authoritative.
   const list=Array.isArray(state.catalog)?state.catalog.filter(p=>!isPublicQaOffer_(p)):[];
-  if(!logged())return viewPublicMarketplace(list);
-  if(!list.length)return title('Katalog Produk & Jasa','PILIHAN UNTUK USAHA',
-    'Temukan produk atau jasa yang Anda butuhkan.')+
-    empty('Katalog belum tersedia',isConnected()?
-      'Belum Ada Produk saat ini.':
-      'Coba lagi nanti.');
-  const current=state.catalogFilter||'semua';
-  const shown=current==='semua'?list:list.filter(p=>offerCategory(p)===current);
-  const filters='<div class="catalog-filters" role="group" aria-label="Filter jenis penawaran">'+
-    offerCategories.map(([id,label])=>'<button class="catalog-filter" type="button" data-catalog-filter="'+id+
-      '" aria-pressed="'+(id===current?'true':'false')+'">'+label+'</button>').join('')+'</div>';
-  const header='<div class="catalog-intro"><div><p class="eyebrow">NGULIK DIGITAL / KATALOG</p>'+
-    '<h1>'+ (logged()?'Produk & Jasa untuk Anda':'Produk & Jasa untuk Usaha')+'</h1>'+
-    '<p>Pilih layanan yang cocok untuk usaha Anda.</p>'+
-    '<button type="button" class="btn btn-secondary btn-sm ngd-partner-jump" data-partner-scroll>Lihat Kelas & Alat Pilihan '+icon('arrow')+'</button></div>'+
-    '<div class="catalog-summary"><strong>'+list.length+'</strong><span>penawaran tercatat'+
-    ''+'</span></div></div>';
-  const cards=shown.length?'<div class="catalog-grid">'+shown.map(p=>{
-    const kind=offerCategory(p),safeSale=supportedSaleTypes.has(String(p.tipe))&&moneyValue(p.harga)!==null&&moneyValue(p.harga)>0;
-    const manualFirst=isCoreServiceConsultation_(p)&&config.qrisOwnerImageApproved!==true;
-    const scalev=safeSale?scalevCheckoutFor_(p):null;
-    const mayar=safeSale&&mayarCheckoutEligible_(p);
-    const allowed=safeSale&&config.paymentsEnabled===true&&!manualFirst;
-    const consult=(manualFirst||!allowed)?consultationUrl(p):'';
-    const label=allowed?'Beli Sekarang':safeSale?'Checkout sedang tidak tersedia':'Produk belum tersedia';
-    const tooltip=safeSale?'Checkout belum tersedia pada konfigurasi saat ini':'Periksa ketersediaan produk';
-    const action=mayar?
-      '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'">Bayar via Mayar '+icon('arrow')+'</button>':
-      scalev?scalevCheckoutButton_(scalev,'btn btn-primary'):
-      manualFirst?
-      (consult?'<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi '+esc(offerUiTitle_(p))+' melalui WhatsApp">Tanya via WhatsApp '+icon('arrow')+'</a>':
-       '<button class="btn btn-primary" type="button" disabled>Hubungi admin</button>'):
-      allowed?
-      '<button class="btn btn-primary" type="button" data-buy="'+idSafe(p.product_id)+'">Beli Sekarang '+icon('arrow')+'</button>':
-      consult?
-        '<a class="btn btn-primary" href="'+esc(consult)+'" target="_blank" rel="noopener noreferrer" aria-label="Konsultasi pemesanan '+esc(offerUiTitle_(p))+' melalui WhatsApp">Tanya via WhatsApp '+icon('arrow')+'</a>':
-        '<button class="btn btn-primary" type="button" disabled title="'+esc(tooltip)+'">'+label+' '+icon('arrow')+'</button>';
-    return '<article class="catalog-card"><div class="catalog-card-top">'+
-      '<span class="catalog-card-icon">'+(window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'catalog-product-image','')||
-      '<span class="catalog-product-letter" aria-hidden="true">'+esc(String(p.nama||'P').slice(0,1))+'</span>')+'</span>'+
-      '<span class="catalog-card-type">'+esc(offerCategoryLabel(p))+'</span></div>'+
-      '<div class="catalog-card-copy"><h3>'+esc(offerUiTitle_(p))+'</h3><p>'+esc(offerUiDescription_(p))+'</p>'+
-      '<div class="product-benefits">'+
-      (Number(p.kredit_diberikan)>0?'<span class="chip green">+'+esc(Number(p.kredit_diberikan))+' Token</span>':'')+
-      (Number(p.durasi_hari)>0?'<span class="chip">'+esc(Number(p.durasi_hari))+' hari</span>':'')+
-      '</div></div>'+
-      '<div class="catalog-card-bottom"><div><small>Harga penawaran</small><strong>'+rupiah(p.harga)+'</strong></div>'+
-      action+'</div>'+
-      (kind==='jasa'&&!manualFirst?'<button type="button" class="service-cta" data-service-go>Tanya kebutuhan jasa '+icon('arrow')+'</button>':'')+
-      '</article>';
-  }).join('')+'</div>':
-    '<div class="catalog-empty">'+empty('Belum Ada Pilihan','Coba pilih kategori lain.')+'</div>';
-  const licenses=logged()&&!isAdmin()?
-    '<div class="catalog-license-strip" aria-label="Status akses layanan">'+[
+  const storefront=viewPublicMarketplace(list);
+  if(!logged()||isAdmin())return storefront;
+  const access='<details class="market-member-access"><summary>Akses layanan saya</summary>'+
+    '<div class="market-member-access-list">'+[
       ['POS Kasir',state.me?.status_pos||'Belum aktif'],
       ['Paket 3-in-1',state.me?.akses_3in1_sampai&&new Date(state.me.akses_3in1_sampai).getTime()>Date.now()?'Aktif':'Belum aktif'],
       ['Canva',state.me?.status_canva||'Belum aktif']
-    ].map(([name,status])=>'<span><strong>'+esc(name)+'</strong><small>'+esc(status)+'</small></span>').join('')+'</div>':'';
-  return header+licenses+filters+'<p class="catalog-result-count" aria-live="polite">Menampilkan '+shown.length+
-    ' dari '+list.length+' penawaran</p>'+cards+
-    '<section class="catalog-guidance section-gap"><div><span class="card-kicker">CATATAN</span>'+
-    '<h3>Butuh Bantuan Pilih Jasa?</h3><p>Tanya Admin tentang kebutuhan usaha Anda.</p></div>'+
-    '<button type="button" class="btn btn-secondary" data-route="jasa">Kirim permintaan</button></section>'+
-    viewPartnerShelf_();
+    ].map(([name,status])=>'<span><strong>'+esc(name)+'</strong><small>'+esc(status)+'</small></span>').join('')+'</div></details>';
+  return storefront+access+viewPartnerShelf_();
 }
 function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
@@ -2825,7 +2770,7 @@ document.addEventListener('input',(e)=>{
       if(start!==null&&end!==null)next.setSelectionRange(start,end);}
     return;
   }
-  if(e.target?.id==='market-search'&&!logged()&&state.route==='katalog'){
+  if(e.target?.id==='market-search'&&state.route==='katalog'){
     state.marketplaceSearch=e.target.value;
     const start=e.target.selectionStart,end=e.target.selectionEnd;
     render();
@@ -2842,7 +2787,7 @@ document.addEventListener('input',(e)=>{
   const none=by('nh-empty');if(none)none.hidden=shown>0;
 });
 document.addEventListener('change',e=>{
-  if(e.target?.id!=='market-sort'||logged()||state.route!=='katalog')return;
+  if(e.target?.id!=='market-sort'||state.route!=='katalog')return;
   const selected=String(e.target.value||'default');
   if(!['default','name','price-asc','price-desc'].includes(selected))return;
   state.marketplaceSort=selected;render();
