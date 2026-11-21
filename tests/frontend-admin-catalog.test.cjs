@@ -40,7 +40,7 @@ test('local QA admin catalogue renders eight isolated test records',()=>{
 });
 test('member has no admin catalog and cannot open the editor',()=>{
   const h=makePreview('member','produk');
-  assert.match(h.nodes.screen.innerHTML,/Masuk untuk membuka katalog admin/);
+  assert.match(h.nodes.screen.innerHTML,/Halaman khusus pengelola/);
   assert.doesNotMatch(h.nodes.screen.innerHTML,/id="admin-catalog-form"/);
   assert.doesNotMatch(h.nodes['mobile-nav'].innerHTML,/data-route="produk"/);
 });
