@@ -106,6 +106,63 @@ test('guest drawer exposes four public routes and a single member entrance',()=>
     assert.equal(vm.runInContext('state.route',context),'login');
   }
 });
+test('catalog product detail opens its own page instead of expanding card',()=>{
+  const {nodes,context}=renderPreview();
+  vm.runInContext("go('katalog')",context,{timeout:2000});
+  assert.match(nodes.screen.innerHTML,/data-product-detail="P-3IN1"/);
+  assert.match(nodes.screen.innerHTML,/href="#detail-produk\/P-3IN1"/);
+  assert.match(nodes.screen.innerHTML,/data-market-product="P-3IN1"/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/<details class="ngd-card-public-detail"/);
+  vm.runInContext("openProductDetail_('P-3IN1')",context,{timeout:2000});
+  assert.equal(vm.runInContext('state.route',context),'detail-produk');
+  assert.equal(vm.runInContext('state.productDetailId',context),'P-3IN1');
+  assert.match(nodes.screen.innerHTML,/ngdp-shell/);
+  assert.match(nodes.screen.innerHTML,/Paket 3-in-1/);
+  assert.match(nodes.screen.innerHTML,/Rp(?:\s|\u00a0)*25\.000/);
+  assert.match(nodes.screen.innerHTML,/Tentang produk ini/);
+  assert.match(nodes.screen.innerHTML,/data-checkout-product="P-3IN1"/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/checkout-dialog|data-checkout-create/);
+});
+test('product detail URL deep link restores exact SKU and rejects malformed IDs',()=>{
+  const {context,nodes}=renderPreview();
+  context.location.hash='#detail-produk/P-POS';
+  assert.equal(vm.runInContext('aiRouteFromHash_()',context,{timeout:2000}),'detail-produk');
+  assert.equal(vm.runInContext('state.productDetailId',context),'P-POS');
+  vm.runInContext("state.route='detail-produk';render()",context,{timeout:2000});
+  assert.match(nodes.screen.innerHTML,/POS Kasir Sederhana/);
+  context.location.hash='#detail-produk/%3Cscript%3E';
+  assert.equal(vm.runInContext('aiRouteFromHash_()',context,{timeout:2000}),'katalog');
+  context.location.hash='#detail-produk/%XX';
+  assert.equal(vm.runInContext('aiRouteFromHash_()',context,{timeout:2000}),'katalog');
+});
+test('guest purchase from a product page still requires login and remembers product',()=>{
+  const {context,nodes}=renderPreview();
+  vm.runInContext("openProductDetail_('P-POS');openProductCheckout_('P-POS')",context,{timeout:2000});
+  assert.equal(vm.runInContext('state.route',context),'login');
+  assert.equal(vm.runInContext('state.pendingPurchaseId',context),'P-POS');
+  assert.equal(vm.runInContext('state.checkoutReturnRoute',context),'detail-produk');
+  assert.doesNotMatch(nodes.screen.innerHTML,/data-checkout-create|checkout-dialog/);
+});
+test('member product detail proceeds to existing checkout without new order writes',()=>{
+  const {context,nodes}=renderPreview('?preview=member');
+  vm.runInContext("go('katalog');openProductDetail_('P-3IN1');openProductCheckout_('P-3IN1')",context,{timeout:2000});
+  assert.equal(vm.runInContext('state.route',context),'checkout');
+  assert.equal(vm.runInContext('state.checkoutReturnRoute',context),'detail-produk');
+  assert.match(nodes.screen.innerHTML,/Rincian Checkout/);
+  assert.match(nodes.screen.innerHTML,/Pembayaran belum dibuka/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/data-checkout-create/);
+});
+test('product mini landing escapes untrusted catalog text and uses responsive contained art',()=>{
+  const {context,nodes}=renderPreview();
+  vm.runInContext("state.catalog=[{product_id:'P-SAFE',nama:'<img src=x onerror=evil()>',deskripsi:'<script>alert(1)</script>',tipe:'LISENSI_SEKALI',harga:10000}];openProductDetail_('P-SAFE')",context,{timeout:2000});
+  assert.match(nodes.screen.innerHTML,/&lt;img src=x onerror=evil\(\)&gt;/);
+  assert.match(nodes.screen.innerHTML,/&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/<script>alert\(1\)<\/script>|<img src=x onerror/);
+  const css=fs.readFileSync(path.join(base,'assets/product-detail-v1.css'),'utf8');
+  assert.match(css,/\.ngdp-artwork img/);
+  assert.match(css,/object-fit:contain/);
+  assert.match(css,/@media\(max-width:600px\)/);
+});
 test('guest product selection preserves intent but cannot open checkout',()=>{
   const {nodes,context}=renderPreview();
   vm.runInContext("go('katalog');openProductCheckout_('P-3IN1')",context,{timeout:2000});
@@ -122,7 +179,7 @@ test('public login is fail-closed while member preview and staging source keep s
   assert.doesNotMatch(nodes.screen.innerHTML,/id="auth-form"/);
   assert.match(app,/location\.pathname\.includes\('\/staging\/'\)/);
   const page=fs.readFileSync(path.join(base,'staging/member.html'),'utf8');
-  assert.match(page,/app\.js\?v=20261121-guest-auth-status-v3/);
+  assert.match(page,/app\.js\?v=20261121-product-detail-v1/);
 });
 test('guest Jasa shows actual backend-catalog prices and gates checkout behind login',()=>{
   const {nodes,context}=renderPreview();
