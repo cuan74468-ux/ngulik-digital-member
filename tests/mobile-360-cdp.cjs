@@ -33,7 +33,7 @@ async function connect(){
     try{
       const portFile=path.join(profile,'DevToolsActivePort');
       if(!existsSync(portFile)){await pause(100);continue;}
-      const candidate=Number(String(readFileSync(portFile,'utf8')).split(/\\r?\\n/)[0]);
+      const candidate=parseInt(String(readFileSync(portFile,'utf8')),10);
       if(!Number.isInteger(candidate)||candidate<1024){await pause(100);continue;}
       port=candidate;
       const r=await fetch('http://127.0.0.1:'+port+'/json');
