@@ -58,10 +58,10 @@ test('historical BANNER cannot be re-created but can be found for archival',()=>
 test('both page entrypoints load the campaign CSS after all older marketing styles',()=>{
   for(const path of ['index.html','staging/member.html']){
     const html=read(path);
-    assert.match(html,/catalog-campaign-v9\.css\?v=20261121-catalog-v9-2/);
+    assert.match(html,/catalog-campaign-v9\.css\?v=20261121-proportions-v13-1/);
     const idx=html.indexOf('catalog-campaign-v9.css');
     assert.ok(idx>html.indexOf('public-experience-v8.css'));
-    assert.match(html,/content-ui\.js\?v=20261121-catalog-v9-2/);
+    assert.match(html,/content-ui\.js\?v=20261121-proportions-v13-1/);
   }
   assert.match(css,/\.ngd-catalog-campaign-copy/);
   assert.match(css,/@media\(max-width:700px\)/);
