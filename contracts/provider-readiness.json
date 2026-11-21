@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "documentType": "NON_EXECUTABLE_PROVIDER_READINESS_CONTRACT",
-  "decisionDate": "2026-11-15",
+  "decisionDate": "2026-11-21",
   "releaseState": "OWNER_AUTHORIZED_FEATURE_IMPLEMENTATION",
   "externalTrafficAuthorized": true,
   "releaseGates": {
@@ -12,12 +12,12 @@
     "notifications": true,
     "externalProviders": true
   },
-  "description": "Owner authorizes implementation of all stages. This non-executable contract does not configure Script Properties, create provider credentials, prove deployment or bypass technical validation. Mayar source-only staging adapter and regression tests are implemented on 2026-11-20. Merchant payout recovery, credential rotation, API compatibility, GAS deployment and real payments are NOT verified; the gateway is fail-closed.",
+  "description": "Implementation authorization is NOT production activation. Owner's binding decision of 20 November 2026 replaces Mayar/Scalev commerce with self-managed official DANA Bisnis static QRIS. Both live GAS endpoints report payments OFF; the public endpoint reports writes OFF. No automatic QRIS settlement or payout approval has been proven. Legacy adapter source, if retained, is not an approved payment route.",
   "integrations": [
     {
       "id": "registration_whatsapp",
-      "candidate": "Fonnte (owner will create account later)",
-      "status": "IMPLEMENTATION_AUTHORIZED",
+      "candidate": "Fonnte registration OTP; existing member login OTP is a distinct feature, not proof that new-member registration is enabled.",
+      "status": "IMPLEMENTED_SOURCE_STAGING_REGISTRATION_OFF",
       "sourceBoundary": "apps-script/OtpAuth.gs",
       "secretPropertyNames": [
         "FONNTE_API_TOKEN",
@@ -38,32 +38,21 @@
     },
     {
       "id": "merchant_payment",
-      "candidate": "Mayar Starter (preferred for API/webhook) + single NGD affiliate ledger; Scalev Free retained only as unconfigured fallback",
-      "status": "STAGING_SOURCE_IMPLEMENTED_RUNTIME_UNVERIFIED",
-      "sourceBoundary": "apps-script/Code.gs:createMayarOrder_/mayarWebhook_ plus js/app.js STAGING",
-      "secretPropertyNames": [
-        "MAYAR_API_KEY",
-        "MAYAR_WEBHOOK_SECRET",
-        "MAYAR_PAYOUT_CONFIRMED"
-      ],
+      "candidate": "Official DANA Bisnis static QRIS: server-generated order + 3-digit unique amount, manual owner-approved reconciliation; no payment intermediary.",
+      "status": "SOURCE_IMPLEMENTED_FINANCE_RUNTIME_OFF_MERCHANT_IMAGE_UNVERIFIED",
+      "sourceBoundary": "apps-script/Code.gs:newOrder_/adminVerifyOrder and js/app.js:viewCheckoutDraft_/viewCheckout",
+      "secretPropertyNames": [],
       "mustProve": [
-        "merchant_authorization",
-        "official_provider_event_authentication",
-        "authoritative_payment_confirmation",
-        "webhook_idempotency_and_replay",
-        "one_internal_wallet_authority",
-        "settlement_reconciliation",
-        "refund_and_partial_failure_handling",
-        "cost_fee_policy",
-        "kill_switch",
-        "merchant_payout_restoration_confirmed_after_2026_11_04_incident",
-        "new_api_key_rotated_after_2026_10_31",
-        "merchant_KYC_and_identity_verification",
-        "staging_only_invoice_api_compatible_schema",
-        "transaction_ID_binding_and_refund_mapping",
-        "verified_provider_hosted_invoice_URL",
-        "commission_owner_NGD_no_double_affiliate_payout",
-        "owner_approves_money_acceptance"
+        "owner_confirms_official_DANA_Bisnis_QRIS_file_origin",
+        "independent_scan_matches_Linggau_AI_Studio_and_official_NMID",
+        "public_image_matches_verified_merchant_without_placeholder",
+        "backend_generates_unique_payable_amount_and_prevents_collisions",
+        "expired_or_ambiguous_payments_require_manual_reconciliation",
+        "buyer_claim_does_not_automatically_set_PAID",
+        "real_DANA_Bisnis_incoming_mutation_checked_by_authorized_owner",
+        "one_paid_order_one_fulfillment_one_ledger_no_duplicate_commission",
+        "refund_reversal_and_payout_policy_verified",
+        "owner_explicitly_approves_payment_activation_after_small_supervised_UAT"
       ]
     },
     {
@@ -90,7 +79,7 @@
     {
       "id": "external_notifications",
       "candidate": "Fonnte",
-      "status": "IMPLEMENTATION_AUTHORIZED",
+      "status": "IMPLEMENTATION_AUTHORIZED_PROVIDER_ACCEPTANCE_NOT_DELIVERY",
       "sourceBoundary": "apps-script/Code.gs",
       "secretPropertyNames": [
         "FONNTE_API_TOKEN"
@@ -112,5 +101,32 @@
     "secrets_server_side_in_GAS_Script_Properties",
     "production_data_and_deployment_are_separate_actions",
     "keep_idempotency_and_ledger_consistency"
-  ]
+  ],
+  "releaseGatesInterpretation": "Existing true values represent owner permission to implement code, never proof of enabled GAS Script Properties or verified integrations.",
+  "latestOwnerPaymentDecision": {
+    "authority": "Keputusan Final Pembayaran QRIS DANA Bisnis — Ngulik Juara (20 Nov 2026), Google Drive",
+    "method": "QRIS_STATIS",
+    "provider": "DANA_BISNIS",
+    "intermediaryGateways": "MAYAR_AND_SCALEV_CANCELLED",
+    "merchant": "Linggau AI Studio",
+    "settlement": "MANUAL_VERIFICATION_AGAINST_REAL_DANA_BISNIS_MUTATION",
+    "uniqueCodeDigits": 3,
+    "imageStatus": "DRIVE_JPG_FOUND_REPO_SVG_PRESENT_IDENTITY_AND_SCANNED_PAYEE_NOT_ATTESTED",
+    "financeRelease": "BLOCKED_UNTIL_APPROVED_REAL_MONEY_UAT"
+  },
+  "observedRuntime20261121": {
+    "public": {
+      "apiVersion": "1.0.2",
+      "writesEnabled": false,
+      "paymentsEnabled": false
+    },
+    "staging": {
+      "apiVersion": "1.0.3",
+      "mutationsEnabled": true,
+      "registrationEnabled": false,
+      "otpRegistrationEnabled": false,
+      "financeEnabled": false
+    },
+    "scope": "Read-only GET and GitHub Actions identity attestation; does not prove Apps Script editor/source SHA parity, provider delivery or bank settlement."
+  }
 }
