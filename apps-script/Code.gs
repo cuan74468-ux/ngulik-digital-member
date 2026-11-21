@@ -1403,8 +1403,7 @@ function ngdEligibleReferrer_(buyer,inviter) {
   return Boolean(buyer&&buyer.role==='MEMBER'&&inviter&&
     inviter.role==='MEMBER'&&inviter.status==='AKTIF'&&
     String(buyer.referred_by||'').trim()===String(inviter.member_id||'').trim()&&
-    String(buyer.member_id||'').trim()!==String(inviter.member_id||'').trim()&&
-    ngdStarterUnlocked_(inviter.member_id));
+    String(buyer.member_id||'').trim()!==String(inviter.member_id||'').trim());
 }
 function onPaid_(o,actor) {
   var product=byId_('katalog_produk','product_id',o.product_id);
@@ -1423,7 +1422,8 @@ function onPaid_(o,actor) {
       'orders',o.order_id,'','BLOCKED',{reason:'BUYER_EQUALS_REFERRER'});
   }
   var inviter=referrer?byId_('members','member_id',referrer):null;
-  var eligibleInviter=!selfReferral&&ngdEligibleReferrer_(member,inviter);
+  var eligibleInviter=!selfReferral&&ngdEligibleReferrer_(member,inviter)&&
+    ngdStarterUnlocked_(inviter.member_id);
   var terms=referrer&&product.bisa_komisi===true?
     ngdCommissionTerms_(s,product,o.harga_dasar):{persen:percent,nominal:0};
   // Legacy MEMBER -> ADMIN references may exist. Do not rewrite historical
