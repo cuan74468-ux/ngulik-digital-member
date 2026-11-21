@@ -71,7 +71,7 @@ test('learning filters and lesson navigation are delegated without changing API 
   const app=read('js/app.js');
   for(const token of ['function filterLearningCards_()','function selectLearningLesson_(index)',
     "hasAttribute('data-lms-filter')","hasAttribute('data-lms-lesson-open')",
-    "hasAttribute('data-lms-next')'])
+    "hasAttribute('data-lms-next')"]
     assert.ok(app.includes(token),token);
   assert.match(app,/api\('getMyLMSEnrollments'/);
   assert.match(read('js/lms-ui.js'),/data-lms-action="open-course"/);
