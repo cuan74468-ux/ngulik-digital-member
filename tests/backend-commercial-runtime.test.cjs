@@ -119,12 +119,17 @@ test('fresh seed catalog includes nine brief-approved product IDs and per-produc
   c.seedIfEmpty_=(table,rows)=>{assert.equal(table,'katalog_produk');seeded=rows;return rows.length;};
   assert.equal(c.seedCatalog_(),9);
   assert.deepEqual(Array.from(seeded,x=>x.product_id),[
-    'P-EBOOK','P-3IN1','P-POS','P-VIDEO-AI','P-CANVA','P-TOKEN-10',
-    'P-KREDIT-50','P-KREDIT-150','P-KREDIT-400'
+    'P-EBOOK','P-3IN1','P-POS','P-VIDEO-AI','P-INTEGRASI-GAS','P-TOKEN-10',
+    'P-TOKEN-35','P-TOKEN-100','P-STARTER-15'
   ]);
-  assert.equal(seeded.find(x=>x.product_id==='P-EBOOK').komisi_persen,40);
+  assert.equal(seeded.find(x=>x.product_id==='P-EBOOK').harga,0);
+  assert.equal(seeded.find(x=>x.product_id==='P-STARTER-15').komisi_nominal_tetap,5000);
+  assert.equal(seeded.find(x=>x.product_id==='P-3IN1').harga,99000);
+  assert.equal(seeded.find(x=>x.product_id==='P-POS').harga,149000);
   assert.equal(seeded.find(x=>x.product_id==='P-VIDEO-AI').komisi_persen,20);
-  assert.equal(seeded.find(x=>x.product_id==='P-TOKEN-10').harga,10000);
+  assert.equal(seeded.find(x=>x.product_id==='P-TOKEN-10').harga,7000);
+  assert.equal(seeded.find(x=>x.product_id==='P-TOKEN-35').harga,20000);
+  assert.equal(seeded.find(x=>x.product_id==='P-TOKEN-100').harga,50000);
   assert.ok(seeded.every(x=>x.sumber_produk==='INTERNAL'));
 });
 test('digital purchase grants bonus once, closes order and repeats commissions per order',()=>{
