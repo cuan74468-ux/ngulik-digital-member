@@ -99,7 +99,18 @@ test('guest product selection preserves intent but cannot open checkout',()=>{
   vm.runInContext("go('katalog');openProductCheckout_('P-3IN1')",context,{timeout:2000});
   assert.equal(vm.runInContext('state.pendingPurchaseId',context),'P-3IN1');
   assert.equal(vm.runInContext('state.route',context),'login');
-  assert.match(nodes.screen.innerHTML,/Masuk atau daftar gratis pakai WhatsApp/);
+  assert.match(nodes.screen.innerHTML,/Login member belum tersedia di halaman publik/);
+  assert.match(nodes.screen.innerHTML,/Produk yang dipilih belum dipesan atau ditagihkan/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/id="auth-form"|Kode OTP WhatsApp/);
+});
+test('public login is fail-closed while member preview and staging source keep separate gates',()=>{
+  const {nodes,context}=renderPreview();
+  vm.runInContext("go('login')",context,{timeout:2000});
+  assert.match(nodes.screen.innerHTML,/Login member belum tersedia/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/id="auth-form"/);
+  assert.match(app,/location\.pathname\.includes\('\/staging\/'\)/);
+  const page=fs.readFileSync(path.join(base,'staging/member.html'),'utf8');
+  assert.match(page,/app\.js\?v=20261121-guest-auth-status-v3/);
 });
 test('guest Jasa shows actual backend-catalog prices and gates checkout behind login',()=>{
   const {nodes,context}=renderPreview();
