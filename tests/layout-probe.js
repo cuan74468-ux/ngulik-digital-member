@@ -48,7 +48,7 @@
       // on mobile. Read the actual visible active state at each breakpoint.
       if(guest){
         var sideHidden=getComputedStyle(document.querySelector('.sidebar')).display==='none';
-        if(window.innerWidth<=760){
+        if(window.innerWidth<=920){
           var guestActive=nav?nav.querySelector('.nav-item[aria-current="page"]'):null;
           inkNav=sideHidden&&visible&&!!guestActive&&
             getComputedStyle(guestActive).display!=='none'&&

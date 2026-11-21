@@ -10,7 +10,7 @@
       var image=art&&art.querySelector('img');
       if(!copy||!art)return;
       var c=copy.getBoundingClientRect(),a=art.getBoundingClientRect();
-      var desktop=window.innerWidth>760;
+      var desktop=window.innerWidth>920;
       var columnsClear=desktop?
         c.width>=250&&a.width>=230&&c.right<=a.left+6:
         (c.width>280&&a.width>280);
