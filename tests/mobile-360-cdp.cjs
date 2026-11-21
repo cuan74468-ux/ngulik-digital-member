@@ -67,10 +67,11 @@ const jsCheck=`(()=>{
   // Existing CI-only QA <output> nodes contain unbroken JSON, not app UI.
   // Hide only these probe diagnostics before measuring real application geometry.
   document.querySelectorAll('output[id^="qa-"]').forEach(el=>{el.style.display='none';});
-  const h=document.querySelector('.ngd-member-hero h1')||
-    document.querySelector('.ngd-member-services .service-heading h1');
+  const h=document.querySelector('.ngdm-wallet-top > span:first-child')||
+    document.querySelector('.ngd-member-services .service-heading h1')||
+    document.querySelector('.ngdb-hero h1');
   const colors=h?(()=>{
-    const el=h,bg=h.closest('.ngd-member-hero,.service-heading');
+    const el=h,bg=h.closest('.ngdm-wallet,.ngd-member-hero,.service-heading,.ngdb-hero');
     const c=getComputedStyle(el),b=bg&&getComputedStyle(bg);
     return {text:c.color,background:b?.backgroundColor||''};
   })():null;
@@ -120,7 +121,7 @@ async function visit(url,label){
       toggle.click();
       const drawer=document.getElementById('top-nav-drawer');
       const opened=!drawer.hidden&&toggle.getAttribute('aria-expanded')==='true';
-      const order=drawer.querySelector('[data-route="pesanan"]');
+      const order=drawer.querySelector('[data-route="belajar"]');
       const exists=Boolean(order);
       if(opened&&exists)order.click();
       return {opened,exists,closed:drawer.hidden,hash:location.hash};
@@ -128,7 +129,7 @@ async function visit(url,label){
     const m=click.result.value;
     console.log('MOBILE_360_DRAWER '+JSON.stringify(m));
     assert.ok(m.opened&&m.exists&&m.closed,label+' drawer toggles and closes on navigation');
-    assert.equal(m.hash,'#pesanan',label+' drawer navigates to Pesanan');
+    assert.equal(m.hash,'#belajar',label+' More drawer navigates to Belajar without duplicating Pesanan tab');
   }
   if(label==='member-home'||label==='member-services'){
     assert.ok(x.colors,label+' hero text missing');
@@ -163,6 +164,6 @@ async function visit(url,label){
   }finally{
     try{ws?.close();}catch(e){}
     child.kill('SIGTERM');
-    rmSync(profile,{recursive:true,force:true});
+    rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:120});
   }
 })().catch(e=>{console.error(e.stack||String(e));process.exitCode=1;});

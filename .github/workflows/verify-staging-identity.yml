@@ -80,13 +80,15 @@ jobs:
               if(d?.workspace!=='NGD_STAGING'||d.environment!=='STAGING'||
                   d.admin_login_enabled!==true)
                 throw Error('STAGING identity invariants failed.');
-              for(const field of ['mutations_enabled','registration_enabled','otp_enabled','finance_enabled']){
+              for(const field of ['mutations_enabled','registration_enabled','otp_enabled','external_providers_enabled','finance_enabled']){
                 if(typeof d[field]!=='boolean')
                   throw Error('STAGING identity flag invalid: '+field);
               }
+              if(d.mutations_enabled!==true||d.registration_enabled!==true||d.otp_enabled!==true||d.external_providers_enabled!==true)
+                throw Error('STAGING signup release gates are not all enabled.');
               console.log('STAGING_IDENTITY_VERIFIED: environment=STAGING; admin_login_enabled=true; mutations='+
                 d.mutations_enabled+'; registration='+d.registration_enabled+
-                '; otp='+d.otp_enabled+'; finance='+d.finance_enabled);
+                '; otp='+d.otp_enabled+'; providers='+d.external_providers_enabled+'; finance='+d.finance_enabled);
             }finally{clearTimeout(timer);}
           })().catch(e=>{console.error('STAGING_IDENTITY_UNVERIFIED:',String(e.message).slice(0,180));process.exitCode=1;});
           NODE
@@ -132,5 +134,46 @@ jobs:
             echo 'STAGING_CHROME_LOGIN_GATE_FAIL: browser did not reach verified login gate' >&2
             grep -o 'data-staging-browser-failure="[^"]*"' /tmp/ngd-staging-attestation.html | tail -1 || true
             grep -E 'CORS|Access-Control|net::ERR' /tmp/ngd-staging-ci-chrome.log | tail -8 || true
+            exit 1
+          fi
+
+      - name: Verify live STAGING signup form is enabled in Chrome (read-only)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cat > staging/ci-signup-probe.js <<'JS'
+          (() => {
+            let attempts=0;
+            const timer=setInterval(() => {
+              const form=document.querySelector('#auth-form[data-mode="register"]');
+              const request=form?.querySelector('[data-action="otp-request"]');
+              const verify=form?.querySelector('[data-action="otp-verify"]');
+              if(form&&request&&!request.disabled&&verify&&!verify.disabled){
+                document.body.setAttribute('data-staging-signup-ready','true');
+                clearInterval(timer);
+              }else if(++attempts>=125){
+                document.body.setAttribute('data-staging-signup-ready','false');
+                clearInterval(timer);
+              }
+            },120);
+          })();
+          JS
+          sed -i 's#</body>#<script src="./ci-signup-probe.js" defer></script></body>#' staging/member.html
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/ngd-signup-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in {1..25}; do
+            if curl -fsS -o /dev/null http://127.0.0.1:8765/staging/member.html; then break; fi
+            sleep 0.3
+          done
+          CHROME="$(command -v google-chrome || command -v chromium || true)"
+          test -n "$CHROME"
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=19000 --window-size=390,844 --dump-dom \
+            'http://127.0.0.1:8765/staging/member.html#daftar' > /tmp/ngd-live-signup.html 2>/tmp/ngd-live-signup-chrome.log
+          if grep -q 'data-staging-signup-ready="true"' /tmp/ngd-live-signup.html; then
+            echo 'STAGING_REGISTRATION_FORM_READY: server attested + OTP request and verification controls enabled; no OTP sent'
+          else
+            echo 'STAGING_REGISTRATION_NOT_READY: inspected deployed GAS release gates, no OTP sent' >&2
+            grep -o 'data-staging-signup-ready="[^"]*"' /tmp/ngd-live-signup.html | tail -1 || true
             exit 1
           fi
