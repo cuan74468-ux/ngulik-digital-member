@@ -44,13 +44,10 @@ test('public hub is a calm mobile-first entry with accessible product navigation
   assert.doesNotMatch(html,/class="nh-grid"|class="nh-rail"/);
   assert.equal(h.apiCalls.length,0);
 });
-test('guest learning page explains Chapter 1 while leaving real LMS locked',()=>{
+test('guest learning page redirects to member login without exposing free resources',()=>{
   const h=preview();h.go('belajar');
-  assert.match(h.nodes.screen.innerHTML,/eBook Gratis/);
-  assert.match(h.nodes.screen.innerHTML,/Kelas Gratis/);
-  assert.match(h.nodes.screen.innerHTML,/ozzbygx3/);
-  assert.doesNotMatch(h.nodes.screen.innerHTML,/Masuk untuk membuka/);
-  assert.doesNotMatch(h.nodes.screen.innerHTML,/data-lms-action="complete"/);
+  assert.doesNotMatch(h.nodes.screen.innerHTML,/buku-pintar-vibe-coder|classroom\\.google\\.com|ozzbygx3/);
+  assert.match(h.nodes.screen.innerHTML,/Login member belum tersedia|Masuk ke akun Anda/);
   assert.equal(h.apiCalls.length,0);
 });
 test('guest marketplace displays all eight official QA fixtures without pretending payment is available',()=>{
