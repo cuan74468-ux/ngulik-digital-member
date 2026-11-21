@@ -1667,7 +1667,9 @@ function viewServiceRequests(){
     // A sales-facing page uses actual published catalogue items and backend prices.
     // No synthetic portfolio, fixed price, or guest order creation.
     const services=(Array.isArray(state.catalog)?state.catalog:[])
-      .filter(p=>String(p.tipe)==='JASA_SEKALI'&&!isPublicQaOffer_(p));
+      .filter(p=>String(p.tipe)==='JASA_SEKALI'&&!isPublicQaOffer_(p))
+      .sort((a,b)=>(moneyValue(a.harga)??Number.POSITIVE_INFINITY)-
+        (moneyValue(b.harga)??Number.POSITIVE_INFINITY));
     const packages=services.map(p=>{
       const price=moneyValue(p.harga);
       const imageSrc=ngdPremiumArtSrc_(ngdProductArtId_(p,'jasa'));
