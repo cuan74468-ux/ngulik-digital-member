@@ -1388,11 +1388,23 @@ function ngdCommissionTiming_(product) {
   return sku==='P-STARTER-15'||sku==='P-STARTER-15K'||
     type==='TOPUP_TOKEN'||type==='TOPUP_KREDIT'?'INSTANT_ON_PAID':'HOLD_14_DAYS';
 }
+// Pay-to-unlock is derived from verified orders, not a browser flag or
+// mutable profile badge. Historical refunded or pending Starter orders never unlock.
+function ngdStarterUnlocked_(memberId) {
+  var id=String(memberId||'').trim();
+  if(!id)return false;
+  return findRows_('orders',function(o){
+    return String(o.member_id||'')===id&&
+      String(o.product_id||'')==='P-STARTER-15'&&
+      ['PAID','FULFILLED'].indexOf(String(o.status||''))>=0;
+  }).length>0;
+}
 function ngdEligibleReferrer_(buyer,inviter) {
   return Boolean(buyer&&buyer.role==='MEMBER'&&inviter&&
     inviter.role==='MEMBER'&&inviter.status==='AKTIF'&&
     String(buyer.referred_by||'').trim()===String(inviter.member_id||'').trim()&&
-    String(buyer.member_id||'').trim()!==String(inviter.member_id||'').trim());
+    String(buyer.member_id||'').trim()!==String(inviter.member_id||'').trim()&&
+    ngdStarterUnlocked_(inviter.member_id));
 }
 function onPaid_(o,actor) {
   var product=byId_('katalog_produk','product_id',o.product_id);
@@ -1913,7 +1925,9 @@ function affiliateDashboard_(m) {
     approved_at:c.approved_at,payout_requested_at:c.payout_requested_at,
     paid_at:c.paid_at
   };});
-  return {kode_referral:m.kode_referral,link:'https://cuan74468-ux.github.io/ngulik-digital-member/?ref='+m.kode_referral,klik:findRows_('klik_log',function(r){return r.referrer_id===m.member_id&&r.tipe==='REFERRAL';}).length,pendaftar:findRows_('members',function(r){return r.referred_by===m.member_id;}).length,konversi:all.length,saldo:sums,komisi:safeRows};
+  var partnerUnlocked=ngdStarterUnlocked_(m.member_id);
+  return {mitra_aktif:partnerUnlocked,kode_referral:partnerUnlocked?m.kode_referral:'',
+    link:partnerUnlocked?'https://cuan74468-ux.github.io/ngulik-digital-member/?ref='+m.kode_referral:'',klik:findRows_('klik_log',function(r){return r.referrer_id===m.member_id&&r.tipe==='REFERRAL';}).length,pendaftar:findRows_('members',function(r){return r.referred_by===m.member_id;}).length,konversi:all.length,saldo:sums,komisi:safeRows};
 }
 function ngdDanaDestination_(raw){
   var phone=String(raw||'').replace(/[\s()+-]/g,'');
