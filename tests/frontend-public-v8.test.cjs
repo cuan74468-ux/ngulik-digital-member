@@ -39,5 +39,5 @@ test('public Help uses a readable purchase guide while member routes remain priv
  assert.match(css,/\.market-product-media/);
  const html=read('index.html');
  assert.match(html,/guest-sales-trust-v1\.css\?v=20261121-sales-trust-v1/);
- assert.match(html,/js\/app\.js\?v=20261121-guest-auth-status-v3/);
+ assert.match(html,/js\/app\.js\?v=20261121-member-resources-v1/);
 });
