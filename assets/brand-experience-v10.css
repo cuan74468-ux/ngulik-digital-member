@@ -329,3 +329,125 @@ body.ngd-public-app[data-app-role=member] .ngd-member-hero .ngd-member-hero-art{
 @media(prefers-reduced-motion:reduce){
   body.ngd-public-app .ngd-purpose-hero *,body.ngd-public-app .ngd-service-media *{animation:none!important;transition:none!important}
 }
+
+
+/* V12: information architecture has three voices, not one replicated sales hero.
+   Public = discovery; Member = task completion; Admin = operational control. */
+body.ngd-public-app[data-app-role=guest] .ngd-shop-home .ngd-shop-hero{
+  isolation:isolate;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-public-services-hero,
+body.ngd-public-app[data-app-role=guest] .ngd-help-hero,
+body.ngd-public-app[data-app-role=guest] .partner-public-intro,
+body.ngd-public-app[data-app-role=guest] .ngd-purpose-hero--learn{
+  position:relative;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-purpose-hero--learn{
+  background:#fbf6ef!important;
+  border-color:#eee1cc!important;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-purpose-hero--learn .eyebrow{color:#96631f!important}
+body.ngd-public-app[data-app-role=guest] .ngd-purpose-hero--learn .ngd-purpose-media{
+  background:radial-gradient(ellipse at center,rgba(229,178,94,.13),transparent 68%);
+}
+body.ngd-public-app[data-app-role=guest] .ngd-public-services-hero{
+  background:#eef6f7!important;
+  border-color:#d9e9e9!important;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-public-services-hero .eyebrow{color:#276873!important}
+body.ngd-public-app[data-app-role=guest] .ngd-help-hero{
+  background:#f4f7fb!important;
+  border-color:#e2eaf4!important;
+}
+body.ngd-public-app[data-app-role=guest] .ngd-help-hero .eyebrow{color:#3d5e91!important}
+body.ngd-public-app[data-app-role=guest] .partner-public-intro{
+  overflow:hidden;
+}
+body.ngd-public-app[data-app-role=guest] .ai-catalog .ai-catalog-intro{
+  background:#f1eefb!important;
+  border-color:#e2daf8!important;
+}
+/* Member: personal first, promotional assets second. Avoid a second retail hero. */
+body.ngd-public-app[data-app-role=member] .ngd-member-home{
+  --ngd-member-accent:#5933b5;
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-home .ngd-member-hero{
+  background:#f5f2fc!important;
+  border:1px solid #eae3f8!important;
+  box-shadow:none!important;
+  padding:clamp(22px,3.6vw,48px)!important;
+  border-radius:21px!important;
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-hero h1{
+  font-family:"Plus Jakarta Sans",Inter,system-ui,sans-serif;
+  font-size:clamp(27px,3.1vw,44px)!important;
+  letter-spacing:-.05em;
+  line-height:1.18;
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-hero .lead{
+  max-width:53ch;font-size:clamp(13px,1.05vw,16px)!important;line-height:1.65;
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-hero .ngd-member-hero-art{
+  max-width:320px!important;max-height:245px!important;object-fit:contain!important;
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-page-intro{
+  display:flex;align-items:center;justify-content:space-between;gap:22px;
+  padding:26px 0 20px;margin:0 0 12px;border-bottom:1px solid #e8e3f0;
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-page-intro>div{min-width:0;max-width:720px}
+body.ngd-public-app[data-app-role=member] .ngd-member-page-intro .eyebrow{color:#6b47b7;font-weight:800;font-size:11px;letter-spacing:.12em}
+body.ngd-public-app[data-app-role=member] .ngd-member-page-intro h1{
+  margin:8px 0 10px;color:#281f4e;
+  font:800 clamp(25px,2.8vw,39px)/1.18 "Plus Jakarta Sans",Inter,sans-serif;letter-spacing:-.045em
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-page-intro p:not(.eyebrow){color:#6f6880;line-height:1.6;max-width:56ch;font-size:14px;margin:0}
+body.ngd-public-app[data-app-role=member] .ngd-member-page-intro .btn{flex-shrink:0}
+body.ngd-public-app[data-app-role=member] .ngd-member-catalog .market-banner-shell{display:none!important}
+body.ngd-public-app[data-app-role=member] .ngd-member-catalog .market-header{
+  padding:6px 0 12px!important;background:transparent!important;border:0!important
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-catalog .market-header h1{
+  font:750 clamp(19px,1.9vw,26px)/1.2 "Plus Jakarta Sans",Inter,sans-serif!important
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-catalog .market-header p{max-width:65ch;font-size:13px}
+body.ngd-public-app[data-app-role=member] .ngd-member-catalog .market-shopping{padding-top:8px}
+body.ngd-public-app[data-app-role=member] .ai-catalog .ai-catalog-intro{
+  background:#fff!important;border:0!important;border-bottom:1px solid #e7e1ef!important;
+  box-shadow:none!important;border-radius:0!important;padding:18px 0 25px!important;min-height:0;
+}
+body.ngd-public-app[data-app-role=member] .ai-catalog .ai-catalog-intro h1{font-size:clamp(27px,2.8vw,40px)!important}
+body.ngd-public-app[data-app-role=member] .ai-catalog .ai-catalog-intro .ai-wallet-mini{
+  background:#f5f2fc!important;border:1px solid #e6dcf6!important;box-shadow:none!important;
+}
+/* Admin: prevent public storefront furniture from competing with operations. */
+body.ngd-public-app[data-app-role=admin] #guest-nav,
+body.ngd-public-app[data-app-role=admin] .guest-login,
+body.ngd-public-app[data-app-role=admin] .ngd-header-register,
+body.ngd-public-app[data-app-role=admin] .ngd-header-search,
+body.ngd-public-app[data-app-role=admin] .guest-brand{display:none!important}
+body.ngd-public-app[data-app-role=admin] .admin-operations-intro{
+  background:#f8f9fc!important;border:1px solid #e7eaf0!important;
+  border-radius:16px!important;box-shadow:none!important;
+  padding:clamp(22px,3vw,38px)!important;
+}
+body.ngd-public-app[data-app-role=admin] .admin-operations-intro h1{
+  font:750 clamp(24px,2.5vw,36px)/1.2 "Plus Jakarta Sans",Inter,sans-serif!important;
+  letter-spacing:-.04em!important;color:#232c42!important
+}
+body.ngd-public-app[data-app-role=admin] .admin-operations-intro p{max-width:70ch}
+body.ngd-public-app .ngd-role-gate{
+  margin:clamp(40px,6vw,90px) auto;padding:clamp(25px,4vw,48px);
+  width:min(100%,620px);border:1px solid #e6e1ef;border-radius:18px;background:#fff;
+  text-align:left;box-shadow:0 15px 36px rgba(31,23,72,.05)
+}
+body.ngd-public-app .ngd-role-gate .eyebrow{font-size:11px;letter-spacing:.12em;font-weight:800;color:#6541ad}
+body.ngd-public-app .ngd-role-gate h1{font:800 clamp(24px,3vw,34px)/1.15 "Plus Jakarta Sans",Inter,sans-serif;color:#29214c;margin:10px 0}
+body.ngd-public-app .ngd-role-gate p:not(.eyebrow){color:#6b647a;line-height:1.7;max-width:54ch}
+body.ngd-public-app .ngd-role-gate .btn{margin-top:12px;min-height:45px}
+@media(max-width:760px){
+  body.ngd-public-app[data-app-role=member] .ngd-member-page-intro{align-items:flex-start;flex-direction:column;gap:15px;padding:20px 0 16px}
+  body.ngd-public-app[data-app-role=member] .ngd-member-page-intro .btn{width:100%;justify-content:center}
+  body.ngd-public-app[data-app-role=member] .ngd-member-hero .ngd-member-hero-art{max-height:155px!important}
+  body.ngd-public-app[data-app-role=member] .ai-catalog .ai-catalog-intro{padding:12px 0 20px!important}
+  body.ngd-public-app[data-app-role=admin] .admin-operations-intro{border-radius:14px!important;padding:24px 19px!important}
+}
