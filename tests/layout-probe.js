@@ -68,7 +68,7 @@
           document.querySelector('#guest-nav button[aria-current="page"]');
         var selectedStyle=memberSelected?getComputedStyle(memberSelected):null;
         inkNav=!!selectedStyle&&
-          selectedStyle.color==='rgb(91, 40, 214)'&&
+          ['rgb(91, 40, 214)','rgb(85, 32, 203)'].includes(selectedStyle.color)&&
           selectedStyle.backgroundColor!=='rgba(0, 0, 0, 0)';
       }
       var activeSurface=main?main.querySelector('.surface,.metric-card,.member-focus'):null;
