@@ -135,7 +135,7 @@ test('digital purchase grants bonus once, closes order and repeats commissions p
     bisa_komisi:true,komisi_persen:40};
   const order={order_id:'ORDER-A',member_id:'M2',product_id:'P-EBOOK',
     harga_dasar:25000,total_bayar:25100,status:'PAID',_row:2};
-  records.members.push(member);
+  records.members.push(member,{member_id:'M1',role:'MEMBER',status:'AKTIF',referred_by:''});
   records.katalog_produk.push(product);
   records.orders.push(order);
   let n=0,notifications=0;
