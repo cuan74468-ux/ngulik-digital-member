@@ -18,10 +18,10 @@ test('both real pages use larger accessible Ngulik Digital wordmark consistently
     const html=read(file);
     assert.match(html,/ngd-icon-v10-64\.png\?v=20261121-v10-1/);
     assert.match(html,/ngd-icon-v10-192\.png\?v=20261121-v10-1/);
-    assert.match(html,/brand-experience-v10\.css\?v=20261121-purpose-v11-1/);
+    assert.match(html,/brand-experience-v10\.css\?v=20261121-roles-v12-1/);
     assert.match(html,/Plus\+Jakarta\+Sans/);
     assert.match(html,/data-route="ai">Studio AI<\/button>/);
-    assert.match(html,/20261121-purpose-v11-1/);
+    assert.match(html,/20261121-roles-v12-1/);
   }
   assert.match(styling,/\.guest-brand strong/);
   assert.match(styling,/font-size:clamp\(19px,1\.46vw,23px\)/);
@@ -43,5 +43,5 @@ test('Studio AI preserved in public and member UI, with five-tab guest mobile na
   assert.match(app,/\['beranda','katalog','ai','jasa','menu'\]/);
   assert.match(app,/\['beranda','katalog','ai','pesanan','menu'\]/);
   assert.match(app,/\['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'\]/);
-  assert.match(app,/const guestNav=\['beranda','katalog','ai','jasa','affiliate','belajar','dukungan','login','daftar'\]/);
+  assert.match(app,/const guestNav=\['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'\]/);
 });
