@@ -72,11 +72,15 @@ test('member has four primary mobile tabs and a complementary More menu with no 
   assert.deepEqual([...dock.matchAll(/data-route="([^"]+)"/g)].map(m=>m[1]),
     ['beranda','katalog','ai','pesanan']);
   assert.deepEqual([...sheet.matchAll(/data-route="([^"]+)"/g)].map(m=>m[1]),
-    ['jasa','belajar','affiliate','dukungan','akun']);
+    ['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun']);
   assert.match(dock,/id="member-more-toggle"/);
   assert.match(dock,/aria-controls="top-nav-drawer"/);
   assert.match(sheet,/data-action="logout"/);
-  assert.doesNotMatch(sheet,/data-route="beranda"|data-route="pesanan"|data-route="katalog"|data-route="ai"/);
+  // The same drawer serves desktop and mobile; phone-only CSS removes dock routes.
+  const css=fs.readFileSync(path.join(base,'assets/member-native-dashboard-v1.css'),'utf8');
+  for(const route of ['beranda','pesanan','katalog','ai'])
+    assert.ok(css.includes('#top-nav-drawer nav [data-route="'+route+'"]'));
+  assert.match(css,/@media\(max-width:760px\)/);
   h.go('menu');
   assert.equal(h.attributes['data-member-route'],'beranda');
 });
