@@ -234,7 +234,16 @@ const state={
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const adminLoginEnabled=()=>isConnected()&&config.adminLoginEnabled===true;
-const registrationOtpEnabled=()=>isWriteEnabled()&&config.registrationOtpEnabled===true;
+// Registration is enabled only when the verified STAGING backend confirms all
+// existing OTP/provider/write gates. A frontend setting alone cannot open signup.
+const registrationOtpEnabled=()=>isWriteEnabled()&&config.registrationOtpEnabled===true&&
+  location.pathname.includes('/staging/')&&
+  state.workspaceInfo?.workspace==='NGD_STAGING'&&
+  state.workspaceInfo?.environment==='STAGING'&&
+  state.workspaceInfo?.mutations_enabled===true&&
+  state.workspaceInfo?.registration_enabled===true&&
+  state.workspaceInfo?.otp_enabled===true&&
+  state.workspaceInfo?.external_providers_enabled===true;
 // Only STAGING member page opts in. Public and admin retain existing PIN behavior.
 const memberOtpLoginEnabled=()=>isWriteEnabled()&&config.memberOtpLoginEnabled===true&&
   location.pathname.includes('/staging/');
@@ -1346,7 +1355,7 @@ function viewAccount(){
 function viewLogin(register=false,adminMode=false){
   if(register&&!registrationOtpEnabled()&&!state.registrationWaitlist){
     return '<section class="ngd-role-gate"><p class="eyebrow">PENDAFTARAN MEMBER</p><h1>Pendaftaran belum dibuka.</h1>'+
-      '<p>Anda masih bisa melihat katalog dan layanan, serta membuka materi gratis dari beranda. Akun yang sudah terdaftar dapat masuk melalui WhatsApp dan OTP pada layanan yang telah aktif.</p>'+
+      '<p>Katalog masih dapat dibuka. Pendaftaran WhatsApp hanya aktif setelah database, layanan OTP, dan pengiriman kode STAGING terverifikasi. Akun member yang sudah aktif dapat mencoba login melalui halaman STAGING.</p>'+
       '<div class="ngd-role-actions"><button type="button" class="btn btn-primary" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
       '<button type="button" class="btn btn-secondary" data-route="login">Sudah punya akun? Masuk</button></div></section>';
   }
@@ -2372,6 +2381,19 @@ function go(route){
   }
   lastRouteHash_=location.hash;
   render();window.scrollTo({top:0,behavior:'auto'});loadRoute(route);
+}
+async function refreshStagingReadiness_(){
+  if(state.qa||!isConnected()||!location.pathname.includes('/staging/'))return;
+  try{
+    const workspace=await api('getStagingWorkspaceInfo');
+    // Rejection and unexpected environment responses fail closed.
+    state.workspaceInfo=workspace?.workspace==='NGD_STAGING'&&
+      workspace?.environment==='STAGING'?workspace:null;
+  }catch(_){
+    state.workspaceInfo=null;
+  }
+  // Re-evaluate login/registration independently of catalog or member session.
+  if(state.route==='daftar'||state.route==='login')render();
 }
 async function refreshPublic(){
   if(state.qa||!isConnected())return;
@@ -3819,12 +3841,13 @@ async function init(){
     // Public catalog/content and a private session are independent. Do not
     // hold back the member/admin route behind slower public asset requests.
     const publicLoad=refreshPublic();
+    const readinessLoad=refreshStagingReadiness_();
     await restoreSession();
     if(logged()&&guestPrivateRoutes_.has(requestedRoute)&&!isAdmin()){
       // Only resume a bookmarked private route after the server confirms the session.
       go(requestedRoute);
     }else if(logged())void loadRoute(state.route);
-    await publicLoad;
+    await Promise.all([publicLoad,readinessLoad]);
   }else render();
 }
 init();
