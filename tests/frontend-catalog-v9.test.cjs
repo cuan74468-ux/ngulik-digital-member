@@ -79,7 +79,8 @@ test('home campaigns and other public page artwork reuse the CMS within existing
   assert.match(app,/cmsPageArt_\('jasa'\)/);
   assert.match(app,/cmsPageArt_\('ai'\)/);
   assert.match(app,/cmsPageArt_\('dukungan'\)/);
-  assert.match(app,/state\.route==='belajar'/);
+  assert.match(app,/cmsPageArt_\('belajar'\)/);
+  assert.doesNotMatch(app,/by\('screen'\)\.innerHTML=\(!logged\(\)&&state\.route==='belajar'/);
   const css=read('assets/catalog-campaign-v9.css');
   assert.match(css,/\.ngd-cms-affiliate-art/);
   assert.match(css,/\.ngd-ai-hero-art/);
