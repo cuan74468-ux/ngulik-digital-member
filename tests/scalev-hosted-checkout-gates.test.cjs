@@ -84,6 +84,7 @@ test('Scalev and Mayar are retired from staging checkout and cannot leak to publ
   const staging=read('staging/member.html'),publicPage=read('index.html'),app=read('js/app.js');
   assert.doesNotMatch(staging,/src="[^\"]*(?:scalev-bridge|scalev-checkout-map)\.js/);
   assert.doesNotMatch(publicPage,/scalev-bridge\.js|scalev-checkout-map\.js/);
-  assert.match(app,/function scalevCheckoutFor_\(\)\{return null;/);
-  assert.match(app,/function mayarCheckoutEligible_\(\)\{[\s\S]*?return false;/);
+  const buyer=app.slice(app.indexOf('async function buy(productId)'),app.indexOf('async function openOrderDetail_'));
+  assert.match(buyer,/api\('createOrder',\{product_id:productId\}/);
+  assert.doesNotMatch(buyer,/createMayarOrder|scalevCheckout|wa\.me/);
 });
