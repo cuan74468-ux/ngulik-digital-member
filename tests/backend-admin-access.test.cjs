@@ -129,8 +129,8 @@ test('owner recovery never touches Sheets without preflight approval and matchin
 test('frontend admin login is independent while registrations and payments stay blocked',()=>{
  const conf=read('config.js'),client=read('js/api.js'),app=read('js/app.js');
  assert.match(conf,/adminLoginEnabled:\s*true/);
- assert.match(conf,/memberWritesEnabled:\s*true/);
- assert.match(conf,/registrationOtpEnabled:\s*true/);
+ assert.match(conf,/memberWritesEnabled:\s*false/);
+ assert.match(conf,/registrationOtpEnabled:\s*false/);
  assert.match(conf,/paymentsEnabled:\s*false/);
  assert.match(client,/adminAuth = false/);
  assert.match(client,/adminLogin','adminLogout','adminChangePin/);
