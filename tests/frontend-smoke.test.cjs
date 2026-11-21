@@ -211,14 +211,47 @@ test('public buyer pages have isolated responsive styling and no invented prices
   assert.match(app,/String\(p\.tipe\)==='JASA_SEKALI'/);
   assert.match(app,/rupiah\(price\)/);
 });
-test('local member preview renders native-like dashboard without login',()=>{
+test('local member preview renders premium native-like dashboard without login',()=>{
   const {nodes,context}=renderPreview('?preview=member');
-  assert.match(nodes.screen.innerHTML,/RUANG MEMBER \/ AKTIVITAS SAYA/);
-  assert.match(nodes.screen.innerHTML,/ngd-member-activity/);
-  assert.match(nodes.screen.innerHTML,/Komisi Siap Tarik/);
-  assert.match(nodes.screen.innerHTML,/Saldo Token/);
+  assert.match(nodes.screen.innerHTML,/ngdm-dashboard/);
+  assert.match(nodes.screen.innerHTML,/DOMPET TOKEN/);
+  assert.match(nodes.screen.innerHTML,/ngdm-wallet-chart/);
+  assert.match(nodes.screen.innerHTML,/Status pesanan/);
+  assert.match(nodes.screen.innerHTML,/ngdm-recent/);
+  assert.match(nodes.screen.innerHTML,/ngdm-shortcut/);
+  assert.match(nodes['member-mobile-nav'].innerHTML,/member-more-toggle/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.equal(vm.runInContext('isWriteEnabled()',context),false);
+});
+test('member dashboard draws graph only from real ledger samples and never fabricates missing data',()=>{
+  const {nodes,context}=renderPreview('?preview=member');
+  vm.runInContext("state.creditHistory=[];state.memberDashboardReads={balance:true,orders:true,affiliate:true,products:true,credits:true,classes:true};render()",context,{timeout:2000});
+  assert.match(nodes.screen.innerHTML,/setidaknya dua aktivitas token/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/ngdm-chart-plot/);
+  vm.runInContext("state.creditHistory=[{created_at:'2026-11-14T00:00:00Z',saldo_setelah:25,jumlah:5},{created_at:'2026-11-15T00:00:00Z',saldo_setelah:30,jumlah:5}];state.home.saldo_kredit=30;render()",context,{timeout:2000});
+  assert.match(nodes.screen.innerHTML,/ngdm-chart-plot/);
+  assert.match(nodes.screen.innerHTML,/dari 25 menjadi 30 token/);
+  assert.match(nodes.screen.innerHTML,/30<\/strong><span>token/);
+});
+test('mobile member dock is native, complementary, and does not appear for guests',()=>{
+  const member=renderPreview('?preview=member');
+  const dock=member.nodes['member-mobile-nav'].innerHTML;
+  const more=member.nodes['top-nav-drawer'].innerHTML;
+  assert.deepEqual([...dock.matchAll(/data-route="([^"]+)"/g)].map(m=>m[1]),
+    ['beranda','katalog','ai','pesanan']);
+  assert.deepEqual([...more.matchAll(/data-route="([^"]+)"/g)].map(m=>m[1]),
+    ['jasa','belajar','affiliate','dukungan','akun']);
+  assert.match(dock,/member-more-toggle/);
+  const guest=renderPreview();
+  assert.equal(guest.nodes['member-mobile-nav'].hidden,true);
+  const style=fs.readFileSync(path.join(base,'assets/member-native-dashboard-v1.css'),'utf8');
+  assert.match(style,/#member-mobile-nav/);
+  assert.match(style,/#top-nav-trigger/);
+  assert.match(style,/#guest-nav/);
+  assert.match(style,/@media\(max-width:760px\)/);
+  const stage=fs.readFileSync(path.join(base,'staging/member.html'),'utf8');
+  assert.match(stage,/member-native-dashboard-v1\.css/);
+  assert.match(stage,/id="member-mobile-nav"/);
 });
 test('preview catalog uses sample products with internal checkout previews',()=>{
   const {nodes,context}=renderPreview('?preview=member');
