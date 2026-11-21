@@ -89,3 +89,10 @@ test('public and staging load the same checkout UI and new JS while keeping old 
   assert.match(css,/@media\(max-width:680px\)/);
   assert.match(css,/grid-template-columns:minmax\(0,1fr\)/);
 });
+
+test('checkout deep link keeps the validated product ID on refresh',()=>{
+  assert.match(app,/if\(hash\.startsWith\('checkout\/'\)\)/);
+  assert.match(app,/state\.checkoutProductId=id;state\.lastOrder=null/);
+  assert.match(app,/checkout\/'\+encodeURIComponent\(state\.checkoutProductId\)/);
+  assert.match(app,/return 'katalog';/);
+});
