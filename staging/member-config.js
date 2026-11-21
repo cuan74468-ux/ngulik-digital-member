@@ -6,8 +6,8 @@ window.NGD_CONFIG = Object.freeze({
   brand:'Ngulik Digital — STAGING',
   apiUrl:window.NGD_STAGING_CONFIG?.apiUrl||'', // single canonical staging/config.js source
   siteUrl:'https://cuan74468-ux.github.io/ngulik-digital-member/staging/member.html',
-  memberWritesEnabled:true,
-  registrationOtpEnabled:true,
+  memberWritesEnabled:true, // STAGING GAS verified mutations=true (21 Nov 2026)
+  registrationOtpEnabled:false, // STAGING identity attested registration=false, otp=false
   memberOtpLoginEnabled:true, // STAGING UI only; backend flag remains authoritative
   paymentsEnabled:false, // STAGING fail-closed until QRIS merchant scan + controlled financial QA
   adminLoginEnabled:true,
