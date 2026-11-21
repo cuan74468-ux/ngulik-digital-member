@@ -151,7 +151,7 @@ test('broken published artwork falls back to curated local WebP once',()=>{
 
 test('guest services offers clearly routed categories without a second marketplace or unlocked quote form',()=>{
   const h=preview();h.go('jasa');const html=h.nodes.screen.innerHTML;
-  assert.match(html,/class="ngd-public-services"/);
+  assert.match(html,/class="ngd-public-services ngd-service-guide"/);
   assert.match(html,/class="ngd-service-guide-head"/);
   assert.doesNotMatch(html,/market-product-card|ngd-service-main-art/);
   assert.match(html,/data-route="katalog"/);
