@@ -510,7 +510,7 @@ function viewHome(){
       <div class="ngdl-hero-copy">
         <p class="ngdl-eyebrow"><span class="ngdl-spark" aria-hidden="true">✦</span> TOOLS AI, PRODUK DIGITAL & JASA KREATIF</p>
         <h1 id="ngdl-title">Punya usaha? <span>Ngulik digitalnya</span> di sini aja.</h1>
-        <p class="ngdl-hero-lead">Mau bikin konten jualan, merapikan catatan usaha, atau coba AI tanpa langganan macam-macam? Di sini ada alat, produk, dan orang yang bisa bantu. Buka lewat HP juga bisa.</p>
+        <p class="ngdl-hero-lead">Bikin konten jualan, coba AI, atau rapikan usaha? Di sini ada alat, produk, dan orang yang bisa bantu. Bisa dari HP juga.</p>
         <div class="ngdl-actions">
           <button type="button" class="ngdl-btn ngdl-btn-gold" data-route="katalog">Lihat Produk & Layanan <span aria-hidden="true">↗</span></button>
           <button type="button" class="ngdl-btn ngdl-btn-ghost" data-route="daftar">Masuk atau Daftar</button>
@@ -538,9 +538,9 @@ function viewHome(){
       <ul><li><strong>Pesan tanpa pindah-pindah tempat.</strong> Pilih produk, cek rincian, lalu bayar lewat halaman checkout.</li><li><strong>Nggak harus buka laptop.</strong> Katalog dan ruang member bisa diakses dari browser HP.</li><li><strong>Pembelian tercatat.</strong> Akses produk diberikan setelah pembayaran terverifikasi, sesuai ketentuan masing-masing.</li><li><strong>Belum mau beli?</strong> Coba baca eBook atau ikut kelas gratis lebih dulu.</li></ul>
     </section>
     <section class="ngdl-end" aria-labelledby="ngdl-end-title">
-      <p class="ngdl-kicker">MAU MULAI?</p><h2 id="ngdl-end-title">Lihat-lihat dulu, siapa tahu ada yang pas.</h2>
-      <p>Mau punya akun? Silakan daftar. Kalau masih penasaran, cek katalognya dulu—nggak harus langsung beli.</p>
-      <div class="ngdl-actions"><button type="button" data-route="daftar" class="ngdl-btn ngdl-btn-gold">Buat Akun atau Masuk <span aria-hidden="true">↗</span></button><button type="button" data-route="katalog" class="ngdl-btn ngdl-btn-ghost">Jelajahi Katalog</button></div>
+      <h2 id="ngdl-end-title">Mau mulai ngulik?</h2>
+      <p>Lihat katalognya dulu, atau masuk kalau sudah punya pilihan.</p>
+      <div class="ngdl-actions"><button type="button" data-route="daftar" class="ngdl-btn ngdl-btn-gold">Masuk / Daftar <span aria-hidden="true">↗</span></button><button type="button" data-route="katalog" class="ngdl-btn ngdl-btn-ghost">Lihat Katalog</button></div>
       <nav class="ngdl-free" aria-label="Materi gratis"><a href="${NGD_FREE_EBOOK_URL}" target="_blank" rel="noopener noreferrer">Baca eBook Gratis ↗</a><a href="${NGD_FREE_CLASSROOM_URL}" target="_blank" rel="noopener noreferrer">Ikut Kelas Gratis ↗</a></nav>
     </section>
   </div>`;
