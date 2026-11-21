@@ -394,7 +394,7 @@ const safeBadge=(s)=>'<span class="chip '+(['AKTIF','FULFILLED','PAID','APPROVED
 function viewHome(){
   if(isAdmin())return viewAdmin();
   if(logged()){
-    const first=String(state.me.nama||'Member').trim().split(/\\s+/)[0];
+    const first=String(state.me.nama||'Member').trim().split(/\s+/)[0];
     const d=state.home||{};
     const safeBalance=Math.max(0,Number(d.saldo_kredit??state.me.saldo_kredit??0)||0);
     const orders=Array.isArray(state.orders)?state.orders:[];
@@ -3567,6 +3567,16 @@ function syncBrowserRoute_(){
   lastRouteHash_=location.hash;
   const route=aiRouteFromHash_()==='menu'?'beranda':aiRouteFromHash_();state.route=route;render();loadRoute(route);
 }
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    const drawer=by('top-nav-drawer');
+    if(drawer&&!drawer.hidden){
+      drawer.hidden=true;
+      by('top-nav-trigger')?.setAttribute('aria-expanded','false');
+      by('top-nav-trigger')?.focus();
+    }
+  }
+});
 window.addEventListener('popstate',syncBrowserRoute_);
 window.addEventListener('hashchange',syncBrowserRoute_);
 // Called synchronously during initial script evaluation, before any awaited API.
