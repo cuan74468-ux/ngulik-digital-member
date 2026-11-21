@@ -714,7 +714,7 @@ function viewPublicMarketplace(list){
     (showCampaign?'<div class="market-banner-shell">'+banner+'</div>':'')+
     '<section class="market-shopping" id="market-shopping" aria-label="Belanja produk digital">'+
       controls+filterBar+
-      '<div class="market-results-header"><h2>'+(memberMode?'Pilihan Produk & Layanan':'Jelajahi Produk')+'</h2><span aria-live="polite">'+shown.length+' dari '+publicList.length+' produk</span'+
+      '<div class="market-results-header"><h2>'+(memberMode?'Pilihan Produk & Layanan':'Jelajahi Produk')+'</h2><span aria-live="polite">'+shown.length+' dari '+publicList.length+' produk</span>'+
       '<button type="button" class="market-refresh" data-market-refresh aria-label="Perbarui katalog">Perbarui</button></div>'+
       (cards?'<div class="market-product-grid">'+cards+'</div>':
         '<div class="market-no-results"><h3>Produk Tidak Ditemukan</h3><p>Coba kata kunci atau kategori lain.</p>'+
