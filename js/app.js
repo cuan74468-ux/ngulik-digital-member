@@ -324,8 +324,9 @@ function viewMore(){
     rilis:'Versi terbaru',antrean:'Pendaftar menunggu',pengaturan:'Atur aplikasi'
   };
   return '<section class="ngd-menu-page" aria-label="Semua menu">'+
-    title(isAdmin()?'Kelola Usaha Anda':'Mau Buka Apa?','SEMUA MENU',
-      'Pilih menu yang Anda butuhkan.')+
+    title(isAdmin()?'Pusat Operasional':logged()?'Ruang Kerja Saya':'Jelajahi Ngulik Digital',
+      isAdmin()?'PENGELOLA':logged()?'AKSES MEMBER':'JELAJAH PUBLIK',
+      isAdmin()?'Kelola transaksi, konten, pengguna, dan layanan.':logged()?'Pilih pekerjaan atau aktivitas yang ingin Anda lanjutkan.':'Kenali produk, alat, layanan, dan cara belajar sebelum bergabung.')+
     '<nav class="ngd-menu-grid" aria-label="Daftar seluruh fitur">'+routes.map(route=>
       '<button type="button" class="ngd-menu-tile" data-route="'+route+'">'+
       '<span class="ngd-menu-icon" aria-hidden="true">'+
@@ -404,23 +405,23 @@ function viewHome(){
     const campaign=(window.NGD_CONTENT_UI?.hero(state.siteContent,'member_home')||'')+
       (window.NGD_CONTENT_UI?.promotion(state.siteContent,'member_home')||'');
     const quickLinks=[
-      ['store','Jelajahi katalog','katalog','Produk digital dan lisensi'],
+      ['store','Cari solusi usaha','katalog','Produk dan layanan sesuai kebutuhan'],
       ['spark','Studio AI','ai','Alat AI dan saldo token'],
       ['book','Kelas belajar','belajar','Materi dan progres Anda'],
       ['clipboard','Pesanan saya','pesanan','Cek pembelian dan status'],
-      ['link','Program afiliasi','affiliate','Bagikan tautan dan cek komisi'],
+      ['link','Komisi ajak teman','affiliate','Bagikan tautan dan pantau hasil'],
       ['shield','Pusat bantuan','dukungan','Laporkan kendala layanan']
     ];
     return '<div class="ngd-member-home">'+
       '<section class="member-welcome ngd-member-hero" aria-label="Dashboard Ngulik Digital Member">'+
         '<div class="ngd-member-hero-copy">'+
-          '<p class="eyebrow">DASHBOARD / MEJA KERJA</p>'+
-          '<h1>Halo, <span class="accent">'+esc(first)+'.</span><br>Semua kebutuhan digital di sini.</h1>'+
-          '<p class="lead">Belajar, belanja produk digital, gunakan Studio AI, dan pantau pesanan dari satu akun.</p>'+
+          '<p class="eyebrow">RUANG MEMBER / AKTIVITAS SAYA</p>'+
+          '<h1>Halo, <span class="accent">'+esc(first)+'.</span><br>Apa yang ingin diselesaikan hari ini?</h1>'+
+          '<p class="lead">Lanjutkan kelas, buat konten dengan AI, dan pantau pesanan dari meja kerja pribadi Anda.</p>'+
           '<span class="ngd-member-status">'+icon('check')+' Akun '+esc(state.me.status||'Member')+'</span>'+
           '<div class="ngd-member-hero-actions">'+
-            '<button type="button" class="btn btn-primary" data-route="katalog">Jelajahi Produk '+icon('arrow')+'</button>'+
-            '<button type="button" class="btn btn-secondary" data-route="pesanan">Pesanan Saya</button>'+
+            '<button type="button" class="btn btn-primary" data-route="ai">Buka Studio AI '+icon('arrow')+'</button>'+
+            '<button type="button" class="btn btn-secondary" data-route="belajar">Lanjutkan Belajar</button>'+
           '</div>'+
         '</div>'+
         '<img class="ngd-member-hero-art" src="'+esc(cmsPageArt_('member_home')||ngdPremiumArtSrc_('templates'))+'" alt="" decoding="async">'+
@@ -641,6 +642,7 @@ function viewPublicMarketplace(list){
   const search=String(options.search??state.marketplaceSearch??'').trim().toLocaleLowerCase('id-ID');
   const sort=options.sort??(state.marketplaceSort||'default');
   const showCampaign=options.showCampaign!==false;
+  const memberMode=options.memberMode===true;
   let shown=publicList.filter(p=>ngdOfferInCategory_(p,category)&&
     (!search||String(p.nama||'').toLocaleLowerCase('id-ID').includes(search)||
       String(p.deskripsi||'').toLocaleLowerCase('id-ID').includes(search)||
@@ -720,12 +722,12 @@ function viewPublicMarketplace(list){
   }).join('');
   return '<div class="market-page">'+
     '<header class="market-header"><div><p class="market-eyebrow">NGULIK DIGITAL / PILIHAN UNTUK USAHA</p>'+
-    '<h1>Katalog Produk & Jasa</h1><p>Cari solusi yang cocok, lihat harga, dan pilih langkah berikutnya.</p></div>'+
+    '<h1>'+(memberMode?'Katalog untuk kebutuhan Anda':'Katalog Produk & Jasa')+'</h1><p>'+(memberMode?'Bandingkan pilihan, cek detail manfaat, lalu beli sesuai kebutuhan.':'Cari solusi yang cocok, lihat harga, dan pilih langkah berikutnya.')+'</p></div>'+
     '</header>'+
     (showCampaign?'<div class="market-banner-shell">'+banner+'</div>':'')+
     '<section class="market-shopping" id="market-shopping" aria-label="Belanja produk digital">'+
       controls+filterBar+
-      '<div class="market-results-header"><h2>Produk Unggulan</h2><span aria-live="polite">'+shown.length+' dari '+publicList.length+' produk</span>'+
+      '<div class="market-results-header"><h2>'+(memberMode?'Pilihan Produk & Layanan':'Jelajahi Produk')+'</h2><span aria-live="polite">'+shown.length+' dari '+publicList.length+' produk</span'+
       '<button type="button" class="market-refresh" data-market-refresh aria-label="Perbarui katalog">Perbarui</button></div>'+
       (cards?'<div class="market-product-grid">'+cards+'</div>':
         '<div class="market-no-results"><h3>Produk Tidak Ditemukan</h3><p>Coba kata kunci atau kategori lain.</p>'+
@@ -764,7 +766,7 @@ function viewCatalog(){
   // One catalog presentation for guests and signed-in members.
   // Existing server-side payment and role gates remain authoritative.
   const list=Array.isArray(state.catalog)?state.catalog.filter(p=>!isPublicQaOffer_(p)):[];
-  const storefront=viewPublicMarketplace(list,{showCampaign:!logged()&&!isAdmin()});
+  const storefront=viewPublicMarketplace(list,{showCampaign:!logged()&&!isAdmin(),memberMode:logged()&&!isAdmin()});
   if(!logged()||isAdmin())return storefront;
   const access='<details class="market-member-access"><summary>Akses layanan saya</summary>'+
     '<div class="market-member-access-list">'+[
