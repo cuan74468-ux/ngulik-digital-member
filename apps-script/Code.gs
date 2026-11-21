@@ -17,7 +17,7 @@ const NGD = Object.freeze({
   MAX_LOGIN_FAILURES: 5,
   HEADERS: {
     members: 'member_id,role,nama,wa,wa_verified,wa_verified_at,nama_usaha,pin_hash,pin_salt,kode_referral,referred_by,status,joined_at,jenis_usaha,kota,deskripsi_usaha,instagram,onboarding_at,trial_mulai,trial_berakhir,akses_3in1_sampai,sumber_akses_3in1,url_halaman_bisnis,status_pos,pos_lisensi_kode,status_canva,canva_email,canva_mulai,canva_berakhir,last_active_at,d14_active,d30_active,saldo_kredit,retensi_14,retensi_30',
-    katalog_produk: 'product_id,nama,deskripsi,tipe,harga,kredit_diberikan,durasi_hari,perlu_approval_admin,bisa_komisi,komisi_persen,sumber_produk,aktif,urut',
+    katalog_produk: 'product_id,nama,deskripsi,tipe,harga,kredit_diberikan,durasi_hari,perlu_approval_admin,bisa_komisi,komisi_persen,sumber_produk,aktif,urut,komisi_nominal_tetap',
     etalase_affiliate_luar: 'item_id,judul,kategori,deskripsi_singkat,alasan_rekomendasi,harga_info,link_affiliate,gambar_url,urut,aktif,klik_total,catatan_admin',
     orders: 'order_id,member_id,product_id,nama_produk,harga_dasar,kode_unik,total_bayar,status,metode,created_at,expires_at,konfirmasi_bayar_at,paid_at,verified_by,fulfilled_at,cancelled_at,refunded_at,ref_member_id,catatan_admin,request_id,gateway_ref_id,gateway_payment_url,qris_payload,admin_notified_at,member_followup_at,abandonment_reminded_at',
     credits_ledger: 'entry_id,member_id,created_at,tipe,jumlah,status,ref_id,tool_id,keterangan,saldo_setelah',
@@ -1353,6 +1353,30 @@ function commissionRate_(settings,product) {
     'CONFLICT','Persentase komisi tidak valid.');
   return value;
 }
+// A positive fixed commission overrides percentage. Both must never be
+// positive together; this prevents a silent extra payout or ambiguous UI.
+// Exact nominal is stored in the catalog, not inferred from a rounded 33%.
+function ngdFixedCommission_(product) {
+  var raw=product&&product.komisi_nominal_tetap;
+  if(raw===undefined||raw===null||String(raw).trim()==='')return 0;
+  var amount=Number(raw);
+  require_(Number.isSafeInteger(amount)&&amount>=0&&amount<=10000000,
+    'CONFLICT','Komisi nominal tetap tidak valid.');
+  return amount;
+}
+function ngdCommissionTerms_(settings,product,basePrice) {
+  var price=Number(basePrice),fixed=ngdFixedCommission_(product),
+    percent=commissionRate_(settings,product);
+  require_(Number.isSafeInteger(price)&&price>=0,'CONFLICT',
+    'Harga dasar komisi tidak valid.');
+  require_(!(fixed>0&&percent>0),'CONFLICT',
+    'Komisi nominal tetap dan persentase tidak boleh sama-sama aktif.');
+  require_(fixed<=price,'CONFLICT','Komisi tidak boleh melebihi harga dasar.');
+  var amount=fixed||Math.floor(price*percent/100);
+  require_(Number.isSafeInteger(amount)&&amount>=0,'CONFLICT',
+    'Nominal komisi tidak valid.');
+  return {persen:fixed?0:percent,nominal:amount};
+}
 // A referral is payout-eligible only when the inviter is an active MEMBER.
 // Keep historical rows unchanged: ineligible legacy commissions need review.
 function ngdEligibleReferrer_(buyer,inviter) {
@@ -1365,7 +1389,7 @@ function onPaid_(o,actor) {
   var product=byId_('katalog_produk','product_id',o.product_id);
   var member=byId_('members','member_id',o.member_id);
   require_(product&&member,'CONFLICT','Data produk atau member tidak tersedia.');
-  var s=settings_(),percent=commissionRate_(s,product);
+  var s=settings_(),terms=ngdCommissionTerms_(s,product,o.harga_dasar),percent=terms.persen;
   // Fail closed for self-referrals even if an old/bad member row points to itself.
   // This check belongs at posting time: the registration and form UI are not trust boundaries.
   var referrer=String(member.referred_by||'').trim();
@@ -1381,15 +1405,15 @@ function onPaid_(o,actor) {
   var eligibleInviter=!selfReferral&&ngdEligibleReferrer_(member,inviter);
   // Legacy MEMBER -> ADMIN references may exist. Do not rewrite historical
   // ownership or create a new liability against an ineligible inviter.
-  if(referrer&&!eligibleInviter&&product.bisa_komisi===true&&percent>0){
+  if(referrer&&!eligibleInviter&&product.bisa_komisi===true&&terms.nominal>0){
     var reviewLogged=findRows_('audit_logs',function(a){
       return a.action==='COMMISSION_REFERRER_REVIEW_REQUIRED'&&a.entity_id===o.order_id;
     });
     if(!reviewLogged.length)logAudit_('SYSTEM','SYSTEM','COMMISSION_REFERRER_REVIEW_REQUIRED',
       'orders',o.order_id,'','BLOCKED',{reason:'INVITER_NOT_ACTIVE_MEMBER'});
   }
-  var commissionEligible=Boolean(eligibleInviter&&product.bisa_komisi===true&&percent>0);
-  var commissionValue=commissionEligible?Math.floor(Number(o.harga_dasar)*percent/100):0;
+  var commissionEligible=Boolean(eligibleInviter&&product.bisa_komisi===true&&terms.nominal>0);
+  var commissionValue=commissionEligible?terms.nominal:0;
   if(commissionEligible)require_(Number.isSafeInteger(commissionValue)&&commissionValue>0,
     'CONFLICT','Nominal komisi tidak valid.');
   var fulfilled=false,days=Number(product.durasi_hari||0),end;
@@ -1844,7 +1868,20 @@ function advanceTrial_(m,p) {
     return {trial_berakhir:isoWib_(trialEnd),paid_access_preserved:paidActive};
   });
 }
-function publicCatalog_() {return readAll_('katalog_produk').filter(function(r){return r.aktif===true;}).sort(function(a,b){return Number(a.urut||0)-Number(b.urut||0);}).map(function(r){return {product_id:r.product_id,nama:r.nama,deskripsi:r.deskripsi,tipe:r.tipe,harga:r.harga,kredit_diberikan:r.kredit_diberikan,durasi_hari:r.durasi_hari};});}
+function publicCatalog_() {
+  var s=settings_();
+  return readAll_('katalog_produk').filter(function(r){return r.aktif===true;})
+    .sort(function(a,b){return Number(a.urut||0)-Number(b.urut||0);})
+    .map(function(r){
+      var enabled=r.bisa_komisi===true;
+      var fixed=enabled?ngdFixedCommission_(r):0;
+      var rate=enabled&&!fixed?commissionRate_(s,r):0;
+      return {product_id:r.product_id,nama:r.nama,deskripsi:r.deskripsi,
+        tipe:r.tipe,harga:r.harga,kredit_diberikan:r.kredit_diberikan,
+        durasi_hari:r.durasi_hari,bisa_komisi:enabled,
+        komisi_persen:rate,komisi_nominal_tetap:fixed};
+    });
+}
 function dashboard_(m) {
   var modules=modules_(),done=findRows_('progress_member',function(r){return r.member_id===m.member_id;});
   var next=modules.filter(function(x){return !done.some(function(y){return x.modul_id===y.modul_id;});})[0]||null;
@@ -2069,7 +2106,8 @@ function financeFindings_(orders,ledger,commissions,products,policy,members) {
     var inviterEligibleForAudit=!members||
       ngdEligibleReferrer_(expectedBuyer,expectedInviter);
     if(policy&&catalog[String(o.product_id)]&&
-        commissionRate_(policy,catalog[String(o.product_id)])>0&&
+        (ngdFixedCommission_(catalog[String(o.product_id)])>0||
+         commissionRate_(policy,catalog[String(o.product_id)])>0)&&
         ['PAID','FULFILLED'].indexOf(o.status)>=0&&
         String(o.ref_member_id||'')!==''&&inviterEligibleForAudit&&
         catalog[String(o.product_id)].bisa_komisi===true&&

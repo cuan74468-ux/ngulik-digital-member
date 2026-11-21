@@ -77,3 +77,25 @@ test('non-member and inactive sponsors never produce commission',()=>{
     assert.ok(h.audits.some(x=>x[2]==='COMMISSION_REFERRER_REVIEW_REQUIRED'));
   }
 });
+
+test('STAGING Starter Pack pays exactly Rp5.000, not rounded 33%',()=>{
+  const h=fixture(25,15000);
+  h.product.product_id='P-STARTER-15K';
+  h.product.komisi_persen=0;
+  h.product.komisi_nominal_tetap=5000;
+  h.perform();
+  assert.equal(h.commissions.length,1);
+  assert.equal(h.commissions[0].nominal,5000);
+  assert.equal(h.commissions[0].persen,0);
+  h.perform();
+  assert.equal(h.commissions.length,1);
+});
+test('catalogue returns the fixed commission dynamically and validates contradictory terms',()=>{
+  const h=fixture(25,15000);
+  const fixed={harga:15000,bisa_komisi:true,komisi_nominal_tetap:5000,komisi_persen:0};
+  assert.equal(h.ctx.ngdCommissionTerms_({komisi_persen:25},fixed,15000).nominal,5000);
+  assert.throws(()=>h.ctx.ngdCommissionTerms_({komisi_persen:25},
+    {...fixed,komisi_persen:25},15000),/sama-sama aktif/);
+  assert.throws(()=>h.ctx.ngdCommissionTerms_({komisi_persen:25},
+    {...fixed,komisi_nominal_tetap:25000},15000),/melebihi harga/);
+});

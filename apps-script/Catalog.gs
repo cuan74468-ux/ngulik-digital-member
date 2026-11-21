@@ -13,7 +13,7 @@ var NGD_CATALOG_TYPES_=[
 ];
 var NGD_CATALOG_EDIT_FIELDS_=[
   'nama','deskripsi','tipe','harga','kredit_diberikan','durasi_hari',
-  'perlu_approval_admin','bisa_komisi','urut','komisi_persen','sumber_produk'
+  'perlu_approval_admin','bisa_komisi','urut','komisi_persen','komisi_nominal_tetap','sumber_produk'
 ];
 function catalogRevision_(row) {
   var values=NGD_CATALOG_EDIT_FIELDS_.map(function(k){return row[k];});
@@ -25,6 +25,7 @@ function catalogAdminView_(row) {
   NGD_CATALOG_EDIT_FIELDS_.forEach(function(k){out[k]=row[k];});
   out.aktif=row.aktif===true;
   out.komisi_persen=row.komisi_persen===undefined||row.komisi_persen===null||row.komisi_persen===''?null:Number(row.komisi_persen);
+  out.komisi_nominal_tetap=ngdFixedCommission_(row);
   out.sumber_produk=String(row.sumber_produk||'INTERNAL');
   out.checkout_supported=['LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_TOKEN','TOPUP_KREDIT',
     'PRODUK_DIGITAL','JASA_SEKALI'].indexOf(row.tipe)>=0;
@@ -53,7 +54,7 @@ function catalogPayload_(p,existing) {
   var keys=NGD_CATALOG_EDIT_FIELDS_.concat(existing?['product_id','revision']:[]);
   require_(Object.keys(p).every(function(k){return keys.indexOf(k)>=0;}),
     'VALIDATION','Kolom katalog tidak diizinkan.');
-  require_(NGD_CATALOG_EDIT_FIELDS_.filter(function(k){return ['komisi_persen','sumber_produk'].indexOf(k)<0;}).every(function(k){
+  require_(NGD_CATALOG_EDIT_FIELDS_.filter(function(k){return ['komisi_persen','komisi_nominal_tetap','sumber_produk'].indexOf(k)<0;}).every(function(k){
     return Object.prototype.hasOwnProperty.call(p,k);
   }),'VALIDATION','Formulir produk belum lengkap.');
   require_(typeof p.nama==='string'&&typeof p.deskripsi==='string',
@@ -86,6 +87,20 @@ function catalogPayload_(p,existing) {
       'VALIDATION','Komisi produk harus 0–50 persen atau kosong.');
     patch.komisi_persen=rate;
   }
+  var fixedRaw=Object.prototype.hasOwnProperty.call(p,'komisi_nominal_tetap')
+    ?p.komisi_nominal_tetap:(existing?existing.komisi_nominal_tetap:'');
+  if(fixedRaw===undefined||fixedRaw===null||String(fixedRaw).trim()==='')
+    patch.komisi_nominal_tetap='';
+  else {
+    var fixed=Number(fixedRaw);
+    require_(Number.isSafeInteger(fixed)&&fixed>=0&&fixed<=10000000,
+      'VALIDATION','Komisi nominal tetap harus rupiah bulat.');
+    patch.komisi_nominal_tetap=fixed;
+  }
+  require_(!(Number(patch.komisi_nominal_tetap)>0&&Number(patch.komisi_persen)>0),
+    'VALIDATION','Pilih komisi persentase ATAU nominal tetap.');
+  require_(Number(patch.komisi_nominal_tetap||0)<=patch.harga,
+    'VALIDATION','Komisi nominal tidak boleh lebih tinggi dari harga.');
   var source=Object.prototype.hasOwnProperty.call(p,'sumber_produk')
     ?String(p.sumber_produk||'').trim()
     :String(existing&&existing.sumber_produk||'INTERNAL').trim();
@@ -131,7 +146,7 @@ function catalogCreate_(admin,p,requestId) {
     var record={product_id:id,aktif:false};
     NGD_CATALOG_EDIT_FIELDS_.forEach(function(k){record[k]=patch[k];});
     var header=tbl_('katalog_produk').headers;
-    require_(header.indexOf('komisi_persen')>=0&&header.indexOf('sumber_produk')>=0,
+    require_(header.indexOf('komisi_persen')>=0&&header.indexOf('komisi_nominal_tetap')>=0&&header.indexOf('sumber_produk')>=0,
       'SCHEMA_MISMATCH','Kolom komisi_persen dan sumber_produk harus tersedia pada katalog_produk.');
     appendRow_('katalog_produk',record);
     logAudit_(admin.member_id,'ADMIN','CATALOG_CREATED','katalog_produk',
@@ -154,7 +169,7 @@ function catalogUpdate_(admin,p) {
     // Existing orders retain their snapshot amounts. Price changes affect
     // only new orders and require a separate audit event.
     var headers=tbl_('katalog_produk').headers;
-    require_(headers.indexOf('komisi_persen')>=0&&headers.indexOf('sumber_produk')>=0,
+    require_(headers.indexOf('komisi_persen')>=0&&headers.indexOf('komisi_nominal_tetap')>=0&&headers.indexOf('sumber_produk')>=0,
       'SCHEMA_MISMATCH','Kolom komisi_persen dan sumber_produk harus tersedia.');
     updateRow_('katalog_produk',old._row,patch);
     logAudit_(admin.member_id,'ADMIN','CATALOG_UPDATED','katalog_produk',
@@ -202,7 +217,7 @@ function syncCatalogColumnsStaging() {
     require_(!!sheet,'SCHEMA_MISMATCH','Tabel katalog_produk tidak ditemukan.');
     var headers=sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0].map(String);
     var added=[];
-    ['komisi_persen','sumber_produk'].forEach(function(key){
+    ['komisi_persen','komisi_nominal_tetap','sumber_produk'].forEach(function(key){
       if(headers.indexOf(key)<0){
         var col=sheet.getLastColumn()+1;
         sheet.getRange(1,col).setValue(key);
