@@ -83,7 +83,7 @@ const screens={
 };
 const guestNav=['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'];
 const memberNav=['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun'];
-const adminOnlyRoutes=new Set(['admin','konten','produk','layanan','lms','lms-editor','lms-lesson','lms-ai','member','antrean','rilis','pengaturan']);
+const adminOnlyRoutes=new Set(['admin','konten','produk','layanan','lms','lms-editor','lms-lesson','lms-ai','member','antrean','pengaturan']);
 const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
 const adminContextRoute=(route)=>({
   'lms-editor':'lms','lms-lesson':'lms','lms-ai':'lms',
@@ -2146,7 +2146,7 @@ function render(){
   const routeBlocked=adminOnlyRoutes.has(state.route)&&!isAdmin();
   const adminOutOfScope=isAdmin()&&!adminOnlyRoutes.has(state.route)&&!['beranda','menu','pesanan','dukungan','akun','tiket','member360','admin-login'].includes(state.route);
   const screen=routeBlocked?
-    '<section class="ngd-role-gate"><p class="eyebrow">AKSES PENGELOLA</p><h1>Halaman khusus Admin</h1><p>Halaman operasional hanya tersedia untuk Admin yang telah masuk dan terverifikasi.</p><button type="button" class="btn btn-primary" data-route="admin-login">Masuk sebagai Admin</button></section>':
+    '<section class="ngd-role-gate"><p class="eyebrow">AKSES TERBATAS</p><h1>Halaman khusus pengelola.</h1><p>Konten ini tidak tersedia dalam ruang publik atau member. Kembali ke area yang sesuai dengan akun Anda.</p><button type="button" class="btn btn-primary" data-route="beranda">Kembali ke Beranda</button></section>':
     adminOutOfScope?
     '<section class="ngd-role-gate"><p class="eyebrow">RUANG PENGELOLA</p><h1>Anda berada di mode Admin.</h1><p>Untuk mengelola produk dan pesanan, gunakan modul Admin. Etalase pembeli tidak ditampilkan dalam ruang operasional.</p><button type="button" class="btn btn-primary" data-route="admin">Kembali ke Panel Admin</button></section>':
     (routes[state.route]||viewHome)();
