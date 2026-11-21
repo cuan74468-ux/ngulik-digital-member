@@ -34,9 +34,9 @@ test('guest has native five-tab mobile dock, compact marketplace header, and mem
   assert.match(market,/display:flex!important/);
   assert.match(market,/@media\(max-width:920px\)/);
   assert.match(html,/id="guest-nav"/);
-  for(const name of ['Beranda','Katalog','Layanan','Afiliasi','Bantuan','Masuk','Daftar Member'])
+  for(const name of ['Beranda','Katalog','Studio AI','Layanan','Afiliasi','Bantuan','Masuk','Daftar Member'])
     assert.ok(html.includes('>'+name+'</button>'),name);
-  assert.match(app,/\['beranda','katalog','jasa','affiliate','dukungan'\]/);
+  assert.match(app,/\['beranda','katalog','ai','jasa','menu'\]/);
   assert.match(app,/\['beranda','katalog','ai','pesanan','menu'\]/);
   assert.match(html,/data-route="menu"/);
   assert.doesNotMatch(html,/Bertumbuh dimulai|Belajar • Berkarya • Bertumbuh|Ruang belajar/i);

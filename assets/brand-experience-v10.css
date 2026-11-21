@@ -1,0 +1,213 @@
+/* Ngulik Digital V10 — owner-supplied icon adapted for indigo marketplace.
+   Source logo keeps its ring, three ascending bars, handle and gold dot.
+   Images are transparent. The brand name remains accessible HTML text.
+   Applies to guest, signed-in member, admin workspace, and login.
+   Does NOT alter auth, pricing, ledgers or deployment gates. */
+body.ngd-public-app:not(#ngd){
+  --ngd-brand-deep:#21134f;--ngd-brand-primary:#5b28d6;
+  --ngd-brand-highlight:#ffe34d;
+}
+body.ngd-public-app:not(#ngd) .ngd-brand-image{
+  display:block!important;object-fit:contain!important;object-position:center;
+  width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;
+  padding:0!important;margin:0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;
+  box-shadow:none!important;
+}
+/* The old teal container must never frame the new transparent symbol. */
+body.ngd-public-app:not(#ngd) :is(.brand-mark,.guest-brand-icon,.ngd-floating-logo,.partner-art-mark){
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;
+}
+body.ngd-public-app:not(#ngd) .guest-brand-icon{
+  display:grid!important;place-items:center!important;overflow:visible!important;
+  flex:0 0 56px!important;width:56px!important;height:56px!important;
+  min-width:56px!important;border-radius:0!important;padding:0!important;
+}
+body.ngd-public-app:not(#ngd) .topbar .guest-brand{
+  display:flex!important;align-items:center!important;gap:11px!important;
+  flex:0 0 auto!important;max-width:none!important;min-width:0;
+  text-decoration:none!important;
+}
+body.ngd-public-app:not(#ngd) .guest-brand strong{
+  display:block!important;margin:0!important;
+  font-family:"Plus Jakarta Sans",Inter,system-ui,sans-serif!important;
+  font-size:clamp(19px,1.46vw,23px)!important;
+  font-weight:850!important;line-height:1.1!important;
+  letter-spacing:-.065em!important;white-space:nowrap;
+  color:#21134f!important;
+  background:linear-gradient(110deg,#1e154c 6%,#5020bf 72%,#5935dc);
+  background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+body.ngd-public-app:not(#ngd) .guest-brand small{
+  display:block!important;margin-top:4px!important;
+  color:#645781!important;font:650 10px/1.24 Inter,system-ui,sans-serif!important;
+  letter-spacing:.004em!important;white-space:nowrap;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar,
+body.ngd-public-app[data-app-role=member]:not(#ngd) .topbar{
+  height:82px!important;min-height:82px!important;
+  padding:8px clamp(15px,2.15vw,38px)!important;gap:11px!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) #guest-nav button,
+body.ngd-public-app[data-app-role=member]:not(#ngd) #guest-nav button{
+  padding:8px clamp(4px,.55vw,10px)!important;
+  min-height:44px!important;font-size:clamp(10px,.78vw,12px)!important;
+  white-space:nowrap!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-header-search,
+body.ngd-public-app[data-app-role=member]:not(#ngd) .ngd-header-search{
+  width:clamp(140px,14.8vw,206px)!important;
+}
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-shop-hero .ngd-brand-image{
+  background:transparent!important;
+}
+body.ngd-public-app:not(#ngd) .brand-mark{
+  width:54px!important;height:54px!important;min-width:54px!important;
+  overflow:visible!important;padding:0!important;
+}
+body.ngd-public-app:not(#ngd) .brand-copy strong{
+  color:#21134f!important;
+  font:850 19px/1.12 "Plus Jakarta Sans",Inter,sans-serif!important;
+  letter-spacing:-.052em!important;
+}
+body.ngd-public-app:not(#ngd) .brand-copy small{
+  color:#72628e!important;font:650 10px/1.28 Inter,sans-serif!important;
+}
+/* Login is a calm, clear workspace gate. No fake PIN requirement for Member. */
+body.ngd-public-app:not(#ngd) .login-shell.ngd-auth-v10{
+  display:block!important;width:min(100%,510px)!important;max-width:510px!important;
+  margin:clamp(18px,4vw,54px) auto 65px!important;
+  padding:clamp(23px,3.8vw,44px)!important;
+  background:#fff!important;border:1px solid #e8e0f5!important;
+  border-radius:22px!important;box-shadow:0 17px 51px rgba(39,24,96,.07)!important;
+  color:#261e4f!important;text-align:left!important;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-brand{
+  display:flex;align-items:center;gap:10px;min-width:0;
+  margin:0 0 27px;padding:0 0 21px;border-bottom:1px solid #ece7f6;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-brand img{
+  flex:0 0 53px;width:53px;height:53px;object-fit:contain;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-brand strong{
+  display:block;color:#26164e;font:850 22px/1.14 "Plus Jakarta Sans",Inter,sans-serif;
+  letter-spacing:-.055em;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-brand small{
+  display:block;margin-top:3px;color:#706687;
+  font:600 11px/1.2 Inter,sans-serif;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 > .eyebrow{
+  margin:0 0 8px!important;color:#6637ce!important;
+  font:850 10px/1.3 Inter,sans-serif!important;letter-spacing:.12em;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 > h1{
+  margin:0 0 13px!important;color:#231948!important;
+  font:850 clamp(28px,3.2vw,38px)/1.17 "Plus Jakarta Sans",Inter,sans-serif!important;
+  letter-spacing:-.052em!important;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 > .lead{
+  margin:0 0 23px!important;color:#716c86!important;
+  font:500 14px/1.65 Inter,sans-serif!important;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 #auth-form{
+  padding:0!important;margin:0!important;border:0!important;
+  box-shadow:none!important;background:transparent!important;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 .field{margin-bottom:15px!important}
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 .field label{
+  display:block;margin-bottom:7px;color:#30254c;font-weight:750;font-size:12px;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 .input{
+  width:100%;min-height:47px;padding:11px 13px;
+  background:#fdfcff!important;color:#302452!important;
+  border:1px solid #e2d8f5!important;border-radius:11px!important;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 .input:focus{
+  outline:2px solid #bda5ff;outline-offset:1px;border-color:#7854df!important;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 .btn-primary{
+  min-height:47px!important;background:#5b28d6!important;border-color:#5b28d6!important;
+  border-radius:11px!important;color:#fff!important;font-weight:800;
+  box-shadow:none!important;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 .btn-secondary{
+  min-height:44px;border-color:#d8c8fb!important;color:#582ac1!important;
+  border-radius:11px!important;background:#fff!important;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 .form-hint,
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 .login-other-route{
+  color:#726b87;font-size:12px;line-height:1.5;
+}
+body.ngd-public-app:not(#ngd) .ngd-auth-v10 .login-other-route{
+  margin-top:18px;padding-top:13px;border-top:1px solid #ece8f5;
+}
+/* Desktop navigation: six public destinations without clipping at laptop widths. */
+@media(max-width:1280px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar .ngd-header-search{
+    width:42px!important;padding:0 5px!important;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-header-search input{
+    width:0!important;flex:0 0 0!important;opacity:0;pointer-events:none;
+  }
+}
+@media(max-width:1110px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar{
+    height:68px!important;min-height:68px!important;padding:7px 16px!important;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) #guest-nav{display:none!important}
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar .guest-brand{flex:1 1 auto!important}
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) #mobile-nav{
+    display:flex!important;position:fixed!important;inset:auto 0 0!important;
+    left:0!important;right:0!important;transform:none!important;
+    width:100%!important;max-width:none!important;z-index:80;
+    min-height:calc(64px + env(safe-area-inset-bottom,0px));
+    padding:6px 5px calc(5px + env(safe-area-inset-bottom,0px))!important;
+    border:0!important;border-top:1px solid #e8e1f7!important;border-radius:0!important;
+    background:#fff!important;align-items:stretch;justify-content:space-around;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) #mobile-nav .nav-item{
+    display:flex!important;flex:1;min-width:0;min-height:49px;
+    justify-content:center;align-items:center;flex-direction:column;
+    gap:3px;padding:5px 3px;border:0;border-radius:10px;
+    font:750 10px/1.16 Inter,sans-serif;
+  }
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) #mobile-nav .nav-item svg{width:21px;height:21px}
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content{
+    padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important;
+  }
+}
+@media(max-width:980px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar,
+  body.ngd-public-app[data-app-role=member]:not(#ngd) .topbar{
+    height:68px!important;min-height:68px!important;
+  }
+  body.ngd-public-app:not(#ngd) .guest-brand-icon{
+    flex-basis:48px!important;width:48px!important;height:48px!important;min-width:48px!important;
+  }
+  body.ngd-public-app:not(#ngd) .guest-brand strong{
+    font-size:18px!important;
+  }
+  body.ngd-public-app:not(#ngd) .guest-brand small{font-size:9px!important}
+}
+@media(max-width:640px){
+  body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar,
+  body.ngd-public-app[data-app-role=member]:not(#ngd) .topbar{
+    height:65px!important;min-height:65px!important;padding:8px 12px!important;
+  }
+  body.ngd-public-app:not(#ngd) .guest-brand-icon{
+    flex-basis:43px!important;width:43px!important;height:43px!important;min-width:43px!important;
+  }
+  body.ngd-public-app:not(#ngd) .guest-brand strong{
+    font-size:17px!important;letter-spacing:-.06em!important;
+  }
+  body.ngd-public-app:not(#ngd) .guest-brand small{display:none!important}
+  body.ngd-public-app:not(#ngd) .topbar .guest-brand{gap:6px!important}
+  body.ngd-public-app:not(#ngd) .ngd-auth-v10{margin:12px auto 42px!important;padding:24px 21px!important}
+  body.ngd-public-app:not(#ngd) .ngd-auth-brand strong{font-size:20px}
+}
+@media(max-width:370px){
+  body.ngd-public-app:not(#ngd) .guest-brand strong{font-size:16px!important}
+  body.ngd-public-app:not(#ngd) .ngd-auth-v10{padding:20px 17px!important}
+}

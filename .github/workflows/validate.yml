@@ -92,6 +92,20 @@ jobs:
           grep -q 'data-overflow="false"' /tmp/ngd-guest.html
           echo 'DESKTOP_HERO_GEOMETRY_OK'
           echo 'GUEST_BROWSER_QA_OK'
+          # Brand V10: real transparent icon, OTP-only member login and AI route.
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom "http://127.0.0.1:8765/#login" > /tmp/ngd-login-v10.html 2>>/tmp/ngd-chrome.log
+          grep -q 'class="login-shell ngd-auth-v10"' /tmp/ngd-login-v10.html
+          grep -q 'id="login-otp"' /tmp/ngd-login-v10.html
+          grep -q 'Member tidak perlu membuat PIN' /tmp/ngd-login-v10.html
+          grep -q 'ngd-icon-v10-192.png' /tmp/ngd-login-v10.html
+          grep -q 'data-overflow="false"' /tmp/ngd-login-v10.html
+          if grep -q 'id="pin"' /tmp/ngd-login-v10.html; then echo 'LOGIN_V10_FAIL: Member PIN shown' >&2; exit 1; fi
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom "http://127.0.0.1:8765/?preview=member#ai" > /tmp/ngd-member-ai-v10.html 2>>/tmp/ngd-chrome.log
+          grep -q '<h1>Studio AI</h1>' /tmp/ngd-member-ai-v10.html
+          grep -q 'id="ai-tool-cards"' /tmp/ngd-member-ai-v10.html
+          grep -q 'data-route="ai" aria-current="page"' /tmp/ngd-member-ai-v10.html
+          grep -q 'data-overflow="false"' /tmp/ngd-member-ai-v10.html
+          echo 'BRAND_OTP_STUDIO_V10_BROWSER_OK'
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1440,900 --dump-dom "http://127.0.0.1:8765/#affiliate" > /tmp/ngd-affiliate-v8.html 2>>/tmp/ngd-chrome.log
           grep -q 'class="partner-public"' /tmp/ngd-affiliate-v8.html
           grep -q 'data-v8-affiliate-cohesive="true"' /tmp/ngd-affiliate-v8.html

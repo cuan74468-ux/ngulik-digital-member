@@ -3,7 +3,8 @@ import {api, ApiError, isConnected, isWriteEnabled, createRequestId} from './api
 const config = window.NGD_CONFIG || {};
 const by = (id) => document.getElementById(id);
 // Canonical brand asset is the same favicon URL in public and STAGING pages.
-const defaultBrandLogoSrc=document.querySelector?.('link[rel="icon"]')?.href||'';
+const defaultBrandLogoSrc=document.querySelector?.('.guest-brand-icon .ngd-brand-image')?.src||
+  document.querySelector?.('link[rel="icon"]')?.href||'';
 // Published CMS logo overrides the default on visible UI; favicon stays static.
 function brandLogoSrc_(){
   const item=window.NGD_CONTENT_UI?.published(state.siteContent,'BRAND_LOGO','brand')?.[0];
@@ -264,11 +265,10 @@ function renderNav(){
   const navIcon=(route)=>window.NGD_CONTENT_UI?.media(state.siteContent,'NAV_ICON',route,'nav-custom-icon','')||icon(screens[route][1]);
   const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+navIcon(route)+'<span>'+esc(screens[route][0])+'</span></button>';
   by('desktop-nav').innerHTML=items.map(button).join('');
-  // Four high-frequency destinations + a full, discoverable menu. The topbar
-  // account button stays available on every viewport, including mobile.
+  // Studio AI and the complete public menu are directly accessible on mobile.
   const mobileItems=isAdmin()?['admin','produk','pesanan','lms','menu']:
     logged()?['beranda','katalog','ai','pesanan','menu']:
-    ['beranda','katalog','jasa','affiliate','dukungan'];
+    ['beranda','katalog','ai','jasa','menu'];
   const context=mobileNavRoute(state.route);
   const selectedMobile=mobileItems.includes(context)?context:'menu';
   by('mobile-nav').innerHTML=mobileItems.map(route=>
@@ -289,7 +289,7 @@ function renderNav(){
   if(publicNav){
     const navRoutes=logged()&&!isAdmin()?
       ['beranda','katalog','belajar','ai','pesanan','affiliate','dukungan']:
-      ['beranda','katalog','jasa','affiliate','dukungan'];
+      ['beranda','katalog','ai','jasa','affiliate','dukungan'];
     const navNames={beranda:'Beranda',katalog:'Katalog',belajar:'Kelas',
       ai:'Studio AI',pesanan:'Pesanan',affiliate:'Afiliasi',jasa:'Layanan',
       dukungan:'Bantuan'};
@@ -312,7 +312,8 @@ const needLogin=(feature)=>
 // Browseable on mobile instead of hiding most routes behind a desktop-only sidebar.
 // This is a presentation route: existing auth checks still guard every action.
 function viewMore(){
-  const routes=isAdmin()?adminNav:memberNav;
+  const routes=isAdmin()?adminNav:logged()?memberNav:
+    ['beranda','katalog','ai','jasa','affiliate','dukungan','belajar','login','daftar'];
   const descriptions={
     beranda:'Mulai dari sini',belajar:'Kelas dan progres',katalog:'Jasa dan produk',
     jasa:'Pesan jasa',ai:'Buat konten',affiliate:'Bagikan tautan',
@@ -1218,14 +1219,22 @@ function viewLogin(register=false,adminMode=false){
       '<div class="actions"><button type="button" class="btn btn-primary" data-route="beranda">Kembali ke beranda</button>'+
       '<button type="button" class="btn btn-secondary" data-route="login">Masuk nanti</button></div></section>';
   }
-  const enabled=adminMode?adminLoginEnabled():register?registrationOtpEnabled():isWriteEnabled();
-  const memberOtp=!adminMode&&!register&&memberOtpLoginEnabled();
-  return '<div class="login-shell"><p class="eyebrow">'+
+  const memberOtp=!adminMode&&!register;
+  // Member authentication is WhatsApp OTP, never an assumed PIN.
+  // Backend and environment release gates still apply.
+  const enabled=adminMode?adminLoginEnabled():
+    register?registrationOtpEnabled():memberOtpLoginEnabled();
+  return '<div class="login-shell ngd-auth-v10">'+
+    '<div class="ngd-auth-brand"><img src="'+esc(defaultBrandLogoSrc)+'" alt="" decoding="async">'+
+      '<span><strong>Ngulik Digital</strong><small>Marketplace Produk Digital</small></span></div>'+
+    '<p class="eyebrow">'+
     (adminMode?'AKSES PENGELOLA':register?'BERGABUNG':'SELAMAT DATANG KEMBALI')+'</p>'+
-    '<h1 style="font-size:2.25rem">'+
+    '<h1>'+
     (adminMode?'Masuk sebagai Admin.':register?'Daftar akun.':'Masuk ke akun Anda.')+'</h1>'+
     '<p class="lead">'+
-    (adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':register?'Daftar memakai nomor WhatsApp Anda.':memberOtp?'Masukkan kode dari WhatsApp Anda.':'Masukkan nomor WhatsApp dan PIN Anda.')+'</p>'+
+    (adminMode?'Masuk dengan nomor WhatsApp administrator dan PIN enam angka.':
+      register?'Daftar dengan nomor WhatsApp. Verifikasi dilakukan melalui kode WhatsApp.':
+      'Masukkan nomor WhatsApp dan kode OTP. Member tidak perlu membuat PIN.')+'</p>'+
     '<form id="auth-form" class="surface" data-mode="'+(adminMode?'admin':register?'register':'login')+'">'+
     (register?'<div class="field"><label for="nama">Nama lengkap</label><input class="input" id="nama" name="nama" autocomplete="name" required minlength="2" maxlength="80"></div>'+
       '<div class="field"><label for="usaha">Nama usaha</label><input class="input" id="usaha" name="nama_usaha" required minlength="2" maxlength="100"></div>':'')+
@@ -1233,7 +1242,7 @@ function viewLogin(register=false,adminMode=false){
     (memberOtp?'<div class="field"><label for="login-otp">Kode OTP WhatsApp</label><input class="input" id="login-otp" name="otp" required inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="6 digit OTP"></div>'+
       '<label class="small"><input type="checkbox" name="setuju_pengiriman" required> Saya setuju menerima OTP melalui WhatsApp.</label>'+
       '<div class="actions"><button type="button" class="btn btn-secondary" data-action="member-otp-request" '+(!enabled?'disabled':'')+'>Kirim Kode</button></div>':
-      '<div class="field"><label for="pin">PIN 6 angka</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>')+
+      '<div class="field"><label for="pin">'+(adminMode?'PIN Admin 6 angka':'PIN registrasi')+'</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>')+
     (register?'<div class="field"><label for="otp">Kode OTP WhatsApp</label><input class="input" id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" type="text" required placeholder="6 digit kode verifikasi"></div>'+
       '<div class="actions" style="margin-bottom:13px"><button type="button" class="btn btn-secondary" data-action="otp-request" '+(!enabled?'disabled':'')+'>Kirim Kode</button>'+
       '<button type="button" class="btn btn-ghost" data-action="otp-verify" '+(!enabled?'disabled':'')+'>Verifikasi kode</button></div>':'')+
@@ -1241,11 +1250,13 @@ function viewLogin(register=false,adminMode=false){
     '<button class="btn btn-primary btn-wide" type="submit" '+(!enabled?'disabled':'')+'>'+
     (adminMode?'Masuk admin':register?'Buat akun':'Masuk')+' '+icon('arrow')+'</button>'+
     '<p class="form-hint" style="margin:13px 0 0">'+
-    (enabled?(memberOtp?'Kode berlaku 5 menit, maksimal 3 percobaan. Jangan bagikan kode.':'Jaga kerahasiaan PIN Anda.'):adminMode?'Akses administrator belum diaktifkan pada backend. Akun yang sudah ada tetap aman.':'Pendaftaran dan akses member sedang dipersiapkan.')+'</p></form>'+
+    (enabled?(memberOtp?'Kode berlaku 5 menit, maksimal 3 percobaan. Jangan bagikan kode.':adminMode?'Jangan bagikan PIN Admin Anda.':'Verifikasi WhatsApp diperlukan sebelum aktivasi akun.'):
+      adminMode?'Akses administrator belum diaktifkan pada backend. Akun yang sudah ada tetap aman.':
+      register?'Pendaftaran baru belum dibuka pada layanan ini.':'Login OTP member belum diaktifkan pada layanan ini. Tidak perlu memasukkan PIN.')+'</p></form>'+
     '<p class="small login-other-route">'+
     (adminMode?'<button class="btn btn-ghost btn-sm" data-route="login">Kembali ke login</button>':
       register?'Sudah punya akun? <button class="btn btn-ghost btn-sm" data-route="login">Masuk</button>':
-      '<button class="btn btn-ghost btn-sm" data-route="daftar">Belum punya akun? Daftar</button> <button class="btn btn-secondary btn-sm" data-route="admin-login">Masuk Admin</button>')+
+      '<button class="btn btn-ghost btn-sm" data-route="daftar">Belum punya akun? Daftar</button>')+
     '</p>'+
     (adminMode&&!String(config.brand||'').includes('STAGING')?
       '<section class="admin-env-notice"><strong>Database STAGING menggunakan Admin Studio terpisah.</strong>'+
@@ -2398,8 +2409,9 @@ async function requestMemberLoginOtp_(){
 }
 async function processLogin(form,register){
   const adminMode=form.dataset.mode==='admin';
-  if(!(adminMode?adminLoginEnabled():isWriteEnabled()))
-    return toast(adminMode?'Login administrator belum diaktifkan.':'Login belum tersedia.',true);
+  if(!(adminMode?adminLoginEnabled():register?registrationOtpEnabled():memberOtpLoginEnabled()))
+    return toast(adminMode?'Login administrator belum diaktifkan.':register?
+      'Pendaftaran OTP belum dibuka.':'Login member menggunakan OTP WhatsApp; layanan ini belum diaktifkan.',true);
   const fd=new FormData(form);
   const otpLogin=!adminMode&&!register&&memberOtpLoginEnabled();
   const payload=otpLogin?
