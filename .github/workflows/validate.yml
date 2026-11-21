@@ -143,7 +143,7 @@ jobs:
           grep -q 'class="ngd-member-home ngd-member-command"' /tmp/ngd-member.html
           grep -q 'class="member-welcome ngd-member-hero"' /tmp/ngd-member.html
           grep -q 'aria-label="Dompet Token Universal"' /tmp/ngd-member.html
-          grep -q 'class="ngd-member-stats"' /tmp/ngd-member.html
+          grep -q 'class="metric-grid ngd-member-stats"' /tmp/ngd-member.html
           grep -q 'class="ngd-member-activity"' /tmp/ngd-member.html
           grep -q 'id="top-nav-trigger"' /tmp/ngd-member.html
           grep -q 'id="top-nav-drawer"' /tmp/ngd-member.html
