@@ -3,16 +3,16 @@
 // Synthetic member fixture only. No production login, payment or database write.
 const assert=require('node:assert/strict');
 const {spawn}=require('node:child_process');
-const {mkdtempSync,rmSync,mkdirSync,writeFileSync}=require('node:fs');
+const {mkdtempSync,rmSync,mkdirSync,writeFileSync,readFileSync,existsSync}=require('node:fs');
 const os=require('node:os'),path=require('node:path');
 const {setTimeout:pause}=require('node:timers/promises');
 const chrome=process.env.CHROME||'/usr/bin/google-chrome';
 const profile=mkdtempSync(path.join(os.tmpdir(),'ngd-mobile-360-'));
-const port=19283;
+let port=0;
 const child=spawn(chrome,[
-  '--headless=new','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
+  '--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
   '--no-first-run','--disable-background-networking','--no-default-browser-check',
-  '--remote-allow-origins=*','--remote-debugging-port='+port,
+  '--remote-allow-origins=*','--remote-debugging-port=0',
   '--user-data-dir='+profile,'about:blank'
 ],{stdio:['ignore','ignore','pipe']});
 let chromeErrors='';
@@ -31,6 +31,11 @@ async function connect(){
   let target;
   for(let i=0;i<180;i++){
     try{
+      const portFile=path.join(profile,'DevToolsActivePort');
+      if(!existsSync(portFile)){await pause(100);continue;}
+      const candidate=Number(String(readFileSync(portFile,'utf8')).split(/\\r?\\n/)[0]);
+      if(!Number.isInteger(candidate)||candidate<1024){await pause(100);continue;}
+      port=candidate;
       const r=await fetch('http://127.0.0.1:'+port+'/json');
       const tabs=await r.json();
       target=tabs.find(x=>x.type==='page'&&x.webSocketDebuggerUrl);
