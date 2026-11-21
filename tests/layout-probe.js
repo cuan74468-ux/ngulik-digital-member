@@ -12,6 +12,13 @@
       var checkoutSafe=buys.length===0&&unsafePayments.length===0;
       var visible=nav?getComputedStyle(nav).display!=='none':false;
       var overflow=document.documentElement.scrollWidth>window.innerWidth+2;
+      // Diagnostic context is CI-only, and does not change what constitutes
+      // a PASS. Identify the element responsible for an oversized viewport.
+      var overflowers=overflow?Array.prototype.slice.call(document.querySelectorAll('body *'))
+        .map(function(el){var b=el.getBoundingClientRect();
+          return {tag:el.tagName,cls:typeof el.className==='string'?el.className.slice(0,80):'',
+            left:Math.round(b.left),right:Math.round(b.right),width:Math.round(b.width)};
+        }).filter(function(b){return b.right>window.innerWidth+3||b.left<-3;}).slice(0,18):[];
       var memberTheme=document.body.classList.contains('member-experience');
       var primaryColor=getComputedStyle(document.body)
         .getPropertyValue('--green').trim();
@@ -24,9 +31,11 @@
         !!document.querySelector('link[href*="portfolio-adaptation.css"]');
       var main=document.getElementById('screen');
       var navRect=nav?nav.getBoundingClientRect():null;
+      var guest=document.body.getAttribute('data-app-role')==='guest';
       var floatingNav=window.innerWidth<=760&&visible&&navRect&&
-        navRect.left>=10&&navRect.right<=window.innerWidth-10&&
-        navRect.width<=window.innerWidth-18;
+        (guest?
+          (navRect.left>=-1&&navRect.right<=window.innerWidth+1&&navRect.width>=280):
+          (navRect.left>=10&&navRect.right<=window.innerWidth-10&&navRect.width<=window.innerWidth-18));
       var activeNav=document.querySelector(
         window.innerWidth<=760?'.mobile-nav .nav-item[aria-current="page"]':
           '.sidebar .nav-item[aria-current="page"]');
@@ -35,10 +44,18 @@
           .includes(getComputedStyle(activeNav).backgroundColor)&&
         ['rgb(36, 84, 207)','rgb(36, 89, 219)','rgb(37, 61, 96)','rgb(145, 83, 59)']
           .includes(getComputedStyle(activeNav).color);
-      var guest=document.body.getAttribute('data-app-role')==='guest';
-      // Public top navigation replaces all selected sidebar/bottom nav states.
-      if(guest)inkNav=!visible&&getComputedStyle(document.querySelector('.sidebar')).display==='none'
-        &&getComputedStyle(document.querySelector('.guest-nav')).display!=='none';
+      // Guests have the full top nav on desktop and the native bottom dock
+      // on mobile. Read the actual visible active state at each breakpoint.
+      if(guest){
+        var sideHidden=getComputedStyle(document.querySelector('.sidebar')).display==='none';
+        if(window.innerWidth<=760){
+          var guestActive=nav?nav.querySelector('.nav-item[aria-current="page"]'):null;
+          inkNav=sideHidden&&visible&&!!guestActive&&
+            getComputedStyle(guestActive).display!=='none'&&
+            getComputedStyle(guestActive).color==='rgb(93, 40, 208)';
+        }else inkNav=sideHidden&&!visible&&
+          getComputedStyle(document.querySelector('.guest-nav')).display!=='none';
+      }
       var activeSurface=main?main.querySelector('.surface,.metric-card,.member-focus'):null;
       var surfaceReady=!!activeSurface&&
         getComputedStyle(activeSurface).backgroundColor!=='rgba(0, 0, 0, 0)';
@@ -82,7 +99,8 @@
         scrollWidth:document.documentElement.scrollWidth,
         overflow:overflow,memberTheme:memberTheme,sharedTheme:safeTheme,inkNavigation:inkNav,
         mobileNavigationVisible:visible,floatingNavigation:Boolean(floatingNav),
-        checkoutSafe:checkoutSafe,disabledBuyButtons:buys.length
+        checkoutSafe:checkoutSafe,disabledBuyButtons:buys.length,
+        overflowers:overflowers
       });
       document.body.appendChild(output);
     },700);
