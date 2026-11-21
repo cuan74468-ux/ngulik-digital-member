@@ -62,3 +62,15 @@ Status: NO-GO for live payments until gates below pass.
 - `ngdInfrastructurePreflightReadOnly` PASS: 29 tables, environment STAGING, `mutations_flag=true`, `preflight_writes=false`, `providers_flag=false`.
 - `ngdDataIntegrityPreflightReadOnly` PASS: 8 tables, empty issues, `writes=false`.
 - STAGING diagnostic success does not imply GAS web app has been updated. Existing deployment must be updated in-place and verified while financial payments remain OFF. Historical order `ORD-STG-0001` remains under review.
+
+## Post-deployment read-only review — 2026-11-21 10:49 WIB
+- User reports an in-place STAGING GAS deployment update. Independent GET on the prior STAGING /exec returned ok=true, version=1.0.3, writes_enabled=true, payments_enabled=false. Confirms endpoint reachability/flags, NOT an exact deployed source hash.
+- Separate public-main /exec returned version=1.0.2, writes_enabled=false, payments_enabled=false. Its published frontend config has paymentsEnabled=false. Public main and staging remain different API endpoints.
+- STAGING member page and frontend config accessible: paymentsEnabled=false, qrisOwnerImageApproved=false; nonfinancial member/admin writes enabled. Do not treat STAGING as globally read-only.
+- Direct Sheets read: ORD-STG-0001 status PAID despite a populated fulfilled_at; one linked TOPUP_TOKEN +10 to M-0009; historical KOM-STG-0001 Rp1,000 PENDING to ADMIN M-0001, approval date 2026-12-02. No data mutation made.
+- Second order NGD-261119-61ED29966DF7 remains PENDING though expires_at was 2026-11-19 11:59:34 WIB. Investigate as stale historical order, do not assume payment received or trigger financial maintenance while finance OFF.
+- All 8 historical MEMBER rows have referred_by=M-0001 (role ADMIN); new MEMBER-to-MEMBER eligible referral registration not yet proven.
+- Text search of js/app.js found no direct adminMarkCommissionPaid or adminGetReconciliation invocation. Admin payout/reconciliation user experience remains an unverified go-live gate.
+- QRIS SVG external extractor returned empty_content, which is neither proof of 404 nor verified QRIS validity. Real independent merchant scan is pending.
+- Result: STAGING payment gate OFF, infrastructure and data-integrity checks PASS, memory-only finance tests 29/29 PASS, historical reconciliation needs_review=1, live payment GO-LIVE remains NO-GO.
+- Next: non-mutating post-deploy API smoke tests plus optional operator browser admin/member checks. Never enable money flows until controlled test and owner authorization.
