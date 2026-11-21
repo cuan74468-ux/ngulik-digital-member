@@ -498,22 +498,22 @@ function viewHome(){
   // The full catalog owns product cards, prices, filtering and checkout.
   // Guest-only landing; member and admin rendering above remains untouched.
   const landingCards=[
-    {route:'ai',tag:'STUDIO AI',name:'Tools AI Eceran',desc:'Butuh caption, ide promosi, atau naskah video? Gunakan alat bantu AI dengan kredit sesuai kebutuhan.',img:'ngd-v8-ai-large.webp',alt:'Visual paket alat bantu AI'},
-    {route:'katalog',tag:'PRODUK DIGITAL',name:'Produk & Aplikasi Siap Pakai',desc:'Template siap edit, Starter Pack, katalog usaha, sampai aplikasi kasir sederhana untuk UMKM.',img:'ngd-v6-pos.webp',alt:'Visual produk sistem kasir digital'},
-    {route:'jasa',tag:'BENGKEL KREATIF',name:'Jasa Kreatif Terima Beres',desc:'Perlu video promosi, website katalog, atau otomasi Google Sheets? Pilih bantuan yang sesuai.',img:'ngd-v6-video.webp',alt:'Visual jasa pembuatan video promosi'},
-    {route:'affiliate',tag:'AJAK TEMAN',name:'Bagikan & Dapat Komisi',desc:'Punya teman yang membutuhkan? Bagikan tautan referal dan dapatkan komisi dari transaksi yang memenuhi syarat.',img:'ngd-v6-bundle.webp',alt:'Visual koleksi produk digital'}
+    {route:'ai',tag:'STUDIO AI',name:'Coba Tools AI Seperlunya',desc:'Lagi buntu cari ide konten? Coba buat caption, konsep promosi, atau naskah video. Kreditnya dipakai saat Anda menggunakan tools.',img:'ngd-v8-ai-large.webp',alt:'Visual paket alat bantu AI'},
+    {route:'katalog',tag:'PRODUK DIGITAL',name:'Produk Siap Dipakai',desc:'Ada template, paket awal, katalog online, sampai kasir sederhana. Tinggal pilih yang cocok dengan cara kerja usaha Anda.',img:'ngd-v6-pos.webp',alt:'Visual produk sistem kasir digital'},
+    {route:'jasa',tag:'BENGKEL KREATIF',name:'Butuh Dibantu? Bisa.',desc:'Nggak sempat bikin sendiri? Kami bisa bantu urus video promosi, website katalog, atau pekerjaan berulang di Google Sheets.',img:'ngd-v6-video.webp',alt:'Visual jasa pembuatan video promosi'},
+    {route:'affiliate',tag:'AJAK TEMAN',name:'Ajak Teman, Dapat Komisi',desc:'Kalau ada teman yang cocok dengan layanan di sini, bagikan link Anda. Komisi dihitung dari pembelian yang sah, sesuai aturan program.',img:'ngd-v6-bundle.webp',alt:'Visual koleksi produk digital'}
   ];
   return `<div class="ngd-landing-v1">
     <section class="ngdl-hero" aria-labelledby="ngdl-title">
       <div class="ngdl-hero-copy">
-        <p class="ngdl-eyebrow"><span class="ngdl-spark" aria-hidden="true">✦</span> WARUNG TOOLS AI & BENGKEL KREATIF</p>
-        <h1 id="ngdl-title">Warung Tools AI & <span>Bengkel Kreatif</span> buat Usaha & Kreator.</h1>
-        <p class="ngdl-hero-lead">Butuh bahan promosi, alat bantu AI, katalog usaha, atau aplikasi kasir tapi nggak mau ribet? Pilih alat dan bantuan yang cocok, dari HP pun bisa.</p>
+        <p class="ngdl-eyebrow"><span class="ngdl-spark" aria-hidden="true">✦</span> TOOLS AI, PRODUK DIGITAL & JASA KREATIF</p>
+        <h1 id="ngdl-title">Punya usaha? <span>Ngulik digitalnya</span> di sini aja.</h1>
+        <p class="ngdl-hero-lead">Mau bikin konten jualan, merapikan catatan usaha, atau coba AI tanpa langganan macam-macam? Di sini ada alat, produk, dan orang yang bisa bantu. Buka lewat HP juga bisa.</p>
         <div class="ngdl-actions">
-          <button type="button" class="ngdl-btn ngdl-btn-gold" data-route="katalog">Lihat Isi Katalog <span aria-hidden="true">↗</span></button>
-          <button type="button" class="ngdl-btn ngdl-btn-ghost" data-route="daftar">Masuk / Daftar Member</button>
+          <button type="button" class="ngdl-btn ngdl-btn-gold" data-route="katalog">Lihat Produk & Layanan <span aria-hidden="true">↗</span></button>
+          <button type="button" class="ngdl-btn ngdl-btn-ghost" data-route="daftar">Masuk atau Daftar</button>
         </div>
-        <p class="ngdl-hero-caption">Pilih sesuai kebutuhan. Tidak harus mulai dari paket besar.</p>
+        <p class="ngdl-hero-caption">Mulai dari yang diperlukan dulu. Nggak perlu borong semuanya.</p>
       </div>
       <div class="ngdl-hero-art" aria-label="Ilustrasi koleksi produk digital Ngulik Digital">
         <div class="ngdl-art-halo" aria-hidden="true"></div>
@@ -522,30 +522,30 @@ function viewHome(){
       </div>
     </section>
     <div class="ngdl-trust" aria-label="Cara pakai Ngulik Digital">
-      <span>✦ Kredit AI sesuai pemakaian</span><span>✦ Pembayaran via QRIS DANA Bisnis</span><span>✦ Nyaman dari HP</span><span>✦ Komisi ajak teman sesuai ketentuan</span>
+      <span>✦ Tools AI pakai kredit</span><span>✦ Bayar dengan QRIS DANA Bisnis</span><span>✦ Bisa dibuka lewat HP</span><span>✦ Ada komisi untuk referal yang berhasil</span>
     </div>
     <section class="ngdl-story" aria-labelledby="ngdl-story-title">
-      <p class="ngdl-kicker">KENAPA ADA NGULIK DIGITAL?</p>
-      <h2 id="ngdl-story-title">Biar kerja digital <em>nggak bikin pusing.</em></h2>
-      <p>Banyak pemilik usaha dan kreator ingin memakai AI, bikin promosi, atau merapikan usaha—tapi waktunya terbatas, istilah teknis bikin bingung, dan biaya alat terasa berat. Di sini konsepnya seperti warung dan bengkel: pilih tools seperlunya, ambil produk siap pakai, atau pesan bantuan saat dibutuhkan.</p>
+      <p class="ngdl-kicker">SEDIKIT CERITA</p>
+      <h2 id="ngdl-story-title">Kerjaan sudah banyak. <em>Yang digital jangan ikut bikin repot.</em></h2>
+      <p>Kadang yang bikin tertunda bukan niatnya, tapi waktu dan tenaga. Mau bikin katalog saja harus belajar ini-itu. Mau coba AI, bingung mulai dari mana. Ngulik Digital kami buat seperti warung sekaligus bengkel: ada yang bisa langsung dibawa pulang, ada alat yang dipakai seperlunya, dan ada pekerjaan yang bisa kami bantu kerjakan.</p>
     </section>
     <section class="ngdl-offers" aria-labelledby="ngdl-offers-title">
-      <div class="ngdl-section-top"><div><p class="ngdl-kicker">APA SAJA ISINYA?</p><h2 id="ngdl-offers-title">Empat pintu, satu tempat.</h2></div><p>Mulai dari yang paling Anda butuhkan hari ini.</p></div>
+      <div class="ngdl-section-top"><div><p class="ngdl-kicker">YANG BISA ANDA TEMUKAN</p><h2 id="ngdl-offers-title">Lagi butuh apa?</h2></div><p>Nggak harus pakai semuanya. Lihat-lihat dulu juga boleh.</p></div>
       <div class="ngdl-grid">${landingCards.map(c=>`<article class="ngdl-offer">
         <div class="ngdl-offer-image"><img src="./assets/media/${c.img}" loading="lazy" decoding="async" alt="${c.alt}"></div>
         <div class="ngdl-offer-body"><p class="ngdl-offer-tag">${c.tag}</p><h3>${c.name}</h3><p>${c.desc}</p>
-        <button type="button" data-route="${c.route}" class="ngdl-offer-link">Jelajahi ${c.tag.toLowerCase()} <span aria-hidden="true">↗</span></button></div>
+        <button type="button" data-route="${c.route}" class="ngdl-offer-link">Lihat selengkapnya <span aria-hidden="true">↗</span></button></div>
       </article>`).join('')}</div>
     </section>
     <section class="ngdl-benefits" aria-labelledby="ngdl-benefits-title">
-      <div><p class="ngdl-kicker">JADI MEMBER, BUAT APA?</p><h2 id="ngdl-benefits-title">Biar semua lebih gampang dijangkau.</h2></div>
-      <ul><li><strong>Pilih & bayar dari satu tempat.</strong> Checkout produk menggunakan alur pembayaran yang tersedia.</li><li><strong>Pakai lewat HP Android.</strong> Jelajahi katalog dan ruang member di browser.</li><li><strong>Akses mengikuti status pembayaran.</strong> Produk digital dibuka sesuai verifikasi transaksi dan ketentuannya.</li><li><strong>Mau kenalan dulu?</strong> Ada eBook serta kelas gratis tanpa perlu membeli produk.</li></ul>
+      <div><p class="ngdl-kicker">KALAU JADI MEMBER</p><h2 id="ngdl-benefits-title">Lebih mudah cari yang Anda perlukan.</h2></div>
+      <ul><li><strong>Pesan tanpa pindah-pindah tempat.</strong> Pilih produk, cek rincian, lalu bayar lewat halaman checkout.</li><li><strong>Nggak harus buka laptop.</strong> Katalog dan ruang member bisa diakses dari browser HP.</li><li><strong>Pembelian tercatat.</strong> Akses produk diberikan setelah pembayaran terverifikasi, sesuai ketentuan masing-masing.</li><li><strong>Belum mau beli?</strong> Coba baca eBook atau ikut kelas gratis lebih dulu.</li></ul>
     </section>
     <section class="ngdl-end" aria-labelledby="ngdl-end-title">
-      <p class="ngdl-kicker">MULAI DARI SINI</p><h2 id="ngdl-end-title">Mau coba-coba dulu atau langsung pakai?</h2>
-      <p>Buat akun untuk menjelajah ruang member, atau lihat dulu apa yang cocok di katalog.</p>
-      <div class="ngdl-actions"><button type="button" data-route="daftar" class="ngdl-btn ngdl-btn-gold">Daftar / Masuk Member <span aria-hidden="true">↗</span></button><button type="button" data-route="katalog" class="ngdl-btn ngdl-btn-ghost">Lihat Katalog</button></div>
-      <nav class="ngdl-free" aria-label="Materi gratis"><a href="${NGD_FREE_EBOOK_URL}" target="_blank" rel="noopener noreferrer">Baca eBook Gratis ↗</a><a href="${NGD_FREE_CLASSROOM_URL}" target="_blank" rel="noopener noreferrer">Gabung Kelas Gratis ↗</a></nav>
+      <p class="ngdl-kicker">MAU MULAI?</p><h2 id="ngdl-end-title">Lihat-lihat dulu, siapa tahu ada yang pas.</h2>
+      <p>Mau punya akun? Silakan daftar. Kalau masih penasaran, cek katalognya dulu—nggak harus langsung beli.</p>
+      <div class="ngdl-actions"><button type="button" data-route="daftar" class="ngdl-btn ngdl-btn-gold">Buat Akun atau Masuk <span aria-hidden="true">↗</span></button><button type="button" data-route="katalog" class="ngdl-btn ngdl-btn-ghost">Jelajahi Katalog</button></div>
+      <nav class="ngdl-free" aria-label="Materi gratis"><a href="${NGD_FREE_EBOOK_URL}" target="_blank" rel="noopener noreferrer">Baca eBook Gratis ↗</a><a href="${NGD_FREE_CLASSROOM_URL}" target="_blank" rel="noopener noreferrer">Ikut Kelas Gratis ↗</a></nav>
     </section>
   </div>`;
 }
