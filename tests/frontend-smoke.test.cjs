@@ -101,6 +101,36 @@ test('guest product selection preserves intent but cannot open checkout',()=>{
   assert.equal(vm.runInContext('state.route',context),'login');
   assert.match(nodes.screen.innerHTML,/Masuk atau daftar gratis pakai WhatsApp/);
 });
+test('guest Jasa shows actual backend-catalog prices and gates checkout behind login',()=>{
+  const {nodes,context}=renderPreview();
+  vm.runInContext("state.catalog=[{product_id:'P-SERVICE',nama:'Video & Promosi',deskripsi:'Video promo singkat',tipe:'JASA_SEKALI',harga:50000},{product_id:'P-APP',nama:'Kasir',tipe:'LISENSI_SEKALI',harga:25000}];go('jasa')",context,{timeout:2000});
+  assert.match(nodes.screen.innerHTML,/ngd-buyer-services/);
+  assert.match(nodes.screen.innerHTML,/Paket yang dapat dipilih/);
+  assert.match(nodes.screen.innerHTML,/Video &amp; Promosi/);
+  assert.match(nodes.screen.innerHTML,/Rp(?:\s|\u00a0)*50\.000/);
+  assert.match(nodes.screen.innerHTML,/data-checkout-product="P-SERVICE"/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/data-checkout-product="P-APP"/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/id="service-brief-form"/);
+  vm.runInContext("openProductCheckout_('P-SERVICE')",context,{timeout:2000});
+  assert.equal(vm.runInContext('state.route',context),'login');
+  assert.equal(vm.runInContext('state.pendingPurchaseId',context),'P-SERVICE');
+});
+test('guest help is a readable purchase FAQ and never exposes private tickets',()=>{
+  const {nodes,context}=renderPreview();
+  vm.runInContext("go('dukungan')",context,{timeout:2000});
+  assert.match(nodes.screen.innerHTML,/ngd-buyer-help/);
+  assert.match(nodes.screen.innerHTML,/Harus daftar dulu untuk membeli/);
+  assert.match(nodes.screen.innerHTML,/Bagaimana cara membayar/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/support-create-form|service-quote-form/);
+});
+test('public buyer pages have isolated responsive styling and no invented prices',()=>{
+  const css=fs.readFileSync(path.join(base,'assets/guest-sales-trust-v1.css'),'utf8');
+  assert.match(css,/\.ngd-buyer-services/);
+  assert.match(css,/\.ngd-buyer-help/);
+  assert.match(css,/@media\(max-width:600px\)/);
+  assert.match(app,/String\(p\.tipe\)==='JASA_SEKALI'/);
+  assert.match(app,/rupiah\(price\)/);
+});
 test('local member preview renders native-like dashboard without login',()=>{
   const {nodes,context}=renderPreview('?preview=member');
   assert.match(nodes.screen.innerHTML,/RUANG MEMBER \/ AKTIVITAS SAYA/);
