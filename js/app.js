@@ -440,7 +440,7 @@ function viewHome(){
       brandStage+
     '</div>'+
     '<div class="ngd-shop-hero-art" aria-hidden="true">'+
-      '<img src="'+esc(ngdLocalArtSrc_('hero'))+'" alt="" decoding="async" fetchpriority="high">'+
+      '<img src="'+esc(ngdPremiumArtSrc_('hero'))+'" alt="" decoding="async" fetchpriority="high">'+
     '</div>'+
   '</section>';
   const trust='<section class="ngd-shop-trust" aria-label="Informasi layanan">'+[
@@ -463,7 +463,7 @@ function viewHome(){
     '<button type="button" data-route="daftar">Daftar Member '+icon('arrow')+'</button>'+
     '</section>';
   return '<div class="nh-home nh-home-minimal ngd-shop-home">'+
-    hero+trust+showcase+viewHomeServices_()+signup+'</div>';
+    hero+trust+showcase+signup+'</div>';
 }
 const offerCategories=[
   ['semua','Semua Produk'],['belajar','eBook & Panduan'],
@@ -534,10 +534,15 @@ function ngdLocalArtSrc_(name){
   const root=String(window.location?.pathname||'').includes('/staging/')?'../':'./';
   return root+'assets/media/ngd-cover-'+name+'.svg';
 }
+function ngdPremiumArtSrc_(name){
+  const root=String(window.location?.pathname||'').includes('/staging/')?'../':'./';
+  const supported=new Set(['hero','ebook','starter','bundle','pos','video','integrasi']);
+  return supported.has(name)?root+'assets/media/ngd-v6-'+name+'.webp':ngdLocalArtSrc_(name);
+}
 function ngdProductImageFallback_(p,kind){
   const name=ngdProductArtId_(p,kind);
-  return '<img class="market-product-image ngd-product-cover" src="'+esc(ngdLocalArtSrc_(name))+
-    '" alt="Ilustrasi produk digital: '+esc(offerUiTitle_(p))+'" loading="lazy" decoding="async">';
+  return '<img class="market-product-image ngd-product-cover" src="'+esc(ngdPremiumArtSrc_(name))+
+    '" alt="Visual produk digital: '+esc(offerUiTitle_(p))+'" loading="lazy" decoding="async">';
 }
 
 function viewPublicMarketplace(list){
@@ -561,9 +566,9 @@ function viewPublicMarketplace(list){
       '<button type="button" class="market-hero-link" data-route="daftar">Daftar Member '+icon('arrow')+'</button>'+
       '</div><div class="market-hero-symbol" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt="">'+
       '<div class="ngd-market-hero-products">'+
-      '<img src="'+esc(ngdLocalArtSrc_('bundle'))+'" alt="" decoding="async">'+
-      '<img src="'+esc(ngdLocalArtSrc_('pos'))+'" alt="" decoding="async">'+
-      '<img src="'+esc(ngdLocalArtSrc_('video'))+'" alt="" decoding="async">'+
+      '<img src="'+esc(ngdPremiumArtSrc_('bundle'))+'" alt="" decoding="async">'+
+      '<img src="'+esc(ngdPremiumArtSrc_('pos'))+'" alt="" decoding="async">'+
+      '<img src="'+esc(ngdPremiumArtSrc_('video'))+'" alt="" decoding="async">'+
       '</div></div></section>';
   const filterBar='<div class="market-categories" role="group" aria-label="Jelajahi kategori produk">'+
     offerCategories.map(([id,label])=>'<button type="button" class="catalog-filter market-category" data-catalog-filter="'+esc(id)+
@@ -2863,6 +2868,15 @@ async function submitServiceQuote(form){
   catch(error){toast('Perubahan tersimpan. Muat ulang daftar.',true);}
   render();
 }
+document.addEventListener('submit',(e)=>{
+  if(e.target?.id!=='guest-header-search-form')return;
+  e.preventDefault();
+  if(logged()||isAdmin())return;
+  const query=String(e.target.elements?.namedItem?.('query')?.value||'').trim().slice(0,80);
+  state.marketplaceSearch=query;
+  state.catalogFilter='semua';
+  go('katalog');
+});
 document.addEventListener('input',(e)=>{
   if(e.target?.id==='ai-tool-search'&&state.route==='ai'){
     state.aiSearch=e.target.value;
