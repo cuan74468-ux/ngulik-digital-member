@@ -71,7 +71,7 @@ test('member has four primary mobile tabs and a complementary More menu with no 
   const sheet=h.nodes['top-nav-drawer'].innerHTML;
   assert.deepEqual([...dock.matchAll(/data-route="([^"]+)"/g)].map(m=>m[1]),
     ['beranda','katalog','ai','pesanan']);
-  assert.match(dock,/data-route="beranda"[^>]*>[\\s\\S]*?<span>Dashboard<\\/span>/);
+  assert.match(dock,/data-route="beranda"[^>]*>[\s\S]*?<span>Dashboard<\/span>/);
   assert.deepEqual([...sheet.matchAll(/data-route="([^"]+)"/g)].map(m=>m[1]),
     ['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun']);
   assert.match(dock,/id="member-more-toggle"/);
