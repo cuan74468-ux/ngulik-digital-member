@@ -61,6 +61,23 @@ test('guest homepage renders the guest-only visual landing',()=>{
   assert.match(nodes['desktop-nav'].innerHTML,/Katalog/);
   assert.equal(document.title,'Beranda — Ngulik Digital');
 });
+test('guest drawer exposes four public routes and a single member entrance',()=>{
+  const {nodes,context}=renderPreview();
+  const drawer=nodes['top-nav-drawer'].innerHTML;
+  const routes=[...drawer.matchAll(/data-route="([^"]+)"/g)].map(x=>x[1]);
+  assert.deepEqual(routes,['beranda','katalog','jasa','dukungan','login']);
+  for(const privateRoute of ['ai','affiliate','belajar','pesanan','checkout']){
+    vm.runInContext('go('+JSON.stringify(privateRoute)+')',context,{timeout:2000});
+    assert.equal(vm.runInContext('state.route',context),'login');
+  }
+});
+test('guest product selection preserves intent but cannot open checkout',()=>{
+  const {nodes,context}=renderPreview();
+  vm.runInContext("go('katalog');openProductCheckout_('P-3IN1')",context,{timeout:2000});
+  assert.equal(vm.runInContext('state.pendingPurchaseId',context),'P-3IN1');
+  assert.equal(vm.runInContext('state.route',context),'login');
+  assert.match(nodes.screen.innerHTML,/Masuk atau daftar gratis pakai WhatsApp/);
+});
 test('local member preview renders native-like dashboard without login',()=>{
   const {nodes,context}=renderPreview('?preview=member');
   assert.match(nodes.screen.innerHTML,/RUANG MEMBER \/ AKTIVITAS SAYA/);
