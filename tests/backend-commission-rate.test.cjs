@@ -80,13 +80,15 @@ test('non-member and inactive sponsors never produce commission',()=>{
 
 test('STAGING Starter Pack pays exactly Rp5.000, not rounded 33%',()=>{
   const h=fixture(25,15000);
-  h.product.product_id='P-STARTER-15K';
+  h.product.product_id='P-STARTER-15';
   h.product.komisi_persen=0;
   h.product.komisi_nominal_tetap=5000;
   h.perform();
   assert.equal(h.commissions.length,1);
   assert.equal(h.commissions[0].nominal,5000);
   assert.equal(h.commissions[0].persen,0);
+  assert.equal(h.commissions[0].status,'APPROVED');
+  assert.ok(h.commissions[0].approved_at);
   h.perform();
   assert.equal(h.commissions.length,1);
 });
