@@ -76,13 +76,14 @@ jobs:
             "http://127.0.0.1:8765/" > /tmp/ngd-guest.html 2>/tmp/ngd-chrome.log
           echo 'GUEST_BROWSE_PROBE:'
           grep -Eo 'class="nh-hero[^"]*"|class="ngd-shop-hero-art"|data-experience-v2="[^"]*"|data-app-role="[^"]*"|data-overflow="[^"]*"' /tmp/ngd-guest.html | tail -12 || true
-          grep -q 'class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal ngd-shop-hero"' /tmp/ngd-guest.html
-          grep -q 'class="ngd-shop-hero-art"' /tmp/ngd-guest.html
+          grep -q 'class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal ngd-shop-hero ngd-home-quiet-hero"' /tmp/ngd-guest.html
+          grep -q 'class="ngd-home-direct-links"' /tmp/ngd-guest.html
           grep -q 'Ngulik Digital' /tmp/ngd-guest.html
           grep -q 'data-experience-v2="true"' /tmp/ngd-guest.html
           grep -q 'data-home-columns-clear="true"' /tmp/ngd-guest.html
           grep -q 'data-home-header-clear="true"' /tmp/ngd-guest.html
-          grep -q 'data-home-art-loaded="true"' /tmp/ngd-guest.html
+          grep -q 'data-home-art-absent="true"' /tmp/ngd-guest.html
+          grep -q 'data-home-no-products="true"' /tmp/ngd-guest.html
           echo 'DESKTOP_HOME_GEOMETRY:'
           grep -oE '<output id="qa-home-geometry"[^>]*>[^<]*' /tmp/ngd-guest.html | cut -c1-1400 || true
           grep -q 'data-home-header-anchored="true"' /tmp/ngd-guest.html
@@ -121,7 +122,11 @@ jobs:
           echo 'PUBLIC_V8_AFFILIATE_HELP_OK'
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1440,900 --dump-dom "http://127.0.0.1:8765/#jasa" > /tmp/ngd-public-services-v8.html 2>>/tmp/ngd-chrome.log
           grep -q 'class="ngd-public-services"' /tmp/ngd-public-services-v8.html
-          grep -q 'class="ngd-public-services-hero"' /tmp/ngd-public-services-v8.html
+          grep -q 'class="ngd-service-guide-head"' /tmp/ngd-public-services-v8.html
+          grep -q 'Website &amp; Katalog Online' /tmp/ngd-public-services-v8.html
+          if grep -q 'market-product-card' /tmp/ngd-public-services-v8.html; then
+            echo 'SERVICE_BROWSER_FAIL: catalog renderer leaked into Jasa' >&2; exit 1
+          fi
           grep -q 'data-overflow="false"' /tmp/ngd-public-services-v8.html
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom "http://127.0.0.1:8765/#ai" > /tmp/ngd-public-ai-v8.html 2>>/tmp/ngd-chrome.log
           grep -q 'class="ai-catalog"' /tmp/ngd-public-ai-v8.html
@@ -297,7 +302,9 @@ jobs:
           grep -q 'data-mobile-nav="true"' /tmp/ngd-guest-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
-          grep -q 'class="ngd-journey-stage ngd-shop-brand-stage"' /tmp/ngd-guest-mobile.html
+          grep -q 'class="ngd-home-direct-links"' /tmp/ngd-guest-mobile.html
+          grep -q 'data-home-art-absent="true"' /tmp/ngd-guest-mobile.html
+          grep -q 'data-home-no-products="true"' /tmp/ngd-guest-mobile.html
           grep -q 'data-home-order="true"' /tmp/ngd-guest-mobile.html
           grep -q 'data-home-header-clear="true"' /tmp/ngd-guest-mobile.html
           grep -q 'data-home-header-anchored="true"' /tmp/ngd-guest-mobile.html
