@@ -42,7 +42,8 @@ test('member has no admin catalog and cannot open the editor',()=>{
   const h=makePreview('member','produk');
   assert.match(h.nodes.screen.innerHTML,/Halaman khusus pengelola/);
   assert.doesNotMatch(h.nodes.screen.innerHTML,/id="admin-catalog-form"/);
-  assert.doesNotMatch(h.nodes['mobile-nav'].innerHTML,/data-route="produk"/);
+  assert.match(h.nodes['top-nav-drawer'].innerHTML,/data-route="katalog"/);
+  assert.doesNotMatch(h.nodes['top-nav-drawer'].innerHTML,/data-route="produk"/);
 });
 test('catalogue editor has whitelisted fields, immutable type when editing',()=>{
   const h=makePreview();
