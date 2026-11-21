@@ -30,7 +30,7 @@ test('guest has native five-tab mobile dock, compact marketplace header, and mem
   assert.match(html,/data-app-role="guest"/);
   assert.match(css,/data-app-role=guest\]:not\(#ngd\) \.sidebar\{display:none!important\}/);
   const market=read('assets/marketplace-ref-v5.css');
-  assert.match(market,/\.mobile-nav\{/);
+  assert.match(market,/#mobile-nav\{/);
   assert.match(market,/display:flex!important/);
   assert.match(market,/@media\(max-width:920px\)/);
   assert.match(html,/id="guest-nav"/);
