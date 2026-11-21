@@ -324,3 +324,27 @@ body.ngd-public-app[data-app-role=member] .ngd-member-credit-notice{
     max-width:78px;white-space:normal;text-align:right
   }
 }
+
+/* Correctly separated catalogue result count and refresh action. */
+body.ngd-public-app .market-results-header{
+  display:flex!important;align-items:center!important;
+  justify-content:flex-start!important;gap:10px!important;
+  flex-wrap:wrap!important;min-width:0!important;max-width:100%!important
+}
+body.ngd-public-app .market-results-header h2{
+  flex:1 1 100%!important;min-width:0!important;margin:0 0 2px!important
+}
+body.ngd-public-app .market-results-header > span{
+  flex:1 1 auto!important;min-width:0!important;
+  color:#5e5870!important;font-size:12px!important;line-height:1.5!important
+}
+body.ngd-public-app .market-results-header .market-refresh{
+  flex:0 0 auto!important;min-height:38px!important;
+  margin-left:auto!important;padding:8px 13px!important
+}
+/* Historical bottom-bar spacers are not valid after V16. */
+body.ngd-public-app[data-app-role=guest]:not(#ngd) .main-content,
+body.ngd-public-app[data-app-role=member]:not(#ngd) .main-content,
+body.ngd-public-app[data-app-role=admin]:not(#ngd) .main-content{
+  padding-bottom:clamp(35px,5vw,70px)!important
+}
