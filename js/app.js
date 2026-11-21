@@ -384,7 +384,7 @@ function renderNav(){
         '<button type="button" class="ngdm-dock-button" data-route="'+route+'" '+
         (state.route===route||route==='ai'&&state.route==='ai-tool'?
           'aria-current="page"':'')+'>'+
-        icon(screens[route][1])+'<span>'+esc(route==='ai'?'Studio AI':screens[route][0])+'</span></button>'
+        icon(screens[route][1])+'<span>'+esc(route==='beranda'?'Dashboard':route==='ai'?'Studio AI':screens[route][0])+'</span></button>'
       ).join('')+
       '<button type="button" id="member-more-toggle" class="ngdm-dock-button" '+
         'aria-controls="top-nav-drawer" aria-expanded="'+
