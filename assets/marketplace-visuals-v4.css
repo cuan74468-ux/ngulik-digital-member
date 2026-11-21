@@ -1,0 +1,98 @@
+
+/* NGD Marketplace Visuals V4 — locally hosted, CMS-first artwork.
+ * No checkout or payment rules live in this file. */
+body.ngd-public-app .market-page .market-hero-fallback{
+  min-height:clamp(250px,30vw,370px);
+  display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
+  gap:10px;overflow:hidden;isolation:isolate;position:relative;
+  background:#f2f3ed;border:1px solid #e3e8e0;border-radius:22px;
+}
+body.ngd-public-app .market-page .market-hero-fallback::before{
+  content:"";position:absolute;inset:auto -10% -55% 36%;
+  background:radial-gradient(ellipse at center,#d6e6df 0%,transparent 65%);pointer-events:none;
+}
+body.ngd-public-app .market-page .market-hero-content{z-index:3}
+body.ngd-public-app .market-page .market-hero-content h2{
+  max-width:18ch;font-size:clamp(1.85rem,3.1vw,3.25rem);
+  font-weight:780;letter-spacing:-.048em;
+}
+body.ngd-public-app .market-page .market-hero-content p{max-width:36ch}
+body.ngd-public-app .market-page .market-hero-link{
+  min-height:44px;border-radius:11px;background:#195b55;color:white;
+  box-shadow:none;font-weight:700;
+}
+body.ngd-public-app .market-page .ngd-market-hero-products{
+  display:flex;align-items:center;justify-content:center;
+  overflow:visible;position:relative;isolation:isolate;
+  width:100%;height:100%;min-width:0;max-width:none;
+  aspect-ratio:auto;background:transparent;border:0;border-radius:0;
+  box-shadow:none;padding:0;
+}
+body.ngd-public-app .market-page .ngd-market-hero-products img{
+  display:block;position:absolute;width:64%;height:auto;
+  aspect-ratio:3/2;object-fit:cover;border-radius:14px;
+  box-shadow:0 18px 30px rgba(30,57,51,.16);background:#e4eae6;
+  border:4px solid rgba(255,255,255,.65);
+}
+body.ngd-public-app .market-page .ngd-market-hero-products img:nth-child(1){
+  width:74%;z-index:3;transform:translate(-14%,5%) rotate(-6deg)
+}
+body.ngd-public-app .market-page .ngd-market-hero-products img:nth-child(2){
+  width:62%;z-index:2;transform:translate(27%,-28%) rotate(9deg)
+}
+body.ngd-public-app .market-page .ngd-market-hero-products img:nth-child(3){
+  width:58%;z-index:1;transform:translate(37%,33%) rotate(12deg)
+}
+body.ngd-public-app .market-product-media{
+  overflow:hidden;isolation:isolate;background:#eff2ef;position:relative;
+}
+body.ngd-public-app .market-product-media > img.ngd-product-cover{
+  display:block;width:100%;height:100%;min-width:100%;
+  object-fit:cover;object-position:center;border-radius:0;
+}
+body.ngd-public-app .market-product-card:hover .ngd-product-cover{
+  transform:scale(1.035);transition:transform .24s ease;
+}
+body.ngd-public-app .market-product-card{overflow:hidden}
+body.ngd-public-app .market-product-media .market-product-category{display:none}
+@media(max-width:650px){
+  body.ngd-public-app .market-page .market-hero-fallback{
+    grid-template-columns:1fr;min-height:0;gap:0;
+    border-radius:17px;
+  }
+  body.ngd-public-app .market-page .market-hero-content{
+    padding:22px 21px 7px;
+  }
+  body.ngd-public-app .market-page .market-hero-content h2{
+    font-size:clamp(1.6rem,7vw,2.1rem);max-width:19ch;margin-bottom:8px;
+  }
+  body.ngd-public-app .market-page .market-hero-content p{
+    font-size:.77rem;line-height:1.45;margin-bottom:13px;
+  }
+  body.ngd-public-app .market-page .market-hero-link{
+    min-height:42px;padding:10px 14px;font-size:.75rem;
+  }
+  body.ngd-public-app .market-page .ngd-market-hero-products{
+    height:150px;min-height:150px;
+  }
+  body.ngd-public-app .market-page .ngd-market-hero-products img{
+    width:46%;max-width:230px;min-width:0;border-radius:12px;border-width:2px;
+  }
+  body.ngd-public-app .market-page .ngd-market-hero-products img:nth-child(1){
+    width:49%;transform:translate(-37%,-3%) rotate(-8deg)
+  }
+  body.ngd-public-app .market-page .ngd-market-hero-products img:nth-child(2){
+    width:42%;transform:translate(33%,-14%) rotate(9deg)
+  }
+  body.ngd-public-app .market-page .ngd-market-hero-products img:nth-child(3){
+    width:40%;transform:translate(55%,22%) rotate(12deg)
+  }
+  body.ngd-public-app .market-product-media > img.ngd-product-cover{
+    object-fit:cover;object-position:center;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body.ngd-public-app .market-product-card:hover .ngd-product-cover{
+    transform:none;transition:none;
+  }
+}

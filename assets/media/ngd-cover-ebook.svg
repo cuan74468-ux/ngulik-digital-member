@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-label="Ilustrasi eBOOK">
+ <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#d5e6f3"/><stop offset="1" stop-color="#f5f0e9"/></linearGradient><linearGradient id="cover" x2="1" y2="1"><stop stop-color="#122d4d"/><stop offset="1" stop-color="#3662a5"/></linearGradient><filter id="s"><feGaussianBlur stdDeviation="20"/></filter></defs>
+ <rect width="900" height="600" fill="url(#bg)"/>
+ <circle cx="760" cy="95" r="205" fill="#ffffff" opacity=".24"/>
+ <circle cx="93" cy="520" r="230" fill="#ffffff" opacity=".17"/>
+ <ellipse cx="440" cy="501" rx="308" ry="40" fill="#28312e" opacity=".22" filter="url(#s)"/>
+ <g transform="translate(140 70)">
+  <path d="M112 28 L574 3 L621 57 L159 85Z" fill="#122d4d" opacity=".8"/>
+  <path d="M112 28 L159 85 V398 L112 361Z" fill="#122d4d"/>
+  <path d="M159 85 L621 57 V398 L159 421Z" fill="url(#cover)"/>
+  <path d="M159 85 L621 57" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="5"/>
+  <path d="M180 119 L600 93" stroke="#fff" stroke-opacity=".1" stroke-width="2"/>
+  <text x="190" y="143" font-size="22" fill="#fff" opacity=".8" font-family="Arial,sans-serif" font-weight="700" letter-spacing="3">NGULIK DIGITAL</text>
+  <text x="190" y="215" font-size="53" fill="#fff" font-family="Arial,sans-serif" font-weight="800">eBOOK</text>
+  <text x="192" y="261" font-size="25" fill="#fff" opacity=".88" font-family="Arial,sans-serif" font-weight="500">Vibe Coder</text>
+  <path d="M190 354 H375" stroke="#fff" stroke-opacity=".44" stroke-width="4"/>
+  <text x="190" y="390" font-size="18" fill="#fff" opacity=".75" font-family="Arial,sans-serif" font-weight="700" letter-spacing="2">PANDUAN DIGITAL</text>
+  <g transform="translate(508 234)"><rect width="188" height="150" rx="19" fill="#ffffff" opacity=".17"/><path d="M30 44 Q70 22 98 50 Q124 22 158 44 V123 Q125 103 98 126 Q70 103 30 123Z" fill="none" stroke="white" stroke-width="9"/><path d="M98 50 V126" stroke="white" stroke-width="7"/></g>
+ </g></svg>

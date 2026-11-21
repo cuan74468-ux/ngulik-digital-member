@@ -455,6 +455,32 @@ const offerUiDescription_=p=>String(p?.deskripsi||'');
 const isPublicQaOffer_=p=>
   String(p?.product_id||'')==='P-B36AA0054926'||
   String(p?.sumber_produk||'').toUpperCase()==='QA_STAGING_TEST';
+
+/* Local editorial cover artwork is a safe fallback when a CMS PRODUCT_IMAGE
+ * has not been published. Product price, availability and checkout remain
+ * exclusively sourced from the existing catalog/backend. */
+function ngdProductArtId_(p,kind){
+  const id=String(p?.product_id||'').toUpperCase();
+  if(id==='P-EBOOK'||id.startsWith('P-CLASS'))return 'ebook';
+  if(id.startsWith('P-STARTER'))return 'starter';
+  if(id==='P-3IN1')return 'bundle';
+  if(id==='P-POS')return 'pos';
+  if(id==='P-VIDEO-AI'||id.startsWith('P-PRIVAT'))return 'video';
+  if(id.startsWith('P-INTEGRASI'))return 'integrasi';
+  if(id.startsWith('P-TOKEN')||id.startsWith('P-KREDIT'))return 'token';
+  if(id.startsWith('P-KIT')||id.startsWith('P-CANVA'))return 'template';
+  return ({ai:'token',aplikasi:'pos',jasa:'video',belajar:'ebook'})[kind]||'template';
+}
+function ngdLocalArtSrc_(name){
+  const root=String(window.location.pathname||'').includes('/staging/')?'../':'./';
+  return root+'assets/media/ngd-cover-'+name+'.svg';
+}
+function ngdProductImageFallback_(p,kind){
+  const name=ngdProductArtId_(p,kind);
+  return '<img class="market-product-image ngd-product-cover" src="'+esc(ngdLocalArtSrc_(name))+
+    '" alt="Ilustrasi produk digital: '+esc(offerUiTitle_(p))+'" loading="lazy" decoding="async">';
+}
+
 function viewPublicMarketplace(list){
   const publicList=list.filter(p=>!isPublicQaOffer_(p));
   const category=state.catalogFilter||'semua';
@@ -474,7 +500,11 @@ function viewPublicMarketplace(list){
       '<h2>Solusi digital untuk usaha Anda</h2>'+
       '<p>Temukan alat, aplikasi, dan layanan sesuai kebutuhan.</p>'+
       '<button type="button" class="market-hero-link" data-route="belajar">Mulai belajar '+icon('arrow')+'</button>'+
-      '</div><div class="market-hero-symbol" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></div></section>';
+      '</div><div class="market-hero-symbol ngd-market-hero-products" aria-hidden="true">'+
+      '<img src="'+esc(ngdLocalArtSrc_('bundle'))+'" alt="" decoding="async">'+
+      '<img src="'+esc(ngdLocalArtSrc_('pos'))+'" alt="" decoding="async">'+
+      '<img src="'+esc(ngdLocalArtSrc_('video'))+'" alt="" decoding="async">'+
+      '</div></section>';
   const filterBar='<div class="market-categories" role="group" aria-label="Jelajahi kategori produk">'+
     offerCategories.map(([id,label])=>'<button type="button" class="catalog-filter market-category" data-catalog-filter="'+esc(id)+
       '" aria-pressed="'+(id===category?'true':'false')+'"><span class="market-category-icon" aria-hidden="true">'+
@@ -505,10 +535,10 @@ function viewPublicMarketplace(list){
     const benefits=(Number(p.kredit_diberikan)>0?'<span>'+esc(Number(p.kredit_diberikan))+' token</span>':'')+
       (Number(p.durasi_hari)>0?'<span>'+esc(Number(p.durasi_hari))+' hari akses</span>':'');
     const cover=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'market-product-image',offerUiTitle_(p));
-    const fallbackIcon=kind==='ai'?'spark':kind==='belajar'?'book':kind==='jasa'?'gift':'store';
+    const fallbackCover=ngdProductImageFallback_(p,kind);
     return '<article class="market-product-card" data-market-kind="'+esc(kind)+'" aria-label="'+esc(offerUiTitle_(p))+'">'+
       '<div class="market-product-media market-media-'+esc(kind)+'">'+
-        (cover||'<div class="market-product-placeholder" aria-hidden="true"><span class="market-product-placeholder-icon">'+icon(fallbackIcon)+'</span><span class="market-product-placeholder-name">'+esc(offerCategoryLabel(p))+'</span></div>')+
+        (cover||fallbackCover)+
         (badge?'<span class="market-product-badge">'+esc(badge)+'</span>':'')+
         '<span class="market-product-category">'+esc(offerCategoryLabel(p))+'</span>'+
       '</div><div class="market-product-body">'+
