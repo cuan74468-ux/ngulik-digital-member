@@ -26,12 +26,14 @@ test('both real pages use larger accessible Ngulik Digital wordmark consistently
   assert.match(styling,/\.guest-brand strong/);
   assert.match(styling,/font-size:clamp\(19px,1\.46vw,23px\)/);
 });
-test('member uses WhatsApp OTP login; PIN stays reserved for Admin',()=>{
-  assert.match(app,/const memberOtp=!adminMode&&!register;/);
+test('member uses OTP by default, optional hashed-PIN login only in STAGING',()=>{
+  assert.match(app,/const memberOtp=!adminMode&&!register&&!pinLogin;/);
   assert.match(app,/memberOtpLoginEnabled\(\)/);
   assert.match(app,/Login OTP member belum diaktifkan/);
-  assert.match(app,/Masukkan nomor WhatsApp dan kode OTP\. Member tidak perlu membuat PIN/);
+  assert.match(app,/Masukkan nomor WhatsApp dan kode OTP untuk masuk/);
   assert.match(app,/PIN Admin 6 angka/);
+  assert.match(app,/PIN Akun 6 angka/);
+  assert.match(app,/pinLogin=memberStaging&&state.stagingPinLogin===true/);
   assert.match(app,/api\(adminMode\?'adminLogin':register\?'register':otpLogin\?'verifyMemberLoginOtp':'login'/);
   assert.match(read('config.js'),/memberWritesEnabled:\s*false/);
   assert.match(read('staging/member-config.js'),/memberOtpLoginEnabled:\s*true/);
