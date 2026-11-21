@@ -1428,7 +1428,7 @@ function viewAccount(){
     '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan kendala '+icon('arrow')+'</button></div></div>'+viewNotificationCenter()+viewProfileEditor();
 }
 function viewLogin(register=false,adminMode=false){
-  if(register&&!registrationOtpEnabled()&&!state.registrationWaitlist){
+  if(register&&!registrationOtpEnabled()&&!state.registrationWaitlist&&!location.pathname.includes('/staging/')){
     return '<section class="ngd-role-gate"><p class="eyebrow">PENDAFTARAN MEMBER</p><h1>Pendaftaran belum dibuka.</h1>'+
       '<p>Katalog masih dapat dibuka. Pendaftaran WhatsApp hanya aktif setelah database, layanan OTP, dan pengiriman kode STAGING terverifikasi. Akun member yang sudah aktif dapat mencoba login melalui halaman STAGING.</p>'+
       '<div class="ngd-role-actions"><button type="button" class="btn btn-primary" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
@@ -1489,7 +1489,8 @@ function viewLogin(register=false,adminMode=false){
     '<p class="form-hint" style="margin:13px 0 0">'+
     (enabled?(memberOtp?'Kode berlaku 5 menit, maksimal 3 percobaan. Jangan bagikan kode.':adminMode?'Jangan bagikan PIN Admin Anda.':'Verifikasi WhatsApp diperlukan sebelum aktivasi akun.'):
       adminMode?'Akses administrator belum diaktifkan pada backend. Akun yang sudah ada tetap aman.':
-      register?'Pendaftaran baru belum dibuka pada layanan ini.':'Login OTP member belum diaktifkan pada layanan ini. Tidak perlu memasukkan PIN.')+'</p></form>'+
+      register?'Pendaftaran STAGING belum siap. Periksa koneksi backend lalu coba lagi.':'Login OTP member belum diaktifkan pada layanan ini. Tidak perlu memasukkan PIN.')+'</p>'+ 
+    (!enabled&&register&&location.pathname.includes('/staging/')?'<button type="button" class="btn btn-ghost" data-staging-readiness-refresh>Cek ulang kesiapan pendaftaran</button>':'')+'</form>'+
     '<p class="small login-other-route">'+
     (adminMode?'<button class="btn btn-ghost btn-sm" data-route="login">Kembali ke login</button>':
       register?'Sudah punya akun? <button class="btn btn-ghost btn-sm" data-route="login">Masuk</button>':
@@ -3557,6 +3558,13 @@ document.addEventListener('keydown',e=>{
   }
 });
 document.addEventListener('click',async(e)=>{
+  const retry=e.target.closest?.('[data-staging-readiness-refresh]');
+  if(retry){
+    retry.disabled=true;
+    await refreshStagingReadiness_();
+    if(!registrationOtpEnabled())toast('Registrasi STAGING belum dapat diverifikasi. Periksa konfigurasi GAS dan layanan OTP.',true);
+    return;
+  }
   const more=e.target.closest?.('#member-more-toggle');
   if(more&&logged()&&!isAdmin()){
     const drawer=by('top-nav-drawer'),open=drawer?.hidden===true;
@@ -3926,9 +3934,14 @@ window.addEventListener('hashchange',syncBrowserRoute_);
 async function init(){
   captureFirstInviter_();
   const requestedRoute=aiRouteFromHash_();
-  state.route=guestRoute_(requestedRoute==='menu'?'beranda':requestedRoute);
-  state.catalog=[];
-  if(!activatePreview()){
+  // Establish the explicitly requested offline QA identity before resolving
+  // protected deep links. Live sessions still require server validation.
+  const previewActive=activatePreview();
+  state.route=previewActive?
+    (screens[requestedRoute]?(requestedRoute==='menu'?'beranda':requestedRoute):'beranda'):
+    guestRoute_(requestedRoute==='menu'?'beranda':requestedRoute);
+  if(!previewActive){
+    state.catalog=[];
     state.info=null;
     render();
     // Public catalog/content and a private session are independent. Do not

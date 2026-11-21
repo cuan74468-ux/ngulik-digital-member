@@ -78,8 +78,8 @@ test('public page artwork remains contextual while quiet home does not repeat CM
   assert.match(app,/cmsPageArt_\('affiliate'\)/);
   assert.match(app,/function viewServiceRequests\(\)/);
   assert.match(app,/cmsPageArt_\('ai'\)/);
-  assert.match(app,/cmsPageArt_\('dukungan'\)/);
-  assert.match(app,/cmsPageArt_\('belajar'\)/);
+  assert.match(app,/function viewSupport\(\)/); // Help is text-first, no decorative cover dependency.
+  assert.match(app,/function viewLearn\(\)/); // Member-only learning uses its own layout.
   assert.doesNotMatch(app,/by\('screen'\)\.innerHTML=\(!logged\(\)&&state\.route==='belajar'/);
   const css=read('assets/catalog-campaign-v9.css');
   assert.match(css,/\.ngd-cms-affiliate-art/);
@@ -97,6 +97,6 @@ test('V13 public banner maintains proportional desktop layout and content-driven
   assert.match(ui,/\.market-product-media\{[\s\S]*?aspect-ratio:6\/5/);
   assert.match(ui,/\.ngd-cms-preview-desktop \.ngd-cms-preview-image\{[\s\S]*?aspect-ratio:8\/3/);
   assert.match(ui,/\.ngd-cms-preview-mobile \.ngd-cms-preview-image\{[\s\S]*?aspect-ratio:4\/5/);
-  assert.match(app,/Buat katalog online, gunakan sistem kasir/);
+  assert.match(app,/Bikin konten jualan, coba AI, atau rapikan usaha/);
   assert.match(content,/CMS saat ini menggunakan satu gambar per penempatan/);
 });

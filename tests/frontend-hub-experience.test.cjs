@@ -36,9 +36,10 @@ function preview(query=''){
 }
 test('public hub is a calm mobile-first entry with accessible product navigation',()=>{
   const h=preview(),html=h.nodes.screen.innerHTML;
-  for(const key of ['nh-home-minimal','ngd-home-quiet-hero','public-hero-copy','ngd-home-direct-links','eBook Gratis','Kelas Gratis'])
+  for(const key of ['ngd-landing-v1','ngdl-hero','ngdl-hero-copy','ngdl-actions','ngdl-offers'])
     assert.ok(html.includes(key),key);
-  assert.match(html,/Solusi digital yang benar-benar membantu/);
+  assert.match(html,/Bikin konten jualan, coba AI, atau rapikan usaha/);
+  assert.doesNotMatch(html,/eBook Gratis|Kelas Gratis/);
   assert.doesNotMatch(html,/market-product-card|ngd-shop-featured|ngd-shop-signup/);
   assert.doesNotMatch(html,/class="ngd-home-services"/); // No duplicate tall service cards.
   assert.doesNotMatch(html,/class="nh-grid"|class="nh-rail"/);
@@ -70,8 +71,9 @@ test('guest marketplace routes every owned offer internally and keeps QRIS OFF',
   assert.doesNotMatch(html,/wa\.me|Tanya via WhatsApp|Chat WhatsApp/);
   vm.runInContext("state.checkoutProductId='P-VIDEO-AI';state.lastOrder=null;go('checkout')",h.ctx);
   const detail=h.nodes.screen.innerHTML;
-  assert.match(detail,/Rincian Checkout/);
-  assert.match(detail,/Pembayaran belum dibuka/);
+  assert.match(detail,/Login member belum tersedia|Masuk ke akun Anda/);
+  assert.equal(vm.runInContext('state.pendingPurchaseId',h.ctx),'P-VIDEO-AI');
+  assert.match(detail,/data-route="katalog"/);
   assert.doesNotMatch(detail,/data-qris-image|data-checkout-create/);
   assert.equal(h.apiCalls.length,0);
 });
@@ -173,9 +175,9 @@ test('guest Jasa handles an empty catalog without inventing prices or unlocking 
 test('guest Beranda keeps a lean route-first layout without products or banner artwork',()=>{
   const h=preview();
   const page=h.nodes.screen.innerHTML;
-  assert.match(page,/ngd-home-quiet/);
+  assert.match(page,/ngd-landing-v1/);
   assert.match(page,/data-route="jasa"/);
   assert.match(page,/data-route="ai"/);
-  assert.match(page,/eBook Gratis/);
+  assert.doesNotMatch(page,/eBook Gratis|Kelas Gratis/);
   assert.doesNotMatch(page,/market-product-card|ngd-shop-featured|ngd-shop-signup|ngd-home-artwork/);
 });

@@ -60,13 +60,13 @@ test('admin lesson draft editor and AI review are read-only in demo',()=>{
 });
 test('member preview shows published class and allows reading without AI or payment',()=>{
   const h=preview('member','belajar');
-  assert.match(h.nodes.screen.innerHTML,/RUANG MEMBER \/ KELAS SAYA/);
+  assert.match(h.nodes.screen.innerHTML,/Kelas yang Anda ikuti/);
   assert.match(h.nodes.screen.innerHTML,/Fondasi Digital untuk UMKM/);
   assert.match(h.nodes.screen.innerHTML,/Materi Pengantar/);
   h.go('lms-course');
   assert.match(h.nodes.screen.innerHTML,/Menyiapkan Profil Usaha/);
   assert.match(h.nodes.screen.innerHTML,/Tujuan pembelajaran/);
-  assert.match(h.nodes.screen.innerHTML,/disabled title="Edit materi belum tersedia"/);
+  assert.match(h.nodes.screen.innerHTML,/Tandai selesai/);
 });
 test('member cannot open admin editor routes',()=>{
   const h=preview('member','lms');

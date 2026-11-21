@@ -17,8 +17,8 @@ test('public and STAGING share the same latest calm floating-brand layer',()=>{
   }
 });
 test('quiet public hero uses text first, with accessible links and no decorative product collage',()=>{
-  assert.match(app,/class="ngd-shop-brand-stage"/);
-  assert.match(app,/class="ngd-home-quiet-hero"|ngd-home-quiet-hero/);
+  assert.match(app,/class="ngdl-hero"/);
+  assert.match(app,/class="ngdl-hero"|ngdl-hero/);
   assert.doesNotMatch(app.slice(app.indexOf('  \/\/ Public front door:'),app.indexOf('const offerCategories=')),/ngd-home-artwork|ngd-floating-shadow|market-product-card/);
   assert.doesNotMatch(app,/ngd-journey-step|ngd-climb-step|ngd-journey-stairs|ngd-journey-art/);
   assert.match(floating,/@keyframes ngdQuietFloat/);
@@ -26,9 +26,9 @@ test('quiet public hero uses text first, with accessible links and no decorative
   assert.doesNotMatch(floating,/@keyframes ngdBallAscend|@keyframes ngdStairLight|ngdPixelDrift/);
 });
 test('homepage routes to the live catalog and member registration without fake commerce',()=>{
-  assert.match(app,/class="nh-home nh-home-minimal ngd-shop-home ngd-home-quiet"/);
-  assert.match(app,/class="ngd-shop-hero"|ngd-shop-hero/);
-  assert.match(app,/ngd-home-direct-links/);
+  assert.match(app,/class="ngd-landing-v1"/);
+  assert.match(app,/class="ngdl-hero"|ngdl-hero/);
+  assert.match(app,/ngdl-actions/);
   assert.doesNotMatch(app.slice(app.indexOf('  \/\/ Public front door:'),app.indexOf('const offerCategories=')),/ngd-shop-featured|ngd-shop-signup/);
   assert.match(app,/data-route="katalog"/);
   assert.match(app,/data-route="daftar"/);
@@ -51,7 +51,7 @@ test('homepage-only CSS preserves payment and account logic',()=>{
 });
 
 test('both entrypoints load current homepage copy rather than cached 16 November module',()=>{
-  assert.match(app,/Solusi digital yang benar-benar membantu/);
-  assert.match(publicHtml,/js\/app\.js\?v=20261121-p0-mobile-v16-2/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261121-p0-mobile-v16-2/);
+  assert.match(app,/Bikin konten jualan, coba AI, atau rapikan usaha/);
+  assert.match(publicHtml,/js\/app\.js\?v=20261121-member-native-2/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261121-member-native-2/);
 });
