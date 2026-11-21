@@ -348,3 +348,46 @@ body.ngd-public-app[data-app-role=member]:not(#ngd) .main-content,
 body.ngd-public-app[data-app-role=admin]:not(#ngd) .main-content{
   padding-bottom:clamp(35px,5vw,70px)!important
 }
+
+/* P0: historical member-specific rules used higher specificity than the shared
+ * mobile header/hero; force the final accessible surface in real 360px Chrome. */
+@media(max-width:980px){
+  html body.ngd-public-app[data-app-role=member]:not(#ngd) .topbar .top-actions #account-button,
+  html body.ngd-public-app[data-app-role=admin]:not(#ngd) .topbar .top-actions #account-button,
+  html body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar .top-actions #account-button{
+    display:none!important;visibility:hidden!important;width:0!important
+  }
+  html body.ngd-public-app .topbar .top-actions{
+    gap:4px!important;flex:0 1 auto!important;max-width:calc(100vw - 143px)!important
+  }
+  html body.ngd-public-app .topbar .guest-brand{
+    flex:1 1 0!important;min-width:0!important;width:auto!important
+  }
+  html body.ngd-public-app .topbar .guest-brand strong{
+    white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important
+  }
+  html body.ngd-public-app .topbar .top-header-token{
+    min-width:0!important;max-width:72px!important;text-overflow:ellipsis!important
+  }
+}
+html body.ngd-public-app[data-app-role=member]:not(#ngd) .workarea .main-content #screen
+.ngd-member-command .ngd-member-hero h1,
+html body.ngd-public-app[data-app-role=member]:not(#ngd) .workarea .main-content #screen
+.ngd-member-command .ngd-member-hero h1 .accent{
+  color:#231f3c!important;-webkit-text-fill-color:#231f3c!important;
+  text-shadow:none!important
+}
+html body.ngd-public-app[data-app-role=member]:not(#ngd) .workarea .main-content #screen
+.ngd-member-command .ngd-member-hero .lead,
+html body.ngd-public-app[data-app-role=member]:not(#ngd) .workarea .main-content #screen
+.ngd-member-command .ngd-member-hero .eyebrow{
+  color:#554e66!important;-webkit-text-fill-color:#554e66!important;
+  text-shadow:none!important
+}
+html body.ngd-public-app[data-app-role=member]:not(#ngd) .workarea .main-content #screen
+.ngd-member-services .service-heading h1,
+html body.ngd-public-app[data-app-role=member]:not(#ngd) .workarea .main-content #screen
+.ngd-member-services .service-heading p{
+  color:#28243d!important;-webkit-text-fill-color:#28243d!important;
+  text-shadow:none!important
+}
