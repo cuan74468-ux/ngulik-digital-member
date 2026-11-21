@@ -2144,7 +2144,7 @@ function render(){
     dukungan:viewSupport,tiket:viewTicketDetail,member360:viewMember360,rilis:viewReleases,pengaturan:viewAdminSettings
   };
   const routeBlocked=adminOnlyRoutes.has(state.route)&&!isAdmin();
-  const adminOutOfScope=isAdmin()&&!adminOnlyRoutes.has(state.route)&&!['beranda','menu','pesanan','dukungan','akun','tiket','member360','admin-login'].includes(state.route);
+  const adminOutOfScope=isAdmin()&&!adminOnlyRoutes.has(state.route)&&!['beranda','menu','pesanan','dukungan','akun','tiket','member360','rilis','admin-login'].includes(state.route);
   const screen=routeBlocked?
     '<section class="ngd-role-gate"><p class="eyebrow">AKSES TERBATAS</p><h1>Halaman khusus pengelola.</h1><p>Konten ini tidak tersedia dalam ruang publik atau member. Kembali ke area yang sesuai dengan akun Anda.</p><button type="button" class="btn btn-primary" data-route="beranda">Kembali ke Beranda</button></section>':
     adminOutOfScope?
