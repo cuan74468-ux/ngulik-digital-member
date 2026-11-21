@@ -168,3 +168,23 @@ test('schema migration is staging-only, id-confirmed, forward-only, and idempote
   assert.equal(created,1);
   assert.equal(tables.site_content.rows[0].join(','),headers.site_content);
 });
+
+test('published CMS cannot be edited live or republished with legacy unknown kind',()=>{
+  const h=fixture(),one=h.create().item;
+  const live=h.status({content_id:one.content_id,status:'PUBLISHED',revision:one.revision});
+  assert.throws(()=>h.update({...sample({title:'Accidental edit'}),
+    content_id:one.content_id,revision:live.item.revision}),/Tarik tayang/);
+  assert.equal(h.rows[0].title,'Kelas untuk UMKM');
+  const draft=h.status({content_id:one.content_id,status:'DRAFT',revision:live.item.revision});
+  const patched=h.update({...sample({title:'Disetujui ulang'}),
+    content_id:one.content_id,revision:draft.item.revision});
+  assert.equal(patched.item.title,'Disetujui ulang');
+  // Historical BANNER rows remain accessible to Admin for archival, never public.
+  h.rows.push({kind:'BANNER',content_id:'CNT-OLD-BANNER',placement:'home',status:'DRAFT',
+    _row:3,image_path:'assets/media/old.webp',sort_order:9,title:'Old',description:'',
+    cta_label:'',cta_route:'',start_date:'',end_date:''});
+  assert.throws(()=>h.status({content_id:'CNT-OLD-BANNER',status:'PUBLISHED',
+    revision:h.ctx.contentRevision_(h.rows[1])}),/Format banner lama/);
+  h.rows[1].status='PUBLISHED';
+  assert.equal(h.ctx.contentPublicList_().some(x=>x.kind==='BANNER'),false);
+});

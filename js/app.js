@@ -508,7 +508,7 @@ function viewHome(){
     '<header class="ngd-shop-featured-head"><div><span>PRODUK PILIHAN</span>'+
     '<h2>Temukan solusi digital untuk usaha Anda</h2></div>'+
     '<button type="button" data-route="katalog">Lihat Semua Produk '+icon('arrow')+'</button></header>'+
-    viewPublicMarketplace(curated)+'</section>';
+    viewPublicMarketplace(curated,{showCampaign:false})+'</section>';
   const signup='<section class="ngd-shop-signup" aria-label="Keanggotaan Ngulik Digital">'+
     '<div><strong>Jadi Member Ngulik Digital Sekarang!</strong>'+
     '<p>Belajar, akses produk digital, dan ikuti program afiliasi sesuai syarat.</p></div>'+
@@ -623,6 +623,7 @@ function viewPublicMarketplace(list){
   const category=options.category??(state.catalogFilter||'semua');
   const search=String(options.search??state.marketplaceSearch??'').trim().toLocaleLowerCase('id-ID');
   const sort=options.sort??(state.marketplaceSort||'default');
+  const showCampaign=options.showCampaign!==false;
   let shown=publicList.filter(p=>ngdOfferInCategory_(p,category)&&
     (!search||String(p.nama||'').toLocaleLowerCase('id-ID').includes(search)||
       String(p.deskripsi||'').toLocaleLowerCase('id-ID').includes(search)||
@@ -631,18 +632,18 @@ function viewPublicMarketplace(list){
   if(sort==='price-asc')shown=[...shown].sort((a,b)=>(moneyValue(a.harga)??Number.POSITIVE_INFINITY)-(moneyValue(b.harga)??Number.POSITIVE_INFINITY));
   if(sort==='price-desc')shown=[...shown].sort((a,b)=>(moneyValue(b.harga)??Number.NEGATIVE_INFINITY)-(moneyValue(a.harga)??Number.NEGATIVE_INFINITY));
   if(sort==='name')shown=[...shown].sort((a,b)=>String(a.nama||'').localeCompare(String(b.nama||''),'id'));
-  const banner=window.NGD_CONTENT_UI?.hero(state.siteContent,'catalog')||
-    '<section class="market-hero-fallback" aria-label="Selamat datang di marketplace Ngulik Digital">'+
-      '<div class="market-hero-content"><span class="market-eyebrow">NGULIK DIGITAL MEMBER</span>'+
-      '<h2>Belajar, Berkarya, dan Ngulik Bareng AI</h2>'+
-      '<p>Solusi digital, eBook, aplikasi, dan jasa praktis untuk UMKM.</p>'+
-      '<button type="button" class="market-hero-link" data-route="daftar">Daftar Member '+icon('arrow')+'</button>'+
-      '</div><div class="market-hero-symbol" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt="">'+
-      '<div class="ngd-market-hero-products">'+
-      '<img src="'+esc(ngdPremiumArtSrc_('bundle'))+'" alt="" decoding="async">'+
-      '<img src="'+esc(ngdPremiumArtSrc_('pos'))+'" alt="" decoding="async">'+
-      '<img src="'+esc(ngdPremiumArtSrc_('video'))+'" alt="" decoding="async">'+
-      '</div></div></section>';
+  // Admin HERO/catalog content is authoritative. The baked-in visual is a
+  // reliable fallback when a catalog campaign has not been published yet.
+  const banner=window.NGD_CONTENT_UI?.catalogBanner(state.siteContent)||
+    '<section class="ngd-catalog-campaign" data-catalog-banner-source="default">'+
+      '<div class="ngd-catalog-campaign-viewport"><article class="ngd-catalog-campaign-slide">'+
+      '<div class="ngd-catalog-campaign-picture"><img src="'+esc(ngdPremiumArtSrc_('hero'))+'" alt=""></div>'+
+      '<div class="ngd-catalog-campaign-copy">'+
+      '<p class="ngd-catalog-campaign-kicker">NGULIK DIGITAL · MARKETPLACE PRODUK DIGITAL</p>'+
+      '<h2>Produk digital untuk belajar dan mengembangkan usaha.</h2>'+
+      '<p class="ngd-catalog-campaign-description">Jelajahi solusi digital yang sesuai kebutuhan Anda.</p>'+
+      '<div class="ngd-catalog-campaign-actions"><button type="button" class="ngd-catalog-campaign-cta" data-market-browse>Jelajahi Produk</button></div>'+
+      '</div></article></div></section>';
   const filterBar='<div class="market-categories" role="group" aria-label="Jelajahi kategori produk">'+
     offerCategories.map(([id,label])=>'<button type="button" class="catalog-filter market-category" data-catalog-filter="'+esc(id)+
       '" aria-pressed="'+(id===category?'true':'false')+'"><span class="market-category-icon" aria-hidden="true">'+
@@ -704,8 +705,8 @@ function viewPublicMarketplace(list){
     '<header class="market-header"><div><p class="market-eyebrow">NGULIK DIGITAL / PILIHAN UNTUK USAHA</p>'+
     '<h1>Katalog Produk & Jasa</h1><p>Cari solusi yang cocok, lihat harga, dan pilih langkah berikutnya.</p></div>'+
     '</header>'+
-    '<div class="market-banner-shell">'+banner+'</div>'+
-    '<section class="market-shopping" aria-label="Belanja produk digital">'+
+    (showCampaign?'<div class="market-banner-shell">'+banner+'</div>':'')+
+    '<section class="market-shopping" id="market-shopping" aria-label="Belanja produk digital">'+
       controls+filterBar+
       '<div class="market-results-header"><h2>Produk Unggulan</h2><span aria-live="polite">'+shown.length+' dari '+publicList.length+' produk</span>'+
       '<button type="button" class="market-refresh" data-market-refresh aria-label="Perbarui katalog">Perbarui</button></div>'+
@@ -1586,7 +1587,7 @@ function viewServiceRequests(){
   if(!logged()&&!isAdmin()){
     const items=(Array.isArray(state.catalog)?state.catalog:[]).filter(p=>
       !isPublicQaOffer_(p)&&['JASA_SEKALI','SEAT_30H'].includes(String(p.tipe||'')));
-    const cards=items.length?viewPublicMarketplace(items,{category:'semua',search:'',sort:'default'}):
+    const cards=items.length?viewPublicMarketplace(items,{category:'semua',search:'',sort:'default',showCampaign:false}):
       '<p class="ngd-public-services-empty">Katalog layanan sedang dimuat atau belum tersedia. Lihat katalog lengkap untuk pilihan lain.</p>';
     return '<div class="ngd-public-services">'+
       '<section class="ngd-public-services-hero" aria-label="Layanan Ngulik Digital">'+
@@ -1926,19 +1927,49 @@ function syncHeroRotation_(){
   if(heroTimer_!==null){clearTimeout(heroTimer_);heroTimer_=null;}
   if(typeof document.querySelector!=='function')return;
   showHeroSlide_(state.heroIndex);
-  if(state.qa||state.route!=='beranda'||isAdmin()||state.heroPaused||
+  if(state.qa||!['beranda','katalog'].includes(state.route)||isAdmin()||state.heroPaused||
      heroFocused_||document.hidden||typeof setTimeout!=='function')return;
   const root=document.querySelector('[data-hero-carousel]');
   if(!root||root.querySelectorAll('[data-hero-panel]').length<2)return;
   if(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return;
   heroTimer_=setTimeout(()=>{
     heroTimer_=null;
-    if(state.route==='beranda'&&!state.heroPaused&&!heroFocused_&&!document.hidden){
+    if(['beranda','katalog'].includes(state.route)&&!state.heroPaused&&!heroFocused_&&!document.hidden){
       showHeroSlide_(state.heroIndex+1);
     }
     syncHeroRotation_();
   },6500);
 }
+function updateContentPreview_(){
+  const form=document.getElementById('content-editor-form');
+  if(!form)return;
+  const src=window.NGD_CONTENT_UI?.mediaPath(form.querySelector('[name="image_path"]')?.value);
+  const title=String(form.querySelector('[name="title"]')?.value||'Judul banner Anda');
+  const kind=form.querySelector('[name="kind"]')?.value;
+  const place=form.querySelector('[name="placement"]');
+  if(kind&&place){
+    let first='';
+    for(const option of Array.from(place.options||[])){
+      const valid=option.dataset.contentKind===kind;
+      option.hidden=!valid;option.disabled=!valid;
+      if(valid&&!first)first=option.value;
+    }
+    if(place.selectedOptions?.[0]?.disabled&&first)place.value=first;
+  }
+  form.querySelectorAll('[data-content-preview-title]').forEach(node=>{node.textContent=title;});
+  form.querySelectorAll('[data-content-preview-image]').forEach(img=>{
+    if(src){img.src=src;img.hidden=false;}
+    else {img.hidden=true;img.removeAttribute('src');}
+  });
+}
+document.addEventListener('input',e=>{
+  if(e.target?.closest?.('#content-editor-form')&&
+     ['content-kind','content-placement','content-image','content-title'].includes(e.target?.id))
+    updateContentPreview_();
+});
+document.addEventListener('change',e=>{
+  if(e.target?.id==='content-kind')updateContentPreview_();
+});
 async function submitContentForm_(form){
   if(!isAdmin()||!contentWriteEnabled())return toast('Edit konten belum tersedia.',true);
   const fd=new FormData(form),id=String(form.dataset.contentId||'');
@@ -1950,7 +1981,11 @@ async function submitContentForm_(form){
   payload.sort_order=Number(payload.sort_order);
   const old=id?state.adminContent.find(x=>x.content_id===id):null;
   if(id&&!old)return toast('Konten berubah. Muat ulang halaman.',true);
-  if(old){payload.content_id=id;payload.revision=old.revision;}
+  if(old){
+    if(old.status==='PUBLISHED')
+      return toast('Tarik tayang konten terlebih dahulu sebelum mengedit. Ini mencegah perubahan live tanpa persetujuan publikasi ulang.',true);
+    payload.content_id=id;payload.revision=old.revision;
+  }
   if(!(payload.kind==='PROMO'||payload.kind==='ANNOUNCEMENT')||payload.image_path){
     if(!window.NGD_CONTENT_UI?.mediaPath(payload.image_path))
       return toast('Gunakan URL HTTPS gambar atau path assets/ (PNG, JPG, WebP, AVIF).',true);
@@ -1978,6 +2013,8 @@ async function changeContentStatus_(id,nextStatus){
   const old=state.adminContent.find(x=>x.content_id===id);
   if(!old)return toast('Konten tidak ditemukan.',true);
   if(nextStatus==='PUBLISHED'){
+    if(!['HERO','PRODUCT_IMAGE','FEATURE_ICON','PAGE_COVER','NAV_ICON','BRAND_LOGO','PROMO','ANNOUNCEMENT'].includes(old.kind))
+      return toast('Format konten lama tidak dapat diterbitkan. Buat konten baru dengan jenis yang didukung.',true);
     const src=window.NGD_CONTENT_UI?.mediaPath(old.image_path);
     if(!src&&['PROMO','ANNOUNCEMENT'].includes(old.kind)){
       if(!confirm('Terbitkan '+(old.kind==='PROMO'?'promosi':'pengumuman')+' tanpa gambar?'))return;
@@ -2057,7 +2094,8 @@ function render(){
     dukungan:viewSupport,tiket:viewTicketDetail,member360:viewMember360,rilis:viewReleases,pengaturan:viewAdminSettings
   };
   const screen=(routes[state.route]||viewHome)();
-  by('screen').innerHTML=(!logged()&&['belajar','katalog','jasa','ai','affiliate','dukungan'].includes(state.route)?
+  // Catalog has a single authoritative HERO slot; do not stack PAGE_COVER above it.
+  by('screen').innerHTML=(!logged()&&['belajar','jasa','ai','affiliate','dukungan'].includes(state.route)?
     (window.NGD_CONTENT_UI?.cover(state.siteContent,state.route)||''):'')+screen;
   syncCheckoutClock_();
   syncHeroRotation_();
@@ -3007,7 +3045,17 @@ async function submitServiceQuote(form){
 }
 document.addEventListener('error',(event)=>{
   const img=event.target;
-  if(img?.tagName!=='IMG'||!img.classList?.contains('market-product-image'))return;
+  if(img?.tagName!=='IMG')return;
+  if(img.closest?.('.ngd-catalog-campaign-picture')){
+    // CMS URLs can disappear after publication. Recover to the vetted local
+    // wide artwork once, preserving the Admin-authored text and CTA.
+    if(img.dataset?.campaignRecovered==='1'){img.hidden=true;return;}
+    img.dataset.campaignRecovered='1';
+    const root=String(window.location?.pathname||'').includes('/staging/')?'../':'./';
+    img.src=root+'assets/media/ngd-catalog-v9-wide.webp';
+    return;
+  }
+  if(!img.classList?.contains('market-product-image'))return;
   const fallback=String(img.dataset?.marketFallback||'');
   if(fallback&&img.dataset.marketFallbackUsed!=='1'){
     img.dataset.marketFallbackUsed='1';
@@ -3149,6 +3197,10 @@ document.addEventListener('click',async(e)=>{
     }
     return;
   }
+  if(e.target.closest('[data-market-browse]')){
+    document.querySelector?.('#market-shopping')?.scrollIntoView?.({behavior:'smooth',block:'start'});
+    return;
+  }
   if(e.target.closest('[data-market-refresh]')){
     if(!isConnected()||state.qa)return;
     const button=e.target.closest('[data-market-refresh]');
@@ -3161,7 +3213,7 @@ document.addEventListener('click',async(e)=>{
     state.marketplaceSearch='';state.catalogFilter='semua';state.marketplaceSort='default';
     render();return;
   }
-  const target=e.target.closest('[data-checkout-product],[data-checkout-create],[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-image],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-payment-open],[data-order-detail]');
+  const target=e.target.closest('[data-checkout-product],[data-checkout-create],[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-create],[data-content-asset],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-image],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-payment-open],[data-order-detail]');
   if(!target)return;
   if(target.hasAttribute('data-checkout-product')){
     openProductCheckout_(target.dataset.checkoutProduct);return;
@@ -3241,7 +3293,23 @@ document.addEventListener('click',async(e)=>{
     target.textContent=state.heroPaused?'Lanjutkan':'Jeda';syncHeroRotation_();
   }else if(target.hasAttribute('data-content-new')){
     if(!isAdmin())return;
-    state.contentEditId='';state.contentRequestId=null;render();
+    state.contentEditId='';state.contentPresetProductId='catalog';state.contentRequestId=null;render();
+  }else if(target.hasAttribute('data-content-create')){
+    if(!isAdmin())return;
+    const place=String(target.dataset.contentCreate||'');
+    if(!['home','catalog','member_home'].includes(place))return;
+    state.contentEditId='';state.contentPresetProductId=place;state.contentRequestId=null;render();
+    document.getElementById('content-editor-form')?.scrollIntoView?.({block:'nearest'});
+  }else if(target.hasAttribute('data-content-asset')){
+    if(!isAdmin())return;
+    const asset=String(target.dataset.contentAsset||'');
+    const approved=new Set(['ngd-catalog-v9-wide.webp','ngd-v6-hero.webp',
+      'ngd-v6-ebook.webp','ngd-v6-starter.webp','ngd-v6-bundle.webp',
+      'ngd-v8-pos.webp','ngd-v8-video.webp','ngd-v8-gas.webp',
+      'ngd-v8-ai-small.webp','ngd-v8-templates.webp']);
+    if(!asset.startsWith('assets/media/')||!approved.has(asset.slice(13)))return;
+    const field=document.getElementById('content-image');
+    if(field){field.value=asset;updateContentPreview_();}
   }else if(target.hasAttribute('data-content-edit')){
     if(!isAdmin())return;
     state.contentEditId=target.dataset.contentEdit;state.contentRequestId=null;render();

@@ -107,6 +107,7 @@ function contentPublicList_() {
   var nowWib=Utilities.formatDate(now_(),NGD.TZ,'yyyy-MM-dd');
   return readAll_('site_content').filter(function(row){
     return row.status==='PUBLISHED'&&
+      NGD_CONTENT_KINDS_.indexOf(row.kind)>=0&&
       (!row.start_date||String(row.start_date)<=nowWib)&&
       (!row.end_date||String(row.end_date)>=nowWib);
   }).sort(function(a,b){
@@ -146,6 +147,8 @@ function contentUpdate_(admin,p) {
     var old=byId_('site_content','content_id',id);
     require_(old,'NOT_FOUND','Konten tidak ditemukan.');
     require_(old.status!=='ARCHIVED','CONFLICT','Pulihkan arsip sebelum menyunting.');
+    require_(old.status!=='PUBLISHED','CONFLICT',
+      'Tarik tayang konten sebagai DRAFT sebelum mengedit. Publikasikan ulang setelah diperiksa.');
     var patch=contentPayload_(p,old);
     if(contentSame_(old,patch))return {item:contentAdminView_(old),updated:false};
     require_(String(p.revision||'')===contentRevision_(old),
@@ -174,6 +177,8 @@ function contentSetStatus_(admin,p) {
       'CONFLICT','Status konten sudah berubah. Muat ulang.');
     require_(old.status!=='ARCHIVED'||p.status==='DRAFT',
       'CONFLICT','Pulihkan arsip sebagai draft sebelum menerbitkan.');
+    if(p.status==='PUBLISHED')require_(NGD_CONTENT_KINDS_.indexOf(old.kind)>=0,
+      'VALIDATION','Format banner lama tidak dapat diterbitkan. Buat HERO atau PROMO baru.');
     updateRow_('site_content',old._row,{status:p.status,updated_at:now_()});
     logAudit_(admin.member_id,'ADMIN','CONTENT_STATUS','site_content',id,
       old.status,p.status,{kind:old.kind,placement:old.placement});

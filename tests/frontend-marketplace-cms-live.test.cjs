@@ -76,7 +76,8 @@ test('Admin product-photo shortcut reuses the existing authorized CMS',()=>{
   });
   assert.match(html,/name="kind" id="content-kind"/);
   assert.match(html,/<option value="PRODUCT_IMAGE" selected/);
-  assert.match(html,/name="placement" list="content-places" maxlength="70" value="P-POS"/);
+  assert.match(html,/id="content-placement" name="placement"/);
+  assert.match(html,/<option value="P-POS" data-content-kind="PRODUCT_IMAGE" selected/);
   assert.match(html,/disabled/);
   assert.match(html,/Badge produk \(opsional, maks 24 karakter\)/);
 });

@@ -19,7 +19,15 @@
       el.setAttribute('data-v8-archived-visible',String(archived));
       el.setAttribute('data-v8-affiliate-cohesive',String(affiliateCohesive));
       el.setAttribute('data-v8-help-faq',String(helpCount));
-      document.body.appendChild(el);
+      const campaign=document.querySelector('.ngd-catalog-campaign');
+     const campaignPicture=campaign?.querySelector('.ngd-catalog-campaign-picture img');
+     const source=campaign?.getAttribute('data-catalog-banner-source')||'none';
+     const artReady=!!campaignPicture&&campaignPicture.complete&&campaignPicture.naturalWidth>0;
+     el.setAttribute('data-v9-campaign-source',source);
+     el.setAttribute('data-v9-campaign-art-loaded',String(artReady));
+     el.setAttribute('data-v9-campaign-has-headline',String(!!campaign?.querySelector('h2')));
+     el.setAttribute('data-v9-campaign-width',String(Math.round(campaign?.getBoundingClientRect().width||0)));
+     document.body.appendChild(el);
     },1250);
   },{once:true});
 })();

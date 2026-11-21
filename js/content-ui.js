@@ -62,6 +62,64 @@
         '<button type="button" class="nh-carousel-toggle" data-hero-pause aria-pressed="false">Jeda</button></div>':'')+
       '</section>';
   }
+  /* A single catalog campaign renderer shared by public + member storefronts.
+   * Admin HERO/catalog rows override this shipped fallback only after publication.
+   * No prices, discounts, or commissions are fabricated by the presentation.
+   */
+  function catalogBanner(contents){
+    const rows=published(contents,'HERO','catalog').slice(0,4);
+    const defaults=!rows.length;
+    const slides=defaults?[{
+      title:'Produk digital untuk belajar, berkarya, dan bertumbuh.',
+      description:'Jelajahi eBook, template, tools AI, aplikasi kasir, dan layanan untuk kebutuhan usaha Anda.',
+      image_path:'assets/media/ngd-catalog-v9-wide.webp',
+      cta_label:'Jelajahi Produk',cta_route:'',default_art:true
+    }]:rows;
+    const html=slides.map((item,i)=>{
+      const route=routes.includes(item.cta_route)?item.cta_route:'';
+      const picture=item.default_art?
+        '<picture class="ngd-catalog-campaign-picture" aria-hidden="true">'+
+          '<source media="(max-width:700px)" srcset="'+h(mediaPath('assets/media/ngd-catalog-v9-mobile.webp'))+'">'+
+          '<img src="'+h(mediaPath(item.image_path))+'" alt="" loading="'+(i?'lazy':'eager')+'" decoding="async">'+
+        '</picture>':
+        '<div class="ngd-catalog-campaign-picture" aria-hidden="true"><img src="'+
+          h(mediaPath(item.image_path))+'" alt="" loading="'+(i?'lazy':'eager')+
+          '" decoding="async"></div>';
+      const headline=String(item.title||'Temukan Produk Digital Pilihan');
+      const detail=String(item.description||'eBook, tools AI, sistem, dan layanan untuk UMKM.');
+      const button=route?
+        '<button type="button" class="ngd-catalog-campaign-cta" data-route="'+h(route)+'">'+
+          h(item.cta_label||'Lihat Produk')+' <span aria-hidden="true">→</span></button>':
+        item.default_art?
+        '<button type="button" class="ngd-catalog-campaign-cta" data-market-browse>'+
+          h(item.cta_label)+' <span aria-hidden="true">→</span></button>':'';
+      return '<article class="ngd-catalog-campaign-slide" data-hero-panel="'+i+'"'+
+        (i?' hidden aria-hidden="true"':' aria-hidden="false"')+'>'+
+        picture+
+        '<div class="ngd-catalog-campaign-copy">'+
+          '<p class="ngd-catalog-campaign-kicker">NGULIK DIGITAL · MARKETPLACE PRODUK DIGITAL</p>'+
+          '<h2>'+h(headline)+'</h2>'+
+          '<p class="ngd-catalog-campaign-description">'+h(detail)+'</p>'+
+          '<div class="ngd-catalog-campaign-actions">'+button+
+            '<span class="ngd-catalog-campaign-benefit">Produk & layanan untuk UMKM</span>'+
+          '</div>'+
+        '</div>'+
+      '</article>';
+    }).join('');
+    const controls=slides.length>1?
+      '<div class="ngd-catalog-campaign-controls" aria-label="Kontrol banner katalog">'+
+        '<button type="button" data-hero-step="-1" aria-label="Banner sebelumnya">‹</button>'+
+        '<div class="ngd-catalog-campaign-dots">'+slides.map((_,i)=>
+          '<button type="button" data-hero-index="'+i+'" aria-label="Banner '+(i+1)+
+          ' dari '+slides.length+'" aria-current="'+(i===0?'true':'false')+'"></button>'
+        ).join('')+'</div>'+
+        '<button type="button" data-hero-step="1" aria-label="Banner berikutnya">›</button>'+
+        '<button type="button" data-hero-pause aria-pressed="false">Jeda</button>'+
+      '</div>':'';
+    return '<section class="ngd-catalog-campaign" data-hero-carousel aria-label="Penawaran katalog Ngulik Digital"'+
+      (defaults?' data-catalog-banner-source="default"':' data-catalog-banner-source="admin"')+'>'+
+      '<div class="ngd-catalog-campaign-viewport">'+html+'</div>'+controls+'</section>';
+  }
   function promotion(contents,placement='member_home'){
     const items=(Array.isArray(contents)?contents:[]).filter(x=>x&&
       ['PROMO','ANNOUNCEMENT'].includes(String(x.kind||''))&&
@@ -113,15 +171,44 @@
     const product=String(ctx.defaultPlacement||'');
     const productValid=/^P-[A-Za-z0-9-]{2,60}$/.test(product)&&
       (Array.isArray(ctx.products)?ctx.products:[]).some(p=>p.product_id===product);
+    const preferred=['home','catalog','member_home'].includes(product)?product:'catalog';
     const draft=selected||{kind:productValid?'PRODUCT_IMAGE':'HERO',
-      placement:productValid?product:'home',title:'',description:'',image_path:'',
+      placement:productValid?product:preferred,title:'',description:'',
+      image_path:productValid?'':preferred==='catalog'?
+        'assets/media/ngd-catalog-v9-wide.webp':'assets/media/ngd-v6-hero.webp',
       cta_label:'',cta_route:'',sort_order:rows.length+1,start_date:'',end_date:''};
+    const legacy=!!selected&&!kinds.includes(selected.kind);
+    const catalogRows=rows.filter(x=>x.kind==='HERO'&&x.placement==='catalog');
+    const publishedCatalog=catalogRows.filter(x=>x.status==='PUBLISHED');
+    const coverState=publishedCatalog.length?
+      'Terdapat '+publishedCatalog.length+' banner PUBLISHED (jadwal tayang tetap diperiksa runtime).':
+      'Belum ada HERO katalog terbit. Website memakai banner bawaan yang konsisten.';
+    const presets=[
+      ['Banner Katalog V9','assets/media/ngd-catalog-v9-wide.webp','HERO'],
+      ['Showcase Produk','assets/media/ngd-v6-hero.webp','HERO'],
+      ['eBook','assets/media/ngd-v6-ebook.webp','PRODUCT_IMAGE'],
+      ['Starter Pack','assets/media/ngd-v6-starter.webp','PRODUCT_IMAGE'],
+      ['Paket 3-in-1','assets/media/ngd-v6-bundle.webp','PRODUCT_IMAGE'],
+      ['Sistem POS','assets/media/ngd-v8-pos.webp','PRODUCT_IMAGE'],
+      ['Video AI','assets/media/ngd-v8-video.webp','PRODUCT_IMAGE'],
+      ['Integrasi GAS','assets/media/ngd-v8-gas.webp','PRODUCT_IMAGE'],
+      ['Kredit AI','assets/media/ngd-v8-ai-small.webp','PRODUCT_IMAGE'],
+      ['Template','assets/media/ngd-v8-templates.webp','PRODUCT_IMAGE']
+    ];
+    const allowedPlaces=places.slice();
+    if(draft.kind==='PRODUCT_IMAGE'&&Array.isArray(ctx.products))
+      ctx.products.forEach(p=>{
+        if(/^P-[A-Za-z0-9-]{2,60}$/.test(String(p.product_id||'')))
+          allowedPlaces.push(['PRODUCT_IMAGE',p.product_id,p.nama]);
+      });
+    if(!allowedPlaces.some(p=>p[1]===draft.placement))
+      allowedPlaces.push([draft.kind,draft.placement,draft.placement]);
     const locked=ctx.enabled!==true;
     const form='<section class="surface content-editor" aria-label="Editor konten visual">'+
       '<div class="content-editor-heading"><div><p class="eyebrow">EDIT KONTEN</p><h2>'+
       (selected?'Ubah konten':'Tambah konten')+'</h2></div>'+
       (selected?'<button type="button" class="btn btn-secondary btn-sm" data-content-new>Tambah baru</button>':'')+'</div>'+
-      '<div class="ngd-media-help"><div><strong>Tambahkan gambar dari GitHub</strong><p>Unggah gambar ke <code>assets/media/</code>, lalu tempel alamat filenya di bawah. Jangan unggah data pribadi.</p></div>'+ 
+      '<div class="ngd-media-help"><div><strong>Pilih artwork atau unggah gambar baru</strong><p>Gunakan gambar katalog 3:1 tanpa tulisan/harga dalam gambar. Lokasi <code>assets/media/</code> disimpan di GitHub; Admin mengatur konten & jadwal di sini.</p></div>'+ 
       '<a class="btn btn-secondary btn-sm" href="https://github.com/cuan74468-ux/ngulik-digital-member/upload/main/assets/media" target="_blank" rel="noopener noreferrer">Unggah gambar ↗</a></div>'+
       '<form id="content-editor-form" data-content-id="'+h(selected?.content_id||'')+'" class="content-form">'+
       '<div class="grid-2"><div class="field"><label for="content-kind">Jenis gambar</label>'+
@@ -130,14 +217,21 @@
         '<select class="input" name="kind" id="content-kind">'+
         kinds.map(k=>'<option value="'+k+'" '+(draft.kind===k?'selected':'')+'>'+names[k]+'</option>').join('')+'</select>')+
       '</div><div class="field"><label for="content-placement">Tampil di</label>'+
-      '<input class="input" id="content-placement" name="placement" list="content-places" maxlength="70" value="'+h(draft.placement||'')+'" required>'+
-      '<datalist id="content-places">'+places.map(p=>'<option value="'+h(p[1])+'" label="'+h(p[2])+'"></option>').join('')+
-      (Array.isArray(ctx.products)?ctx.products.map(p=>'<option value="'+h(p.product_id)+'" label="'+h(p.nama)+'"></option>').join(''):'')+
-      '</datalist></div></div>'+
-      '<div class="field"><label for="content-image">Alamat gambar</label>'+
-      '<input class="input" id="content-image" name="image_path" maxlength="45000" placeholder="https://contoh.com/banner.webp" value="'+h(draft.image_path||'')+'">'+
-      (mediaPath(draft.image_path)?'<img class="content-editor-preview" src="'+h(mediaPath(draft.image_path))+'" alt="Pratinjau file gambar" loading="lazy">':'')+
-      '</div>'+
+      '<select class="input" id="content-placement" name="placement" required aria-label="Pilih lokasi tayang">'+
+        allowedPlaces.map(p=>'<option value="'+h(p[1])+'" data-content-kind="'+h(p[0])+'" '+
+          (p[0]!==draft.kind?'hidden disabled ':'')+
+          (draft.placement===p[1]?'selected':'')+'>'+h(p[2])+'</option>').join('')+
+      '</select></div></div>'+
+      '<div class="field"><label for="content-image">Alamat gambar (HTTPS atau assets/media/)</label>'+
+      '<input class="input" id="content-image" name="image_path" maxlength="45000" placeholder="assets/media/ngd-catalog-v9-wide.webp" value="'+h(draft.image_path||'')+'">'+
+      '<p class="form-hint">Admin hanya menyimpan alamat gambar. Gambar harus bisa diakses publik saat diterbitkan.</p></div>'+
+      '<div class="ngd-cms-art-presets" aria-label="Pilihan artwork siap pakai">'+
+        '<strong>Artwork resmi Ngulik Digital</strong>'+
+        '<div class="ngd-cms-art-grid">'+presets.map(p=>
+          '<button type="button" class="ngd-cms-preset" data-content-asset="'+h(p[1])+'" '+
+            (locked||legacy?'disabled':'')+'><img src="'+h(mediaPath(p[1]))+
+            '" alt="" loading="lazy"><span>'+h(p[0])+'</span></button>'
+        ).join('')+'</div></div>'+
       '<div class="field"><label for="content-title">Judul / teks gambar</label>'+
       '<input class="input" id="content-title" name="title" maxlength="120" value="'+h(draft.title||'')+'"></div>'+
       '<div class="field"><label for="content-description">'+
@@ -156,7 +250,21 @@
       '<input class="input" type="date" name="start_date" id="content-start" value="'+h(draft.start_date||'')+'"></div></div>'+
       '<div class="field"><label for="content-end">Akhir tayang</label>'+
       '<input class="input" type="date" name="end_date" id="content-end" value="'+h(draft.end_date||'')+'"></div>'+
-      '<button class="btn btn-primary" type="submit" '+(locked?'disabled':'')+'>'+(selected?'Simpan':'Simpan draf')+'</button>'+
+      '<div class="ngd-cms-live-preview" aria-label="Pratinjau artwork sebelum terbit">'+
+        '<strong>Pratinjau banner: desktop dan HP</strong>'+
+        '<div class="ngd-cms-preview-grid">'+['desktop','mobile'].map(device=>
+          '<figure class="ngd-cms-preview-'+device+'">'+
+            '<div class="ngd-cms-preview-image"><img data-content-preview-image src="'+
+              h(mediaPath(draft.image_path)||mediaPath('assets/media/ngd-catalog-v9-wide.webp'))+
+              '" alt="" loading="lazy">'+
+              '<span data-content-preview-title>'+h(draft.title||'Judul banner Anda')+'</span>'+
+            '</div><figcaption>'+h(device==='desktop'?'Tampilan PC':'Tampilan HP')+'</figcaption></figure>'
+        ).join('')+'</div>'+
+        '<p class="form-hint">Periksa ruang teks, fokus gambar, dan keterbacaan pada kedua ukuran.</p>'+
+      '</div>'+
+      (selected?.status==='PUBLISHED'?'<p class="ngd-cms-published-warning">Konten sedang tayang. Pilih Tarik tayang pada daftar, kemudian edit draf dan terbitkan ulang setelah pratinjau.</p>':'')+
+      (legacy?'<p class="ngd-cms-legacy-warning">Konten lama tipe '+h(selected.kind)+' tidak mendukung penyuntingan. Tarik/arsipkan lalu buat banner HERO baru.</p>':'')+
+      '<button class="btn btn-primary" type="submit" '+(locked||legacy||selected?.status==='PUBLISHED'?'disabled':'')+'>'+(selected?'Simpan perubahan':'Simpan draf')+'</button>'+
       (locked?'<p class="form-hint">Edit konten belum tersedia.</p>':'')+
       '</form></section>';
     const rowsHtml='<section class="content-admin-list" aria-label="Daftar gambar dan banner">'+
@@ -180,9 +288,15 @@
       }).join(''):'<div class="empty"><h3>Belum Ada Gambar</h3><p>Gambar dan banner yang Anda tambah akan muncul di sini.</p></div>')+
       '</section>';
     return '<section class="content-admin-heading"><p class="eyebrow">ADMIN / KONTEN</p>'+
-      '<h1>Kelola Gambar & Banner</h1><p>Atur gambar, judul, tombol, dan jadwal tayang.</p>'+
+      '<h1>Kelola Gambar & Banner</h1><p>Atur gambar, judul, tombol, dan jadwal tayang dari satu CMS.</p>'+
       '<span class="chip">'+rows.length+' gambar tersimpan</span></section>'+
+      '<section class="ngd-cms-campaign-status" aria-label="Status kampanye katalog">'+
+        '<div><p class="eyebrow">BANNER KATALOG</p><strong>'+h(coverState)+'</strong>'+
+        '<p>HERO · katalog · maksimal 4 banner aktif; urutan dan jadwal diatur pada form.</p>'+
+        (rows.some(x=>x.kind==='BANNER')?'<small>Ada banner format lama (BANNER) yang tidak lagi didukung sebagai HERO. Anda dapat mengarsipkannya.</small>':'')+
+        '</div><button type="button" class="btn btn-primary" data-content-create="catalog" '+(locked?'disabled':'')+'>Buat Banner Katalog</button>'+
+      '</section>'+
       '<div class="content-admin-layout">'+rowsHtml+form+'</div>';
   }
-  window.NGD_CONTENT_UI=Object.freeze({mediaPath,published,media,hero,promotion,cover,admin});
+  window.NGD_CONTENT_UI=Object.freeze({mediaPath,published,media,hero,catalogBanner,promotion,cover,admin});
 })();
