@@ -41,3 +41,17 @@ test('OTP provider access remains checked by server-side authorization',()=>{
   assert.match(otp,/getProperty\('NGD_EXTERNAL_PROVIDERS_ENABLED'\)\s*===\s*'true'/);
   assert.equal(data.releaseGates.externalProviders,true);
 });
+
+test('binding 20-Nov payment decision overrides legacy Mayar/Scalev proposals without opening finance',()=>{
+  assert.equal(data.latestOwnerPaymentDecision.method,'QRIS_STATIS');
+  assert.equal(data.latestOwnerPaymentDecision.provider,'DANA_BISNIS');
+  assert.equal(data.latestOwnerPaymentDecision.intermediaryGateways,'MAYAR_AND_SCALEV_CANCELLED');
+  const payment=data.integrations.find(x=>x.id==='merchant_payment');
+  assert.match(payment.candidate,/DANA Bisnis static QRIS/);
+  assert.doesNotMatch(payment.candidate,/Mayar|Scalev/);
+  assert.ok(payment.mustProve.includes('buyer_claim_does_not_automatically_set_PAID'));
+  assert.equal(data.observedRuntime20261121.public.paymentsEnabled,false);
+  assert.equal(data.observedRuntime20261121.staging.financeEnabled,false);
+  assert.equal(data.observedRuntime20261121.public.writesEnabled,false);
+  assert.equal(data.observedRuntime20261121.staging.registrationEnabled,false);
+});
