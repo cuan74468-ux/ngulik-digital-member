@@ -551,7 +551,7 @@ function viewHome(){
           '<div class="ngdm-orders-body">'+
             (reads.orders===true?
               '<div class="ngdm-progress" role="img" aria-label="'+esc(completed)+' dari '+esc(allOrders)+' pesanan telah dibayar atau dipenuhi" style="--ngdm-done:'+paidPercent+'%">'+
-                '<div><strong>'+esc(allOrders?paidPercent+'%':'0')+'</strong><span>dibayar</span></div></div>'+
+                '<div><strong>'+esc(allOrders?paidPercent+'%':'0')+'</strong><span>dibayar</span></div></div>':
               '<div class="ngdm-progress ngdm-progress-unknown"><div><strong>—</strong><span>data</span></div></div>')+
             '<div class="ngdm-order-legend">'+
               '<div><span class="ngdm-indicator ngdm-indicator-finished"></span><span>Selesai / dibayar</span><strong>'+number('orders',String(completed))+'</strong></div>'+
