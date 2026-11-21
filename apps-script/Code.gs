@@ -1387,7 +1387,9 @@ function ngdCommissionTerms_(settings,product,basePrice) {
 function ngdCommissionTiming_(product) {
   var sku=String(product&&product.product_id||'').toUpperCase();
   var type=String(product&&product.tipe||'').toUpperCase();
-  return sku==='P-STARTER-15'||
+  // Legacy STAGING SKU P-STARTER-15K and current P-STARTER-15 both
+  // represent the paid Starter Pack. No other product unlocks referral.
+  return ['P-STARTER-15','P-STARTER-15K'].indexOf(sku)>=0||
     type==='TOPUP_TOKEN'||type==='TOPUP_KREDIT'?'INSTANT_ON_PAID':'HOLD_14_DAYS';
 }
 // Pay-to-unlock is derived from verified orders, not a browser flag or
@@ -1396,8 +1398,9 @@ function ngdStarterUnlocked_(memberId) {
   var id=String(memberId||'').trim();
   if(!id)return false;
   return findRows_('orders',function(o){
+    var sku=String(o.product_id||'').toUpperCase();
     return String(o.member_id||'')===id&&
-      String(o.product_id||'')==='P-STARTER-15'&&
+      ['P-STARTER-15','P-STARTER-15K'].indexOf(sku)>=0&&
       ['PAID','FULFILLED'].indexOf(String(o.status||''))>=0;
   }).length>0;
 }
