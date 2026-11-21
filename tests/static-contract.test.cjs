@@ -22,7 +22,7 @@ test('feature toggles do not embed secrets in config',()=>{
   const config=read('config.js');
   // Endpoint publik read-only boleh ada (bukan rahasia); kunci/token/PIN tidak boleh.
   assert.match(config,/apiUrl:\s*'https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec'/);
-  assert.match(config,/memberWritesEnabled:\s*true/);
+  assert.match(config,/memberWritesEnabled:\s*false/);
   assert.match(config,/paymentsEnabled:\s*false/);
   assert.doesNotMatch(config,/sk-[A-Za-z0-9]{20,}/);
   assert.doesNotMatch(config,/BEGIN PRIVATE KEY/);
