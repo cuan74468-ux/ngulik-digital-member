@@ -144,9 +144,11 @@ test('homepage services use live catalog names and never link unpublished offers
   const html=()=>create(state,String,String,()=>'',()=>false,p=>p.nama,p=>p.deskripsi);
   assert.doesNotMatch(html(),/data-checkout-product=/);
   assert.match(html(),/data-route="katalog"/);
-  state.catalog=[{product_id:'P-3IN1',aktif:true,nama:'Paket Baru',deskripsi:'Sesuai katalog'}];
+  state.catalog=[{product_id:'P-3IN1',nama:'Paket Baru',deskripsi:'Sesuai katalog'}];
   assert.match(html(),/data-checkout-product="P-3IN1"/);
   assert.match(html(),/Paket Baru/);
   assert.match(html(),/Sesuai katalog/);
+  assert.match(backend,/function publicCatalog_\(\)/);
+  assert.match(backend,/\.filter\(function\(r\)\{return r\.aktif===true;/);
   assert.doesNotMatch(html(),/data-checkout-product="P-VIDEO-AI"/);
 });
