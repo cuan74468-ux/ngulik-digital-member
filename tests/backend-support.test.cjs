@@ -305,6 +305,24 @@ test('filter distinguishes paid but unfulfilled from active and expired subscrip
   assert.equal(h.run('adminSearchMembers','adm',
     {product_id:'P-OTHER',akses_status:'BERAKHIR'}).total,1);
 });
+test('member products shows delivered TOKEN top-up as credit, not generic verification',()=>{
+  const h=harness();
+  h.products.push({product_id:'P-TOKEN-10',tipe:'TOPUP_TOKEN',nama:'Top-Up 10 Token',aktif:true});
+  const order={order_id:'ORDER-TOKEN-1',member_id:'M1',product_id:'P-TOKEN-10',
+    status:'FULFILLED',paid_at:new Date('2026-11-14T00:00:00Z')};
+  h.orders.push(order);
+  let item=h.ctx.supportMemberProducts_(h.members[0],h.orders,h.products)
+    .find(x=>x.product_id==='P-TOKEN-10');
+  assert.equal(item.akses_status,'KREDIT_TERCATAT');
+  assert.equal(item.order_status,'FULFILLED');
+  order.status='PAID';
+  item=h.ctx.supportMemberProducts_(h.members[0],h.orders,h.products)
+    .find(x=>x.product_id==='P-TOKEN-10');
+  assert.equal(item.akses_status,'MENUNGGU_PEMENUHAN');
+  order.status='PENDING';
+  assert.equal(h.ctx.supportMemberProducts_(h.members[0],h.orders,h.products)
+    .some(x=>x.product_id==='P-TOKEN-10'),false);
+});
 test('seat purchaser awaiting activation is not incorrectly marked expired',()=>{
   const h=harness();
   h.orders.push({order_id:'ORDER-CANVA',member_id:'M1',
