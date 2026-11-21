@@ -1394,7 +1394,9 @@ function viewCheckout(){
     '<div class="checkout-summary"><section><h2>Rincian Pesanan</h2>'+
     '<div class="price-line"><span>Produk</span><strong>'+esc(o.nama_produk||'—')+'</strong></div>'+
     '<div class="price-line"><span>Harga</span><strong>'+rupiah(o.harga_dasar)+'</strong></div>'+
-    '<div class="price-line"><span>Kode unik</span><strong>'+rupiah(o.kode_unik)+'</strong></div>'+
+    '<div class="price-line">'+(Number(o.total_bayar)===Number(o.harga_dasar)-Number(o.kode_unik)?
+      '<span>Potongan kode unik</span><strong>− '+rupiah(o.kode_unik)+'</strong>':
+      '<span>Kode unik pesanan lama</span><strong>+ '+rupiah(o.kode_unik)+'</strong>')+'</div>'+
     '<div class="checkout-total"><small>Total yang harus dibayar</small>'+
     '<strong class="checkout-total-amount" style="white-space:nowrap;font-variant-numeric:tabular-nums">'+rupiah(o.total_bayar)+'</strong>'+
     (open?'<button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(String(o.total_bayar))+'">Salin nominal</button>':'')+'</div>'+
