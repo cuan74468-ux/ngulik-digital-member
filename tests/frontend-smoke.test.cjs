@@ -42,7 +42,8 @@ test('public config exposes owner-enabled features while secrets stay server-sid
   const sandbox={window:{}};
   vm.runInNewContext(config,sandbox,{timeout:1000});
   assert.match(sandbox.window.NGD_CONFIG.apiUrl,/^https:\/\/script\.google\.com\/macros\/s\//);
-  assert.equal(sandbox.window.NGD_CONFIG.memberWritesEnabled,true);
+  assert.equal(sandbox.window.NGD_CONFIG.memberWritesEnabled,false);
+  assert.equal(sandbox.window.NGD_CONFIG.registrationOtpEnabled,false);
   assert.equal(sandbox.window.NGD_CONFIG.paymentsEnabled,false);
   assert.equal(sandbox.window.NGD_CONFIG.qrisImageUrl,'assets/qris-linggau-ai-studio.svg');
   assert.equal(sandbox.window.NGD_CONFIG.qrisOwnerImageApproved,false);
