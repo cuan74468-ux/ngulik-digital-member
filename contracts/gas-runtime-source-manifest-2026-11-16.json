@@ -1,25 +1,40 @@
 {
   "product": "Ngulik Digital Member",
-  "date": "2026-11-16",
+  "date": "2026-11-21",
   "purpose": "Source-to-runtime manifest; NOT an assertion that GAS source has been synchronized.",
   "repository": "cuan74468-ux/ngulik-digital-member",
   "source_snapshot_branch": "main",
-  "source_snapshot_commit": "51fa7d92a760e32f32d250ac5f5b64da3766fccb",
+  "source_snapshot_commit": "75603272377de7a98e438a2c58bc58bcbdfec0cb",
   "source_content_hash_kind": "Git blob SHA1; not an Apps Script editor fingerprint",
   "environment": "STAGING",
   "verified_editor_functions": [
     {
       "name": "ngdInfrastructurePreflightReadOnly",
-      "result": "PASS_29_TABLES_ON_PREVIOUS_SOURCE",
-      "owner_log_date": "2026-11-15"
+      "result": "PASS_29_TABLES_STAGING_PRECHECK_WRITES_FALSE",
+      "owner_log_date": "2026-11-21"
     },
     {
       "name": "ngdDataIntegrityPreflightReadOnly",
-      "result": "PASS_8_TABLES",
-      "owner_log_date": "2026-11-15"
+      "result": "PASS_8_TABLES_ISSUES_0",
+      "owner_log_date": "2026-11-21"
+    },
+    {
+      "name": "diagnosticFinanceScenarios",
+      "result": "PASS_29_OF_29_MEMORY_ONLY",
+      "owner_log_date": "2026-11-21"
+    },
+    {
+      "name": "diagnosticApiPublic",
+      "result": "API_PUBLIC_OK_READ_ONLY",
+      "owner_log_date": "2026-11-21"
+    },
+    {
+      "name": "diagnosticReconciliationReadOnly",
+      "result": "WARN_ONE_HISTORICAL_ORDER_REQUIRES_REVIEW",
+      "owner_log_date": "2026-11-21"
     }
   ],
-  "unverified": "GitHub source fingerprints refreshed 2026-11-20. Apps Script editor sync is NOT yet verified by operator execution/readback. Mayar V2 source is STAGING-only. NOT yet verified by operator execution: actual merchant API credentials, payout availability, invoice creation and webhook/affiliate end-to-end. No Google Sheets data, production GAS deployment, or Script Properties modified.",
+  "unverified": "GitHub source blob fingerprints refreshed 2026-11-21. Apps Script editor sync is NOT yet verified by operator execution/readback at byte-for-byte source level. Operator logs confirm functions ran, not which exact source blob was deployed. Merchant QRIS scan, real-money receipt, invoice and affiliate payout end-to-end are NOT yet verified by operator execution. No production payment release or database mutation is asserted.",
   "release_gate": "OWNER_EXECUTION_AUTHORIZED",
   "external_providers": "CONFIGURATION_PENDING",
   "modules": [
@@ -37,8 +52,8 @@
     },
     {
       "file": "Code.gs",
-      "github_blob_sha": "d8b3f3e93020de77dddb020899923081fb16a214",
-      "bytes": 171806,
+      "github_blob_sha": "10046bbc323a0f5a734d1941aa64981cc3a445a1",
+      "bytes": 174892,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
@@ -51,19 +66,19 @@
       "file": "DataIntegrityPreflight.gs",
       "github_blob_sha": "a5a805bf79a234f04db3bc1a36142550908eef8a",
       "bytes": 8300,
-      "runtime_evidence": "OPERATOR_EXECUTION_OBSERVED_2026_11_15"
+      "runtime_evidence": "OPERATOR_EXECUTION_OBSERVED_2026_11_21_BLOB_NOT_PROVEN"
     },
     {
       "file": "Diagnostics.gs",
-      "github_blob_sha": "ddc583a10ae5cc8d2f94d022da3891334a6b49d9",
-      "bytes": 22819,
+      "github_blob_sha": "db6607adc7340101b14d31f7096ce664ac23fc97",
+      "bytes": 25468,
       "runtime_evidence": "SOURCE_PRESENT_RUNTIME_NOT_VERIFIED"
     },
     {
       "file": "InfrastructurePreflight.gs",
       "github_blob_sha": "707c3f19ee1265c50ab8c790debf4781ebfc3723",
       "bytes": 5460,
-      "runtime_evidence": "SOURCE_UPDATED_RUNTIME_SYNC_NOT_VERIFIED"
+      "runtime_evidence": "OPERATOR_EXECUTION_OBSERVED_2026_11_21_BLOB_NOT_PROVEN"
     },
     {
       "file": "LMS.gs",
