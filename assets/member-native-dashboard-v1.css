@@ -112,7 +112,7 @@ html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #guest-nav{di
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #guest-nav button{white-space:nowrap!important;min-width:0!important;min-height:42px!important;padding:8px clamp(5px,.55vw,10px)!important;font-size:clamp(10px,.8vw,12px)!important}
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .top-actions{flex:0 0 auto!important;gap:clamp(6px,.7vw,11px)!important}
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar :is(#mode-indicator,#header-order){display:none!important}
-html body.ngd-public-app[data-app-role="member"]:not(#ngd) [data-member-route='beranda'] .topbar :is(.ngd-header-search,#header-token){display:none!important}
+html body.ngd-public-app[data-app-role="member"]:not(#ngd)[data-member-route='beranda'] .topbar :is(.ngd-header-search,#header-token){display:none!important}
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #top-nav-trigger{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;min-width:78px!important;min-height:42px!important;padding:7px 11px!important;gap:5px!important;border:1px solid transparent!important;border-radius:10px!important;background:transparent!important;color:#344e50!important;font:750 12px/1.15 Inter,sans-serif!important}
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #top-nav-trigger svg{display:none!important}
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #top-nav-trigger .ngdm-desktop-more-text{display:inline!important}
@@ -130,9 +130,21 @@ html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-wallet-
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-lower{grid-template-columns:minmax(0,1fr)}
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-wallet-chart{padding-left:0;border-left:0;border-top:1px solid #c9e4d8;padding-top:12px}
 }
-html body.ngd-public-app[data-app-role="member"]:not(#ngd) :not([data-app-role='member']) .topbar #top-nav-trigger .ngdm-desktop-more-text{display:none!important}
+body.ngd-public-app:not([data-app-role='member']) .topbar #top-nav-trigger .ngdm-desktop-more-text{display:none!important}
 @media(max-width:760px){
-html body.ngd-public-app[data-app-role="member"]:not(#ngd) .sidebar|#desktop-nav|.topbar #guest-nav|.topbar #top-nav-trigger|.topbar #header-order|.topbar #header-token|.topbar .guest-login|.topbar .ngd-header-register|.topbar .breadcrumb|.topbar .top-actions|.topbar #mode-indicator|.mobile-nav|.bottom-nav{display:none!important}
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) .sidebar,
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) #desktop-nav,
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #guest-nav,
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #top-nav-trigger,
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #header-order,
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #header-token,
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .guest-login,
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .ngd-header-register,
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .breadcrumb,
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .top-actions,
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar #mode-indicator,
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) .mobile-nav,
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) .bottom-nav{display:none!important}
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar{display:flex!important;align-items:center!important;justify-content:flex-start!important;height:60px!important;min-height:60px!important;padding:7px 15px!important;background:#fff!important;border-bottom:1px solid #e7eeea!important;box-shadow:none!important}
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .guest-brand{display:flex!important;align-items:center!important;gap:8px!important}
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) .topbar .guest-brand strong{font-size:15px!important;color:#1f393d!important;-webkit-text-fill-color:#1f393d!important}
