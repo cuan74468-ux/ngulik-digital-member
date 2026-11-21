@@ -70,7 +70,13 @@ const jsCheck=`(()=>{
     const r=el.getBoundingClientRect();
     return {tag:el.tagName,label:(el.textContent||'').slice(0,30),left:r.left,right:r.right};
   }).filter(x=>x.left< -1||x.right>innerWidth+1);
-  return {width:innerWidth,scrollWidth:doc.scrollWidth,bodyWidth:document.body.scrollWidth,
+  const protruders=[...document.querySelectorAll('body *')].map(el=>{
+    const r=el.getBoundingClientRect();
+    return {element:el.tagName.toLowerCase(),id:el.id||'',className:String(el.className?.baseVal||el.className||'').slice(0,85),
+      left:Math.round(r.left),right:Math.round(r.right),width:Math.round(r.width)};
+  }).filter(x=>x.width>innerWidth+30||x.right>innerWidth+30||x.left< -30)
+    .sort((x,y)=>y.right-x.right).slice(0,12);
+  return {width:innerWidth,scrollWidth:doc.scrollWidth,bodyWidth:document.body.scrollWidth,protruders,
     bottomNav:!!document.querySelector('#mobile-nav'),
     bottomVisible:[...document.querySelectorAll('.mobile-nav')].some(el=>getComputedStyle(el).display!=='none'),
     drawerPresent:!!document.querySelector('#top-nav-drawer'),
