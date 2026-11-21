@@ -13,7 +13,9 @@ function harness(options={}){
     status:'PENDING',metode:'MAYAR',gateway_ref_id:id,
     catatan_admin:'',ref_member_id:m.referred_by};
   const inviter={_row:3,member_id:'M-AFF',role:'MEMBER',status:'AKTIF',referred_by:''};
-  const rows={orders:[order],members:[m,inviter],katalog_produk:[p],
+  const sponsorStarter={_row:3,order_id:'SPONSOR-STARTER',member_id:'M-AFF',
+    product_id:'P-STARTER-15',status:'FULFILLED'};
+  const rows={orders:[order,sponsorStarter],members:[m,inviter],katalog_produk:[p],
     affiliate_commissions:[],audit_logs:[],credits_ledger:[]};
   const writes=[],audits=[],calls=[];
   const ctx=vm.createContext({Date,Number,JSON,Math,console:{error:()=>{},log:()=>{}}});
