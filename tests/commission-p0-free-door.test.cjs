@@ -7,64 +7,56 @@ const gas=fs.readFileSync(path.join(root,'apps-script/Code.gs'),'utf8');
 const html=[fs.readFileSync(path.join(root,'index.html'),'utf8'),fs.readFileSync(path.join(root,'staging/member.html'),'utf8')];
 const between=(text,a,b)=>{const s=text.indexOf(a),e=text.indexOf(b,s);assert.ok(s>=0&&e>s,'missing '+a);return text.slice(s,e)};
 const attribution=between(app,"const firstInviterKey=","// Production catalogue");
-const redirect=between(app,"// Called synchronously during initial script evaluation","async function init(){");
-const urls=between(app,"const NGD_FREE_EBOOK_URL=","function viewHeroFreeLinks_");
+// Free materials are now member-only. Attribution remains on public registration
+// visits, but no query parameter may redirect a guest to eBook/Classroom.
+const urls=between(app,"const NGD_FREE_EBOOK_URL=","function viewMemberFreeResources_");
 function browser(query,{blocked=false,initial=null}={}){
-  const cells=new Map(initial||[]);
-  const events=[];
+  const cells=new Map(initial||[]),events=[];
   let currentQuery=query,clock=Date.UTC(2026,10,20);
   const localStorage={
     getItem(k){if(blocked)throw Error('storage denied');return cells.get(k)||null;},
     setItem(k,v){if(blocked)throw Error('storage denied');cells.set(k,v);events.push('persist');},
     removeItem(k){if(blocked)throw Error('storage denied');cells.delete(k)}
   };
-  const window={location:{assign(url){
-    assert.ok(cells.has('ngd_first_inviter_v1'),'redirect before persistence');
-    events.push('redirect');
-    events.push(url);
-  }}};
-  const context=vm.createContext({localStorage,window,location:{get search(){return currentQuery;}},
+  const context=vm.createContext({localStorage,location:{get search(){return currentQuery;}},
     URLSearchParams,Date:{now:()=>clock},Number,String,JSON});
-  vm.runInContext(attribution+'\n'+urls+'\n'+redirect,context,{timeout:2000});
-  return {run:()=>vm.runInContext('routeFreeDoor_()',context),
+  vm.runInContext(attribution,context,{timeout:2000});
+  return {capture:()=>vm.runInContext('captureFirstInviter_()',context),
     first:()=>vm.runInContext('firstInviter_()',context),
     query:q=>{currentQuery=q;},time:n=>{clock+=n;},cells,events};
 }
-test('ebook landing persists inviter before opening original free ebook',()=>{
+test('public invite persists attribution without redirecting to free materials',()=>{
   const b=browser('?ref=KODE_A&free=ebook');
-  assert.equal(b.run(),true);
-  assert.deepEqual(b.events.slice(0,2),['persist','redirect']);
-  assert.equal(b.events[2],'https://cuan74468-ux.github.io/buku-pintar-vibe-coder/');
+  assert.equal(b.capture(),'KODE_A');
+  assert.deepEqual(b.events,['persist']);
   assert.equal(b.first(),'KODE_A');
+  assert.doesNotMatch(app,/routeFreeDoor_\(|window\.location\.assign\(target\)/);
 });
-test('classroom landing persists inviter before Google Classroom launch',()=>{
-  const b=browser('?ref=KODE_B&free=kelas');
-  assert.equal(b.run(),true);
-  assert.deepEqual(b.events.slice(0,2),['persist','redirect']);
-  assert.match(b.events[2],/^https:\/\/classroom\.google\.com\/c\/ODk4MzQ4OTEwMjc5\?cjc=ozzbygx3$/);
-});
-test('first valid inviter wins for 30 days; expires and can be replaced',()=>{
+test('first valid inviter wins for 30 days and expires safely',()=>{
   const b=browser('?ref=FIRST_A&free=ebook');
-  assert.equal(b.run(),true);
+  assert.equal(b.capture(),'FIRST_A');
   b.query('?ref=SECOND_B&free=kelas');b.time(29*86400000);
-  assert.equal(b.run(),true);assert.equal(b.first(),'FIRST_A');
+  assert.equal(b.capture(),'FIRST_A');
   b.time(86400001);assert.equal(b.first(),'');
-  assert.equal(b.run(),true);assert.equal(b.first(),'SECOND_B');
+  assert.equal(b.capture(),'SECOND_B');
 });
-test('browser storage denied: never redirect and never claim attribution',()=>{
+test('browser storage denied never claims attribution or redirects',()=>{
   const b=browser('?ref=VALID_ABC&free=kelas',{blocked:true});
-  assert.equal(b.run(),false);assert.deepEqual(b.events,[]);
+  assert.equal(b.capture(),'');assert.deepEqual(b.events,[]);
 });
-test('invalid ref cannot redirect, and a plain ref does not auto-navigate',()=>{
+test('invalid referral code is rejected; plain referral does not navigate',()=>{
   const b=browser('?ref=<script>&free=ebook');
-  assert.equal(b.run(),false);assert.deepEqual(b.events,[]);
-  b.query('?ref=ABCDEF');assert.equal(b.run(),false);
+  assert.equal(b.capture(),'');assert.deepEqual(b.events,[]);
+  b.query('?ref=ABCDEF');assert.equal(b.capture(),'ABCDEF');
+  assert.deepEqual(b.events,['persist']);
 });
-test('entrypoint performs redirect before any awaited public/session load',()=>{
-  assert.match(app,/async function init\(\)\{\s*if\(routeFreeDoor_\(\)\)return;\s*captureFirstInviter_\(\)/);
+test('entrypoint captures referrals but never opens free doors before login',()=>{
+  assert.match(app,/async function init\(\)\{\s*captureFirstInviter_\(\)/);
   assert.match(app,/\?ref='\+encodeURIComponent\(code\)/);
-  assert.match(app,/const ebookInvite=url\?url\+'&free=ebook'/);
-  assert.match(app,/const classInvite=url\?url\+'&free=kelas'/);
+  assert.doesNotMatch(app,/const ebookInvite=|const classInvite=|routeFreeDoor_\(/);
+  assert.match(app,/function viewMemberFreeResources_\(\)/);
+  assert.match(app,/if\(!logged\(\)\|\|isAdmin\(\)\)return ''/);
+  assert.match(urls,/https:\/\/cuan74468-ux\.github\.io\/buku-pintar-vibe-coder\//);
 });
 test('member/public copies avoid technical commission terminology',()=>{
   const view=between(app,'function viewAffiliate(){','function viewNotificationCenter(){');
