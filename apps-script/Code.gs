@@ -488,7 +488,7 @@ function seedCatalog_() {
     ['P-TOKEN-10','Top-Up 10 Token Universal','Tambahan 10 token universal.','TOPUP_KREDIT',7000,10,0,false,true,10,'INTERNAL',true,6],
     ['P-TOKEN-35','Top-Up 35 Token Universal','Tambahan 35 token universal.','TOPUP_KREDIT',20000,35,0,false,true,10,'INTERNAL',true,7],
     ['P-TOKEN-100','Top-Up 100 Token Universal','Tambahan 100 token universal.','TOPUP_KREDIT',50000,100,0,false,true,10,'INTERNAL',true,8],
-    ['P-STARTER-15','Starter Pack Ngulik Digital','15 token dan akses mitra seumur hidup setelah pembayaran sah.','PRODUK_DIGITAL',15000,15,0,false,true,0,'INTERNAL',true,9]
+    ['P-STARTER-15','Starter Pack Ngulik Digital','15 token dan akses mitra seumur hidup setelah pembayaran sah.','PRODUK_DIGITAL',15000,15,0,false,true,0,'INTERNAL',true,9,5000]
   ];
   return seedIfEmpty_('katalog_produk',rows.map(function(row){
     var obj={},columns=NGD.HEADERS.katalog_produk.split(',');
@@ -1380,6 +1380,14 @@ function ngdCommissionTerms_(settings,product,basePrice) {
 }
 // A referral is payout-eligible only when the inviter is an active MEMBER.
 // Keep historical rows unchanged: ineligible legacy commissions need review.
+// Policy is tied to product type, never to the UI or a browser-provided speed.
+// Only Starter and credit top-ups can be approved immediately when funds are verified.
+function ngdCommissionTiming_(product) {
+  var sku=String(product&&product.product_id||'').toUpperCase();
+  var type=String(product&&product.tipe||'').toUpperCase();
+  return sku==='P-STARTER-15'||sku==='P-STARTER-15K'||
+    type==='TOPUP_TOKEN'||type==='TOPUP_KREDIT'?'INSTANT_ON_PAID':'HOLD_14_DAYS';
+}
 function ngdEligibleReferrer_(buyer,inviter) {
   return Boolean(buyer&&buyer.role==='MEMBER'&&inviter&&
     inviter.role==='MEMBER'&&inviter.status==='AKTIF'&&
@@ -1490,17 +1498,19 @@ function onPaid_(o,actor) {
       // One level for life: every distinct PAID order from this directly
       // invited member is eligible; prior purchase is never an exclusion.
       {
-        var when=new Date(Date.now()+Number(s.masa_tahan_hari||14)*86400000);
+        var timing=ngdCommissionTiming_(product);
+        var instant=timing==='INSTANT_ON_PAID';
+        var when=instant?now_():new Date(Date.now()+Number(s.masa_tahan_hari||14)*86400000);
         var id=recordId_('K');
         appendRow_('affiliate_commissions',{
           komisi_id:id,referrer_id:member.referred_by,
           referred_member_id:member.member_id,order_id:o.order_id,
           dasar_komisi:o.harga_dasar,persen:percent,
-          nominal:commissionValue,status:'PENDING',
-          created_at:now_(),approve_after:when
+          nominal:commissionValue,status:instant?'APPROVED':'PENDING',
+          created_at:now_(),approve_after:when,approved_at:instant?now_():''
         });
         logAudit_('SYSTEM','SYSTEM','COMMISSION_CREATED','affiliate_commissions',
-          id,'','PENDING',{amount:commissionValue});
+          id,'',instant?'APPROVED':'PENDING',{amount:commissionValue,timing:timing});
       }
     }
   }
