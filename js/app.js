@@ -36,21 +36,6 @@ const urlSafe = (raw) => {
     return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';
   }catch{return '';}
 };
-// Public business contact enables consultation, never an unverified payment.
-const consultationUrl = (product) => {
-  let number=String(state.info?.wa_admin||'').replace(/\D/g,'');
-  if(number.startsWith('0'))number='62'+number.slice(1);
-  if(!/^62\d{8,13}$/.test(number))return '';
-  const service=String(product?.product_id||'');
-  const messages={
-    'P-3IN1':'Halo Mas Ferry, saya mau tanya soal pembuatan Website & Katalog Online untuk usaha saya. Boleh info harga dan contohnya?',
-    'P-INTEGRASI-GAS':'Halo Mas Ferry, saya butuh Aplikasi Kasir / Catatan Usaha pakai Google Sheets. Boleh konsultasi dulu?',
-    'P-VIDEO-AI':'Halo Mas Ferry, saya mau pesan Jasa Video Iklan untuk produk saya. Boleh info paket dan harganya?'
-  };
-  const name=String(product?.nama||'layanan digital').slice(0,140);
-  const message=messages[service]||('Halo Mas Ferry, saya mau tanya soal '+name+'. Boleh info harga dan cara pesannya?');
-  return 'https://wa.me/'+number+'?text='+encodeURIComponent(message);
-};
 const classroomUrlSafe = (raw) => {
   const normalized=urlSafe(raw);
   if(!normalized)return '';
@@ -457,28 +442,6 @@ const offerCategoryLabel=p=>{
 };
 /* Public marketplace presentation only. Commerce decisions reuse the existing
  * verified catalog, availability and checkout rules; no invented discounts. */
-// Manual-first consultation for the three owner-delivered business offers.
-// This is presentation routing only; original prices, backend, and ledger remain unchanged.
-const coreServiceConsultationIds=new Set(['P-3IN1','P-INTEGRASI-GAS','P-VIDEO-AI']);
-const isCoreServiceConsultation_=p=>coreServiceConsultationIds.has(String(p?.product_id||''));
-/* Hosted Scalev checkout is STAGING-only until its merchant product URLs,
- * onboarding and fulfillment controls have been verified. This does not
- * create NGD orders, carry referrals, or prove receipt of funds.
- * Production cannot activate it through URL parameters or catalog content. */
-// Member-side Mayar checkout only becomes visible when backend STAGING
-// reports verified merchant payout readiness. Backend re-verifies every gate.
-function mayarCheckoutEligible_(){
-  // Mayar is retired: checkout always creates internal QRIS_STATIS orders.
-  return false;
-}
-function scalevCheckoutFor_(){return null;} // Scalev is retired.
-function scalevCheckoutButton_(offer,css){
-  return '<a class="'+css+'" href="'+esc(offer.url)+
-    '" target="_blank" rel="noopener noreferrer" data-scalev-hosted="'+esc(offer.sku)+
-    '">Bayar via Scalev '+icon('arrow')+'</a>';
-}
-
-// Product names and descriptions always come from the Admin-managed catalog.
 const offerUiTitle_=p=>String(p?.nama||'Produk');
 const offerUiDescription_=p=>String(p?.deskripsi||'');
 const isPublicQaOffer_=p=>
@@ -1190,13 +1153,6 @@ function viewCheckout(){
   const merchant=String(config.qrisOwnerImageApproved===true
     ?config.qrisMerchant:(o.qris_atas_nama||config.qrisMerchant||''));
   const officialQr=!!(paymentEnabled()&&config.qrisOwnerImageApproved===true&&qrUrl&&merchant&&!bundledPlaceholder&&String(o.metode)==='QRIS_STATIS'&&state.workspaceInfo?.finance_enabled!==false);
-  const paymentLink=(()=>{try{const u=new URL(String(o.gateway_payment_url||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';}catch{return '';}})();
-  let adminWa=String(o.wa_admin||'').replace(/\D/g,'');
-  if(adminWa.startsWith('0'))adminWa='62'+adminWa.slice(1);
-  const adminChat=/^62\d{8,13}$/.test(adminWa)?
-    'https://wa.me/'+adminWa+'?text='+encodeURIComponent(
-      'Halo Admin Ngulik Digital. Mohon instruksi pembayaran resmi / tindak lanjut untuk order '+o.order_id+
-      ' sebesar '+rupiah(o.total_bayar)+'. Status pesanan: '+status+'.'):null;
   const seconds=open?Math.max(0,Math.ceil((expiryMs-Date.now())/1000)):0;
   const timer=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
   const stateNote=status==='FULFILLED'?
@@ -2197,6 +2153,7 @@ async function changeAdminPin_(form){
     toast('PIN berhasil diganti. Silakan masuk lagi.');
   }catch(error){toast(error.message,true);if(button)button.disabled=false;}
 }
+let checkoutSubmitting_=false;
 async function buy(productId){
   if(!checkoutQrReady_()){toast('QRIS belum diverifikasi atau pembayaran belum aktif.',true);return;}
   if(!logged()){
@@ -2209,13 +2166,18 @@ async function buy(productId){
   if(!supportedSaleTypes.has(String(product.tipe))||!(moneyValue(product.harga)>0))
     return toast('Produk belum bisa diproses sebagai pesanan berbayar.',true);
   if(!confirm('Buat pesanan '+product.nama+'? Nominal akhir termasuk kode unik ditentukan oleh server.'))return;
+  if(checkoutSubmitting_)return;
+  checkoutSubmitting_=true;
+  const button=document.querySelector('[data-checkout-create]');
+  if(button)button.disabled=true;
   try{
     const requestId=state.checkoutRequestId||createRequestId();
     state.checkoutRequestId=requestId;
     const order=await api('createOrder',{product_id:productId},state.token,{write:true,requestId});
     if(!order?.order_id)throw new ApiError('Respons pesanan tidak lengkap. Periksa riwayat sebelum mencoba kembali.');
     state.checkoutRequestId=null;state.checkoutReturnRoute='pesanan';state.orderDetailLoading=false;state.lastOrder=order;go('checkout');toast('Pesanan berhasil dibuat.');
-  }catch(e){toast(e.message,true);}
+  }catch(e){toast(e.message,true);if(button?.isConnected)button.disabled=false;}
+  finally{checkoutSubmitting_=false;}
 }
 async function openOrderDetail_(id){
   if(!logged()||isAdmin())return toast('Masuk sebagai Member untuk melihat pesanan.',true);
