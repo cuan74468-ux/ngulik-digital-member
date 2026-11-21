@@ -11,7 +11,7 @@ test('STAGING and public load guest landing, service, and help stylesheets in th
     }
     assert.ok(html.indexOf('landing-guest-v1.css')>html.indexOf('mobile-critical-v16.css'));
     assert.ok(html.indexOf('guest-sales-trust-v1.css')>html.indexOf('landing-guest-v1.css'));
-    assert.match(html,/app\.js\?v=20261122-fintech-member-v2/);
+    assert.match(html,/app\.js\?v=20261122-unified-brand-member-v3/);
   }
 });
 test('guest landing and services use the correct media base for each route',()=>{

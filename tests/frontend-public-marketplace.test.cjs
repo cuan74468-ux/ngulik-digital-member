@@ -52,7 +52,7 @@ test('published entrypoints both load current marketplace and checkout sources i
     assert.match(html,/content-ui\.js\?v=20261121-proportions-v13-1/);
     assert.match(html,/catalog-experience-v3\.css/);
     assert.match(html,/checkout-qris-unified\.css/);
-    assert.match(html,/app\.js\?v=20261122-fintech-member-v2/);
+    assert.match(html,/app\.js\?v=20261122-unified-brand-member-v3/);
     assert.ok(html.indexOf('checkout-qris-unified.css')>html.indexOf('catalog-experience-v3.css'));
   }
 });
