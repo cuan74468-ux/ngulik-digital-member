@@ -19,18 +19,20 @@ test('runtime manifest records exact SHA1 blobs of all GitHub GAS source files',
    assert.equal(module.bytes,body.length,module.file);
  }
 });
-test('a source hash alone never claims that the GAS editor is synchronized',()=>{
- assert.match(manifest.unverified,/Apps Script editor sync/);
- assert.match(manifest.unverified,/NOT yet verified by operator execution/);
- assert.equal(manifest.release_gate,'OWNER_EXECUTION_AUTHORIZED');
- assert.equal(manifest.external_providers,'CONFIGURATION_PENDING');
- assert.deepEqual(manifest.verified_editor_functions.map(x=>x.name),[
-   'ngdInfrastructurePreflightReadOnly','ngdDataIntegrityPreflightReadOnly'
- ]);
- assert.deepEqual(manifest.modules
-   .filter(x=>x.runtime_evidence.startsWith('OPERATOR_'))
-   .map(x=>x.file),['DataIntegrityPreflight.gs']);
- assert.equal(manifest.modules.find(x=>x.file==='InfrastructurePreflight.gs').runtime_evidence,
-   'SOURCE_UPDATED_RUNTIME_SYNC_NOT_VERIFIED');
- assert.match(manifest.verified_editor_functions[0].result,/PREVIOUS_SOURCE/);
+test('source hashes and operator logs are distinct from deployed GAS source attestation',()=>{
+  assert.match(manifest.unverified,/Apps Script editor sync/);
+  assert.match(manifest.unverified,/NOT yet verified by operator execution/);
+  assert.equal(manifest.release_gate,'OWNER_EXECUTION_AUTHORIZED');
+  assert.equal(manifest.external_providers,'CONFIGURATION_PENDING');
+  const names=manifest.verified_editor_functions.map(x=>x.name);
+  for(const required of [
+    'ngdInfrastructurePreflightReadOnly','ngdDataIntegrityPreflightReadOnly',
+    'diagnosticFinanceScenarios','diagnosticApiPublic','diagnosticReconciliationReadOnly'
+  ])assert.ok(names.includes(required),'Missing operator-observed function '+required);
+  assert.match(manifest.verified_editor_functions.find(x=>x.name==='diagnosticFinanceScenarios').result,/29_OF_29_MEMORY_ONLY/);
+  assert.match(manifest.verified_editor_functions.find(x=>x.name==='diagnosticReconciliationReadOnly').result,/REQUIRES_REVIEW/);
+  for(const file of ['DataIntegrityPreflight.gs','InfrastructurePreflight.gs']){
+    assert.match(manifest.modules.find(x=>x.file===file).runtime_evidence,
+      /^OPERATOR_EXECUTION_OBSERVED_2026_11_21_BLOB_NOT_PROVEN$/);
+  }
 });
