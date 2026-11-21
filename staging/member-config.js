@@ -9,7 +9,7 @@ window.NGD_CONFIG = Object.freeze({
   memberWritesEnabled:true,
   registrationOtpEnabled:true,
   memberOtpLoginEnabled:true, // STAGING UI only; backend flag remains authoritative
-  paymentsEnabled:true,
+  paymentsEnabled:false, // STAGING fail-closed until QRIS merchant scan + controlled financial QA
   adminLoginEnabled:true,
   contentEnabled:true,
   catalogEnabled:true,
