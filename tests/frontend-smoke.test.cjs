@@ -64,7 +64,7 @@ test('local member preview renders native-like dashboard without login',()=>{
   assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.equal(vm.runInContext('isWriteEnabled()',context),false);
 });
-test('preview catalog uses sample products with disabled buy buttons',()=>{
+test('preview catalog uses sample products with internal checkout previews',()=>{
   const {nodes,context}=renderPreview('?preview=member');
   vm.runInContext("go('katalog')",context,{timeout:2000});
   assert.match(nodes.screen.innerHTML,/Paket 3-in-1/);
@@ -73,7 +73,12 @@ test('preview catalog uses sample products with disabled buy buttons',()=>{
   assert.match(nodes.screen.innerHTML,/Bundel Ebook Vibe Coder/);
   assert.match(nodes.screen.innerHTML,/data-catalog-filter="aplikasi"/);
   assert.match(nodes.screen.innerHTML,/data-catalog-filter="jasa"/);
-  assert.match(nodes.screen.innerHTML,/disabled title="Checkout belum tersedia pada konfigurasi saat ini"/);
+  assert.match(nodes.screen.innerHTML,/data-checkout-product=/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/Tanya via WhatsApp|Chat WhatsApp|data-buy=/);
+  vm.runInContext("state.checkoutProductId='P-3IN1';state.lastOrder=null;go('checkout')",context,{timeout:2000});
+  assert.match(nodes.screen.innerHTML,/Rincian Checkout/);
+  assert.match(nodes.screen.innerHTML,/Pembayaran belum dibuka/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/data-qris-image|data-checkout-create/);
 });
 test('catalog escapes untrusted product names, and external URLs are restricted',()=>{
   const {nodes,context}=renderPreview();
