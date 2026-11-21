@@ -342,7 +342,9 @@ function ngdMemberOtpLoginRequest_(p) {
         Number.isFinite(new Date(row.created_at).getTime()) &&
         new Date(row.created_at).getTime()>now-86400000;
     });
-    require_(byWa.length<5,'RATE_LIMITED','Batas permintaan OTP harian tercapai.');
+    // STAGING QA: up to 12 confirmed requests per WhatsApp in a rolling 24h.
+    // Global cap, 60-second cooldown, six-digit proof and 3 attempts remain.
+    require_(byWa.length<12,'RATE_LIMITED','Batas permintaan OTP harian tercapai (12 per 24 jam).');
     var last=ngdMemberOtpLoginLatest_(rows,wa);
     if(last && Number.isFinite(new Date(last.created_at).getTime()) &&
       now-new Date(last.created_at).getTime()<60000) return {skip:true};

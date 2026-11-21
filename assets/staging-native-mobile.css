@@ -165,3 +165,24 @@ body.ngd-staging-app .checkout-qr .qris-fallback{
     font-size:16px;
   }
 }
+
+/* STAGING member login: secure PIN fallback avoids unnecessary OTP sends. */
+body.ngd-staging-app #screen .ngd-auth-mode-switch{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;
+  max-width:540px;margin:17px 0 20px;padding:5px;border-radius:15px;
+  background:#eeecf7;border:1px solid #e0dcf2
+}
+body.ngd-staging-app #screen .ngd-auth-mode-switch button{
+  min-height:43px;padding:8px 10px;min-width:0;border:0;border-radius:11px;
+  color:#50436f;background:transparent;font:700 .86rem Inter,system-ui,sans-serif;
+  cursor:pointer;white-space:normal
+}
+body.ngd-staging-app #screen .ngd-auth-mode-switch button[aria-pressed="true"]{
+  background:#fff;color:#4423ac;box-shadow:0 2px 9px rgb(44 28 94 / 12%)
+}
+body.ngd-staging-app #screen .ngd-auth-mode-switch button:focus-visible{
+  outline:3px solid #6d4bdb;outline-offset:2px
+}
+@media(max-width:420px){
+  body.ngd-staging-app #screen .ngd-auth-mode-switch{width:100%;max-width:100%}
+}

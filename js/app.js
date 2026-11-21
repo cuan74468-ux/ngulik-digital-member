@@ -260,7 +260,7 @@ const state={
   adminCatalog:[],catalogEditId:'',catalogRequestId:null,
   adminRuntime:null,adminRuntimeError:'',adminSettings:null,adminSettingsError:'',adminPaymentReviewId:'',workspaceInfo:null,
   services:[],selectedServiceId:'',serviceKind:'VIDEO_AI',serviceRequestId:null,
-  registrationOtpVerifiedWa:'',registrationWaitlist:null,publicStep:0,selectedAiToolId:'',aiCategory:'semua',aiSearch:'',pendingPurchaseId:'',pendingServiceRequest:false
+  registrationOtpVerifiedWa:'',registrationWaitlist:null,stagingPinLogin:false,publicStep:0,selectedAiToolId:'',aiCategory:'semua',aiSearch:'',pendingPurchaseId:'',pendingServiceRequest:false
 };
 const isAdmin=()=>state.me?.role==='ADMIN';
 const adminLoginEnabled=()=>isConnected()&&config.adminLoginEnabled===true;
@@ -1489,11 +1489,14 @@ function viewLogin(register=false,adminMode=false){
       '<button type="button" class="btn btn-secondary" data-route="dukungan">Cara Kerja &amp; Bantuan</button></div>'+
     '</section>';
   }
-  const memberOtp=!adminMode&&!register;
-  // Member authentication is WhatsApp OTP, never an assumed PIN.
-  // Backend and environment release gates still apply.
+  // A verified PIN is an existing server-side auth option for STAGING QA only.
+  // Public production still never renders a member PIN login form.
+  const memberStaging=!adminMode&&!register&&
+    String(location.pathname||'').includes('/staging/');
+  const pinLogin=memberStaging&&state.stagingPinLogin===true;
+  const memberOtp=!adminMode&&!register&&!pinLogin;
   const enabled=adminMode?adminLoginEnabled():
-    register?registrationOtpEnabled():memberOtpLoginEnabled();
+    register?registrationOtpEnabled():pinLogin?isWriteEnabled():memberOtpLoginEnabled();
   return '<div class="login-shell ngd-auth-v10">'+
     '<div class="ngd-auth-brand"><img src="'+esc(defaultBrandLogoSrc)+'" alt="" decoding="async">'+
       '<span><strong>Ngulik Digital</strong><small>Marketplace Produk Digital</small></span></div>'+
@@ -1504,15 +1507,20 @@ function viewLogin(register=false,adminMode=false){
     '<p class="lead">'+
     (!adminMode&&state.pendingPurchaseId?'Masuk atau daftar gratis pakai WhatsApp untuk melanjutkan pesanan dan menyimpan akses produk Anda.':adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':
       register?'Daftar dengan nomor WhatsApp. Verifikasi dilakukan melalui kode WhatsApp.':
-      'Masukkan nomor WhatsApp dan kode OTP. Member tidak perlu membuat PIN.')+'</p>'+
-    '<form id="auth-form" class="surface" data-mode="'+(adminMode?'admin':register?'register':'login')+'">'+
+      pinLogin?'Masuk dengan PIN enam angka yang sudah Anda miliki. Tidak mengirim OTP atau memakai kuota Fonnte.':
+      'Masukkan nomor WhatsApp dan kode OTP untuk masuk.')+'</p>'+
+    (memberStaging?'<div class="ngd-auth-mode-switch" role="group" aria-label="Metode masuk member">'+
+      '<button type="button" data-staging-auth-method="otp" aria-pressed="'+String(!pinLogin)+'">OTP WhatsApp</button>'+
+      '<button type="button" data-staging-auth-method="pin" aria-pressed="'+String(pinLogin)+'">PIN Akun</button>'+
+      '</div>':'')+
+    '<form id="auth-form" class="surface" data-mode="'+(adminMode?'admin':register?'register':pinLogin?'pin':'login')+'">'+
     (register?'<div class="field"><label for="nama">Nama lengkap</label><input class="input" id="nama" name="nama" autocomplete="name" required minlength="2" maxlength="80"></div>'+
       '<div class="field"><label for="usaha">Nama usaha</label><input class="input" id="usaha" name="nama_usaha" required minlength="2" maxlength="100"></div>':'')+
     '<div class="field"><label for="wa">Nomor WhatsApp</label><input class="input" id="wa" name="wa" required inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx"></div>'+
     (memberOtp?'<div class="field"><label for="login-otp">Kode OTP WhatsApp</label><input class="input" id="login-otp" name="otp" required inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="6 digit OTP"></div>'+
       '<label class="small"><input type="checkbox" name="setuju_pengiriman" required> Saya setuju menerima OTP melalui WhatsApp.</label>'+
       '<div class="actions"><button type="button" class="btn btn-secondary" data-action="member-otp-request" '+(!enabled?'disabled':'')+'>Kirim Kode</button></div>':
-      '<div class="field"><label for="pin">'+(adminMode?'PIN Admin 6 angka':'PIN registrasi')+'</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>')+
+      '<div class="field"><label for="pin">'+(adminMode?'PIN Admin 6 angka':pinLogin?'PIN Akun 6 angka':'PIN registrasi')+'</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>')+
     (register?'<div class="field"><label for="otp">Kode OTP WhatsApp</label><input class="input" id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" type="text" required placeholder="6 digit kode verifikasi"></div>'+
       '<div class="actions" style="margin-bottom:13px"><button type="button" class="btn btn-secondary" data-action="otp-request" '+(!enabled?'disabled':'')+'>Kirim Kode</button>'+
       '<button type="button" class="btn btn-ghost" data-action="otp-verify" '+(!enabled?'disabled':'')+'>Verifikasi kode</button></div>':'')+
@@ -1520,7 +1528,7 @@ function viewLogin(register=false,adminMode=false){
     '<button class="btn btn-primary btn-wide" type="submit" '+(!enabled?'disabled':'')+'>'+
     (adminMode?'Masuk admin':register?'Buat akun':'Masuk')+' '+icon('arrow')+'</button>'+
     '<p class="form-hint" style="margin:13px 0 0">'+
-    (enabled?(memberOtp?'Kode berlaku 5 menit, maksimal 3 percobaan. Jangan bagikan kode.':adminMode?'Jangan bagikan PIN Admin Anda.':'Verifikasi WhatsApp diperlukan sebelum aktivasi akun.'):
+    (enabled?(memberOtp?'Kode berlaku 5 menit, maksimal 3 percobaan. Batas pengiriman per nomor berlaku; gunakan PIN akun jika kuota habis.':adminMode?'Jangan bagikan PIN Admin Anda.':pinLogin?'PIN akun sudah tersimpan saat pendaftaran. Jangan bagikan PIN kepada siapa pun.':'Verifikasi WhatsApp diperlukan sebelum aktivasi akun.'):
       adminMode?'Akses administrator belum diaktifkan pada backend. Akun yang sudah ada tetap aman.':
       register?'Pendaftaran STAGING belum siap. Periksa koneksi backend lalu coba lagi.':'Login OTP member belum diaktifkan pada layanan ini. Tidak perlu memasukkan PIN.')+'</p>'+ 
     (!enabled&&register&&location.pathname.includes('/staging/')?'<button type="button" class="btn btn-ghost" data-staging-readiness-refresh>Cek ulang kesiapan pendaftaran</button>':'')+'</form>'+
@@ -2782,16 +2790,23 @@ async function requestMemberLoginOtp_(){
     const res=await api('requestMemberLoginOtp',{wa,setuju_pengiriman:true},'',{write:true});
     if(res?.accepted!==true)throw new ApiError('Permintaan OTP belum dikonfirmasi.');
     toast('Jika terdaftar, kode akan dikirim ke WhatsApp.');
-  }catch(e){toast(e.message,true);}
+  }catch(e){
+    toast(e.code==='RATE_LIMITED'?
+      'Batas permintaan kode tercapai. Gunakan tab PIN Akun di STAGING, atau coba OTP lagi setelah batas 24 jam berakhir.':
+      e.message,true);
+  }
   finally{if(btn)btn.disabled=false;}
 }
 async function processLogin(form,register){
   const adminMode=form.dataset.mode==='admin';
-  if(!(adminMode?adminLoginEnabled():register?registrationOtpEnabled():memberOtpLoginEnabled()))
+  const pinLogin=!adminMode&&!register&&form.dataset.mode==='pin'&&
+    String(location.pathname||'').includes('/staging/');
+  if(!(adminMode?adminLoginEnabled():register?registrationOtpEnabled():
+    pinLogin?isWriteEnabled():memberOtpLoginEnabled()))
     return toast(adminMode?'Login administrator belum diaktifkan.':register?
-      'Pendaftaran OTP belum dibuka.':'Login member menggunakan OTP WhatsApp; layanan ini belum diaktifkan.',true);
+      'Pendaftaran OTP belum dibuka.':'Layanan autentikasi member sedang tidak tersedia.',true);
   const fd=new FormData(form);
-  const otpLogin=!adminMode&&!register&&memberOtpLoginEnabled();
+  const otpLogin=!adminMode&&!register&&!pinLogin&&memberOtpLoginEnabled();
   const payload=otpLogin?
     {wa:String(fd.get('wa')||''),otp:String(fd.get('otp')||'').trim()}:
     {wa:String(fd.get('wa')||''),pin:String(fd.get('pin')||'')};
@@ -2824,6 +2839,7 @@ async function processLogin(form,register){
     }
     if(!result?.token||!result?.profil)throw new ApiError('Respons login belum lengkap.');
     state.token=result.token;state.me=result.profil;
+    state.stagingPinLogin=false;
     sessionStorage.setItem(tokenKey,result.token);
     toast('Selamat datang!');
     const resume=(!isAdmin()&&state.pendingPurchaseId)?state.pendingPurchaseId:'';
@@ -3591,6 +3607,17 @@ document.addEventListener('keydown',e=>{
   }
 });
 document.addEventListener('click',async(e)=>{
+  const authMethod=e.target.closest?.('[data-staging-auth-method]');
+  if(authMethod&&String(location.pathname||'').includes('/staging/')&&!logged()){
+    const method=String(authMethod.dataset.stagingAuthMethod||'');
+    if(method!=='pin'&&method!=='otp')return;
+    const previousWa=by('auth-form')?.querySelector('[name="wa"]')?.value||'';
+    state.stagingPinLogin=method==='pin';
+    render();
+    const nextWa=by('auth-form')?.querySelector('[name="wa"]');
+    if(nextWa){nextWa.value=previousWa;nextWa.focus();}
+    return;
+  }
   const retry=e.target.closest?.('[data-staging-readiness-refresh]');
   if(retry){
     retry.disabled=true;
