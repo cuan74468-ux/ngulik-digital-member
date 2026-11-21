@@ -49,29 +49,32 @@ test('member-only theme is active for member and onboarding but not admin',()=>{
   const admin=preview('admin');
   assert.equal(admin.classes.has('member-experience'),false);
 });
-test('redesigned member dashboard shows a bounded real progress ring and navigation',()=>{
+test('member command center shows honest wallet, orders, access and account activity',()=>{
   const h=preview('member');
-  assert.match(h.nodes.screen.innerHTML,/member-focus-ring/);
-  assert.match(h.nodes.screen.innerHTML,/33 persen progres modul/);
-  assert.match(h.nodes.screen.innerHTML,/Lanjutkan kelas/);
-  assert.match(h.nodes.screen.innerHTML,/data-lms-action="open-course"/);
-  assert.match(h.nodes['mobile-nav'].innerHTML,/data-route="ai"/);
-  assert.match(h.nodes['mobile-nav'].innerHTML,/data-route="katalog"/);
-  assert.match(h.nodes.screen.innerHTML,/wallet-hero/);
-  assert.match(h.nodes['mobile-nav'].innerHTML,/aria-current="page"/);
+  const page=h.nodes.screen.innerHTML;
+  assert.match(page,/ngd-member-command/);
+  assert.match(page,/wallet-hero/);
+  assert.match(page,/Akses Aktif/);
+  assert.match(page,/Pesanan/);
+  assert.match(page,/Komisi Siap Tarik/);
+  assert.match(page,/ngd-member-activity/);
+  assert.doesNotMatch(page,/member-focus-ring|data-route="menu"/);
+  assert.match(h.nodes['top-nav-drawer'].innerHTML,/data-route="pesanan"/);
+  assert.match(h.nodes['top-nav-drawer'].innerHTML,/data-route="affiliate"/);
   assert.equal(h.attributes['data-member-route'],'beranda');
 });
-test('member mobile has five native destinations and the full menu remains discoverable',()=>{
+
+test('member uses one top navigation and old Menu route redirects home',()=>{
   const h=preview('member','lms-course');
-  const nav=h.nodes['mobile-nav'].innerHTML;
-  for(const route of ['beranda','katalog','ai','pesanan','menu'])
+  const nav=h.nodes['top-nav-drawer'].innerHTML;
+  for(const route of ['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun'])
     assert.match(nav,new RegExp('data-route="'+route+'"'));
-  assert.doesNotMatch(nav,/data-route="belajar"|data-route="affiliate"/);
-  h.go('lms-complete');
-  assert.equal(h.attributes['data-member-route'],'lms-complete');
+  assert.doesNotMatch(nav,/data-route="menu"/);
+  assert.equal(h.nodes['mobile-nav']?.innerHTML||'','');
   h.go('menu');
-  assert.match(h.nodes.screen.innerHTML,/data-route="belajar"/);
+  assert.equal(h.attributes['data-member-route'],'beranda');
 });
+
 test('success screen is explicitly labeled preview, not a real stored completion',()=>{
   const h=preview('member','lms-complete'),display=h.nodes.screen.innerHTML;
   assert.match(display,/Pelajaran Selesai!/);
@@ -108,7 +111,7 @@ test('read-only preview locks writes even when visual calls to action exist',()=
   assert.equal(h.apiCalls(),0);
 });
 
-test('admin mobile workspace exposes every operational module with a consistent active route',()=>{
+test('admin top drawer and operational commandbar cover all modules',()=>{
   const h=preview('admin','lms-editor');
   assert.equal(h.attributes['data-app-role'],'admin');
   const bar=h.nodes['notice-slot'].innerHTML;
@@ -116,8 +119,8 @@ test('admin mobile workspace exposes every operational module with a consistent 
   for(const route of ['admin','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','akun'])
     assert.ok(bar.includes('data-route="'+route+'"'),'Admin route missing: '+route);
   assert.match(bar,/data-route="lms" aria-current="page"/);
-  for(const route of ['admin','produk','pesanan','lms','menu'])
-    assert.ok(h.nodes['mobile-nav'].innerHTML.includes('data-route="'+route+'"'),route);
+  for(const route of ['admin','produk','pesanan','lms','pengaturan'])
+    assert.ok(h.nodes['top-nav-drawer'].innerHTML.includes('data-route="'+route+'"'),route);
   h.go('member360');
   assert.match(h.nodes['notice-slot'].innerHTML,/data-route="member" aria-current="page"/);
   const guest=preview('','beranda');
@@ -135,24 +138,24 @@ test('administrator account has operational controls without member-only affilia
   assert.doesNotMatch(screen,/Lihat referral saya|Simpan perubahan profil/);
 });
 
-test('mobile all-menu route exposes member services and admin modules without API',()=>{
-  const member=preview('member','menu');
-  assert.match(member.nodes['mobile-nav'].innerHTML,/data-route="menu"/);
+test('no duplicate Menu page or bottom tabs; all links appear in header drawer',()=>{
+  const member=preview('member','beranda');
+  assert.doesNotMatch(member.nodes['top-nav-drawer'].innerHTML,/data-route="menu"/);
   for(const route of ['ai','affiliate','dukungan','akun'])
-    assert.match(member.nodes.screen.innerHTML,new RegExp('data-route="'+route+'"'));
-  member.go('affiliate');
-  assert.match(member.nodes['mobile-nav'].innerHTML,/data-route="menu" aria-current="page"/);
-  const admin=preview('admin','menu');
+    assert.match(member.nodes['top-nav-drawer'].innerHTML,new RegExp('data-route="'+route+'"'));
+  member.go('menu');
+  assert.equal(member.attributes['data-member-route'],'beranda');
+  const admin=preview('admin','beranda');
   for(const route of ['konten','layanan','member','rilis','antrean','pengaturan','akun'])
-    assert.match(admin.nodes.screen.innerHTML,new RegExp('data-route="'+route+'"'));
+    assert.match(admin.nodes['top-nav-drawer'].innerHTML,new RegExp('data-route="'+route+'"'));
   assert.equal(member.apiCalls(),0);
   assert.equal(admin.apiCalls(),0);
 });
-test('guest all-menu offers sign-in links without bypassing access flags',()=>{
-  const guest=preview('','menu');
-  assert.match(guest.nodes.screen.innerHTML,/data-route="login"/);
-  // The administrator entry is intentionally private; use the direct URL.
-  assert.doesNotMatch(guest.nodes.screen.innerHTML,/data-route="admin-login"/);
-  assert.doesNotMatch(guest.nodes.screen.innerHTML,/PRIVATE_TEST_TOKEN|FONNTE_API_KEY/);
+
+test('guest drawer offers sign-in without exposing private admin login',()=>{
+  const guest=preview('','beranda');
+  assert.match(guest.nodes['top-nav-drawer'].innerHTML,/data-route="login"/);
+  assert.doesNotMatch(guest.nodes['top-nav-drawer'].innerHTML,/data-route="admin-login"/);
+  assert.doesNotMatch(guest.nodes['top-nav-drawer'].innerHTML,/PRIVATE_TEST_TOKEN|FONNTE_API_KEY/);
   assert.equal(guest.apiCalls(),0);
 });
