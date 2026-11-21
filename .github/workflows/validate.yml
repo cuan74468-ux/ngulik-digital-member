@@ -121,7 +121,7 @@ jobs:
           fi
           echo 'PUBLIC_V8_AFFILIATE_HELP_OK'
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1440,900 --dump-dom "http://127.0.0.1:8765/#jasa" > /tmp/ngd-public-services-v8.html 2>>/tmp/ngd-chrome.log
-          grep -q 'class="ngd-public-services"' /tmp/ngd-public-services-v8.html
+          grep -q 'class="ngd-public-services ngd-service-guide"' /tmp/ngd-public-services-v8.html
           grep -q 'class="ngd-service-guide-head"' /tmp/ngd-public-services-v8.html
           grep -q 'Website &amp; Katalog Online' /tmp/ngd-public-services-v8.html
           if grep -q 'market-product-card' /tmp/ngd-public-services-v8.html; then
