@@ -12,7 +12,8 @@ function harness(options={}){
     product_id:p.product_id,harga_dasar:50000,total_bayar:50000,
     status:'PENDING',metode:'MAYAR',gateway_ref_id:id,
     catatan_admin:'',ref_member_id:m.referred_by};
-  const rows={orders:[order],members:[m],katalog_produk:[p],
+  const inviter={_row:3,member_id:'M-AFF',role:'MEMBER',status:'AKTIF',referred_by:''};
+  const rows={orders:[order],members:[m,inviter],katalog_produk:[p],
     affiliate_commissions:[],audit_logs:[],credits_ledger:[]};
   const writes=[],audits=[],calls=[];
   const ctx=vm.createContext({Date,Number,JSON,Math,console:{error:()=>{},log:()=>{}}});
