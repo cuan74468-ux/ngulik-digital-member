@@ -39,8 +39,8 @@ test('public and STAGING use identical branded favicon and correct relative sour
 test('all dynamic brand placements use same canonical official image',()=>{
   assert.match(app,/const defaultBrandLogoSrc=document\.querySelector\?\.\('\.guest-brand-icon \.ngd-brand-image'\)/);
   assert.match(app,/by\('brand-mark'\)/);
-  assert.match(app,/class="ngd-floating-logo" role="img" aria-label="Logo resmi Ngulik Digital"/);
-  assert.match(app,/class="ngd-brand-image" src="'\+esc\(brandLogoSrc_\(\)\)/);
+  assert.match(app,/class="ngd-home-quiet-hero"|ngd-home-quiet-hero/);
+  assert.doesNotMatch(app.slice(app.indexOf('  \/\/ Public front door:'),app.indexOf('const offerCategories=')),/ngd-floating-logo|ngd-home-artwork/);
   // The compact commission page intentionally removed its decorative logo art.
   assert.match(app,/function viewAffiliate\(\)/);
   assert.doesNotMatch(app.slice(app.indexOf('function viewAffiliate(){'),app.indexOf('function viewNotificationCenter(){')),/partner-art-mark/);
