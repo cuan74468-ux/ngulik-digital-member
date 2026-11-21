@@ -1027,7 +1027,7 @@ function viewAffiliate(){
   const code=unlocked?String(a.kode_referral||''):'';
   const referralBase='https://cuan74468-ux.github.io/ngulik-digital-member/';
   const url=unlocked&&/^[A-Za-z0-9_-]{3,80}$/.test(code)&&
-    String(a.link||'')===referralBase+'?ref='+code?a.link:'';
+    String(a.link||'')===referralBase+'?ref='+encodeURIComponent(code)?a.link:'';
   if(!unlocked)return '<section class="partner-member partner-locked">'+
     '<p class="partner-kicker">AKSES AJAK TEMAN</p><h1>Aktifkan link komisi Anda.</h1>'+
     '<p>Starter Pack Rp15.000 membuka akses mitra seumur hidup, bonus 15 token AI, dan ruang kurasi. '+ 
