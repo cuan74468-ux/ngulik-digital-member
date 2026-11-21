@@ -1774,7 +1774,9 @@ function viewSupport(){
         '<button type="button" class="btn btn-primary" data-route="login">Masuk untuk bantuan pribadi</button>'+
         '<button type="button" class="btn btn-secondary" data-route="katalog">Lihat Katalog</button>'+
       '</div></div>'+
-      '<div class="ngd-help-media" aria-hidden="true">'+icon('shield')+'<span>Bantuan produk</span><span>Pesanan &amp; pembayaran</span><span>Akun &amp; akses</span></div>'+
+      '<div class="ngd-help-media" aria-hidden="true">'+
+        (cmsPageArt_('dukungan')?'<img class="ngd-help-cms-art" src="'+esc(cmsPageArt_('dukungan'))+'" alt="" loading="lazy" decoding="async">':icon('shield'))+
+        '<span>Bantuan produk</span><span>Pesanan &amp; pembayaran</span><span>Akun &amp; akses</span></div>'+
     '</section>'+
     '<section class="ngd-help-topics" aria-label="Topik bantuan">'+
       [['clipboard','Pesanan','Lihat detail checkout, batas pembayaran, dan status melalui akun member.'],
