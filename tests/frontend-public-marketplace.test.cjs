@@ -20,8 +20,8 @@ test('guest and member use the same truthful product data and internal checkout'
   assert.doesNotMatch(app.slice(app.indexOf('function viewPublicMarketplace'),app.indexOf('function viewCatalog')),/4\.9|terjual|50% OFF|diskon palsu|Tanya via WhatsApp/i);
 });
 test('CMS published banner is scoped to catalog and can be configured by admin',()=>{
-  assert.match(app,/catalogBanner\\(state\\.siteContent\\)/);
-  assert.match(cms,/function catalogBanner\\(contents\\)/);
+  assert.match(app,/catalogBanner\(state\.siteContent\)/);
+  assert.match(cms,/function catalogBanner\(contents\)/);
   assert.match(cms,/published\(contents,'HERO',target\)/);
   assert.match(cms,/\['HERO','catalog','Banner promosi marketplace publik'\]/);
   assert.match(cms,/mediaPath\(x\.image_path\)/);

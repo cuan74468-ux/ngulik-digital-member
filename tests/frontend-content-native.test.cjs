@@ -113,7 +113,7 @@ test('app integrates real image slots across guest home and catalogue and admin 
   assert.doesNotMatch(home,/nh-carousel/); // Hero composition is frozen; CMS banners remain stored.
   vm.runInContext("go('katalog')",guest.ctx,{timeout:3000});
   assert.match(guest.nodes.screen.innerHTML,/ngd-catalog-campaign/);
-  assert.doesNotMatch(guest.nodes.screen.innerHTML,/assets\\/media\\/sampul-katalog.webp/);
+  assert.doesNotMatch(guest.nodes.screen.innerHTML,/assets\/media\/sampul-katalog.webp/);
   assert.match(guest.nodes.screen.innerHTML,/assets\/media\/produk-pos.webp/);
   assert.match(guest.nodes.screen.innerHTML,/market-product-image/);
   const admin=load();
