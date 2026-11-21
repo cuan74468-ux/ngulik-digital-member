@@ -74,6 +74,6 @@ test('learning filters and lesson navigation are delegated without changing API 
     "hasAttribute('data-lms-next')"])
     assert.ok(app.includes(token),token);
   assert.match(app,/api\('getMyLMSEnrollments'/);
-  assert.match(read('js/lms-ui.js'),/data-lms-action="open-course"/);
+  assert.match(read('js/lms-ui.js'),/btn\('open-course'/);
   assert.match(app,/if\(isAdmin\(\)\)return viewAdmin\(\)/);
 });
