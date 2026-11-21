@@ -40,15 +40,16 @@ test('unauthenticated public admin route never advertises administrator entry',(
  assert.doesNotMatch(html,/data-route="daftar"/);
  assert.match(html,/data-route="beranda"/);
 });
-test('member login stays independent and fails closed',()=>{
+test('member login stays independent and fails closed when public OTP is off',()=>{
  const p=preview('login'),html=p.elements.screen.innerHTML;
- assert.match(html,/data-mode="login"/);
- assert.doesNotMatch(html,/data-route="admin-login"/); // Admin entry is direct/private.
- assert.match(html,/id="login-otp"/);
- assert.doesNotMatch(html,/id="pin"/);
- assert.match(html,/Member tidak perlu membuat PIN/);
- assert.match(html,/data-route="daftar"/);
- assert.match(html,/type="submit" disabled/);
+ assert.match(html,/ngd-member-login-closed/);
+ assert.match(html,/Login member belum tersedia di halaman publik/);
+ assert.doesNotMatch(html,/data-route="admin-login"/);
+ assert.doesNotMatch(html,/id="login-otp"|id="pin"|id="auth-form"/);
+ assert.match(html,/data-route="katalog"/);
+ assert.match(html,/data-route="dukungan"/);
+ // Staging OTP login remains a separately configured member experience.
+ assert.match(read('staging/member-config.js'),/memberOtpLoginEnabled:true/);
 });
 test('administrator PIN change verifies confirmation locally before making a request',()=>{
  const app=read('js/app.js');
