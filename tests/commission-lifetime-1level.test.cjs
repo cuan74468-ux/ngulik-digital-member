@@ -76,15 +76,14 @@ test('DANA destination required and no automatic payout or bank requirement',()=
   assert.match(code,/payout_note:'DANA:'\+dana/);
   assert.match(code,/min_payout/);
   assert.match(gas,/nomor_dana\)===destination\.split/);
-  assert.match(app,/Tarik Komisi ke DANA/);
+  assert.match(app,/Ajukan pencairan/);
 });
 test('public and member wording uses Komisi / Ajak Teman and free doors',()=>{
-  assert.match(app,/Komisi Tertahan \(14 Hari\)/);
-  assert.match(app,/Saldo Komisi Siap Tarik/);
-  assert.match(app,/Link eBook Gratis/);
-  assert.match(app,/Link Kelas Gratis/);
-  assert.match(app,/Bagikan eBook ke WA/);
-  assert.match(app,/Bagikan Kelas ke WA/);
+  assert.match(app,/Dalam masa tahan/);
+  assert.match(app,/Siap diajukan/);
+  assert.match(app,/Salin tautan eBook/);
+  assert.match(app,/Salin tautan kelas/);
+  assert.match(app,/Bagikan via WA/);
   assert.match(app,/firstInviterTtlMs=30\*24\*60\*60\*1000/);
   assert.match(app,/free=ebook/);
   assert.match(app,/free=kelas/);
