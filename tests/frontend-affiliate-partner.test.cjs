@@ -46,7 +46,7 @@ test('referral sharing uses production URL even on staging and validates code',(
   assert.match(app,/data-copy=/);
 });
 test('payout action is explicit, guarded, and server-authoritative',()=>{
-  assert.match(app,/if\(affiliatePayoutSubmitting_\|\|!isWriteEnabled\(\)\|\|config\.paymentsEnabled!==true\)return/);
+  assert.match(app,/if\(affiliatePayoutSubmitting_\|\|!paymentEnabled\(\)\)return/);
   assert.match(app,/if\(!confirm\('Ajukan komisi /);
   assert.match(app,/api\('requestPayout',\{nomor_dana:nomorDana\},state\.token,\{write:true\}\)/);
   assert.match(app,/api\('getAffiliateDashboard',\{\},state\.token\)/);
@@ -64,7 +64,7 @@ test('responsive, light commission CSS loads last for public and staging',()=>{
     assert.match(html,/commission-experience-v2\.css\?v=20261121-member-public-v2/);
     assert.ok(html.indexOf('commission-experience-v2.css')>html.indexOf('affiliate-partner.css'));
     assert.ok(html.indexOf('commission-experience-v2.css')>html.indexOf('catalog-experience-v3.css'));
-    assert.match(html,/app\.js\?v=20261121-member-native-3/);
+    assert.match(html,/app\.js\?v=20261121-staging-finance-ready-1/);
   }
 });
 test('affiliate dashboard prioritizes verified referral link and hides payout while finance is OFF',()=>{
@@ -76,7 +76,7 @@ test('affiliate dashboard prioritizes verified referral link and hides payout wh
   assert.match(section,/partner-link-panel/);
   assert.match(section,/partner-metric-grid/);
   assert.ok(section.indexOf('partner-link-panel')<section.indexOf('partner-metric-grid'));
-  assert.match(section,/const canRequest=eligible>0&&isWriteEnabled\(\)&&config\.paymentsEnabled===true/);
+  assert.match(section,/const canRequest=eligible>0&&paymentEnabled\(\)/);
   assert.match(section,/canRequest\?'<div class="partner-payout-form">/);
   assert.match(section,/Pencairan belum dibuka/);
   assert.doesNotMatch(section,/partner-free-links|ebookInvite|classInvite/); // Material links are member-learning only.

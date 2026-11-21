@@ -251,7 +251,14 @@ const registrationOtpEnabled=()=>isWriteEnabled()&&config.registrationOtpEnabled
 // Only STAGING member page opts in. Public and admin retain existing PIN behavior.
 const memberOtpLoginEnabled=()=>isWriteEnabled()&&config.memberOtpLoginEnabled===true&&
   location.pathname.includes('/staging/');
-const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true;
+// A STAGING financial flow is never released by a browser flag alone.
+// Production and any unverified backend identity must fail closed.
+const paymentEnabled=()=>isWriteEnabled()&&config.paymentsEnabled===true&&
+  String(location.pathname||'').includes('/staging/')&&
+  state.workspaceInfo?.workspace==='NGD_STAGING'&&
+  state.workspaceInfo?.environment==='STAGING'&&
+  state.workspaceInfo?.mutations_enabled===true&&
+  state.workspaceInfo?.finance_enabled===true;
 const qrisUrl=()=>{try{const u=new URL(String(config.qrisImageUrl||''),location.href);return u.origin===location.origin&&u.protocol==='https:'?u.href:'';}catch{return '';}};
 const logged=()=>Boolean(state.me&&state.token);
 const title=(heading,eyebrow,detail)=>'<div class="section-head"><div><p class="eyebrow">'+esc(eyebrow)+'</p><h2>'+esc(heading)+'</h2>'+(detail?'<p>'+esc(detail)+'</p>':'')+'</div></div>';
@@ -837,7 +844,7 @@ function viewPublicMarketplace(list){
         '<button type="button" data-market-reset>Hapus filter</button></div>')+
     '</section>'+
     '<p class="market-trust-note">'+
-      (config.paymentsEnabled===true?'Pembayaran diproses setelah verifikasi admin.':'Checkout produk tersedia. Pembayaran QRIS baru dibuka setelah verifikasi penerima resmi.')+'</p>'+
+      (paymentEnabled()?'Pembayaran diproses setelah verifikasi admin.':'Checkout produk tersedia. Pembayaran QRIS baru dibuka setelah verifikasi penerima resmi.')+'</p>'+
   '</div>';
 }
 function viewPartnerShelf_(){
@@ -1294,7 +1301,7 @@ function viewAffiliate(){
     .reduce((sum,x)=>sum+(Number(x.nominal)||0),0);
   const eligible=all.filter(x=>x.status==='APPROVED'&&!x.payout_requested_at)
     .reduce((sum,x)=>sum+(Number(x.nominal)||0),0);
-  const canRequest=eligible>0&&isWriteEnabled()&&config.paymentsEnabled===true;
+  const canRequest=eligible>0&&paymentEnabled();
   const statusLabel={PENDING:'Dalam masa tahan',APPROVED:'Disetujui',PAID:'Dibayar',REVERSED:'Dibatalkan'};
   const rows=[...all].sort((x,y)=>String(y.created_at||'').localeCompare(String(x.created_at||''))).slice(0,50);
   const waShare=url?'https://wa.me/?text='+encodeURIComponent('Rekomendasi produk digital Ngulik Digital: '+url):'';
@@ -1337,14 +1344,14 @@ function viewAffiliate(){
       '<div class="partner-empty"><h3>Belum ada komisi</h3><p>Mulai dengan membagikan tautan Anda. Komisi tercatat setelah transaksi memenuhi ketentuan.</p></div>')+'</section>'+
     '<section class="partner-payout" aria-label="Pengajuan pencairan">'+
       '<div><p class="partner-kicker">PENCAIRAN</p><h2>Tarik komisi</h2>'+
-      '<p>'+(!config.paymentsEnabled?
+      '<p>'+(!paymentEnabled()?
         'Pencairan belum dibuka. Saldo dan riwayat tetap bisa dipantau.':
         'Pengajuan hanya untuk saldo disetujui yang memenuhi ketentuan minimum. Admin akan memverifikasi tujuan dan transfer.')+'</p></div>'+
       (canRequest?'<div class="partner-payout-form">'+
         '<label for="commission-dana-number">Nomor DANA tujuan</label>'+
         '<input id="commission-dana-number" class="input" type="tel" inputmode="tel" autocomplete="off" placeholder="08xxxxxxxxxx" pattern="08[0-9]{8,11}" maxlength="13">'+
         '<button type="button" class="partner-btn partner-btn-primary" data-affiliate-payout>Ajukan pencairan '+icon('arrow')+'</button></div>':
-        '<span class="partner-payout-state">'+(!config.paymentsEnabled?'Belum dibuka':'Belum memenuhi syarat')+'</span>')+'</section>'+
+        '<span class="partner-payout-state">'+(!paymentEnabled()?'Belum dibuka':'Belum memenuhi syarat')+'</span>')+'</section>'+
     '<details class="partner-terms"><summary>Ketentuan program komisi</summary><p>'+esc(uiCommissionText_(state.info?.disclosure||
        'Komisi mengikuti ketentuan produk, pemeriksaan transaksi, masa tahan, dan pengembalian dana. Pengajuan bukan konfirmasi pembayaran.'))+'</p></details>'+
   '</div>';
@@ -3605,7 +3612,7 @@ document.addEventListener('click',async(e)=>{
       }
       return;
     }
-    if(affiliatePayoutSubmitting_||!isWriteEnabled()||config.paymentsEnabled!==true)return;
+    if(affiliatePayoutSubmitting_||!paymentEnabled())return;
     const rows=Array.isArray(state.affiliates?.komisi)?state.affiliates.komisi:[];
     const amount=rows.filter(x=>x.status==='APPROVED'&&!x.payout_requested_at)
       .reduce((sum,x)=>sum+(Number(x.nominal)||0),0);

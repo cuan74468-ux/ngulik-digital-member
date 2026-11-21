@@ -1,7 +1,8 @@
 /* STAGING QA UI gates: visible workflows may be exercised only when the matching
  * server-side release gates permit them. Production endpoint stays isolated.
- * Payments, token debits, refunds and provider calls remain blocked whenever
- * the Apps Script NGD_FINANCE_ENABLED property is false. */
+ * Client-side financial workflows are prepared for STAGING only. No payment,
+ * token debit, payout or settlement may run until backend finance is enabled,
+ * and QRIS presentation remains blocked until merchant verification. */
 window.NGD_CONFIG = Object.freeze({
   brand:'Ngulik Digital — STAGING',
   apiUrl:window.NGD_STAGING_CONFIG?.apiUrl||'', // single canonical staging/config.js source
@@ -9,7 +10,7 @@ window.NGD_CONFIG = Object.freeze({
   memberWritesEnabled:true, // STAGING GAS verified mutations=true (21 Nov 2026)
   registrationOtpEnabled:true, // UI is additionally gated by verified STAGING API readiness
   memberOtpLoginEnabled:true, // STAGING UI only; backend flag remains authoritative
-  paymentsEnabled:false, // STAGING fail-closed until QRIS merchant scan + controlled financial QA
+  paymentsEnabled:true, // STAGING UI opt-in; live finance still requires verified backend + official QR
   adminLoginEnabled:true,
   contentEnabled:true,
   catalogEnabled:true,

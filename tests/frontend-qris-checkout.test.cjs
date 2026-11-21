@@ -70,20 +70,36 @@ test('verified release UI creates only internal QRIS orders, never external invo
   assert.match(backend,/function newOrder_\(m,p,requestId\)/);
   assert.match(backend,/metode:'QRIS_STATIS'/);
 });
-test('financial gate is independently closed in public, staging and backend',()=>{
-  assert.match(stage,/paymentsEnabled:false/);
+test('STAGING client opt-in never bypasses backend finance or unverified QRIS',()=>{
+  assert.match(stage,/paymentsEnabled:true/);
   assert.match(stage,/qrisOwnerImageApproved:false/);
   assert.match(publicConfig,/paymentsEnabled:\s*false/);
   assert.match(publicConfig,/qrisOwnerImageApproved:\s*false/);
   assert.match(backend,/function requireFinanceEnabled_\(\)/);
   assert.match(backend,/function requireActionFeatureEnabled_\(action\)/);
   assert.match(app,/const canConfirm=open&&paymentEnabled\(\)&&!financeBlocked&&officialQr;/);
-  assert.match(app,/config\.qrisOwnerImageApproved===true/);
+  assert.match(app,/config\\.qrisOwnerImageApproved===true/);
+  const definition=app.match(/const paymentEnabled=\\(\\)=>[\\s\\S]*?;\\n/)?.[0];
+  assert.ok(definition, 'backend-attested payment release required');
+  const finance=new Function('isWriteEnabled','config','state','location',
+    definition+'return paymentEnabled();');
+  const stage={workspace:'NGD_STAGING',environment:'STAGING',mutations_enabled:true,finance_enabled:false};
+  const location={pathname:'/ngulik-digital-member/staging/member.html'};
+  assert.equal(finance(()=>true,{paymentsEnabled:true},{workspaceInfo:stage},location),false,
+    'client opt-in cannot bypass server finance=false');
+  assert.equal(finance(()=>true,{paymentsEnabled:true},{workspaceInfo:{...stage,finance_enabled:true}},location),true,
+    'approved STAGING backend can activate finance');
+  assert.equal(finance(()=>true,{paymentsEnabled:true},{workspaceInfo:{...stage,finance_enabled:true}},{pathname:'/ngulik-digital-member/'}),false,
+    'production path remains isolated');
+  assert.equal(finance(()=>true,{paymentsEnabled:true},{workspaceInfo:null},location),false,
+    'unverified or unreachable API fails closed');
+  assert.equal(finance(()=>false,{paymentsEnabled:true},{workspaceInfo:{...stage,finance_enabled:true}},location),false,
+    'write permission must remain active');
 });
 test('public and staging load the same checkout UI and new JS while keeping old styles',()=>{
   for(const page of html){
     assert.match(page,/checkout-qris-unified\.css\?v=20261121-qris-checkout-v4/);
-    assert.match(page,/app\.js\?v=20261121-member-native-3/);
+    assert.match(page,/app\.js\?v=20261121-staging-finance-ready-1/);
     assert.ok(page.indexOf('checkout-qris-unified.css')>page.indexOf('commission-experience-v2.css'));
   }
   assert.match(css,/@media\(max-width:680px\)/);
