@@ -55,10 +55,11 @@ test('truthful badges only reflect price and product terms; no invented ratings'
     "];state.info={wa_admin:'081234567890'};state.route='katalog';render()",h.ctx);
   const html=h.nodes.screen.innerHTML;
   assert.match(html,/market-product-badge[^>]*>Gratis/);
-  assert.match(html,/market-product-badge[^>]*>Konsultasi/);
+  assert.match(html,/market-product-badge[^>]*>30 hari/);
   assert.match(html,/market-product-badge[^>]*>Sekali bayar/);
-  assert.match(html,/https:\/\/cuan74468-ux\.github\.io\/buku-pintar-vibe-coder\//);
-  assert.match(html,/wa\.me\/6281234567890\?text=/);
+  assert.match(html,/data-checkout-product="P-EBOOK"/);
+  assert.match(html,/data-checkout-product="P-3IN1"/);
+  assert.doesNotMatch(html,/wa\.me\/|Tanya via WhatsApp|Chat WhatsApp/);
   assert.doesNotMatch(html,/data-buy="P-3IN1"/);
   assert.doesNotMatch(html,/rating|terjual|diskon palsu/i);
 });
