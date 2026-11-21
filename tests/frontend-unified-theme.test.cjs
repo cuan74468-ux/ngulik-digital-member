@@ -41,7 +41,7 @@ test('guest has no sidebar or mobile dock; logged members have four destinations
 });
 test('full commercial routes and API modules are preserved',()=>{
   const config=read('config.js'),code=read('js/api.js');
-  for(const flag of ['memberWritesEnabled: true','paymentsEnabled: false',
+  for(const flag of ['memberWritesEnabled: false','paymentsEnabled: false',
     'supportEnabled: true','lmsEnabled: true','notificationsEnabled: true'])
     assert.ok(config.includes(flag),flag);
   for(const route of ["admin:['Admin'","lms:['Kelola Kelas'",
