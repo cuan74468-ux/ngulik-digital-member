@@ -52,7 +52,7 @@ test('published entrypoints both load current marketplace and checkout sources i
     assert.match(html,/content-ui\.js\?v=20261121-catalog-v9-2/);
     assert.match(html,/catalog-experience-v3\.css/);
     assert.match(html,/checkout-qris-unified\.css/);
-    assert.match(html,/app\.js\?v=20261121-purpose-v11-1/);
+    assert.match(html,/app\.js\?v=20261121-roles-v12-1/);
     assert.ok(html.indexOf('checkout-qris-unified.css')>html.indexOf('catalog-experience-v3.css'));
   }
 });
