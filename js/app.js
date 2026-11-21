@@ -267,16 +267,32 @@ function renderNav(){
   const navIcon=(route)=>window.NGD_CONTENT_UI?.media(state.siteContent,'NAV_ICON',route,'nav-custom-icon','')||icon(screens[route][1]);
   const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+navIcon(route)+'<span>'+esc(screens[route][0])+'</span></button>';
   by('desktop-nav').innerHTML=items.map(button).join('');
-  // Studio AI and the complete public menu are directly accessible on mobile.
-  const mobileItems=isAdmin()?['admin','produk','pesanan','lms','menu']:
-    logged()?['beranda','katalog','ai','pesanan','menu']:
-    ['beranda','katalog','ai','jasa','menu'];
-  const context=mobileNavRoute(state.route);
-  const selectedMobile=mobileItems.includes(context)?context:'menu';
-  by('mobile-nav').innerHTML=mobileItems.map(route=>
-    '<button type="button" class="nav-item" data-route="'+route+'" '+
-    (route===selectedMobile?'aria-current="page"':'')+' aria-label="'+esc(screens[route][0])+'">'+
-    navIcon(route)+'<span>'+esc(({produk:'Katalog',layanan:'Jasa',konten:'Konten'})[route]||screens[route][0])+'</span></button>').join('');
+  // V16: one header navigation on all viewports. Drawer is a real dialog-like
+  // navigation surface, never a fixed bottom bar or a duplicated Menu page.
+  const drawer=by('top-nav-drawer');
+  if(drawer){
+    const routes=isAdmin()?adminNav:logged()?memberNav:guestNav;
+    const names={beranda:'Beranda',katalog:'Katalog',ai:'Studio AI',
+      jasa:'Jasa',belajar:'Kelas',affiliate:'Ajak Teman',pesanan:'Pesanan',
+      dukungan:'Bantuan',akun:'Profil',admin:'Dashboard'};
+    drawer.innerHTML='<div class="top-nav-drawer-inner">'+
+      '<p class="top-nav-drawer-label">'+(isAdmin()?'OPERASIONAL':logged()?'RUANG MEMBER':'JELAJAH')+'</p>'+
+      '<nav aria-label="Navigasi utama">'+routes.map(route=>
+        '<button type="button" data-route="'+route+'"'+
+        (route===state.route?' aria-current="page"':'')+'>'+
+        (names[route]||screens[route][0])+icon('arrow')+'</button>').join('')+
+      '</nav>'+(logged()?'<button type="button" class="top-nav-drawer-signout" data-route="akun">Akun & keluar</button>':
+      '<button type="button" class="top-nav-drawer-signout" data-route="login">Masuk Member</button>')+
+      '</div>';
+  }
+  const tokenBadge=by('header-token');
+  if(tokenBadge){
+    tokenBadge.hidden=!logged()||isAdmin();
+    tokenBadge.textContent=logged()&&!isAdmin()?
+      Math.max(0,Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0)||0).toLocaleString('id-ID')+' Token':'';
+  }
+  const orderLink=by('header-order');
+  if(orderLink)orderLink.hidden=!logged()||isAdmin();
   by('page-label').textContent=screens[state.route]?.[0]||'Beranda';
   by('account-avatar').textContent=logged()?
     String(state.me.nama||'M').split(' ').map(v=>v[0]).join('').slice(0,2).toUpperCase():'ND';
@@ -2129,6 +2145,7 @@ function render(){
 // bookmarked, and Android/browser Back returns to the previous screen.
 let lastRouteHash_=location.hash;
 function go(route){
+  if(route==='menu')route='beranda';
   if(!screens[route])route='beranda';
   state.route=route;
   const fragment=route==='ai-tool'?aiToolRoute_(state.selectedAiToolId):
@@ -3189,6 +3206,21 @@ document.addEventListener('error',event=>{
 
 let affiliatePayoutSubmitting_=false;
 document.addEventListener('click',async(e)=>{
+  const trigger=e.target.closest?.('#top-nav-trigger');
+  if(trigger){
+    const drawer=by('top-nav-drawer'),open=drawer?.hidden===true;
+    if(drawer)drawer.hidden=!open;
+    trigger.setAttribute('aria-expanded',String(open));
+    if(open)drawer?.querySelector('button')?.focus();
+    return;
+  }
+  if(e.target.closest?.('#top-nav-drawer [data-route]')){
+    const drawer=by('top-nav-drawer');if(drawer)drawer.hidden=true;
+    by('top-nav-trigger')?.setAttribute('aria-expanded','false');
+  }else if(!e.target.closest?.('#top-nav-drawer')){
+    const drawer=by('top-nav-drawer');if(drawer)drawer.hidden=true;
+    by('top-nav-trigger')?.setAttribute('aria-expanded','false');
+  }
   const affiliateAction=e.target.closest?.('[data-affiliate-refresh],[data-affiliate-payout]');
   if(affiliateAction){
     if(!logged()||isAdmin()||state.route!=='affiliate')return;
@@ -3501,7 +3533,7 @@ function syncBrowserRoute_(){
   // Back/Forward may emit both popstate and hashchange; render/load only once.
   if(location.hash===lastRouteHash_)return;
   lastRouteHash_=location.hash;
-  const route=aiRouteFromHash_();state.route=route;render();loadRoute(route);
+  const route=aiRouteFromHash_()==='menu'?'beranda':aiRouteFromHash_();state.route=route;render();loadRoute(route);
 }
 window.addEventListener('popstate',syncBrowserRoute_);
 window.addEventListener('hashchange',syncBrowserRoute_);
@@ -3522,6 +3554,7 @@ async function init(){
   if(routeFreeDoor_())return;
   captureFirstInviter_();
   state.route=aiRouteFromHash_();
+  if(state.route==='menu')state.route='beranda';
   state.catalog=[];
   if(!activatePreview()){
     state.info=null;
