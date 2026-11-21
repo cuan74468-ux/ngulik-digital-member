@@ -1,0 +1,129 @@
+/* Ngulik Digital — universal QRIS checkout (UI only; no money routing). */
+body.ngd-public-app:not(#ngd) .checkout-backdrop{
+  background:rgba(18,32,31,.58);backdrop-filter:none;
+  padding:clamp(10px,3vw,24px);
+}
+body.ngd-public-app:not(#ngd) .checkout-dialog{
+  width:min(100%,850px);background:#fff;border:1px solid #e4ebe7;
+  border-radius:18px;box-shadow:0 24px 60px -32px rgba(23,42,37,.4);
+  padding:clamp(19px,3.5vw,34px);
+  font-family:Inter,system-ui,sans-serif;color:#203733;
+}
+body.ngd-public-app:not(#ngd) .checkout-heading{
+  border-bottom:1px solid #e7eee9;margin-bottom:21px;padding-bottom:17px;
+}
+body.ngd-public-app:not(#ngd) .checkout-heading .eyebrow{
+  color:#366c67;letter-spacing:.09em;font-weight:750;font-size:.65rem;
+}
+body.ngd-public-app:not(#ngd) .checkout-heading h1{
+  color:#203b39;font-size:clamp(1.42rem,3vw,1.82rem);
+  font-weight:760;letter-spacing:-.04em;line-height:1.18;
+}
+body.ngd-public-app:not(#ngd) .checkout-close{
+  flex:none;width:44px;height:44px;border:1px solid #dfebe5;
+  color:#35524c;background:#f5f8f5;border-radius:12px;
+  cursor:pointer;
+}
+body.ngd-public-app:not(#ngd) .checkout-summary{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;
+}
+body.ngd-public-app:not(#ngd) .checkout-summary>section{
+  min-width:0;align-content:start;gap:12px;
+}
+body.ngd-public-app:not(#ngd) .checkout-summary h2{
+  color:#31504a;font-size:.96rem;font-weight:730;line-height:1.28;
+}
+body.ngd-public-app:not(#ngd) .checkout-summary .price-line{
+  border-bottom:1px solid #eff2ef;padding:6px 0;gap:9px;min-width:0;
+}
+body.ngd-public-app:not(#ngd) .checkout-summary .price-line strong{
+  font-size:.83rem;overflow-wrap:anywhere;max-width:65%;
+  text-align:right;color:#2b3e3a;
+}
+body.ngd-public-app:not(#ngd) .checkout-summary .price-line span{
+  color:#768680;font-size:.78rem;
+}
+body.ngd-public-app:not(#ngd) .checkout-total{
+  padding:18px;border:1px solid #dcece4;
+  border-radius:12px;background:#edf5f0;
+}
+body.ngd-public-app:not(#ngd) .checkout-total small{
+  color:#667f73;font-size:.73rem;font-weight:650;
+}
+body.ngd-public-app:not(#ngd) .checkout-total .checkout-total-amount{
+  color:#176059;font-weight:780;font-size:clamp(1.34rem,3vw,1.7rem);
+  letter-spacing:-.04em;white-space:normal!important;overflow-wrap:anywhere;
+}
+body.ngd-public-app:not(#ngd) .checkout-qr{
+  gap:10px;padding:19px 16px;
+  border:1px solid #d9e7de;border-radius:13px;
+  background:#f5f9f5;text-align:left;
+}
+body.ngd-public-app:not(#ngd) .checkout-qr>strong{
+  font-size:.88rem;color:#23564f;
+}
+body.ngd-public-app:not(#ngd) .checkout-qr.checkout-payment-closed{
+  align-items:flex-start;background:#f5f7f5;
+}
+body.ngd-public-app:not(#ngd) .checkout-qr.checkout-payment-closed p{
+  margin:0;text-align:left;color:#6c7b74;font-size:.77rem;
+}
+body.ngd-public-app:not(#ngd) .checkout-qr img[data-qris-image]{
+  width:min(100%,260px);height:auto;max-height:310px;
+  object-fit:contain;margin:6px auto;
+}
+body.ngd-public-app:not(#ngd) .checkout-note{
+  color:#6a7974;font-size:.78rem;line-height:1.58;margin:0;
+}
+body.ngd-public-app:not(#ngd) .checkout-dialog .btn-primary{
+  background:#17565b;border:1px solid #17565b;color:#fff;
+  border-radius:11px;min-height:46px;font-size:.82rem;font-weight:700;
+}
+body.ngd-public-app:not(#ngd) .checkout-dialog .btn-primary:disabled{
+  background:#edf1ed;color:#7b8d82;border-color:#e1e9e3;cursor:not-allowed;
+}
+body.ngd-public-app:not(#ngd) .checkout-dialog .btn-secondary{
+  border:1px solid #d5e2db;background:#fff;color:#2d5b56;
+}
+body.ngd-public-app:not(#ngd) .checkout-dialog .btn-ghost{
+  color:#536c62;
+}
+body.ngd-public-app:not(#ngd) .checkout-dialog :is(a,button):focus-visible{
+  outline:3px solid #91cbbd;outline-offset:3px;
+}
+body.ngd-public-app:not(#ngd) .checkout-product-preview{
+  --checkout-ink:#23413a;
+}
+body.ngd-public-app:not(#ngd) .checkout-product-preview .checkout-summary{
+  align-items:start;
+}
+@media(max-width:680px){
+  body.ngd-public-app:not(#ngd) .checkout-backdrop{
+    align-items:flex-start;padding:0;
+  }
+  body.ngd-public-app:not(#ngd) .checkout-dialog{
+    width:100%;min-height:100dvh;max-height:100dvh;
+    border-radius:0;border:0;padding:clamp(16px,4vw,22px);
+    overflow-y:auto;box-shadow:none;
+  }
+  body.ngd-public-app:not(#ngd) .checkout-summary{
+    grid-template-columns:minmax(0,1fr);gap:22px;
+  }
+  body.ngd-public-app:not(#ngd) .checkout-summary>section{
+    gap:9px;
+  }
+  body.ngd-public-app:not(#ngd) .checkout-heading{
+    margin-bottom:15px;
+  }
+  body.ngd-public-app:not(#ngd) .checkout-total{
+    padding:16px;
+  }
+  body.ngd-public-app:not(#ngd) .checkout-dialog .btn-wide{
+    min-height:46px;width:100%;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body.ngd-public-app:not(#ngd) .checkout-dialog :is(.btn,button){
+    animation:none;transition:none;transform:none;
+  }
+}
