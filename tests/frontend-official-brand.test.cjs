@@ -33,8 +33,8 @@ test('public and STAGING use identical branded favicon and correct relative sour
     assert.ok(html.indexOf('brand-official.css')>html.indexOf('affiliate-partner.css'));
     assert.doesNotMatch(html,/guest-brand-icon"[^>]*>n\./);
   }
-  assert.match(publicHtml,/js\/app\.js\?v=20261121-blueprint-v15-1/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261121-blueprint-v15-1/);
+  assert.match(publicHtml,/js\/app\.js\?v=20261121-blueprint-v15-2/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261121-blueprint-v15-2/);
 });
 test('all dynamic brand placements use same canonical official image',()=>{
   assert.match(app,/const defaultBrandLogoSrc=document\.querySelector\?\.\('\.guest-brand-icon \.ngd-brand-image'\)/);
