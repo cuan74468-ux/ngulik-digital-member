@@ -483,9 +483,12 @@ function viewHome(){
     esc(homeCampaign.title):'Bikin usaha lebih mudah dengan <em>solusi digital.</em>';
   const homeLead=homeCampaign?.description?
     esc(homeCampaign.description):'Katalog online, aplikasi kasir, otomasi order, dan konten promosi yang bisa membantu pekerjaan UMKM sehari-hari.';
-  const homeRoute=homeCampaign&&screens[String(homeCampaign.cta_route||'')]?
-    String(homeCampaign.cta_route):'katalog';
-  const homeCta=homeCampaign?.cta_label?esc(homeCampaign.cta_label):'Jelajahi Produk';
+  const homeRouteCandidate=String(homeCampaign?.cta_route||'');
+  const homeRouteAllowed=['katalog','jasa','ai','belajar','affiliate','dukungan','login','daftar'];
+  const homeRoute=homeRouteAllowed.includes(homeRouteCandidate)&&
+    (homeRouteCandidate!=='daftar'||registrationOtpEnabled())?homeRouteCandidate:'katalog';
+  const homeCta=homeRouteCandidate==='daftar'&&!registrationOtpEnabled()?
+    'Jelajahi Produk':homeCampaign?.cta_label?esc(homeCampaign.cta_label):'Jelajahi Produk';
   const curatedIds=['P-3IN1','P-POS','P-INTEGRASI-GAS','P-VIDEO-AI',
     'P-STARTER-15K','P-STARTER-15','P-EBOOK'];
   const curated=curatedIds.map(id=>(state.catalog||[]).find(p=>
@@ -505,12 +508,13 @@ function viewHome(){
       '</div>'+
       '<div class="ngd-shop-hero-actions">'+
         '<button type="button" class="ngd-shop-yellow-btn" data-route="'+esc(homeRoute)+'">'+homeCta+' '+icon('arrow')+'</button>'+
-        '<button type="button" class="ngd-shop-outline-btn" data-route="daftar">Daftar Member</button>'+
+        (registrationOtpEnabled()?'<button type="button" class="ngd-shop-outline-btn" data-route="daftar">Daftar Member</button>':
+          '<button type="button" class="ngd-shop-outline-btn" data-route="jasa">Lihat Layanan</button>')+
       '</div>'+
       brandStage+
     '</div>'+
     '<div class="ngd-shop-hero-art" aria-hidden="true">'+
-      '<img src="'+esc(homeArt)+'" alt="" decoding="async" fetchpriority="high">'+
+      '<img class="ngd-home-artwork" src="'+esc(homeArt)+'" data-home-fallback="'+esc(ngdPremiumArtSrc_('hero'))+'" alt="" decoding="async" fetchpriority="high">'+
     '</div>'+
   '</section>';
   const trust='<section class="ngd-shop-trust" aria-label="Informasi layanan">'+[
@@ -3102,6 +3106,13 @@ async function submitServiceQuote(form){
 document.addEventListener('error',(event)=>{
   const img=event.target;
   if(img?.tagName!=='IMG')return;
+  if(img.classList?.contains('ngd-home-artwork')){
+    const fallback=String(img.dataset?.homeFallback||'');
+    if(fallback&&img.dataset.homeRecovered!=='1'){
+      img.dataset.homeRecovered='1';img.src=fallback;
+    }else img.hidden=true;
+    return;
+  }
   if(img.closest?.('.ngd-catalog-campaign-picture')){
     // CMS URLs can disappear after publication. Recover to the vetted local
     // wide artwork once, preserving the Admin-authored text and CTA.
