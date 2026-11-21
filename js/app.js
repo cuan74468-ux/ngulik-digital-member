@@ -81,7 +81,8 @@ const screens={
   tiket:['Detail tiket','shield'],member360:['Member 360°','users'],
   rilis:['Pembaruan','check'],pengaturan:['Pengaturan','shield'],login:['Masuk','user'],['admin-login']:['Masuk Admin','shield'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
-const memberNav=['beranda','katalog','ai','belajar','pesanan','affiliate','jasa','dukungan','akun'];
+const guestNav=['beranda','katalog','ai','jasa','affiliate','belajar','dukungan','login','daftar'];
+const memberNav=['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun'];
 const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
 const adminContextRoute=(route)=>({
   'lms-editor':'lms','lms-lesson':'lms','lms-ai':'lms',
@@ -261,7 +262,7 @@ const mobileNavRoute=(route)=>({
   member360:'member'
 })[route]||route;
 function renderNav(){
-  const items=isAdmin()?adminNav:memberNav;
+  const items=isAdmin()?adminNav:logged()?memberNav:guestNav;
   const navIcon=(route)=>window.NGD_CONTENT_UI?.media(state.siteContent,'NAV_ICON',route,'nav-custom-icon','')||icon(screens[route][1]);
   const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+navIcon(route)+'<span>'+esc(screens[route][0])+'</span></button>';
   by('desktop-nav').innerHTML=items.map(button).join('');
@@ -288,10 +289,10 @@ function renderNav(){
   const publicNav=by('guest-nav');
   if(publicNav){
     const navRoutes=logged()&&!isAdmin()?
-      ['beranda','katalog','belajar','ai','pesanan','affiliate','dukungan']:
-      ['beranda','katalog','ai','jasa','affiliate','dukungan'];
+      ['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan']:
+      ['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'];
     const navNames={beranda:'Beranda',katalog:'Katalog',belajar:'Kelas',
-      ai:'Studio AI',pesanan:'Pesanan',affiliate:'Afiliasi',jasa:'Layanan',
+      ai:'Studio AI',pesanan:'Pesanan',affiliate:'Ajak Teman',jasa:'Layanan',
       dukungan:'Bantuan'};
     publicNav.innerHTML=navRoutes.map(route=>
       '<button type="button" data-route="'+route+'">'+esc(navNames[route])+'</button>'
@@ -312,8 +313,7 @@ const needLogin=(feature)=>
 // Browseable on mobile instead of hiding most routes behind a desktop-only sidebar.
 // This is a presentation route: existing auth checks still guard every action.
 function viewMore(){
-  const routes=isAdmin()?adminNav:logged()?memberNav:
-    ['beranda','katalog','ai','jasa','affiliate','dukungan','belajar','login','daftar'];
+  const routes=isAdmin()?adminNav:logged()?memberNav:guestNav;
   const descriptions={
     beranda:'Mulai dari sini',belajar:'Kelas dan progres',katalog:'Jasa dan produk',
     jasa:'Pesan jasa',ai:'Buat konten',affiliate:'Bagikan tautan',
