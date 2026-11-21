@@ -900,7 +900,8 @@ function authRegister_(p) {
       'Pengaturan kredit awal tidak valid.');
     var ref=String(p.ref||'').trim().toUpperCase(),referrer=/^[A-Z0-9_-]{3,80}$/.test(ref)?byId_('members','kode_referral',ref):null;
     if(referrer&&referrer.wa===wa)referrer=null;
-    if(referrer&&(referrer.status!=='AKTIF'||referrer.role!=='MEMBER'))referrer=null;
+    if(referrer&&(referrer.status!=='AKTIF'||referrer.role!=='MEMBER'||
+      !ngdStarterUnlocked_(referrer.member_id)))referrer=null;
     var salt=newSalt_(),id=nextMemberId_(),joined=now_(),status=wait?'WAITING_LIST':'AKTIF';
     var m={member_id:id,role:'MEMBER',nama:safeText_(p.nama,80),wa:wa,nama_usaha:safeText_(p.nama_usaha,100),wa_verified:true,wa_verified_at:joined,pin_hash:pinHashForWrite_(pin,salt),pin_salt:salt,kode_referral:newReferralCode_(),referred_by:referrer?referrer.member_id:'',status:status,joined_at:joined,last_active_at:joined,status_pos:'BELUM',status_canva:'BELUM',d14_active:false,d30_active:false};
     // Verify an OTP under the lock without marking it USED yet. Sheets has
@@ -983,7 +984,8 @@ function authChangePin_(m,p) {
 function publicInfo_(p) {
   var s=settings_(),quota=Number(s.kuota_gelombang||50),used=memberCount_();
   var ref=String(p.ref||'').toUpperCase(),referer=ref?byId_('members','kode_referral',ref):null;
-  return {nama_brand:s.nama_brand,wa_admin:s.wa_admin,kuota:quota,terpakai:used,sisa:Math.max(0,quota-used),mode:s.mode_pendaftaran==='TERTUTUP'?'TERTUTUP':(used>=quota||memberWaitlist_().length>0)?'WAITING_LIST':s.mode_pendaftaran,disclosure:s.teks_disclosure_affiliate,referrer:referer&&referer.status==='AKTIF'?String(referer.nama).split(' ')[0]:null};
+  return {nama_brand:s.nama_brand,wa_admin:s.wa_admin,kuota:quota,terpakai:used,sisa:Math.max(0,quota-used),mode:s.mode_pendaftaran==='TERTUTUP'?'TERTUTUP':(used>=quota||memberWaitlist_().length>0)?'WAITING_LIST':s.mode_pendaftaran,disclosure:s.teks_disclosure_affiliate,referrer:referer&&referer.status==='AKTIF'&&referer.role==='MEMBER'&&
+    ngdStarterUnlocked_(referer.member_id)?String(referer.nama).split(' ')[0]:null};
 }
 function modules_() {return readAll_('modul_belajar').filter(function(r){return r.aktif===true;}).sort(function(a,b){return a.urut-b.urut;});}
 function creditWarning_(id) {
