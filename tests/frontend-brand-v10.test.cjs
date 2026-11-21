@@ -40,8 +40,8 @@ test('Studio AI preserved in public and member UI, with five-tab guest mobile na
   assert.match(app,/function viewAI\(\)/);
   assert.match(app,/function viewAITool\(\)/);
   assert.match(app,/getTools/);
-  assert.match(app,/\['beranda','katalog','ai','jasa','menu'\]/);
-  assert.match(app,/\['beranda','katalog','ai','pesanan','menu'\]/);
+  assert.match(app,/const routes=isAdmin\(\)\?adminNav:logged\(\)\?memberNav:guestNav/);
+  assert.match(app,/top-nav-drawer/);
   assert.match(app,/\['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'\]/);
   assert.match(app,/const guestNav=\['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'\]/);
 });
