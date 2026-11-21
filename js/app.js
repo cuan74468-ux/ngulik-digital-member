@@ -356,14 +356,19 @@ function viewMore(){
       '<button class="btn btn-primary" type="button" data-route="login">Masuk</button></div>':'')+
     '</section>';
 }
-// Free educational resources belong to the public HERO, not the top navigation.
+// These URLs are rendered only inside the authenticated member learning area.
+// External sites must enforce their own access policies separately.
 const NGD_FREE_EBOOK_URL='https://cuan74468-ux.github.io/buku-pintar-vibe-coder/';
 const NGD_FREE_CLASSROOM_URL='https://classroom.google.com/c/ODk4MzQ4OTEwMjc5?cjc=ozzbygx3';
-function viewHeroFreeLinks_(){
-  return '<nav class="ngd-hero-free-links" aria-label="Belajar gratis">'+
-    '<a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">eBook Gratis</a>'+
-    '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Kelas Gratis</a>'+
-  '</nav>';
+function viewMemberFreeResources_(){
+  if(!logged()||isAdmin())return '';
+  return '<section class="surface ngd-member-learning-links" aria-label="Materi gratis member">'+
+    '<p class="eyebrow">KHUSUS MEMBER</p><h2>Materi Gratis untuk Member</h2>'+
+    '<p>Buka eBook dan kelas pengantar melalui ruang belajar ini.</p>'+
+    '<div class="actions">'+
+      '<a class="btn btn-primary" href="'+esc(NGD_FREE_EBOOK_URL)+'" target="_blank" rel="noopener noreferrer">Baca eBook Gratis '+icon('arrow')+'</a>'+
+      '<a class="btn btn-secondary" href="'+esc(NGD_FREE_CLASSROOM_URL)+'" target="_blank" rel="noopener noreferrer">Buka Kelas Gratis '+icon('arrow')+'</a>'+
+    '</div></section>';
 }
 // Three public service cards are sales entry points, never payment or account actions.
 function viewHomeServices_(){
@@ -535,13 +540,12 @@ function viewHome(){
     </section>
     <section class="ngdl-benefits" aria-labelledby="ngdl-benefits-title">
       <div><p class="ngdl-kicker">KALAU JADI MEMBER</p><h2 id="ngdl-benefits-title">Lebih mudah cari yang Anda perlukan.</h2></div>
-      <ul><li><strong>Pesan tanpa pindah-pindah tempat.</strong> Pilih produk, cek rincian, lalu bayar lewat halaman checkout.</li><li><strong>Nggak harus buka laptop.</strong> Katalog dan ruang member bisa diakses dari browser HP.</li><li><strong>Pembelian tercatat.</strong> Akses produk diberikan setelah pembayaran terverifikasi, sesuai ketentuan masing-masing.</li><li><strong>Belum mau beli?</strong> Coba baca eBook atau ikut kelas gratis lebih dulu.</li></ul>
+      <ul><li><strong>Pesan tanpa pindah-pindah tempat.</strong> Pilih produk, cek rincian, lalu bayar lewat halaman checkout.</li><li><strong>Nggak harus buka laptop.</strong> Katalog dan ruang member bisa diakses dari browser HP.</li><li><strong>Pembelian tercatat.</strong> Akses produk diberikan setelah pembayaran terverifikasi, sesuai ketentuan masing-masing.</li><li><strong>Materi belajar untuk member.</strong> Buka panduan dan kelas melalui ruang belajar setelah login.</li></ul>
     </section>
     <section class="ngdl-end" aria-labelledby="ngdl-end-title">
       <h2 id="ngdl-end-title">Mau mulai ngulik?</h2>
       <p>Lihat katalognya dulu, atau masuk kalau sudah punya pilihan.</p>
       <div class="ngdl-actions"><button type="button" data-route="daftar" class="ngdl-btn ngdl-btn-gold">Masuk / Daftar <span aria-hidden="true">↗</span></button><button type="button" data-route="katalog" class="ngdl-btn ngdl-btn-ghost">Lihat Katalog</button></div>
-      <nav class="ngdl-free" aria-label="Materi gratis"><a href="${NGD_FREE_EBOOK_URL}" target="_blank" rel="noopener noreferrer">Baca eBook Gratis ↗</a><a href="${NGD_FREE_CLASSROOM_URL}" target="_blank" rel="noopener noreferrer">Ikut Kelas Gratis ↗</a></nav>
     </section>
   </div>`;
 }
@@ -796,23 +800,16 @@ function viewCatalog(){
 }
 function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
-    return window.NGD_LMS_UI.memberCatalog(state.lmsCourses,state.lmsEnrollments,state.modules);
-  if(!logged())return '<div class="ngd-learning-public">'+
-    '<section class="ngd-purpose-hero ngd-purpose-hero--learn" aria-label="Belajar gratis Ngulik Digital">'+
-      '<div class="ngd-purpose-copy"><p class="eyebrow">BELAJAR · NGULIK DIGITAL</p>'+
-      '<h1>Belajar keterampilan digital, mulai dari yang praktis.</h1>'+
-      '<p>Mulai dengan eBook dan kelas pengantar gratis. Pelajari langkah yang bisa langsung dicoba untuk usaha dan karya Anda.</p>'+
-      '<div class="ngd-purpose-actions">'+
-        '<a class="btn btn-primary" href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">Baca eBook Gratis '+icon('arrow')+'</a>'+
-        '<a class="btn btn-secondary" href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Buka Kelas Gratis</a>'+
-      '</div></div>'+
-      '<div class="ngd-purpose-media"><img src="'+esc(cmsPageArt_('belajar')||ngdPremiumArtSrc_('class'))+'" alt="Ilustrasi materi belajar digital" loading="lazy" decoding="async"></div>'+
-    '</section><section class="ngd-learning-path"><p class="eyebrow">LANGKAH BELAJAR</p><h2>Mulai dengan tiga langkah sederhana</h2>'+
-    '<div class="ngd-learning-steps"><article><span>01</span><strong>Baca panduan</strong><p>Kenali konsep dan contoh sederhana.</p></article>'+
-    '<article><span>02</span><strong>Ikuti kelas</strong><p>Praktikkan materi sesuai kebutuhan.</p></article>'+
-    '<article><span>03</span><strong>Kembangkan karya</strong><p>Jelajahi produk dan alat pendukung.</p></article></div></section></div>';
+    return viewMemberFreeResources_()+
+      window.NGD_LMS_UI.memberCatalog(state.lmsCourses,state.lmsEnrollments,state.modules);
+  if(!logged())return '<section class="ngd-role-gate">'+
+    '<p class="eyebrow">RUANG BELAJAR MEMBER</p>'+
+    '<h1>Materi belajar tersedia untuk member.</h1>'+
+    '<p>Masuk sebagai member untuk membuka eBook dan kelas. Tautan materi tidak ditampilkan di halaman publik.</p>'+
+    '<div class="ngd-role-actions"><button type="button" class="btn btn-primary" data-route="login">Masuk Member</button>'+
+    '<button type="button" class="btn btn-secondary" data-route="katalog">Kembali ke Katalog</button></div></section>';
   const modules=state.modules;
-  return title('Kelas & Materi Anda','PILIHAN KELAS','Pilih materi yang ingin Anda pelajari.')+
+  return viewMemberFreeResources_()+title('Kelas & Materi Anda','PILIHAN KELAS','Pilih materi yang ingin Anda pelajari.')+
     (modules.length?'<div class="stack">'+modules.map((m,i)=>'<article class="surface list-row"><div class="left" style="display:flex;gap:15px;align-items:center"><span class="step-no">'+esc(m.urut||i+1)+'</span><div><strong>'+esc(m.judul)+'</strong><small>'+esc(m.deskripsi||'')+'</small></div></div>'+
     (classroomUrlSafe(m.url_classroom)?'<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href="'+esc(classroomUrlSafe(m.url_classroom))+'">Buka materi '+icon('arrow')+'</a>':
     '<span class="chip">Materi menyusul</span>')+'</article>').join('')+'</div>':
@@ -1095,8 +1092,6 @@ function viewAffiliate(){
     '<button type="button" class="partner-btn partner-btn-primary" data-checkout-product="P-STARTER-15">Lihat Starter Pack '+icon('arrow')+'</button>'+
     '<button type="button" class="partner-btn partner-btn-outline" data-route="katalog">Lihat Katalog</button>'+
     '</section>';
-  const ebookInvite=url?url+'&free=ebook':'';
-  const classInvite=url?url+'&free=kelas':'';
   const all=Array.isArray(a.komisi)?a.komisi:[];
   const totals=a.saldo||{};
   const pending=Number(totals.PENDING)||0;
@@ -1136,15 +1131,6 @@ function viewAffiliate(){
         '<div><span>Member diajak</span><strong>'+esc(a.pendaftar??0)+'</strong></div>'+
         '<div><span>Catatan komisi</span><strong>'+esc(all.length)+'</strong></div>'+
       '</div></section>'+
-    '<details class="partner-free-links" aria-label="Bagikan materi gratis">'+
-      '<summary><span><strong>Bagikan materi gratis</strong><small>eBook & kelas dengan tautan ajak teman</small></span><span aria-hidden="true">+</span></summary>'+
-      '<p>Tautan akan membuka Ngulik Digital terlebih dahulu sebelum mengarahkan ke materi gratis.</p>'+
-      (url?'<div class="partner-free-links-grid">'+
-        '<div><strong>eBook gratis</strong><button type="button" class="partner-btn partner-btn-outline" data-copy="'+esc(ebookInvite)+'">Salin tautan eBook</button>'+
-          '<a href="https://wa.me/?text='+encodeURIComponent('Baca eBook gratis Ngulik Digital: '+ebookInvite)+'" target="_blank" rel="noopener noreferrer">Bagikan via WA '+icon('arrow')+'</a></div>'+
-        '<div><strong>Kelas gratis</strong><button type="button" class="partner-btn partner-btn-outline" data-copy="'+esc(classInvite)+'">Salin tautan kelas</button>'+
-          '<a href="https://wa.me/?text='+encodeURIComponent('Ikut kelas gratis Ngulik Digital: '+classInvite)+'" target="_blank" rel="noopener noreferrer">Bagikan via WA '+icon('arrow')+'</a></div>'+
-        '</div>':'<p>Kode ajak teman belum tersedia.</p>')+'</details>'+
     '<section class="partner-commission-panel" aria-label="Riwayat komisi">'+
       '<header class="partner-panel-head"><div><h2>Riwayat komisi</h2><p>Status terbaru dari transaksi yang memenuhi syarat.</p></div>'+
       '<span>Maks. 50 catatan</span></header>'+
@@ -1897,9 +1883,7 @@ function viewSupport(){
       '</div>'+
     '</section>'+
     '<footer class="ngdb-help-foot"><div><h2>Mau lihat-lihat dulu? Silakan.</h2>'+
-      '<p>Mulai dari katalog, atau buka materi gratis kalau masih ingin belajar.</p>'+
-      '<div class="ngdb-help-free"><a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">Baca eBook Gratis ↗</a>'+
-      '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Ikut Kelas Gratis ↗</a></div></div>'+
+      '<p>Lihat isi dan harga katalog dulu. Materi belajar tersedia setelah masuk sebagai member.</p></div>'+
       '<button type="button" class="ngdb-button ngdb-primary" data-route="katalog">Buka Katalog '+icon('arrow')+'</button>'+
     '</footer>'+
   '</div>';
@@ -3700,20 +3684,7 @@ function syncBrowserRoute_(){
 window.addEventListener('popstate',syncBrowserRoute_);
 window.addEventListener('hashchange',syncBrowserRoute_);
 // Called synchronously during initial script evaluation, before any awaited API.
-function routeFreeDoor_(){
-  const params=new URLSearchParams(location.search);
-  const door=params.get('free');
-  if(door!=='ebook'&&door!=='kelas')return false;
-  const code=captureFirstInviter_();
-  // A redirect is forbidden unless the browser has actually persisted and
-  // read back the first valid inviter with its 30-day expiry.
-  if(!code||firstInviter_()!==code)return false;
-  const target=door==='ebook'?NGD_FREE_EBOOK_URL:NGD_FREE_CLASSROOM_URL;
-  window.location.assign(target);
-  return true;
-}
 async function init(){
-  if(routeFreeDoor_())return;
   captureFirstInviter_();
   const requestedRoute=aiRouteFromHash_();
   state.route=guestRoute_(requestedRoute==='menu'?'beranda':requestedRoute);
