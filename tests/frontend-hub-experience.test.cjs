@@ -158,3 +158,27 @@ test('guest services displays real catalog checkout cards and no unlocked quote 
   assert.doesNotMatch(html,/id="service-brief-form"|Tanya via WhatsApp/);
   assert.equal(h.apiCalls.length,0);
 });
+
+test('guest Jasa renders without catalog data or CMS artwork dependencies',()=>{
+  const h=preview();
+  vm.runInContext("state.catalog=[];state.siteContent=[];go('jasa')",h.ctx);
+  const page=h.nodes.screen.innerHTML;
+  assert.match(page,/ngd-service-guide-head/);
+  assert.match(page,/Website &amp; Katalog Online/);
+  assert.match(page,/Aplikasi Kasir &amp; Pencatatan/);
+  assert.match(page,/Video &amp; Visual Promosi/);
+  assert.match(page,/Integrasi &amp; Otomasi/);
+  assert.match(page,/data-route="katalog"/);
+  assert.match(page,/data-route="login"/);
+  assert.doesNotMatch(page,/market-product-card|market-toolbar|ngd-service-main-art|<img/);
+  assert.equal(h.apiCalls.length,0);
+});
+test('guest Beranda keeps a lean route-first layout without products or banner artwork',()=>{
+  const h=preview();
+  const page=h.nodes.screen.innerHTML;
+  assert.match(page,/ngd-home-quiet/);
+  assert.match(page,/data-route="jasa"/);
+  assert.match(page,/data-route="ai"/);
+  assert.match(page,/eBook Gratis/);
+  assert.doesNotMatch(page,/market-product-card|ngd-shop-featured|ngd-shop-signup|ngd-home-artwork/);
+});
