@@ -422,7 +422,7 @@ function viewHome(){
             '<button type="button" class="btn btn-secondary" data-route="pesanan">Pesanan Saya</button>'+
           '</div>'+
         '</div>'+
-        '<img class="ngd-member-hero-art" src="'+esc(ngdPremiumArtSrc_('hero'))+'" alt="" decoding="async">'+
+        '<img class="ngd-member-hero-art" src="'+esc(cmsPageArt_('member_home')||ngdPremiumArtSrc_('templates'))+'" alt="" decoding="async">'+
       '</section>'+
       '<div class="metric-grid ngd-member-stats" aria-label="Ringkasan akun">'+
         '<section class="wallet-hero" aria-label="Dompet Token Universal">'+
@@ -653,7 +653,7 @@ function viewPublicMarketplace(list){
   const banner=window.NGD_CONTENT_UI?.catalogBanner(state.siteContent)||
     '<section class="ngd-catalog-campaign" data-catalog-banner-source="default">'+
       '<div class="ngd-catalog-campaign-viewport"><article class="ngd-catalog-campaign-slide">'+
-      '<div class="ngd-catalog-campaign-picture"><img src="'+esc(ngdPremiumArtSrc_('hero'))+'" alt=""></div>'+
+      '<div class="ngd-catalog-campaign-picture"><img src="'+esc(ngdPremiumArtSrc_('templates'))+'" alt=""></div>'+
       '<div class="ngd-catalog-campaign-copy">'+
       '<p class="ngd-catalog-campaign-kicker">NGULIK DIGITAL · MARKETPLACE PRODUK DIGITAL</p>'+
       '<h2>Produk digital untuk belajar dan mengembangkan usaha.</h2>'+
@@ -776,12 +776,20 @@ function viewCatalog(){
 function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
     return window.NGD_LMS_UI.memberCatalog(state.lmsCourses,state.lmsEnrollments,state.modules);
-  if(!logged())return title('Belajar gratis','EBOOK & KELAS UMKM',
-    'Dua materi gratis, tanpa perlu daftar Member Ngulik Digital.')+
-    '<div class="ngd-learn-direct-links">'+
-      '<a href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">Baca eBook Gratis</a>'+
-      '<a href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Masuk Kelas Gratis</a>'+
-    '</div>';
+  if(!logged())return '<div class="ngd-learning-public">'+
+    '<section class="ngd-purpose-hero ngd-purpose-hero--learn" aria-label="Belajar gratis Ngulik Digital">'+
+      '<div class="ngd-purpose-copy"><p class="eyebrow">BELAJAR · NGULIK DIGITAL</p>'+
+      '<h1>Belajar keterampilan digital, mulai dari yang praktis.</h1>'+
+      '<p>Mulai dengan eBook dan kelas pengantar gratis. Pelajari langkah yang bisa langsung dicoba untuk usaha dan karya Anda.</p>'+
+      '<div class="ngd-purpose-actions">'+
+        '<a class="btn btn-primary" href="'+NGD_FREE_EBOOK_URL+'" target="_blank" rel="noopener noreferrer">Baca eBook Gratis '+icon('arrow')+'</a>'+
+        '<a class="btn btn-secondary" href="'+NGD_FREE_CLASSROOM_URL+'" target="_blank" rel="noopener noreferrer">Buka Kelas Gratis</a>'+
+      '</div></div>'+
+      '<div class="ngd-purpose-media"><img src="'+esc(cmsPageArt_('belajar')||ngdPremiumArtSrc_('class'))+'" alt="Ilustrasi materi belajar digital" loading="lazy" decoding="async"></div>'+
+    '</section><section class="ngd-learning-path"><p class="eyebrow">LANGKAH BELAJAR</p><h2>Mulai dengan tiga langkah sederhana</h2>'+
+    '<div class="ngd-learning-steps"><article><span>01</span><strong>Baca panduan</strong><p>Kenali konsep dan contoh sederhana.</p></article>'+
+    '<article><span>02</span><strong>Ikuti kelas</strong><p>Praktikkan materi sesuai kebutuhan.</p></article>'+
+    '<article><span>03</span><strong>Kembangkan karya</strong><p>Jelajahi produk dan alat pendukung.</p></article></div></section></div>';
   const modules=state.modules;
   return title('Kelas & Materi Anda','PILIHAN KELAS','Pilih materi yang ingin Anda pelajari.')+
     (modules.length?'<div class="stack">'+modules.map((m,i)=>'<article class="surface list-row"><div class="left" style="display:flex;gap:15px;align-items:center"><span class="step-no">'+esc(m.urut||i+1)+'</span><div><strong>'+esc(m.judul)+'</strong><small>'+esc(m.deskripsi||'')+'</small></div></div>'+
@@ -891,7 +899,7 @@ function viewAI(){
   const publicMode=!logged()||isAdmin();
   const intro='<header class="ai-catalog-intro"><div class="ai-catalog-intro-copy">'+
     '<p class="eyebrow">NGULIK DIGITAL</p><h1>Studio AI</h1>'+
-    '<p>Pilih alat yang ingin digunakan.</p></div>'+
+    '<p>'+(publicMode?'Jelajahi alat untuk menulis, merencanakan konten, dan mendukung pekerjaan usaha. Masuk sebagai member untuk menjalankannya.':'Pilih alat, periksa kebutuhan token, lalu mulai bekerja dari satu tempat.')+'</p></div>'+
     (publicMode?'<img class="ngd-ai-hero-art" src="'+esc(cmsPageArt_('ai')||ngdPremiumArtSrc_('ai-pack'))+'" alt="" loading="lazy" decoding="async">':'')+
     (!publicMode?'<div class="ai-wallet-mini"><small>Saldo</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
     '<button type="button" data-catalog-go="ai">Isi Token</button></div>':'')+
@@ -1018,7 +1026,7 @@ function viewAffiliate(){
   // Financial actions keep their existing client + server feature gates.
   if(!logged())return '<div class="partner-public">'+
     '<header class="partner-public-intro">'+
-      (cmsPageArt_('affiliate')?'<img class="ngd-cms-affiliate-art" src="'+esc(cmsPageArt_('affiliate'))+'" alt="" loading="lazy" decoding="async">':'')+
+      '<img class="ngd-cms-affiliate-art" src="'+esc(cmsPageArt_('affiliate')||ngdPremiumArtSrc_('starter'))+'" alt="" loading="lazy" decoding="async">'+
       '<p class="partner-kicker">NGULIK DIGITAL · PROGRAM KOMISI</p>'+
       '<h1>Bagikan manfaat.<br><span>Dapatkan komisi.</span></h1>'+
       '<p>Rekomendasikan produk digital yang sesuai kebutuhan teman. Komisi hanya tercatat untuk transaksi yang memenuhi ketentuan.</p>'+
@@ -1622,12 +1630,12 @@ function viewServiceRequests(){
       '<section class="ngd-public-services-hero" aria-label="Layanan Ngulik Digital">'+
         '<div><p class="eyebrow">LAYANAN DIGITAL NGULIK DIGITAL</p>'+
           '<h1>Solusi praktis untuk mengembangkan usaha Anda.</h1>'+
-          '<p>Produksi video AI, integrasi data, automasi, dan layanan digital yang tersedia di katalog resmi.</p>'+
+          '<p>Dari video promosi hingga website dan aplikasi usaha. Pilih layanan yang sesuai kebutuhan, lihat rinciannya, lalu ajukan pesanan.</p>'+
           '<div class="ngd-services-hero-actions">'+
             '<button type="button" class="btn btn-primary" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
             '<button type="button" class="btn btn-secondary" data-route="login">Permintaan Kustom</button>'+
           '</div></div>'+
-        '<img src="'+esc(cmsPageArt_('jasa')||ngdPremiumArtSrc_('gas'))+'" alt="" decoding="async" loading="lazy">'+
+        '<div class="ngd-service-media" aria-hidden="true"><img class="ngd-service-main-art" src="'+esc(cmsPageArt_('jasa')||ngdPremiumArtSrc_('video'))+'" alt="" decoding="async" loading="lazy"><img class="ngd-service-secondary-art" src="'+esc(ngdPremiumArtSrc_('pos'))+'" alt="" decoding="async" loading="lazy"></div>'+
       '</section>'+
       '<section class="ngd-public-services-shelf" aria-label="Daftar layanan digital">'+
         '<header class="ngd-public-services-heading"><div><p class="eyebrow">LAYANAN PILIHAN</p>'+
@@ -1766,7 +1774,7 @@ function viewSupport(){
         '<button type="button" class="btn btn-primary" data-route="login">Masuk untuk bantuan pribadi</button>'+
         '<button type="button" class="btn btn-secondary" data-route="katalog">Lihat Katalog</button>'+
       '</div></div>'+
-      '<img src="'+esc(cmsPageArt_('dukungan')||ngdPremiumArtSrc_('class'))+'" alt="" loading="lazy" decoding="async">'+
+      '<div class="ngd-help-media" aria-hidden="true">'+icon('shield')+'<span>Bantuan produk</span><span>Pesanan &amp; pembayaran</span><span>Akun &amp; akses</span></div>'+
     '</section>'+
     '<section class="ngd-help-topics" aria-label="Topik bantuan">'+
       [['clipboard','Pesanan','Lihat detail checkout, batas pembayaran, dan status melalui akun member.'],
