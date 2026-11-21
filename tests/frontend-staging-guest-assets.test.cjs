@@ -22,7 +22,7 @@ test('guest landing and services use the correct media base for each route',()=>
   assert.equal(factory({pathname:'/ngulik-digital-member/staging/member.html'})(),'../assets/media/');
   assert.equal(factory({pathname:'/ngulik-digital-member/'})(),'./assets/media/');
   assert.match(app,/src="\$\{guestMediaBase_\(\)\}\$\{c\.img\}"/);
-  assert.match(app,/guestMediaBase_\(\)\+'ngd-v8-video.webp'/);
+  assert.match(app,/guestMediaBase_\(\)\+'ngd-v8-video.webp"/);
   assert.match(app,/guestMediaBase_\(\)\+x\[2\]/);
   assert.doesNotMatch(app,/src="\.\/assets\/media/);
   for(const name of ['ngd-v8-ai-large.webp','ngd-v6-pos.webp','ngd-v6-video.webp',
