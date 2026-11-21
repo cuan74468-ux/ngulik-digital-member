@@ -81,7 +81,7 @@ const screens={
   tiket:['Detail tiket','shield'],member360:['Member 360°','users'],
   rilis:['Pembaruan','check'],pengaturan:['Pengaturan','shield'],login:['Masuk','user'],['admin-login']:['Masuk Admin','shield'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
-const guestNav=['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'];
+const guestNav=['beranda','katalog','jasa','dukungan'];
 const memberNav=['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun'];
 const adminOnlyRoutes=new Set(['admin','konten','produk','layanan','lms','lms-editor','lms-lesson','lms-ai','member','antrean','pengaturan']);
 const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
@@ -282,7 +282,7 @@ function renderNav(){
         (route===state.route?' aria-current="page"':'')+'>'+
         (names[route]||screens[route][0])+icon('arrow')+'</button>').join('')+
       '</nav>'+(logged()?'<button type="button" class="top-nav-drawer-signout" data-route="akun">Akun & keluar</button>':
-      '<button type="button" class="top-nav-drawer-signout" data-route="login">Masuk Member</button>')+
+      '<button type="button" class="top-nav-drawer-signout" data-route="login">Masuk / Daftar Member</button>')+
       '</div>';
   }
   const tokenBadge=by('header-token');
@@ -307,9 +307,9 @@ function renderNav(){
   if(publicNav){
     const navRoutes=isAdmin()?[]:logged()?
       ['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan']:
-      ['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'];
+      ['beranda','katalog','jasa','dukungan'];
     const navNames={beranda:'Beranda',katalog:'Katalog',belajar:'Kelas',
-      ai:'Studio AI',pesanan:'Pesanan',affiliate:'Ajak Teman',jasa:'Layanan',
+      ai:'Studio AI',pesanan:'Pesanan',affiliate:'Ajak Teman',jasa:'Jasa',
       dukungan:'Bantuan'};
     publicNav.innerHTML=navRoutes.map(route=>
       '<button type="button" data-route="'+route+'">'+esc(navNames[route])+'</button>'
@@ -330,7 +330,7 @@ const needLogin=(feature)=>
 // Browseable on mobile instead of hiding most routes behind a desktop-only sidebar.
 // This is a presentation route: existing auth checks still guard every action.
 function viewMore(){
-  const routes=isAdmin()?adminNav:logged()?memberNav:[...guestNav,'login','daftar'];
+  const routes=isAdmin()?adminNav:logged()?memberNav:[...guestNav,'login'];
   const descriptions={
     beranda:'Mulai dari sini',belajar:'Kelas dan progres',katalog:'Jasa dan produk',
     jasa:'Pesan jasa',ai:'Buat konten',affiliate:'Bagikan tautan',
@@ -1250,7 +1250,7 @@ function viewAccount(){
 function viewLogin(register=false,adminMode=false){
   if(register&&!registrationOtpEnabled()&&!state.registrationWaitlist){
     return '<section class="ngd-role-gate"><p class="eyebrow">PENDAFTARAN MEMBER</p><h1>Pendaftaran belum dibuka.</h1>'+
-      '<p>Anda tetap dapat menjelajahi produk, Studio AI, layanan, serta materi gratis. Akun yang sudah terdaftar dapat masuk melalui WhatsApp dan OTP pada layanan yang telah aktif.</p>'+
+      '<p>Anda masih bisa melihat katalog dan layanan, serta membuka materi gratis dari beranda. Akun yang sudah terdaftar dapat masuk melalui WhatsApp dan OTP pada layanan yang telah aktif.</p>'+
       '<div class="ngd-role-actions"><button type="button" class="btn btn-primary" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
       '<button type="button" class="btn btn-secondary" data-route="login">Sudah punya akun? Masuk</button></div></section>';
   }
@@ -1278,7 +1278,7 @@ function viewLogin(register=false,adminMode=false){
     '<h1>'+
     (adminMode?'Masuk sebagai Admin.':register?'Daftar akun.':'Masuk ke akun Anda.')+'</h1>'+
     '<p class="lead">'+
-    (adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':
+    (!adminMode&&state.pendingPurchaseId?'Masuk atau daftar gratis pakai WhatsApp untuk melanjutkan pesanan dan menyimpan akses produk Anda.':adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':
       register?'Daftar dengan nomor WhatsApp. Verifikasi dilakukan melalui kode WhatsApp.':
       'Masukkan nomor WhatsApp dan kode OTP. Member tidak perlu membuat PIN.')+'</p>'+
     '<form id="auth-form" class="surface" data-mode="'+(adminMode?'admin':register?'register':'login')+'">'+
@@ -1350,6 +1350,10 @@ function openProductCheckout_(id){
     String(p.product_id)===String(id)&&!isPublicQaOffer_(p)):null;
   if(!product){toast('Produk belum tersedia. Muat ulang katalog.',true);return;}
   state.checkoutProductId=String(product.product_id);
+  if(!logged()){
+    state.pendingPurchaseId=state.checkoutProductId;
+    go('login');return;
+  }
   state.checkoutRequestId=null;state.lastOrder=null;
   state.orderDetailLoading=false;state.checkoutReturnRoute='katalog';
   go('checkout');
@@ -2188,8 +2192,17 @@ function render(){
 // Navigation is a small predictable state machine. A product checkout can be
 // bookmarked, and Android/browser Back returns to the previous screen.
 let lastRouteHash_=location.hash;
+const guestPrivateRoutes_=new Set(['ai','ai-tool','belajar','lms-course','lms-complete','affiliate','pesanan','checkout','akun','layanan']);
+function guestRoute_(route){
+  if(!logged()&&!isAdmin()&&guestPrivateRoutes_.has(route)){
+    if(route==='checkout'&&state.checkoutProductId)state.pendingPurchaseId=state.checkoutProductId;
+    return 'login';
+  }
+  return route;
+}
 function go(route){
   if(route==='menu')route='beranda';
+  route=guestRoute_(route);
   if(!screens[route])route='beranda';
   state.route=route;
   const fragment=route==='ai-tool'?aiToolRoute_(state.selectedAiToolId):
@@ -2521,8 +2534,8 @@ async function processLogin(form,register){
     toast('Selamat datang!');
     const resume=(!isAdmin()&&state.pendingPurchaseId)?state.pendingPurchaseId:'';
     state.pendingPurchaseId='';
-    go(isAdmin()?'admin':resume?'katalog':'beranda');
-    if(resume)await buy(resume);
+    if(resume){openProductCheckout_(resume);}
+    else go(isAdmin()?'admin':'beranda');
   }catch(e){toast(e.message,true);}finally{btn.disabled=false;}
 }
 function clearPrivateCommandCenter_(){
@@ -2531,7 +2544,7 @@ function clearPrivateCommandCenter_(){
 }
 async function logout(){
   const token=state.token,wasAdmin=isAdmin();
-  state.token='';state.me=null;sessionStorage.removeItem(tokenKey);
+  state.token='';state.me=null;state.pendingPurchaseId='';sessionStorage.removeItem(tokenKey);
   clearPrivateCommandCenter_();
   go('beranda');
   if(token&&isConnected()){
@@ -2564,11 +2577,11 @@ async function changeAdminPin_(form){
 }
 let checkoutSubmitting_=false;
 async function buy(productId){
-  if(!checkoutQrReady_()){toast('QRIS belum diverifikasi atau pembayaran belum aktif.',true);return;}
   if(!logged()){
     state.pendingPurchaseId=productId;
-    go('login');toast('Masuk untuk melanjutkan checkout.');return;
+    go('login');return;
   }
+  if(!checkoutQrReady_()){toast('QRIS belum diverifikasi atau pembayaran belum aktif.',true);return;}
   if(isAdmin())return toast('Checkout hanya untuk member.',true);
   const product=state.catalog.find(p=>p.product_id===productId);
   if(!product)return toast('Produk tidak ditemukan.',true);
@@ -3608,7 +3621,10 @@ function syncBrowserRoute_(){
   // Back/Forward may emit both popstate and hashchange; render/load only once.
   if(location.hash===lastRouteHash_)return;
   lastRouteHash_=location.hash;
-  const route=aiRouteFromHash_()==='menu'?'beranda':aiRouteFromHash_();state.route=route;render();loadRoute(route);
+  const parsed=aiRouteFromHash_();
+  const route=guestRoute_(parsed==='menu'?'beranda':parsed);
+  if(route!==parsed){go(route);return;}
+  state.route=route;render();loadRoute(route);
 }
 window.addEventListener('popstate',syncBrowserRoute_);
 window.addEventListener('hashchange',syncBrowserRoute_);
@@ -3630,6 +3646,8 @@ async function init(){
   captureFirstInviter_();
   state.route=aiRouteFromHash_();
   if(state.route==='menu')state.route='beranda';
+  // Before session restoration, a private bookmark shows login instead of the private page.
+  if(!state.token)state.route=guestRoute_(state.route);
   state.catalog=[];
   if(!activatePreview()){
     state.info=null;
