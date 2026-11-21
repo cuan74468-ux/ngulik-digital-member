@@ -27,7 +27,7 @@ test('Learning Studio loads on public, staging-member and operations after legac
 test('member LMS catalog is discovery-first and shows truthful enrolled status',()=>{
   const ui=lms();
   const html=ui.memberCatalog([course],[{course_id:'CRS-1',status:'ACTIVE'}],[]);
-  for(const token of ['Pilih Kelas yang Anda Suka','data-lms-filter="all"',
+  for(const token of ['RUANG MEMBER / KELAS SAYA','data-lms-filter="all"',
     'data-lms-filter="active"','id="learning-course-search"',
     'data-course-state="active"','Lanjutkan kelas','data-course-id="CRS-1"'])
     assert.ok(html.includes(token),token);
