@@ -149,30 +149,30 @@ test('broken published artwork falls back to curated local WebP once',()=>{
   assert.equal(img.src,'./assets/media/ngd-v8-video.webp');
 });
 
-test('guest services offers clearly routed categories without a second marketplace or unlocked quote form',()=>{
+test('guest Jasa is a buyer-focused page with real packages and a member gate',()=>{
   const h=preview();h.go('jasa');const html=h.nodes.screen.innerHTML;
-  assert.match(html,/class="ngd-public-services ngd-service-guide"/);
-  assert.match(html,/class="ngd-service-guide-head"/);
-  assert.doesNotMatch(html,/market-product-card|ngd-service-main-art/);
-  assert.match(html,/data-route="katalog"/);
-  assert.doesNotMatch(html,/data-checkout-product|id="service-brief-form"|Tanya via WhatsApp/);
+  assert.match(html,/class="ngd-buyer-services"/);
+  assert.match(html,/class="ngdb-hero"/);
+  assert.match(html,/id="ngdb-packages"/);
+  assert.match(html,/Harga katalog/);
+  assert.match(html,/data-services-packages/);
+  assert.match(html,/data-checkout-product=/);
+  assert.doesNotMatch(html,/id="service-brief-form"|Tanya via WhatsApp/);
   assert.equal(h.apiCalls.length,0);
 });
 
-test('guest Jasa renders without catalog data or CMS artwork dependencies',()=>{
+test('guest Jasa handles an empty catalog without inventing prices or unlocking a form',()=>{
   const h=preview();
   vm.runInContext("state.catalog=[];state.siteContent=[];go('jasa')",h.ctx);
   const page=h.nodes.screen.innerHTML;
-  assert.match(page,/ngd-service-guide-head/);
-  assert.match(page,/Website &amp; Katalog Online/);
-  assert.match(page,/Aplikasi Kasir &amp; Pencatatan/);
-  assert.match(page,/Video &amp; Visual Promosi/);
-  assert.match(page,/Integrasi &amp; Otomasi/);
+  assert.match(page,/ngdb-hero/);
+  assert.match(page,/Paket jasa belum dapat ditampilkan/);
   assert.match(page,/data-route="katalog"/);
-  assert.match(page,/data-route="login"/);
-  assert.doesNotMatch(page,/market-product-card|market-toolbar|ngd-service-main-art|<img/);
+  assert.match(page,/data-service-request/);
+  assert.doesNotMatch(page,/market-product-card|market-toolbar|id="service-brief-form"|data-checkout-product/);
   assert.equal(h.apiCalls.length,0);
 });
+
 test('guest Beranda keeps a lean route-first layout without products or banner artwork',()=>{
   const h=preview();
   const page=h.nodes.screen.innerHTML;
