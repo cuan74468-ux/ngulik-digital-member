@@ -3,7 +3,7 @@
 // Synthetic member fixture only. No production login, payment or database write.
 const assert=require('node:assert/strict');
 const {spawn}=require('node:child_process');
-const {mkdtempSync,rmSync}=require('node:fs');
+const {mkdtempSync,rmSync,mkdirSync,writeFileSync}=require('node:fs');
 const os=require('node:os'),path=require('node:path');
 const {setTimeout:pause}=require('node:timers/promises');
 const chrome=process.env.CHROME||'/usr/bin/google-chrome';
@@ -92,6 +92,12 @@ async function visit(url,label){
   assert.equal(x.bottomVisible,false,label+' old bottom navigation visible');
   assert.equal(x.drawerPresent,true,label+' top drawer missing');
   assert.deepEqual(x.critical,[],label+' clipped cards/headings');
+  if(['member-home','member-services','member-catalog'].includes(label)){
+    mkdirSync('mobile-qa-artifacts',{recursive:true});
+    const shot=await request('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,
+      fromSurface:true});
+    writeFileSync('mobile-qa-artifacts/'+label+'-360x800.png',Buffer.from(shot.data,'base64'));
+  }
   if(label==='member-home'||label==='member-services'){
     assert.ok(x.colors,label+' hero text missing');
     // Dark ink on a light surface: text is never white-on-white.
