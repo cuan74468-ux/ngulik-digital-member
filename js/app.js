@@ -1185,8 +1185,8 @@ function viewProfileEditor(){
     (!isWriteEnabled()?'<p class="form-hint">Profil belum bisa diubah.</p>':'')+'</form>';
 }
 function viewAccount(){
-  if(!logged())return title('Akun member','PROFIL & KEAMANAN','Lihat dan atur profil Anda.')+
-    '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk memakai nomor WhatsApp Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan PIN, tautan sesi, atau kode pribadi kepada siapa pun.</p></div></div>';
+  if(!logged())return title('Akun Member','AKSES PRIBADI','Profil dan pengaturan hanya tersedia setelah masuk.')+
+    '<div class="grid-2"><div class="surface"><h3>Sudah punya akun?</h3><p class="card-desc">Masuk memakai nomor WhatsApp Anda.</p><div class="actions" style="margin-top:20px"><button class="btn btn-primary" data-route="login">Masuk</button></div></div><div class="surface"><h3>Keamanan akun</h3><p class="card-desc">Jangan membagikan kode OTP atau tautan sesi kepada siapa pun.</p></div></div>';
   if(isAdmin()){
     const m=state.me;
     return title('Akun Admin','AKUN ADMIN','Lihat profil dan pengaturan akun Admin.')+
@@ -1223,6 +1223,12 @@ function viewAccount(){
     '<div class="divider"></div><h3>Bantuan & dukungan</h3><button class="btn btn-ghost" data-route="dukungan">Laporkan kendala '+icon('arrow')+'</button></div></div>'+viewNotificationCenter()+viewProfileEditor();
 }
 function viewLogin(register=false,adminMode=false){
+  if(register&&!registrationOtpEnabled()&&!state.registrationWaitlist){
+    return '<section class="ngd-role-gate"><p class="eyebrow">PENDAFTARAN MEMBER</p><h1>Pendaftaran belum dibuka.</h1>'+
+      '<p>Anda tetap dapat menjelajahi produk, Studio AI, layanan, serta materi gratis. Akun yang sudah terdaftar dapat masuk melalui WhatsApp dan OTP pada layanan yang telah aktif.</p>'+
+      '<div class="ngd-role-actions"><button type="button" class="btn btn-primary" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
+      '<button type="button" class="btn btn-secondary" data-route="login">Sudah punya akun? Masuk</button></div></section>';
+  }
   if(register&&state.registrationWaitlist){
     const pos=Number(state.registrationWaitlist.posisi);
     return '<section class="login-shell" role="status" aria-live="polite">'+
@@ -1280,11 +1286,9 @@ function viewLogin(register=false,adminMode=false){
     '</div>';
 }
 function viewMyOrders(){
-  if(!logged())return title('Masuk untuk melihat pesanan','AKSES PESANAN','Pilih jenis akun. Admin menggunakan PIN; Member menggunakan OTP WhatsApp.')+
-    '<section class="surface"><div class="actions" style="display:flex;gap:12px;flex-wrap:wrap">'+
-    '<button type="button" class="btn btn-primary" data-route="admin-login">Saya Admin — masuk dengan PIN '+icon('arrow')+'</button>'+
-    '<button type="button" class="btn btn-secondary" data-route="login">Saya Member — masuk dengan OTP '+icon('arrow')+'</button>'+
-    '</div></section>';
+  if(!logged())return '<section class="ngd-role-gate"><p class="eyebrow">RUANG MEMBER / PESANAN</p><h1>Pesanan Anda tersimpan di akun.</h1>'+
+    '<p>Masuk menggunakan WhatsApp dan OTP untuk memeriksa status pembayaran, akses produk, dan riwayat belanja.</p>'+
+    '<button type="button" class="btn btn-primary" data-route="login">Masuk sebagai Member '+icon('arrow')+'</button></section>';
   return title('Pesanan saya','RIWAYAT PESANAN','Lihat status dan rincian pesanan Anda.')+
     (!state.orders.length?empty('Belum ada pesanan','Pesanan Anda akan muncul di sini.','katalog','Lihat katalog'):
     '<div class="stack order-history-list">'+state.orders.map(o=>{
