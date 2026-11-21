@@ -101,7 +101,7 @@ jobs:
           grep -q 'data-overflow="false"' /tmp/ngd-login-v10.html
           if grep -q 'id="pin"' /tmp/ngd-login-v10.html; then echo 'LOGIN_V10_FAIL: Member PIN shown' >&2; exit 1; fi
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom "http://127.0.0.1:8765/?preview=member#ai" > /tmp/ngd-member-ai-v10.html 2>>/tmp/ngd-chrome.log
-          grep -q '<h1>Studio AI</h1>' /tmp/ngd-member-ai-v10.html
+          grep -Fq '<h1>Pilih alat. Mulai berkarya.</h1>' /tmp/ngd-member-ai-v10.html
           grep -q 'id="ai-tool-cards"' /tmp/ngd-member-ai-v10.html
           grep -q 'data-route="ai" aria-current="page"' /tmp/ngd-member-ai-v10.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-ai-v10.html
