@@ -2315,6 +2315,63 @@ function ngdPilotSelfTestReadOnly() {
 }
 
 /**
+ * Owner-approved 21 Nov 2026 price/commission contract.
+ * Strictly read-only; use in STAGING to inspect current 29-tab DB before any
+ * manual reconciliation. Existing orders, ledger and history are untouched.
+ * A SOURCE change or seedCatalog_() never rewrites live catalogue rows.
+ */
+function ngdApprovedBlueprintAuditReadOnly() {
+  var info=ngdStagingWorkspaceInfo_(); // hard reject Production or wrong spreadsheet
+  require_(info.environment==='STAGING','FORBIDDEN','Hanya STAGING.');
+  var expected=[
+    {id:'P-STARTER-15',price:15000,type:'PRODUK_DIGITAL',credits:15,fixed:5000,rate:0},
+    {id:'P-TOKEN-10',price:7000,credits:10,type:'TOPUP_KREDIT'},
+    {id:'P-TOKEN-35',price:20000,credits:35,type:'TOPUP_KREDIT'},
+    {id:'P-TOKEN-100',price:50000,credits:100,type:'TOPUP_KREDIT'},
+    {id:'P-3IN1',price:99000,type:'LANGGANAN_30H',rate:25},
+    {id:'P-POS',price:149000,type:'LISENSI_SEKALI',rate:25},
+    {id:'P-VIDEO-AI',price:50000,type:'JASA_SEKALI',rate:20},
+    {id:'P-INTEGRASI-GAS',price:400000,type:'JASA_SEKALI',rate:20}
+  ];
+  var findings=expected.map(function(want){
+    var current=byId_('katalog_produk','product_id',want.id);
+    var issues=[];
+    if(!current)issues.push('SKU_NOT_FOUND');
+    else{
+      if(ngdPriceRupiah_(current.harga)!==want.price)issues.push('PRICE_MISMATCH');
+      if(String(current.tipe)!==want.type)issues.push('TYPE_MISMATCH');
+      if(want.credits!==undefined&&Number(current.kredit_diberikan||0)!==want.credits)
+        issues.push('TOKEN_COUNT_MISMATCH');
+      if(want.fixed!==undefined&&Number(current.komisi_nominal_tetap||0)!==want.fixed)
+        issues.push('FIXED_COMMISSION_MISMATCH');
+      if(want.rate!==undefined&&Number(current.komisi_persen||0)!==want.rate)
+        issues.push('RATE_MISMATCH');
+      if(current.aktif!==true)issues.push('INACTIVE');
+    }
+    return {sku:want.id,ok:issues.length===0,issues:issues};
+  });
+  var legacy=['P-KREDIT-50','P-KREDIT-150','P-KREDIT-400',
+    'P-TOKEN-50','P-STARTER-15K','P-CANVA'];
+  var legacyActive=legacy.filter(function(id){
+    var p=byId_('katalog_produk','product_id',id);
+    return !!p&&p.aktif===true;
+  });
+  var waiting=readAll_('orders').filter(function(o){
+    return ['PENDING','MENUNGGU_VERIFIKASI'].indexOf(String(o.status))>=0;
+  }).length;
+  var mismatch=findings.filter(function(x){return !x.ok;}).length;
+  var result={environment:'STAGING',read_only:true,created_orders:0,
+    database_writes:0,sent_whatsapp:0,finance_activated:false,
+    qris_formula:'BASE_PRICE_MINUS_THREE_DIGIT_DISCOUNT',
+    catalogue:findings,legacy_active_skus:legacyActive,
+    open_orders_count:waiting,needs_reconciliation:mismatch>0||legacyActive.length>0||
+      waiting>0,verdict:mismatch===0&&legacyActive.length===0&&waiting===0?
+        'BLUEPRINT_SOURCE_DATA_PARITY_OK':'RECONCILIATION_REQUIRED'};
+  console.log('NGD_APPROVED_BLUEPRINT_STAGING_AUDIT '+JSON.stringify(result));
+  return result;
+}
+
+/**
  * End-to-end pilot simulation, using the REAL checkout/confirm/approve code
  * on a disposable spreadsheet. Source STAGING tables are read, never mutated.
  * No WhatsApp/API calls and no real payment is represented.
