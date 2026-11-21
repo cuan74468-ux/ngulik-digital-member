@@ -1387,7 +1387,7 @@ function ngdCommissionTerms_(settings,product,basePrice) {
 function ngdCommissionTiming_(product) {
   var sku=String(product&&product.product_id||'').toUpperCase();
   var type=String(product&&product.tipe||'').toUpperCase();
-  return sku==='P-STARTER-15'||sku==='P-STARTER-15K'||
+  return sku==='P-STARTER-15'||
     type==='TOPUP_TOKEN'||type==='TOPUP_KREDIT'?'INSTANT_ON_PAID':'HOLD_14_DAYS';
 }
 // Pay-to-unlock is derived from verified orders, not a browser flag or
