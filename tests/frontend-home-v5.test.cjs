@@ -26,7 +26,7 @@ test('quiet public hero uses text first, with accessible links and no decorative
   assert.doesNotMatch(floating,/@keyframes ngdBallAscend|@keyframes ngdStairLight|ngdPixelDrift/);
 });
 test('homepage routes to the live catalog and member registration without fake commerce',()=>{
-  assert.match(app,/class="nh-home nh-home-minimal ngd-shop-home"/);
+  assert.match(app,/class="nh-home nh-home-minimal ngd-shop-home ngd-home-quiet"/);
   assert.match(app,/class="ngd-shop-hero"|ngd-shop-hero/);
   assert.match(app,/ngd-home-direct-links/);
   assert.doesNotMatch(app.slice(app.indexOf('  \/\/ Public front door:'),app.indexOf('const offerCategories=')),/ngd-shop-featured|ngd-shop-signup/);
@@ -52,6 +52,6 @@ test('homepage-only CSS preserves payment and account logic',()=>{
 
 test('both entrypoints load current homepage copy rather than cached 16 November module',()=>{
   assert.match(app,/Solusi digital yang benar-benar membantu/);
-  assert.match(publicHtml,/js\/app\.js\?v=20261121-proportions-v13-2/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261121-proportions-v13-2/);
+  assert.match(publicHtml,/js\/app\.js\?v=20261121-quiet-home-v14-1/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261121-quiet-home-v14-1/);
 });
