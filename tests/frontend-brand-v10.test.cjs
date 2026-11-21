@@ -42,6 +42,6 @@ test('Studio AI preserved in public and member UI, with five-tab guest mobile na
   assert.match(app,/getTools/);
   assert.match(app,/\['beranda','katalog','ai','jasa','menu'\]/);
   assert.match(app,/\['beranda','katalog','ai','pesanan','menu'\]/);
-  assert.match(app,/\['beranda','katalog','ai','jasa','affiliate','dukungan'\]/);
-  assert.match(app,/\['beranda','katalog','ai','jasa','affiliate','dukungan','belajar','login','daftar'\]/);
+  assert.match(app,/\['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'\]/);
+  assert.match(app,/const guestNav=\['beranda','katalog','ai','jasa','affiliate','belajar','dukungan','login','daftar'\]/);
 });
