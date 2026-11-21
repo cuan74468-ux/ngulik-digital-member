@@ -73,10 +73,10 @@ test('both page entrypoints load the campaign CSS after all older marketing styl
   }
 });
 
-test('home campaigns and other public page artwork reuse the CMS within existing heroes',()=>{
-  assert.match(app,/published\(state\.siteContent,'HERO','home'\)/);
+test('public page artwork remains contextual while quiet home does not repeat CMS hero art',()=>{
+  assert.doesNotMatch(app.slice(app.indexOf('  // Public front door:'),app.indexOf('const offerCategories=')),/published\(state\.siteContent,'HERO','home'\)/);
   assert.match(app,/cmsPageArt_\('affiliate'\)/);
-  assert.match(app,/cmsPageArt_\('jasa'\)/);
+  assert.match(app,/function viewServiceRequests\(\)/);
   assert.match(app,/cmsPageArt_\('ai'\)/);
   assert.match(app,/cmsPageArt_\('dukungan'\)/);
   assert.match(app,/cmsPageArt_\('belajar'\)/);
@@ -97,6 +97,6 @@ test('V13 public banner maintains proportional desktop layout and content-driven
   assert.match(ui,/\.market-product-media\{[\s\S]*?aspect-ratio:6\/5/);
   assert.match(ui,/\.ngd-cms-preview-desktop \.ngd-cms-preview-image\{[\s\S]*?aspect-ratio:8\/3/);
   assert.match(ui,/\.ngd-cms-preview-mobile \.ngd-cms-preview-image\{[\s\S]*?aspect-ratio:4\/5/);
-  assert.match(app,/Katalog online, aplikasi kasir, otomasi order/);
+  assert.match(app,/Buat katalog online, gunakan sistem kasir/);
   assert.match(content,/CMS saat ini menggunakan satu gambar per penempatan/);
 });
