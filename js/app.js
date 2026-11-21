@@ -1,6 +1,9 @@
 import {api, ApiError, isConnected, isWriteEnabled, createRequestId} from './api.js?v=20261114-adminauth1';
 
 const config = window.NGD_CONFIG || {};
+// Static media lives at the repository root, not inside /staging/.
+const guestMediaBase_=()=>String(location.pathname||'').includes('/staging/')?
+  '../assets/media/':'./assets/media/';
 const by = (id) => document.getElementById(id);
 // Canonical brand asset is the same favicon URL in public and STAGING pages.
 const defaultBrandLogoSrc=document.querySelector?.('.guest-brand-icon .ngd-brand-image')?.src||
@@ -647,7 +650,7 @@ function viewHome(){
     <section class="ngdl-offers" aria-labelledby="ngdl-offers-title">
       <div class="ngdl-section-top"><div><p class="ngdl-kicker">ISI WARUNGNYA</p><h2 id="ngdl-offers-title">Cari yang pas buat Anda.</h2></div><p>Mulai dari satu hal yang sedang dibutuhkan.</p></div>
       <div class="ngdl-grid">${landingCards.map(c=>`<article class="ngdl-offer">
-        <div class="ngdl-offer-image"><img src="./assets/media/${c.img}" loading="lazy" decoding="async" alt="${c.alt}"></div>
+        <div class="ngdl-offer-image"><img src="${guestMediaBase_()}${c.img}" loading="lazy" decoding="async" alt="${c.alt}"></div>
         <div class="ngdl-offer-body"><p class="ngdl-offer-tag">${c.tag}</p><h3>${c.name}</h3><p>${c.desc}</p>
         <button type="button" data-route="${c.route}" class="ngdl-offer-link">Lihat selengkapnya <span aria-hidden="true">↗</span></button></div>
       </article>`).join('')}</div>
@@ -1931,7 +1934,7 @@ function viewServiceRequests(){
           '<button type="button" class="ngdb-button ngdb-outline" data-service-request>Ajukan kebutuhan khusus</button></div>'+
           '<small>Harga paket mengikuti katalog. Permintaan khusus perlu dibahas terlebih dahulu.</small>'+
         '</div>'+
-        '<div class="ngdb-hero-visual"><img src="./assets/media/ngd-v8-video.webp" alt="Ilustrasi layanan produksi materi promosi digital" width="800" height="800" decoding="async"></div>'+
+        '<div class="ngdb-hero-visual"><img src="'+guestMediaBase_()+'ngd-v8-video.webp" alt="Ilustrasi layanan produksi materi promosi digital" width="800" height="800" decoding="async"></div>'+
       '</header>'+
       '<section id="ngdb-packages" class="ngdb-packages" aria-labelledby="ngdb-packages-title">'+
         '<div class="ngdb-heading"><p class="ngdb-overline">HARGA NYATA, BUKAN TEBAK-TEBAKAN</p>'+
@@ -1946,7 +1949,7 @@ function viewServiceRequests(){
         '<div class="ngdb-heading"><p class="ngdb-overline">APA YANG BISA DIBANTU?</p>'+
           '<h2 id="ngdb-capabilities-title">Mulai dari pekerjaan yang paling menyita waktu.</h2></div>'+
         '<div class="ngdb-capability-list">'+examples.map(x=>
-          '<article class="ngdb-capability"><img src="./assets/media/'+x[2]+'" alt="" loading="lazy" decoding="async">'+
+          '<article class="ngdb-capability"><img src="'+guestMediaBase_()+x[2]+'" alt="" loading="lazy" decoding="async">'+
             '<div><h3>'+x[0]+'</h3><p>'+x[1]+'</p></div></article>').join('')+'</div>'+
       '</section>'+
       '<section class="ngdb-process" aria-labelledby="ngdb-process-title">'+
