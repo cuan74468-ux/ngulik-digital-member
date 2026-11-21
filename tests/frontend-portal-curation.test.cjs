@@ -19,7 +19,7 @@ test('all 39 STAGING portal entries render in four distinct groups without check
   assert.equal(modules.length,39);
   const html=renderModules(modules);
   for(const heading of ['Portal Belajar & Fasilitas UMKM','Materi Internal Ngulik Digital',
-    'AI & Digital Marketing','Bisnis & Keuangan UMKM','Fasilitas Resmi UMKM','39 materi dan tautan kurasi']){
+    'AI &amp; Digital Marketing','Bisnis &amp; Keuangan UMKM','Fasilitas Resmi UMKM','39 materi dan tautan kurasi']){
     assert.ok(html.includes(heading),heading);
   }
   assert.equal((html.match(/class="learning-legacy-row"/g)||[]).length,39);

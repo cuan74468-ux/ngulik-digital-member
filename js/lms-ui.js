@@ -30,9 +30,17 @@ function select(name,title,items,value){
 }
 function fmt(v){if(!v)return '-';var d=new Date(v);return Number.isNaN(d.getTime())?'-':
   new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeZone:'Asia/Jakarta'}).format(d);}
+// LMS lesson references retain their original trusted-host allowlist.
 function link(v){
-  // Curated learning resources include government portals, course platforms and Classroom.
-  // Permit public HTTPS hosts only, while keeping URL contents escaped in markup.
+  try{var u=new URL(String(v||''));
+    var hosts=['classroom.google.com','youtube.com','www.youtube.com',
+      'youtu.be','drive.google.com','docs.google.com'];
+    return u.protocol==='https:'&&!u.username&&!u.password&&hosts.indexOf(u.hostname)>=0?u.href:'';
+  }catch(_){return '';}
+}
+// Member Portal is curated by the owner in modul_belajar; external official
+// government and training sites require a wider HTTPS validator than LMS lessons.
+function portalLink_(v){
   try{var u=new URL(String(v||''));
     return u.protocol==='https:'&&!u.username&&!u.password&&u.hostname.indexOf('.')>0&&
       !/^(?:localhost|\d+\.\d+\.\d+\.\d+)$/i.test(u.hostname)?u.href:'';
@@ -78,7 +86,7 @@ function memberPortal_(old){
   return '<section class="learning-legacy learning-portal section-gap" aria-labelledby="member-portal-heading">'+
     '<div class="learning-section-head"><div><p class="eyebrow">FASILITAS MEMBER / PORTAL INFORMASI</p>'+
     '<h3 id="member-portal-heading">Portal Belajar & Fasilitas UMKM</h3>'+
-    '<p>'+old.length+' materi dan tautan kurasi. Akses penyedia tanpa checkout Ngulik Digital.</p></div></div>'+
+    '<p>'+old.length+' materi dan tautan kurasi. Materi Pengantar internal dan akses penyedia tanpa checkout Ngulik Digital.</p></div></div>'+
     '<p class="learning-portal-disclaimer" role="note">'+e(disclosure)+'</p>'+
     '<div class="learning-portal-groups">'+groups.map(function(group){
       var items=old.filter(function(m){return portalGroup_(m)===group.id;});
@@ -87,7 +95,7 @@ function memberPortal_(old){
         '<summary class="learning-portal-summary"><span><strong>'+e(group.title)+'</strong>'+
         '<small>'+items.length+' pilihan</small></span><span class="learning-portal-chevron" aria-hidden="true">⌄</span></summary>'+
         '<div class="learning-legacy-list">'+items.map(function(m,i){
-          var target=link(m.url_classroom);
+          var target=portalLink_(m.url_classroom);
           var cleanName=String(m.judul||'').replace(/^\[(?:AI & Digital Marketing|Bisnis & Keuangan UMKM|Fasilitas Resmi UMKM)\]\s*/,'');
           return '<article class="learning-legacy-row"><span class="learning-legacy-no">'+
             String(i+1).padStart(2,'0')+'</span><div class="learning-legacy-copy">'+
