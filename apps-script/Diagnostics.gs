@@ -259,8 +259,11 @@ function diagnosticFinanceReadOnly() {
     if(!mids[String(o.member_id)])errors.push('ORDER_MEMBER_MISSING');
     if(!pids[String(o.product_id)])errors.push('ORDER_PRODUCT_MISSING');
     var price=Number(o.harga_dasar),code=Number(o.kode_unik),total=Number(o.total_bayar);
+    // Historical paid invoices used price + code. The owner-approved 21 Nov
+    // contract uses price - code. Never rewrite a historical invoice merely
+    // because the checkout rule changed; accept either exact formula here.
     if(!Number.isFinite(price)||!Number.isFinite(code)||!Number.isFinite(total)||
-       price+code!==total)errors.push('ORDER_TOTAL_INVALID');
+       (price+code!==total&&price-code!==total))errors.push('ORDER_TOTAL_INVALID');
     if(['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0){
       if(money[total])errors.push('ACTIVE_PAYMENT_AMOUNT_DUPLICATE');
       money[total]=true;
