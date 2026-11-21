@@ -49,28 +49,34 @@ test('member-only theme is active for member and onboarding but not admin',()=>{
   const admin=preview('admin');
   assert.equal(admin.classes.has('member-experience'),false);
 });
-test('member command center shows honest wallet, orders, access and account activity',()=>{
+test('member native dashboard shows real-only wallet, charts, orders and shortcuts',()=>{
   const h=preview('member');
   const page=h.nodes.screen.innerHTML;
-  assert.match(page,/ngd-member-command/);
-  assert.match(page,/wallet-hero/);
-  assert.match(page,/Akses Aktif/);
-  assert.match(page,/Pesanan/);
-  assert.match(page,/Komisi Siap Tarik/);
-  assert.match(page,/ngd-member-activity/);
-  assert.doesNotMatch(page,/member-focus-ring|data-route="menu"/);
-  assert.match(h.nodes['top-nav-drawer'].innerHTML,/data-route="pesanan"/);
-  assert.match(h.nodes['top-nav-drawer'].innerHTML,/data-route="affiliate"/);
+  for(const landmark of ['ngdm-dashboard','ngdm-wallet','ngdm-wallet-chart','ngdm-progress','ngdm-metrics','ngdm-shortcuts','ngdm-recent']){
+    assert.match(page,new RegExp(landmark));
+  }
+  assert.match(page,/DOMPET TOKEN/);
+  assert.match(page,/Status pesanan/);
+  assert.match(page,/Aktivitas Anda/);
+  assert.match(page,/data-route="ai"/);
+  assert.match(page,/data-route="pesanan"/);
+  assert.doesNotMatch(page,/ngd-member-hero-art|member-focus-ring|data-route="menu"/);
   assert.equal(h.attributes['data-member-route'],'beranda');
+  assert.equal(h.apiCalls(),0);
 });
 
-test('member uses one top navigation and old Menu route redirects home',()=>{
+test('member has four primary mobile tabs and a complementary More menu with no duplicates',()=>{
   const h=preview('member','lms-course');
-  const nav=h.nodes['top-nav-drawer'].innerHTML;
-  for(const route of ['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun'])
-    assert.match(nav,new RegExp('data-route="'+route+'"'));
-  assert.doesNotMatch(nav,/data-route="menu"/);
-  assert.equal(h.nodes['mobile-nav']?.innerHTML||'','');
+  const dock=h.nodes['member-mobile-nav'].innerHTML;
+  const sheet=h.nodes['top-nav-drawer'].innerHTML;
+  assert.deepEqual([...dock.matchAll(/data-route="([^"]+)"/g)].map(m=>m[1]),
+    ['beranda','katalog','ai','pesanan']);
+  assert.deepEqual([...sheet.matchAll(/data-route="([^"]+)"/g)].map(m=>m[1]),
+    ['jasa','belajar','affiliate','dukungan','akun']);
+  assert.match(dock,/id="member-more-toggle"/);
+  assert.match(dock,/aria-controls="top-nav-drawer"/);
+  assert.match(sheet,/data-action="logout"/);
+  assert.doesNotMatch(sheet,/data-route="beranda"|data-route="pesanan"|data-route="katalog"|data-route="ai"/);
   h.go('menu');
   assert.equal(h.attributes['data-member-route'],'beranda');
 });
@@ -138,14 +144,17 @@ test('administrator account has operational controls without member-only affilia
   assert.doesNotMatch(screen,/Lihat referral saya|Simpan perubahan profil/);
 });
 
-test('no duplicate Menu page or bottom tabs; all links appear in header drawer',()=>{
+test('member bottom navigation never leaks into guest or admin contexts',()=>{
   const member=preview('member','beranda');
-  assert.doesNotMatch(member.nodes['top-nav-drawer'].innerHTML,/data-route="menu"/);
-  for(const route of ['ai','affiliate','dukungan','akun'])
-    assert.match(member.nodes['top-nav-drawer'].innerHTML,new RegExp('data-route="'+route+'"'));
+  assert.equal(member.nodes['member-mobile-nav'].hidden,false);
+  assert.match(member.nodes['member-mobile-nav'].innerHTML,/data-route="beranda"/);
   member.go('menu');
   assert.equal(member.attributes['data-member-route'],'beranda');
+  const guest=preview('','beranda');
+  assert.equal(guest.nodes['member-mobile-nav'].hidden,true);
+  assert.equal(guest.nodes['member-mobile-nav'].innerHTML,'');
   const admin=preview('admin','beranda');
+  assert.equal(admin.nodes['member-mobile-nav'].hidden,true);
   for(const route of ['konten','layanan','member','rilis','antrean','pengaturan','akun'])
     assert.match(admin.nodes['top-nav-drawer'].innerHTML,new RegExp('data-route="'+route+'"'));
   assert.equal(member.apiCalls(),0);
