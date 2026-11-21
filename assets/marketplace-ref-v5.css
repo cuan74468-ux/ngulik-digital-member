@@ -515,7 +515,7 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) :is(.ngd-shop-hero button,.ng
  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-shop-signup p{font-size:.68rem}
  body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-shop-signup button{width:100%;min-height:42px}
  /* Fixed bottom dock for browsing guests. Member/admin nav remains unchanged. */
- body.ngd-public-app[data-app-role=guest]:not(#ngd) .mobile-nav{
+ body.ngd-public-app[data-app-role=guest]:not(#ngd) #mobile-nav{
   display:flex!important;align-items:stretch!important;justify-content:space-around!important;
   position:fixed;left:0;right:0;bottom:0;z-index:72;
   min-height:calc(64px + env(safe-area-inset-bottom));
