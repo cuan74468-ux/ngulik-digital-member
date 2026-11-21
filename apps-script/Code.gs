@@ -2025,7 +2025,8 @@ function financeFindings_(orders,ledger,commissions,products,policy,members) {
   (members||[]).forEach(function(m){memberIndex[String(m.member_id)]=m;});
   products.forEach(function(p){types[String(p.product_id)]=p.tipe;catalog[String(p.product_id)]=p;});
   orders.forEach(function(o){
-    var reasons=[],entries=ledger.filter(function(l){return l.ref_id===o.order_id&&\n      ['TOPUP','TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(String(l.tipe))>=0;});
+    var reasons=[],entries=ledger.filter(function(l){return l.ref_id===o.order_id&&
+      ['TOPUP','TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(String(l.tipe))>=0;});
     var reversals=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='ADJUST_REFUND';});
     var isTopup=['TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(types[String(o.product_id)])>=0;
     if(o.status==='PAID'){
