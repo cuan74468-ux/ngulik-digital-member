@@ -521,12 +521,12 @@ function viewHome(){
       <span>✦ Tools AI pakai kredit</span><span>✦ Bayar dengan QRIS DANA Bisnis</span><span>✦ Bisa dibuka lewat HP</span><span>✦ Ada komisi untuk referal yang berhasil</span>
     </div>
     <section class="ngdl-story" aria-labelledby="ngdl-story-title">
-      <p class="ngdl-kicker">SEDIKIT CERITA</p>
-      <h2 id="ngdl-story-title">Kerjaan sudah banyak. <em>Yang digital jangan ikut bikin repot.</em></h2>
-      <p>Kadang yang bikin tertunda bukan niatnya, tapi waktu dan tenaga. Mau bikin katalog saja harus belajar ini-itu. Mau coba AI, bingung mulai dari mana. Ngulik Digital kami buat seperti warung sekaligus bengkel: ada yang bisa langsung dibawa pulang, ada alat yang dipakai seperlunya, dan ada pekerjaan yang bisa kami bantu kerjakan.</p>
+      <p class="ngdl-kicker">KENAPA NGULIK DIGITAL?</p>
+      <h2 id="ngdl-story-title">Urusan digital, nggak harus bikin repot.</h2>
+      <p>Mau bikin konten, katalog, atau coba AI tapi waktunya mepet? Di sini ada alat yang bisa dipakai seperlunya, produk yang sudah siap, dan bantuan kalau ingin terima beres.</p>
     </section>
     <section class="ngdl-offers" aria-labelledby="ngdl-offers-title">
-      <div class="ngdl-section-top"><div><p class="ngdl-kicker">YANG BISA ANDA TEMUKAN</p><h2 id="ngdl-offers-title">Lagi butuh apa?</h2></div><p>Nggak harus pakai semuanya. Lihat-lihat dulu juga boleh.</p></div>
+      <div class="ngdl-section-top"><div><p class="ngdl-kicker">ISI WARUNGNYA</p><h2 id="ngdl-offers-title">Cari yang pas buat Anda.</h2></div><p>Mulai dari satu hal yang sedang dibutuhkan.</p></div>
       <div class="ngdl-grid">${landingCards.map(c=>`<article class="ngdl-offer">
         <div class="ngdl-offer-image"><img src="./assets/media/${c.img}" loading="lazy" decoding="async" alt="${c.alt}"></div>
         <div class="ngdl-offer-body"><p class="ngdl-offer-tag">${c.tag}</p><h3>${c.name}</h3><p>${c.desc}</p>
