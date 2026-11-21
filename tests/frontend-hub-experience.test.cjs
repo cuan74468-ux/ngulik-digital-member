@@ -147,3 +147,12 @@ test('broken published artwork falls back to curated local WebP once',()=>{
   onError({target:img});
   assert.equal(img.src,'./assets/media/ngd-v8-video.webp');
 });
+
+test('guest services displays real catalog checkout cards and no unlocked quote form',()=>{
+  const h=preview();h.go('jasa');const html=h.nodes.screen.innerHTML;
+  assert.match(html,/class="ngd-public-services"/);
+  assert.match(html,/class="ngd-public-services-hero"/);
+  assert.match(html,/data-checkout-product=/);
+  assert.doesNotMatch(html,/id="service-brief-form"|Tanya via WhatsApp/);
+  assert.equal(h.apiCalls.length,0);
+});

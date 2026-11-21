@@ -31,11 +31,13 @@ test('guest Affiliate, Help, Login and Katalog share violet marketplace system',
  assert.match(app,/ngd-help-question/);
  assert.match(css,/\.partner-public-intro/);
  assert.match(css,/\.ngd-help-faq/);
+ assert.match(css,/\.ngd-public-services-hero/);
+ assert.match(css,/\.ai-catalog-intro/);
  assert.match(css,/\.login-shell/);
  assert.match(css,/\.market-product-media/);
  for(const page of ['index.html','staging/member.html']){
    const html=read(page);
-   assert.match(html,/public-experience-v8\.css\?v=20261121-public-v8-1/);
-   assert.match(html,/app\.js\?v=20261121-qris-checkout-v4-market-v8/);
+   assert.match(html,/public-experience-v8\.css\?v=20261121-public-v8-2/);
+   assert.match(html,/app\.js\?v=20261121-qris-checkout-v4-market-v8-2/);
  }
 });

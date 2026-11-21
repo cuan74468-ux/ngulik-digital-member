@@ -105,6 +105,15 @@ jobs:
             exit 1
           fi
           echo 'PUBLIC_V8_AFFILIATE_HELP_OK'
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1440,900 --dump-dom "http://127.0.0.1:8765/#jasa" > /tmp/ngd-public-services-v8.html 2>>/tmp/ngd-chrome.log
+          grep -q 'class="ngd-public-services"' /tmp/ngd-public-services-v8.html
+          grep -q 'class="ngd-public-services-hero"' /tmp/ngd-public-services-v8.html
+          grep -q 'data-overflow="false"' /tmp/ngd-public-services-v8.html
+          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom "http://127.0.0.1:8765/#ai" > /tmp/ngd-public-ai-v8.html 2>>/tmp/ngd-chrome.log
+          grep -q 'class="ai-catalog"' /tmp/ngd-public-ai-v8.html
+          grep -q 'class="ai-catalog-intro"' /tmp/ngd-public-ai-v8.html
+          grep -q 'data-overflow="false"' /tmp/ngd-public-ai-v8.html
+          echo 'PUBLIC_V8_SERVICES_AI_OK'
           if grep -q 'DEMO LOKAL\|Pratinjau — bukan data transaksi' /tmp/ngd-guest.html; then
             echo 'ERROR: internal development banner leaked to public page' >&2
             exit 1

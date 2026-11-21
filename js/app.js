@@ -619,9 +619,10 @@ function ngdProductImageFallback_(p,kind){
 
 function viewPublicMarketplace(list){
   const publicList=list.filter(p=>!isPublicQaOffer_(p));
-  const category=state.catalogFilter||'semua';
-  const search=String(state.marketplaceSearch||'').trim().toLocaleLowerCase('id-ID');
-  const sort=state.marketplaceSort||'default';
+  const options=arguments[1]||{};
+  const category=options.category??(state.catalogFilter||'semua');
+  const search=String(options.search??state.marketplaceSearch??'').trim().toLocaleLowerCase('id-ID');
+  const sort=options.sort??(state.marketplaceSort||'default');
   let shown=publicList.filter(p=>ngdOfferInCategory_(p,category)&&
     (!search||String(p.nama||'').toLocaleLowerCase('id-ID').includes(search)||
       String(p.deskripsi||'').toLocaleLowerCase('id-ID').includes(search)||
@@ -1582,6 +1583,32 @@ function viewAdminContent(){
 }
 const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
 function viewServiceRequests(){
+  if(!logged()&&!isAdmin()){
+    const items=(Array.isArray(state.catalog)?state.catalog:[]).filter(p=>
+      !isPublicQaOffer_(p)&&['JASA_SEKALI','SEAT_30H'].includes(String(p.tipe||'')));
+    const cards=items.length?viewPublicMarketplace(items,{category:'semua',search:'',sort:'default'}):
+      '<p class="ngd-public-services-empty">Katalog layanan sedang dimuat atau belum tersedia. Lihat katalog lengkap untuk pilihan lain.</p>';
+    return '<div class="ngd-public-services">'+
+      '<section class="ngd-public-services-hero" aria-label="Layanan Ngulik Digital">'+
+        '<div><p class="eyebrow">LAYANAN DIGITAL NGULIK DIGITAL</p>'+
+          '<h1>Solusi praktis untuk mengembangkan usaha Anda.</h1>'+
+          '<p>Produksi video AI, integrasi data, automasi, dan layanan digital yang tersedia di katalog resmi.</p>'+
+          '<div class="ngd-services-hero-actions">'+
+            '<button type="button" class="btn btn-primary" data-route="katalog">Jelajahi Katalog '+icon('arrow')+'</button>'+
+            '<button type="button" class="btn btn-secondary" data-route="login">Permintaan Kustom</button>'+
+          '</div></div>'+
+        '<img src="'+esc(ngdPremiumArtSrc_('gas'))+'" alt="" decoding="async" loading="lazy">'+
+      '</section>'+
+      '<section class="ngd-public-services-shelf" aria-label="Daftar layanan digital">'+
+        '<header class="ngd-public-services-heading"><div><p class="eyebrow">LAYANAN PILIHAN</p>'+
+          '<h2>Pilih sesuai kebutuhan usaha</h2></div>'+
+          '<button type="button" data-route="katalog">Semua Produk '+icon('arrow')+'</button></header>'+
+        cards+'</section>'+
+      '<section class="ngd-public-services-cta"><div><strong>Butuh solusi yang lebih khusus?</strong>'+
+        '<p>Masuk sebagai member untuk mengajukan kebutuhan dan menerima penawaran.</p></div>'+
+        '<button type="button" data-route="login">Masuk Member '+icon('arrow')+'</button></section>'+
+    '</div>';
+  }
   return window.NGD_SERVICES_UI?
     window.NGD_SERVICES_UI.member({logged:logged()&&!isAdmin(),
       items:state.services,enabled:serviceWriteEnabled(),kind:state.serviceKind}):
