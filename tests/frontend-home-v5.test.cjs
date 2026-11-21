@@ -52,6 +52,6 @@ test('homepage-only CSS preserves payment and account logic',()=>{
 
 test('both entrypoints load current homepage copy rather than cached 16 November module',()=>{
   assert.match(app,/Bikin konten jualan, coba AI, atau rapikan usaha/);
-  assert.match(publicHtml,/js\/app\.js\?v=20261121-staging-login-fallback-1/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261121-staging-login-fallback-1/);
+  assert.match(publicHtml,/js\/app\.js\?v=20261122-member-desktop-nav-1/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261122-member-desktop-nav-1/);
 });

@@ -101,7 +101,7 @@ test('STAGING client opt-in never bypasses backend finance or unverified QRIS',(
 test('public and staging load the same checkout UI and new JS while keeping old styles',()=>{
   for(const page of html){
     assert.match(page,/checkout-qris-unified\.css\?v=20261121-qris-checkout-v4/);
-    assert.match(page,/app\.js\?v=20261121-staging-login-fallback-1/);
+    assert.match(page,/app\.js\?v=20261122-member-desktop-nav-1/);
     assert.ok(page.indexOf('checkout-qris-unified.css')>page.indexOf('commission-experience-v2.css'));
   }
   assert.match(css,/@media\(max-width:680px\)/);

@@ -345,8 +345,8 @@ function renderNav(){
   if(orderLink)orderLink.hidden=!logged()||isAdmin();
   const moreButton=by('top-nav-trigger');
   if(moreButton){
-    moreButton.setAttribute('aria-label',logged()&&!isAdmin()?'Buka menu lainnya':'Buka navigasi utama');
-    moreButton.setAttribute('data-overflow-active',String(logged()&&!isAdmin()&&
+    moreButton.setAttribute?.('aria-label',logged()&&!isAdmin()?'Buka menu lainnya':'Buka navigasi utama');
+    moreButton.setAttribute?.('data-overflow-active',String(logged()&&!isAdmin()&&
       memberDesktopExtraRoutes.includes(state.route)));
   }
   by('page-label').textContent=screens[state.route]?.[0]||'Beranda';
