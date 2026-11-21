@@ -50,3 +50,10 @@ Status: NO-GO for live payments until gates below pass.
 - Latest source edits have been committed to GitHub main, but NOT YET confirmed synced into GAS. No backend deployment or public payment enabling authorized.
 - **Next step:** sync BOTH latest Code.gs and Diagnostics.gs into the same STAGING GAS project and save. Run diagnosticFinanceScenarios, diagnosticFinanceReadOnly, diagnosticReconciliationReadOnly. Expected reconciliation: existing historic order still needs review, with more precise reason codes; no automatic data mutation.
 - Operator must determine disposition of historic ADMIN commissions and order status only after independent evidence of payment/fulfillment.
+
+## Verified operator retest — 2026-11-21 10:43 local
+- Latest GAS editor diagnostics: `FINANCE_SCENARIOS_OK | cases=29 | mode=MEMORY_ONLY` (29 PASS), reported 10:42.
+- Latest GAS editor reconciliation: `RECONCILIATION_SUMMARY {"checked":2,"needs_review":1}` (reported 10:43).
+- Historical `ORD-STG-0001` remains `PAID`, flagged `TOPUP_PAID_LEDGER_POSTED_STATUS_REVIEW` and `COMMISSION_REFERRER_NOT_ELIGIBLE`. These are correct review flags, **not a reason to re-credit tokens or retroactively authorize a commission**.
+- The reconciliation diagnostics were read-only. Historical balances, referral links, commission and order status were not modified by this step.
+- Go-live remains **NO-GO**; payment feature remains OFF. Next verify infrastructure and DB integrity in STAGING editor, then update existing GAS deployment only after validation and authorized decision on historical anomaly.
