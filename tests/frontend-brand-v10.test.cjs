@@ -45,3 +45,21 @@ test('Studio AI preserved in public and member UI, with five-tab guest mobile na
   assert.match(app,/\['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'\]/);
   assert.match(app,/const guestNav=\['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'\]/);
 });
+
+test('V12 keeps role-specific menus, page missions and protected admin workspace',()=>{
+  assert.match(app,/const guestNav=\['beranda','katalog','ai','jasa','affiliate','belajar','dukungan'\]/);
+  assert.match(app,/const memberNav=\['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun'\]/);
+  assert.match(app,/const adminOnlyRoutes=new Set\(/);
+  assert.match(app,/const navRoutes=isAdmin\(\)\?\[\]:logged\(\)\?/);
+  assert.match(app,/const routeBlocked=adminOnlyRoutes\.has\(state\.route\)&&!isAdmin\(\)/);
+  assert.match(app,/const adminOutOfScope=isAdmin\(\)/);
+  assert.match(app,/memberMode:logged\(\)&&!isAdmin\(\)/);
+  assert.match(app,/showCampaign:!logged\(\)&&!isAdmin\(\)/);
+  assert.match(app,/RUANG MEMBER \/ BELANJA/);
+  assert.match(app,/PUSAT OPERASIONAL \/ ADMIN/);
+  assert.match(app,/RUANG MEMBER \/ PESANAN/);
+  assert.match(app,/register&&!registrationOtpEnabled\(\)/);
+  assert.match(styling,/data-app-role=guest/);
+  assert.match(styling,/data-app-role=member/);
+  assert.match(styling,/data-app-role=admin/);
+});
