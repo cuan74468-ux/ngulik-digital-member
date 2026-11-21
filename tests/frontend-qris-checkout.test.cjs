@@ -83,7 +83,7 @@ test('financial gate is independently closed in public, staging and backend',()=
 test('public and staging load the same checkout UI and new JS while keeping old styles',()=>{
   for(const page of html){
     assert.match(page,/checkout-qris-unified\.css\?v=20261121-qris-checkout-v4/);
-    assert.match(page,/app\.js\?v=20261121-quiet-home-v14-1/);
+    assert.match(page,/app\.js\?v=20261121-blueprint-v15-1/);
     assert.ok(page.indexOf('checkout-qris-unified.css')>page.indexOf('commission-experience-v2.css'));
   }
   assert.match(css,/@media\(max-width:680px\)/);
