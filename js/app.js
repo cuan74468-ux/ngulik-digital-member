@@ -992,13 +992,14 @@ function viewAffiliate(){
       '<h1>Bagikan manfaat.<br><span>Dapatkan komisi.</span></h1>'+
       '<p>Rekomendasikan produk digital yang sesuai kebutuhan teman. Komisi hanya tercatat untuk transaksi yang memenuhi ketentuan.</p>'+
       '<div class="partner-hero-actions">'+
-        '<button type="button" class="partner-btn partner-btn-primary" data-route="daftar">Gabung sebagai member '+icon('arrow')+'</button>'+
+        (registrationOtpEnabled()?'<button type="button" class="partner-btn partner-btn-primary" data-route="daftar">Daftar Member '+icon('arrow')+'</button>':
+        '<button type="button" class="partner-btn partner-btn-primary" data-route="katalog">Lihat Starter Pack '+icon('arrow')+'</button>')+
         '<button type="button" class="partner-btn partner-btn-outline" data-route="login">Sudah punya akun?</button>'+
       '</div><small>Gratis bergabung. Tidak ada jaminan penghasilan atau komisi untuk setiap klik.</small></header>'+
     '<section class="partner-steps-compact" aria-label="Cara kerja program komisi">'+
       [['01','Daftar','Buat akun member Ngulik Digital.'],
-       ['02','Bagikan','Salin tautan pribadi dan rekomendasikan produk.'],
-       ['03','Pantau','Lihat status komisi dari pembelian yang memenuhi syarat.']].map(x=>
+       ['02','Aktifkan','Beli Starter Pack dan tunggu verifikasi pembayaran.'],
+       ['03','Bagikan','Setelah aktif, bagikan tautan dan pantau komisi yang memenuhi syarat.']].map(x=>
         '<article class="partner-step-compact"><span>'+x[0]+'</span><div><h2>'+x[1]+'</h2><p>'+x[2]+'</p></div></article>').join('')+'</section>'+
     '<section class="partner-pick-products"><div><p class="partner-kicker">MULAI DARI PRODUK YANG COCOK</p>'+
       '<h2>Punya rekomendasi untuk teman?</h2>'+
@@ -1020,10 +1021,20 @@ function viewAffiliate(){
   if(!a)return '<section class="partner-member partner-member-empty"><p class="partner-kicker">DASHBOARD MEMBER</p>'+
     '<h1>Komisi saya</h1><p>Data komisi belum berhasil dimuat.</p>'+
     '<button type="button" class="partner-btn partner-btn-outline" data-affiliate-refresh>Coba lagi</button></section>';
-  const code=String(a.kode_referral||state.me?.kode_referral||'');
-  // Referrals must point to the canonical public site, never to staging.
+  // The backend decides membership status. Never reconstruct an unlocked
+  // referral link from a cached profile or from the browser query string.
+  const unlocked=a.mitra_aktif===true;
+  const code=unlocked?String(a.kode_referral||''):'';
   const referralBase='https://cuan74468-ux.github.io/ngulik-digital-member/';
-  const url=/^[A-Za-z0-9_-]{3,80}$/.test(code)?referralBase+'?ref='+encodeURIComponent(code):'';
+  const url=unlocked&&/^[A-Za-z0-9_-]{3,80}$/.test(code)&&
+    String(a.link||'')===referralBase+'?ref='+code?a.link:'';
+  if(!unlocked)return '<section class="partner-member partner-locked">'+
+    '<p class="partner-kicker">AKSES AJAK TEMAN</p><h1>Aktifkan link komisi Anda.</h1>'+
+    '<p>Starter Pack Rp15.000 membuka akses mitra seumur hidup, bonus 15 token AI, dan ruang kurasi. '+ 
+    'Komisi hanya berlaku untuk pembelian yang memenuhi ketentuan setelah pembayaran diverifikasi.</p>'+
+    '<button type="button" class="partner-btn partner-btn-primary" data-checkout-product="P-STARTER-15">Lihat Starter Pack '+icon('arrow')+'</button>'+
+    '<button type="button" class="partner-btn partner-btn-outline" data-route="katalog">Lihat Katalog</button>'+
+    '</section>';
   const ebookInvite=url?url+'&free=ebook':'';
   const classInvite=url?url+'&free=kelas':'';
   const all=Array.isArray(a.komisi)?a.komisi:[];
