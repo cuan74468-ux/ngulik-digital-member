@@ -38,7 +38,7 @@ test('unauthenticated public admin route never advertises administrator entry',(
  const html=p.elements.screen.innerHTML;
  assert.doesNotMatch(html,/data-route="admin-login"/);
  assert.doesNotMatch(html,/data-route="daftar"/);
- assert.match(html,/data-route="login"/);
+ assert.match(html,/data-route="beranda"/);
 });
 test('member login stays independent and fails closed',()=>{
  const p=preview('login'),html=p.elements.screen.innerHTML;
