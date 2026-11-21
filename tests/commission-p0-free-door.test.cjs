@@ -98,6 +98,7 @@ test('QRIS path configured but unverified image must keep payment gate closed',(
     assert.match(c,/qris-linggau-ai-studio\.svg/);
     assert.match(c,/qrisOwnerImageApproved:\s*false/);
   }
-  assert.match(app,/function mayarCheckoutEligible_\(\)\{[\s\S]*?return false/);
-  assert.match(app,/function scalevCheckoutFor_\(\)\{return null;/);
+  assert.match(app,/api\('createOrder',\{product_id:productId\}/);
+  assert.doesNotMatch(app,/api\('createMayarOrder'/);
+  assert.match(app,/const canConfirm=open&&paymentEnabled\(\)&&!financeBlocked&&officialQr/);
 });
