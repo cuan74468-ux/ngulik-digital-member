@@ -93,7 +93,10 @@ test('ADMIN can list orders but member PIN hash remains hidden in member list',(
   }
 });
 test('public referral does not reveal referred member full WhatsApp or PIN',()=>{
-  const h=fixture(),result=h.action('getPublicInfo','',{ref:'REF123'});
+  const h=fixture();
+  h.orders.push({order_id:'PAID-STARTER-M1',member_id:'M-1',
+    product_id:'P-STARTER-15',status:'FULFILLED'});
+  const result=h.action('getPublicInfo','',{ref:'REF123'});
   assert.equal(result.referrer,'Member');
   assert.equal(result.mode,'TERTUTUP');
   assert.equal(Object.hasOwn(result,'pin_hash'),false);
