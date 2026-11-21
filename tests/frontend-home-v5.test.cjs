@@ -52,6 +52,6 @@ test('homepage-only CSS preserves payment and account logic',()=>{
 
 test('both entrypoints load current homepage copy rather than cached 16 November module',()=>{
   assert.match(app,/Jasa Web, Aplikasi &amp; Video UMKM/);
-  assert.match(publicHtml,/js\/app\.js\?v=20261121-qris-checkout-v4/);
-  assert.match(stagingHtml,/js\/app\.js\?v=20261121-qris-checkout-v4/);
+  assert.match(publicHtml,/js\/app\.js\?v=20261121-purpose-v11-1/);
+  assert.match(stagingHtml,/js\/app\.js\?v=20261121-purpose-v11-1/);
 });
