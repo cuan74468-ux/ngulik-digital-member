@@ -79,5 +79,5 @@ test('affiliate dashboard prioritizes verified referral link and hides payout wh
   assert.match(section,/const canRequest=eligible>0&&isWriteEnabled\(\)&&config\.paymentsEnabled===true/);
   assert.match(section,/canRequest\?'<div class="partner-payout-form">/);
   assert.match(section,/Pencairan belum dibuka/);
-  assert.match(section,/partner-free-links/);
+  assert.doesNotMatch(section,/partner-free-links|ebookInvite|classInvite/); // Material links are member-learning only.
 });
