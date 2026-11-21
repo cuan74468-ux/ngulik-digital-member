@@ -211,3 +211,9 @@ body.ngd-public-app:not(#ngd) .ngd-auth-v10 .login-other-route{
   body.ngd-public-app:not(#ngd) .guest-brand strong{font-size:16px!important}
   body.ngd-public-app:not(#ngd) .ngd-auth-v10{padding:20px 17px!important}
 }
+
+/* Hero icon from the same transparent owner mark, never a teal tile. */
+body.ngd-public-app:not(#ngd) .ngd-floating-logo{
+ display:grid!important;place-items:center!important;overflow:visible!important;
+ background:transparent!important;border:0!important;box-shadow:none!important;
+}

@@ -43,7 +43,10 @@ test('unauthenticated public admin route never advertises administrator entry',(
 test('member login stays independent and fails closed',()=>{
  const p=preview('login'),html=p.elements.screen.innerHTML;
  assert.match(html,/data-mode="login"/);
- assert.match(html,/data-route="admin-login"/); // Separate optional Admin entry, not Member credentials.
+ assert.doesNotMatch(html,/data-route="admin-login"/); // Admin entry is direct/private.
+ assert.match(html,/id="login-otp"/);
+ assert.doesNotMatch(html,/id="pin"/);
+ assert.match(html,/Member tidak perlu membuat PIN/);
  assert.match(html,/data-route="daftar"/);
  assert.match(html,/type="submit" disabled/);
 });

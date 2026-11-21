@@ -1232,7 +1232,7 @@ function viewLogin(register=false,adminMode=false){
     '<h1>'+
     (adminMode?'Masuk sebagai Admin.':register?'Daftar akun.':'Masuk ke akun Anda.')+'</h1>'+
     '<p class="lead">'+
-    (adminMode?'Masuk dengan nomor WhatsApp administrator dan PIN enam angka.':
+    (adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':
       register?'Daftar dengan nomor WhatsApp. Verifikasi dilakukan melalui kode WhatsApp.':
       'Masukkan nomor WhatsApp dan kode OTP. Member tidak perlu membuat PIN.')+'</p>'+
     '<form id="auth-form" class="surface" data-mode="'+(adminMode?'admin':register?'register':'login')+'">'+
