@@ -10,7 +10,7 @@ const publicHtml=read('index.html'),stagingHtml=read('staging/member.html');
 
 test('guest and member use the same truthful product data and internal checkout',()=>{
   assert.match(app,/function viewPublicMarketplace\(list\)/);
-  assert.match(app,/const storefront=viewPublicMarketplace\(list\)/);
+  assert.match(app,/const storefront=viewPublicMarketplace\(list,\{showCampaign:!logged\(\)&&!isAdmin\(\),memberMode:logged\(\)&&!isAdmin\(\)\}\)/);
   assert.match(app,/window\.NGD_CONTENT_UI\?\.media\(state\.siteContent,'PRODUCT_IMAGE',p\.product_id/);
   assert.match(app,/rupiah\(p\.harga\)/);
   assert.match(app,/esc\(offerUiTitle_\(p\)\)/);
