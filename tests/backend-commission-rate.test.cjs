@@ -13,11 +13,14 @@ function fixture(rate,price=10000,eligible=true){
         product={product_id:'P1',tipe:'LISENSI_SEKALI',bisa_komisi:eligible},
         order={order_id:'O1',product_id:'P1',member_id:'BUYER',harga_dasar:price,_row:4};
   const writes=[],commissions=[],audits=[];
+  const sponsorStarter={order_id:'SPONSOR-STARTER',member_id:'SPONSOR',
+    product_id:'P-STARTER-15',status:'FULFILLED'};
   ctx.byId_=(table,key,id)=>table==='members'?(id==='BUYER'?member:id==='SPONSOR'?sponsor:null):
     table==='katalog_produk'?product:null;
   ctx.settings_=()=>({komisi_persen:rate,komisi_hanya_order_pertama:true,masa_tahan_hari:14});
   ctx.updateRow_=(name,row,patch)=>{writes.push({name,row,patch});};
-  ctx.findRows_=(name,predicate)=>name==='affiliate_commissions'?commissions.filter(predicate):[];
+  ctx.findRows_=(name,predicate)=>name==='affiliate_commissions'?
+    commissions.filter(predicate):name==='orders'?[sponsorStarter].filter(predicate):[];
   ctx.appendRow_=(name,obj)=>{assert.equal(name,'affiliate_commissions');commissions.push(obj);};
   ctx.logAudit_=(...args)=>audits.push(args);
   ctx.now_=()=>new Date('2026-11-14T00:00:00Z');
