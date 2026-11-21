@@ -128,7 +128,7 @@ test('an ordinary member is denied catalogue admin read and mutation routes',()=
 });
 
 test('new install seeds nine documented commercial offers, including 10-token topup',()=>{
-  const ids=[...backend.matchAll(/\['(P-(?:3IN1|POS|CANVA|TOKEN-10|KREDIT-50|KREDIT-150|KREDIT-400|VIDEO-AI|EBOOK))','/g)]
+  const ids=[...backend.matchAll(/\['(P-(?:3IN1|POS|INTEGRASI-GAS|TOKEN-10|TOKEN-35|TOKEN-100|STARTER-15|VIDEO-AI|EBOOK))','/g)]
     .map(m=>m[1]);
   assert.equal(ids.length,9);
   assert.equal(new Set(ids).size,9);
