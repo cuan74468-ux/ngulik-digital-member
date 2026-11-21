@@ -261,7 +261,9 @@ function renderNav(){
   by('desktop-nav').innerHTML=items.map(button).join('');
   // Four high-frequency destinations + a full, discoverable menu. The topbar
   // account button stays available on every viewport, including mobile.
-  const mobileItems=isAdmin()?['admin','produk','pesanan','lms','menu']:['beranda','ai','katalog','affiliate'];
+  const mobileItems=isAdmin()?['admin','produk','pesanan','lms','menu']:
+    logged()?['beranda','ai','katalog','affiliate']:
+    ['beranda','katalog','jasa','affiliate','dukungan'];
   const context=mobileNavRoute(state.route);
   const selectedMobile=mobileItems.includes(context)?context:'menu';
   by('mobile-nav').innerHTML=mobileItems.map(route=>
@@ -411,29 +413,86 @@ function viewHome(){
       '</div></section></div>'+
       (d.peringatan_kredit?'<div class="banner warning section-gap"><div><h3>Saldo Hampir Habis</h3><p>Isi saldo sebelum memakai alat AI.</p></div><button class="btn btn-secondary" data-route="ai">Lihat saldo</button></div>':'');
   }
-  // Quiet placeholder brand mark. Replace with the eventual 2D character later.
-  // No stairs, falling pixels, or narrative animations on the homepage.
-  const brandStage='<div class="ngd-journey-stage">'+
-    '<div class="ngd-floating-logo" role="img" aria-label="Logo Ngulik Digital"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></div>'+
-    '<span class="ngd-floating-shadow" aria-hidden="true"></span>'+
-    viewHeroFreeLinks_()+
-  '</div>';
-  const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal" aria-label="Ngulik Digital">'+
-    brandStage+
-    '<div class="public-hero-copy">'+
-      '<h1>Jasa Web, Aplikasi &amp; Video UMKM</h1>'+
-      '<p class="public-hero-lead">Terima beres, ringan di HP, tanpa biaya server bulanan.</p>'+
 
+  // The buyer-facing home is a compact digital storefront; no synthetic
+  // orders, prices, ratings or affiliate earnings are rendered here.
+  const curatedIds=['P-EBOOK','P-STARTER-15K','P-STARTER-15',
+    'P-3IN1','P-POS','P-VIDEO-AI','P-INTEGRASI-GAS'];
+  const curated=curatedIds.map(id=>(state.catalog||[]).find(p=>
+    String(p.product_id)===id&&!isPublicQaOffer_(p))).filter(Boolean);
+  const brandStage='<div class="ngd-journey-stage ngd-shop-brand-stage">'+
+    '<div class="ngd-floating-logo" role="img" aria-label="Logo resmi Ngulik Digital">'+
+    '<img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt=""></div>'+
+    '<span class="ngd-floating-shadow" aria-hidden="true"></span>'+
+    viewHeroFreeLinks_()+'</div>';
+  const hero='<section class="nh-hero public-editorial-hero pf-portfolio-hero pf-home-minimal ngd-shop-hero" aria-label="Marketplace Ngulik Digital">'+
+    '<div class="ngd-shop-hero-content">'+
+      '<p class="ngd-shop-kicker">MARKETPLACE PRODUK DIGITAL</p>'+
+      '<div class="public-hero-copy">'+
+        '<h1>Belajar, Berkarya, dan <em>Ngulik Bareng AI</em></h1>'+
+        '<p class="public-hero-lead">eBook, paket belajar, aplikasi usaha, video AI, dan integrasi praktis untuk UMKM.</p>'+
+        '<p class="ngd-shop-service-keywords">Jasa Web, Aplikasi &amp; Video UMKM</p>'+
+      '</div>'+
+      '<div class="ngd-shop-hero-actions">'+
+        '<button type="button" class="ngd-shop-yellow-btn" data-route="katalog">Jelajahi Produk '+icon('arrow')+'</button>'+
+        '<button type="button" class="ngd-shop-outline-btn" data-route="daftar">Daftar Member</button>'+
+      '</div>'+
+      brandStage+
+    '</div>'+
+    '<div class="ngd-shop-hero-art" aria-hidden="true">'+
+      '<img src="'+esc(ngdLocalArtSrc_('hero'))+'" alt="" decoding="async" fetchpriority="high">'+
     '</div>'+
   '</section>';
-  // Show one consistent logo-led hero on both PC and phone.
-  // Published home CMS banners remain stored but do not replace this hero.
-  return '<div class="nh-home nh-home-minimal">'+hero+viewHomeServices_()+'</div>';
+  const trust='<section class="ngd-shop-trust" aria-label="Informasi layanan">'+[
+    ['spark','Produk digital','Lihat rincian produk sebelum membeli'],
+    ['shield','QRIS DANA Bisnis',config.paymentsEnabled&&config.qrisOwnerImageApproved?'Verifikasi pembayaran oleh admin':'Aktif setelah verifikasi merchant'],
+    ['users','Program afiliasi','Komisi hanya untuk referral yang sah'],
+    ['clock','Bantuan member','Riwayat order dan dukungan']
+  ].map(x=>'<div class="ngd-shop-trust-item">'+
+    '<span class="ngd-shop-trust-icon">'+icon(x[0])+'</span>'+
+    '<div><strong>'+esc(x[1])+'</strong><small>'+esc(x[2])+'</small></div>'+
+    '</div>').join('')+'</section>';
+  const showcase='<section class="ngd-shop-featured" aria-label="Pilihan produk digital">'+
+    '<header class="ngd-shop-featured-head"><div><span>PRODUK PILIHAN</span>'+
+    '<h2>Temukan solusi digital untuk usaha Anda</h2></div>'+
+    '<button type="button" data-route="katalog">Lihat Semua Produk '+icon('arrow')+'</button></header>'+
+    viewPublicMarketplace(curated)+'</section>';
+  const signup='<section class="ngd-shop-signup" aria-label="Keanggotaan Ngulik Digital">'+
+    '<div><strong>Jadi Member Ngulik Digital Sekarang!</strong>'+
+    '<p>Belajar, akses produk digital, dan ikuti program afiliasi sesuai syarat.</p></div>'+
+    '<button type="button" data-route="daftar">Daftar Member '+icon('arrow')+'</button>'+
+    '</section>';
+  return '<div class="nh-home nh-home-minimal ngd-shop-home">'+
+    hero+trust+showcase+viewHomeServices_()+signup+'</div>';
 }
 const offerCategories=[
-  ['semua','Semua'],['ai','Token AI'],['aplikasi','Aplikasi'],
-  ['jasa','Jasa & Seat'],['belajar','Ebook & Kelas']
+  ['semua','Semua Produk'],['belajar','eBook & Panduan'],
+  ['starter','Paket Starter'],['aplikasi','Sistem & Aplikasi'],
+  ['video','Video & AI'],['integrasi','Integrasi & Otomasi'],
+  ['ai','Token AI'],['jasa','Layanan']
 ];
+function ngdOfferInCategory_(p,category) {
+  const id=String(p.product_id||'').toUpperCase();
+  if(category==='starter')return id.startsWith('P-STARTER');
+  if(category==='video')return id==='P-VIDEO-AI'||id.includes('VIDEO');
+  if(category==='integrasi')return id.startsWith('P-INTEGRASI');
+  return category==='semua'||offerCategory(p)===category;
+}
+function ngdOfferCategoryLabel_(p){
+  const id=String(p.product_id||'').toUpperCase();
+  return id.startsWith('P-STARTER')?'Paket Starter':
+    id==='P-VIDEO-AI'?'Video & AI':
+    id.startsWith('P-INTEGRASI')?'Integrasi & Otomasi':
+    id==='P-POS'?'Sistem POS':offerCategoryLabel(p);
+}
+function ngdCommissionLabel_(p){
+  if(p.bisa_komisi!==true)return '';
+  const fixed=Number(p.komisi_nominal_tetap||0);
+  if(Number.isSafeInteger(fixed)&&fixed>0)return 'Komisi '+rupiah(fixed);
+  const percent=Number(p.komisi_persen||0);
+  return Number.isInteger(percent)&&percent>0&&percent<=50?
+    'Komisi '+percent+'%':'';
+}
 const supportedSaleTypes=new Set(['LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','TOPUP_TOKEN','TOPUP_KREDIT','PRODUK_DIGITAL','JASA_SEKALI']);
 function offerCategory(p){
   switch(String(p.tipe||'')){
@@ -486,20 +545,20 @@ function viewPublicMarketplace(list){
   const category=state.catalogFilter||'semua';
   const search=String(state.marketplaceSearch||'').trim().toLocaleLowerCase('id-ID');
   const sort=state.marketplaceSort||'default';
-  let shown=publicList.filter(p=>(category==='semua'||offerCategory(p)===category)&&
+  let shown=publicList.filter(p=>ngdOfferInCategory_(p,category)&&
     (!search||String(p.nama||'').toLocaleLowerCase('id-ID').includes(search)||
       String(p.deskripsi||'').toLocaleLowerCase('id-ID').includes(search)||
-      offerCategoryLabel(p).toLocaleLowerCase('id-ID').includes(search)));
+      ngdOfferCategoryLabel_(p).toLocaleLowerCase('id-ID').includes(search)));
   // Prices may arrive as "Rp99.000" from Sheets; sort with the same safe parser used by checkout.
   if(sort==='price-asc')shown=[...shown].sort((a,b)=>(moneyValue(a.harga)??Number.POSITIVE_INFINITY)-(moneyValue(b.harga)??Number.POSITIVE_INFINITY));
   if(sort==='price-desc')shown=[...shown].sort((a,b)=>(moneyValue(b.harga)??Number.NEGATIVE_INFINITY)-(moneyValue(a.harga)??Number.NEGATIVE_INFINITY));
   if(sort==='name')shown=[...shown].sort((a,b)=>String(a.nama||'').localeCompare(String(b.nama||''),'id'));
   const banner=window.NGD_CONTENT_UI?.hero(state.siteContent,'catalog')||
     '<section class="market-hero-fallback" aria-label="Selamat datang di marketplace Ngulik Digital">'+
-      '<div class="market-hero-content"><span class="market-eyebrow">PRODUK & JASA NGULIK DIGITAL</span>'+
-      '<h2>Solusi digital untuk usaha Anda</h2>'+
-      '<p>Temukan alat, aplikasi, dan layanan sesuai kebutuhan.</p>'+
-      '<button type="button" class="market-hero-link" data-route="belajar">Mulai belajar '+icon('arrow')+'</button>'+
+      '<div class="market-hero-content"><span class="market-eyebrow">NGULIK DIGITAL MEMBER</span>'+
+      '<h2>Belajar, Berkarya, dan Ngulik Bareng AI</h2>'+
+      '<p>Solusi digital, eBook, aplikasi, dan jasa praktis untuk UMKM.</p>'+
+      '<button type="button" class="market-hero-link" data-route="daftar">Daftar Member '+icon('arrow')+'</button>'+
       '</div><div class="market-hero-symbol" aria-hidden="true"><img class="ngd-brand-image" src="'+esc(brandLogoSrc_())+'" alt="">'+
       '<div class="ngd-market-hero-products">'+
       '<img src="'+esc(ngdLocalArtSrc_('bundle'))+'" alt="" decoding="async">'+
@@ -509,7 +568,7 @@ function viewPublicMarketplace(list){
   const filterBar='<div class="market-categories" role="group" aria-label="Jelajahi kategori produk">'+
     offerCategories.map(([id,label])=>'<button type="button" class="catalog-filter market-category" data-catalog-filter="'+esc(id)+
       '" aria-pressed="'+(id===category?'true':'false')+'"><span class="market-category-icon" aria-hidden="true">'+
-      ({semua:'✦',ai:'✳',aplikasi:'▣',jasa:'◈',belajar:'▤'}[id]||'•')+'</span>'+esc(label)+'</button>').join('')+'</div>';
+      ({semua:'▦',ai:'✦',aplikasi:'▣',jasa:'◈',belajar:'▤',starter:'↗',video:'▷',integrasi:'⌘'}[id]||'•')+'</span>'+esc(label)+'</button>').join('')+'</div>';
   const controls='<div class="market-toolbar"><label class="market-search-wrap" for="market-search">'+
     '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>'+
     '<input id="market-search" type="search" placeholder="Cari produk atau jasa..." autocomplete="off" value="'+esc(state.marketplaceSearch||'')+'" aria-label="Cari produk digital">'+
@@ -522,8 +581,10 @@ function viewPublicMarketplace(list){
     const price=moneyValue(p.harga);
     // Every catalog item opens the same internal checkout details first.
     // No WhatsApp commerce CTA, no direct money movement on card click.
-    const action='<button type="button" class="market-product-action" data-checkout-product="'+idSafe(p.product_id)+'">'+
-      (price===0?'Lihat akses gratis':'Lihat checkout')+' '+icon('arrow')+'</button>';
+    const action='<div class="ngd-card-actions">'+
+      '<button type="button" class="ngd-card-detail" data-checkout-product="'+idSafe(p.product_id)+'">Detail</button>'+
+      '<button type="button" class="market-product-action" data-checkout-product="'+idSafe(p.product_id)+'">'+
+      (price===0?'Akses Gratis':'Beli Sekarang')+' '+icon('arrow')+'</button></div>';
     // Optional short badge is owned by the published PRODUCT_IMAGE CMS entry.
     // Long descriptions are never converted into tiny marketing labels.
     const imageEntry=window.NGD_CONTENT_UI?.published(state.siteContent,'PRODUCT_IMAGE',p.product_id)?.[0];
@@ -537,19 +598,22 @@ function viewPublicMarketplace(list){
       (Number(p.durasi_hari)>0?'<span>'+esc(Number(p.durasi_hari))+' hari akses</span>':'');
     const cover=window.NGD_CONTENT_UI?.media(state.siteContent,'PRODUCT_IMAGE',p.product_id,'market-product-image',offerUiTitle_(p));
     const fallbackCover=ngdProductImageFallback_(p,kind);
+    const commissionLabel=ngdCommissionLabel_(p);
     return '<article class="market-product-card" data-market-kind="'+esc(kind)+'" aria-label="'+esc(offerUiTitle_(p))+'">'+
       '<div class="market-product-media market-media-'+esc(kind)+'">'+
         (cover||fallbackCover)+
         (badge?'<span class="market-product-badge">'+esc(badge)+'</span>':'')+
         '<span class="market-product-category">'+esc(offerCategoryLabel(p))+'</span>'+
       '</div><div class="market-product-body">'+
-        '<span class="market-product-merchant">'+esc(offerCategoryLabel(p))+'</span>'+
+        '<span class="market-product-merchant">'+esc(ngdOfferCategoryLabel_(p))+'</span>'+
         '<h3>'+esc(offerUiTitle_(p))+'</h3>'+
         '<p class="market-product-description">'+esc(offerUiDescription_(p)||'Lihat pilihan produk digital kami.')+'</p>'+
         (benefits?'<div class="market-product-benefits">'+benefits+'</div>':'')+
         '<div class="market-product-bottom"><span class="market-product-price-label">Harga</span>'+
-        '<strong class="market-product-price">'+(price===0?'Gratis':price!==null&&price>0?rupiah(p.harga):'Tanya harga')+'</strong>'+
-        action+'</div>'+
+        '<div class="ngd-market-price-row"><strong class="market-product-price">'+
+          (price===0?'Gratis':price!==null&&price>0?rupiah(p.harga):'Harga belum tersedia')+'</strong>'+
+          (commissionLabel?'<span class="ngd-market-commission">'+esc(commissionLabel)+'</span>':'')+
+        '</div>'+action+'</div>'+
       '</div></article>';
   }).join('');
   return '<div class="market-page">'+
@@ -559,7 +623,7 @@ function viewPublicMarketplace(list){
     '<div class="market-banner-shell">'+banner+'</div>'+
     '<section class="market-shopping" aria-label="Belanja produk digital">'+
       controls+filterBar+
-      '<div class="market-results-header"><h2>Jelajahi pilihan</h2><span aria-live="polite">'+shown.length+' dari '+publicList.length+' produk</span>'+
+      '<div class="market-results-header"><h2>Produk Unggulan</h2><span aria-live="polite">'+shown.length+' dari '+publicList.length+' produk</span>'+
       '<button type="button" class="market-refresh" data-market-refresh aria-label="Perbarui katalog">Perbarui</button></div>'+
       (cards?'<div class="market-product-grid">'+cards+'</div>':
         '<div class="market-no-results"><h3>Produk Tidak Ditemukan</h3><p>Coba kata kunci atau kategori lain.</p>'+
