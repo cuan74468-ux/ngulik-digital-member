@@ -83,6 +83,10 @@ const screens={
 };
 const guestNav=['beranda','katalog','jasa','dukungan'];
 const memberNav=['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun'];
+// One native navigation system on phones: four primary tabs plus a More sheet.
+// The existing header nav remains available on wide screens only.
+const memberDockRoutes=['beranda','katalog','ai','pesanan'];
+const memberExtraRoutes=['jasa','belajar','affiliate','dukungan','akun'];
 const adminOnlyRoutes=new Set(['admin','konten','produk','layanan','lms','lms-editor','lms-lesson','lms-ai','member','antrean','pengaturan']);
 const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
 const adminContextRoute=(route)=>({
@@ -280,8 +284,7 @@ function renderNav(){
   // navigation surface, never a fixed bottom bar or a duplicated Menu page.
   const drawer=by('top-nav-drawer');
   if(drawer){
-    const routes=isAdmin()?adminNav:logged()?
-      ['beranda','katalog','jasa','ai','belajar','affiliate','pesanan']:guestNav;
+    const routes=isAdmin()?adminNav:logged()?memberExtraRoutes:guestNav;
     const names={beranda:logged()&&!isAdmin()?'Beranda Member':'Beranda',
       katalog:'Katalog',ai:'Studio AI',jasa:'Jasa',belajar:'Akses & Kelas',
       affiliate:'Ajak Teman',pesanan:'Pesanan',
@@ -332,6 +335,23 @@ function renderNav(){
     if(btn.dataset?.route===state.route)btn.setAttribute('aria-current','page');
     else btn.removeAttribute('aria-current');
   });
+  const memberDock=by('member-mobile-nav');
+  if(memberDock){
+    const active=logged()&&!isAdmin();
+    memberDock.hidden=!active;
+    memberDock.innerHTML=active?
+      memberDockRoutes.map(route=>
+        '<button type="button" class="ngdm-dock-button" data-route="'+route+'" '+
+        (state.route===route||route==='ai'&&state.route==='ai-tool'?
+          'aria-current="page"':'')+'>'+
+        icon(screens[route][1])+'<span>'+esc(route==='ai'?'Studio AI':screens[route][0])+'</span></button>'
+      ).join('')+
+      '<button type="button" id="member-more-toggle" class="ngdm-dock-button" '+
+        'aria-controls="top-nav-drawer" aria-expanded="'+
+        String(drawer&&!drawer.hidden)+'" '+
+        (memberExtraRoutes.includes(state.route)?'aria-current="page"':'')+'>'+
+        icon('grid')+'<span>Lainnya</span></button>':'';
+  }
 }
 const empty=(heading,message,action='',label='Masuk')=>
   '<div class="empty"><span class="symbol">◌</span><h3>'+esc(heading)+'</h3><p>'+esc(message)+'</p>'+
@@ -3470,11 +3490,22 @@ document.addEventListener('keydown',e=>{
     if(drawer&&!drawer.hidden){
       drawer.hidden=true;
       by('top-nav-trigger')?.setAttribute('aria-expanded','false');
-      by('top-nav-trigger')?.focus();
+      const more=by('member-more-toggle');
+      if(more){more.setAttribute('aria-expanded','false');more.focus();}
+      else by('top-nav-trigger')?.focus();
     }
   }
 });
 document.addEventListener('click',async(e)=>{
+  const more=e.target.closest?.('#member-more-toggle');
+  if(more&&logged()&&!isAdmin()){
+    const drawer=by('top-nav-drawer'),open=drawer?.hidden===true;
+    if(drawer)drawer.hidden=!open;
+    more.setAttribute('aria-expanded',String(open));
+    by('top-nav-trigger')?.setAttribute('aria-expanded','false');
+    if(open)drawer?.querySelector('button')?.focus();
+    return;
+  }
   const trigger=e.target.closest?.('#top-nav-trigger');
   if(trigger){
     const drawer=by('top-nav-drawer'),open=drawer?.hidden===true;
@@ -3486,9 +3517,11 @@ document.addEventListener('click',async(e)=>{
   if(e.target.closest?.('#top-nav-drawer [data-route]')){
     const drawer=by('top-nav-drawer');if(drawer)drawer.hidden=true;
     by('top-nav-trigger')?.setAttribute('aria-expanded','false');
+    by('member-more-toggle')?.setAttribute('aria-expanded','false');
   }else if(!e.target.closest?.('#top-nav-drawer')){
     const drawer=by('top-nav-drawer');if(drawer)drawer.hidden=true;
     by('top-nav-trigger')?.setAttribute('aria-expanded','false');
+    by('member-more-toggle')?.setAttribute('aria-expanded','false');
   }
   const affiliateAction=e.target.closest?.('[data-affiliate-refresh],[data-affiliate-payout]');
   if(affiliateAction){
