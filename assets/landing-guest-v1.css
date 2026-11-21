@@ -145,7 +145,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 :focus-visibl
 @media(max-width:600px){
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero{min-height:0;padding:24px 18px 155px;border-radius:18px;align-items:flex-start}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero-copy{max-width:100%;width:100%;gap:11px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::before{inset:0;height:auto;background-position:88% 58%;background-size:cover;opacity:1;-webkit-mask-image:none;mask-image:none}
+  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::before{inset:0;height:auto;background-position:98% 49%;background-size:cover;opacity:1;-webkit-mask-image:none;mask-image:none}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::after{background:linear-gradient(180deg,#161238 0%,rgba(22,18,56,.98) 38%,rgba(22,18,56,.87) 58%,rgba(22,18,56,.38) 78%,rgba(22,18,56,.03) 100%)}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-eyebrow{font-size:9px;letter-spacing:.07em}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero h1{font-size:clamp(29px,8.1vw,37px)!important;line-height:1.13!important;max-width:18ch}
