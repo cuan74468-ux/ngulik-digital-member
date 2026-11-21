@@ -113,7 +113,7 @@ test('catalogue modification uses master server-side mutation gate',()=>{
   assert.match(backend,/'adminListCatalog'/);
   const config=read('config.js');
   assert.match(config,/catalogEnabled:\s*true/);
-  assert.match(config,/memberWritesEnabled:\s*true/);
+  assert.match(config,/memberWritesEnabled:\s*false/);
   assert.match(config,/paymentsEnabled:\s*false/);
   assert.doesNotMatch(catalog,/\bMailApp\b|\bUrlFetchApp\b|\bGmailApp\b/);
 });
