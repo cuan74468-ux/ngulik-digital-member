@@ -1,0 +1,186 @@
+/* V16 P0: Unified top navigation + mobile layout integrity.
+ * Loaded last, after all historical themes. Does not touch payment, auth, ledger.
+ * Topbar controls/drawer replace bottom navigation in all roles.
+ */
+*,*::before,*::after{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:clip}
+body.ngd-public-app{min-width:0!important;overflow-x:clip!important}
+body.ngd-public-app .app-shell{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important}
+body.ngd-public-app .sidebar,body.ngd-public-app #mobile-nav,
+body.ngd-public-app .mobile-nav{display:none!important}
+body.ngd-public-app .workarea{min-width:0!important;width:100%!important;max-width:100%!important}
+body.ngd-public-app .main-content,
+body.ngd-public-app #screen,
+body.ngd-public-app .ngd-member-home,
+body.ngd-public-app .ngd-member-catalog,
+body.ngd-public-app .ngd-member-services{
+  min-width:0!important;max-width:100%!important;box-sizing:border-box!important
+}
+body.ngd-public-app .main-content{width:min(100%,1390px)!important;margin-inline:auto!important;overflow:visible}
+body.ngd-public-app .topbar{
+  position:sticky!important;top:0!important;z-index:105!important;
+  width:100%!important;max-width:100%!important;background:#fff!important;
+  border-bottom:1px solid #e8e3ee!important;
+  box-shadow:0 2px 11px rgba(29,21,51,.03)!important;isolation:isolate
+}
+body.ngd-public-app[data-app-role=admin] .topbar .guest-brand{
+  display:flex!important;min-width:0!important
+}
+body.ngd-public-app .top-actions{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important;flex:0 0 auto}
+body.ngd-public-app .top-nav-trigger,
+body.ngd-public-app .top-header-order{
+  display:inline-grid!important;place-items:center;flex:0 0 42px;
+  min-width:42px;min-height:42px;padding:8px;border-radius:11px;
+  color:#282045;background:#fff;border:1px solid #e4dced;cursor:pointer
+}
+body.ngd-public-app .top-nav-trigger:hover,
+body.ngd-public-app .top-header-order:hover{background:#f5f1fc}
+body.ngd-public-app .top-header-token{
+  display:inline-flex;align-items:center;white-space:nowrap;
+  padding:7px 10px;min-height:34px;border-radius:999px;
+  background:#f0ecfa;color:#4a2a9c;font-size:12px;font-weight:800
+}
+body.ngd-public-app :is(.top-header-token,.top-header-order)[hidden]{display:none!important}
+body.ngd-public-app .top-nav-drawer{
+  position:fixed;z-index:110;top:clamp(64px,6vw,82px);right:clamp(8px,2vw,24px);
+  width:min(360px,calc(100vw - 16px));max-height:calc(100dvh - 80px);
+  overflow-y:auto;overscroll-behavior:contain;padding:15px;
+  background:#fff;color:#24213a;border:1px solid #e6dff0;
+  border-radius:16px;box-shadow:0 20px 60px rgba(29,18,62,.19)
+}
+body.ngd-public-app .top-nav-drawer[hidden]{display:none!important}
+body.ngd-public-app .top-nav-drawer-label{
+  margin:5px 9px 11px;color:#766991;font-size:10px;font-weight:850;letter-spacing:.12em
+}
+body.ngd-public-app .top-nav-drawer nav{display:grid;grid-template-columns:1fr;gap:2px}
+body.ngd-public-app .top-nav-drawer button{
+  appearance:none;border:0;display:flex;justify-content:space-between;
+  align-items:center;text-align:left;gap:10px;min-height:46px;
+  padding:10px 12px;border-radius:10px;color:#292340;
+  background:transparent;font-weight:700;font-size:14px;cursor:pointer
+}
+body.ngd-public-app .top-nav-drawer button svg{width:16px;height:16px;flex:none}
+body.ngd-public-app .top-nav-drawer button[aria-current="page"]{color:#5025b5;background:#f1eafa}
+body.ngd-public-app .top-nav-drawer button:hover{background:#f4f1fa}
+body.ngd-public-app .top-nav-drawer .top-nav-drawer-signout{
+  width:100%;margin-top:10px;border-top:1px solid #ebe6f0;border-radius:0;color:#5534a1
+}
+body.ngd-public-app .topbar #guest-nav{margin-inline:auto;min-width:0}
+body.ngd-public-app .main-content{padding-bottom:clamp(40px,6vw,78px)!important}
+/* Explicit light-surface contrast; never white ink over pale panels. */
+body.ngd-public-app[data-app-role=member] .ngd-member-home .ngd-member-hero{
+  display:block!important;min-height:0!important;width:100%!important;
+  border-radius:17px!important;padding:clamp(19px,3vw,32px)!important;
+  color:#22203b!important;background:#f7f5fc!important;background-image:none!important;
+  border:1px solid #e8e2f1!important;box-shadow:none!important;overflow:visible!important
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-hero .ngd-member-hero-copy{
+  width:100%!important;max-width:100%!important;padding:0!important;color:#22203b!important
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-hero .eyebrow{color:#6942a2!important}
+body.ngd-public-app[data-app-role=member] .ngd-member-hero h1,
+body.ngd-public-app[data-app-role=member] .ngd-member-hero h1 .accent{
+  color:#231f3c!important;-webkit-text-fill-color:#231f3c!important;
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-hero .lead{
+  color:#565069!important;-webkit-text-fill-color:#565069!important
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-status{
+  color:#22543b!important;background:#e8f6ec!important;
+  border:1px solid #b8dfc5!important
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-hero-actions .btn-secondary{
+  color:#50328f!important;background:#fff!important;border-color:#cfc2e5!important
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-hero-actions .btn-primary{
+  color:#fff!important;background:#5429b9!important;border-color:#5429b9!important
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading{
+  background:#fff!important;background-image:none!important;color:#252139!important;
+  border-bottom:1px solid #e8e3ef!important
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading h1,
+body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading p{
+  color:#28243d!important;-webkit-text-fill-color:#28243d!important
+}
+body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading .eyebrow{
+  color:#624196!important;-webkit-text-fill-color:#624196!important
+}
+/* Constrain deep nested catalog grids and flex rows at the source. */
+body.ngd-public-app :is(.market-shopping,.market-header,.market-product-grid,
+.market-products,.market-toolbar,.market-product-card,.market-product-media,
+.market-catalog,.ngd-menu-grid,.ngd-member-page-intro,.ngd-member-stats,
+.service-columns,.service-heading,.topbar,.top-actions) {min-width:0;max-width:100%}
+body.ngd-public-app :is(.market-shopping,.ngd-member-catalog,.ngd-menu-grid,
+.ngd-member-home,.ngd-member-services) :is(h1,h2,h3,p,strong,small){
+  overflow-wrap:anywhere;word-break:normal
+}
+body.ngd-public-app .market-shopping .market-product-card{width:100%;min-width:0}
+body.ngd-public-app .market-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+body.ngd-public-app .market-toolbar > *{min-width:0}
+body.ngd-public-app .market-filter-scroll,
+body.ngd-public-app .market-category-filters{
+  display:flex;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-inline:contain;
+  -webkit-overflow-scrolling:touch;scrollbar-width:thin
+}
+@media(max-width:980px){
+  body.ngd-public-app .topbar #guest-nav,
+  body.ngd-public-app .topbar .ngd-header-search,
+  body.ngd-public-app .topbar .mode-indicator,
+  body.ngd-public-app .topbar .guest-login,
+  body.ngd-public-app .topbar .ngd-header-register,
+  body.ngd-public-app .topbar .breadcrumb,
+  body.ngd-public-app .topbar .mobile-back,
+  body.ngd-public-app .topbar #account-button{display:none!important}
+  body.ngd-public-app .topbar{height:64px!important;min-height:64px!important;padding:6px 12px!important;gap:6px!important}
+  body.ngd-public-app .topbar .guest-brand{
+    display:flex!important;flex:1 1 auto!important;min-width:0!important;max-width:none!important
+  }
+  body.ngd-public-app .topbar .guest-brand-icon{
+    width:36px!important;height:36px!important;min-width:36px!important;flex-basis:36px!important
+  }
+  body.ngd-public-app .topbar .guest-brand strong{
+    font-size:clamp(14px,4vw,18px)!important;letter-spacing:-.04em!important
+  }
+  body.ngd-public-app .topbar .guest-brand small{display:none!important}
+  body.ngd-public-app .topbar .top-actions{gap:5px!important}
+  body.ngd-public-app .top-header-token{
+    font-size:10px;padding:5px 7px;min-height:28px;max-width:75px;overflow:hidden;white-space:nowrap
+  }
+  body.ngd-public-app .top-nav-drawer{top:67px;right:8px;max-height:calc(100dvh - 76px)}
+  body.ngd-public-app .main-content{
+    width:100%!important;padding:18px clamp(12px,4vw,24px) 42px!important
+  }
+  body.ngd-public-app .ngd-member-home .ngd-member-hero h1{font-size:clamp(23px,6vw,34px)!important;line-height:1.18!important}
+  body.ngd-public-app .ngd-member-stats{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important
+  }
+  body.ngd-public-app .ngd-member-stats>*{
+    width:100%;min-width:0;min-height:122px!important;padding:14px!important
+  }
+  body.ngd-public-app .ngd-member-shortcut-grid{
+    display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important
+  }
+  body.ngd-public-app .ngd-member-shortcut-grid>*{min-width:0;width:100%!important}
+  body.ngd-public-app .market-product-grid,
+  body.ngd-public-app .market-product-list{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;width:100%!important
+  }
+  body.ngd-public-app .ngd-menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:390px){
+  body.ngd-public-app .main-content{padding-inline:12px!important}
+  body.ngd-public-app .top-nav-trigger,body.ngd-public-app .top-header-order{
+    min-width:38px;min-height:40px;flex-basis:38px;padding:6px
+  }
+  body.ngd-public-app .ngd-member-stats>*{padding:12px!important}
+  body.ngd-public-app .market-product-grid{gap:9px!important}
+}
+@media(max-width:335px){
+  body.ngd-public-app .topbar .guest-brand strong{font-size:14px!important}
+  body.ngd-public-app .top-header-token{max-width:55px}
+  body.ngd-public-app .market-product-grid{grid-template-columns:minmax(0,1fr)!important}
+}
+@media(prefers-reduced-motion:reduce){
+  body.ngd-public-app .top-nav-drawer{scroll-behavior:auto}
+}
