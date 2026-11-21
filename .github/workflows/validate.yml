@@ -137,37 +137,29 @@ jobs:
             echo 'ERROR: internal development banner leaked to public page' >&2
             exit 1
           fi
+          # V16 top-only navigation, real member dashboard and role-aware drawer.
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member" > /tmp/ngd-member.html 2>>/tmp/ngd-chrome.log
-          echo 'MEMBER_BROWSER_PROBE:'
-          grep -Eo 'data-app-role="[^"]*"|class="member-welcome"|RUANG MEMBER / AKTIVITAS SAYA|DOMPET TOKEN UNIVERSAL|data-overflow="[^"]*"|data-floating-nav="[^"]*"|data-mobile-nav="[^"]*"|data-v2-cascade="[^"]*"' /tmp/ngd-member.html | tail -14 || true
-          grep -q 'RUANG MEMBER / AKTIVITAS SAYA' /tmp/ngd-member.html
-          # The accessible wallet heading is title-case in the actual member UI.
-          # Check the rendered semantic element, not an obsolete uppercase copy.
-          grep -q 'class="wallet-hero" aria-label="Dompet Token Universal"' /tmp/ngd-member.html
-          grep -q 'class="ngd-member-home"' /tmp/ngd-member.html
+          grep -q 'class="ngd-member-home ngd-member-command"' /tmp/ngd-member.html
           grep -q 'class="member-welcome ngd-member-hero"' /tmp/ngd-member.html
-          grep -q 'class="ngd-member-shortcut-grid"' /tmp/ngd-member.html
+          grep -q 'aria-label="Dompet Token Universal"' /tmp/ngd-member.html
+          grep -q 'class="ngd-member-stats"' /tmp/ngd-member.html
+          grep -q 'class="ngd-member-activity"' /tmp/ngd-member.html
+          grep -q 'id="top-nav-trigger"' /tmp/ngd-member.html
+          grep -q 'id="top-nav-drawer"' /tmp/ngd-member.html
+          grep -q 'data-route="pesanan"' /tmp/ngd-member.html
+          if grep -q 'id="mobile-nav"' /tmp/ngd-member.html; then
+            echo 'MOBILE_P0_FAIL: deprecated bottom navigation in DOM' >&2; exit 1
+          fi
           grep -q 'data-overflow="false"' /tmp/ngd-member.html
-          grep -q 'data-native-member-nav="true"' /tmp/ngd-member.html
-          grep -q 'data-mobile-nav="true"' /tmp/ngd-member.html
-          grep -q 'data-v2-cascade="true"' /tmp/ngd-member.html
-          # Member uses five primary native tabs; the 9-route menu keeps secondary features discoverable.
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
-            "http://127.0.0.1:8765/?preview=member#menu" > /tmp/ngd-member-menu.html 2>>/tmp/ngd-chrome.log
-          grep -q 'data-menu-items="9"' /tmp/ngd-member-menu.html
-          grep -q 'data-guidance-visible="true"' /tmp/ngd-member-menu.html
-          grep -q 'data-overflow="false"' /tmp/ngd-member-menu.html
-          grep -q 'data-v2-cascade="true"' /tmp/ngd-member-menu.html
-          grep -q 'data-route="affiliate"' /tmp/ngd-member-menu.html
-          grep -q 'data-route="dukungan"' /tmp/ngd-member-menu.html
-          run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
-            "http://127.0.0.1:8765/?preview=admin#menu" > /tmp/ngd-admin-menu.html 2>>/tmp/ngd-chrome.log
-          grep -q 'data-menu-items="12"' /tmp/ngd-admin-menu.html
-          grep -q 'data-guidance-visible="true"' /tmp/ngd-admin-menu.html
-          grep -q 'data-overflow="false"' /tmp/ngd-admin-menu.html
-          grep -q 'data-route="pengaturan"' /tmp/ngd-admin-menu.html
-          echo 'MOBILE_MENU_QA_OK: 9 member routes and 12 admin modules discoverable, no overflow'
+            "http://127.0.0.1:8765/?preview=admin#pengaturan" > /tmp/ngd-admin-drawer.html 2>>/tmp/ngd-chrome.log
+          grep -q 'id="top-nav-drawer"' /tmp/ngd-admin-drawer.html
+          grep -q 'data-route="pengaturan"' /tmp/ngd-admin-drawer.html
+          if grep -q 'id="mobile-nav"' /tmp/ngd-admin-drawer.html; then
+            echo 'MOBILE_P0_FAIL: admin bottom tabs' >&2; exit 1
+          fi
+          echo 'TOP_ONLY_NAV_QA_OK: member and admin have a single header drawer'
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#katalog" > /tmp/ngd-catalog.html 2>>/tmp/ngd-chrome.log
           # Runtime storefront uses only API data: no built-in test offers.
@@ -227,7 +219,7 @@ jobs:
           grep -q 'RUANG MEMBER / KELAS SAYA' /tmp/ngd-lms-member.html
           grep -q 'Fondasi Digital untuk UMKM' /tmp/ngd-lms-member.html
           grep -q 'data-overflow="false"' /tmp/ngd-lms-member.html
-          grep -q 'data-native-member-nav="true"' /tmp/ngd-lms-member.html
+          grep -q 'id="top-nav-drawer"' /tmp/ngd-lms-member.html
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#lms-course" > /tmp/ngd-lms-reader.html 2>>/tmp/ngd-chrome.log
           grep -q 'Menyiapkan Profil Usaha' /tmp/ngd-lms-reader.html
@@ -263,7 +255,7 @@ jobs:
             "http://127.0.0.1:8765/?preview=admin#lms" > /tmp/ngd-admin-unchanged.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-member-theme="false"' /tmp/ngd-admin-unchanged.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-unchanged.html
-          grep -q 'data-floating-nav="true"' /tmp/ngd-admin-unchanged.html
+          grep -q 'id="top-nav-trigger"' /tmp/ngd-admin-unchanged.html
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=member#akun" > /tmp/ngd-member-account.html 2>>/tmp/ngd-chrome.log
           grep -q 'id="profile-form"' /tmp/ngd-member-account.html
@@ -282,7 +274,7 @@ jobs:
             "http://127.0.0.1:8765/?preview=member#beranda" > /tmp/ngd-member-desktop.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-unified-theme="true"' /tmp/ngd-member-desktop.html
           grep -q 'data-ink-navigation="true"' /tmp/ngd-member-desktop.html
-          grep -q 'class="ngd-member-home"' /tmp/ngd-member-desktop.html
+          grep -q 'class="ngd-member-home ngd-member-command"' /tmp/ngd-member-desktop.html
           grep -q 'member-marketplace-v7.css' /tmp/ngd-member-desktop.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-desktop.html
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=1280,800 --dump-dom \
@@ -299,7 +291,7 @@ jobs:
           grep -oE '<output id="qa-home-geometry"[^>]*>[^<]*' /tmp/ngd-guest-mobile.html | cut -c1-1200 || true
           grep -q 'data-unified-theme="true"' /tmp/ngd-guest-mobile.html
           grep -q 'data-ink-navigation="true"' /tmp/ngd-guest-mobile.html
-          grep -q 'data-mobile-nav="true"' /tmp/ngd-guest-mobile.html
+          grep -q 'id="top-nav-trigger"' /tmp/ngd-guest-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-guest-mobile.html
           grep -q 'class="ngd-home-direct-links"' /tmp/ngd-guest-mobile.html
@@ -313,7 +305,7 @@ jobs:
             "http://127.0.0.1:8765/?preview=admin#admin" > /tmp/ngd-admin-mobile.html 2>>/tmp/ngd-chrome.log
           grep -q 'data-unified-theme="true"' /tmp/ngd-admin-mobile.html
           grep -q 'data-ink-navigation="true"' /tmp/ngd-admin-mobile.html
-          grep -q 'data-floating-nav="true"' /tmp/ngd-admin-mobile.html
+          grep -q 'id="top-nav-trigger"' /tmp/ngd-admin-mobile.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-mobile.html
           # New catalogue admin CRUD must render safely and stay locked on demo.
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
@@ -340,13 +332,18 @@ jobs:
           grep -q 'id="service-brief-form"' /tmp/ngd-member-services.html
           grep -q 'Kirim permintaan' /tmp/ngd-member-services.html
           grep -q 'data-overflow="false"' /tmp/ngd-member-services.html
-          grep -q 'data-native-member-nav="true"' /tmp/ngd-member-services.html
+          grep -q 'id="top-nav-drawer"' /tmp/ngd-member-services.html
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/?preview=admin#layanan" > /tmp/ngd-admin-services.html 2>>/tmp/ngd-chrome.log
           grep -q 'Kelola Permintaan Jasa' /tmp/ngd-admin-services.html
           grep -q 'Belum ada permintaan' /tmp/ngd-admin-services.html
           grep -q 'data-overflow="false"' /tmp/ngd-admin-services.html
           echo 'SERVICE_BROWSER_QA_OK'
+          # Strict 360 × 800 real DevTools viewport, all requested routes:
+          # checks documentElement.scrollWidth, body width, clipped headings,
+          # missing bottom tab DOM and computed hero ink/background.
+          CHROME="$CHROME" node tests/mobile-360-cdp.cjs
+
           run_chrome --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=3500 --window-size=390,844 --dump-dom \
             "http://127.0.0.1:8765/#layanan" > /tmp/ngd-guest-services.html 2>>/tmp/ngd-chrome.log
           if grep -q 'id="service-quote-form"' /tmp/ngd-guest-services.html; then
