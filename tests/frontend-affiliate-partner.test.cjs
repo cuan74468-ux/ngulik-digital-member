@@ -64,7 +64,7 @@ test('responsive, light commission CSS loads last for public and staging',()=>{
     assert.match(html,/commission-experience-v2\.css\?v=20261121-member-public-v2/);
     assert.ok(html.indexOf('commission-experience-v2.css')>html.indexOf('affiliate-partner.css'));
     assert.ok(html.indexOf('commission-experience-v2.css')>html.indexOf('catalog-experience-v3.css'));
-    assert.match(html,/app\.js\?v=20261121-quiet-home-v14-1/);
+    assert.match(html,/app\.js\?v=20261121-blueprint-v15-1/);
   }
 });
 test('affiliate dashboard prioritizes verified referral link and hides payout while finance is OFF',()=>{
