@@ -32,13 +32,13 @@ test('real source assets are efficient WebP images, not decorative fake QR or pr
     assert.ok(buf.length>3500&&buf.length<110000,name+' size '+buf.length);
   }
   assert.match(app,/function ngdPremiumArtSrc_\(name\)/);
-  assert.match(app,/ngdPremiumArtSrc_\('hero'\)/);
+  assert.match(app,/ngdPremiumArtSrc_\(name\)/);
   assert.match(app,/ngdPremiumArtSrc_\(name\)/);
 });
 test('no duplicate service cards appear below the storefront; checkout gates unchanged',()=>{
   const home=app.slice(app.indexOf('function viewHome(){'),app.indexOf('const offerCategories='));
-  assert.match(home,/hero\+trust\+showcase\+signup/);
-  assert.doesNotMatch(home,/hero\+trust\+showcase\+viewHomeServices_/);
+  assert.match(home,/ngd-home-direct-links/);
+  assert.doesNotMatch(home,/hero\+trust\+showcase\+signup|viewPublicMarketplace\(curated/);
   assert.match(app,/function ngdCommissionLabel_\(p\)/);
   assert.match(app,/function viewCheckout\(\)/);
   assert.match(app,/async function confirmPayment\(\)/);
