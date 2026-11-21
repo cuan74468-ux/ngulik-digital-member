@@ -23,5 +23,5 @@ test('public and staging reference the existing vector asset, with real-payment 
     assert.match(cfg,/qrisOwnerImageApproved:\s*false/);
   }
   assert.match(pub,/paymentsEnabled:\s*false/);
-  assert.match(stage,/paymentsEnabled:\s*true/); // Backend NGD_FINANCE_ENABLED=false remains final STAGING authority.
+  assert.match(stage,/paymentsEnabled:\s*false/); // Keep browser and GAS independently fail-closed.
 });
