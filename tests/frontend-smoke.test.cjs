@@ -48,11 +48,14 @@ test('public config exposes owner-enabled features while secrets stay server-sid
   assert.equal(sandbox.window.NGD_CONFIG.qrisImageUrl,'assets/qris-linggau-ai-studio.svg');
   assert.equal(sandbox.window.NGD_CONFIG.qrisOwnerImageApproved,false);
 });
-test('guest homepage renders and shows offline preview warning',()=>{
+test('guest homepage renders the guest-only visual landing',()=>{
   const {nodes,document}=renderPreview();
-  assert.match(nodes.screen.innerHTML,/nh-hero/);
-  assert.match(nodes.screen.innerHTML,/nh-home-minimal/);
-  assert.match(nodes.screen.innerHTML,/ngd-home-quiet-hero/);
+  assert.match(nodes.screen.innerHTML,/ngd-landing-v1/);
+  assert.match(nodes.screen.innerHTML,/Warung Tools AI/);
+  assert.match(nodes.screen.innerHTML,/ngdl-hero-art/);
+  assert.equal((nodes.screen.innerHTML.match(/class="ngdl-offer"/g)||[]).length,4);
+  assert.match(nodes.screen.innerHTML,/data-route="daftar"/);
+  assert.match(nodes.screen.innerHTML,/Baca eBook Gratis/);
   assert.doesNotMatch(nodes.screen.innerHTML,/market-product-card|ngd-home-artwork/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
   assert.match(nodes['desktop-nav'].innerHTML,/Katalog/);
