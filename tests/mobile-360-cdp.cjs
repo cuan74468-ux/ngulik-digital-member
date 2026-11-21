@@ -14,7 +14,9 @@ const child=spawn(chrome,[
   '--no-first-run','--disable-background-networking','--no-default-browser-check',
   '--remote-allow-origins=*','--remote-debugging-port='+port,
   '--user-data-dir='+profile,'about:blank'
-],{stdio:'ignore'});
+],{stdio:['ignore','ignore','pipe']});
+let chromeErrors='';
+child.stderr?.on('data',v=>{chromeErrors+=String(v).slice(0,800);if(chromeErrors.length>2800)chromeErrors=chromeErrors.slice(-2800);});
 let ws,seq=0;
 const pending=new Map();
 function request(method,params={}){
@@ -27,7 +29,7 @@ function request(method,params={}){
 }
 async function connect(){
   let target;
-  for(let i=0;i<65;i++){
+  for(let i=0;i<180;i++){
     try{
       const r=await fetch('http://127.0.0.1:'+port+'/json');
       const tabs=await r.json();
@@ -36,7 +38,7 @@ async function connect(){
     }catch(e){}
     await pause(100);
   }
-  assert.ok(target,'Chrome CDP did not become available');
+  assert.ok(target,'Chrome CDP did not become available; exit='+String(child.exitCode)+'; stderr='+chromeErrors);
   ws=new WebSocket(target.webSocketDebuggerUrl);
   await new Promise((resolve,reject)=>{
     ws.addEventListener('open',resolve,{once:true});
