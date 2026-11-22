@@ -884,3 +884,260 @@ body.ngd-public-app:not(#ngd) .learning-portal-promo .btn{flex:none}
   body.ngd-public-app:not(#ngd) .learning-portal-promo{flex-direction:column;align-items:stretch;padding:20px}
   body.ngd-public-app:not(#ngd) .learning-portal-promo .btn{width:100%}
 }
+
+
+/* LEARNING EXPERIENCE V3 — isolated, intentional, no legacy collisions.
+   Target only signed-in learning routes. Mirrors member brand lavender/ink. */
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen,
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen{
+  --learn-ink:#23203a;--learn-text:#56516a;--learn-accent:#6148c8;
+  --learn-border:#e8e4f0;--learn-soft:#f5f2fc;
+  min-width:0;max-width:1180px;margin:0 auto;color:var(--learn-ink)
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-dashboard{
+  display:grid;gap:24px;max-width:none;width:100%
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-intro{
+  display:flex;align-items:center;justify-content:space-between;gap:24px;
+  padding:clamp(24px,3.3vw,43px);min-height:0;margin:0;
+  background:linear-gradient(115deg,#f2eeff 0%,#faf8ff 72%);border:1px solid #e9e3fb;
+  border-radius:23px;box-shadow:none
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-intro-copy{min-width:0;flex:1}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-overline{
+  color:#6550af;font-size:11px;letter-spacing:.095em;font-weight:750
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-intro h2{
+  color:#27213e;font-size:clamp(1.75rem,3.2vw,2.75rem);line-height:1.16;
+  max-width:24ch;margin:12px 0 10px;letter-spacing:-.043em
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-intro p{
+  color:#59536d;font-size:.93rem;line-height:1.6;max-width:57ch;margin:0
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-intro-aside{
+  flex:none;width:180px;min-height:0;padding:18px 20px;border:1px solid #e5dff3;
+  border-radius:17px;background:#fff;align-self:center
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-aside-label{
+  color:#79718e;font-size:.65rem;letter-spacing:.08em
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-aside-value{
+  font-size:2.65rem;line-height:1.1;margin:8px 0 7px;color:#5b47ba;letter-spacing:-.06em
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-aside-value span{font-size:1.05rem;color:#958daa}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-intro-rule{display:none}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-section-head{
+  margin:0;align-items:center;gap:12px
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-section-head h3{
+  color:#242039;font-size:1.4rem;letter-spacing:-.03em
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-section-head p{
+  color:#6b637c;line-height:1.5;max-width:65ch
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-course-count{
+  border:none;background:#f1edfc;color:#6049ac;white-space:nowrap
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-toolbar{
+  gap:12px;align-items:center;margin:0;min-width:0
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-filter-group{
+  gap:5px;padding:4px;border-radius:13px;background:#f2eff9;
+  border:1px solid #e9e5f4
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-filter{
+  min-height:40px;border:none;border-radius:10px;background:transparent;color:#665e76;
+  font-size:.82rem;white-space:nowrap;padding:8px 13px
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-filter[aria-pressed="true"]{
+  background:#fff;color:#523ead;box-shadow:0 1px 5px #241f4510
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-search{
+  min-width:0;border-color:#e4dff0;border-radius:12px;background:#fff
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-course-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;min-width:0
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .lms-course-tile{
+  min-width:0;min-height:265px;border:1px solid #e7e2f1;border-radius:19px;
+  overflow:hidden;box-shadow:none;transform:none;background:#fff
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .lms-course-tile:hover{
+  border-color:#cbbcf0;transform:translateY(-2px);box-shadow:0 12px 27px -23px #35206c55
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-course-art,
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .lms-course-tile:nth-child(n) .learning-course-art{
+  min-height:72px;height:72px;padding:17px 20px;
+  display:flex;justify-content:space-between;align-items:center;
+  background:#f7f4fd;border-bottom:1px solid #efeafa
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-art-index{
+  position:static;transform:none;color:#6954ae;font-size:.66rem;font-weight:800;
+  letter-spacing:.09em
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-art-glyph{
+  display:grid;place-items:center;width:34px;height:34px;border-radius:10px;
+  color:#6d53c5;background:#ece5fc;font-size:1.25rem;font-weight:500
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-course-copy{
+  gap:11px;padding:21px;min-width:0
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-course-copy h3{
+  color:#24203a;font-size:1.07rem;line-height:1.4;letter-spacing:-.02em
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-course-category{
+  color:#6954b5;font-size:.72rem
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-status{
+  background:#f3f0fb;color:#6c5d98;border-radius:8px;white-space:normal;text-align:center
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-status.is-active{
+  color:#236447;background:#e8f6ee
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-course-copy .card-desc{
+  color:#736c81;font-size:.84rem;line-height:1.6
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-course-footer{
+  border-top:1px solid #f0ecf6
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-portal-promo{
+  margin:0;padding:24px 26px;border-radius:18px;border:1px solid #e7e1f3;background:#faf8ff;min-width:0
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-portal-promo h3{color:#29213e}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-portal-promo p:not(.eyebrow){color:#6c657c}
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-portal-promo .btn,
+html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-course-footer .btn{
+  background:#5d45c0;border:1px solid #5d45c0;color:white;min-height:42px;border-radius:11px
+}
+/* Portal — one category control on mobile; never five squeezed chips. */
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-page{
+  max-width:1120px;gap:21px
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-hero{
+  border:1px solid #e9e2fa;background:#f5f2ff;color:#2a2343;box-shadow:none;border-radius:22px
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-hero h2{
+  color:#27213d;font-size:clamp(1.75rem,3.3vw,2.6rem);max-width:25ch
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-hero p:not(.eyebrow){
+  color:#655e77;max-width:69ch
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-total{color:#674eb8}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-disclaimer{
+  background:#faf9fc;color:#5d566d;border:1px solid #e8e4ee;border-left:3px solid #826cc6
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-disclaimer strong{color:#302646}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-category-select{display:none}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-filters{
+  display:flex;gap:8px;flex-wrap:wrap;overflow:visible
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-filters button{
+  border:1px solid #e4dff0;background:#fff;color:#675e79;
+  max-width:100%;min-height:42px;border-radius:12px;white-space:normal;
+  font-size:.8rem;line-height:1.35
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-filters button[aria-pressed="true"]{
+  background:#5c45bd;border-color:#5c45bd;color:#fff
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-search input{
+  border-color:#e3ddef;max-width:none;min-height:48px;border-radius:12px
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-group{
+  border:1px solid #e8e4f0;border-radius:17px;overflow:hidden;box-shadow:none
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-group-head{
+  background:#faf9fd;border-bottom:1px solid #eeeaf5
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-group-head h3{color:#302847}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-group-head p{color:#736b81}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-group-head>span{color:#705ab5}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-legacy-row{
+  display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;
+  gap:15px;min-width:0;padding:17px 22px;border-bottom:1px solid #f0edf5
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-legacy-no{
+  background:#f1edfa;color:#7056b8;width:38px;height:38px;border-radius:11px
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-legacy-copy h4{
+  color:#2c2640;font-size:.94rem;line-height:1.4;overflow-wrap:anywhere
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-legacy-copy p{
+  color:#736d81;line-height:1.5;overflow-wrap:anywhere
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-legacy-row .btn{
+  min-height:40px;padding:8px 13px;flex:none;white-space:nowrap;
+  border-radius:10px;background:#fff;color:#5944a4;border:1px solid #d9d0f0
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-result{
+  color:#777085;font-size:.82rem
+}
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-search input:focus-visible,
+html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-category-select select:focus-visible{
+  outline:3px solid #6b51c8;outline-offset:2px
+}
+@media(max-width:900px){
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-course-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))
+  }
+}
+@media(max-width:700px){
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-dashboard{gap:19px}
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-intro{
+    display:block;min-height:0;padding:24px 20px;border-radius:18px
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-intro-aside{
+    margin-top:18px;width:100%;padding:14px 17px;min-height:0;border-radius:13px;
+    display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-aside-label{grid-column:1}
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-aside-value{
+    grid-column:2;grid-row:1/3;margin:0;font-size:2rem
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-intro-aside p{grid-column:1}
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-course-grid{grid-template-columns:1fr;gap:12px}
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .lms-course-tile{min-height:0}
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-toolbar{
+    display:grid;grid-template-columns:minmax(0,1fr);gap:12px
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-filter-group{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-filter{
+    font-size:.73rem;padding:8px 4px;white-space:normal;line-height:1.2
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-section-head{
+    align-items:flex-start;flex-direction:column
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-page{gap:16px}
+  html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-hero{padding:23px 19px;border-radius:18px}
+  html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-filters{display:none!important}
+  html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-category-select{
+    display:grid;gap:7px;width:100%;min-width:0
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-category-select label{
+    color:#4a405d;font-size:.82rem;font-weight:750
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-category-select select{
+    appearance:auto;display:block;width:100%;max-width:100%;min-width:0;min-height:48px;
+    padding:10px 13px;border:1px solid #ded7ed;border-radius:12px;
+    background:#fff;color:#2b2541;font:600 .87rem Inter,sans-serif;
+    overflow:hidden;text-overflow:ellipsis
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-group-head{
+    padding:18px 16px;display:block
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-group-head>span{
+    display:inline-block;margin-top:7px
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-legacy-row{
+    display:grid;grid-template-columns:32px minmax(0,1fr);gap:9px 12px;
+    padding:17px 15px
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-legacy-no{
+    width:32px;height:32px;border-radius:9px;font-size:.78rem
+  }
+  html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-legacy-copy{min-width:0}
+  html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-legacy-row .btn{
+    grid-column:1/-1;width:100%;justify-content:center;min-width:0
+  }
+}
