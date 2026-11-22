@@ -8,6 +8,9 @@
 // ===== KONSTANTA =====
 const NGD = Object.freeze({
   VERSION: '1.0.3',
+  // Manually bumped for each GAS bundle release. Not a source hash: the
+  // identifier is also exposed by doGet and cannot self-reference.
+  SOURCE_REVISION: 'ngd-gas-staging-20261122-p5-r1',
   // Spreadsheet ID is read from Script Properties, not committed in source.
   DB_ID: '',
   TZ: 'Asia/Jakarta',
@@ -2828,6 +2831,7 @@ function apiOutput_(value) {
 }
 function doGet(e) {
   return apiOutput_({ok:true,data:{app:'Ngulik Digital API',version:NGD.VERSION,
+    source_revision:NGD.SOURCE_REVISION,
     writes_enabled:mutationsEnabled_(),payments_enabled:financeEnabled_(),
     time:isoWib_(now_())},server_time:isoWib_(now_())});
 }
