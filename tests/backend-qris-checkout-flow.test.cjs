@@ -92,10 +92,11 @@ test('QRIS: admin approval cannot proceed without confirmed funds and reference'
   });
   assert.equal(result.status,'PAID');
   assert.equal(h.paid.length,1);
-  assert.throws(()=>h.ctx.transitionOrder_(admin,order.order_id,'approve',{
+  const replay=h.ctx.transitionOrder_(admin,order.order_id,'approve',{
     dana_diterima:true,nominal_terverifikasi:order.total_bayar,metode_diterima:'QRIS_STATIS',referensi_pembayaran:'DANA-MUTASI-12345'
-  }),/Status pesanan/);
-  assert.equal(h.paid.length,1);
+  });
+  assert.equal(replay.status,'PAID');
+  assert.equal(h.paid.length,1); // exactly one fulfillment despite double approval
 });
 
 test('QRIS rejects archived or internal QA checkout even if the catalog row remains active',()=>{
@@ -125,4 +126,17 @@ test('low-price paid offer uses surcharge rather than discount or negative amoun
   const a=h.ctx.newOrder_(h.members[0],{product_id:h.product.product_id},'TEST_CHEAP_PLUS');
   assert.equal(a.total_bayar,500+a.kode_unik);
   assert.ok(a.total_bayar>=600&&a.total_bayar<=1499);
+});
+
+test('QRIS: expired order cannot be approved normally, preserving its ledger',()=>{
+  const h=setup();
+  const order=h.ctx.newOrder_(h.members[0],{product_id:'P-TOKEN-10'},'REQUEST_EXPIRED');
+  const admin={role:'ADMIN',member_id:'ADM-1'};
+  h.orders[0].expires_at=new Date(Date.now()-60000);
+  assert.throws(()=>h.ctx.transitionOrder_(admin,order.order_id,'approve',{
+    dana_diterima:true,nominal_terverifikasi:order.total_bayar,
+    metode_diterima:'QRIS_STATIS',referensi_pembayaran:'DANA-LATE-12345'
+  }),/Pesanan kedaluwarsa/);
+  assert.equal(h.orders[0].status,'EXPIRED');
+  assert.equal(h.paid.length,0);
 });
