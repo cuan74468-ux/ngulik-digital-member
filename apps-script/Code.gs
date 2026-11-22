@@ -105,7 +105,7 @@ function ngdUpgradePinHashOnLogin_(member,pin) {
   var props=PropertiesService.getScriptProperties();
   if(props.getProperty('NGD_PIN_HASH_V2_ENABLED')!=='true')return false;
   var stored=String(member&&member.pin_hash||'');
-  if(/^v2\\$[a-f0-9]{64}$/i.test(stored))return false;
+  if(/^v2\$[a-f0-9]{64}$/i.test(stored))return false;
   require_(/^[a-f0-9]{64}$/i.test(stored)&&Number.isInteger(member._row)&&member._row>=2,
     'MAINTENANCE','Data PIN belum siap untuk peningkatan keamanan.');
   // pinHashV2_ fails closed on missing/short pepper, before any data write.
