@@ -20,5 +20,5 @@ window.NGD_CONFIG = Object.freeze({
   lmsEnabled:true,
   qrisImageUrl:'../assets/qris-linggau-ai-studio.svg',
   qrisMerchant:'Linggau AI Studio',
-  qrisOwnerImageApproved:false // remains false until verified image is present on main/Pages
+  qrisOwnerImageApproved:true // owner confirmed independent scan matches Linggau AI Studio; backend finance remains authoritative
 });
