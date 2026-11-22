@@ -1071,7 +1071,7 @@ function newOrder_(m,p,requestId) {
     require_(String(s.payment_gateway_mode||'QRIS_STATIS')==='QRIS_STATIS','NOT_AVAILABLE','Metode pembayaran saat ini tidak tersedia.');
     require_(Number.isInteger(price)&&price>0,'VALIDATION','Harga produk belum valid.');
     require_(Number.isInteger(min)&&Number.isInteger(max)&&min>=100&&max<=999&&min<=max,'VALIDATION','Rentang kode unik tidak valid.');
-    require_(price>max,'VALIDATION','Harga harus lebih besar dari kode diskon maksimum.');
+    require_(Number.isSafeInteger(price+max),'VALIDATION','Nominal pembayaran terlalu besar.');
     var open=readAll_('orders').filter(function(o){return ['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0&&
       (o.status==='MENUNGGU_VERIFIKASI'||new Date(o.expires_at).getTime()>Date.now());});
     var taken={};open.forEach(function(o){taken[Number(o.total_bayar)]=true;});

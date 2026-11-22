@@ -118,3 +118,11 @@ test('public catalog omits QA fixtures without deleting historic product rows',(
   assert.deepEqual(Array.from(h.ctx.publicCatalog_(),r=>r.product_id),[clean.product_id]);
   assert.equal(rows.length,4);
 });
+
+test('low-price paid offer uses surcharge rather than discount or negative amount',()=>{
+  const h=setup();
+  h.product.harga='Rp500';
+  const a=h.ctx.newOrder_(h.members[0],{product_id:h.product.product_id},'TEST_CHEAP_PLUS');
+  assert.equal(a.total_bayar,500+a.kode_unik);
+  assert.ok(a.total_bayar>=600&&a.total_bayar<=1499);
+});

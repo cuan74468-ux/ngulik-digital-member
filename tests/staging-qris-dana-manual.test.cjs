@@ -27,7 +27,7 @@ test('browser checkout is QRIS-only, and unverified payment paths are parked',()
 });
 test('checkout amount uniqueness, three digits and real-funds review remain backend authoritative',()=>{
   assert.match(gas,/min>=100&&max<=999/);
-  assert.match(gas,/taken\[price+n\]/);
+  assert.match(gas,/taken\[price\+n\]/);
   assert.match(gas,/status:'PENDING',metode:'QRIS_STATIS'/);
   assert.match(gas,/p\.dana_diterima===true/);
   assert.match(gas,/received===exact/);

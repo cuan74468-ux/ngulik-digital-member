@@ -35,10 +35,10 @@ function sandbox(environment='STAGING',change={}){
   ctx.UrlFetchApp={fetch:()=>{calls.network++;throw Error('ILLEGAL_NETWORK');}};
   return {ctx,rows,logs,calls,orders,setOrders:xs=>{orders=xs;}};
 }
-test('owner decision: QRIS invoice must subtract three-digit code, and reject code >= price',()=>{
-  assert.match(code,/taken\[price+n\]/);
+test('owner decision: QRIS invoice adds three-digit code without a hidden discount',()=>{
+  assert.match(code,/taken\[price\+n\]/);
   assert.match(code,/total_bayar:price\+code/);
-  assert.match(code,/require_\(price>max/);
+  assert.match(code,/Number\.isSafeInteger\(price\+max\)/);
   assert.doesNotMatch(code,/total_bayar:price-code,status:'PENDING'/);
 });
 test('Starter Rp15.000 fixed Rp5.000 and token Blueprint prices are reviewable without DB writes',()=>{
