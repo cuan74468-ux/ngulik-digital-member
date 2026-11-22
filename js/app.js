@@ -1582,8 +1582,8 @@ function checkoutQrReady_(){
   // Browser UI is presentation only; GAS also checks NGD_FINANCE_ENABLED.
   return paymentEnabled()&&config.qrisOwnerImageApproved===true&&!!qrisUrl()&&
     Boolean(String(config.qrisMerchant||''))&&
-    state.workspaceInfo?.finance_enabled!==false&&
-    state.workspaceInfo?.mutations_enabled!==false;
+    state.workspaceInfo?.finance_enabled===true&&
+    state.workspaceInfo?.mutations_enabled===true;
 }
 function openProductCheckout_(id){
   const product=Array.isArray(state.catalog)?state.catalog.find(p=>
@@ -1682,7 +1682,7 @@ function viewCheckout(){
   const qrUrl=(()=>{try{const u=new URL(qrRaw,location.href);return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';}catch{return '';}})();
   const merchant=String(config.qrisOwnerImageApproved===true
     ?config.qrisMerchant:(o.qris_atas_nama||config.qrisMerchant||''));
-  const officialQr=!!(paymentEnabled()&&config.qrisOwnerImageApproved===true&&qrUrl&&merchant&&!bundledPlaceholder&&String(o.metode)==='QRIS_STATIS'&&qrAmountMatchesOrder&&state.workspaceInfo?.finance_enabled!==false);
+  const officialQr=!!(paymentEnabled()&&config.qrisOwnerImageApproved===true&&qrUrl&&merchant&&!bundledPlaceholder&&String(o.metode)==='QRIS_STATIS'&&qrAmountMatchesOrder&&state.workspaceInfo?.finance_enabled===true);
   const seconds=open?Math.max(0,Math.ceil((expiryMs-Date.now())/1000)):0;
   const timer=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
   const stateNote=status==='FULFILLED'?
@@ -3007,7 +3007,7 @@ function syncAdminPaymentApproval_(){
 let adminPaymentSubmitting_=false;
 async function submitAdminPaymentForm_(form){
   if(adminPaymentSubmitting_||!isAdmin()||!paymentEnabled()||
-    state.workspaceInfo?.finance_enabled===false||state.workspaceInfo?.mutations_enabled===false)
+    state.workspaceInfo?.finance_enabled!==true||state.workspaceInfo?.mutations_enabled!==true)
     return toast('Cek Pembayaran Admin belum diaktifkan.',true);
   const id=String(form.dataset.orderId||'');
   const order=state.adminOrders.find(o=>o.order_id===id);
@@ -3064,7 +3064,7 @@ async function confirmPayment(){
   const order=state.lastOrder;
   if(memberConfirmSubmitting_)return;
   if(!logged()||isAdmin()||!order||!paymentEnabled()||
-    state.workspaceInfo?.finance_enabled===false||state.workspaceInfo?.mutations_enabled===false)
+    state.workspaceInfo?.finance_enabled!==true||state.workspaceInfo?.mutations_enabled!==true)
     return toast('Konfirmasi pembayaran belum tersedia.',true);
   if(order.status!=='PENDING')
     return toast('Pesanan ini tidak lagi menunggu konfirmasi. Buka ulang detailnya.',true);
