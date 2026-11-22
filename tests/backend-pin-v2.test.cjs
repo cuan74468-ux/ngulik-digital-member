@@ -88,7 +88,7 @@ test('successful login upgrades an existing V1 PIN only when owner enables V2',(
   h.ctx.newSessionMember_=()=>({token:'FAKE'});
   assert.equal(h.ctx.authLogin_({wa:'081234567890',pin},false).token,'FAKE');
   assert.equal(updates.length,1);
-  assert.match(m.pin_hash,/^v2\\$/);
+  assert.match(m.pin_hash,/^v2\$/);
   assert.equal(m.pin_salt,salt);
   assert.equal(h.ctx.pinMatches_(pin,salt,m.pin_hash),true);
   assert.equal(h.ctx.authLogin_({wa:'081234567890',pin},false).token,'FAKE');
