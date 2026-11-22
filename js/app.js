@@ -2583,10 +2583,15 @@ function syncMarketplacePolling_(){
 }
 async function restoreSession(){
   if(state.qa||!isConnected()||!state.token)return;
+  const restoringToken=state.token;
   try{
-    state.me=await api('getMe',{},state.token);
+    const profile=await api('getMe',{},restoringToken);
+    // An old response must never log in a previous account over a new one.
+    if(state.token!==restoringToken)return;
+    state.me=profile;
     render();
   }catch(e){
+    if(state.token!==restoringToken)return;
     // Network errors are not evidence that the server revoked the session.
     if(e?.code==='UNAUTHORIZED'||e?.code==='FORBIDDEN'){
       state.token='';state.me=null;sessionStorage.removeItem(tokenKey);
@@ -2600,18 +2605,28 @@ async function restoreSession(){
 async function loadRoute(route){
   if(state.qa||!isConnected()||!logged())return;
   const token=state.token;
+  const sameSession=()=>state.token===token&&logged();
+  // Verify ownership at the moment a response resolves, not just at request start.
+  // This prevents a slow request from filling member B's screen with member A's data.
+  const verifySessionRead=async pending=>{
+    const result=await pending;
+    if(!sameSession())throw new Error('SESSION_CHANGED');
+    return result;
+  };
+  const sessionApi=async(...args)=>verifySessionRead(api(...args));
   try{
     if(route==='checkout'&&!isAdmin()&&String(config.brand||'').includes('STAGING')){
-      try{state.workspaceInfo=await api('getStagingWorkspaceInfo');}catch{state.workspaceInfo=null;}
+      try{state.workspaceInfo=await sessionApi('getStagingWorkspaceInfo');}
+      catch{if(!sameSession())return;state.workspaceInfo=null;}
     }
     if(route==='beranda'&&!isAdmin()){
       // Member command center: every metric comes from a real backend read.
       // Partial failures preserve other sections, but never fabricate records.
-      const tasks=await Promise.allSettled([
-        api('getBeranda',{},token),api('listMyOrders',{},token),
-        api('getAffiliateDashboard',{},token),api('getMyProducts',{},token),
-        api('getKreditRiwayat',{},token),api('getMyLMSEnrollments',{},token)
-      ]);
+      const tasks=await verifySessionRead(Promise.allSettled([
+        sessionApi('getBeranda',{},token),sessionApi('listMyOrders',{},token),
+        sessionApi('getAffiliateDashboard',{},token),sessionApi('getMyProducts',{},token),
+        sessionApi('getKreditRiwayat',{},token),sessionApi('getMyLMSEnrollments',{},token)
+      ]));
       if(tasks[0].status==='fulfilled')state.home=tasks[0].value;
       if(tasks[1].status==='fulfilled')state.orders=tasks[1].value||[];
       if(tasks[2].status==='fulfilled')state.affiliates=tasks[2].value||null;
@@ -2628,9 +2643,9 @@ async function loadRoute(route){
     if(route==='ai'||route==='ai-tool'){
       // Independent reads: two GAS calls in parallel without losing the
       // successful result when the other service is temporarily unavailable.
-      const [homeResult,toolsResult]=await Promise.allSettled([
-        api('getBeranda',{},token),api('getTools',{},token)
-      ]);
+      const [homeResult,toolsResult]=await verifySessionRead(Promise.allSettled([
+        sessionApi('getBeranda',{},token),sessionApi('getTools',{},token)
+      ]));
       if(homeResult.status==='fulfilled')state.home=homeResult.value;
       if(toolsResult.status==='fulfilled')state.tools=toolsResult.value?.tools||[];
       if(homeResult.status==='rejected'&&toolsResult.status==='rejected')
@@ -2640,69 +2655,69 @@ async function loadRoute(route){
       // STAGING provider readiness comes from the backend, never a URL param.
       // A failed read must hide all Mayar checkout actions.
       if(location.pathname.includes('/staging/')){
-        try{state.workspaceInfo=await api('getStagingWorkspaceInfo');}
-        catch(e){state.workspaceInfo=null;}
+        try{state.workspaceInfo=await sessionApi('getStagingWorkspaceInfo');}
+        catch(e){if(!sameSession())return;state.workspaceInfo=null;}
       }
       // Member shelf is read-only and never launches internal checkout.
-      try{state.partnerShelf=await api('getEtalase',{},token);state.partnerShelfLoaded=true;}
-      catch(e){state.partnerShelfLoaded=true;state.partnerShelf=[];}
+      try{state.partnerShelf=await sessionApi('getEtalase',{},token);state.partnerShelfLoaded=true;}
+      catch(e){if(!sameSession())return;state.partnerShelfLoaded=true;state.partnerShelf=[];}
     }
     if(route==='belajar'){
       // Legacy modules remain usable while the new GAS LMS backend is staged.
-      const responses=await Promise.allSettled([
-        api('getModulBelajar',{},token),api('getLMSCatalog',{},token),
-        api('getMyLMSEnrollments',{},token)
-      ]);
+      const responses=await verifySessionRead(Promise.allSettled([
+        sessionApi('getModulBelajar',{},token),sessionApi('getLMSCatalog',{},token),
+        sessionApi('getMyLMSEnrollments',{},token)
+      ]));
       if(responses[0].status==='fulfilled')state.modules=responses[0].value||[];
       if(responses[1].status==='fulfilled')state.lmsCourses=responses[1].value||[];
       if(responses[2].status==='fulfilled')state.lmsEnrollments=responses[2].value||[];
     }
     if(route==='konten'&&isAdmin()){
-      state.adminContent=await api('adminListContent',{},token);
+      state.adminContent=await sessionApi('adminListContent',{},token);
       if(state.contentPresetProductId){
         const photo=state.adminContent.find(x=>x.kind==='PRODUCT_IMAGE'&&
           x.placement===state.contentPresetProductId&&x.status!=='ARCHIVED');
         state.contentEditId=photo?.content_id||'';
       }
     }
-    if(route==='produk'&&isAdmin())state.adminCatalog=await api('adminListCatalog',{},token);
-    if(route==='jasa'&&!isAdmin())state.services=await api('getMyServiceRequests',{},token);
-    if(route==='layanan'&&isAdmin())state.services=await api('adminListServiceRequests',{},token);
+    if(route==='produk'&&isAdmin())state.adminCatalog=await sessionApi('adminListCatalog',{},token);
+    if(route==='jasa'&&!isAdmin())state.services=await sessionApi('getMyServiceRequests',{},token);
+    if(route==='layanan'&&isAdmin())state.services=await sessionApi('adminListServiceRequests',{},token);
     if(route==='lms'&&isAdmin())
-      state.lmsAdminCourses=await api('adminListLMSCourses',{},token);
+      state.lmsAdminCourses=await sessionApi('adminListLMSCourses',{},token);
     if(route==='lms-editor'&&isAdmin()&&state.lmsSelectedCourseId){
-      const [detail,jobs]=await Promise.all([
-        api('adminGetLMSCourse',{course_id:state.lmsSelectedCourseId},token),
-        api('adminListLMSAIJobs',{course_id:state.lmsSelectedCourseId},token)
-      ]);
+      const [detail,jobs]=await verifySessionRead(Promise.all([
+        sessionApi('adminGetLMSCourse',{course_id:state.lmsSelectedCourseId},token),
+        sessionApi('adminListLMSAIJobs',{course_id:state.lmsSelectedCourseId},token)
+      ]));
       state.lmsAdminCourse=detail;
       state.lmsJobs=jobs||[];
     }
     if(route==='lms-course'&&state.lmsSelectedCourseId)
-      state.lmsCourseDetail=await api('getLMSCourse',
+      state.lmsCourseDetail=await sessionApi('getLMSCourse',
         {course_id:state.lmsSelectedCourseId},token);
     if(route==='akun'&&!isAdmin()&&config.notificationsEnabled===true)
-      state.notifications=await api('getMyNotifications',{},token);
-    if(route==='affiliate')state.affiliates=await api('getAffiliateDashboard',{},token);
+      state.notifications=await sessionApi('getMyNotifications',{},token);
+    if(route==='affiliate')state.affiliates=await sessionApi('getAffiliateDashboard',{},token);
     if(route==='pesanan'){
       if(isAdmin()){
         // Reconciliation is not displayed on this page; avoid an extra GAS
         // execution and spreadsheet scan on every visit.
-        const [ordersResult,workspaceResult]=await Promise.allSettled([
-          api('adminListOrders',{},token),
-          api('getStagingWorkspaceInfo')
-        ]);
+        const [ordersResult,workspaceResult]=await verifySessionRead(Promise.allSettled([
+          sessionApi('adminListOrders',{},token),
+          sessionApi('getStagingWorkspaceInfo')
+        ]));
         if(ordersResult.status==='fulfilled')state.adminOrders=ordersResult.value||[];
         else throw ordersResult.reason;
         if(workspaceResult.status==='fulfilled')state.workspaceInfo=workspaceResult.value;
         else state.workspaceInfo=null;
-      }else state.orders=await api('listMyOrders',{},token);
+      }else state.orders=await sessionApi('listMyOrders',{},token);
     }
     if(route==='admin'&&isAdmin()){
       // These three independent views should never hide each other's data.
-      const [dashboard,overview,runtime]=await Promise.allSettled([
-        api('adminGetDashboard',{},token),api('adminGetSupportOverview',{},token),
-        api('adminGetRuntimeStatus',{},token)]);
+      const [dashboard,overview,runtime]=await verifySessionRead(Promise.allSettled([
+        sessionApi('adminGetDashboard',{},token),sessionApi('adminGetSupportOverview',{},token),
+        sessionApi('adminGetRuntimeStatus',{},token)]));
       if(dashboard.status==='fulfilled')state.adminSummary=dashboard.value;
       if(overview.status==='fulfilled')state.supportOverview=overview.value;
       if(runtime.status==='fulfilled'){
@@ -2717,10 +2732,10 @@ async function loadRoute(route){
         state.adminSummary=null;
     }
     if(route==='pengaturan'&&isAdmin()){
-      const [settings,runtime]=await Promise.allSettled([
-        api('adminGetSettings',{},token),
-        api('adminGetRuntimeStatus',{},token)
-      ]);
+      const [settings,runtime]=await verifySessionRead(Promise.allSettled([
+        sessionApi('adminGetSettings',{},token),
+        sessionApi('adminGetRuntimeStatus',{},token)
+      ]));
       state.adminSettings=settings.status==='fulfilled'?settings.value:null;
       state.adminSettingsError=settings.status==='rejected'?
         (settings.reason?.message||'Pengaturan belum bisa dibaca.'):'';
@@ -2728,36 +2743,37 @@ async function loadRoute(route){
       state.adminRuntimeError=runtime.status==='rejected'?
         'Status teknis belum dapat dimuat dari deployment yang terhubung. Cek versi deployment Apps Script.':'';
     }
-    if(route==='member'&&isAdmin())state.members=await api('adminListMembers',{},token);
-    if(route==='antrean'&&isAdmin())state.waitlist=await api('adminListWaitingList',{},token);
+    if(route==='member'&&isAdmin())state.members=await sessionApi('adminListMembers',{},token);
+    if(route==='antrean'&&isAdmin())state.waitlist=await sessionApi('adminListWaitingList',{},token);
     if(route==='dukungan'){
       if(isAdmin()){
-        const [tickets,overview]=await Promise.all([
-          api('adminListTickets',{},token),api('adminGetSupportOverview',{},token)]);
+        const [tickets,overview]=await verifySessionRead(Promise.all([
+          sessionApi('adminListTickets',{},token),sessionApi('adminGetSupportOverview',{},token)]));
         state.adminSupportTickets=tickets||[];
         state.supportOverview=overview;
       }else{
-        const [tickets,products,releases]=await Promise.all([
-          api('getMyTickets',{},token),
-          api('getMyProducts',{},token),
-          api('getMyProductReleases',{},token)
-        ]);
+        const [tickets,products,releases]=await verifySessionRead(Promise.all([
+          sessionApi('getMyTickets',{},token),
+          sessionApi('getMyProducts',{},token),
+          sessionApi('getMyProductReleases',{},token)
+        ]));
         state.supportTickets=tickets||[];
         state.memberProducts=products||[];
         state.supportReleases=releases||[];
       }
     }
     if(route==='tiket'&&state.selectedTicketId)
-      state.ticketDetail=await api(isAdmin()?'adminGetTicket':'getTicket',
+      state.ticketDetail=await sessionApi(isAdmin()?'adminGetTicket':'getTicket',
         {ticket_id:state.selectedTicketId},token);
     if(route==='member360'&&isAdmin()&&state.selectedMemberId)
-      state.member360=await api('adminGetMember360',
+      state.member360=await sessionApi('adminGetMember360',
         {member_id:state.selectedMemberId},token);
     if(route==='rilis')
-      state.supportReleases=await api(isAdmin()?'adminListProductReleases':
+      state.supportReleases=await sessionApi(isAdmin()?'adminListProductReleases':
         'getMyProductReleases',{},token);
-    if(route===state.route)render();
+    if(route===state.route&&sameSession())render();
   }catch(e){
+    if(!sameSession())return;
     const label=screens[route]?.[0]||'halaman';
     const detail=e?.code==='INTERNAL'?
       'Server Apps Script mengalami kesalahan internal. Periksa menu Eksekusi pada project GAS yang sedang dipakai.':
