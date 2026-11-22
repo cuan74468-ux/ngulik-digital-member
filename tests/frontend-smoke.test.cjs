@@ -179,7 +179,7 @@ test('public login is fail-closed while member preview and staging source keep s
   assert.doesNotMatch(nodes.screen.innerHTML,/id="auth-form"/);
   assert.match(app,/location\.pathname\.includes\('\/staging\/'\)/);
   const page=fs.readFileSync(path.join(base,'staging/member.html'),'utf8');
-  assert.match(page,/app\.js\?v=20261122-unified-brand-member-v3/);
+  assert.match(page,/app\.js\?v=20261122-qris-contract-safe-v4/);
 });
 test('guest Jasa shows actual backend-catalog prices and gates checkout behind login',()=>{
   const {nodes,context}=renderPreview();

@@ -1633,7 +1633,7 @@ function viewCheckoutDraft_(){
       (Number(p.durasi_hari)>0?'<div class="price-line"><span>Masa akses</span><strong>'+esc(p.durasi_hari)+' hari</strong></div>':'')+
       '<div class="checkout-total"><small>Harga produk</small><strong class="checkout-total-amount">'+
         (free?'Gratis':price!==null?rupiah(p.harga):'Harga belum tersedia')+'</strong></div>'+
-      (!free&&orderable?'<p class="checkout-note">Nominal akhir dan kode unik akan dihitung server setelah pesanan dibuat.</p>':'')+
+      (!free&&orderable?'<p class="checkout-note">Nominal akhir = harga produk + kode unik 3 digit (Rp100–Rp999), dihitung server setelah pesanan dibuat.</p>':'')+
     '</section><section><h2>'+ (free?'Akses gratis':'Metode pembayaran')+'</h2>'+
       (free?'<p class="checkout-note">Produk ini tidak memerlukan pembayaran QRIS.</p>':
        '<div class="checkout-qr checkout-payment-closed"><strong>QRIS Statis · DANA Bisnis</strong>'+
@@ -1660,6 +1660,12 @@ function viewCheckout(){
   const waiting=status==='MENUNGGU_VERIFIKASI';
   const paid=status==='PAID'||status==='FULFILLED';
   const finished=['EXPIRED','CANCELLED','REFUNDED'].includes(status);
+  const baseAmount=Number(o.harga_dasar),uniqueCode=Number(o.kode_unik),dueAmount=Number(o.total_bayar);
+  const qrAmountMatchesOrder=Number.isSafeInteger(baseAmount)&&baseAmount>0&&
+    Number.isSafeInteger(uniqueCode)&&uniqueCode>=100&&uniqueCode<=999&&
+    Number.isSafeInteger(dueAmount)&&dueAmount===baseAmount+uniqueCode;
+  const legacyDiscount=Number.isSafeInteger(dueAmount)&&Number.isSafeInteger(baseAmount)&&
+    Number.isSafeInteger(uniqueCode)&&uniqueCode>0&&dueAmount===baseAmount-uniqueCode;
   // Approved frontend asset is canonical; backend's historical relative path may
   // otherwise resolve under /staging/assets rather than the repository assets.
   const qrRaw=String(config.qrisOwnerImageApproved===true
@@ -1669,7 +1675,7 @@ function viewCheckout(){
   const qrUrl=(()=>{try{const u=new URL(qrRaw,location.href);return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';}catch{return '';}})();
   const merchant=String(config.qrisOwnerImageApproved===true
     ?config.qrisMerchant:(o.qris_atas_nama||config.qrisMerchant||''));
-  const officialQr=!!(paymentEnabled()&&config.qrisOwnerImageApproved===true&&qrUrl&&merchant&&!bundledPlaceholder&&String(o.metode)==='QRIS_STATIS'&&state.workspaceInfo?.finance_enabled!==false);
+  const officialQr=!!(paymentEnabled()&&config.qrisOwnerImageApproved===true&&qrUrl&&merchant&&!bundledPlaceholder&&String(o.metode)==='QRIS_STATIS'&&qrAmountMatchesOrder&&state.workspaceInfo?.finance_enabled!==false);
   const seconds=open?Math.max(0,Math.ceil((expiryMs-Date.now())/1000)):0;
   const timer=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
   const stateNote=status==='FULFILLED'?
@@ -1683,6 +1689,8 @@ function viewCheckout(){
     '<div class="checkout-qr checkout-payment-closed"><strong>'+(
       waiting?'Menunggu pemeriksaan Admin':paid?'Pembayaran dan layanan':'Pembayaran ditutup')+
       '</strong><p class="checkout-note">'+esc(stateNote)+'</p></div>':
+    !qrAmountMatchesOrder?
+      '<div class="checkout-qr checkout-payment-closed" role="alert"><strong>Nominal perlu verifikasi</strong><p class="checkout-note">Nominal pesanan tidak mengikuti rumus QRIS saat ini. Jangan transfer. Hubungi Admin untuk rekonsiliasi pesanan.</p></div>':
     officialQr?
       '<div class="checkout-qr"><strong>QRIS DANA Bisnis resmi</strong><img data-qris-image src="'+esc(qrUrl)+'" alt="QRIS penerima '+esc(merchant)+'" width="260" height="260">'+
       '<div data-qris-fallback class="qris-fallback" hidden>Gambar QRIS gagal dimuat. Jangan bayar sampai gambar tersedia.</div>'+
@@ -1700,9 +1708,9 @@ function viewCheckout(){
     '<div class="checkout-summary"><section><h2>Rincian Pesanan</h2>'+
     '<div class="price-line"><span>Produk</span><strong>'+esc(o.nama_produk||'—')+'</strong></div>'+
     '<div class="price-line"><span>Harga</span><strong>'+rupiah(o.harga_dasar)+'</strong></div>'+
-    '<div class="price-line">'+(Number(o.total_bayar)===Number(o.harga_dasar)-Number(o.kode_unik)?
-      '<span>Potongan kode unik</span><strong>− '+rupiah(o.kode_unik)+'</strong>':
-      '<span>Kode unik pesanan lama</span><strong>+ '+rupiah(o.kode_unik)+'</strong>')+'</div>'+
+    '<div class="price-line">'+(legacyDiscount?
+      '<span>Potongan kode unik (riwayat)</span><strong>− '+rupiah(o.kode_unik)+'</strong>':
+      '<span>Kode unik pembayaran</span><strong>+ '+rupiah(o.kode_unik)+'</strong>')+'</div>'+
     '<div class="checkout-total"><small>Total yang harus dibayar</small>'+
     '<strong class="checkout-total-amount" style="white-space:nowrap;font-variant-numeric:tabular-nums">'+rupiah(o.total_bayar)+'</strong>'+
     (open?'<button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(String(o.total_bayar))+'">Salin nominal</button>':'')+'</div>'+

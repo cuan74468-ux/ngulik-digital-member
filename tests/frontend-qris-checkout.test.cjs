@@ -101,7 +101,7 @@ test('STAGING client opt-in never bypasses backend finance or unverified QRIS',(
 test('public and staging load the same checkout UI and new JS while keeping old styles',()=>{
   for(const page of html){
     assert.match(page,/checkout-qris-unified\.css\?v=20261121-qris-checkout-v4/);
-    assert.match(page,/app\.js\?v=20261122-unified-brand-member-v3/);
+    assert.match(page,/app\.js\?v=20261122-qris-contract-safe-v4/);
     assert.ok(page.indexOf('checkout-qris-unified.css')>page.indexOf('commission-experience-v2.css'));
   }
   assert.match(css,/@media\(max-width:680px\)/);
@@ -169,4 +169,14 @@ test('homepage services use live catalog names and never link unpublished offers
   assert.match(backend,/function publicCatalog_\(\)/);
   assert.match(backend,/\.filter\(function\(r\)\{return r\.aktif===true;/);
   assert.doesNotMatch(html(),/data-checkout-product="P-VIDEO-AI"/);
+});
+
+test('checkout invoice matches the backend surcharge contract and never offers a malformed QRIS amount',()=>{
+  assert.match(app,/dueAmount===baseAmount\+uniqueCode/);
+  assert.match(app,/uniqueCode>=100&&uniqueCode<=999/);
+  assert.match(app,/String\(o\.metode\)==='QRIS_STATIS'&&qrAmountMatchesOrder/);
+  assert.match(app,/Nominal perlu verifikasi/);
+  assert.match(app,/Kode unik pembayaran/);
+  assert.match(app,/harga produk \+ kode unik 3 digit/);
+  assert.doesNotMatch(app,/Kode unik pesanan lama/);
 });

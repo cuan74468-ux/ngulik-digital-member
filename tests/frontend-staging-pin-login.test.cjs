@@ -34,6 +34,6 @@ test('STAGING OTP daily cap is suited for QA but leaves global, cooldown and ret
 test('STAGING PIN login CSS is mobile safe and loaded after base styles',()=>{
   const stage=read('staging/member.html');
   assert.match(stage,/staging-native-mobile\.css\?v=20261121-staging-pin-fallback-v1/);
-  assert.match(stage,/app\.js\?v=20261122-unified-brand-member-v3/);
+  assert.match(stage,/app\.js\?v=20261122-qris-contract-safe-v4/);
   assert.match(read('assets/staging-native-mobile.css'),/\.ngd-auth-mode-switch button\[aria-pressed="true"\]/);
 });
