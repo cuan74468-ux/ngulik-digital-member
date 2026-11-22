@@ -24,7 +24,7 @@ test('STAGING signup readiness requires verified backend flags, not just UI opt-
     assert.match(app,new RegExp('state\\.workspaceInfo\\?\\.'+flag+'===true'));
   assert.match(app,/api\('getStagingWorkspaceInfo'\)/);
   assert.match(app,/const readinessLoad=refreshStagingReadiness_\(\)/);
-  assert.match(stagePage,/member-config\.js\?v=20261121-signup-readiness-v1/);
+  assert.match(stagePage,/member-config\.js\?v=20261122-qris-owner-scan-v1/);
   assert.match(stagePage,/app\.js\?v=20261122-private-gates-v5/);
 });
 test('member registration UI requests WhatsApp OTP and verifies it before submit',()=>{
