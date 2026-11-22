@@ -94,3 +94,16 @@ test('getOrder does not disclose another members order',()=>{
   assert.throws(()=>vm.runInContext(
     'getOrder_({role:"MEMBER",member_id:"STRANGER"},"ORDER-1")',c),/Pesanan tidak ditemukan/);
 });
+
+test('finance reconciliation flags invalid PENDING expiry without writing data',()=>{
+  const c=runtime();
+  const rows=[{order_id:'ORDER-MALFORMED',member_id:'M-TEST',product_id:'CREDIT',
+    status:'PENDING',expires_at:'not-a-date'}];
+  const result=c.financeFindings_(rows,[],[],[],null,null);
+  assert.equal(result.checked,1);
+  assert.equal(result.needs_review,1);
+  assert.equal(result.findings[0].order_id,'ORDER-MALFORMED');
+  assert.ok(Array.from(result.findings[0].issues).includes('PENDING_ORDER_EXPIRY_INVALID'));
+  const good=c.financeFindings_([{...rows[0],expires_at:new Date(Date.now()+60000).toISOString()}],[],[],[],null,null);
+  assert.equal(good.needs_review,0);
+});
