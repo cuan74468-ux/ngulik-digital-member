@@ -1,0 +1,54 @@
+name: Compare STAGING Apps Script source revision (read-only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ngd-staging-drift-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout source to compare
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Node.js runtime
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+      - name: Compare read-only GAS runtime identity
+        shell: bash
+        run: |
+          node <<'NODE'
+          'use strict';
+          const fs=require('node:fs');
+          const source=fs.readFileSync('apps-script/Code.gs','utf8');
+          const expected=source.match(/SOURCE_REVISION:\s*'([a-z0-9-]{12,80})'/);
+          if(!expected)throw Error('Source revision marker is missing.');
+          const staging=fs.readFileSync('staging/config.js','utf8');
+          const matched=staging.match(/apiUrl:\s*'(https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec)'/);
+          if(!matched)throw Error('STAGING URL not found or invalid.');
+          const endpoint=matched[1];
+          const controller=new AbortController();
+          const timer=setTimeout(()=>controller.abort(),25000);
+          (async()=>{
+            try{
+              const response=await fetch(endpoint,{method:'GET',redirect:'follow',
+                headers:{Accept:'application/json'},signal:controller.signal});
+              if(!response.ok)throw Error('GET health failed: HTTP '+response.status);
+              const body=await response.json();
+              if(body?.ok!==true||body?.data?.app!=='Ngulik Digital API')
+                throw Error('Unexpected backend identity.');
+              const actual=String(body?.data?.source_revision||'');
+              if(!actual)throw Error('DRIFT: runtime has no source_revision; GAS update has not been verified.');
+              if(actual!==expected[1])
+                throw Error('DRIFT: source revision differs from active STAGING GAS.');
+              console.log('STAGING_SOURCE_REVISION_MATCH:',actual);
+              console.log('NOTE: marker match is not a cryptographic full-bundle attestation. Verify each copied .gs file before deployment.');
+            }finally{clearTimeout(timer);}
+          })().catch(error=>{
+            console.error('STAGING_SOURCE_DRIFT_CHECK_FAILED:',String(error.message).slice(0,180));
+            process.exitCode=1;
+          });
+          NODE
