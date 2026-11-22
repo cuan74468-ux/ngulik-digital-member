@@ -10,7 +10,7 @@ window.NGD_CONFIG = Object.freeze({
   memberWritesEnabled:true, // STAGING GAS verified mutations=true (21 Nov 2026)
   registrationOtpEnabled:true, // UI is additionally gated by verified STAGING API readiness
   memberOtpLoginEnabled:true, // STAGING UI only; backend flag remains authoritative
-  paymentsEnabled:false, // fail closed until QRIS merchant scan, finance UAT and owner release approval
+  paymentsEnabled:true, // STAGING UI only: backend finance readiness + verified merchant QRIS must both be true
   adminLoginEnabled:true,
   contentEnabled:true,
   catalogEnabled:true,
