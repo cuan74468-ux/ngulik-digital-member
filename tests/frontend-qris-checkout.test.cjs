@@ -19,7 +19,7 @@ const checkoutEnd=app.indexOf('function viewCheckout(){',checkoutStart);
 const draft=app.slice(checkoutStart,checkoutEnd);
 function harness({id='P-SERVICE',price=50000,payments=false,logged=true}={}){
   const p={product_id:id,nama:'Jasa Website',deskripsi:'Deskripsi',harga:price,tipe:'JASA_SEKALI'};
-  const state={catalog:[p],checkoutProductId:id};
+  const state={catalog:[p],checkoutProductId:id,workspaceInfo:{workspace:'NGD_STAGING',environment:'STAGING',finance_enabled:payments,mutations_enabled:true}};
   const make=new Function('state','config','moneyValue','paymentEnabled','qrisUrl',
     'isAdmin','logged','supportedSaleTypes','offerUiTitle_','offerUiDescription_',
     'offerCategoryLabel','esc','idSafe','rupiah','icon','NGD_FREE_EBOOK_URL',
@@ -27,7 +27,7 @@ function harness({id='P-SERVICE',price=50000,payments=false,logged=true}={}){
     draft+'\nreturn {viewCheckoutDraft_,openProductCheckout_};');
   const routes=[];
   return {routes,ui:make(state,
-    {qrisMerchant:'Linggau AI Studio',qrisOwnerImageApproved:payments},
+    {qrisMerchant:'Linggau AI Studio',qrisOwnerImageApproved:payments,qrisImageUrl:payments?'https://example.invalid/qris.svg':''},
     Number,()=>payments,()=>payments?'https://example.invalid/qris.svg':'',
     ()=>false,()=>logged,new Set(['JASA_SEKALI']),
     p=>p.nama,p=>p.deskripsi,()=>'Jasa Digital',
