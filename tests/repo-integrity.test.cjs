@@ -107,15 +107,17 @@ test('berkas hygiene repo tersedia dan benar',()=>{
   assert.match(ignore,/^node_modules\/$/m);
 });
 
-test('README selaras dengan keputusan pembayaran dan tidak memuat klaim usang',()=>{
+test('README publik menjelaskan manfaat produk tanpa membocorkan kontrol internal',()=>{
   const readme=read('README.md');
-  assert.match(readme,/QRIS Statis DANA Bisnis/);
-  assert.match(readme,/NO-GO/);
-  assert.doesNotMatch(readme,/Pembayaran terencana/i);
-  assert.doesNotMatch(readme,/Mayar\.id\s*\/\s*QRIS/i);
-  assert.doesNotMatch(readme,/\b\d{3}\/\d{3}\s+tes\b/i,'jangan menulis jumlah tes di README; baca dari CI');
+  assert.match(readme,/Ngulik Digital/);
+  assert.match(readme,/Linggau AI Studio/);
+  assert.match(readme,/github\.io\/ngulik-digital-member\//);
+  // Public presentation is not an operational runbook.
+  assert.doesNotMatch(readme,/NO-GO|STAGING|\bproduction\b|DATABASE|\b29 tab\b|\b16 tab\b/i);
+  assert.doesNotMatch(readme,/NGD_[A-Z_]+|(?:apps-script|contracts|PROJECT_CONTROL|AGENTS|docs\/)/);
+  assert.doesNotMatch(readme,/Mayar|Scalev|DANA Bisnis|\b(?:PENDING|PAID|EXPIRED)\b/);
+  assert.doesNotMatch(readme,/script\.google\.com|docs\.google\.com|spreadsheets\/d\//);
 });
-
 test('seluruh GitHub Actions terikat SHA 40 karakter, bukan tag bergerak',()=>{
   const dir=path.join(root,'.github/workflows');
   const workflows=fs.readdirSync(dir).filter(f=>/\.ya?ml$/.test(f));
