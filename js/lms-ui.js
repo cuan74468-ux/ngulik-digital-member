@@ -75,36 +75,53 @@ function portalGroup_(m){
   return 'internal';
 }
 function memberPortal_(old){
-  if(!old.length)return '';
-  var disclosure='Seluruh program kelas online gratis, pelatihan, dan portal layanan publik di bawah ini merupakan fasilitas resmi milik masing-masing penyedia layanan. Ngulik Digital hanya berperan sebagai kurator dan penghubung informasi untuk memudahkan akses member. Untuk mengikuti kelas atau menggunakan layanan, Anda perlu mendaftar/masuk langsung di situs penyedia masing-masing. Seluruh syarat, jadwal, kuota, dan ketentuan sertifikat sepenuhnya mengikuti kebijakan penyedia terkait.';
+  var resources=Array.isArray(old)?old:[];
+  var disclosure='Ngulik Digital hanya berperan sebagai kurator dan penghubung informasi. Semua kelas, layanan, akun, jadwal, biaya tambahan bila ada, serta sertifikat berada di bawah ketentuan masing-masing penyedia. Anda akan membuka situs penyedia di tab baru; tidak ada checkout atau komisi affiliate dari halaman ini.';
   var groups=[
-    {id:'internal',title:'Materi Internal Ngulik Digital'},
-    {id:'ai',title:'AI & Digital Marketing'},
-    {id:'bisnis',title:'Bisnis & Keuangan UMKM'},
-    {id:'fasilitas',title:'Fasilitas Resmi UMKM'}
+    {id:'internal',title:'Materi Internal Ngulik Digital',hint:'Panduan pengantar dan materi dari tim Ngulik Digital.'},
+    {id:'ai',title:'AI & Digital Marketing',hint:'Belajar membuat konten dan mempromosikan usaha.'},
+    {id:'bisnis',title:'Bisnis & Keuangan UMKM',hint:'Mengelola usaha, keuangan, dan pengembangan bisnis.'},
+    {id:'fasilitas',title:'Fasilitas Resmi UMKM',hint:'Informasi dan layanan pemerintah atau penyedia resmi.'}
   ];
-  return '<section class="learning-legacy learning-portal section-gap" aria-labelledby="member-portal-heading">'+
-    '<div class="learning-section-head"><div><p class="eyebrow">FASILITAS MEMBER / PORTAL INFORMASI</p>'+
-    '<h3 id="member-portal-heading">Portal Belajar & Fasilitas UMKM</h3>'+
-    '<p>'+old.length+' materi dan tautan kurasi. Materi Pengantar internal dan akses penyedia tanpa checkout Ngulik Digital.</p></div></div>'+
-    '<p class="learning-portal-disclaimer" role="note">'+e(disclosure)+'</p>'+
-    '<div class="learning-portal-groups">'+groups.map(function(group){
-      var items=old.filter(function(m){return portalGroup_(m)===group.id;});
-      if(!items.length)return '';
-      return '<details class="learning-portal-group" open>'+
-        '<summary class="learning-portal-summary"><span><strong>'+e(group.title)+'</strong>'+
-        '<small>'+items.length+' pilihan</small></span><span class="learning-portal-chevron" aria-hidden="true">⌄</span></summary>'+
-        '<div class="learning-legacy-list">'+items.map(function(m,i){
-          var target=portalLink_(m.url_classroom);
-          var cleanName=String(m.judul||'').replace(/^\[(?:AI & Digital Marketing|Bisnis & Keuangan UMKM|Fasilitas Resmi UMKM)\]\s*/,'');
-          return '<article class="learning-legacy-row"><span class="learning-legacy-no">'+
-            String(i+1).padStart(2,'0')+'</span><div class="learning-legacy-copy">'+
-            '<h4>'+e(cleanName)+'</h4><p>'+e(m.deskripsi)+'</p></div>'+
-            (target?'<a class="btn btn-secondary btn-sm" href="'+e(target)+
-              '" rel="noopener noreferrer external" target="_blank" aria-label="Buka situs penyedia '+e(cleanName)+'">Buka situs ↗</a>':
-              '<span class="chip">Tautan tidak tersedia</span>')+'</article>';
-        }).join('')+'</div></details>';
-    }).join('')+'</div></section>';
+  var count=resources.length;
+  return '<section class="learning-portal-page" aria-labelledby="member-portal-heading">'+
+    '<header class="learning-portal-hero">'+
+      '<div><p class="eyebrow">FASILITAS GRATIS / KHUSUS MEMBER</p>'+
+      '<h2 id="member-portal-heading">Portal Belajar Gratis & Fasilitas UMKM</h2>'+
+      '<p>Temukan panduan, kelas, dan layanan yang bisa membantu usaha Anda. Pilih topik, lalu buka situs penyedianya. Tanpa checkout Ngulik Digital.</p>'+
+      '<div class="learning-portal-hero-actions"><button type="button" class="btn btn-secondary" data-route="belajar">← Kembali ke Kelas Saya</button>'+
+      '<span class="learning-portal-total">'+count+' materi dan tautan kurasi</span></div></div>'+
+    '</header>'+
+    '<div class="learning-portal-disclaimer" role="note" aria-label="Disclaimer resmi">'+
+      '<strong>Informasi penting sebelum membuka tautan</strong><p>'+e(disclosure)+
+      ' Seluruh syarat, jadwal, kuota, dan ketentuan sertifikat mengikuti kebijakan penyedia layanan terkait.</p>'+
+    '</div>'+
+    (count?
+      '<div class="learning-portal-tools">'+
+        '<label class="learning-portal-search"><span>Cari materi atau layanan</span><input id="learning-portal-search" type="search" autocomplete="off" placeholder="Contoh: AI, pemasaran, KUR, NIB…" aria-label="Cari materi dan layanan gratis"></label>'+
+        '<div class="learning-portal-filters" role="group" aria-label="Filter kategori portal">'+
+          '<button type="button" data-portal-filter="all" aria-pressed="true">Semua</button>'+
+          groups.map(function(g){return '<button type="button" data-portal-filter="'+g.id+'" aria-pressed="false">'+e(g.title)+'</button>';}).join('')+
+        '</div><p class="learning-portal-result" role="status" aria-live="polite">Menampilkan '+count+' materi dan tautan</p>'+
+      '</div>'+
+      '<div class="learning-portal-groups">'+groups.map(function(group){
+        var items=resources.filter(function(m){return portalGroup_(m)===group.id;});
+        if(!items.length)return '';
+        return '<section class="learning-portal-group" data-portal-group="'+group.id+'" aria-label="'+e(group.title)+'">'+
+          '<div class="learning-portal-group-head"><div><h3>'+e(group.title)+'</h3><p>'+e(group.hint)+'</p></div><span>'+items.length+' pilihan</span></div>'+
+          '<div class="learning-legacy-list">'+items.map(function(m,i){
+            var target=portalLink_(m.url_classroom);
+            var cleanName=String(m.judul||'').replace(/^\\[(?:AI & Digital Marketing|Bisnis & Keuangan UMKM|Fasilitas Resmi UMKM)\\]\\s*/,'');
+            var searchText=(cleanName+' '+String(m.deskripsi||'')).toLocaleLowerCase('id-ID');
+            return '<article class="learning-legacy-row" data-portal-item data-portal-category="'+group.id+'" data-portal-search="'+e(searchText)+'">'+
+              '<span class="learning-legacy-no">'+String(i+1).padStart(2,'0')+'</span>'+
+              '<div class="learning-legacy-copy"><h4>'+e(cleanName)+'</h4><p>'+e(m.deskripsi||'')+'</p></div>'+
+              (target?'<a class="btn btn-secondary btn-sm" href="'+e(target)+'" rel="noopener noreferrer external" target="_blank" aria-label="Buka situs resmi penyedia '+e(cleanName)+'">Buka Situs Resmi ↗</a>':
+                '<span class="chip">Tautan tidak tersedia</span>')+'</article>';
+          }).join('')+'</div></section>';
+      }).join('')+'</div><p class="learning-portal-empty" hidden role="status">Tidak ada materi sesuai pencarian. Coba kategori atau kata lain.</p>':
+      '<section class="learning-portal-empty-state"><h3>Belum ada materi yang ditampilkan</h3><p>Materi portal akan muncul di sini setelah diterbitkan oleh pengelola.</p></section>')+
+  '</section>';
 }
 function memberCatalog(courses,enrollments,legacy){
   var list=Array.isArray(courses)?courses:[],joined=Array.isArray(enrollments)?enrollments:[],
@@ -147,7 +164,9 @@ function memberCatalog(courses,enrollments,legacy){
       '<div class="surface lms-empty learning-empty">'+
       '<h3>Kelas Belum Tersedia</h3>'+
       '<p>Kelas baru akan muncul di sini.</p></div>')+
-    memberPortal_(old)+
+    '<section class="learning-portal-promo" aria-label="Portal belajar gratis">'+
+      '<div><p class="eyebrow">SUMBER BELAJAR TAMBAHAN</p><h3>Butuh referensi gratis dari luar kelas?</h3><p>Jelajahi materi dan layanan resmi UMKM. Ini portal tautan, bukan kelas dengan progres, dan tidak memerlukan checkout.</p></div>'+
+      '<button type="button" class="btn btn-secondary" data-route="portal">Buka Portal Gratis ↗</button></section>'+
     '</div>';
 }
 function memberCourse(detail,enrollments,canWrite){
@@ -358,7 +377,7 @@ function aiJob(job,canWrite){
       '<p class="small muted">Periksa dan edit hasil sebelum menerbitkannya.</p></section>';
 }
 root.NGD_LMS_UI=Object.freeze({
-  memberCatalog:memberCatalog,memberCourse:memberCourse,memberSuccess:memberSuccess,
+  memberCatalog:memberCatalog,memberPortal:memberPortal_,memberCourse:memberCourse,memberSuccess:memberSuccess,
   adminCatalog:adminCatalog,adminEditor:adminEditor,
   lessonEditor:lessonEditor,aiJob:aiJob
 });
