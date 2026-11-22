@@ -176,6 +176,8 @@ test('checkout invoice matches the backend surcharge contract and never offers a
   assert.match(app,/uniqueCode>=100&&uniqueCode<=999/);
   assert.match(app,/String\(o\.metode\)==='QRIS_STATIS'&&qrAmountMatchesOrder/);
   assert.match(app,/Nominal perlu verifikasi/);
+  assert.match(app,/open&&qrAmountMatchesOrder&&officialQr\?'<button/);
+  assert.doesNotMatch(app,/\(open\?'<button type="button" class="btn btn-secondary btn-sm" data-copy=/);
   assert.match(app,/Kode unik pembayaran/);
   assert.match(app,/harga produk \+ kode unik 3 digit/);
   assert.doesNotMatch(app,/Kode unik pesanan lama/);
