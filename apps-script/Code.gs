@@ -3009,9 +3009,13 @@ function runScheduledAutomations() {
       if(o.status!=='PENDING'||processed>=100)return;
       processed++;
       var created=new Date(o.created_at).getTime();
-      if(!Number.isFinite(created))return;
+      var deadline=new Date(o.expires_at).getTime();
+      // The invoice's persisted expiry is authoritative; settings may have
+      // changed after the member placed the order. Corrupt timestamps are
+      // held for Owner reconciliation instead of being silently rewritten.
+      if(!Number.isFinite(created)||!Number.isFinite(deadline))return;
       var age=now-created;
-      if(age>=expiryMin*60000){
+      if(deadline<=now){
         updateRow_('orders',o._row,{status:'EXPIRED'});
         logAudit_('SYSTEM','SYSTEM','ORDER_EXPIRED','orders',
           o.order_id,'PENDING','EXPIRED',{reason:'SCHEDULED'});

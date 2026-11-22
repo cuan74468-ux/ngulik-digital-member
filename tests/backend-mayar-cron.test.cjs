@@ -9,7 +9,7 @@ const token='T'.repeat(48);
 function setup(){
   const order={_row:2,order_id:'ORDER-1',member_id:'M-2',product_id:'P-TOKEN-10',
     gateway_ref_id:'pay_123456789012',status:'PENDING',total_bayar:10100,
-    created_at:new Date(Date.now()-20*60000).toISOString(),abandonment_reminded_at:''};
+    created_at:new Date(Date.now()-20*60000).toISOString(),expires_at:new Date(Date.now()+40*60000).toISOString(),abandonment_reminded_at:''};
   const member={_row:3,member_id:'M-2',nama:'Member',wa:'628123456789'};
   const product={product_id:'P-TOKEN-10',tipe:'TOPUP_TOKEN',kredit_diberikan:10};
   const mutations=[],queue=[],audit=[];
@@ -80,7 +80,7 @@ test('cron: sends one reminder and marks the order',()=>{
   assert.equal(b.reminders_accepted,0);
 });
 test('cron: expires old pending order without reminder',()=>{
-  const x=setup();x.order.created_at=new Date(Date.now()-61*60000).toISOString();
+  const x=setup();x.order.created_at=new Date(Date.now()-61*60000).toISOString();x.order.expires_at=new Date(Date.now()-60000).toISOString();
   const a=vm.runInContext('runScheduledAutomations()',x.ctx);
   assert.equal(a.expired,1);
   assert.equal(x.order.status,'EXPIRED');
@@ -95,4 +95,24 @@ test('static QRIS: Mayar webhook rejects even with valid gateway credentials',()
   const x=setup();x.ctx.settings_=()=>({payment_gateway_mode:'QRIS_STATIS'});
   assert.throws(()=>x.webhook(),/Webhook Mayar tidak aktif/);
   assert.equal(x.order.status,'PENDING');
+});
+
+test('scheduled expiry uses each invoice deadline, not changed global settings',()=>{
+  const x=setup();
+  x.order.created_at=new Date(Date.now()-70*60000).toISOString();
+  x.order.expires_at=new Date(Date.now()+5*60000).toISOString();
+  x.ctx.settings_=()=>({order_expiry_menit:20,cart_abandonment_menit:15,
+    followup_member_otomatis:false,payment_gateway_mode:'QRIS_STATIS'});
+  const result=x.ctx.runScheduledAutomations();
+  assert.equal(result.expired,0);
+  assert.equal(x.order.status,'PENDING');
+  assert.equal(x.mutations.length,0);
+});
+test('scheduled expiry leaves invalid deadlines for reconciliation',()=>{
+  const x=setup();
+  x.order.expires_at='invalid-date';
+  const result=x.ctx.runScheduledAutomations();
+  assert.equal(result.expired,0);
+  assert.equal(result.reminders_accepted,0);
+  assert.equal(x.mutations.length,0);
 });
