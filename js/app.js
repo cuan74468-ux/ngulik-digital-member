@@ -1030,7 +1030,7 @@ function viewPortalGratis_(){
 }
 function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
-    return viewMemberFreeResources_()+window.NGD_LMS_UI.memberCatalog(state.lmsCourses,state.lmsEnrollments,state.modules);
+    return window.NGD_LMS_UI.memberCatalog(state.lmsCourses,state.lmsEnrollments,state.modules)+viewMemberFreeResources_();
   if(!logged())return '<section class="ngd-role-gate">'+
     '<p class="eyebrow">RUANG BELAJAR MEMBER</p>'+
     '<h1>Materi belajar tersedia untuk member.</h1>'+
