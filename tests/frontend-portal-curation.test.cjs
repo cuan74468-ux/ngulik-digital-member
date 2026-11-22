@@ -4,7 +4,7 @@ const root=path.join(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'
 function renderModules(modules){
   const window={};
   vm.runInNewContext(read('js/lms-ui.js'),{window,URL},{timeout:3000});
-  return window.NGD_LMS_UI.memberCatalog([],[],modules);
+  return window.NGD_LMS_UI.memberPortal(modules);
 }
 test('all 39 STAGING portal entries render in four distinct groups without checkout',()=>{
   const modules=[
@@ -23,7 +23,7 @@ test('all 39 STAGING portal entries render in four distinct groups without check
     assert.ok(html.includes(heading),heading);
   }
   assert.equal((html.match(/class="learning-legacy-row"/g)||[]).length,39);
-  assert.equal((html.match(/Buka situs ↗/g)||[]).length,39);
+  assert.equal((html.match(/Buka Situs Resmi ↗/g)||[]).length,39);
   assert.match(html,/Ngulik Digital hanya berperan sebagai kurator/);
   assert.match(html,/Seluruh syarat, jadwal, kuota, dan ketentuan sertifikat/);
   assert.doesNotMatch(html,/data-checkout-product|data-checkout-create|data-partner-out/);
@@ -53,4 +53,20 @@ test('public navigation and partner shelf separate member facilities',()=>{
   assert.equal(eligible({link_affiliate:'https://fonnte.com/'}),'');
   assert.equal(eligible({link_affiliate:'https://shopee.co.id/search?keyword=printer'}),'');
   assert.match(eligible({link_affiliate:'https://member.pusatecourse.com/aff/1740/1424/'}),/\/aff\/1740\/1424\//);
+});
+
+test('member learning catalog separates internal LMS courses from the free provider portal',()=>{
+  const window={};
+  vm.runInNewContext(read('js/lms-ui.js'),{window,URL},{timeout:3000});
+  const courses=window.NGD_LMS_UI.memberCatalog([],[],[{modul_id:'KUR-A3-01',judul:'[Fasilitas Resmi UMKM] OSS',url_classroom:'https://oss.go.id/id'}]);
+  assert.match(courses,/Kelas Belum Tersedia/);
+  assert.match(courses,/Buka Portal Gratis/);
+  assert.doesNotMatch(courses,/href="https:\/\/oss\.go\.id/);
+  const app=read('js/app.js');
+  assert.match(app,/portal:\['Portal Gratis','book'\]/);
+  assert.match(app,/function viewPortalGratis_\(\)/);
+  assert.match(app,/route==='belajar'\|\|route==='portal'/);
+  assert.match(app,/guestPrivateRoutes_=new Set\(\['ai','ai-tool','belajar','portal'/);
+  assert.match(app,/function filterMemberPortal_\(\)/);
+  assert.match(app,/if\(e\.target\.id==='learning-portal-search'\)filterMemberPortal_\(\)/);
 });
