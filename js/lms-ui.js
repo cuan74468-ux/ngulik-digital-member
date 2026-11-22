@@ -55,8 +55,7 @@ function courseTile(course,admin,enrolled){
   var actionText=admin?'Kelola kelas':active?'Lanjutkan kelas':locked?'Lihat detail':'Lihat kurikulum';
   return '<article class="surface lms-course-tile" data-course-state="'+(active?'active':'available')+
     '" data-course-search="'+e((String(course.title||'')+' '+String(course.category||'')+' '+String(course.summary||'')).toLocaleLowerCase('id-ID'))+'">'+
-    '<div class="learning-course-art" aria-hidden="true"><div class="learning-course-symbol">'+
-    '<span></span><span></span><span></span></div><span class="learning-art-index">NGULIK / KELAS</span></div>'+
+    '<div class="learning-course-art" aria-hidden="true"><span class="learning-art-index">NGULIK DIGITAL · KELAS PRAKTIS</span><span class="learning-art-glyph">↗</span></div>'+
     '<div class="learning-course-copy"><div class="lms-course-top">'+
     '<span class="learning-course-category">'+e(course.category||'Kelas praktis')+'</span>'+
     '<span class="learning-status'+(active?' is-active':'')+'">'+e(labelText)+'</span></div>'+
