@@ -98,6 +98,22 @@ function pinMatches_(pin,salt,stored) {
   if(!/^[a-f0-9]{64}$/i.test(hash))return false;
   return pinEqualConstantTime_(pinHash_(pin,salt),hash);
 }
+// Opt-in, locked upgrade-on-login. Never rewrite a legacy hash until a
+// correct PIN has been checked and the owner-enabled V2 pepper is available.
+// Existing sessions remain valid: the PIN itself has not changed.
+function ngdUpgradePinHashOnLogin_(member,pin) {
+  var props=PropertiesService.getScriptProperties();
+  if(props.getProperty('NGD_PIN_HASH_V2_ENABLED')!=='true')return false;
+  var stored=String(member&&member.pin_hash||'');
+  if(/^v2\$[a-f0-9]{64}$/i.test(stored))return false;
+  require_(/^[a-f0-9]{64}$/i.test(stored)&&Number.isInteger(member._row)&&member._row>=2,
+    'MAINTENANCE','Data PIN belum siap untuk peningkatan keamanan.');
+  // pinHashV2_ fails closed on missing/short pepper, before any data write.
+  var upgraded=pinHashV2_(pin,member.pin_salt);
+  updateRow_('members',member._row,{pin_hash:upgraded});
+  member.pin_hash=upgraded;
+  return true;
+}
 function randomPin_() {
   // Enam angka, tanpa memakai PIN statis dari kode.
   var parts = uuid_().match(/.{1,4}/g);
@@ -959,6 +975,9 @@ function authLogin_(p,adminOnly,expectedAdminId) {
       throw ngdError_('UNAUTHORIZED','Nomor WhatsApp atau PIN salah.');
     }
     require_(m.status==='AKTIF','FORBIDDEN','Akun belum aktif.');
+    // Under the same authentication lock: no unrelated account can write
+    // the PIN between verification and migration.
+    ngdUpgradePinHashOnLogin_(m,pin);
     clearLoginFailures_(wa);
     updateActivity_(m);
     return newSessionMember_(m);
