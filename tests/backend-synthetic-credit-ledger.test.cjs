@@ -90,7 +90,7 @@ test('STAGING exposes QA UI controls but backend retains independent finance and
   assert.match(app,/state\.workspaceInfo\?\.registration_enabled===true/);
   assert.match(staging,/memberOtpLoginEnabled:true/);
   assert.match(staging,/paymentsEnabled:true/); // Opt-in alone cannot permit finance writes.
-  assert.match(staging,/qrisOwnerImageApproved:false/);
+  assert.match(staging,/qrisOwnerImageApproved:\s*true/);
   assert.match(staging,/adminLoginEnabled:true/);
   assert.match(code,/requireMutationsEnabled_\(\);\s*requireActionFeatureEnabled_\(action\);/);
   assert.match(code,/function requireActionFeatureEnabled_\(action\)/);
