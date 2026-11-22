@@ -95,7 +95,7 @@ const icons = {
 };
 const icon=(name)=>'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||icons.grid)+'</svg>';
 const screens={
-  beranda:['Beranda','home'],belajar:['Kelas','book'],menu:['Menu','grid'],
+  beranda:['Beranda','home'],belajar:['Kelas Saya','book'],portal:['Portal Gratis','book'],menu:['Menu','grid'],
   lms:['Kelola Kelas','book'],['lms-editor']:['Ruang Materi','book'],
   ['lms-lesson']:['Editor Pelajaran','book'],['lms-course']:['Ruang Kelas','book'],
   ['lms-ai']:['Review Draft AI','spark'],
@@ -108,14 +108,14 @@ const screens={
   rilis:['Pembaruan','check'],pengaturan:['Pengaturan','shield'],login:['Masuk','user'],['admin-login']:['Masuk Admin','shield'],daftar:['Daftar','users'],checkout:['Pembayaran','wallet']
 };
 const guestNav=['beranda','katalog','jasa','dukungan'];
-const memberNav=['beranda','katalog','ai','jasa','belajar','pesanan','affiliate','dukungan','akun'];
+const memberNav=['beranda','katalog','ai','jasa','belajar','portal','pesanan','affiliate','dukungan','akun'];
 // Keep desktop focused: five destinations; remaining features live in More.
 const memberDesktopNav=['beranda','katalog','ai','jasa','belajar'];
 const memberDesktopExtraRoutes=memberNav.filter(route=>!memberDesktopNav.includes(route));
 // One native navigation system on phones: four primary tabs plus a More sheet.
 // The existing header nav remains available on wide screens only.
 const memberDockRoutes=['beranda','katalog','ai','pesanan'];
-const memberExtraRoutes=['jasa','belajar','affiliate','dukungan','akun'];
+const memberExtraRoutes=['jasa','belajar','portal','affiliate','dukungan','akun'];
 const adminOnlyRoutes=new Set(['admin','konten','produk','layanan','lms','lms-editor','lms-lesson','lms-ai','member','antrean','pengaturan']);
 const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
 const adminContextRoute=(route)=>({
@@ -322,7 +322,7 @@ function renderNav(){
   if(drawer){
     const routes=isAdmin()?adminNav:logged()?memberNav:guestNav;
     const names={beranda:logged()&&!isAdmin()?'Beranda Member':'Beranda',
-      katalog:'Katalog',ai:'Studio AI',jasa:'Jasa',belajar:'Akses & Kelas',
+      katalog:'Katalog',ai:'Studio AI',jasa:'Jasa',belajar:'Kelas Saya',portal:'Portal Gratis',
       affiliate:'Ajak Teman',pesanan:'Pesanan',
       dukungan:'Bantuan',akun:'Profil',admin:'Dashboard'};
     drawer.innerHTML='<div class="top-nav-drawer-inner">'+
@@ -403,7 +403,7 @@ const needLogin=(feature)=>
 function viewMore(){
   const routes=isAdmin()?adminNav:logged()?memberNav:[...guestNav,'login'];
   const descriptions={
-    beranda:'Mulai dari sini',belajar:'Kelas dan progres',katalog:'Jasa dan produk',
+    beranda:'Mulai dari sini',belajar:'Kelas dan progres',portal:'Materi & layanan gratis resmi',katalog:'Jasa dan produk',
     jasa:'Pesan jasa',ai:'Buat konten',affiliate:'Bagikan tautan',
     dukungan:'Tanya dan laporkan kendala',akun:'Profil akun',admin:'Ringkasan usaha',
     konten:'Gambar dan banner',produk:'Daftar Produk',layanan:'Permintaan pelanggan',
@@ -1022,10 +1022,15 @@ function viewCatalog(){
     '<button type="button" class="btn btn-secondary" data-route="pesanan">Pesanan Saya '+icon('arrow')+'</button></header>'+
     access+storefront+viewPartnerShelf_()+'</div>';
 }
+function viewPortalGratis_(){
+  if(!logged()||isAdmin())return needLogin('Portal Belajar Gratis Member');
+  if(!window.NGD_LMS_UI?.memberPortal)
+    return '<section class="surface"><h2>Portal sedang dimuat</h2><p>Coba muat ulang halaman untuk membuka sumber belajar gratis.</p></section>';
+  return window.NGD_LMS_UI.memberPortal(state.modules);
+}
 function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
-    return viewMemberFreeResources_()+
-      window.NGD_LMS_UI.memberCatalog(state.lmsCourses,state.lmsEnrollments,state.modules);
+    return window.NGD_LMS_UI.memberCatalog(state.lmsCourses,state.lmsEnrollments,state.modules);
   if(!logged())return '<section class="ngd-role-gate">'+
     '<p class="eyebrow">RUANG BELAJAR MEMBER</p>'+
     '<h1>Materi belajar tersedia untuk member.</h1>'+
@@ -1033,7 +1038,7 @@ function viewLearn(){
     '<div class="ngd-role-actions"><button type="button" class="btn btn-primary" data-route="login">Masuk Member</button>'+
     '<button type="button" class="btn btn-secondary" data-route="katalog">Kembali ke Katalog</button></div></section>';
   const modules=state.modules;
-  return viewMemberFreeResources_()+title('Kelas & Materi Anda','PILIHAN KELAS','Pilih materi yang ingin Anda pelajari.')+
+  return title('Kelas Saya','PILIHAN KELAS','Belajar melalui kelas yang mencatat progres. Untuk tautan belajar gratis, buka Portal Gratis.')+
     (modules.length?'<div class="stack">'+modules.map((m,i)=>'<article class="surface list-row"><div class="left" style="display:flex;gap:15px;align-items:center"><span class="step-no">'+esc(m.urut||i+1)+'</span><div><strong>'+esc(m.judul)+'</strong><small>'+esc(m.deskripsi||'')+'</small></div></div>'+
     (classroomUrlSafe(m.url_classroom)?'<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href="'+esc(classroomUrlSafe(m.url_classroom))+'">Buka materi '+icon('arrow')+'</a>':
     '<span class="chip">Materi menyusul</span>')+'</article>').join('')+'</div>':
@@ -2482,7 +2487,7 @@ function render(){
   renderNav();
   by('notice-slot').innerHTML=notice();
   const routes={
-    beranda:viewHome,belajar:viewLearn,katalog:viewCatalog,'detail-produk':viewProductDetail,ai:viewAI,'ai-tool':viewAITool,affiliate:viewAffiliate,menu:viewMore,
+    beranda:viewHome,belajar:viewLearn,portal:viewPortalGratis_,katalog:viewCatalog,'detail-produk':viewProductDetail,ai:viewAI,'ai-tool':viewAITool,affiliate:viewAffiliate,menu:viewMore,
     lms:()=>isAdmin()&&window.NGD_LMS_UI?
       window.NGD_LMS_UI.adminCatalog(state.lmsAdminCourses,lmsWriteEnabled(),state.catalog):
       needLogin('studio LMS'),
@@ -2523,7 +2528,7 @@ function render(){
 // Navigation is a small predictable state machine. A product checkout can be
 // bookmarked, and Android/browser Back returns to the previous screen.
 let lastRouteHash_=location.hash;
-const guestPrivateRoutes_=new Set(['ai','ai-tool','belajar','lms-course','lms-complete','affiliate','pesanan','checkout','akun','layanan']);
+const guestPrivateRoutes_=new Set(['ai','ai-tool','belajar','portal','lms-course','lms-complete','affiliate','pesanan','checkout','akun','layanan']);
 function guestRoute_(route){
   if(!logged()&&!isAdmin()&&guestPrivateRoutes_.has(route)){
     if(route==='checkout'&&state.checkoutProductId)state.pendingPurchaseId=state.checkoutProductId;
@@ -2690,7 +2695,7 @@ async function loadRoute(route){
       try{state.partnerShelf=await sessionApi('getEtalase',{},token);state.partnerShelfLoaded=true;}
       catch(e){if(!sameSession())return;state.partnerShelfLoaded=true;state.partnerShelf=[];}
     }
-    if(route==='belajar'){
+    if(route==='belajar'||route==='portal'){
       // Legacy modules remain usable while the new GAS LMS backend is staged.
       const responses=await verifySessionRead(Promise.allSettled([
         sessionApi('getModulBelajar',{},token),sessionApi('getLMSCatalog',{},token),
@@ -3644,6 +3649,26 @@ function filterLearningCards_(){
   const notice=root.querySelector('.learning-filter-empty');
   if(notice)notice.hidden=count>0;
 }
+function filterMemberPortal_(){
+  const root=document.querySelector('.learning-portal-page');
+  if(!root)return;
+  const filter=root.querySelector('[data-portal-filter][aria-pressed="true"]')?.dataset.portalFilter||'all';
+  const query=(root.querySelector('#learning-portal-search')?.value||'').trim().toLocaleLowerCase('id-ID');
+  let count=0;
+  root.querySelectorAll('[data-portal-item]').forEach(item=>{
+    const visible=(filter==='all'||item.dataset.portalCategory===filter)&&
+      (!query||(item.dataset.portalSearch||'').includes(query));
+    item.hidden=!visible;
+    if(visible)count++;
+  });
+  root.querySelectorAll('[data-portal-group]').forEach(group=>{
+    group.hidden=!Array.from(group.querySelectorAll('[data-portal-item]')).some(item=>!item.hidden);
+  });
+  const result=root.querySelector('.learning-portal-result');
+  if(result)result.textContent='Menampilkan '+count+' materi dan tautan';
+  const empty=root.querySelector('.learning-portal-empty');
+  if(empty)empty.hidden=count>0;
+}
 function selectLearningLesson_(index){
   const root=document.querySelector('.learning-reader-layout');
   if(!root||!Number.isSafeInteger(index)||index<0)return;
@@ -3661,6 +3686,7 @@ function selectLearningLesson_(index){
 }
 document.addEventListener('input',e=>{
   if(e.target.id==='learning-course-search')filterLearningCards_();
+  if(e.target.id==='learning-portal-search')filterMemberPortal_();
 });
 // Capture image loading failures even when the checkout is re-rendered.
 document.addEventListener('error',event=>{
