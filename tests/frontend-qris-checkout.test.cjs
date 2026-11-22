@@ -192,3 +192,24 @@ test('guest cannot read member-only free resource URL from a direct checkout ren
   assert.match(member,/Buka akses gratis/);
   assert.match(app,/if\(!logged\(\)\|\|isAdmin\(\)\)return viewCheckoutDraft_\(\)/);
 });
+
+test('server rejects subtractive QRIS amounts before persistence and financial approval',()=>{
+  const fnStart=backend.indexOf('function ngdRequireQrOrderAmount_(o)');
+  const fnEnd=backend.indexOf('var NGD_CHECKOUT_TYPES_',fnStart);
+  assert.ok(fnStart>=0&&fnEnd>fnStart);
+  const guard=new Function('require_',backend.slice(fnStart,fnEnd)+
+    '\nreturn ngdRequireQrOrderAmount_;')((condition,code,message)=>{
+      if(!condition)throw new Error(code+': '+message);
+    });
+  assert.equal(guard({metode:'QRIS_STATIS',harga_dasar:15000,kode_unik:100,total_bayar:15100}),15100);
+  assert.throws(()=>guard({metode:'QRIS_STATIS',harga_dasar:15000,kode_unik:100,total_bayar:14900}),/RECONCILIATION_REQUIRED/);
+  assert.throws(()=>guard({metode:'QRIS_STATIS',harga_dasar:15000,kode_unik:99,total_bayar:15099}),/RECONCILIATION_REQUIRED/);
+  const checkout=backend.slice(backend.indexOf('function newOrder_'),backend.indexOf('function ngdMayarInvoiceUrl_'));
+  assert.ok(checkout.indexOf('ngdRequireQrOrderAmount_(o);')<checkout.indexOf("appendRow_('orders',o);"));
+  assert.match(checkout,/var persisted=byId_\('orders','order_id',id\)/);
+  assert.match(checkout,/ngdRequireQrOrderAmount_\(persisted\)/);
+  assert.match(checkout,/Number\(persisted\.total_bayar\)\.toLocaleString\('id-ID'\)/);
+  assert.match(checkout,/return orderView_\(persisted,m\)/);
+  const transition=backend.slice(backend.indexOf('function transitionOrder_'),backend.indexOf('// Shared pure reference checks.'));
+  assert.match(transition,/if\(String\(o\.metode\|\|''\)==='QRIS_STATIS'\)ngdRequireQrOrderAmount_\(o\)/);
+});
