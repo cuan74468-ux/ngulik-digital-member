@@ -115,3 +115,29 @@ test('README selaras dengan keputusan pembayaran dan tidak memuat klaim usang',(
   assert.doesNotMatch(readme,/Mayar\.id\s*\/\s*QRIS/i);
   assert.doesNotMatch(readme,/\b\d{3}\/\d{3}\s+tes\b/i,'jangan menulis jumlah tes di README; baca dari CI');
 });
+
+test('seluruh GitHub Actions terikat SHA 40 karakter, bukan tag bergerak',()=>{
+  const dir=path.join(root,'.github/workflows');
+  const workflows=fs.readdirSync(dir).filter(f=>/\.ya?ml$/.test(f));
+  assert.ok(workflows.length>=4);
+  for(const name of workflows){
+    const text=read('.github/workflows/'+name);
+    const uses=[...text.matchAll(/^\s*-\s*uses:\s*([^\s#]+)/gm)].map(m=>m[1]);
+    for(const ref of uses){
+      assert.match(ref,/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+@[0-9a-f]{40}$/,name+' menggunakan action tanpa SHA: '+ref);
+    }
+    assert.match(text,/^permissions:\s*\n\s+contents:\s*read\s*$/m,name+' harus read-only');
+    assert.match(text,/^concurrency:\s*$/m,name+' perlu concurrency');
+    assert.match(text,/^\s+timeout-minutes:\s*\d+/m,name+' perlu timeout');
+  }
+});
+test('aturan review dan kanal pelaporan privat disiapkan',()=>{
+  assert.match(read('.github/CODEOWNERS'),/@cuan74468-ux/);
+  assert.match(read('.github/pull_request_template.md'),/Belum terbukti/);
+  assert.match(read('SECURITY.md'),/privat/);
+  const codeql=read('.github/workflows/codeql.yml');
+  assert.match(codeql,/schedule:/);
+  assert.match(codeql,/pull_request:/);
+  assert.match(codeql,/upload:\s*false/);
+  assert.doesNotMatch(codeql,/security-events:\s*write/);
+});
