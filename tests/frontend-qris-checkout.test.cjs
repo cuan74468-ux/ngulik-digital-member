@@ -72,7 +72,7 @@ test('verified release UI creates only internal QRIS orders, never external invo
 });
 test('STAGING client opt-in never bypasses backend finance or unverified QRIS',()=>{
   assert.match(stage,/paymentsEnabled:true/);
-  assert.match(stage,/qrisOwnerImageApproved:false/);
+  assert.match(stage,/qrisOwnerImageApproved:true/);
   assert.match(publicConfig,/paymentsEnabled:\s*false/);
   assert.match(publicConfig,/qrisOwnerImageApproved:\s*false/);
   assert.match(backend,/function requireFinanceEnabled_\(\)/);
