@@ -8,14 +8,14 @@ test('Mayar buyer checkout is retired; only QRIS STATIS internal orders are crea
   const buyer=app.slice(app.indexOf('async function buy(productId)'),app.indexOf('async function openOrderDetail_'));
   assert.match(buyer,/api\('createOrder',\{product_id:productId\}/);
   assert.doesNotMatch(buyer,/createMayarOrder|scalev-bridge|wa\.me/);
-  assert.match(gas,/MAYAR_PAYOUT_CONFIRMED/); // historical source-only guard
+  assert.match(gas,/mayar_checkout_ready:false/);
   assert.doesNotMatch(staging,/js\/scalev-bridge\.js/);
 });
 test('Mayar financial actions are gated in GAS and never auto-enabled by public UI',()=>{
-  assert.match(gas,/case 'createMayarOrder':return createMayarOrder_/);
+  assert.match(gas,/case 'createMayarOrder':throw ngdError_\('NOT_AVAILABLE'/);
   assert.match(gas,/\['createOrder','createMayarOrder','confirmPayment'/);
-  assert.match(gas,/MAYAR_PAYOUT_CONFIRMED/);
-  assert.match(gas,/mayar_checkout_ready:mutationsEnabled_\(\)&&financeEnabled_\(\)/);
+  assert.match(gas,/WEBHOOK_RETIRED/);
+  assert.match(gas,/mayar_checkout_ready:false/);
   assert.match(gas,/function ngdStagingWorkspaceInfo_\(/);
 });
 test('public checkout does not expose Mayar secrets or invoke external invoices',()=>{
