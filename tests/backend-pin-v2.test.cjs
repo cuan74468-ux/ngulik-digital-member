@@ -71,28 +71,61 @@ test('unrecognized and malformed hash formats always fail closed',()=>{
       'v3$'+'a'.repeat(64),'f'.repeat(63), 'unknown'])
     assert.equal(h.ctx.pinMatches_(pin,salt,stored),false);
 });
-test('login does not silently migrate legacy hashes; explicit change can write V2',()=>{
+test('successful login upgrades an existing V1 PIN only when owner enables V2',()=>{
   const h=boot({NGD_PIN_HASH_V2_ENABLED:'true',NGD_PIN_HASH_PEPPER:pepper});
   const m={_row:3,member_id:'M-T',wa:'6281234567890',role:'MEMBER',status:'AKTIF',
     pin_salt:salt,pin_hash:h.ctx.pinHash_(pin,salt)};
+  const updates=[];
   h.ctx.withLock_=fn=>fn();
   h.ctx.loginGuard_=()=>({attempts:0});
-  h.ctx.byId_=(tab,col,id)=>tab==='members'&&m[col]===id?m:null;
   h.ctx.findRows_=(tab,predicate)=>tab==='members'?[m].filter(predicate):[];
   h.ctx.noteLoginFailure_=()=>{};h.ctx.clearLoginFailures_=()=>{};
   h.ctx.updateActivity_=()=>{};
-  let issueCount=0;
-  h.ctx.newSessionMember_=()=>{issueCount++;return {token:'FAKE'};};
+  h.ctx.updateRow_=(tab,row,patch)=>{
+    assert.equal(tab,'members');assert.equal(row,3);
+    updates.push(patch);Object.assign(m,patch);
+  };
+  h.ctx.newSessionMember_=()=>({token:'FAKE'});
   assert.equal(h.ctx.authLogin_({wa:'081234567890',pin},false).token,'FAKE');
-  assert.equal(m.pin_hash,h.ctx.pinHash_(pin,salt));
-  h.ctx.checkNewPin_=()=>{};h.ctx.newSalt_=()=> 'SALT2';
-  h.ctx.updateRow_=(tab,row,patch)=>Object.assign(m,patch);
-  h.ctx.findRows_=()=>[];h.ctx.logAudit_=()=>{};
+  assert.equal(updates.length,1);
+  assert.match(m.pin_hash,/^v2\\$/);
+  assert.equal(m.pin_salt,salt);
+  assert.equal(h.ctx.pinMatches_(pin,salt,m.pin_hash),true);
+  assert.equal(h.ctx.authLogin_({wa:'081234567890',pin},false).token,'FAKE');
+  assert.equal(updates.length,1,'V2 must not be rewritten');
+  assert.throws(()=>h.ctx.authLogin_({wa:'081234567890',pin:'111111'},false),
+    /Nomor WhatsApp atau PIN salah/);
+  assert.equal(updates.length,1,'wrong PIN cannot trigger migration');
+  h.ctx.checkNewPin_=()=>{};h.ctx.newSalt_=()=> 'SALT2';h.ctx.logAudit_=()=>{};
+  h.ctx.findRows_=(tab,predicate)=>tab==='members'?[m].filter(predicate):[];
   assert.equal(h.ctx.authChangePin_(m,{pin_lama:pin,pin_baru:'582741'}).login_required,true);
-  assert.match(m.pin_hash,/^v2\$/);
   assert.equal(h.ctx.pinMatches_('582741','SALT2',m.pin_hash),true);
-  assert.equal(issueCount,1);
-  assert.equal(h.calls.logs.some(s=>s.includes('582741')),false);
+  assert.equal(h.calls.logs.some(x=>x.includes('582741')),false);
+});
+test('V1 PIN remains unchanged when V2 switch is disabled',()=>{
+  const h=boot();
+  const m={_row:3,member_id:'M-T',wa:'6281234567890',role:'MEMBER',status:'AKTIF',
+    pin_salt:salt,pin_hash:h.ctx.pinHash_(pin,salt)};
+  h.ctx.withLock_=fn=>fn();h.ctx.loginGuard_=()=>({});
+  h.ctx.findRows_=(table,pred)=>table==='members'?[m].filter(pred):[];
+  h.ctx.clearLoginFailures_=()=>{};h.ctx.updateActivity_=()=>{};
+  h.ctx.newSessionMember_=()=>({token:'OK'});
+  h.ctx.updateRow_=()=>{throw Error('V2 flag off: no PIN writes');};
+  assert.equal(h.ctx.authLogin_({wa:'081234567890',pin},false).token,'OK');
+  assert.equal(m.pin_hash,h.ctx.pinHash_(pin,salt));
+});
+test('V2 migration without pepper fails closed before any member write',()=>{
+  const h=boot({NGD_PIN_HASH_V2_ENABLED:'true'});
+  const m={_row:3,member_id:'M-T',wa:'6281234567890',role:'MEMBER',status:'AKTIF',
+    pin_salt:salt,pin_hash:h.ctx.pinHash_(pin,salt)};
+  h.ctx.withLock_=fn=>fn();h.ctx.loginGuard_=()=>({});
+  h.ctx.findRows_=(table,pred)=>table==='members'?[m].filter(pred):[];
+  let writes=0,sessions=0;
+  h.ctx.updateRow_=()=>{writes++;};
+  h.ctx.newSessionMember_=()=>{sessions++;return {token:'SHOULD_NOT_ISSUE'};};
+  assert.throws(()=>h.ctx.authLogin_({wa:'081234567890',pin},false),
+    /Keamanan PIN belum dikonfigurasi/);
+  assert.equal(writes,0);assert.equal(sessions,0);
 });
 test('administrator recovery and bootstrap also use version-aware writers',()=>{
   assert.match(access,/!pinMatches_\(newPin, admin\.pin_salt, admin\.pin_hash\)/);
