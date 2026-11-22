@@ -1038,7 +1038,7 @@ function viewLearn(){
     '<div class="ngd-role-actions"><button type="button" class="btn btn-primary" data-route="login">Masuk Member</button>'+
     '<button type="button" class="btn btn-secondary" data-route="katalog">Kembali ke Katalog</button></div></section>';
   const modules=state.modules;
-  return title('Kelas Saya','PILIHAN KELAS','Belajar melalui kelas yang mencatat progres. Untuk tautan belajar gratis, buka Portal Gratis.')+
+  return viewMemberFreeResources_()+title('Kelas Saya','PILIHAN KELAS','Belajar melalui kelas yang mencatat progres. Untuk tautan belajar gratis, buka Portal Gratis.')+
     (modules.length?'<div class="stack">'+modules.map((m,i)=>'<article class="surface list-row"><div class="left" style="display:flex;gap:15px;align-items:center"><span class="step-no">'+esc(m.urut||i+1)+'</span><div><strong>'+esc(m.judul)+'</strong><small>'+esc(m.deskripsi||'')+'</small></div></div>'+
     (classroomUrlSafe(m.url_classroom)?'<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href="'+esc(classroomUrlSafe(m.url_classroom))+'">Buka materi '+icon('arrow')+'</a>':
     '<span class="chip">Materi menyusul</span>')+'</article>').join('')+'</div>':
