@@ -1,0 +1,7 @@
+# Owner review applies to source, workflows, and financial/auth code.
+* @cuan74468-ux
+/.github/ @cuan74468-ux
+/apps-script/ @cuan74468-ux
+/js/ @cuan74468-ux
+/config.js @cuan74468-ux
+/staging/ @cuan74468-ux
