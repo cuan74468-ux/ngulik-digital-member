@@ -8,14 +8,14 @@ test('Mayar buyer checkout is retired; only QRIS STATIS internal orders are crea
   const buyer=app.slice(app.indexOf('async function buy(productId)'),app.indexOf('async function openOrderDetail_'));
   assert.match(buyer,/api\('createOrder',\{product_id:productId\}/);
   assert.doesNotMatch(buyer,/createMayarOrder|scalev-bridge|wa\.me/);
-  assert.match(gas,/MAYAR_PAYOUT_CONFIRMED/); // historical source-only guard
+  assert.match(gas,/mayar_checkout_ready:false/);
   assert.doesNotMatch(staging,/js\/scalev-bridge\.js/);
 });
 test('Mayar financial actions are gated in GAS and never auto-enabled by public UI',()=>{
-  assert.match(gas,/case 'createMayarOrder':return createMayarOrder_/);
+  assert.match(gas,/case 'createMayarOrder':throw ngdError_\('NOT_AVAILABLE'/);
   assert.match(gas,/\['createOrder','createMayarOrder','confirmPayment'/);
-  assert.match(gas,/MAYAR_PAYOUT_CONFIRMED/);
-  assert.match(gas,/mayar_checkout_ready:mutationsEnabled_\(\)&&financeEnabled_\(\)/);
+  assert.match(gas,/WEBHOOK_RETIRED/);
+  assert.match(gas,/mayar_checkout_ready:false/);
   assert.match(gas,/function ngdStagingWorkspaceInfo_\(/);
 });
 test('public checkout does not expose Mayar secrets or invoke external invoices',()=>{
@@ -32,4 +32,26 @@ test('only the approved QRIS image is displayed and browser claim cannot set pai
   assert.match(app,/api\('confirmPayment'/);
   assert.match(gas,/var o=\{\};fields\.forEach/);
   assert.match(gas,/function requireFinanceEnabled_\(\)/);
+});
+
+test('cancelled provider webhook is rejected before properties, sheet or external API access',()=>{
+  const vm=require('node:vm');
+  let touched=0;
+  const forbidden=new Proxy({}, {get(){touched++;throw Error('UNEXPECTED_BACKEND_IO');}});
+  const c=vm.createContext({console:{error(){}},PropertiesService:forbidden,
+    SpreadsheetApp:forbidden,UrlFetchApp:forbidden,LockService:forbidden,
+    ContentService:{MimeType:{JSON:'json'},createTextOutput(value){
+      return {getContent(){return value;},setMimeType(){return this;}};
+    }}});
+  vm.runInContext(gas,c,{timeout:10000});
+  const answer=JSON.parse(c.doPost({parameter:{source:'mayar'},
+    postData:{contents:'INVALID_DO_NOT_PARSE'}}).getContent());
+  assert.equal(answer.ok,false);
+  assert.equal(answer.error.code,'WEBHOOK_RETIRED');
+  assert.equal(touched,0);
+});
+test('historical Mayar order display remains supported without new checkout',()=>{
+  assert.match(gas,/function orderView_\(/);
+  assert.match(gas,/ngdMayarInvoiceUrl_\(order\.gateway_payment_url\)/);
+  assert.match(gas,/mayar_checkout_ready:false/);
 });
