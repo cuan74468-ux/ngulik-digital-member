@@ -46,7 +46,7 @@ test('public config exposes owner-enabled features while secrets stay server-sid
   assert.equal(sandbox.window.NGD_CONFIG.registrationOtpEnabled,false);
   assert.equal(sandbox.window.NGD_CONFIG.paymentsEnabled,false);
   assert.equal(sandbox.window.NGD_CONFIG.qrisImageUrl,'assets/qris-linggau-ai-studio.svg');
-  assert.equal(sandbox.window.NGD_CONFIG.qrisOwnerImageApproved,false);
+  assert.equal(sandbox.window.NGD_CONFIG.qrisOwnerImageApproved,true);
 });
 test('guest homepage renders the guest-only visual landing',()=>{
   const {nodes,document}=renderPreview();
