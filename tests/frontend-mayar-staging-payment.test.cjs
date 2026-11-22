@@ -33,3 +33,25 @@ test('only the approved QRIS image is displayed and browser claim cannot set pai
   assert.match(gas,/var o=\{\};fields\.forEach/);
   assert.match(gas,/function requireFinanceEnabled_\(\)/);
 });
+
+test('cancelled provider webhook is rejected before properties, sheet or external API access',()=>{
+  const vm=require('node:vm');
+  let touched=0;
+  const forbidden=new Proxy({}, {get(){touched++;throw Error('UNEXPECTED_BACKEND_IO');}});
+  const c=vm.createContext({console:{error(){}},PropertiesService:forbidden,
+    SpreadsheetApp:forbidden,UrlFetchApp:forbidden,LockService:forbidden,
+    ContentService:{MimeType:{JSON:'json'},createTextOutput(value){
+      return {getContent(){return value;},setMimeType(){return this;}};
+    }}});
+  vm.runInContext(gas,c,{timeout:10000});
+  const answer=JSON.parse(c.doPost({parameter:{source:'mayar'},
+    postData:{contents:'INVALID_DO_NOT_PARSE'}}).getContent());
+  assert.equal(answer.ok,false);
+  assert.equal(answer.error.code,'WEBHOOK_RETIRED');
+  assert.equal(touched,0);
+});
+test('historical Mayar order display remains supported without new checkout',()=>{
+  assert.match(gas,/function orderView_\(/);
+  assert.match(gas,/ngdMayarInvoiceUrl_\(order\.gateway_payment_url\)/);
+  assert.match(gas,/mayar_checkout_ready:false/);
+});
