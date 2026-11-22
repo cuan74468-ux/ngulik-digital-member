@@ -13,9 +13,10 @@ test('owner-approved QRIS configuration points to dedicated image, but fail-clos
   for(const cfg of [stage,publicConfig]){
     assert.match(cfg,/qris-linggau-ai-studio\.svg/);
     assert.match(cfg,/qrisMerchant:\s*['"]Linggau AI Studio['"]/);
-    assert.match(cfg,/qrisOwnerImageApproved:\s*false/);
   }
-  // Do NOT mark this image payment-ready if a GitHub upload has not been verified.
+  assert.match(stage,/qrisOwnerImageApproved:\s*true/);
+  assert.match(publicConfig,/qrisOwnerImageApproved:\s*false/);
+  // Owner independently scanned the actual hosted QR and confirmed merchant identity.
 });
 
 test('browser checkout is QRIS-only, and unverified payment paths are parked',()=>{
