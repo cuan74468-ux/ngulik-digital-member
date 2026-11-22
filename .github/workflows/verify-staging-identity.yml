@@ -8,6 +8,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ngd-verify-staging-identity-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   attestation:
     runs-on: ubuntu-latest
@@ -16,9 +19,9 @@ jobs:
       STAGING_CANDIDATE_URL: 'https://script.google.com/macros/s/AKfycbyQYrRKN0mvIuoYFyWwQVNaA6Vc9hYYj4ycQSy3B1NXPJ4PbvbRIfZo7YVT4NL4IIlh/exec'
     steps:
       - name: Checkout for local production endpoint comparison
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Node 24 — read-only server attestation
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '24'
       - name: Inspect publicly exposed API version and safety flags (GET)
