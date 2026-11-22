@@ -1108,15 +1108,15 @@ function newOrder_(m,p,requestId) {
       var qrPath=String(s.qris_gambar_path||'');
       var qrUnavailable=!qrPath||/(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrPath);
       var amount='Rp'+Number(persisted.total_bayar).toLocaleString('id-ID');
-      var invoice='Halo '+String(m.nama||'Member').slice(0,60)+', pesanan #'+id+
-        ' untuk '+String(product.nama||'produk').slice(0,90)+
+      var invoice='Halo '+String(m.nama||'Member').slice(0,60)+', pesanan #'+persisted.order_id+
+        ' untuk '+String(persisted.nama_produk||'produk').slice(0,90)+
         ' sebesar '+amount+' telah dicatat. Batas pembayaran: '+isoWib_(persisted.expires_at)+'. ';
       invoice+=qrUnavailable?
         'QRIS resmi belum tersedia. JANGAN TRANSFER sebelum Admin memberikan tujuan pembayaran resmi. '+
         'Buka Pesanan di aplikasi, minta instruksi via WhatsApp Admin, lalu ajukan verifikasi hanya jika benar-benar sudah transfer.':
         'Periksa QRIS resmi dan nama penerima di aplikasi. Transfer tepat '+amount+
         ', kemudian ajukan verifikasi pembayaran. Admin akan mencocokkan dana masuk.';
-      sendFonnteWa_(m.wa,invoice,'MEMBER','ORDER_INVOICE_MEMBER',id);
+      sendFonnteWa_(m.wa,invoice,'MEMBER','ORDER_INVOICE_MEMBER',persisted.order_id);
     }
     return orderView_(persisted,m);
   });
