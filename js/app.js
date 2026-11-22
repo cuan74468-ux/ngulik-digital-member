@@ -1720,7 +1720,7 @@ function viewCheckout(){
       '<span>Kode unik pembayaran</span><strong>+ '+rupiah(o.kode_unik)+'</strong>')+'</div>'+
     '<div class="checkout-total"><small>Total yang harus dibayar</small>'+
     '<strong class="checkout-total-amount" style="white-space:nowrap;font-variant-numeric:tabular-nums">'+rupiah(o.total_bayar)+'</strong>'+
-    (open?'<button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(String(o.total_bayar))+'">Salin nominal</button>':'')+'</div>'+
+    (open&&qrAmountMatchesOrder&&officialQr?'<button type="button" class="btn btn-secondary btn-sm" data-copy="'+esc(String(o.total_bayar))+'">Salin nominal</button>':'')+'</div>'+
     (open?'<p class="checkout-countdown" id="checkout-countdown" data-expiry="'+esc(o.expires_at||'')+'">Batas pembayaran: '+timer+'</p>':'')+
     '<div class="checkout-status-summary">'+safeBadge(status)+'<p>'+esc(stateNote)+'</p></div></section>'+
     '<section><h2>'+ (open?'Langkah pembayaran':'Status dan bantuan')+'</h2>'+paymentSection+
