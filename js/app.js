@@ -1601,6 +1601,11 @@ function openProductCheckout_(id){
   go('checkout');
 }
 function viewCheckoutDraft_(){
+  // Defense in depth: deep links must not expose member-only free resources.
+  if(!logged()||isAdmin())return '<section class="surface checkout-access-gate" role="status">'+
+    '<h1>Akses khusus member</h1>'+
+    '<p>Masuk atau daftar terlebih dahulu untuk membuka produk dan fasilitas gratis.</p>'+
+    '<button type="button" class="btn btn-primary" data-route="login">Masuk / Daftar Member</button></section>';
   const p=state.catalog.find(x=>String(x.product_id)===state.checkoutProductId&&!isPublicQaOffer_(x));
   if(!p)return title('Checkout','PRODUK & JASA','')+
     empty('Produk tidak ditemukan','Kembali ke katalog untuk memilih produk.','katalog','Katalog');
@@ -1647,6 +1652,8 @@ function viewCheckoutDraft_(){
     '</section></div></section></div>';
 }
 function viewCheckout(){
+  // A cached order must never render after logout or an account switch.
+  if(!logged()||isAdmin())return viewCheckoutDraft_();
   const o=state.lastOrder;
   if(!o&&state.checkoutProductId)return viewCheckoutDraft_();
   if(!o)return title('Pembayaran','PESANAN ANDA','')+
@@ -2853,6 +2860,7 @@ async function processLogin(form,register){
       return;
     }
     if(!result?.token||!result?.profil)throw new ApiError('Respons login belum lengkap.');
+    clearPrivateCommandCenter_();
     state.token=result.token;state.me=result.profil;
     state.stagingPinLogin=false;
     sessionStorage.setItem(tokenKey,result.token);
@@ -2865,8 +2873,20 @@ async function processLogin(form,register){
   }catch(e){toast(e.message,true);}finally{btn.disabled=false;}
 }
 function clearPrivateCommandCenter_(){
-  state.home=null;state.orders=[];state.creditHistory=[];state.affiliates=null;
-  state.memberProducts=[];state.lmsEnrollments=[];state.memberDashboardReads=null;state.notifications={enabled:false,items:[],unread:0};
+  // Remove all sensitive snapshots; keep only public data and pending login intent.
+  state.home=null;state.orders=[];state.lastOrder=null;state.checkoutProductId='';
+  state.checkoutRequestId=null;state.orderDetailLoading=false;
+  state.creditHistory=[];state.affiliates=null;state.memberProducts=[];
+  state.memberDashboardReads=null;state.notifications={enabled:false,items:[],unread:0};
+  state.modules=[];state.tools=[];state.partnerShelf=[];state.partnerShelfLoaded=false;
+  state.lmsCourses=[];state.lmsEnrollments=[];state.lmsCourseDetail=null;
+  state.lmsAdminCourses=[];state.lmsAdminCourse=null;state.lmsJobs=[];
+  state.lmsCompletion=null;state.supportTickets=[];state.supportReleases=[];
+  state.supportOverview=null;state.adminSupportTickets=[];state.ticketDetail=null;
+  state.services=[];state.waitlist=[];state.members=[];state.adminOrders=[];
+  state.adminSummary=null;state.reconciliation=null;state.adminRuntime=null;
+  state.adminSettings=null;state.adminContent=[];state.adminCatalog=[];
+  state.memberSearch=null;state.member360=null;state.selectedMemberId=null;
 }
 async function logout(){
   const token=state.token,wasAdmin=isAdmin();
@@ -2897,6 +2917,7 @@ async function changeAdminPin_(form){
       throw new ApiError('Konfirmasi perubahan PIN belum lengkap.');
     // Backend revokes every session on PIN change, including this device.
     state.token='';state.me=null;sessionStorage.removeItem(tokenKey);
+    clearPrivateCommandCenter_();
     go('admin-login');
     toast('PIN berhasil diganti. Silakan masuk lagi.');
   }catch(error){toast(error.message,true);if(button)button.disabled=false;}

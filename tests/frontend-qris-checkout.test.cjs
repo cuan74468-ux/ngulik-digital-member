@@ -101,7 +101,7 @@ test('STAGING client opt-in never bypasses backend finance or unverified QRIS',(
 test('public and staging load the same checkout UI and new JS while keeping old styles',()=>{
   for(const page of html){
     assert.match(page,/checkout-qris-unified\.css\?v=20261121-qris-checkout-v4/);
-    assert.match(page,/app\.js\?v=20261122-qris-contract-safe-v4/);
+    assert.match(page,/app\.js\?v=20261122-private-gates-v5/);
     assert.ok(page.indexOf('checkout-qris-unified.css')>page.indexOf('commission-experience-v2.css'));
   }
   assert.match(css,/@media\(max-width:680px\)/);
@@ -179,4 +179,14 @@ test('checkout invoice matches the backend surcharge contract and never offers a
   assert.match(app,/Kode unik pembayaran/);
   assert.match(app,/harga produk \+ kode unik 3 digit/);
   assert.doesNotMatch(app,/Kode unik pesanan lama/);
+});
+
+test('guest cannot read member-only free resource URL from a direct checkout render',()=>{
+  const visitor=harness({id:'P-EBOOK',price:0,logged:false}).ui.viewCheckoutDraft_();
+  assert.match(visitor,/Akses khusus member/);
+  assert.match(visitor,/data-route="login"/);
+  assert.doesNotMatch(visitor,/buku-pintar-vibe-coder|Buka akses gratis|data-checkout-create/);
+  const member=harness({id:'P-EBOOK',price:0,logged:true}).ui.viewCheckoutDraft_();
+  assert.match(member,/Buka akses gratis/);
+  assert.match(app,/if\(!logged\(\)\|\|isAdmin\(\)\)return viewCheckoutDraft_\(\)/);
 });

@@ -1914,6 +1914,16 @@ function advanceTrial_(m,p) {
 }
 // Internal QA fixtures may remain in the STAGING database for audit evidence,
 // but must never be exposed to member/public catalog or purchased via direct API.
+// Only enabled, HTTPS partner offers with affiliate identifiers can be
+// returned to members or counted in outbound click analytics.
+function ngdPartnerLinkEligible_(row) {
+  if(!row||row.aktif!==true)return false;
+  var href=String(row.link_affiliate||'').trim();
+  if(!/^https:\/\/[^\/?#\s@]+(?:[\/?#][^\s]*)?$/i.test(href))return false;
+  var withoutFragment=href.split('#')[0];
+  return /(?:[?&](?:ref|referral|aff|affiliate|aff_id|affiliate_id|partner_id)=[A-Za-z0-9_-]{3,120}(?:&|$))/i.test(withoutFragment)||
+    /\/aff\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+\/?(?:[?#]|$)/.test(href);
+}
 function ngdCatalogIsQa_(row) {
   if(!row)return false;
   var id=String(row.product_id||'').toUpperCase();
@@ -2588,6 +2598,10 @@ function apiRouter_(action,token,p,requestId) {
       return withLock_(function(){
         var type=p.tipe==='ETALASE_LUAR'?'ETALASE_LUAR':'REFERRAL',visitor=safeText_(p.visitor_id,120);
         require_(visitor.length>=8,'VALIDATION','Pengunjung tidak valid.');
+        if(type==='ETALASE_LUAR'){
+          var partner=byId_('etalase_affiliate_luar','item_id',String(p.item_id||'').trim());
+          require_(ngdPartnerLinkEligible_(partner),'NOT_FOUND','Tautan partner tidak tersedia.');
+        }
         var ref=String(p.ref||'').toUpperCase(),r=ref?byId_('members','kode_referral',ref):null;
         var prior=findRows_('klik_log',function(x){return x.visitor_id===visitor&&x.tipe===type&&(type==='REFERRAL'?x.kode_referral===ref:x.item_id===p.item_id)&&new Date(x.timestamp).getTime()>Date.now()-86400000;});
         if(prior.length)return {recorded:false};
@@ -2631,7 +2645,7 @@ function apiRouter_(action,token,p,requestId) {
     case 'submitOnboarding3in1':return advanceTrial_(m,p);
     case 'markModulSelesai':
       return withLock_(function(){var module=byId_('modul_belajar','modul_id',p.modul_id);require_(module&&module.aktif===true,'NOT_FOUND','Modul tidak tersedia.');if(!findRows_('progress_member',function(r){return r.member_id===m.member_id&&r.modul_id===p.modul_id;}).length)appendRow_('progress_member',{member_id:m.member_id,modul_id:p.modul_id,selesai_at:now_()});return {success:true};});
-    case 'getEtalase':return readAll_('etalase_affiliate_luar').filter(function(r){return r.aktif===true;}).map(function(r){return {item_id:r.item_id,judul:r.judul,kategori:r.kategori,deskripsi_singkat:r.deskripsi_singkat,alasan_rekomendasi:r.alasan_rekomendasi,harga_info:r.harga_info,link_affiliate:r.link_affiliate,gambar_url:r.gambar_url};});
+    case 'getEtalase':return readAll_('etalase_affiliate_luar').filter(ngdPartnerLinkEligible_).map(function(r){return {item_id:r.item_id,judul:r.judul,kategori:r.kategori,deskripsi_singkat:r.deskripsi_singkat,alasan_rekomendasi:r.alasan_rekomendasi,harga_info:r.harga_info,link_affiliate:r.link_affiliate,gambar_url:r.gambar_url};});
     case 'trackOutbound':return apiRouter_('trackClick',token,{tipe:'ETALASE_LUAR',
       visitor_id:p.visitor_id,item_id:p.item_id},requestId);
     case 'getAffiliateDashboard':return affiliateDashboard_(m);
