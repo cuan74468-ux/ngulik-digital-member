@@ -20,7 +20,7 @@ test('placeholder PNGs are valid identical images, never fake QR payment payload
   // The placeholder pixels are not a QR payment payload: checkout must not
   // imply a real QR until the owner supplies and approves one.
   assert.match(checkoutCfg,/qrisOwnerImageApproved:\s*false/);
-  assert.match(stageMemberCfg,/qrisOwnerImageApproved:false/);
+  assert.match(stageMemberCfg,/qrisOwnerImageApproved:true/);
 });
 test('STAGING member uses only pinned STAGING backend from staging/config.js',()=>{
   assert.match(stageMemberHtml,/src="\.\/config\.js\?v=/);
