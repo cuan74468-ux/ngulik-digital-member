@@ -213,3 +213,28 @@ test('server rejects subtractive QRIS amounts before persistence and financial a
   const transition=backend.slice(backend.indexOf('function transitionOrder_'),backend.indexOf('// Shared pure reference checks.'));
   assert.match(transition,/if\(String\(o\.metode\|\|''\)==='QRIS_STATIS'\)ngdRequireQrOrderAmount_\(o\)/);
 });
+
+test('only the after-payment CTA opens WhatsApp proof chat with an additive, persisted invoice',()=>{
+  const start=app.indexOf('function ngdPaymentProofWaUrl_(order,rawAdminWa)');
+  const end=app.indexOf('function viewCheckout(){',start);
+  assert.ok(start>=0&&end>start);
+  const make=new Function('rupiah',app.slice(start,end)+'\nreturn ngdPaymentProofWaUrl_;')(n=>'Rp'+Number(n).toLocaleString('id-ID'));
+  const order={order_id:'NGD-261122-ABCDEF123456',nama_produk:'Starter Pack',harga_dasar:15000,kode_unik:100,total_bayar:15100,metode:'QRIS_STATIS'};
+  const url=make(order,'081234567890');
+  assert.match(url,/^https:\/\/wa\.me\/6281234567890\?text=/);
+  const body=decodeURIComponent(url.split('?text=')[1]);
+  assert.match(body,/NGD-261122-ABCDEF123456/);
+  assert.match(body,/Rp15\.100/);
+  assert.match(body,/melampirkan screenshot\/struk/);
+  assert.equal(make({...order,total_bayar:14900},'081234567890'),'');
+  assert.equal(make(order,'nomor-tidak-valid'),'');
+  const view=app.slice(app.indexOf('function viewCheckout(){'),app.indexOf('function viewAdminRuntime(){'));
+  assert.match(view,/data-payment-proof-wa/);
+  assert.match(view,/Kirim Bukti Pembayaran ke WhatsApp Admin/);
+  assert.doesNotMatch(view,/data-action="confirm-payment"/);
+  assert.match(view,/Setelah Bayar/);
+  assert.match(view,/proofWaUrl=canConfirm\?ngdPaymentProofWaUrl_\(o,o\.wa_admin\|\|state\.info\?\.wa_admin\)/);
+  const checkout=app.slice(app.indexOf('async function buy(productId)'),app.indexOf('async function openOrderDetail_'));
+  assert.match(checkout,/api\('createOrder'/);
+  assert.doesNotMatch(checkout,/wa\.me|payment-proof-wa/);
+});
