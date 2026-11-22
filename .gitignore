@@ -1,0 +1,16 @@
+# Rahasia dan kredensial: tidak boleh masuk repo (simpan di Script Properties Apps Script)
+.env
+.env.*
+*.pem
+*.key
+*.p12
+secrets.*
+credentials.*
+
+# Artefak lokal dan sistem
+node_modules/
+mobile-qa-artifacts/
+*.log
+.DS_Store
+Thumbs.db
+*.zip
