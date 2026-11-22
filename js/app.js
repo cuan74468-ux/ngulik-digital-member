@@ -3823,7 +3823,7 @@ document.addEventListener('click',async(e)=>{
     state.marketplaceSearch='';state.catalogFilter='semua';state.marketplaceSort='default';
     render();return;
   }
-  const target=e.target.closest('[data-product-detail],[data-market-product],[data-checkout-product],[data-checkout-create],[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-create],[data-content-asset],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-image],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-payment-open],[data-order-detail]');
+  const target=e.target.closest('[data-product-detail],[data-market-product],[data-checkout-product],[data-checkout-create],[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-create],[data-content-asset],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-image],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-portal-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-payment-open],[data-order-detail]');
   if(!target)return;
   if(target.hasAttribute('data-checkout-product')){
     openProductCheckout_(target.dataset.checkoutProduct);return;
@@ -3973,6 +3973,14 @@ document.addEventListener('click',async(e)=>{
       group.querySelectorAll('[data-lms-filter]').forEach(btn=>
         btn.setAttribute('aria-pressed',String(btn===target)));
       filterLearningCards_();
+    }
+  }
+  else if(target.hasAttribute('data-portal-filter')){
+    const group=target.closest('.learning-portal-filters');
+    if(group){
+      group.querySelectorAll('[data-portal-filter]').forEach(btn=>
+        btn.setAttribute('aria-pressed',String(btn===target)));
+      filterMemberPortal_();
     }
   }
   else if(target.hasAttribute('data-lms-lesson-open'))
