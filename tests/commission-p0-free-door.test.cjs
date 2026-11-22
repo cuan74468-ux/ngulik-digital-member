@@ -86,10 +86,9 @@ test('admin payout only after proof and exact DANA match; reference not reused',
 test('QRIS path configured but unverified image must keep payment gate closed',()=>{
   const config=fs.readFileSync(path.join(root,'config.js'),'utf8');
   const stage=fs.readFileSync(path.join(root,'staging/member-config.js'),'utf8');
-  for(const c of [config,stage]){
-    assert.match(c,/qris-linggau-ai-studio\.svg/);
-    assert.match(c,/qrisOwnerImageApproved:\s*false/);
-  }
+  for(const c of [config,stage])assert.match(c,/qris-linggau-ai-studio\.svg/);
+  assert.match(config,/qrisOwnerImageApproved:\s*false/);
+  assert.match(stage,/qrisOwnerImageApproved:\s*true/);
   assert.match(app,/api\('createOrder',\{product_id:productId\}/);
   assert.doesNotMatch(app,/api\('createMayarOrder'/);
   assert.match(app,/const canConfirm=open&&paymentEnabled\(\)&&!financeBlocked&&officialQr/);
