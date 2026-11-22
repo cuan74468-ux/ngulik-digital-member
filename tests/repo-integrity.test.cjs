@@ -122,16 +122,21 @@ test('seluruh GitHub Actions terikat SHA 40 karakter, bukan tag bergerak',()=>{
   const dir=path.join(root,'.github/workflows');
   const workflows=fs.readdirSync(dir).filter(f=>/\.ya?ml$/.test(f));
   assert.ok(workflows.length>=4);
+  let totalUses=0;
   for(const name of workflows){
     const text=read('.github/workflows/'+name);
-    const uses=[...text.matchAll(/^\s*-\s*uses:\s*([^\s#]+)/gm)].map(m=>m[1]);
+    // Langkah bisa berbentuk "- uses:" ATAU "uses:" di bawah "- name:". Pola lama hanya
+    // mengenali bentuk pertama sehingga 0 pencocokan dan tes tidak memeriksa apa pun.
+    const uses=[...text.matchAll(/^\s*(?:-\s*)?uses:\s*([^\s#]+)/gm)].map(m=>m[1]);
+    totalUses+=uses.length;
     for(const ref of uses){
-      assert.match(ref,/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+@[0-9a-f]{40}$/,name+' menggunakan action tanpa SHA: '+ref);
+      assert.match(ref,/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.\/-]+@[0-9a-f]{40}$/,name+' menggunakan action tanpa SHA: '+ref);
     }
     assert.match(text,/^permissions:\s*\n\s+contents:\s*read\s*$/m,name+' harus read-only');
     assert.match(text,/^concurrency:\s*$/m,name+' perlu concurrency');
     assert.match(text,/^\s+timeout-minutes:\s*\d+/m,name+' perlu timeout');
   }
+  assert.ok(totalUses>=8,'tes harus benar-benar menemukan langkah "uses:" (ditemukan '+totalUses+')');
 });
 test('aturan review dan kanal pelaporan privat disiapkan',()=>{
   assert.match(read('.github/CODEOWNERS'),/@cuan74468-ux/);
@@ -155,4 +160,50 @@ test('GAS read-only health exposes a manual source revision for drift detection'
   assert.match(workflow,/method:'GET'/);
   assert.match(workflow,/actual!==expected\[1\]/);
   assert.doesNotMatch(workflow,/security-events:\s*write|method:'POST'/);
+});
+
+test('CodeQL menghasilkan bukti nyata: SARIF disimpan dan job gagal bila ada temuan',()=>{
+  const wf=read('.github/workflows/codeql.yml');
+  assert.match(wf,/upload:\s*false/);
+  assert.doesNotMatch(wf,/security-events:\s*write/);
+  assert.match(wf,/actions\/upload-artifact@[0-9a-f]{40}/);
+  assert.match(wf,/if-no-files-found:\s*error/);
+  assert.match(wf,/output:\s*\$\{\{\s*runner\.temp\s*\}\}\/codeql-sarif/);
+  assert.match(wf,/process\.exitCode=1/);
+});
+
+test('skrip pemeriksa SARIF di workflow CodeQL berperilaku benar (uji perilaku)',()=>{
+  const { spawnSync }=require('node:child_process');
+  const os=require('node:os');
+  const wf=read('.github/workflows/codeql.yml');
+  const m=wf.match(/node <<'NODE'\n([\s\S]*?)\n\s*NODE\n?/);
+  assert.ok(m,'skrip pemeriksa tidak ditemukan');
+  const script=m[1].split('\n').map(l=>l.replace(/^ {10}/,'')).join('\n');
+  const run=(files)=>{
+    const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sarif-'));
+    for(const [name,body] of Object.entries(files))fs.writeFileSync(path.join(dir,name),JSON.stringify(body));
+    const r=spawnSync(process.execPath,['-e',script],{env:{...process.env,SARIF_DIR:dir},encoding:'utf8'});
+    return r;
+  };
+  const withResult=(level,ruleDefault)=>({runs:[{tool:{driver:{rules:[{id:'js/x',defaultConfiguration:{level:ruleDefault}}]}},
+    results:[{ruleId:'js/x',...(level?{level}:{}),locations:[{physicalLocation:{artifactLocation:{uri:'js/app.js'},region:{startLine:7}}}]}]}]});
+  assert.equal(run({'javascript.sarif':{runs:[{results:[]}]}}).status,0,'tanpa temuan harus lolos');
+  assert.equal(run({'javascript.sarif':withResult('warning')}).status,1,'warning harus gagal');
+  assert.equal(run({'javascript.sarif':withResult('error')}).status,1,'error harus gagal');
+  assert.equal(run({'javascript.sarif':withResult(null,'error')}).status,1,'level dari aturan harus dipakai');
+  assert.equal(run({'javascript.sarif':withResult('note')}).status,0,'note saja tidak menggagalkan');
+  assert.notEqual(run({}).status,0,'tanpa SARIF harus gagal, bukan lolos diam-diam');
+  const bad=run({'javascript.sarif':withResult('warning')});
+  assert.match(bad.stderr,/CODEQL_FINDING warning js\/x js\/app\.js:7/);
+});
+
+test('PROJECT_CONTROL.md: tabel log utuh dan heading tidak menyatu dengan baris tabel',()=>{
+  const lines=read('PROJECT_CONTROL.md').split('\n');
+  for(const [i,l] of lines.entries()){
+    assert.ok(!l.includes('\\n\\n'),'baris '+(i+1)+' memuat teks backslash-n literal');
+    if(/^\| 2026-/.test(l))assert.match(l,/\|\s*$/,'baris log '+(i+1)+' harus diakhiri |');
+    if(l.includes('## Checkpoint penutupan hari'))assert.match(l,/^## /,'heading menyatu dengan baris lain');
+  }
+  assert.ok(lines.some(l=>/^## Checkpoint penutupan hari/.test(l)),'heading Checkpoint hilang');
+  assert.ok(lines.some(l=>/^## Pengembangan, tes, dan peta dokumen/.test(l)));
 });
