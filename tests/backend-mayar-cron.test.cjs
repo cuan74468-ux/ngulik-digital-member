@@ -96,3 +96,23 @@ test('static QRIS: Mayar webhook rejects even with valid gateway credentials',()
   assert.throws(()=>x.webhook(),/Webhook Mayar tidak aktif/);
   assert.equal(x.order.status,'PENDING');
 });
+
+test('scheduled expiry uses each invoice deadline, not changed global settings',()=>{
+  const x=setup();
+  x.order.created_at=new Date(Date.now()-70*60000).toISOString();
+  x.order.expires_at=new Date(Date.now()+5*60000).toISOString();
+  x.ctx.settings_=()=>({order_expiry_menit:20,cart_abandonment_menit:15,
+    followup_member_otomatis:false,payment_gateway_mode:'QRIS_STATIS'});
+  const result=x.ctx.runScheduledAutomations();
+  assert.equal(result.expired,0);
+  assert.equal(x.order.status,'PENDING');
+  assert.equal(x.mutations.length,0);
+});
+test('scheduled expiry leaves invalid deadlines for reconciliation',()=>{
+  const x=setup();
+  x.order.expires_at='invalid-date';
+  const result=x.ctx.runScheduledAutomations();
+  assert.equal(result.expired,0);
+  assert.equal(result.reminders_accepted,0);
+  assert.equal(x.mutations.length,0);
+});
