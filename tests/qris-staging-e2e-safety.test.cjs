@@ -36,7 +36,10 @@ test('frontend modules parse and QRIS images fail closed without a manual paymen
   assert.match(app,/data-qris-image/);
   assert.match(app,/data-qris-fallback/);
   assert.match(app,/document\.addEventListener\('error'/);
-  assert.match(app,/confirmButton\.disabled=true/);
+  assert.match(app,/proofLink\.removeAttribute\('href'\)/);
+  assert.match(app,/proofLink\.setAttribute\('aria-disabled','true'\)/);
+  assert.match(app,/data-payment-proof-wa/);
+  assert.doesNotMatch(app,/confirmButton\.disabled=true/);
   assert.match(app,/qrisOwnerImageApproved!==true/);
   assert.match(app,/QRIS belum diaktifkan/);
   assert.match(app,/const canConfirm=open&&paymentEnabled\(\)&&!financeBlocked&&officialQr/);
