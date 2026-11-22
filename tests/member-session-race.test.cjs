@@ -81,8 +81,7 @@ test('dashboard paints fast data before an unrelated GAS request completes',asyn
   const balance=h.pending.find(p=>p.action==='getBeranda');
   balance.resolve({saldo_kredit:55});
   // Each source is painted independently; no need to resolve slow affiliate.
-  await Promise.resolve();
-  await Promise.resolve();
+  await new Promise(resolve=>setImmediate(resolve)); // flush VM promise jobs before checking first paint
   assert.equal(h.state.home?.saldo_kredit,55);
   assert.ok(h.renderCount()>=1);
   h.pending.filter(p=>p!==balance).forEach(p=>p.resolve([]));
