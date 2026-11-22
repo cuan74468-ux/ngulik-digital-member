@@ -3652,7 +3652,10 @@ function filterLearningCards_(){
 function filterMemberPortal_(){
   const root=document.querySelector('.learning-portal-page');
   if(!root)return;
-  const filter=root.querySelector('[data-portal-filter][aria-pressed="true"]')?.dataset.portalFilter||'all';
+  const mobileCategory=root.querySelector('#portal-category');
+  const filter=mobileCategory&&typeof matchMedia==='function'&&matchMedia('(max-width: 700px)').matches
+    ?mobileCategory.value
+    :root.querySelector('[data-portal-filter][aria-pressed="true"]')?.dataset.portalFilter||'all';
   const query=(root.querySelector('#learning-portal-search')?.value||'').trim().toLocaleLowerCase('id-ID');
   let count=0;
   root.querySelectorAll('[data-portal-item]').forEach(item=>{
@@ -3687,6 +3690,9 @@ function selectLearningLesson_(index){
 document.addEventListener('input',e=>{
   if(e.target.id==='learning-course-search')filterLearningCards_();
   if(e.target.id==='learning-portal-search')filterMemberPortal_();
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='portal-category')filterMemberPortal_();
 });
 // Capture image loading failures even when the checkout is re-rendered.
 document.addEventListener('error',event=>{
