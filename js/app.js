@@ -2655,23 +2655,31 @@ async function loadRoute(route){
     if(route==='beranda'&&!isAdmin()){
       // Member command center: every metric comes from a real backend read.
       // Partial failures preserve other sections, but never fabricate records.
-      const tasks=await verifySessionRead(Promise.allSettled([
-        sessionApi('getBeranda',{},token),sessionApi('listMyOrders',{},token),
-        sessionApi('getAffiliateDashboard',{},token),sessionApi('getMyProducts',{},token),
-        sessionApi('getKreditRiwayat',{},token),sessionApi('getMyLMSEnrollments',{},token)
-      ]));
-      if(tasks[0].status==='fulfilled')state.home=tasks[0].value;
-      if(tasks[1].status==='fulfilled')state.orders=tasks[1].value||[];
-      if(tasks[2].status==='fulfilled')state.affiliates=tasks[2].value||null;
-      if(tasks[3].status==='fulfilled')state.memberProducts=tasks[3].value||[];
-      if(tasks[4].status==='fulfilled')state.creditHistory=tasks[4].value?.riwayat||[];
-      if(tasks[5].status==='fulfilled')state.lmsEnrollments=tasks[5].value||[];
-      state.memberDashboardReads={
-        balance:tasks[0].status==='fulfilled',orders:tasks[1].status==='fulfilled',
-        affiliate:tasks[2].status==='fulfilled',products:tasks[3].status==='fulfilled',
-        credits:tasks[4].status==='fulfilled',classes:tasks[5].status==='fulfilled'
+      // Render independently as each GAS read completes. A slow affiliate or
+      // ledger request must not hold back the balance or recent orders.
+      const reads=[
+        ['getBeranda',value=>{state.home=value;state.memberDashboardReads.balance=true;}],
+        ['listMyOrders',value=>{state.orders=value||[];state.memberDashboardReads.orders=true;}],
+        ['getAffiliateDashboard',value=>{state.affiliates=value||null;state.memberDashboardReads.affiliate=true;}],
+        ['getMyProducts',value=>{state.memberProducts=value||[];state.memberDashboardReads.products=true;}],
+        ['getKreditRiwayat',value=>{state.creditHistory=value?.riwayat||[];state.memberDashboardReads.credits=true;}],
+        ['getMyLMSEnrollments',value=>{state.lmsEnrollments=value||[];state.memberDashboardReads.classes=true;}]
+      ];
+      // Keep known state from this authenticated session visible while
+      // refreshing; do not manufacture numbers for pending responses.
+      if(!state.memberDashboardReads)state.memberDashboardReads={
+        balance:false,orders:false,affiliate:false,products:false,credits:false,classes:false
       };
-      if(tasks.every(t=>t.status==='rejected'))throw tasks[0].reason;
+      const errors=await Promise.all(reads.map(async ([action,apply])=>{
+        try{
+          const value=await sessionApi(action,{},token);
+          if(!sameSession())return null;
+          apply(value);
+          if(state.route===route)render();
+          return null;
+        }catch(error){return error;}
+      }));
+      if(errors.every(Boolean))throw errors[0];
     }
     if(route==='ai'||route==='ai-tool'){
       // Independent reads: two GAS calls in parallel without losing the
@@ -2697,13 +2705,25 @@ async function loadRoute(route){
     }
     if(route==='belajar'||route==='portal'){
       // Legacy modules remain usable while the new GAS LMS backend is staged.
-      const responses=await verifySessionRead(Promise.allSettled([
-        sessionApi('getModulBelajar',{},token),sessionApi('getLMSCatalog',{},token),
-        sessionApi('getMyLMSEnrollments',{},token)
-      ]));
-      if(responses[0].status==='fulfilled')state.modules=responses[0].value||[];
-      if(responses[1].status==='fulfilled')state.lmsCourses=responses[1].value||[];
-      if(responses[2].status==='fulfilled')state.lmsEnrollments=responses[2].value||[];
+      // Portal needs only the module listing; avoid two unnecessary LMS
+      // calls. Course list and enrollments resolve separately for Kelas.
+      const reads=route==='portal'
+        ?[['getModulBelajar',value=>{state.modules=value||[];}]]
+        :[
+          ['getModulBelajar',value=>{state.modules=value||[];}],
+          ['getLMSCatalog',value=>{state.lmsCourses=value||[];}],
+          ['getMyLMSEnrollments',value=>{state.lmsEnrollments=value||[];}]
+        ];
+      const errors=await Promise.all(reads.map(async ([action,apply])=>{
+        try{
+          const value=await sessionApi(action,{},token);
+          if(!sameSession())return null;
+          apply(value);
+          if(state.route===route)render();
+          return null;
+        }catch(error){return error;}
+      }));
+      if(errors.every(Boolean))throw errors[0];
     }
     if(route==='konten'&&isAdmin()){
       state.adminContent=await sessionApi('adminListContent',{},token);
