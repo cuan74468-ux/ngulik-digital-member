@@ -2316,11 +2316,9 @@ function ngdStagingWorkspaceInfo_() {
     registration_enabled:props.getProperty('NGD_REGISTRATION_ENABLED')==='true',
     otp_enabled:props.getProperty('NGD_OTP_REGISTRATION_ENABLED')==='true',
     external_providers_enabled:props.getProperty('NGD_EXTERNAL_PROVIDERS_ENABLED')==='true',
-    mayar_checkout_ready:mutationsEnabled_()&&financeEnabled_()&&
-      props.getProperty('NGD_EXTERNAL_PROVIDERS_ENABLED')==='true'&&
-      props.getProperty('MAYAR_PAYOUT_CONFIRMED')==='true'&&
-      String(props.getProperty('MAYAR_API_KEY')||'').trim().length>=20&&
-      String(settings_().payment_gateway_mode||'')==='MAYAR',
+    // Provider retired by Owner: the API must never advertise Mayar ready,
+    // even if legacy Script Properties still exist.
+    mayar_checkout_ready:false,
     finance_enabled:financeEnabled_(),
     manual_payment_direct_enabled:mutationsEnabled_()&&financeEnabled_(),
     catalog_enabled:mutationsEnabled_(),
@@ -2690,7 +2688,7 @@ function apiRouter_(action,token,p,requestId) {
     case 'getOrder':return getOrder_(m,p.order_id);
     case 'listMyOrders':return findRows_('orders',function(o){return o.member_id===m.member_id;}).slice(-50).reverse().map(function(o){return orderView_(o,m);});
     case 'createOrder':return newOrder_(m,p,requestId);
-    case 'createMayarOrder':return createMayarOrder_(m,p,requestId);
+    case 'createMayarOrder':throw ngdError_('NOT_AVAILABLE','Checkout Mayar telah dihentikan. Gunakan QRIS resmi Ngulik Digital.');
     case 'confirmPayment':return transitionOrder_(m,p.order_id,'confirm',p);
     case 'cancelOrder':return transitionOrder_(m,p.order_id,'cancel',p);
     case 'submitOnboarding3in1':return advanceTrial_(m,p);
@@ -3039,12 +3037,10 @@ function runScheduledAutomations() {
 }
 
 function doPost(e) {
-  if(e&&e.parameter&&String(e.parameter.source||'')==='mayar'){
-    try{return apiOutput_({ok:true,data:mayarWebhook_(e)});}
-    catch(webhookError){
-      console.error('MAYAR_WEBHOOK_REJECTED '+String(webhookError&&webhookError.publicCode||'INVALID'));
-      return apiOutput_({ok:false,error:{code:'WEBHOOK_REJECTED',message:'Webhook tidak diterima.'}});
-    }
+  if(e&&e.parameter&&String(e.parameter.source||'').toLowerCase()==='mayar'){
+    // Preserve historical records but permanently reject retired provider
+    // callbacks before parsing payload or touching Sheets / Script Properties.
+    return apiOutput_({ok:false,error:{code:'WEBHOOK_RETIRED',message:'Integrasi pembayaran ini telah dihentikan.'}});
   }
   try {
     var raw=e&&e.postData&&e.postData.contents;
