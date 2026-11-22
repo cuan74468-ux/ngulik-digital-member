@@ -8,6 +8,9 @@ on:
       - "config.js"
 permissions:
   contents: read
+concurrency:
+  group: ngd-verify-live-api-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   verify_api:
     runs-on: ubuntu-latest
