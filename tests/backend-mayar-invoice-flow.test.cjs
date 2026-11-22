@@ -122,7 +122,7 @@ test('mayar member response reveals verified link but not gateway ref or interna
 test('Mayar webhook source uses authoritative transactions v2 not deprecated payment detail',()=>{
   assert.match(source,/https:\/\/api\.mayar\.id\/hl\/v2\/transactions\//);
   assert.doesNotMatch(source,/https:\/\/api\.mayar\.id\/hl\/v2\/payment\//);
-  assert.match(source,/case 'createMayarOrder':return createMayarOrder_/);
+  assert.match(source,/case 'createMayarOrder':throw ngdError_\('NOT_AVAILABLE'/);
   assert.match(source,/requireFinanceEnabled_\(\)/);
   assert.match(source,/SUBSCRIPTION_ENTITLEMENT_CLAIMED/);
   assert.match(source,/COMMISSION_SELF_REFERRAL_BLOCKED/);
