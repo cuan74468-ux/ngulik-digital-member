@@ -1048,6 +1048,18 @@ function ngdPriceRupiah_(value){
   var price=Number(plain.replace(/\./g,''));
   return Number.isSafeInteger(price)&&price>=0?price:NaN;
 }
+// One canonical QRIS invoice invariant, applied before persistence and settlement.
+function ngdRequireQrOrderAmount_(o) {
+  var base=Number(o&&o.harga_dasar),code=Number(o&&o.kode_unik),
+    total=Number(o&&o.total_bayar);
+  require_(o&&String(o.metode||'')==='QRIS_STATIS'&&
+    Number.isSafeInteger(base)&&base>0&&
+    Number.isSafeInteger(code)&&code>=100&&code<=999&&
+    Number.isSafeInteger(total)&&total===base+code,
+    'RECONCILIATION_REQUIRED',
+    'Nominal QRIS tidak konsisten. Jangan membayar atau memverifikasi pesanan ini.');
+  return total;
+}
 var NGD_CHECKOUT_TYPES_=['TOPUP_TOKEN','TOPUP_KREDIT','LANGGANAN_30H','LISENSI_SEKALI','SEAT_30H','PRODUK_DIGITAL','JASA_SEKALI'];
 function newOrder_(m,p,requestId) {
   return withLock_(function(){
@@ -1058,6 +1070,7 @@ function newOrder_(m,p,requestId) {
     if(retry){
       require_(retry.member_id===m.member_id&&retry.product_id===product.product_id,
         'CONFLICT','ID permintaan sudah dipakai untuk pesanan lain.');
+      if(String(retry.metode||'')==='QRIS_STATIS')ngdRequireQrOrderAmount_(retry);
       return orderView_(retry,m);
     }
     require_(NGD_CHECKOUT_TYPES_.indexOf(product.tipe)>=0,
@@ -1082,16 +1095,22 @@ function newOrder_(m,p,requestId) {
     require_(code!==null,'CONFLICT','Kode pembayaran sedang penuh. Coba lagi nanti.');
     var created=now_(),id='NGD-'+Utilities.formatDate(created,NGD.TZ,'yyMMdd')+'-'+uuid_().slice(0,12);
     var o={order_id:id,member_id:m.member_id,product_id:product.product_id,nama_produk:product.nama,harga_dasar:price,kode_unik:code,total_bayar:price+code,status:'PENDING',metode:'QRIS_STATIS',created_at:created,expires_at:new Date(created.getTime()+Number(s.order_expiry_menit||60)*60000),ref_member_id:m.referred_by||'',request_id:requestId};
-    appendRow_('orders',o);logAudit_(m.member_id,m.role,'ORDER_CREATED','orders',id,'','PENDING',{product_id:product.product_id});
+    ngdRequireQrOrderAmount_(o); // fail before touching orders or sending a payment instruction
+    appendRow_('orders',o);
+    var persisted=byId_('orders','order_id',id);
+    require_(persisted&&persisted.member_id===m.member_id&&persisted.product_id===product.product_id,
+      'RECONCILIATION_REQUIRED','Pesanan tersimpan tidak dapat diverifikasi.');
+    ngdRequireQrOrderAmount_(persisted); // read-back is the single source for API and Fonnte
+    logAudit_(m.member_id,m.role,'ORDER_CREATED','orders',id,'','PENDING',{product_id:product.product_id});
     if(s.followup_member_otomatis===true&&m.wa){
       // QRIS placeholder is not a payable destination. Member confirmation
       // means "please verify", NOT verified funds or automatic fulfillment.
       var qrPath=String(s.qris_gambar_path||'');
       var qrUnavailable=!qrPath||/(?:^|\/)assets\/qris\.png(?:$|[?#])/i.test(qrPath);
-      var amount='Rp'+Number(o.total_bayar).toLocaleString('id-ID');
+      var amount='Rp'+Number(persisted.total_bayar).toLocaleString('id-ID');
       var invoice='Halo '+String(m.nama||'Member').slice(0,60)+', pesanan #'+id+
         ' untuk '+String(product.nama||'produk').slice(0,90)+
-        ' sebesar '+amount+' telah dicatat. Batas pembayaran: '+isoWib_(o.expires_at)+'. ';
+        ' sebesar '+amount+' telah dicatat. Batas pembayaran: '+isoWib_(persisted.expires_at)+'. ';
       invoice+=qrUnavailable?
         'QRIS resmi belum tersedia. JANGAN TRANSFER sebelum Admin memberikan tujuan pembayaran resmi. '+
         'Buka Pesanan di aplikasi, minta instruksi via WhatsApp Admin, lalu ajukan verifikasi hanya jika benar-benar sudah transfer.':
@@ -1099,7 +1118,7 @@ function newOrder_(m,p,requestId) {
         ', kemudian ajukan verifikasi pembayaran. Admin akan mencocokkan dana masuk.';
       sendFonnteWa_(m.wa,invoice,'MEMBER','ORDER_INVOICE_MEMBER',id);
     }
-    return orderView_(o,m);
+    return orderView_(persisted,m);
   });
 }
 
@@ -1240,6 +1259,7 @@ function transitionOrder_(m,id,type,p) {
       // member claim, screenshot, or a checkbox alone.
       require_(p.dana_diterima===true,'RECONCILIATION_REQUIRED',
         'Dana harus diverifikasi benar-benar masuk sebelum order dibayar.');
+      if(String(o.metode||'')==='QRIS_STATIS')ngdRequireQrOrderAmount_(o);
       var exact=Number(o.total_bayar),received=Number(p.nominal_terverifikasi);
       require_(Number.isSafeInteger(exact)&&exact>0&&
         Number.isSafeInteger(received)&&received===exact,
