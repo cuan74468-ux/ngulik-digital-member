@@ -111,7 +111,7 @@ function memberPortal_(old){
           '<div class="learning-portal-group-head"><div><h3>'+e(group.title)+'</h3><p>'+e(group.hint)+'</p></div><span>'+items.length+' pilihan</span></div>'+
           '<div class="learning-legacy-list">'+items.map(function(m,i){
             var target=portalLink_(m.url_classroom);
-            var cleanName=String(m.judul||'').replace(/^\\[(?:AI & Digital Marketing|Bisnis & Keuangan UMKM|Fasilitas Resmi UMKM)\\]\\s*/,'');
+            var cleanName=String(m.judul||'').replace(/^\[(?:AI & Digital Marketing|Bisnis & Keuangan UMKM|Fasilitas Resmi UMKM)\]\s*/,'');
             var searchText=(cleanName+' '+String(m.deskripsi||'')).toLocaleLowerCase('id-ID');
             return '<article class="learning-legacy-row" data-portal-item data-portal-category="'+group.id+'" data-portal-search="'+e(searchText)+'">'+
               '<span class="learning-legacy-no">'+String(i+1).padStart(2,'0')+'</span>'+
