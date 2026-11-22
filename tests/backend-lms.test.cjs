@@ -356,3 +356,20 @@ test('archived lesson restore is blocked until course is restored',()=>{
   assert.equal(result.status,'DRAFT');
   assert.equal(f.tables.lms_lessons.length,1);
 });
+
+test('published FREE legacy course is available to active members but never unauthenticated guests',()=>{
+  const f=fixture(),course=f.course({access_type:'FREE'}),lesson=f.lesson(course.course_id);
+  f.act('adminPublishLMSLesson','admin',{lesson_id:lesson.lesson_id});
+  f.act('adminPublishLMSCourse','admin',{course_id:course.course_id});
+  const cat=f.act('getLMSCatalog','member');
+  assert.equal(cat.length,1);
+  assert.equal(cat[0].access_type,'FREE');
+  assert.equal(cat[0].access_granted,true);
+  const joined=f.act('enrollLMSCourse','other',{course_id:course.course_id});
+  assert.equal(joined.status,'ACTIVE');
+  const detail=f.act('getLMSCourse','other',{course_id:course.course_id});
+  assert.equal(detail.lessons.length,1);
+  assert.equal(detail.access_granted,true);
+  assert.equal(f.ctx.lmsCanAccess_(f.members[3],f.tables.lms_courses[0]),false);
+  assert.throws(()=>f.act('getLMSCourse','invalid',{course_id:course.course_id}),/Sesi tidak sah/);
+});

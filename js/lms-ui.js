@@ -266,7 +266,7 @@ function courseForm(c,canWrite,products){
     field('summary','Deskripsi dan tujuan belajar',r.summary||'','textarea','4')+
     '<div class="lms-form-grid">'+field('category','Kategori',r.category||'UMKM','text','required maxlength="60"')+
     select('level','Tingkat',[['PEMULA','Pemula'],['MENENGAH','Menengah'],['LANJUTAN','Lanjutan']],r.level||'PEMULA')+
-    select('access_type','Jenis akses',[['MEMBER','Semua member'],['PRODUCT','Pemilik produk']],r.access_type||'MEMBER')+
+    select('access_type','Jenis akses',[['MEMBER','Semua member'],['FREE','Gratis untuk member'],['PRODUCT','Pemilik produk']],r.access_type||'MEMBER')+
     select('product_id','Produk terkait',items,r.product_id||'')+
     field('sort_order','Urutan',r.sort_order||100,'number','min="1" max="9999" required')+'</div>'+
     '<button class="btn btn-primary" type="submit" '+(!canWrite?'disabled title="Edit kelas belum tersedia"':'')+'>'+

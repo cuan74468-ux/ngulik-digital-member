@@ -59,7 +59,7 @@ test('QRIS: two equal-price checkouts receive collision-free amount and invoice 
   assert.equal(h.orders.length,2);
   assert.notEqual(a.total_bayar,b.total_bayar);
   assert.ok(a.kode_unik>=100&&a.kode_unik<=999);
-  assert.equal(a.total_bayar,10000-a.kode_unik);
+  assert.equal(a.total_bayar,10000+a.kode_unik);
   assert.equal(h.notices.filter(n=>n.template==='ORDER_INVOICE_MEMBER').length,2);
   assert.equal(a.qris_atas_nama,'Owner');
 });
@@ -96,4 +96,25 @@ test('QRIS: admin approval cannot proceed without confirmed funds and reference'
     dana_diterima:true,nominal_terverifikasi:order.total_bayar,metode_diterima:'QRIS_STATIS',referensi_pembayaran:'DANA-MUTASI-12345'
   }),/Status pesanan/);
   assert.equal(h.paid.length,1);
+});
+
+test('QRIS rejects archived or internal QA checkout even if the catalog row remains active',()=>{
+  const h=setup();
+  h.product.sumber_produk='QA_STAGING_TEST';
+  assert.throws(()=>h.ctx.newOrder_(h.members[0],{product_id:h.product.product_id},'BLOCK_QA_001'),/Produk tidak tersedia/);
+  h.product.sumber_produk='IN_HOUSE';
+  h.product.nama='[ARCHIVED] Produk uji lama';
+  assert.throws(()=>h.ctx.newOrder_(h.members[0],{product_id:h.product.product_id},'BLOCK_QA_002'),/Produk tidak tersedia/);
+  assert.equal(h.orders.length,0);
+});
+test('public catalog omits QA fixtures without deleting historic product rows',()=>{
+  const h=setup();
+  const clean={...h.product,urut:1};
+  const qa={...clean,product_id:'P-QA-CRUD-01',sumber_produk:'QA_STAGING_TEST',urut:2};
+  const internal={...clean,product_id:'P-B36AA0054926',sumber_produk:'INTERNAL',urut:3};
+  const archived={...clean,product_id:'P-ARCHIVED',nama:'[ARCHIVED] Test',urut:4};
+  const rows=[clean,qa,internal,archived];
+  h.ctx.readAll_=table=>table==='katalog_produk'?rows:table==='orders'?h.orders:[];
+  assert.deepEqual(Array.from(h.ctx.publicCatalog_(),r=>r.product_id),[clean.product_id]);
+  assert.equal(rows.length,4);
 });

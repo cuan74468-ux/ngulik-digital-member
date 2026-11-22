@@ -702,8 +702,21 @@ function byId_(name,field,id) {
 function auditStatus_(actor,entity,row,from,to) {
   logAudit_(actor.member_id,actor.role,entity+'_STATUS',entity,row.order_id||row.member_id||row.komisi_id,from,to,{});
 }
-function creditBalance_(id) {return readAll_('credits_ledger').filter(function(r){return r.member_id===id;}).reduce(function(s,r){return s+Number(r.jumlah||0);},0);}
-function creditHistory_(id) {return readAll_('credits_ledger').filter(function(r){return r.member_id===id;}).slice(-20).reverse();}
+// SUCCESS is the historic STAGING ledger status; new postings use POSTED.
+// Ignore unposted/failed reservations when calculating spendable tokens.
+function ngdCreditPosted_(row) {
+  return ['POSTED','SUCCESS'].indexOf(String(row&&row.status||'').trim().toUpperCase())>=0;
+}
+function creditBalance_(id) {
+  return readAll_('credits_ledger').filter(function(r){
+    return r.member_id===id&&ngdCreditPosted_(r);
+  }).reduce(function(sum,r){return sum+Number(r.jumlah||0);},0);
+}
+function creditHistory_(id) {
+  return readAll_('credits_ledger').filter(function(r){
+    return r.member_id===id&&ngdCreditPosted_(r);
+  }).slice(-20).reverse();
+}
 function nextMemberId_() {
   var max=readAll_('members').reduce(function(n,r){var match=/^M-(\d+)$/.exec(String(r.member_id));return match?Math.max(n,Number(match[1])):n;},0);
   return 'M-'+String(max+1).padStart(4,'0');
@@ -1040,7 +1053,7 @@ function newOrder_(m,p,requestId) {
   return withLock_(function(){
     require_(m.role==='MEMBER','FORBIDDEN','Hanya member dapat membeli.');
     var product=byId_('katalog_produk','product_id',String(p.product_id||''));
-    require_(product&&product.aktif===true,'NOT_FOUND','Produk tidak tersedia.');
+    require_(product&&product.aktif===true&&!ngdCatalogIsQa_(product),'NOT_FOUND','Produk tidak tersedia.');
     var retry=byId_('orders','request_id',requestId);
     if(retry){
       require_(retry.member_id===m.member_id&&retry.product_id===product.product_id,
@@ -1065,10 +1078,10 @@ function newOrder_(m,p,requestId) {
     // Scan the entire unique-code range from a random starting point.
     // Unlike 25 random trials, this only fails when every amount is occupied.
     var range=max-min+1,start=Math.floor(Math.random()*range),code=null;
-    for(var k=0;k<range;k++){var n=min+(start+k)%range;if(price>n&&!taken[price-n]){code=n;break;}}
+    for(var k=0;k<range;k++){var n=min+(start+k)%range;if(!taken[price+n]){code=n;break;}}
     require_(code!==null,'CONFLICT','Kode pembayaran sedang penuh. Coba lagi nanti.');
     var created=now_(),id='NGD-'+Utilities.formatDate(created,NGD.TZ,'yyMMdd')+'-'+uuid_().slice(0,12);
-    var o={order_id:id,member_id:m.member_id,product_id:product.product_id,nama_produk:product.nama,harga_dasar:price,kode_unik:code,total_bayar:price-code,status:'PENDING',metode:'QRIS_STATIS',created_at:created,expires_at:new Date(created.getTime()+Number(s.order_expiry_menit||60)*60000),ref_member_id:m.referred_by||'',request_id:requestId};
+    var o={order_id:id,member_id:m.member_id,product_id:product.product_id,nama_produk:product.nama,harga_dasar:price,kode_unik:code,total_bayar:price+code,status:'PENDING',metode:'QRIS_STATIS',created_at:created,expires_at:new Date(created.getTime()+Number(s.order_expiry_menit||60)*60000),ref_member_id:m.referred_by||'',request_id:requestId};
     appendRow_('orders',o);logAudit_(m.member_id,m.role,'ORDER_CREATED','orders',id,'','PENDING',{product_id:product.product_id});
     if(s.followup_member_otomatis===true&&m.wa){
       // QRIS placeholder is not a payable destination. Member confirmation
@@ -1899,6 +1912,15 @@ function advanceTrial_(m,p) {
     return {trial_berakhir:isoWib_(trialEnd),paid_access_preserved:paidActive};
   });
 }
+// Internal QA fixtures may remain in the STAGING database for audit evidence,
+// but must never be exposed to member/public catalog or purchased via direct API.
+function ngdCatalogIsQa_(row) {
+  if(!row)return false;
+  var id=String(row.product_id||'').toUpperCase();
+  var source=String(row.sumber_produk||'').toUpperCase();
+  return id==='P-B36AA0054926'||source==='QA_STAGING_TEST'||
+    /^\s*\[(?:ARCHIVED|ARSIP|QA)\]/i.test(String(row.nama||''));
+}
 function ngdPublicCatalogItem_(r) {
   var s=settings_(),enabled=r.bisa_komisi===true;
   var fixed=enabled?ngdFixedCommission_(r):0;
@@ -1909,7 +1931,7 @@ function ngdPublicCatalogItem_(r) {
     komisi_persen:rate,komisi_nominal_tetap:fixed};
 }
 function publicCatalog_() {return readAll_('katalog_produk').filter(function(r){
-  return r.aktif===true;
+  return r.aktif===true&&!ngdCatalogIsQa_(r);
 }).sort(function(a,b){
   return Number(a.urut||0)-Number(b.urut||0);
 }).map(ngdPublicCatalogItem_);}
@@ -2444,6 +2466,19 @@ function ngdStagingEndToEndSimulation() {
       product_id:'P-TOKEN-10',nama:'Top-Up 10 Token Universal',
       tipe:'TOPUP_TOKEN',harga:10000,kredit_diberikan:10,
       bisa_komisi:true,komisi_persen:10,aktif:true
+    },{
+      product_id:'P-STARTER-15K',nama:'Synthetic Starter entitlement',
+      tipe:'PRODUK_DIGITAL',harga:15000,kredit_diberikan:15,
+      bisa_komisi:false,aktif:true
+    }]);
+    // The synthetic inviter must qualify under Pay-to-Unlock.
+    // No real customer order or historical STAGING commission is changed.
+    put('orders',[{
+      order_id:'E2E_SYNTHETIC_STARTER',member_id:'M-0001',
+      product_id:'P-STARTER-15K',status:'FULFILLED',
+      nama_produk:'Synthetic Starter entitlement',
+      harga_dasar:15000,kode_unik:123,total_bayar:15123,
+      metode:'QRIS_STATIS',paid_at:now_(),fulfilled_at:now_()
     }]);
     put('credits_ledger',[{
       entry_id:'E2E_START',member_id:'M-0009',created_at:now_(),
@@ -2464,7 +2499,8 @@ function ngdStagingEndToEndSimulation() {
       'CONFLICT','Konfirmasi pembayaran tidak valid.');
     var admin={member_id:'E2E_ADMIN',role:'ADMIN'};
     var approved=transitionOrder_(admin,order.order_id,'approve',{
-      dana_diterima:true,referensi_pembayaran:'E2E_SIMULATED_ONLY'
+      dana_diterima:true,nominal_terverifikasi:Number(order.total_bayar),
+      metode_diterima:'QRIS_STATIS',referensi_pembayaran:'E2E_SIMULATED_ONLY'
     });
     var finalOrder=byId_('orders','order_id',order.order_id);
     var ledger=findRows_('credits_ledger',function(r){

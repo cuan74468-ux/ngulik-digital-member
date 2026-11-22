@@ -36,7 +36,7 @@ function lmsCoursePayload_(p){
     product=lmsText_(x.product_id,100,0,'Produk');
   require_(['PEMULA','MENENGAH','LANJUTAN'].indexOf(level)>=0,
     'VALIDATION','Level kursus tidak valid.');
-  require_(['MEMBER','PRODUCT'].indexOf(access)>=0,
+  require_(['FREE','MEMBER','PRODUCT'].indexOf(access)>=0,
     'VALIDATION','Jenis akses tidak valid.');
   require_(access!=='PRODUCT'||product,'VALIDATION',
     'Kursus berbayar wajib dikaitkan dengan produk.');
@@ -140,7 +140,10 @@ function lmsPublishedCatalog_(member){
 }
 function lmsCanAccess_(member,course){
   if(member.role==='ADMIN')return true;
-  if(course.published_access_type==='MEMBER')return true;
+  // Authenticated STAGING legacy courses use FREE, while new CMS courses use
+  // MEMBER. Both remain members-only; the API rejects anonymous access.
+  if(member.role!=='MEMBER'||member.status!=='AKTIF')return false;
+  if(['FREE','MEMBER'].indexOf(String(course.published_access_type||''))>=0)return true;
   if(course.published_access_type!=='PRODUCT')return false;
   var p=byId_('katalog_produk','product_id',course.published_product_id);
   if(!p)return false;

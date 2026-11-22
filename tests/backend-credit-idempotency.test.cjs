@@ -78,3 +78,21 @@ test('a new debit larger than available balance is rejected',()=>{
   assert.throws(()=>h.grant('M-1',-20,'ADMIN_ADJUST:REQ-000000000000002','ADJUST'),/saldo negatif/);
   assert.equal(h.ledger.length,1);
 });
+
+test('wallet excludes pending and failed ledger rows while preserving historical SUCCESS entries',()=>{
+  const ctx=vm.createContext({console:{log(){},warn(){},error(){}}});
+  vm.runInContext(backend,ctx,{timeout:10000});
+  const ledger=[
+    {member_id:'M-1',status:'SUCCESS',jumlah:25},
+    {member_id:'M-1',status:'POSTED',jumlah:10},
+    {member_id:'M-1',status:'POSTED',jumlah:-3},
+    {member_id:'M-1',status:'PENDING',jumlah:999},
+    {member_id:'M-1',status:'FAILED',jumlah:1000},
+    {member_id:'M-2',status:'SUCCESS',jumlah:100}
+  ];
+  ctx.readAll_=table=>{assert.equal(table,'credits_ledger');return ledger;};
+  assert.equal(ctx.creditBalance_('M-1'),32);
+  assert.equal(ctx.creditBalance_('M-2'),100);
+  assert.equal(ctx.creditHistory_('M-1').length,3);
+  assert.equal(ledger.length,6);
+});
