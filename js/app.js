@@ -1651,6 +1651,32 @@ function viewCheckoutDraft_(){
       '<button type="button" class="btn btn-ghost btn-wide" data-route="'+esc(state.checkoutReturnRoute||'katalog')+'">Kembali ke produk</button>'+
     '</section></div></section></div>';
 }
+// Payment proof is a user-initiated WhatsApp handoff, NOT payment verification.
+// WhatsApp deep links cannot attach an image automatically: the buyer adds it in chat.
+function ngdPaymentProofWaUrl_(order,rawAdminWa){
+  const raw=String(rawAdminWa||'').trim().replace(/[\s()+-]/g,'');
+  const phone=raw.startsWith('0')?'62'+raw.slice(1):raw;
+  if(!/^62\d{8,13}$/.test(phone)||!order)return '';
+  const id=String(order.order_id||'').trim();
+  const total=Number(order.total_bayar);
+  const base=Number(order.harga_dasar),code=Number(order.kode_unik);
+  if(!/^NGD-[A-Z0-9-]{8,40}$/.test(id)||
+     !Number.isSafeInteger(base)||base<=0||
+     !Number.isSafeInteger(code)||code<100||code>999||
+     !Number.isSafeInteger(total)||total!==base+code||
+     String(order.metode||'')!=='QRIS_STATIS')return '';
+  const message=[
+    'Halo Admin Ngulik Digital, saya ingin mengirim bukti pembayaran QRIS.',
+    'No. pesanan: '+id,
+    'Produk: '+String(order.nama_produk||'Produk digital').slice(0,100),
+    'Nominal tagihan: '+rupiah(total),
+    'Merchant: Linggau AI Studio',
+    '',
+    'Saya akan melampirkan screenshot/struk transaksi di chat ini.',
+    'Mohon cocokkan mutasi DANA Bisnis dan nomor pesanan sebelum menyetujui pembayaran.'
+  ].join('\n');
+  return 'https://wa.me/'+phone+'?text='+encodeURIComponent(message);
+}
 function viewCheckout(){
   // A cached order must never render after logout or an account switch.
   if(!logged()||isAdmin())return viewCheckoutDraft_();
@@ -1708,6 +1734,7 @@ function viewCheckout(){
       '<p class="checkout-note">Pembayaran ke DANA Bisnis belum tersedia untuk order ini. Jangan transfer uang menggunakan gambar atau instruksi lama.</p></div>';
   const financeBlocked=state.workspaceInfo&&(state.workspaceInfo.finance_enabled===false||state.workspaceInfo.mutations_enabled===false);
   const canConfirm=open&&paymentEnabled()&&!financeBlocked&&officialQr;
+  const proofWaUrl=canConfirm?ngdPaymentProofWaUrl_(o,o.wa_admin||state.info?.wa_admin):'';
   return '<div class="checkout-backdrop"><section class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkout-title">'+
     '<header class="checkout-heading"><div><p class="eyebrow">NGULIK DIGITAL / PESANAN</p>'+
     '<h1 id="checkout-title">Detail Pesanan</h1><p>Order '+esc(o.order_id)+'</p></div>'+
@@ -1724,8 +1751,9 @@ function viewCheckout(){
     (open?'<p class="checkout-countdown" id="checkout-countdown" data-expiry="'+esc(o.expires_at||'')+'">Batas pembayaran: '+timer+'</p>':'')+
     '<div class="checkout-status-summary">'+safeBadge(status)+'<p>'+esc(stateNote)+'</p></div></section>'+
     '<section><h2>'+ (open?'Langkah pembayaran':'Status dan bantuan')+'</h2>'+paymentSection+
-    (open&&officialQr?'<div class="checkout-steps"><strong>Setelah Bayar</strong><p>Tekan Saya Sudah Bayar. Admin akan mencocokkan mutasi DANA Bisnis dan nominal tepat sebelum pesanan diproses.</p></div>':'')+
-    (canConfirm?'<button class="btn btn-primary btn-wide" type="button" data-action="confirm-payment">Saya Sudah Bayar</button>':'')+
+    (open&&officialQr?'<div class="checkout-steps"><strong>Setelah Bayar</strong><p>Setelah benar-benar membayar sesuai nominal tagihan, kirim screenshot atau struk transfer melalui WhatsApp Admin. Pesanan baru dinyatakan lunas setelah Admin mencocokkan dana masuk.</p></div>':'')+
+    (proofWaUrl?'<a class="btn btn-primary btn-wide" data-payment-proof-wa href="'+esc(proofWaUrl)+'" target="_blank" rel="noopener noreferrer">Kirim Bukti Pembayaran ke WhatsApp Admin</a>':
+      canConfirm?'<p class="checkout-note" role="alert">Nomor WhatsApp Admin belum tersedia atau tidak valid. Hubungi Admin melalui menu Bantuan; jangan kirim bukti ke nomor lain.</p>':'')+
     (open&&(!paymentEnabled()||financeBlocked)?'<p class="checkout-note"><strong>Konfirmasi pembayaran belum tersedia.</strong> Jangan transfer sebelum QRIS resmi aktif.</p>':'')+
     (paid?'<button type="button" class="btn btn-secondary btn-wide" data-route="beranda">Lihat saldo / akses saya</button>':'')+
     '<button type="button" class="btn btn-ghost btn-wide" data-route="pesanan">Kembali ke pesanan</button>'+
@@ -3641,8 +3669,8 @@ document.addEventListener('error',event=>{
   img.hidden=true;
   const fallback=img.parentElement?.querySelector('[data-qris-fallback]');
   if(fallback)fallback.hidden=false;
-  const confirmButton=img.closest('.checkout-dialog')?.querySelector('[data-action="confirm-payment"]');
-  if(confirmButton){confirmButton.disabled=true;confirmButton.title='QRIS gagal dimuat. Hubungi Admin untuk meminta gambar resmi.';}
+  const proofLink=img.closest('.checkout-dialog')?.querySelector('[data-payment-proof-wa]');
+  if(proofLink){proofLink.removeAttribute('href');proofLink.setAttribute('aria-disabled','true');proofLink.title='QRIS gagal dimuat. Hubungi Admin untuk meminta gambar resmi.';}
 },true);
 
 let affiliatePayoutSubmitting_=false;
