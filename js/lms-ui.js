@@ -87,7 +87,7 @@ function memberPortal_(old){
   return '<section class="learning-portal-page" aria-labelledby="member-portal-heading">'+
     '<header class="learning-portal-hero">'+
       '<div><p class="eyebrow">FASILITAS GRATIS / KHUSUS MEMBER</p>'+
-      '<h2 id="member-portal-heading">Portal Belajar Gratis & Fasilitas UMKM</h2>'+
+      '<h2 id="member-portal-heading">Portal Belajar & Fasilitas UMKM</h2>'+
       '<p>Temukan panduan, kelas, dan layanan yang bisa membantu usaha Anda. Pilih topik, lalu buka situs penyedianya. Tanpa checkout Ngulik Digital.</p>'+
       '<div class="learning-portal-hero-actions"><button type="button" class="btn btn-secondary" data-route="belajar">← Kembali ke Kelas Saya</button>'+
       '<span class="learning-portal-total">'+count+' materi dan tautan kurasi</span></div></div>'+
@@ -165,7 +165,7 @@ function memberCatalog(courses,enrollments,legacy){
       '<h3>Kelas Belum Tersedia</h3>'+
       '<p>Kelas baru akan muncul di sini.</p></div>')+
     '<section class="learning-portal-promo" aria-label="Portal belajar gratis">'+
-      '<div><p class="eyebrow">SUMBER BELAJAR TAMBAHAN</p><h3>Butuh referensi gratis dari luar kelas?</h3><p>Jelajahi materi dan layanan resmi UMKM. Ini portal tautan, bukan kelas dengan progres, dan tidak memerlukan checkout.</p></div>'+
+      '<div><p class="eyebrow">SUMBER BELAJAR TAMBAHAN</p><h3>Butuh referensi gratis dari luar kelas?</h3><p>Jelajahi Materi Pengantar dan layanan resmi UMKM. Ini portal tautan, bukan kelas dengan progres, dan tidak memerlukan checkout.</p></div>'+
       '<button type="button" class="btn btn-secondary" data-route="portal">Buka Portal Gratis ↗</button></section>'+
     '</div>';
 }
