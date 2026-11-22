@@ -141,3 +141,16 @@ test('aturan review dan kanal pelaporan privat disiapkan',()=>{
   assert.match(codeql,/upload:\s*false/);
   assert.doesNotMatch(codeql,/security-events:\s*write/);
 });
+
+test('GAS read-only health exposes a manual source revision for drift detection',()=>{
+  const gas=read('apps-script/Code.gs');
+  const marker=gas.match(/SOURCE_REVISION:\s*'([a-z0-9-]{12,80})'/);
+  assert.ok(marker,'Code.gs must contain a non-secret source revision');
+  assert.match(gas,/source_revision:NGD\.SOURCE_REVISION/);
+  const workflow=read('.github/workflows/verify-source-drift.yml');
+  assert.match(workflow,/workflow_dispatch:/);
+  assert.match(workflow,/contents:\s*read/);
+  assert.match(workflow,/method:'GET'/);
+  assert.match(workflow,/actual!==expected\[1\]/);
+  assert.doesNotMatch(workflow,/security-events:\s*write|method:'POST'/);
+});
