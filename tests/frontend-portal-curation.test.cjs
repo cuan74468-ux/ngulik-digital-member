@@ -59,7 +59,7 @@ test('member learning catalog separates internal LMS courses from the free provi
   const window={};
   vm.runInNewContext(read('js/lms-ui.js'),{window,URL},{timeout:3000});
   const courses=window.NGD_LMS_UI.memberCatalog([],[],[{modul_id:'KUR-A3-01',judul:'[Fasilitas Resmi UMKM] OSS',url_classroom:'https://oss.go.id/id'}]);
-  assert.match(courses,/Kelas Belum Tersedia/);
+  assert.match(courses,/Belum ada kelas yang diterbitkan/);
   assert.match(courses,/Buka Portal Gratis/);
   assert.doesNotMatch(courses,/href="https:\/\/oss\.go\.id/);
   const app=read('js/app.js');
@@ -68,5 +68,6 @@ test('member learning catalog separates internal LMS courses from the free provi
   assert.match(app,/route==='belajar'\|\|route==='portal'/);
   assert.match(app,/guestPrivateRoutes_=new Set\(\['ai','ai-tool','belajar','portal'/);
   assert.match(app,/function filterMemberPortal_\(\)/);
+  assert.match(app,/e\.target\.id==='portal-category'/);
   assert.match(app,/if\(e\.target\.id==='learning-portal-search'\)filterMemberPortal_\(\)/);
 });
