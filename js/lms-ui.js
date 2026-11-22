@@ -99,6 +99,9 @@ function memberPortal_(old){
     (count?
       '<div class="learning-portal-tools">'+
         '<label class="learning-portal-search"><span>Cari materi atau layanan</span><input id="learning-portal-search" type="search" autocomplete="off" placeholder="Contoh: AI, pemasaran, KUR, NIB…" aria-label="Cari materi dan layanan gratis"></label>'+
+        '<div class="learning-portal-category-select"><label for="portal-category">Kategori materi</label><select id="portal-category" aria-label="Pilih kategori portal">'+
+          '<option value="all">Semua kategori</option>'+groups.map(function(g){return '<option value="'+g.id+'">'+e(g.title)+'</option>';}).join('')+
+          '</select></div>'+
         '<div class="learning-portal-filters" role="group" aria-label="Filter kategori portal">'+
           '<button type="button" data-portal-filter="all" aria-pressed="true">Semua</button>'+
           groups.map(function(g){return '<button type="button" data-portal-filter="'+g.id+'" aria-pressed="false">'+e(g.title)+'</button>';}).join('')+
@@ -132,22 +135,22 @@ function memberCatalog(courses,enrollments,legacy){
   var next=active[0]||null;
   return '<div class="learning-dashboard">'+
     '<section class="learning-intro"><div class="learning-intro-copy">'+
-    '<span class="learning-overline"><span class="learning-overline-dot"></span> RUANG MEMBER / KELAS SAYA</span>'+
-    '<h2>'+(next?'Lanjutkan pembelajaran Anda.':'Bangun keterampilan, satu kelas demi satu.')+'</h2>'+
-    '<p>'+(next?'Anda sudah mengikuti kelas. Lanjutkan dari materi berikutnya dan simpan progres belajar.':'Temukan materi yang berguna bagi usaha Anda, mulai belajar, lalu praktikkan secara bertahap.')+'</p>'+
+    '<span class="learning-overline">RUANG BELAJAR · MEMBER</span>'+
+    '<h2>'+(next?'Lanjutkan kelas Anda':'Kelas untuk keterampilan nyata')+'</h2>'+
+    '<p>'+(next?'Buka kelas yang sedang diikuti dan lanjutkan progres tersimpan.':'Pilih kelas, pelajari materinya, lalu tandai pelajaran selesai. Progres tersimpan di akun Anda.')+'</p>'+
     '<div class="learning-intro-actions">'+
     (next?btn('open-course','Lanjutkan kelas',false,' data-course-id="'+e(next.course_id)+'"','btn-primary')+
       '<span class="learning-next-hint">'+e(next.title)+'</span>':
       '<span class="learning-next-hint">Pilih kelas untuk mulai belajar.</span>')+
     '</div></div>'+
     '<div class="learning-intro-aside" aria-label="Ringkasan kelas Anda">'+
-    '<span class="learning-aside-label">KELAS SAYA</span>'+
+    '<span class="learning-aside-label">PROGRES KELAS</span>'+
     '<div class="learning-aside-value">'+active.length+'<span> / '+list.length+'</span></div>'+
     '<p>Kelas yang Anda ikuti</p>'+
     '<div class="learning-intro-rule" aria-hidden="true"><span></span><span></span><span></span></div>'+
     '</div></section>'+
     '<div class="learning-section-head"><div><p class="eyebrow">PILIHAN KELAS</p>'+
-    '<h3>Cari Kelas yang Cocok</h3><p>Mulai dari topik yang paling Anda butuhkan.</p></div>'+
+    '<h3>Jelajahi kelas</h3><p>Materi di sini memiliki pelajaran dan progres. Untuk situs belajar eksternal, buka Portal Gratis.</p></div>'+
     '<span class="learning-course-count">'+list.length+' kelas tersedia</span></div>'+
     (list.length?
       '<div class="learning-toolbar" aria-label="Filter kelas">'+
@@ -162,8 +165,8 @@ function memberCatalog(courses,enrollments,legacy){
       }).join('')+'</div>'+
       '<p class="learning-filter-empty" hidden role="status">Kelas tidak ditemukan. Coba kata lain.</p>':
       '<div class="surface lms-empty learning-empty">'+
-      '<h3>Kelas Belum Tersedia</h3>'+
-      '<p>Kelas baru akan muncul di sini.</p></div>')+
+      '<h3>Belum ada kelas yang diterbitkan</h3>'+
+      '<p>Anda tetap bisa mempelajari materi gratis melalui Portal Gratis di bawah.</p></div>')+
     '<section class="learning-portal-promo" aria-label="Portal belajar gratis">'+
       '<div><p class="eyebrow">SUMBER BELAJAR TAMBAHAN</p><h3>Butuh referensi gratis dari luar kelas?</h3><p>Jelajahi Materi Pengantar dan layanan resmi UMKM. Ini portal tautan, bukan kelas dengan progres, dan tidak memerlukan checkout.</p></div>'+
       '<button type="button" class="btn btn-secondary" data-route="portal">Buka Portal Gratis ↗</button></section>'+
