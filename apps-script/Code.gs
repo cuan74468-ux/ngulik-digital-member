@@ -1248,12 +1248,16 @@ function transitionOrder_(m,id,type,p) {
     var admin=m.role==='ADMIN';
     require_(admin||o.member_id===m.member_id,'FORBIDDEN','Pesanan tidak ditemukan.');
     expireOrder_(o);
+    if(type==='approve'&&admin&&['PAID','FULFILLED'].indexOf(String(o.status))>=0)
+      return orderView_(o,m); // safe replay: no second fulfillment, credit, or commission
+    if(type==='approve'&&admin&&o.status==='EXPIRED')
+      throw ngdError_('RECONCILIATION_REQUIRED','Pesanan kedaluwarsa. Dana yang telanjur masuk wajib direkonsiliasi manual oleh Owner.');
     if(type==='confirm'&&!admin&&o.status==='MENUNGGU_VERIFIKASI')return orderView_(o,m);
     if(type==='cancel'&&!admin&&o.status==='CANCELLED')return orderView_(o,m);
     var from=o.status,to='',patch={};
     if(type==='confirm'&&!admin&&from==='PENDING'){to='MENUNGGU_VERIFIKASI';patch.konfirmasi_bayar_at=now_();}
     else if(type==='cancel'&&!admin&&from==='PENDING'){to='CANCELLED';patch.cancelled_at=now_();}
-    else if(type==='approve'&&admin&&['PENDING','MENUNGGU_VERIFIKASI','EXPIRED'].indexOf(from)>=0){
+    else if(type==='approve'&&admin&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(from)>=0){
       // Admin may reconcile real funds directly even without Member pressing
       // "Saya Sudah Transfer". NEVER infer payment from a QRIS placeholder,
       // member claim, screenshot, or a checkbox alone.
@@ -1278,8 +1282,6 @@ function transitionOrder_(m,id,type,p) {
       require_(!alreadyUsed.length,'RECONCILIATION_REQUIRED',
         'Referensi dana ini sudah dipakai pesanan lain.');
       var note=safeText_(p.alasan,300);
-      if(from==='EXPIRED')require_(note.length>=5,'VALIDATION',
-        'Alasan pembayaran terlambat wajib diisi.');
       to='PAID';patch.paid_at=now_();patch.verified_by=m.member_id;
       patch.metode=paidVia;
       patch.catatan_admin='Pembayaran ref: '+proof+' | Metode: '+paidVia+
