@@ -1266,6 +1266,11 @@ function transitionOrder_(m,id,type,p) {
     var o=byId_('orders','order_id',id);require_(o,'NOT_FOUND','Pesanan tidak ditemukan.');
     var admin=m.role==='ADMIN';
     require_(admin||o.member_id===m.member_id,'FORBIDDEN','Pesanan tidak ditemukan.');
+    // Invalid PENDING expiry must never be treated as an unlimited window
+    // for approving funds. Keep the row untouched for owner reconciliation.
+    if(type==='approve'&&admin&&o.status==='PENDING')
+      require_(Number.isFinite(new Date(o.expires_at).getTime()),
+        'RECONCILIATION_REQUIRED','Tenggat pesanan tidak valid. Periksa pesanan sebelum persetujuan.');
     expireOrder_(o);
     if(type==='approve'&&admin&&['PAID','FULFILLED'].indexOf(String(o.status))>=0)
       return orderView_(o,m); // safe replay: no second fulfillment, credit, or commission
@@ -2172,6 +2177,8 @@ function financeFindings_(orders,ledger,commissions,products,policy,members) {
       ['TOPUP','TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(String(l.tipe))>=0;});
     var reversals=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='ADJUST_REFUND';});
     var isTopup=['TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(types[String(o.product_id)])>=0;
+    if(o.status==='PENDING'&&!Number.isFinite(new Date(o.expires_at).getTime()))
+      reasons.push('PENDING_ORDER_EXPIRY_INVALID');
     if(o.status==='PAID'){
       // PAID is not synonymous with FULFILLED. Classify top-ups using the
       // *persisted* ledger; never auto-credit or auto-change an old order.
