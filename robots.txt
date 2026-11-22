@@ -1,0 +1,10 @@
+# GitHub Pages menyajikan seluruh isi repo. File di bawah ini bukan halaman publik.
+User-agent: *
+Disallow: /staging/
+Disallow: /docs/
+Disallow: /tests/
+Disallow: /contracts/
+Disallow: /apps-script/
+Allow: /
+
+Sitemap: https://cuan74468-ux.github.io/ngulik-digital-member/sitemap.xml

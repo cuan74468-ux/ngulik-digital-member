@@ -1,0 +1,117 @@
+'use strict';
+// Penjaga integritas repo. Tanpa dependensi. Tidak mengubah data apa pun.
+const test=require('node:test'),assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=path.resolve(__dirname,'..');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const gsFiles=fs.readdirSync(path.join(root,'apps-script')).filter(f=>f.endsWith('.gs')).sort();
+
+test('semua file Apps Script dapat dikompilasi (sintaks valid)',()=>{
+  assert.ok(gsFiles.length>0);
+  for(const f of gsFiles){
+    assert.doesNotThrow(()=>new vm.Script(read('apps-script/'+f),{filename:f}),f);
+  }
+});
+
+test('tidak ada nama fungsi global ganda lintas file Apps Script',()=>{
+  // Di Apps Script semua .gs berbagi satu namespace global: duplikat menimpa diam-diam.
+  const seen=new Map(),dups=[];
+  for(const f of gsFiles){
+    const src=read('apps-script/'+f);
+    for(const m of src.matchAll(/^function\s+([A-Za-z_$][\w$]*)\s*\(/gm)){
+      if(seen.has(m[1]))dups.push(m[1]+' ('+seen.get(m[1])+' & '+f+')');
+      else seen.set(m[1],f);
+    }
+  }
+  assert.deepEqual(dups,[]);
+});
+
+test('semua aset lokal yang dirujuk HTML benar-benar ada',()=>{
+  const pages=['index.html','404.html'].concat(
+    fs.readdirSync(path.join(root,'staging')).filter(f=>f.endsWith('.html')).map(f=>'staging/'+f));
+  const missing=[];
+  for(const page of pages){
+    const dir=path.dirname(path.join(root,page));
+    for(const m of read(page).matchAll(/\b(?:href|src)="([^"]+)"/g)){
+      let ref=m[1].split('#')[0].split('?')[0];
+      if(!ref||/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(ref))continue;
+      if(!fs.existsSync(path.resolve(dir,ref)))missing.push(page+' -> '+m[1]);
+    }
+  }
+  assert.deepEqual(missing,[]);
+});
+
+test('adaptor checkout Mayar/Scalev yang dibatalkan tidak dimuat oleh halaman mana pun',()=>{
+  const pages=['index.html'].concat(
+    fs.readdirSync(path.join(root,'staging')).filter(f=>f.endsWith('.html')).map(f=>'staging/'+f));
+  for(const page of pages){
+    const scripts=[...read(page).matchAll(/<script\b[^>]*\bsrc="([^"]+)"/gi)].map(m=>m[1]);
+    for(const s of scripts)assert.doesNotMatch(s,/scalev|mayar/i,page+' memuat '+s);
+  }
+});
+
+test('tidak ada rahasia atau kredensial tertanam di sumber yang dipublikasikan',()=>{
+  const patterns=[
+    /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
+    /\bsk-[A-Za-z0-9_-]{20,}/,
+    /\bghp_[A-Za-z0-9]{30,}/,
+    /\bgithub_pat_[A-Za-z0-9_]{30,}/,
+    /\bxox[abprs]-[A-Za-z0-9-]{10,}/,
+    /\bAIza[0-9A-Za-z_-]{35}\b/,
+    /\bBearer\s+[A-Za-z0-9._-]{30,}/
+  ];
+  const targets=['index.html','config.js','staging/config.js','staging/member-config.js']
+    .concat(fs.readdirSync(path.join(root,'js')).map(f=>'js/'+f))
+    .concat(gsFiles.map(f=>'apps-script/'+f));
+  for(const t of targets){
+    const src=read(t);
+    for(const p of patterns)assert.doesNotMatch(src,p,t+' cocok pola rahasia '+p);
+  }
+});
+
+test('konfigurasi publik konsisten dan tidak memuat rahasia',()=>{
+  const sandbox={window:{}};
+  vm.runInNewContext(read('config.js'),sandbox);
+  const c=sandbox.window.NGD_CONFIG;
+  assert.ok(c&&Object.isFrozen(c),'NGD_CONFIG harus ada dan dibekukan');
+  for(const k of Object.keys(c))
+    assert.doesNotMatch(k,/secret|token|apikey|api_key|pin|password|pepper/i,'kunci config mencurigakan: '+k);
+  // Pembayaran tidak boleh aktif bila penulisan data member nonaktif.
+  if(c.paymentsEnabled===true)assert.equal(c.memberWritesEnabled,true,
+    'paymentsEnabled=true mensyaratkan memberWritesEnabled=true');
+  // Gambar QRIS tidak boleh dianggap disetujui sebelum pembayaran dibuka.
+  if(c.qrisOwnerImageApproved===true)assert.equal(c.paymentsEnabled,true,
+    'qrisOwnerImageApproved=true hanya bermakna jika pembayaran dibuka');
+  assert.match(c.apiUrl,/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/);
+});
+
+test('endpoint STAGING berbeda dari endpoint produksi',()=>{
+  const a={window:{}},b={window:{}};
+  vm.runInNewContext(read('config.js'),a);
+  vm.runInNewContext(read('staging/config.js'),b);
+  assert.notEqual(a.window.NGD_CONFIG.apiUrl,b.window.NGD_STAGING_CONFIG.apiUrl,
+    'STAGING dan produksi tidak boleh memakai deployment yang sama');
+});
+
+test('berkas hygiene repo tersedia dan benar',()=>{
+  const pkg=JSON.parse(read('package.json'));
+  assert.equal(pkg.private,true);
+  assert.equal(pkg.scripts.test,'node --test tests/*.test.cjs');
+  assert.ok(!pkg.dependencies&&!pkg.devDependencies,'repo ini sengaja tanpa dependensi');
+  assert.ok(fs.existsSync(path.join(root,'.nojekyll')));
+  const robots=read('robots.txt');
+  for(const d of ['/staging/','/apps-script/','/docs/','/tests/','/contracts/'])
+    assert.ok(robots.includes('Disallow: '+d),'robots.txt harus melarang '+d);
+  const ignore=read('.gitignore');
+  assert.match(ignore,/^\.env$/m);
+  assert.match(ignore,/^node_modules\/$/m);
+});
+
+test('README selaras dengan keputusan pembayaran dan tidak memuat klaim usang',()=>{
+  const readme=read('README.md');
+  assert.match(readme,/QRIS Statis DANA Bisnis/);
+  assert.match(readme,/NO-GO/);
+  assert.doesNotMatch(readme,/Pembayaran terencana/i);
+  assert.doesNotMatch(readme,/Mayar\.id\s*\/\s*QRIS/i);
+  assert.doesNotMatch(readme,/\b\d{3}\/\d{3}\s+tes\b/i,'jangan menulis jumlah tes di README; baca dari CI');
+});

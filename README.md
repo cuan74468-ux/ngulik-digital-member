@@ -1,94 +1,77 @@
 # Ngulik Digital
 
-**Status terverifikasi — 21 November 2026:** proyek komersial nyata dengan frontend publik dan STAGING berbeda. Source `main` dan GitHub Pages bukan bukti bahwa kode GAS produksi sudah tersinkron.
-
-- **API publik** versi 1.0.2: `writes_enabled=false`, `payments_enabled=false`. UI publik telah mengikuti kondisi tersebut; transaksi, registrasi, dan perubahan member belum dibuka.
-- **API STAGING** versi 1.0.3: `mutations_enabled=true`, `registration_enabled=false`, `otp_enabled=false`, `finance_enabled=false`. OTP registrasi berbeda dari OTP login akun yang sudah terdaftar.
-- **Database:** produksi `Ngulik Digital DB` memiliki 16 tab, STAGING memiliki 29 tab. Katalog dan pengaturan pembayaran keduanya **belum sama**; jangan menyalin data atau mengaktifkan transaksi tanpa pemeriksaan dan persetujuan.
-- **Pembayaran terpilih:** QRIS Statis DANA Bisnis milik Linggau AI Studio. Mayar/Scalev telah dibatalkan sebagai jalur checkout oleh keputusan pemilik 20 November 2026. File QRIS resmi ditemukan di Drive, tetapi pemindaian penerima dan rekonsiliasi pembayaran riil **belum dibuktikan**. Kedua lingkungan tetap finansial OFF.
-- **Keuangan historis STAGING:** satu order `PAID` memiliki ledger top-up tunggal tetapi memerlukan review status dan kelayakan komisi pengajak ADMIN; satu order `PENDING` melewati batas waktu. Jangan mengkredit ulang atau membayar komisi tanpa rekonsiliasi.
-- **Pengujian:** source GitHub memakai suite Node + Chrome CI; pemenuhan tes otomatis tidak menggantikan uji transaksi riil, pemeriksaan hak akses, pembuktian kesamaan GAS editor/deployment, dan persetujuan go-live.
-
-Rujukan keputusan utama: [Master Index Ngulik Digital](https://docs.google.com/document/d/1Vy2OPrhhk1nOMNQ_nrz5pcNmklpMQvd0hZ9k83RGh1Q/edit) dan [Keputusan Final QRIS DANA Bisnis](https://docs.google.com/document/d/1ovN2xl7UB1R0NN1_O3rJArJRolvZC1ar3yPxrFTpX8U/edit). Jangan gunakan draf Mayar/Scalev yang telah diarsipkan.
-
-**Membership digital dan ekosistem solusi UMKM dari Linggau AI Studio.**
-
-Belajar keterampilan digital, menemukan aplikasi usaha, mengakses alat bantu AI, membeli produk digital, mengikuti program komunitas, dan mengajukan jasa kreatif dalam satu layanan.
+Membership digital dan ekosistem solusi UMKM dari **Linggau AI Studio**: belajar keterampilan digital, menemukan aplikasi usaha, memakai alat bantu AI, membeli produk digital, mengikuti program komunitas, dan mengajukan jasa kreatif dalam satu layanan.
 
 **Website:** https://cuan74468-ux.github.io/ngulik-digital-member/
 
-## Apa yang ditawarkan
+## Status (sumber: kondisi yang terverifikasi 21 November 2026)
 
-- **Belajar:** kurikulum praktis, Chapter 1, materi digital marketing, serta pengembangan usaha.
-- **Aplikasi:** POS kasir, bio link, profil bisnis, katalog online, dan solusi operasional UMKM.
-- **Studio AI:** perangkat bantu konten, pemasaran, dan paket kredit AI.
-- **Produk digital:** eBook, template, panduan dan materi pendukung.
-- **Jasa digital:** video iklan AI, website, landing page, aplikasi custom dan konsultasi.
-- **Membership & affiliate:** akun pribadi, riwayat layanan, aktivitas pembelajaran, serta rujukan anggota sesuai kebijakan program.
+**Rilis komersial dan registrasi publik: NO-GO.** Ini platform komersial sungguhan; saklar OFF adalah pengaman rilis, bukan mode demo.
 
-## Belajar bersama melalui Chapter 01
+| Lingkungan | Versi API | Kondisi |
+| --- | --- | --- |
+| Publik (produksi) | 1.0.2 | `writes_enabled=false`, `payments_enabled=false`. Database 16 tab. |
+| STAGING | 1.0.3 | `mutations_enabled=true`; `registration_enabled=false`, `otp_enabled=false`, `finance_enabled=false`. Database 29 tab. |
 
-Program komunitas **Ngulik Digital Chapter 01** mempunyai enam modul praktik yang telah disusun dalam [materi pembelajaran resmi](https://docs.google.com/document/d/1s3Dki-UQVG2OUOpCBNPxyeCTkIvnZTpqtPOn2SpXkk4/edit). Materinya mencakup penggunaan alat digital untuk UMKM, Google Maps, Gemini AI, Canva, WhatsApp Business, dan kalender promosi. Sesuai [SOP komunitas](https://docs.google.com/document/d/1PGKFnPfSKVQ0SRFclgT5aN8_x2iipnW8ng6g2H24xVg/edit), **materi dan pendampingan dasar Chapter 01 tidak dikenakan biaya dan tidak mewajibkan pembelian**. Program ini dikelola melalui Google Classroom dan kanal komunitas; tidak sama dengan kursus berbayar yang kelak dibuka di LMS internal.
+- **Pembayaran:** QRIS Statis DANA Bisnis milik Linggau AI Studio, keputusan pemilik 20 November 2026. Mayar dan Scalev **dibatalkan** sebagai jalur checkout. Sisa kode adaptor lama di repo bukan jalur pembayaran yang disetujui dan tidak boleh diaktifkan. Pemindaian QRIS oleh aplikasi pembayaran independen dan penerimaan dana riil **belum dibuktikan**.
+- **Data keuangan historis STAGING:** satu order `PAID` perlu ditinjau (status dan kelayakan penerima komisi); satu order `PENDING` melewati batas waktu. Jangan kredit ulang atau bayar komisi tanpa rekonsiliasi.
+- **Sumber bukan runtime:** commit ke `main` dan GitHub Pages tidak otomatis memperbarui Apps Script yang sedang dideploy. Kecocokan kode GAS di editor dengan repo **belum terbukti** (lihat `contracts/gas-runtime-source-manifest-2026-11-16.json`, snapshot historis).
+- **Tes otomatis** (Node + Chrome headless di CI) tidak menggantikan uji transaksi riil, pemeriksaan hak akses, dan persetujuan go-live. Jumlah tes yang lulus dibaca dari hasil CI terbaru, bukan dari README ini.
 
-## Pengalaman anggota
+Syarat go-live lengkap: [docs/GO_LIVE_GATE_2026-11-21.md](docs/GO_LIVE_GATE_2026-11-21.md).
 
-1. Jelajahi katalog dan pilih produk atau kelas yang sesuai kebutuhan.
-2. Daftar atau masuk ke akun pribadi ketika keanggotaan dibuka.
-3. Akses materi, produk, dan layanan yang sudah menjadi hak anggota.
-4. Ajukan brief untuk jasa custom, lalu tinjau penawaran resmi sebelum membayar.
-5. Pantau pesanan, progres kelas, referral, dan bantuan melalui dashboard.
+## Yang ditawarkan
 
-## Operasional dan kepercayaan
+- **Belajar:** kurikulum praktis, Chapter 01, digital marketing, pengembangan usaha.
+- **Aplikasi:** POS kasir, bio link, profil bisnis, katalog online.
+- **Studio AI:** alat bantu konten dan pemasaran, paket kredit/token AI.
+- **Produk digital:** eBook, template, panduan.
+- **Jasa digital:** video iklan AI, website, landing page, aplikasi custom, konsultasi (lewat WhatsApp resmi, bukan checkout otomatis).
+- **Membership dan affiliate:** akun pribadi, riwayat layanan, progres belajar, rujukan anggota 1 level sesuai kebijakan program.
 
-Informasi publik dan katalog dibaca dari API resmi Ngulik Digital. Hak akses pribadi, harga transaksi, kredit AI, serta pembayaran harus diverifikasi pada sisi server.
+**Chapter 01** (enam modul praktik: alat digital UMKM, Google Maps, Gemini AI, Canva, WhatsApp Business, kalender promosi) **gratis 100% dan tidak mewajibkan pembelian**. Dikelola lewat Google Classroom dan kanal komunitas, terpisah dari kursus berbayar di LMS internal.
 
-**Status layanan saat ini:** katalog publik telah terhubung dan diperiksa. Pendaftaran baru, penyimpanan data anggota, penagihan online, serta transaksi kredit AI belum dibuka sampai pemeriksaan operasional dan pembayaran diselesaikan. Hal ini tidak mengubah tujuan platform sebagai membership komersial.
+## Arsitektur
 
-Kode akses, token sesi, PIN, dan API key tidak disimpan di repositori atau disematkan ke HTML publik.
+- **Frontend:** HTML, CSS, JavaScript modular tanpa build, disajikan GitHub Pages (`index.html`, `js/`, `assets/`).
+- **Backend:** Google Apps Script (`apps-script/`), satu web app dengan `doGet` (identitas, hanya baca) dan `doPost` (aksi bernama + `request_id` idempoten).
+- **Database:** Google Sheets (produksi dan STAGING dipisah ketat).
+- **Panel STAGING:** `staging/` (noindex), terkunci ke deployment GAS STAGING yang disetujui di `staging/config.js`.
+- **Autentikasi:** OTP WhatsApp (Fonnte) untuk member, PIN terpisah untuk Admin, sesi disimpan sebagai hash.
+- **Rahasia:** kunci API, token, pepper, dan PIN hanya di Script Properties Apps Script. Jangan pernah ke repo atau HTML publik.
 
-## Status operasional terverifikasi — 15 November 2026
+## Saklar rilis (Script Properties, sisi server)
 
-**Tahap aktif: Tahap 1 — Auth WhatsApp, PIN dan sesi. Status PROSES / NO-GO untuk pendaftaran publik, OTP live, pembayaran, AI berbayar dan komisi.** Ini platform membership komersial sungguhan; sakelar keselamatan tidak boleh disalahartikan sebagai mode demo.
+`NGD_MUTATIONS_ENABLED`, `NGD_FINANCE_ENABLED`, `NGD_REGISTRATION_ENABLED`, `NGD_OTP_REGISTRATION_ENABLED`, `NGD_EXTERNAL_PROVIDERS_ENABLED`, `NGD_PIN_HASH_V2_ENABLED`.
 
-- [Panel administrator STAGING](https://cuan74468-ux.github.io/ngulik-digital-member/staging/) sudah terhubung ke deployment GAS yang membuktikan identitas `NGD_STAGING` secara baca-saja.
-- [Pengujian identitas dan Chrome](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43716789442) lulus. Panel mengunci URL ke deployment yang telah disetujui; PIN tidak pernah dikirim ke endpoint lain.
-- Database STAGING memakai 29 tab (27 kontrak backend + dua tabel OTP/WA); satu sesi ADMIN tercatat. Belum ada record OTP maupun transaksi.
-- Source OTP di GitHub diberi guard agar bukti `wa_verified` tersimpan; **perubahan kode GitHub tidak otomatis memperbarui Apps Script yang sedang dideploy**.
+Semuanya fail-closed. Frontend (`config.js`) hanya mencerminkan, bukan menjadi batas keamanan. Mengubah saklar produksi memerlukan persetujuan pemilik tertulis.
 
-Untuk konteks paling mutakhir baca [Audit Terpadu Tahap 1](docs/AUDIT_TERPADU_TAHAP_1_2026-11-15.md) dan [Aturan Kerja Agen](AGENTS.md). Dokumen Master Index dan Mandat Produksi di Google Drive tetap merupakan otoritas kebijakan. Dokumen checkpoint bertanggal lebih lama adalah rekam historis, bukan persetujuan untuk menjalankan tahap selanjutnya.
+## Menjalankan tes
 
+Perlu Node.js 22 atau lebih baru. Tanpa dependensi dan tanpa `npm install`.
 
-- [Audit dokumen + implementasi terkini](docs/AUDIT_DOKUMEN_DAN_IMPLEMENTASI_2026-11-16.md)
+```
+npm test
+# atau
+node --test tests/*.test.cjs
+```
 
-## Titik lanjut pembangunan — 16 November 2026
+`tests/repo-integrity.test.cjs` menjaga hal mendasar: sintaks semua file `.gs`, tidak ada nama fungsi ganda lintas file GAS (di Apps Script semua file berbagi satu namespace global), semua aset yang dirujuk HTML ada, tidak ada rahasia di repo, dan konfigurasi publik konsisten.
 
-UI/UX Mobile-first V2 telah mencapai baseline yang cukup untuk meneruskan pembangunan sistem; ini bukan sign-off perangkat Android fisik. Tahap aktif kembali pada **Tahap 1: keamanan autentikasi/OTP, PIN, sesi, dan integritas registrasi**.
+## Deploy backend (manual)
 
-- Pemeriksaan runtime STAGING dari operator telah **lulus 29/29 tab dan 8/8 tabel integritas**, tanpa perubahan data.
-- Source di GitHub telah diperkuat untuk memvalidasi OTP sebelum append akun dan mengonsumsi OTP sesudah akun tersimpan; logout juga menggunakan `LockService` bersama login/PIN. Hanya source, tidak otomatis mengubah runtime Apps Script.
-- [CI terbaru](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43783011719): **381/381 tes lulus**, browser Chrome dan API readonly PASS. [Pages deployment](https://github.com/cuan74468-ux/ngulik-digital-member/actions/runs/43783011286) SUCCESS.
-- **Langkah kerja berikutnya:** manifest source vs Apps Script editor STAGING, simulasi kegagalan kredit awal/recovery, audit sesi end-to-end, restore terisolasi, dan perancangan LMS/entitlement. Seluruh provider eksternal tetap LAST.
-- [Checkpoint terkini](docs/CHECKPOINT_2026-11-16_RESUME_BUILD_STAGE1.md). Materi historis 13–15 November tidak boleh diperlakukan sebagai bukti terbaru untuk izin aktivasi fitur.
+1. Salin file `apps-script/*.gs` yang berubah ke proyek GAS yang benar (STAGING dahulu), tanpa menimpa modul khusus STAGING.
+2. Simpan, jalankan fungsi diagnostik read-only, lalu perbarui deployment web app yang **sama**.
+3. Pastikan identitas endpoint lewat `doGet` sebelum menganggap sinkron.
 
-**Rilis bisnis dan registrasi publik: NO-GO.** Pengaturan, transaksi, data produksi dan runtime GAS tetap tidak diubah oleh update source ini.
+## Dokumen
 
-## Informasi pengembang dan operasional
+- **Aktif:** [PROJECT_CONTROL.md](PROJECT_CONTROL.md) (satu-satunya berkas kendali operasional), [AGENTS.md](AGENTS.md), [docs/GO_LIVE_GATE_2026-11-21.md](docs/GO_LIVE_GATE_2026-11-21.md).
+- **Keputusan:** [Master Index](https://docs.google.com/document/d/1Vy2OPrhhk1nOMNQ_nrz5pcNmklpMQvd0hZ9k83RGh1Q/edit) dan [Keputusan Final QRIS DANA Bisnis](https://docs.google.com/document/d/1ovN2xl7UB1R0NN1_O3rJArJRolvZC1ar3yPxrFTpX8U/edit) di Google Drive adalah otoritas kebijakan. Draf Mayar/Scalev yang telah diarsipkan tidak boleh dipakai.
+- **Historis:** semua berkas lain di `docs/` bertanggal lebih lama adalah rekam jejak, bukan izin untuk mengaktifkan fitur.
 
-- **Frontend:** HTML, CSS, JavaScript modular, GitHub Pages.
-- **Layanan data:** Google Apps Script dan Google Sheets.
-- **Manajemen kelas & konten:** modul Ngulik Digital, Google Classroom, dan integrasi pembelajaran bertahap.
-- **Pembayaran terencana:** Mayar.id / QRIS resmi, dengan verifikasi dan rekonsiliasi sebelum aktivasi hak akses.
+## Catatan publikasi
 
-**Keputusan persiapan:** akun Fonnte, gateway pembayaran, model AI dan layanan eksternal baru dibuat di tahap integrasi akhir. Seluruh provider tetap nonaktif; pemeriksaan 29 tab dan kontrol QA dapat disiapkan tanpa vendor.
-
-Dokumen kerja:
-- [Fondasi internal — provider terakhir](docs/INFRASTRUKTUR_INTERNAL_FIRST_2026-11-15.md)
-- [Audit rekonsiliasi registrasi STAGING — source-only](docs/REGISTRATION_RECOVERY_PREFLIGHT_2026-11-16.md)
-- [Keamanan Tahap 1: sesi, PIN dan ledger](docs/SECURITY_DECISION_STAGE1_2026-11-16.md)
-- [Audit kesiapan 29 tab STAGING](docs/AUDIT_TERPADU_TAHAP_1_2026-11-15.md)
-- [Arsitektur membership komersial](docs/COMMERCIAL_MEMBERSHIP_RELEASE_2026-11-14.md)
-- [Prosedur keamanan dan pemeriksaan operasional](docs/PILOT_50_GO_LIVE_GATE_2026-11-14.md)
-- [Checkpoint pengembangan](docs/CHECKPOINT_2026-11-14.md)
-- [Arsip catatan teknis terdahulu](docs/ARCHIVE_README_BEFORE_MEMBERSHIP_2026-11-14.md)
+GitHub Pages menyajikan seluruh isi repo, termasuk `docs/`, `tests/`, dan `apps-script/`. `robots.txt` hanya imbauan untuk mesin pencari, bukan pembatas akses. Karena itu tidak ada rahasia yang boleh disimpan di repo.
 
 © 2026 Ngulik Digital / Linggau AI Studio.
