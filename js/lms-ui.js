@@ -41,9 +41,18 @@ function link(v){
 // Member Portal is curated by the owner in modul_belajar; external official
 // government and training sites require a wider HTTPS validator than LMS lessons.
 function portalLink_(v){
-  try{var u=new URL(String(v||''));
-    return u.protocol==='https:'&&!u.username&&!u.password&&u.hostname.indexOf('.')>0&&
-      !/^(?:localhost|\d+\.\d+\.\d+\.\d+)$/i.test(u.hostname)?u.href:'';
+  try{
+    var raw=String(v||'').trim();
+    if(!raw||raw.length>2048)return '';
+    var u=new URL(raw),host=u.hostname.toLowerCase().replace(/\.$/,'');
+    // Curated external resources must be HTTPS DNS hosts, not local/network
+    // addresses or credential-bearing redirects. HTML attributes are escaped
+    // separately at every rendering call site.
+    if(u.protocol!=='https:'||u.username||u.password||u.port||!host.includes('.')||
+       host==='localhost'||host.endsWith('.localhost')||host.endsWith('.local')||
+       /^\d+\.\d+\.\d+\.\d+$/.test(host)||host.startsWith('['))
+      return '';
+    return u.href;
   }catch(_){return '';}
 }
 
