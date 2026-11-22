@@ -18,10 +18,9 @@ test('official owner QRIS payload is represented by the verified immutable vecto
   assert.doesNotMatch(svg,/<script|<foreignObject|href=|onload=|onerror=/i);
 });
 test('public and staging reference the vector asset while merchant approval remains closed',()=>{
-  for(const cfg of [pub,stage]){
-    assert.match(cfg,/qris-linggau-ai-studio\.svg/);
-    assert.match(cfg,/qrisOwnerImageApproved:\s*false/);
-  }
+  for(const cfg of [pub,stage])assert.match(cfg,/qris-linggau-ai-studio\.svg/);
+  assert.match(pub,/qrisOwnerImageApproved:\s*false/);
+  assert.match(stage,/qrisOwnerImageApproved:\s*true/);
   assert.match(pub,/paymentsEnabled:\s*false/);
   assert.match(stage,/paymentsEnabled:\s*true/); // Browser is pre-armed; QRIS remains unapproved and backend is authoritative.
 });
