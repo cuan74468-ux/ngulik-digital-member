@@ -41,8 +41,15 @@ const friendlyDate = (v) => {
 };
 const urlSafe = (raw) => {
   try {
-    const u=new URL(String(raw||''));
-    return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';
+    const value=String(raw||'').trim();
+    if(!value||value.length>2048)return '';
+    const u=new URL(value);
+    const host=u.hostname.toLowerCase().replace(/\.$/,'');
+    if(u.protocol!=='https:'||u.username||u.password||u.port||
+       !host.includes('.')||host==='localhost'||host.endsWith('.localhost')||
+       host.endsWith('.local')||/^\d+\.\d+\.\d+\.\d+$/.test(host)||
+       host.startsWith('['))return '';
+    return u.href;
   }catch{return '';}
 };
 // External shelf links must carry a referral/affiliate identifier; vendor URLs are not eligible.

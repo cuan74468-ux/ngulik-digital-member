@@ -71,3 +71,41 @@ test('member learning catalog separates internal LMS courses from the free provi
   assert.match(app,/e\.target\.id==='portal-category'/);
   assert.match(app,/if\(e\.target\.id==='learning-portal-search'\)filterMemberPortal_\(\)/);
 });
+
+test('external curated links reject credentials, non-HTTPS and local network destinations',()=>{
+  const invalid=[
+    'javascript:alert(1)','data:text/html,hello','http://oss.go.id/',
+    'https://user:secret@oss.go.id/', 'https://localhost/example',
+    'https://app.local/path','https://127.0.0.1/', 'https://[::1]/',
+    'https://oss.go.id:8443/path', 'https://example.invalid/'.padEnd(2050,'a')
+  ];
+  const rows=invalid.map((url,i)=>({
+    modul_id:'KUR-A3-'+String(i+1).padStart(2,'0'),
+    judul:'Uji tautan '+i,url_classroom:url
+  }));
+  const html=renderModules(rows);
+  assert.equal((html.match(/Tautan tidak tersedia/g)||[]).length,rows.length);
+  assert.doesNotMatch(html,/href="(?:javascript:|data:|http:|https:\/\/user:)/i);
+  const ok=renderModules([{modul_id:'KUR-A3-90',judul:'Portal pemerintah',url_classroom:'https://oss.go.id/id'}]);
+  assert.match(ok,/href="https:\/\/oss\.go\.id\/id"/);
+});
+test('outbound affiliate URL validator uses HTTPS DNS and never accepts local targets',()=>{
+  const app=read('js/app.js');
+  const begin=app.indexOf('const urlSafe =');
+  const end=app.indexOf('function partnerVisitorId_()',begin);
+  assert.ok(begin>=0&&end>begin);
+  const safe=new Function(app.slice(begin,end)+'\nreturn {urlSafe,partnerAffiliateUrl_};')();
+  assert.equal(safe.urlSafe('https://partner.example.com/ref?id=123'),'https://partner.example.com/ref?id=123');
+  for(const url of ['javascript:alert(1)','http://partner.example.com/',
+    'https://user:secret@partner.example.com/', 'https://127.0.0.1/',
+    'https://service.local/path','https://partner.example.com:8443/path'])
+    assert.equal(safe.urlSafe(url),'',url);
+  assert.equal(safe.partnerAffiliateUrl_({link_affiliate:'https://service.local/?ref=ABC123'}),'');
+});
+test('public and staging pages enforce safe cross-origin referrer defaults',()=>{
+  for(const page of ['index.html','staging/member.html']){
+    const html=read(page);
+    assert.match(html,/<meta name="referrer" content="strict-origin-when-cross-origin">/);
+    assert.match(html,/content="default-src 'self'; script-src 'self';/);
+  }
+});
