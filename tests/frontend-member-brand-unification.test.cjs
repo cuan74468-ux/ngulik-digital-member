@@ -22,7 +22,7 @@ test('the member phone dock says Dashboard but retains the original beranda rout
 });
 test('published entrypoints share one version of the unified member stylesheet',()=>{
   for(const file of ['index.html','staging/member.html']){
-    assert.match(read(file),/member-native-dashboard-v1\.css\?v=20261122-qris-contract-safe-v4/);
-    assert.match(read(file),/app\.js\?v=20261122-qris-contract-safe-v4/);
+    assert.match(read(file),/member-native-dashboard-v1\.css\?v=20261122-private-gates-v5/);
+    assert.match(read(file),/app\.js\?v=20261122-private-gates-v5/);
   }
 });
