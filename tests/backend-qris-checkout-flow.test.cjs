@@ -140,3 +140,17 @@ test('QRIS: expired order cannot be approved normally, preserving its ledger',()
   assert.equal(h.orders[0].status,'EXPIRED');
   assert.equal(h.paid.length,0);
 });
+
+test('QRIS: admin cannot approve malformed PENDING deadline even with settlement proof',()=>{
+  const h=setup();
+  const order=h.ctx.newOrder_(h.members[0],{product_id:'P-TOKEN-10'},'REQUEST_BAD_EXPIRY');
+  h.orders[0].expires_at='invalid-date';
+  const before=h.audits.length;
+  assert.throws(()=>h.ctx.transitionOrder_({role:'ADMIN',member_id:'ADM-1'},order.order_id,'approve',{
+    dana_diterima:true,nominal_terverifikasi:order.total_bayar,
+    metode_diterima:'QRIS_STATIS',referensi_pembayaran:'DANA-BAD-EXPIRY'
+  }),/Tenggat pesanan tidak valid/);
+  assert.equal(h.orders[0].status,'PENDING');
+  assert.equal(h.paid.length,0);
+  assert.equal(h.audits.length,before);
+});
