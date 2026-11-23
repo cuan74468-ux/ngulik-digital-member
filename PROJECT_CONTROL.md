@@ -15,6 +15,7 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 | Tanggal (WIB) | Versi GAS | Perubahan | Status |
 | --- | --- | --- | --- |
+| 2026-11-23 | GAS tidak diubah / runtime tidak diperiksa | R-0 baseline read-only: router 33 key (termasuk `admin-login`), publik 30 CSS / 741.117 B / 2.109 `!important`, STAGING 31 CSS / 750.125 B / 2.110 `!important`; ratchet otomatis di `tests/r0-baseline-inventory.test.cjs` | SOURCE UPDATED — PR review; Script Properties STAGING/produksi belum diverifikasi langsung; P0-E NO-GO |
 | 2026-11-19 | Belum dicocokkan ke versi deployment GAS | P1 login OTP Member akun Member QA dan P2-A checkout Rp10.284 | LULUS pada pengujian HP/Sheets STAGING yang dikonfirmasi operator |
 | 2026-11-19 | Tidak berubah (frontend GitHub) | Tampilan nominal checkout menggunakan `total_bayar` utuh + CSS mobile + cache busting | Source `main` diperbarui; tampilan HP menunggu verifikasi |
 | 2026-11-19 | Belum disinkronkan/diuji pada GAS | Simulasi read-only `ngdVerifyFullStagingReadiness()` diperkuat di `apps-script/Code.gs` | SOURCE UPDATED — belum dinyatakan runtime PASS |
