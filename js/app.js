@@ -591,7 +591,8 @@ function viewHome(){
             '<strong>'+label+'</strong><small>'+description+'</small></button>').join('')+
         '</div></section>'+
       '<div class="ngdm-lower">'+
-        '<section class="ngdm-orders" aria-labelledby="ngdm-orders-title">'+
+        '<section class="ngdm-orders ngd-window-frame" aria-labelledby="ngdm-orders-title">'+
+          '<div class="ngd-window-titlebar" aria-hidden="true"><span class="ngd-window-dots"><i></i><i></i><i></i></span><span class="ngd-window-title">Pesanan</span></div>'+
           '<div class="ngdm-section-head"><div><p class="ngdm-kicker">PEMBELIAN</p>'+
             '<h2 id="ngdm-orders-title">Status pesanan</h2></div>'+
             '<button type="button" data-route="pesanan">Lihat semua '+icon('arrow')+'</button></div>'+
@@ -606,7 +607,8 @@ function viewHome(){
               '<p>Grafik berdasarkan status pesanan yang tercatat, bukan estimasi penjualan.</p>'+
             '</div>'+
           '</div></section>'+
-        '<section class="ngdm-recent" aria-labelledby="ngdm-recent-title">'+
+        '<section class="ngdm-recent ngd-window-frame" aria-labelledby="ngdm-recent-title">'+
+          '<div class="ngd-window-titlebar" aria-hidden="true"><span class="ngd-window-dots"><i></i><i></i><i></i></span><span class="ngd-window-title">Aktivitas</span></div>'+
           '<div class="ngdm-section-head"><div><p class="ngdm-kicker">TERBARU</p>'+
             '<h2 id="ngdm-recent-title">Aktivitas Anda</h2></div></div>'+
           (activities.length?'<div class="ngdm-recent-list">'+activities.map(x=>
@@ -619,7 +621,8 @@ function viewHome(){
                 'Belum ada aktivitas terbaru yang tercatat.':'Sedang menyiapkan aktivitas akun…')+'</p></div>')+
         '</section>'+
       '</div>'+
-      (products.length?'<section class="ngdm-owned">'+
+      (products.length?'<section class="ngdm-owned ngd-window-frame">'+
+        '<div class="ngd-window-titlebar" aria-hidden="true"><span class="ngd-window-dots"><i></i><i></i><i></i></span><span class="ngd-window-title">Koleksi</span></div>'+
         '<div class="ngdm-section-head"><div><p class="ngdm-kicker">PEMBELIAN MEMBER</p>'+
           '<h2>Koleksi produk saya</h2></div>'+
           '<button type="button" data-route="dukungan">Lihat akses '+icon('arrow')+'</button></div>'+
@@ -656,7 +659,8 @@ function viewHome(){
     <div class="ngdl-trust" aria-label="Cara pakai Ngulik Digital">
       <span>✦ Tools AI pakai kredit</span><span>✦ Bayar dengan QRIS DANA Bisnis</span><span>✦ Bisa dibuka lewat HP</span><span>✦ Ada komisi untuk referal yang berhasil</span>
     </div>
-    <section class="ngdl-story" aria-labelledby="ngdl-story-title">
+    <section class="ngdl-story ngd-window-frame" aria-labelledby="ngdl-story-title">
+      <div class="ngd-window-titlebar" aria-hidden="true"><span class="ngd-window-dots"><i></i><i></i><i></i></span><span class="ngd-window-title">Tentang Ngulik</span></div>
       <p class="ngdl-kicker">KENAPA NGULIK DIGITAL?</p>
       <h2 id="ngdl-story-title">Urusan digital, nggak harus bikin repot.</h2>
       <p>Mau bikin konten, katalog, atau coba AI tapi waktunya mepet? Di sini ada alat yang bisa dipakai seperlunya, produk yang sudah siap, dan bantuan kalau ingin terima beres.</p>

@@ -97,3 +97,33 @@
 .ngd-studio .ns-window-dots i:nth-child(3){background:#FFD965}
 .ngd-studio .ns-board-panel{border-left:0;min-width:0}
 @media(max-width:650px){.ngd-studio .ns-window-titlebar{padding:9px 11px;min-height:43px}.ngd-studio .ns-window-dots i{width:11px;height:11px}}
+
+
+/* V5 — editor framing: panel and export toolbar are continuous components,
+   while Canvas remains the only image surface (no fake editor window). */
+.ngd-studio .ns-board-panel{
+ background:#ECEAE3;
+ min-width:0;
+}
+.ngd-studio .ns-window-titlebar{border-bottom:2px solid #141418}
+.ngd-studio .ns-board-toolbar{
+ gap:10px;
+ background:#FFFFFF;
+ border-bottom:1.5px solid #141418;
+}
+.ngd-studio .ns-artboard{
+ min-width:0;
+ background-color:#ECEAE3;
+}
+.ngd-studio .ns-canvas-wrap{
+ box-shadow:5px 5px 0 #5B3DF5;
+}
+.ngd-studio .ns-window-titlebar strong{
+ color:#141418;
+}
+@media(max-width:650px){
+ .ngd-studio .ns-board-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ngd-studio .ns-board-actions .ns-cta{min-width:0}
+ .ngd-studio .ns-board-actions #ns-download{grid-column:1/-1}
+ .ngd-studio .ns-artboard{padding:16px}
+}
