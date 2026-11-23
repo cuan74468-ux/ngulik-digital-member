@@ -116,6 +116,24 @@ async function visit(url,label){
     writeFileSync('mobile-qa-artifacts/'+label+'-360x800.png',Buffer.from(shot.data,'base64'));
   }
   if(label==='guest-home'||label==='member-home'){
+    const brand=await request('Runtime.evaluate',{expression:`(()=>{
+      const head=document.querySelector('.topbar'),mark=head?.querySelector('.guest-brand-icon');
+      const title=head?.querySelector('.guest-brand strong');
+      const image=mark?.querySelector('img');
+      return {bg:head?getComputedStyle(head).backgroundColor:'',
+        title:title?getComputedStyle(title).color:'',
+        iconBg:mark?getComputedStyle(mark).backgroundColor:'',
+        logoVisible:!!image&&getComputedStyle(image).display!=='none',
+        headerWidth:Math.round(head?.getBoundingClientRect().width||0)};
+    })()`,returnByValue:true});
+    const h=brand.result.value;console.log('NGD_V3_HEADER '+label+' '+JSON.stringify(h));
+    assert.equal(h.bg,'rgb(20, 20, 24)','header should use ink background');
+    assert.equal(h.title,'rgb(255, 255, 255)','brand title must be white on ink');
+    assert.equal(h.iconBg,'rgb(204, 243, 73)','brand icon should be framed in lime');
+    assert.equal(h.logoVisible,true,'original brand image must remain visible');
+    assert.ok(h.headerWidth<=360,'mobile header overflow');
+  }
+  if(label==='guest-home'||label==='member-home'){
     const themed=await request('Runtime.evaluate',{expression:`(()=>{
       const guest=document.querySelector('#screen .ngdl-hero');
       const wallet=document.querySelector('#screen .ngdm-wallet');
@@ -252,6 +270,24 @@ async function visit(url,label){
     assert.equal(pcColors.lastMetric,'rgb(20, 20, 24)','PC third metric must be ink');
     assert.ok(pcColors.walletWidth>=600,'PC wallet should fill the main content');
     assert.ok(pcColors.documentWidth<=1366,'PC layout overflow');
+    const shellChrome=await request('Runtime.evaluate',{expression:`(()=>{
+      const head=document.querySelector('.topbar');
+      const nav=head?.querySelector('#guest-nav');
+      const current=nav?.querySelector('button[aria-current="page"]');
+      const title=head?.querySelector('.guest-brand strong');
+      return {head:getComputedStyle(head).backgroundColor,
+        nav:getComputedStyle(nav).backgroundColor,
+        active:current?getComputedStyle(current).backgroundColor:'',
+        title:getComputedStyle(title).color,
+        navWidth:Math.round(nav?.getBoundingClientRect().width||0)};
+    })()`,returnByValue:true});
+    const brandChrome=shellChrome.result.value;
+    console.log('NGD_V3_DESKTOP_NAV '+JSON.stringify(brandChrome));
+    assert.equal(brandChrome.head,'rgb(20, 20, 24)');
+    assert.equal(brandChrome.nav,'rgb(20, 20, 24)');
+    assert.equal(brandChrome.active,'rgb(204, 243, 73)');
+    assert.equal(brandChrome.title,'rgb(255, 255, 255)');
+    assert.ok(brandChrome.navWidth>200);
     assert.equal(desktop.width,1366);
     assert.ok(desktop.scrollWidth<=1366,'desktop horizontal overflow '+desktop.scrollWidth);
     assert.deepEqual(desktop.routes,['beranda','katalog','ai','jasa','belajar']);
