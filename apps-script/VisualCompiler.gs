@@ -209,3 +209,60 @@ function ngdVisualCompilePromptV2_(payload,registryOverride){
     release_authorized:false
   };
 }
+
+
+/**
+ * Companion to the canonical V2 Img2Img compiler. Exact 12-slot private
+ * skill content comes from the private registry, not frontend controls.
+ * 08 is an immutable code-level *no text* instruction. Layer 12 can only
+ * select a trusted private enum skill; free text never reaches the provider.
+ */
+function ngdVisualCompileRecipe12_(payload,registryOverride){
+  var input=ngdVisualRecipe12Options_(payload);
+  var registry=ngdVisualValidateRecipe12Registry_(
+    registryOverride||ngdVisualLoadPrivateSkillsV2_());
+  var canonicalPayload={};
+  Object.keys(payload).forEach(function(k){
+    if(['result_count','optional_notes','optional_skill_id'].indexOf(k)<0)
+      canonicalPayload[k]=payload[k];
+  });
+  var base=ngdVisualCompilePromptV2_(canonicalPayload,registry);
+  var slots=registry.recipe12.layers.map(function(layer){
+    return {slot:layer.slot,
+      // 08 is always compiler-owned and must not be replaced by user text.
+      text:layer.slot==='08'?NGD_VISUAL_TEXT_LOCK_:layer.skill};
+  });
+  var selectedSkill=registry.recipe12.optional_skills[input.optional_skill_id];
+  var last=slots[11];
+  last.text+='\n'+selectedSkill;
+  var output=slots.map(function(x){return '['+x.slot+']\n'+x.text;}).join('\n\n');
+  // Mandatory V2 safeguards survive adding the extra private layers.
+  output+='\n\n[INPUT_CONDITIONING_AND_PRESERVATION]\n'+
+    base.compiled_prompt;
+  // The fixed lock is also enforced in negative constraints (not rendered).
+  var negative=base.negative_prompt+
+    '\nNo generated typography, no letters, no numbers, no watermark.';
+  return {
+    contract_version:'visual-img2img-v2',
+    recipe_version:NGD_VISUAL_RECIPE12_VERSION_,
+    skill_version:registry.version,
+    image_generation_mode:'IMAGE_TO_IMAGE_REQUIRED',
+    option_ids:base.option_ids,
+    request_id:base.request_id,
+    result_count:input.result_count,
+    compiled_prompt:output,
+    negative_prompt:negative,
+    layer_trace:slots.map(function(x){return x.slot;}),
+    overlay_specification:base.overlay_specification,
+    media_contract:base.media_contract,
+    provider_adapter_profile:base.provider_adapter_profile,
+    // Real cost requires a server-side pricing quote, never browser math.
+    cost_contract:{
+      multiplier:input.result_count,
+      price_quoted_by_backend:false,
+      reserve_once_per_idempotent_request:true
+    },
+    free_text_discarded:true,
+    release_authorized:false
+  };
+}
