@@ -27,7 +27,7 @@ test('global token contract inherits Studio palette, 1.5px borders and crisp sha
   for(const token of tokens){assert.ok(css.includes(token),'master missing '+token);assert.ok(studio.includes(token),'Studio missing '+token)}
   assert.match(css,/--ngds-line:1\.5px solid #141418/);
   assert.match(css,/--ngds-shadow:3px 3px 0 #141418/);
-  assert.match(css,/body\.ngd-design-system/);
+  assert.match(css,/body\.ngd-public-app/);
   assert.match(css,/\.ngdm-wallet/);
   assert.match(css,/\.ai-product-card/);
   assert.match(css,/\.lms-course-card/);
