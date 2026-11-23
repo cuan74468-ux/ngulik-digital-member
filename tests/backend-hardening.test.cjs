@@ -123,12 +123,14 @@ test('auditReferralCodes menandai kode angka atau berawalan digit',()=>{
 function refundFixture({failOrderUpdate=false}={}){
   const h=boot(),calls=[];
   const order={order_id:'NGD-1',member_id:'M-1',product_id:'P-K',status:'FULFILLED',_row:5};
-  const ledger=[{member_id:'M-1',ref_id:'NGD-1',tipe:'TOPUP',jumlah:50},{member_id:'M-1',tipe:'GRANT',jumlah:30}];
+  const ledger=[{member_id:'M-1',ref_id:'NGD-1',tipe:'TOPUP',jumlah:50,status:'POSTED'},
+    {member_id:'M-1',tipe:'GRANT',jumlah:30,status:'POSTED'}];
   const commissions=[{komisi_id:'K-1',order_id:'NGD-1',status:'PENDING',_row:7}];
   h.ctx.withLock_=fn=>fn();
   h.ctx.now_=()=>new Date('2026-11-14T08:00:00Z');
   h.ctx.byId_=(name)=>name==='orders'?order:name==='members'?{member_id:'M-1'}:{tipe:'TOPUP_KREDIT'};
-  h.ctx.findRows_=name=>name==='credits_ledger'?ledger:name==='affiliate_commissions'?commissions:[];
+  h.ctx.findRows_=(name,predicate)=>(name==='credits_ledger'?ledger:
+    name==='affiliate_commissions'?commissions:[]).filter(predicate);
   h.ctx.logAudit_=()=>{};
   h.ctx.grantCredits_=(id,amount,ref,kind)=>{calls.push('credit:'+amount+':'+kind);};
   h.ctx.updateRow_=(name,row,patch)=>{
