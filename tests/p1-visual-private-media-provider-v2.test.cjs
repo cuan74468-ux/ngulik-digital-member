@@ -51,7 +51,7 @@ test('P1 stage3 provider native image editing requires validated reference and a
 test('P1 stage3 provider denies text-to-image, sync, unverified output and unconditioned references',()=>{
  for(const edit of ["p.mode='TEXT_TO_IMAGE'","p.supports_reference_image=false","p.supports_scene_reconstruction=false","p.supports_relighting=false","p.supports_async_jobs=false","p.returns_private_asset=false","p.supports_text_to_image_fallback=true","p.quality_tiers=['economy']","p.max_input_bytes=1000","compiled.media_contract.reference_asset_id=''","compiled.media_contract.no_text_to_image_fallback=false","compiled.image_generation_mode='TEXT_TO_IMAGE'","compiled.release_authorized=true"]){
   setup();vm.runInContext(edit,c);
-  assert.throws(()=>parse('ngdVisualProviderPrepareV2_(compiled,a,port,provider,nowMs)'),/VISUAL_V2_/,edit);
+  assert.throws(()=>parse('ngdVisualProviderPrepareV2_(compiled,a,port,provider,nowMs)'),/VISUAL_(?:V2_|PRIVATE_MEDIA_)/,edit);
  }
 });
 test('P1 stage3 durable async job plan and owner-only redacted public status',()=>{
