@@ -271,7 +271,7 @@ async function simulate(){
   if(!settled.ok)throw Error('Simulasi gagal');
   state.renderNo+=results.length;
   state.history.unshift(...results);
-  state.history=state.history.slice(0,8);
+  while(state.history.length>8)state.history.pop();
   state.rendered=true;
   state.previewVariation=0;
   shell();
@@ -309,5 +309,5 @@ function handleChange(event){const t=event.target;if(t.id==='ns-v2-overlay'){sta
 };reader.readAsDataURL(file)}}
 function mount(el){if(!el)return;root=el;root.classList.add('ngd-studio');root.addEventListener('click',handleClick);root.addEventListener('input',e=>maybeEdit(e.target));root.addEventListener('change',handleChange);shell()}
 function unmount(){epoch++;if(root){root.replaceChildren();root=null}}
-global.NGD_STUDIO={mount,unmount,adapterMode:adapter.mode,debugSnapshot:()=>({mode:adapter.mode,creditsSimulated:state.credits,renders:state.renderNo,history:state.history.length,resultCount:state.resultCount,costPreview:getCost()}),requestDraft:buildVisualRequestDraft,img2imgDraft:buildImg2ImgV2Draft,selectResultCount,photoAssessment,costPreview:()=>({unit:getUnitCost(),count:state.resultCount,total:getCost(),mode:'SIMULATION_ONLY'}),selectOption:selectV2,optionContracts:()=>Object.keys(V2_OPTIONS).reduce((a,k)=>(a[k]=V2_OPTIONS[k].map(x=>[...x]),a),{}),presetContracts:()=>Object.keys(VISUAL_PRESET_IDS).map(id=>({id,...VISUAL_PRESET_IDS[id]}))};
+global.NGD_STUDIO={mount,unmount,adapterMode:adapter.mode,debugSnapshot:()=>({mode:adapter.mode,creditsSimulated:state.credits,renders:state.renderNo,history:state.history.length}),requestDraft:buildVisualRequestDraft,img2imgDraft:buildImg2ImgV2Draft,selectResultCount,photoAssessment,costPreview:()=>({unit:getUnitCost(),count:state.resultCount,total:getCost(),mode:'SIMULATION_ONLY'}),selectOption:selectV2,optionContracts:()=>Object.keys(V2_OPTIONS).reduce((a,k)=>(a[k]=V2_OPTIONS[k].map(x=>[...x]),a),{}),presetContracts:()=>Object.keys(VISUAL_PRESET_IDS).map(id=>({id,...VISUAL_PRESET_IDS[id]}))};
 })(window);
