@@ -120,7 +120,7 @@ test('refund partial: commission reversed then ledger write fails; retry safely 
   assert.equal(h.order.status,'REFUNDED');
   assert.equal(count(h.db,'credits_ledger','ADJUST_REFUND'),1);
   assert.equal(h.db.affiliate_commissions.length,1);
-  assert.equal(h.buyer.saldo_kredit,10); // Sheet snapshot remains derived/previous value; ledger is authoritative.
+  assert.equal(h.buyer.saldo_kredit,0); // Non-formula snapshot is refreshed after refund reversal.
   assert.equal(h.ctx.creditBalance_('BUYER'),0);
 });
 test('refund partial: credit reversal posted then status write fails; automatic retry blocked, no second debit',()=>{
