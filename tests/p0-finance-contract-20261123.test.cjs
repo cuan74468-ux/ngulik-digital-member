@@ -59,6 +59,44 @@ test('invalid payment data or missing date cannot become a legacy exception',()=
   assert.equal(financeAuditFor(invoice({created_at:'',status:'FULFILLED',total_bayar:14877})),'FINANCE_AUDIT_FAILED');
   assert.equal(financeAuditFor(invoice({kode_unik:99,total_bayar:15099})),'FINANCE_AUDIT_FAILED');
 });
+test('finance diagnostics identify exact anomalous order but do not change its classification or data',()=>{
+  const events=[],ctx=runtime(),bad=invoice({
+    order_id:'SYNTHETIC-EXPIRED',created_at:'2026-11-22T10:00:00+07:00',
+    status:'EXPIRED',kode_unik:100,total_bayar:14900
+  });
+  const fixtures={
+    orders:[bad],credits_ledger:[],affiliate_commissions:[],
+    katalog_produk:[{product_id:'P-TEST'}],members:[{member_id:'M-TEST'}]
+  };
+  ctx.console={log(){},warn(...args){events.push(args.join(' '));},error(){}};
+  ctx.diagnosticDb_=()=>({});
+  ctx.readAll_=name=>fixtures[name]||[];
+  ctx.appendRow_=()=>{throw Error('read-only diagnostics must never append');};
+  ctx.updateRow_=()=>{throw Error('read-only diagnostics must never update');};
+  assert.equal(ctx.diagnosticFinanceReadOnly(),'FINANCE_AUDIT_FAILED');
+  const evidence=events.find(line=>line.startsWith('FINANCE_ORDER_AMOUNT_REVIEW '));
+  assert.ok(evidence);
+  assert.deepEqual(JSON.parse(evidence.slice('FINANCE_ORDER_AMOUNT_REVIEW '.length)),{
+    order_id:'SYNTHETIC-EXPIRED',status:'EXPIRED',reason:'ORDER_TOTAL_INVALID',
+    formula:'SUBTRACT',actual_total:14900,expected_total:15100
+  });
+  assert.equal(bad.total_bayar,14900);
+});
+test('legacy before cutoff stays WARN and creates no write',()=>{
+  const events=[],ctx=runtime(),legacy=invoice({
+    order_id:'SYNTHETIC-OLD',created_at:'2026-11-21T10:00:00+07:00',
+    status:'EXPIRED',kode_unik:100,total_bayar:14900
+  });
+  const fixtures={orders:[legacy],credits_ledger:[],affiliate_commissions:[],
+    katalog_produk:[{product_id:'P-TEST'}],members:[{member_id:'M-TEST'}]};
+  ctx.console={log(){},warn(...args){events.push(args.join(' '));},error(){}};
+  ctx.diagnosticDb_=()=>({});
+  ctx.readAll_=name=>fixtures[name]||[];
+  ctx.updateRow_=ctx.appendRow_=()=>{throw Error('unexpected write');};
+  assert.equal(ctx.diagnosticFinanceReadOnly(),'FINANCE_AUDIT_WARN');
+  assert.match(events.join(' '),/LEGACY_SUBTRACTIVE_AMOUNT_REVIEW/);
+  assert.equal(legacy.total_bayar,14900);
+});
 test('source defends against reuse of already refunded bank reference',()=>{
   assert.match(code,/\['PAID','FULFILLED','REFUNDED'\]\.indexOf\(String\(row\.status\)\)/);
   assert.match(code,/x\.member_id===m\.member_id&&ngdCreditPosted_\(x\)/);
