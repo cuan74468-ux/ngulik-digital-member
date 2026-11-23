@@ -98,3 +98,114 @@ function ngdVisualCompilePrompt_(payload,registryOverride) {
     request_id:input.request_id
   };
 }
+
+
+/**
+ * Tool #1 V2 Img2Img compiler. Its ONLY permitted image generation mode is
+ * reference-conditioned reconstruction. The private registry must contain
+ * explicit denoise, deblur, relight, background replacement, and strict brand
+ * preservation instructions. Model compliance requires later visual QA.
+ */
+function ngdVisualV2Entry_(registry,group,id){
+  ngdVisualRequire_(ngdVisualOwn_(registry[group],id),
+    'V2_SKILL_'+group.toUpperCase()+'_MISSING');
+  return registry[group][id];
+}
+function ngdVisualV2Skill_(value,label){
+  return ngdVisualConfigString_(value,'V2_'+label,2200);
+}
+function ngdVisualCompilePromptV2_(payload,registryOverride){
+  var input=ngdVisualInputV2_(payload);
+  var registry=ngdVisualPrivateRegistryV2_(
+    registryOverride||ngdVisualLoadPrivateSkillsV2_());
+  var id=input.ids;
+  var category=ngdVisualV2Entry_(registry,'categories',id.product_category);
+  var style=ngdVisualV2Entry_(registry,'styles',id.visual_style);
+  var use=ngdVisualV2Entry_(registry,'use_cases',id.use_case);
+  var angle=ngdVisualV2Entry_(registry,'camera_angles',id.camera_angle);
+  var light=ngdVisualV2Entry_(registry,'lighting_moods',id.lighting_mood);
+  var ratio=ngdVisualV2Entry_(registry,'ratios',id.aspect_ratio);
+  var quality=ngdVisualV2Entry_(registry,'qualities',id.quality_tier);
+  ngdVisualRequire_(ngdVisualIsPlain_(style)&&
+    Array.isArray(style.compatible_categories)&&
+    style.compatible_categories.indexOf(id.product_category)>=0,
+    'V2_STYLE_CATEGORY_INCOMPATIBLE');
+  ngdVisualRequire_(ngdVisualIsPlain_(use)&&
+    ngdVisualIsPlain_(ratio)&&ngdVisualIsPlain_(quality),
+    'V2_SKILL_SHAPE_INVALID');
+  var pixel=ratio.canvas;
+  ngdVisualRequire_(ngdVisualIsPlain_(pixel)&&
+    Number.isSafeInteger(pixel.width)&&pixel.width>=256&&pixel.width<=8192&&
+    Number.isSafeInteger(pixel.height)&&pixel.height>=256&&pixel.height<=8192,
+    'V2_CANVAS_INVALID');
+  var expected={'1:1':1,'4:5':4/5,'9:16':9/16,'16:9':16/9}[id.aspect_ratio];
+  ngdVisualRequire_(Math.abs(pixel.width/pixel.height-expected)<0.01,
+    'V2_CANVAS_RATIO_INVALID');
+  var safe=ngdVisualSafeZone_(use.safe_zone);
+  var inputCondition=registry.input_conditioning;
+  var preservation=registry.preservation;
+  var layer1=[
+    ngdVisualV2Skill_(inputCondition.denoise_deblur,'DENOISE_DEBLUR'),
+    ngdVisualV2Skill_(inputCondition.relight,'RELIGHT'),
+    ngdVisualV2Skill_(inputCondition.background_rebuild,'BACKGROUND_REBUILD'),
+    ngdVisualV2Skill_(preservation.geometry,'GEOMETRY'),
+    ngdVisualV2Skill_(preservation.brand_color,'BRAND_COLOR'),
+    ngdVisualV2Skill_(preservation.label_integrity,'LABEL_INTEGRITY')
+  ].join('\n');
+  var layers=[
+    {id:'01_INPUT_CONDITIONING_AND_PRESERVATION',text:layer1},
+    {id:'02_MATERIAL_AND_ART_DIRECTION',
+      text:ngdVisualV2Skill_(category,'CATEGORY')+'\n'+
+        ngdVisualV2Skill_(style.skill,'STYLE')},
+    {id:'03_CAMERA_AND_LIGHTING',
+      text:ngdVisualV2Skill_(angle,'ANGLE')+'\n'+
+        ngdVisualV2Skill_(light,'LIGHT')},
+    {id:'04_USE_CASE_FRAMING_AND_RATIO',
+      text:ngdVisualV2Skill_(use.skill,'USE_CASE')+'\n'+
+        ngdVisualV2Skill_(ratio.framing,'RATIO')},
+    {id:'05_QUALITY_AND_NEGATIVE_LOCK',
+      text:ngdVisualV2Skill_(quality.skill,'QUALITY')+'\n'+
+        ngdVisualV2Skill_(registry.guardrails.positive,'POSITIVE')}
+  ];
+  var negative=[
+    ngdVisualV2Skill_(registry.guardrails.negative,'NEGATIVE'),
+    ngdVisualV2Skill_(preservation.negative,'PRESERVATION_NEGATIVE')
+  ];
+  if(style.negative!==undefined)
+    negative.push(ngdVisualV2Skill_(style.negative,'STYLE_NEGATIVE'));
+  ngdVisualRequire_(typeof quality.adapter_profile==='string'&&
+    /^[a-z][a-z0-9_-]{1,50}$/.test(quality.adapter_profile),
+    'V2_PROFILE_INVALID');
+  var overlay={
+    enabled:input.overlay.enabled,
+    text_rendering:'DETERMINISTIC_CANVAS_ONLY',
+    product_name:input.overlay.product_name,
+    promo_text:input.overlay.promo_text,
+    badge_text:input.overlay.badge_text,
+    price:input.overlay.price,
+    cta:input.overlay.cta,
+    currency:'IDR',
+    safe_zone:safe,
+    canvas:{width:pixel.width,height:pixel.height}
+  };
+  return {
+    contract_version:'visual-img2img-v2',
+    skill_version:registry.version,
+    image_generation_mode:'IMAGE_TO_IMAGE_REQUIRED',
+    request_id:input.request_id,
+    option_ids:id,
+    compiled_prompt:layers.map(function(l){return l.text;}).join('\n\n'),
+    negative_prompt:negative.join('\n'),
+    layer_trace:layers.map(function(l){return l.id;}),
+    overlay_specification:overlay,
+    provider_adapter_profile:quality.adapter_profile,
+    media_contract:{
+      reference_asset_id:input.reference_asset_id,
+      requires_trusted_asset_ownership:true,
+      requires_image_conditioning:true,
+      no_text_to_image_fallback:true,
+      storage_backend:'PRIVATE_MEDIA_ADAPTER'
+    },
+    release_authorized:false
+  };
+}
