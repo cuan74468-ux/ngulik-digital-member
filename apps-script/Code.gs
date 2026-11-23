@@ -1053,8 +1053,18 @@ function orderView_(order,m) {
   }
   return o;
 }
+// A single expiry classifier for all checkout/maintenance paths. Invalid dates
+// are never silently treated as open or expired; they require owner review.
+function ngdOrderExpiryState_(o,atMs) {
+  var raw=o&&o.expires_at;
+  if(raw===null||raw===undefined||raw==='')return 'INVALID';
+  var deadline=new Date(raw).getTime();
+  if(!Number.isFinite(deadline))return 'INVALID';
+  var now=atMs===undefined?Date.now():Number(atMs);
+  return deadline<=now?'EXPIRED':'OPEN';
+}
 function expireOrder_(o) {
-  if(o.status==='PENDING'&&new Date(o.expires_at).getTime()<=Date.now()) {
+  if(o.status==='PENDING'&&ngdOrderExpiryState_(o)==='EXPIRED') {
     updateRow_('orders',o._row,{status:'EXPIRED'});
     logAudit_('SYSTEM','SYSTEM','ORDER_EXPIRED','orders',o.order_id,'PENDING','EXPIRED',{});
     o.status='EXPIRED';
@@ -1101,14 +1111,20 @@ function newOrder_(m,p,requestId) {
       require_(['AKTIF','DIAJUKAN'].indexOf(m.status_pos)<0,
         'CONFLICT','Lisensi POS sudah aktif atau sedang menunggu aktivasi.');
     var mine=findRows_('orders',function(o){return o.member_id===m.member_id&&o.product_id===product.product_id&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0;});
-    if(mine.length){var existing=expireOrder_(mine[0]);if(existing.status!=='EXPIRED')return orderView_(existing,m);}
+    if(mine.length){
+      var existing=mine[0];
+      require_(ngdOrderExpiryState_(existing)!=='INVALID',
+        'RECONCILIATION_REQUIRED','Tenggat order aktif tidak valid; hubungi admin untuk pemeriksaan.');
+      expireOrder_(existing);
+      if(existing.status!=='EXPIRED')return orderView_(existing,m);
+    }
     var s=settings_(),min=Number(s.kode_unik_min||100),max=Number(s.kode_unik_max||999),price=ngdPriceRupiah_(product.harga);
     require_(String(s.payment_gateway_mode||'QRIS_STATIS')==='QRIS_STATIS','NOT_AVAILABLE','Metode pembayaran saat ini tidak tersedia.');
     require_(Number.isInteger(price)&&price>0,'VALIDATION','Harga produk belum valid.');
     require_(Number.isInteger(min)&&Number.isInteger(max)&&min>=100&&max<=999&&min<=max,'VALIDATION','Rentang kode unik tidak valid.');
     require_(Number.isSafeInteger(price+max),'VALIDATION','Nominal pembayaran terlalu besar.');
     var open=readAll_('orders').filter(function(o){return ['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0&&
-      (o.status==='MENUNGGU_VERIFIKASI'||new Date(o.expires_at).getTime()>Date.now());});
+      (o.status==='MENUNGGU_VERIFIKASI'||ngdOrderExpiryState_(o)!=='EXPIRED');});
     var taken={};open.forEach(function(o){taken[Number(o.total_bayar)]=true;});
     // Scan the entire unique-code range from a random starting point.
     // Unlike 25 random trials, this only fails when every amount is occupied.
@@ -1261,7 +1277,7 @@ function getOrder_(m,id) {
   require_(o,'NOT_FOUND','Pesanan tidak ditemukan.');
   require_(m.role==='ADMIN'||o.member_id===m.member_id,'FORBIDDEN','Pesanan tidak ditemukan.');
   var view=orderView_(o,m);
-  view.past_due=o.status==='PENDING'&&new Date(o.expires_at).getTime()<=Date.now();
+  view.past_due=o.status==='PENDING'&&ngdOrderExpiryState_(o)==='EXPIRED';
   return view;
 }
 function transitionOrder_(m,id,type,p) {
@@ -1271,8 +1287,8 @@ function transitionOrder_(m,id,type,p) {
     require_(admin||o.member_id===m.member_id,'FORBIDDEN','Pesanan tidak ditemukan.');
     // Invalid PENDING expiry must never be treated as an unlimited window
     // for approving funds. Keep the row untouched for owner reconciliation.
-    if(type==='approve'&&admin&&o.status==='PENDING')
-      require_(Number.isFinite(new Date(o.expires_at).getTime()),
+    if(type==='approve'&&admin&&['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0)
+      require_(ngdOrderExpiryState_(o)!=='INVALID',
         'RECONCILIATION_REQUIRED','Tenggat pesanan tidak valid. Periksa pesanan sebelum persetujuan.');
     expireOrder_(o);
     if(type==='approve'&&admin&&['PAID','FULFILLED'].indexOf(String(o.status))>=0)
@@ -1303,7 +1319,7 @@ function transitionOrder_(m,id,type,p) {
         'VALIDATION','Pilih metode pembayaran yang benar-benar digunakan.');
       // A single bank/QRIS reference cannot settle different member orders.
       var alreadyUsed=findRows_('orders',function(row){
-        return row.order_id!==id&&['PAID','FULFILLED'].indexOf(String(row.status))>=0&&
+        return row.order_id!==id&&['PAID','FULFILLED','REFUNDED'].indexOf(String(row.status))>=0&&
           String(row.catatan_admin||'').indexOf('Pembayaran ref: '+proof)===0;
       });
       require_(!alreadyUsed.length,'RECONCILIATION_REQUIRED',
@@ -1910,7 +1926,10 @@ function refundOrder_(admin,p) {
     var m=byId_('members','member_id',o.member_id);
     var product=byId_('katalog_produk','product_id',o.product_id);
     require_(m&&product,'CONFLICT','Member atau produk tidak tersedia.');
-    var memberLedger=findRows_('credits_ledger',function(x){return x.member_id===m.member_id;});
+    // Only posted entries contribute to a spendable balance or a reversal.
+    var memberLedger=findRows_('credits_ledger',function(x){
+      return x.member_id===m.member_id&&ngdCreditPosted_(x);
+    });
     var commissions=findRows_('affiliate_commissions',function(x){return x.order_id===o.order_id;});
     var decision=refundDecision_(o,product,memberLedger,commissions);
     require_(decision.allowed,'RECONCILIATION_REQUIRED',
@@ -1932,7 +1951,10 @@ function refundOrder_(admin,p) {
       grantCredits_(m.member_id,decision.creditAdjustment,o.order_id,'ADJUST_REFUND');
     try{
       updateRow_('orders',o._row,{status:'REFUNDED',refunded_at:now_(),
-        catatan_admin:reason+' | Refund ref: '+reference});
+        // Retain the original payment reference for duplicate-settlement checks
+        // after REFUNDED. Never erase evidence to make room for refund notes.
+        catatan_admin:String(o.catatan_admin||'').slice(0,400)+
+          ' | Refund: '+reason.slice(0,180)+' | Refund ref: '+reference});
     }catch(err){
       try{logAudit_(admin.member_id,'ADMIN','REFUND_NEEDS_REVIEW','orders',o.order_id,before,before,
         {reason:String(err&&err.message||'unknown').slice(0,180)});}catch(logErr){}
@@ -2082,7 +2104,7 @@ function auditReferralCodes() {
 function maintenance_() {
   return withLock_(function(){
     var now=Date.now(),changed={expired:0,commissions:0,credits:0,canva:0,sessions:0};
-    readAll_('orders').forEach(function(o){if(o.status==='PENDING'&&new Date(o.expires_at).getTime()<=now){expireOrder_(o);changed.expired++;}});
+    readAll_('orders').forEach(function(o){if(o.status==='PENDING'&&ngdOrderExpiryState_(o,now)==='EXPIRED'){expireOrder_(o);changed.expired++;}});
     readAll_('affiliate_commissions').forEach(function(c){
       if(c.status==='PENDING'&&new Date(c.approve_after).getTime()<=now){
         var o=byId_('orders','order_id',c.order_id);
@@ -2108,7 +2130,7 @@ function maintenance_() {
     return changed;
   });
 }
-function expireOrders() {requireMutationsEnabled_();requireFinanceEnabled_();return withLock_(function(){var count=0;readAll_('orders').forEach(function(o){if(o.status==='PENDING'&&new Date(o.expires_at).getTime()<=Date.now()){expireOrder_(o);count++;}});return count;});}
+function expireOrders() {requireMutationsEnabled_();requireFinanceEnabled_();return withLock_(function(){var count=0;readAll_('orders').forEach(function(o){if(o.status==='PENDING'&&ngdOrderExpiryState_(o)==='EXPIRED'){expireOrder_(o);count++;}});return count;});}
 function dailyMaintenance() {requireMutationsEnabled_();requireFinanceEnabled_();return maintenance_();}
 function financeAutomationTick() {
   requireMutationsEnabled_();
@@ -2180,7 +2202,7 @@ function financeFindings_(orders,ledger,commissions,products,policy,members) {
       ['TOPUP','TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(String(l.tipe))>=0;});
     var reversals=ledger.filter(function(l){return l.ref_id===o.order_id&&l.tipe==='ADJUST_REFUND';});
     var isTopup=['TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(types[String(o.product_id)])>=0;
-    if(o.status==='PENDING'&&!Number.isFinite(new Date(o.expires_at).getTime()))
+    if(o.status==='PENDING'&&ngdOrderExpiryState_(o)==='INVALID')
       reasons.push('PENDING_ORDER_EXPIRY_INVALID');
     if(o.status==='PAID'){
       // PAID is not synonymous with FULFILLED. Classify top-ups using the
