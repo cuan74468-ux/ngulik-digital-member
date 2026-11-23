@@ -10,6 +10,8 @@ function backend(){
 }
 const ids={food_type:'soup',cover_concept:'warung',camera_angle:'angle45',lighting:'window',surface:'bamboo',grade:'warm',styling:'minimal',lens:'mm50',format:'4:5',similarity:'exact',count:1};
 const payload={...ids,reference_image:'asset_abcdefghi',request_id:'request_abcdefghijklmnop'};
+function realm(c,value){return vm.runInContext('('+JSON.stringify(value)+')',c);}
+function compile(c,p,r){return c.ngdFoodMagazineCompile_(realm(c,p),realm(c,r));}
 function privateRegistry(){
  const groups=['food_type','cover_concept','camera_angle','lighting','surface','grade','styling','lens','format','similarity'];
  const r={version:'food-magazine-v2.1',role:'Commercial food photo retoucher and art director.',preservation:'Preserve food identity and packaging geometry.',quality:'Photo-real magazine quality.',negative:'No hallucinated objects or fake labels.'};
@@ -37,7 +39,7 @@ test('food contract has 12 guided UI groups, default count 1 and no provider',()
 });
 test('compiler produces 12 private layers and hard model typography ban',()=>{
  const c=backend(),r=privateRegistry();
- const out=c.ngdFoodMagazineCompile_(payload,r);
+ const out=compile(c,payload,r);
  assert.equal(out.layer_trace.length,12);
  assert.equal(out.credit_multiplier,1);
  assert.equal(out.adapter_mode,'SIMULATION');
@@ -61,17 +63,17 @@ test('compiler rejects forged option ID, conflicting art, injected notes, forged
   {...payload,grade:'brand'},
   {...payload,reference_image:'data:image/png;base64,fake'},
   {...payload,evil:true}
- ])assert.throws(()=>c.ngdFoodMagazineCompile_(invalid,r));
+ ])assert.throws(()=>compile(c,invalid,r));
 });
 test('notes are bounded and overlays excluded from model prompt',()=>{
  const c=backend(),r=privateRegistry();
- const out=c.ngdFoodMagazineCompile_({...payload,count:4,overlay_enabled:true,brand_name:'PRIVATE BRAND',headline:'SPECIAL OFFER',user_notes:'Warm and elegant.'},r);
+ const out=compile(c,{...payload,count:4,overlay_enabled:true,brand_name:'PRIVATE BRAND',headline:'SPECIAL OFFER',user_notes:'Warm and elegant.'},r);
  assert.equal(out.credit_multiplier,4);
  assert.equal(out.overlay_specification.brand_name,'PRIVATE BRAND');
  assert.equal(out.compiled_prompt.includes('PRIVATE BRAND'),false);
  assert.equal(out.compiled_prompt.includes('SPECIAL OFFER'),false);
  assert.match(out.compiled_prompt,/Warm and elegant/);
- assert.throws(()=>c.ngdFoodMagazineCompile_({...payload,user_notes:'x'.repeat(241)},r));
+ assert.throws(()=>compile(c,{...payload,user_notes:'x'.repeat(241)},r));
 });
 test('no P0 integrations, payment calls, or live AI provider in new food module',()=>{
  const s=code('js/ai-studio.js');
