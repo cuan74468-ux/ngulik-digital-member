@@ -134,7 +134,6 @@ body.ngd-design-system :is(#modal-root .modal,#modal-root [role="dialog"],#toast
  background:var(--ngds-paper);box-shadow:var(--ngds-shadow);
 }
 body.ngd-design-system .footer{background:var(--ngds-bg);color:var(--ngds-muted)}
-body.ngd-design-system #screen :is(.ngd-studio,.ngd-studio *){font-family:inherit}
 /* Studio has authoritative tokens and component styles in ai-studio.css;
  * leave those unchanged, including canvas and overlay controls. */
 @media(max-width:600px){
