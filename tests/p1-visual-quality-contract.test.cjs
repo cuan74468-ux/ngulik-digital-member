@@ -98,3 +98,22 @@ test('P1 simulated Studio does not fetch, charge or disclose production prompt i
  assert.match(client,/mode:'SIMULATION'/);
  assert.doesNotMatch(quality,/UrlFetchApp|SpreadsheetApp|doPost|PropertiesService/);
 });
+
+
+test('P1 benchmark is exactly 240 unexecuted blind scenarios, never fabricated model quality results',()=>{
+ const b=JSON.parse(read('contracts/visual-quality-benchmark-v1.json'));
+ assert.equal(b.status,'UNEXECUTED_TEST_DESIGN');
+ assert.equal(b.products.length,20);
+ assert.equal(new Set(b.products).size,20);
+ assert.equal(b.visual_styles.length,4);
+ assert.equal(b.ratios.length,3);
+ assert.equal(b.products.length*b.visual_styles.length*b.ratios.length,240);
+ assert.equal(b.cases_per_model,240);
+ assert.equal(b.blind_review.required_reviewers,3);
+ assert.equal(b.blind_review.require_real_output_files,true);
+ assert.equal(b.blind_review.same_brief_input_for_each_model,true);
+ for(const k of ['commercial_appeal','product_fidelity','prompt_adherence','marketing_readiness']){
+  assert.ok(b.minimum_average[k]>=4);
+ }
+ assert.doesNotMatch(JSON.stringify(b),/provider_winner|actual_score|midjourney_parity_passed/i);
+});
