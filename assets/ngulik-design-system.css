@@ -125,6 +125,59 @@ body.ngd-public-app #screen :is(.ai-wallet-mini,.ngdm-wallet-chart,.ngdm-chart-e
 body.ngd-public-app #screen :is(.ai-category-tab.is-current,.ai-product-action):not(.ngd-studio *){
  background:var(--ngds-lime);color:var(--ngds-ink);
 }
+/* High-specificity component migration: override legacy member presentation
+ * without changing its wallet data, chart, ordering or navigation semantics. */
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-dashboard{
+ color:var(--ngds-ink)!important;font-family:var(--ngds-heading)!important;
+}
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-wallet{
+ background:var(--ngds-paper)!important;
+ border:1.5px solid var(--ngds-ink)!important;
+ box-shadow:var(--ngds-shadow)!important;
+ border-radius:var(--ngds-radius)!important;
+ color:var(--ngds-ink)!important;
+}
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-wallet :is(h1,h2,h3,strong,span,p,small){
+ color:inherit;
+}
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-wallet-cta{
+ background:var(--ngds-violet)!important;
+ border:1.5px solid var(--ngds-ink)!important;
+ box-shadow:var(--ngds-shadow)!important;
+ color:#fff!important;
+ font-family:var(--ngds-heading)!important;
+ min-height:44px;
+}
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-metric{
+ background:var(--ngds-paper)!important;
+ border:1.5px solid var(--ngds-ink)!important;
+ box-shadow:var(--ngds-shadow)!important;
+ border-radius:var(--ngds-radius)!important;
+ color:var(--ngds-ink)!important;
+}
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen :is(.ngdm-kicker,.ngdm-greeting h1){
+ color:var(--ngds-ink)!important;
+}
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen :is(.ngdm-wallet-number strong,.ngdm-metric>strong){
+ color:var(--ngds-ink)!important;
+ font-family:var(--ngds-mono)!important;
+}
+/* Catalog and checkout share physical components but retain payment statuses. */
+html body.ngd-public-app:not(#ngd) :is(.checkout-dialog,.checkout-summary){
+ border:1.5px solid var(--ngds-ink)!important;
+ border-radius:var(--ngds-radius)!important;
+ box-shadow:var(--ngds-shadow)!important;
+ background:var(--ngds-paper)!important;
+}
+html body.ngd-public-app:not(#ngd) .checkout-heading h1{
+ color:var(--ngds-ink);font-family:var(--ngds-heading);
+}
+body.ngd-public-app[data-app-role="guest"] #screen :is(.ngdl-hero,.ngdl-feature-card,.ngdl-product-card){
+ border-radius:var(--ngds-radius);
+}
+body.ngd-public-app #screen :is(.ai-catalog-intro,.ai-category-card,.ai-product-card){
+ border-radius:var(--ngds-radius);
+}
 /* Payment state and status semantics are not recolored to imply success.
  * Controls disabled by the existing security gates stay disabled. */
 body.ngd-public-app #screen :is(button,input,select,textarea):disabled{cursor:not-allowed}
