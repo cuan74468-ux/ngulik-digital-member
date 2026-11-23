@@ -7,7 +7,7 @@
 var NGD_VISUAL_COMPILER_VERSION_ = 'visual-compiler-v1';
 var NGD_VISUAL_REGISTRY_PROPERTY_ = 'NGD_VISUAL_SKILL_REGISTRY_V1';
 var NGD_VISUAL_ALLOWED_OPTIONS_ = Object.freeze({
-  template_id:['food_promo','catalog_clean','lifestyle','poster_promo'],
+  template_id:['food_promo','catalog_clean','lifestyle','poster_promo','skincare_podium','dark_luxury','story_vertical'],
   category_id:['culinary','product','lifestyle','promotion'],
   mood_id:['warm_appetite','clean_neutral','editorial','dramatic'],
   lighting_id:['soft_window','softbox','daylight','studio_rim'],
