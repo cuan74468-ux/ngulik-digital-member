@@ -182,8 +182,8 @@ function editor(){
  '</section>'+
  '<section class="ns-block ns-v2-step"><h2><span class="ns-count">02</span> Pilih hasil yang diinginkan</h2>'+
  v2Field('product_category','Jenis Produk','Bahan, warna dan tekstur asli dijaga')+
- v2Field('visual_style','Gaya Foto','Enam panggung fotografi komersial')+
  v2Field('use_case','Untuk Apa?','Kebutuhan menentukan framing dan gaya')+
+ v2Field('visual_style','Gaya Foto','Enam panggung fotografi komersial')+
  '<details class="ns-v2-advanced"><summary>Atur lebih lanjut · sudut & cahaya</summary>'+
  v2Field('camera_angle','Sudut Kamera','Atur fokus pada produk')+
  v2Field('lighting_mood','Suasana Cahaya','Pencahayaan studio sesuai karakter produk')+
