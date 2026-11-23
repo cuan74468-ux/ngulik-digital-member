@@ -184,3 +184,88 @@ function ngdVisualLoadPrivateSkillsV2_(){
   try{decoded=JSON.parse(raw);}catch(_){throw new Error('VISUAL_V2_REGISTRY_JSON_INVALID');}
   return ngdVisualPrivateRegistryV2_(decoded);
 }
+
+
+/**
+ * P1 V2 12-layer recipe extension. These are slot IDs, NOT invented names
+ * for the five parameter groups whose signed-off definitions are unavailable.
+ * Every non-policy recipe block must come from PRIVATE registry.
+ * Layer 08 is a fixed code-level safety rule, never user-provided.
+ */
+var NGD_VISUAL_RECIPE12_VERSION_='visual-img2img-recipe12-v1';
+var NGD_VISUAL_TEXT_LOCK_='Do NOT render any text, letters, numbers, or magazine typography; keep layout zones blank';
+var NGD_VISUAL_RECIPE12_SLOTS_=Object.freeze([
+  '01','02','03','04','05','06','07','08','09','10','11','12'
+]);
+var NGD_VISUAL_RESULT_COUNTS_=Object.freeze([1,2,4]);
+var NGD_VISUAL_OPTIONAL_TAGS_=Object.freeze([
+  'none','minimal_props','centered_subject','extra_negative_space',
+  'natural_surface','strict_label_focus'
+]);
+function ngdVisualRecipe12Options_(payload){
+  ngdVisualRequire_(ngdVisualIsPlain_(payload),'RECIPE12_PAYLOAD_INVALID');
+  var accepted=Object.keys(NGD_VISUAL_V2_OPTIONS_).concat([
+    'reference_image','request_id','overlay_enabled','product_name',
+    'promo_text','badge_text','price','cta','result_count',
+    'optional_notes','optional_skill_id'
+  ]);
+  Object.keys(payload).forEach(function(k){
+    ngdVisualRequire_(accepted.indexOf(k)>=0,'RECIPE12_UNKNOWN_FIELD');
+  });
+  var legacy={};
+  Object.keys(payload).forEach(function(k){
+    if(['result_count','optional_notes','optional_skill_id'].indexOf(k)<0)
+      legacy[k]=payload[k];
+  });
+  var validated=ngdVisualInputV2_(legacy);
+  var count=payload.result_count===undefined?1:payload.result_count;
+  ngdVisualRequire_(typeof count==='number'&&
+    NGD_VISUAL_RESULT_COUNTS_.indexOf(count)>=0,'RECIPE12_COUNT_INVALID');
+  var selected=payload.optional_skill_id===undefined?
+    'none':payload.optional_skill_id;
+  ngdVisualRequire_(typeof selected==='string'&&
+    NGD_VISUAL_OPTIONAL_TAGS_.indexOf(selected)>=0,
+    'RECIPE12_OPTIONAL_SKILL_INVALID');
+  // Free-form notes may carry untrusted commands. They are NEVER serialized
+  // into the compiled prompt, layer metadata, provider request, or logs.
+  var note=payload.optional_notes;
+  ngdVisualRequire_(note===undefined||
+    (typeof note==='string'&&note.length<=160&&
+      !/[\u0000-\u001f\u007f]/.test(note)),
+    'RECIPE12_OPTIONAL_NOTES_INVALID');
+  return {
+    validated_input:validated,
+    result_count:count,
+    optional_skill_id:selected,
+    // The raw note is deliberately dropped (not retained).
+    free_text_dropped:true
+  };
+}
+function ngdVisualValidateRecipe12Registry_(registry){
+  ngdVisualPrivateRegistryV2_(registry);
+  ngdVisualRequire_(ngdVisualIsPlain_(registry.recipe12),
+    'RECIPE12_PRIVATE_REGISTRY_MISSING');
+  var layers=registry.recipe12.layers;
+  ngdVisualRequire_(Array.isArray(layers)&&layers.length===12,
+    'RECIPE12_LAYERS_MUST_BE_12');
+  layers.forEach(function(layer,i){
+    ngdVisualRequire_(ngdVisualIsPlain_(layer)&&
+      layer.slot===NGD_VISUAL_RECIPE12_SLOTS_[i],
+      'RECIPE12_LAYER_ORDER_INVALID');
+    if(i===7){
+      ngdVisualRequire_(layer.skill===NGD_VISUAL_TEXT_LOCK_,
+        'RECIPE12_TEXT_LOCK_TAMPERED');
+    }else{
+      ngdVisualConfigString_(layer.skill,'RECIPE12_LAYER_'+layer.slot,2200);
+    }
+  });
+  ngdVisualRequire_(ngdVisualIsPlain_(registry.recipe12.optional_skills),
+    'RECIPE12_OPTIONAL_REGISTRY_MISSING');
+  NGD_VISUAL_OPTIONAL_TAGS_.forEach(function(id){
+    ngdVisualRequire_(ngdVisualOwn_(registry.recipe12.optional_skills,id),
+      'RECIPE12_OPTIONAL_TAG_MISSING');
+    ngdVisualConfigString_(registry.recipe12.optional_skills[id],
+      'RECIPE12_OPTIONAL_TAG',1100);
+  });
+  return registry;
+}
