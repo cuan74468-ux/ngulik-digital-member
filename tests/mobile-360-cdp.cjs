@@ -115,6 +115,28 @@ async function visit(url,label){
       fromSurface:true});
     writeFileSync('mobile-qa-artifacts/'+label+'-360x800.png',Buffer.from(shot.data,'base64'));
   }
+  if(label==='guest-home'||label==='member-home'){
+    const themed=await request('Runtime.evaluate',{expression:`(()=>{
+      const guest=document.querySelector('#screen .ngdl-hero');
+      const wallet=document.querySelector('#screen .ngdm-wallet');
+      const chart=document.querySelector('#screen .ngdm-wallet-chart');
+      const metric=document.querySelector('#screen .ngdm-metric:first-child');
+      const bg=el=>el?getComputedStyle(el).backgroundColor:'';
+      const shadow=el=>el?getComputedStyle(el).boxShadow:'';
+      return {hero:bg(guest),wallet:bg(wallet),chart:bg(chart),metric:bg(metric),
+        heroShadow:shadow(guest),walletShadow:shadow(wallet)};
+    })()`,returnByValue:true});
+    const v=themed.result.value;console.log('NGD_V2_THEME '+label+' '+JSON.stringify(v));
+    if(label==='guest-home'){
+      assert.equal(v.hero,'rgb(91, 61, 245)','Guest hero not electric purple');
+      assert.ok(v.heroShadow!=='none','Guest hero hard shadow missing');
+    }else{
+      assert.equal(v.wallet,'rgb(91, 61, 245)','Member wallet still pale');
+      assert.equal(v.chart,'rgb(204, 243, 73)','Member chart not acid lime');
+      assert.equal(v.metric,'rgb(204, 243, 73)','First metric not lime');
+      assert.ok(v.walletShadow!=='none','Member wallet hard shadow missing');
+    }
+  }
   if(label==='member-studio'){
     const r=await request('Runtime.evaluate',{expression:`(()=>{
       const root=document.getElementById('ngd-studio-root');
@@ -211,6 +233,25 @@ async function visit(url,label){
     assert.ok(!pc.exceptionDetails,'desktop Chrome runtime error');
     const desktop=pc.result.value;
     console.log('MEMBER_DESKTOP_1366 '+JSON.stringify(desktop));
+    const pcTheme=await request('Runtime.evaluate',{
+      expression:`(()=>{
+        const wallet=document.querySelector('#screen .ngdm-wallet');
+        const chart=document.querySelector('#screen .ngdm-wallet-chart');
+        const summary=document.querySelector('#screen .ngdm-metric:last-child');
+        return {wallet:wallet?getComputedStyle(wallet).backgroundColor:'',
+          chart:chart?getComputedStyle(chart).backgroundColor:'',
+          lastMetric:summary?getComputedStyle(summary).backgroundColor:'',
+          walletWidth:wallet?Math.round(wallet.getBoundingClientRect().width):0,
+          documentWidth:document.documentElement.scrollWidth};
+      })()`,returnByValue:true
+    });
+    const pcColors=pcTheme.result.value;
+    console.log('NGD_V2_DESKTOP_THEME '+JSON.stringify(pcColors));
+    assert.equal(pcColors.wallet,'rgb(91, 61, 245)','PC wallet must use Studio purple');
+    assert.equal(pcColors.chart,'rgb(204, 243, 73)','PC wallet chart must use Studio lime');
+    assert.equal(pcColors.lastMetric,'rgb(20, 20, 24)','PC third metric must be ink');
+    assert.ok(pcColors.walletWidth>=600,'PC wallet should fill the main content');
+    assert.ok(pcColors.documentWidth<=1366,'PC layout overflow');
     assert.equal(desktop.width,1366);
     assert.ok(desktop.scrollWidth<=1366,'desktop horizontal overflow '+desktop.scrollWidth);
     assert.deepEqual(desktop.routes,['beranda','katalog','ai','jasa','belajar']);
