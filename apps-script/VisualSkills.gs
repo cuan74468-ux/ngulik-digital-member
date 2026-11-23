@@ -100,3 +100,87 @@ function ngdVisualLoadPrivateSkills_() {
   try{parsed=JSON.parse(raw);}catch(_){throw new Error('VISUAL_REGISTRY_JSON_INVALID');}
   return ngdVisualPrivateRegistry_(parsed);
 }
+
+
+/**
+ * Tool #1 authoritative V2 Img2Img contract. V1 remains for legacy
+ * regression only; do not dispatch its prompt to a provider for Tool #1.
+ * No skills/prompts are included here. All recipe content stays in
+ * private, versioned backend registry NGD_VISUAL_SKILL_REGISTRY_V2.
+ */
+var NGD_VISUAL_V2_REGISTRY_PROPERTY_='NGD_VISUAL_SKILL_REGISTRY_V2';
+var NGD_VISUAL_V2_OPTIONS_=Object.freeze({
+  product_category:['food_culinary','beverage_bottle','skincare_cosmetic','fashion_craft','general_retail'],
+  visual_style:['studio_clean','splash_levitation','dark_mirror_splash','dark_action_drop','bright_lifestyle_table','moody_nature_wood'],
+  use_case:['marketplace_main','social_feed','story_reels_wa','promo_banner'],
+  camera_angle:['eye_level','hero_45','macro_closeup','flatlay_top'],
+  lighting_mood:['soft_daylight','warm_appetizing','dramatic_rim','crisp_commercial'],
+  aspect_ratio:['1:1','4:5','9:16','16:9'],
+  quality_tier:['standard','hd_commercial']
+});
+function ngdVisualInputV2_(payload){
+  ngdVisualRequire_(ngdVisualIsPlain_(payload),'V2_PAYLOAD_INVALID');
+  var accepted=Object.keys(NGD_VISUAL_V2_OPTIONS_).concat([
+    'reference_image','request_id','overlay_enabled','product_name','promo_text',
+    'badge_text','price','cta'
+  ]);
+  Object.keys(payload).forEach(function(k){
+    ngdVisualRequire_(accepted.indexOf(k)>=0,'V2_UNKNOWN_FIELD');
+  });
+  var ids={};
+  Object.keys(NGD_VISUAL_V2_OPTIONS_).forEach(function(field){
+    ngdVisualRequire_(ngdVisualOwn_(payload,field)&&
+      typeof payload[field]==='string'&&
+      NGD_VISUAL_V2_OPTIONS_[field].indexOf(payload[field])>=0,
+      'V2_OPTION_'+field.toUpperCase()+'_INVALID');
+    ids[field]=payload[field];
+  });
+  var ref=payload.reference_image;
+  ngdVisualRequire_(typeof ref==='string'&&
+    /^asset_[A-Za-z0-9_-]{6,80}$/.test(ref),
+    'V2_REFERENCE_IMAGE_REQUIRED');
+  ngdVisualRequire_(typeof payload.request_id==='string'&&
+    /^[A-Za-z0-9_-]{16,80}$/.test(payload.request_id),
+    'V2_REQUEST_ID_REQUIRED');
+  ngdVisualRequire_(payload.overlay_enabled===undefined||
+    typeof payload.overlay_enabled==='boolean','V2_OVERLAY_FLAG_INVALID');
+  var enabled=payload.overlay_enabled===true;
+  var price=payload.price;
+  ngdVisualRequire_(price==null||(typeof price==='number'&&
+    Number.isSafeInteger(price)&&price>=0&&price<=100000000),
+    'V2_PRICE_INVALID');
+  var overlay={
+    enabled:enabled,
+    product_name:ngdVisualText_(payload.product_name,100,'product_name'),
+    promo_text:ngdVisualText_(payload.promo_text,160,'promo_text'),
+    badge_text:ngdVisualText_(payload.badge_text,60,'badge_text'),
+    price:price==null?null:price,
+    cta:ngdVisualText_(payload.cta,60,'cta')
+  };
+  // User text is overlay-only. Never interpolate any field into Img2Img prompt.
+  return {ids:ids,reference_asset_id:ref,request_id:payload.request_id,overlay:overlay};
+}
+function ngdVisualPrivateRegistryV2_(value){
+  ngdVisualRequire_(ngdVisualIsPlain_(value),'V2_REGISTRY_INVALID');
+  ngdVisualRequire_(typeof value.version==='string'&&
+    /^visual-skills-v2[._-][A-Za-z0-9._-]{1,70}$/.test(value.version),
+    'V2_REGISTRY_VERSION_INVALID');
+  ['input_conditioning','preservation','categories','styles','use_cases',
+   'camera_angles','lighting_moods','ratios','qualities','guardrails']
+    .forEach(function(k){
+      ngdVisualRequire_(ngdVisualIsPlain_(value[k]),
+        'V2_REGISTRY_GROUP_'+k.toUpperCase()+'_INVALID');
+    });
+  return value;
+}
+function ngdVisualLoadPrivateSkillsV2_(){
+  ngdVisualRequire_(typeof PropertiesService!=='undefined',
+    'V2_PRIVATE_BACKEND_REQUIRED');
+  var raw=PropertiesService.getScriptProperties().getProperty(
+    NGD_VISUAL_V2_REGISTRY_PROPERTY_);
+  ngdVisualRequire_(typeof raw==='string'&&raw.length>0&&
+    raw.length<=9000,'V2_PRIVATE_REGISTRY_MISSING');
+  var decoded;
+  try{decoded=JSON.parse(raw);}catch(_){throw new Error('VISUAL_V2_REGISTRY_JSON_INVALID');}
+  return ngdVisualPrivateRegistryV2_(decoded);
+}
