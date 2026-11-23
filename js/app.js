@@ -1170,12 +1170,21 @@ function viewAI(){
     '</header>';
   const navigation=aiCategoryNav_(tools,publicMode);
   // Category chips are filters, not landing cards; show actual tool cards first.
+  const showVisual=logged()&&!isAdmin()&&
+    ['semua','umkm','kreator'].includes(category)&&
+    (!search||['ngulik studio','visual','foto produk','poster','iklan','gambar'].some(q=>q.includes(search)||search.includes(q)));
+  const visualCard=showVisual?'<button type="button" class="ai-product-card" data-ai-open="ngulik-visual" aria-label="Buka Ngulik Studio Visual Generator">'+
+    '<span class="ai-product-icon">'+icon('spark')+'</span>'+
+    '<span class="ai-product-category">DESAIN VISUAL / SIMULASI</span>'+
+    '<strong>Ngulik Studio — Visual Generator</strong>'+
+    '<small>Enam template visual UMKM, editor Canvas HD, dan galeri aset sesi. Simulasi tanpa memotong token asli.</small>'+
+    '<span class="ai-product-bottom"><span>0 token nyata</span><span class="ai-product-action">Buka '+icon('arrow')+'</span></span></button>':'';
   const cards='<section class="ai-tool-catalog" aria-labelledby="ai-tools-heading">'+
     '<div class="ai-tools-heading"><div><h2 id="ai-tools-heading">Pilih alat <span class="ai-tools-count">'+filtered.length+'</span></h2></div>'+
     '<label class="ai-search-wrap"><span class="sr-only">Cari alat AI</span>'+
     '<input id="ai-tool-search" type="search" placeholder="Cari alat AI" autocomplete="off" value="'+
     esc(state.aiSearch||'')+'" aria-label="Cari alat AI"></label></div>'+
-    '<div class="ai-catalog-grid" id="ai-tool-cards">'+
+    '<div class="ai-catalog-grid" id="ai-tool-cards">'+visualCard+
       (filtered.length?filtered.map(t=>{
         const c=aiCategoryFor_(aiToolCategory_(t));
         return '<button type="button" class="ai-product-card" data-ai-open="'+idSafe(t.tool_id)+'" aria-label="Buka tool '+esc(t.nama)+'">'+
@@ -1199,6 +1208,9 @@ function viewAI(){
 // No client-side pricing or availability is invented: getTools is authoritative.
 function viewAITool(){
   const tools=logged()&&!isAdmin()&&state.tools.length?state.tools:(Array.isArray(state.publicTools)?state.publicTools:[]);
+  if(state.selectedAiToolId==='ngulik-visual'&&logged()&&!isAdmin()){
+    return '<div class="ngd-studio" id="ngd-studio-root" aria-label="Ngulik Studio — Visual Generator"></div>';
+  }
   const selected=tools.find(t=>t.tool_id===state.selectedAiToolId);
   if(!selected)return '<div class="ai-tool-detail"><button class="ai-tool-back" type="button" data-route="ai">'+icon('arrow')+' Kembali ke daftar alat</button>'+
     '<div class="ai-catalog-empty"><strong>Alat Belum Tersedia</strong><p>Pilih alat lain dari daftar.</p></div></div>';
@@ -2527,6 +2539,9 @@ function render(){
     (routes[state.route]||viewHome)();
   // Catalog has a single authoritative HERO slot; do not stack PAGE_COVER above it.
   by('screen').innerHTML=screen;
+  if(state.route==='ai-tool'&&state.selectedAiToolId==='ngulik-visual'&&logged()&&!isAdmin()){
+    window.NGD_STUDIO?.mount(document.getElementById('ngd-studio-root'));
+  }
   syncCheckoutClock_();
   syncHeroRotation_();
   syncMarketplacePolling_();
@@ -3935,8 +3950,12 @@ document.addEventListener('click',async(e)=>{
   }
   else if(target.hasAttribute('data-ai-open')){
     const tools=logged()&&!isAdmin()&&state.tools.length?state.tools:state.publicTools;
-    const tool=tools.find(x=>x.tool_id===target.dataset.aiOpen);
-    if(tool){state.selectedAiToolId=tool.tool_id;go('ai-tool');}
+    if(target.dataset.aiOpen==='ngulik-visual'&&logged()&&!isAdmin()){
+      state.selectedAiToolId='ngulik-visual';go('ai-tool');
+    }else{
+      const tool=tools.find(x=>x.tool_id===target.dataset.aiOpen);
+      if(tool){state.selectedAiToolId=tool.tool_id;go('ai-tool');}
+    }
   }
   else if(target.hasAttribute('data-hero-step')){
     showHeroSlide_(state.heroIndex+Number(target.dataset.heroStep||1));syncHeroRotation_();
