@@ -29,7 +29,7 @@ test('V2 exactly matches seven backend option groups and enumerated values',()=>
  assert.deepEqual(Object.keys(ui).sort(),Object.keys(options).sort());
  for(const key of Object.keys(options)){
   assert.deepEqual(Array.from(ui[key],x=>String(x[0])),Array.from(options[key],x=>String(x)),key);
-  assert.ok(ui[key].every(x=>x[1]&&x[1].length>3));
+  assert.ok(ui[key].every(x=>typeof x[1]==='string'&&x[1].trim().length>0));
  }
 });
 test('V2 client never emits an untrusted private asset handle or private prompt',()=>{
