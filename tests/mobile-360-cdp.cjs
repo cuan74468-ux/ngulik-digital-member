@@ -184,6 +184,15 @@ async function visit(url,label){
       ['member-services','?preview=member#jasa'],
       ['member-ai','?preview=member#ai'],
       ['member-studio','?preview=member#ai-tool/ngulik-visual'],
+      ['member-learning','?preview=member#belajar'],
+      ['member-support','?preview=member#dukungan'],
+      ['member-account','?preview=member#akun'],
+      ['member-referral','?preview=member#affiliate'],
+      ['member-order-list','?preview=member#pesanan'],
+      ['admin-home','?preview=admin#admin'],
+      ['admin-catalog','?preview=admin#produk'],
+      ['admin-members','?preview=admin#member'],
+      ['admin-lms','?preview=admin#lms'],
       ['member-affiliate','?preview=member#affiliate'],
       ['member-orders','?preview=member#pesanan']
     ])await visit(host+part,label);
