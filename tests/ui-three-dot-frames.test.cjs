@@ -11,7 +11,10 @@ test('three-dot titlebar is scoped to selected frames and Studio editor',()=>{
  assert.match(studio,/\.ngd-studio \.ns-window-dots i:nth-child\(3\)/);
  assert.match(master,/\.ngd-window-frame>\.ngd-window-titlebar/);
  for(const c of ['#141418','#F676B7','#FFD965','#EAE5FF'])assert.ok(master.includes(c)&&studio.includes(c),c);
- assert.doesNotMatch(master,/\.checkout-dialog::before|\.checkout-summary::before/);\n assert.doesNotMatch(master,/\.ngdm-orders,\.ngdm-recent,\.ngdm-owned,\.ngdl-story\)::before/);\n const app=read('js/app.js');\n for(const name of ['ngdm-orders','ngdm-recent','ngdm-owned','ngdl-story'])assert.ok(app.includes(name+' ngd-window-frame'),name);
+ assert.doesNotMatch(master,/\.checkout-dialog::before|\.checkout-summary::before/);
+ assert.doesNotMatch(master,/\.ngdm-orders,\.ngdm-recent,\.ngdm-owned,\.ngdl-story\)::before/);
+ const app=read('js/app.js');
+ for(const name of ['ngdm-orders','ngdm-recent','ngdm-owned','ngdl-story'])assert.ok(app.includes(name+' ngd-window-frame'),name);
 });
 test('browser cache versions synchronize both entrypoints without new auth or APIs',()=>{
  for(const name of ['index.html','staging/member.html']){
