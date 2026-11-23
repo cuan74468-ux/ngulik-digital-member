@@ -22,7 +22,7 @@ const styles=['studio_clean','splash_levitation','dark_mirror_splash','dark_acti
 const registry={
  version:'visual-skills-v2.1',
  input_conditioning:{
-  denoise_deblur:text('remove phone camera noise and deblur'),
+  denoise_deblur:text('denoise and deblur the phone camera photo; remove sensor noise'),
   relight:text('reconstruct physically realistic studio lighting'),
   background_rebuild:text('remove clutter and rebuild scene')
  },
