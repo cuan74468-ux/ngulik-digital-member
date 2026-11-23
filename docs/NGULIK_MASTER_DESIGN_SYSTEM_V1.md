@@ -49,3 +49,19 @@ Route surface overlap (e.g. `beranda` by role) is intentional. Global route coun
 - Add per-route screenshot baselines for every authenticated route using synthetic data; do not use production accounts/DB in CI.
 - Create reusable page headings, controls, card layouts, data tables and safe status badges as named components. No broad selectors on all `div` or universal shadow rules.
 - Accessibility gate: contrast >= 4.5:1 for standard text, minimum 44px touch target for actionable controls, keyboard navigation, reduced-motion.
+
+## V2 vivid harmonization (2026-11-23)
+The owner rejected the first cross-route theme as too pale and not consistent with P1 Studio. A new, higher-specificity **component-owned V2 layer inside the same canonical CSS** establishes a bold visual signature without creating yet another stylesheet. It intentionally supersedes legacy `!important` rules at the presentation level.
+
+### Distinctive visual landmarks to verify
+- Public: strong electric purple editorial hero + acid-lime accent with existing media/art preserved; trust strip as lime outlined tiles; offer catalog white with hard-shadow borders; benefits lime and final CTA ink. Avoid treating old gradients as the final look.
+- Member: **purple** wallet, **lime** trend card and primary action, clear **lime/white/ink** metric rhythm, outlined shortcut tiles, independent order and recent-activity surfaces.
+- AI catalog, catalog, services, checkout: meaningful use of lime/purple/white hierarchy; preserve existing product photos, prices, copy, checkout conditions and order status.
+- Learning, affiliates, support, admin: lime section anchors, hard-outline white cards and purple key actions; avoid recoloring payment or moderation badges to imply a false successful state.
+- Mobile: 360px no horizontal overflow; wallet/chart stacks vertically; metric cards and trust statements become one column on narrow phones.
+
+### Gated release checklist
+- V2 is **visual only** and is not proof that every historical component is pixel-perfect. The route inventory remains the source for comprehensive manual audit.
+- GitHub CI must validate Node tests and actual Chrome computed CSS colors for guest hero and member wallet/chart/metric on 360px.
+- Screenshots from both guest/member/admin must be reviewed for clipping, contrast, broken buttons and editorial proportions before merge.
+- Never alter `Code.gs`, `Diagnostics.gs`, GAS deployment, Script Properties, credits ledger, payment logic or staging/production sheets for UI migration.
