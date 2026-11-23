@@ -233,6 +233,25 @@ async function visit(url,label){
     assert.ok(!pc.exceptionDetails,'desktop Chrome runtime error');
     const desktop=pc.result.value;
     console.log('MEMBER_DESKTOP_1366 '+JSON.stringify(desktop));
+    const pcTheme=await request('Runtime.evaluate',{
+      expression:`(()=>{
+        const wallet=document.querySelector('#screen .ngdm-wallet');
+        const chart=document.querySelector('#screen .ngdm-wallet-chart');
+        const summary=document.querySelector('#screen .ngdm-metric:last-child');
+        return {wallet:wallet?getComputedStyle(wallet).backgroundColor:'',
+          chart:chart?getComputedStyle(chart).backgroundColor:'',
+          lastMetric:summary?getComputedStyle(summary).backgroundColor:'',
+          walletWidth:wallet?Math.round(wallet.getBoundingClientRect().width):0,
+          documentWidth:document.documentElement.scrollWidth};
+      })()`,returnByValue:true
+    });
+    const pcColors=pcTheme.result.value;
+    console.log('NGD_V2_DESKTOP_THEME '+JSON.stringify(pcColors));
+    assert.equal(pcColors.wallet,'rgb(91, 61, 245)','PC wallet must use Studio purple');
+    assert.equal(pcColors.chart,'rgb(204, 243, 73)','PC wallet chart must use Studio lime');
+    assert.equal(pcColors.lastMetric,'rgb(20, 20, 24)','PC third metric must be ink');
+    assert.ok(pcColors.walletWidth>=600,'PC wallet should fill the main content');
+    assert.ok(pcColors.documentWidth<=1366,'PC layout overflow');
     assert.equal(desktop.width,1366);
     assert.ok(desktop.scrollWidth<=1366,'desktop horizontal overflow '+desktop.scrollWidth);
     assert.deepEqual(desktop.routes,['beranda','katalog','ai','jasa','belajar']);
