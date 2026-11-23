@@ -270,7 +270,7 @@ function evaluateFoodPhoto(image){
 }
 
 function editor(){
- const dims=RATIOS[state.v2.aspect_ratio];
+ const dims=RATIOS[foodMode?food.format:state.v2.aspect_ratio];
  const selected=!!state.photo;
  return '<section class="ns-editor ns-v2-editor" aria-label="Studio Foto Produk">'+
  '<aside class="ns-side">'+
@@ -284,20 +284,23 @@ function editor(){
  '<small class="ns-hint">Atau gunakan foto sampel untuk menguji alur:</small>'+
  '<div class="ns-samples">'+SAMPLES.map((v,i)=>'<button type="button" class="ns-sample" data-sample="'+i+'" aria-label="Pakai contoh '+htmlEscape(v.name)+'" aria-pressed="'+(state.photo===v.img)+'"><img src="'+v.img+'" alt="'+htmlEscape(v.name)+'" loading="lazy"></button>').join('')+'</div>'+
  '</section>'+
- '<div class="ns-food-mode-switch"><button type="button" data-food-mode="food" aria-pressed="'+foodMode+'">Foto Makanan Gaya Majalah</button><button type="button" data-food-mode="general" aria-pressed="'+(!foodMode)+'">Studio Produk Umum</button></div>'+ (foodMode?foodFields():'<section class="ns-block ns-v2-step"><h2><span class="ns-count">02</span> Pilih hasil yang diinginkan</h2>'+
- v2Field('product_category','Jenis Produk','Bahan, warna dan tekstur asli dijaga')+
- v2Field('use_case','Untuk Apa?','Kebutuhan menentukan framing dan gaya')+
- v2Field('visual_style','Gaya Foto','Enam panggung fotografi komersial')+
- '<details class="ns-v2-advanced"><summary>Atur lebih lanjut · sudut & cahaya</summary>'+
- v2Field('camera_angle','Sudut Kamera','Atur fokus pada produk')+
- v2Field('lighting_mood','Suasana Cahaya','Pencahayaan studio sesuai karakter produk')+
- '</details>'+
- v2Field('aspect_ratio','Rasio Gambar','Proporsi untuk tempat penggunaan')+
- v2Field('quality_tier','Kualitas','Biaya saat ini hanya kredit simulasi')+
- '</section>'+
- (foodMode?'':'<section class="ns-block ns-v2-optional"><label class="ns-v2-overlay-toggle"><input id="ns-v2-overlay" type="checkbox" '+(state.overlay?'checked':'')+'><span><strong>Opsional: teks, harga & CTA</strong><small>OFF secara default · hasil utama foto tanpa tulisan</small></span></label>'+
- (state.overlay?'<div class="ns-v2-overlay-fields">'+[['ns-product','Nama Produk / Brand',state.product,40],['ns-headline','Headline Promo',state.headline,54],['ns-promo','Harga / Badge',state.promo,28]].map(([id,l,v,max])=>'<label class="ns-label" for="'+id+'">'+l+'<input id="'+id+'" class="ns-control" maxlength="'+max+'" value="'+htmlEscape(v)+'"></label>').join('')+'</div>':'')+
- '</section>'+
+ '<div class="ns-food-mode-switch"><button type="button" data-food-mode="food" aria-pressed="'+foodMode+'">Foto Makanan Gaya Majalah</button><button type="button" data-food-mode="general" aria-pressed="'+(!foodMode)+'">Studio Produk Umum</button></div>'+
+ (foodMode?foodFields():(
+  '<section class="ns-block ns-v2-step"><h2><span class="ns-count">02</span> Pilih hasil yang diinginkan</h2>'+
+  v2Field('product_category','Jenis Produk','Bahan, warna dan tekstur asli dijaga')+
+  v2Field('use_case','Untuk Apa?','Kebutuhan menentukan framing dan gaya')+
+  v2Field('visual_style','Gaya Foto','Enam panggung fotografi komersial')+
+  '<details class="ns-v2-advanced"><summary>Atur lebih lanjut · sudut & cahaya</summary>'+
+  v2Field('camera_angle','Sudut Kamera','Atur fokus pada produk')+
+  v2Field('lighting_mood','Suasana Cahaya','Pencahayaan studio sesuai karakter produk')+
+  '</details>'+
+  v2Field('aspect_ratio','Rasio Gambar','Proporsi untuk tempat penggunaan')+
+  v2Field('quality_tier','Kualitas','Biaya saat ini hanya kredit simulasi')+
+  '</section>'+
+  '<section class="ns-block ns-v2-optional"><label class="ns-v2-overlay-toggle"><input id="ns-v2-overlay" type="checkbox" '+(state.overlay?'checked':'')+'><span><strong>Opsional: teks, harga & CTA</strong><small>OFF secara default · hasil utama foto tanpa tulisan</small></span></label>'+
+  (state.overlay?'<div class="ns-v2-overlay-fields">'+[['ns-product','Nama Produk / Brand',state.product,40],['ns-headline','Headline Promo',state.headline,54],['ns-promo','Harga / Badge',state.promo,28]].map(([id,l,v,max])=>'<label class="ns-label" for="'+id+'">'+l+'<input id="'+id+'" class="ns-control" maxlength="'+max+'" value="'+htmlEscape(v)+'"></label>').join('')+'</div>':'')+
+  '</section>'
+ ))+
  '</div><div class="ns-cost"><div class="ns-cost-row"><strong>Kredit simulasi</strong><span class="ns-status ns-mono">'+getCost()+' Cr</span></div>'+
  foodPreflightMarkup()+'<div class="ns-hint">'+(foodMode?food.count+' × '+(V2_TIERS[state.v2.quality_tier]||4)+' Cr / hasil · estimasi simulasi':'1 hasil · simulasi')+'</div>'+ '<button type="button" id="ns-generate" class="ns-cta ns-primary" '+(!selected||state.busy||(foodMode&&foodQuality.status==='warning')?'disabled':'')+'>'+ico('spark')+(selected?' Buat Pratinjau Simulasi':' Unggah Foto Dahulu')+'</button>'+
  '<small class="ns-hint">Generasi AI sungguhan belum terhubung. Foto asli tidak dikirim ke server.</small></div></aside>'+
