@@ -115,6 +115,32 @@ async function visit(url,label){
       fromSurface:true});
     writeFileSync('mobile-qa-artifacts/'+label+'-360x800.png',Buffer.from(shot.data,'base64'));
   }
+  if(label==='member-studio'){
+    const r=await request('Runtime.evaluate',{expression:`(()=>{
+      const root=document.getElementById('ngd-studio-root');
+      const c=root?.querySelector('#ns-canvas');
+      const tabs=[...root?.querySelectorAll('.ns-tabs')||[]];
+      const before=window.NGD_STUDIO?.debugSnapshot();
+      const width=root?.getBoundingClientRect().width||0;
+      const documentWidth=document.documentElement.scrollWidth;
+      const imageCards=root?.querySelectorAll('[data-template]').length||0;
+      const card=root?.querySelector('[data-template="kuliner-hangat"]');
+      card?.click();
+      const editor=root?.querySelector('.ns-editor');
+      const visibleCanvas=root?.querySelector('#ns-canvas');
+      const ratio=visibleCanvas?visibleCanvas.width+'x'+visibleCanvas.height:'';
+      return {root:!!root,initialCanvas:!!c,tabs:tabs.length,imageCards,editor:!!editor,ratio,width,documentWidth,adapter:before?.mode};
+    })()`,returnByValue:true});
+    const v=r.result.value;
+    console.log('MOBILE_360_STUDIO '+JSON.stringify(v));
+    assert.ok(v.root&&v.imageCards===6&&v.editor,'P1 Studio gallery/editor missing');
+    assert.equal(v.adapter,'SIMULATION','P1 cannot use live credit adapter');
+    assert.equal(v.ratio,'1080x1350','P1 Canvas resolution mismatch');
+    assert.ok(v.documentWidth<=360,'P1 Studio overflow');
+    mkdirSync('mobile-qa-artifacts',{recursive:true});
+    const shot=await request('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
+    writeFileSync('mobile-qa-artifacts/member-studio-360x800.png',Buffer.from(shot.data,'base64'));
+  }
   if(label==='member-home'){
     const click=await request('Runtime.evaluate',{expression:`(()=>{
       const toggle=document.getElementById('top-nav-trigger');
@@ -157,6 +183,7 @@ async function visit(url,label){
       ['member-catalog','?preview=member#katalog'],
       ['member-services','?preview=member#jasa'],
       ['member-ai','?preview=member#ai'],
+      ['member-studio','?preview=member#ai-tool/ngulik-visual'],
       ['member-affiliate','?preview=member#affiliate'],
       ['member-orders','?preview=member#pesanan']
     ])await visit(host+part,label);
