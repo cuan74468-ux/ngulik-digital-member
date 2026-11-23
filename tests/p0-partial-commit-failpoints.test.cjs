@@ -134,6 +134,16 @@ test('refund partial: credit reversal posted then status write fails; automatic 
   assert.equal(count(h.db,'credits_ledger','ADJUST_REFUND'),1);
   assert.ok(h.reconcile().findings[0].issues.includes('REFUND_ADJUST_WITHOUT_REFUNDED_STATUS'));
 });
+test('refund snapshot write failure keeps order reviewable and blocks a second credit reversal',()=>{
+  const h=fixture();h.approve();
+  h.fail.at='member:saldo';
+  assert.throws(()=>h.refund(),/saldo tampilan belum sinkron/);
+  assert.equal(h.order.status,'FULFILLED');
+  assert.equal(count(h.db,'credits_ledger','ADJUST_REFUND'),1);
+  assert.equal(h.buyer.saldo_kredit,10);
+  assert.throws(()=>h.refund(),/REFUND_ADJUST_ALREADY_EXISTS/);
+  assert.ok(h.reconcile().findings[0].issues.includes('REFUND_ADJUST_WITHOUT_REFUNDED_STATUS'));
+});
 test('non-posted refund adjustment blocks replay before any commission or order writes',()=>{
   const h=fixture();h.approve();
   h.db.credits_ledger.push({_row:3,member_id:'BUYER',ref_id:h.order.order_id,tipe:'ADJUST_REFUND',jumlah:-10,status:'PENDING'});
