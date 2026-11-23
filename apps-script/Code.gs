@@ -1927,6 +1927,15 @@ function refundOrder_(admin,p) {
     var product=byId_('katalog_produk','product_id',o.product_id);
     require_(m&&product,'CONFLICT','Member atau produk tidak tersedia.');
     // Only posted entries contribute to a spendable balance or a reversal.
+    // An unposted reversal/top-up with this order reference is ambiguous.
+    // Do not create a second reversal when a previous write may still settle.
+    var unsettled=findRows_('credits_ledger',function(x){
+      return x.ref_id===o.order_id&&
+        ['TOPUP','ADJUST_REFUND'].indexOf(String(x.tipe))>=0&&
+        !ngdCreditPosted_(x);
+    });
+    require_(!unsettled.length,'RECONCILIATION_REQUIRED',
+      'Ledger order memuat posting belum final. Jangan ulangi refund sebelum rekonsiliasi.');
     var memberLedger=findRows_('credits_ledger',function(x){
       return x.member_id===m.member_id&&ngdCreditPosted_(x);
     });
@@ -2230,6 +2239,11 @@ function financeFindings_(orders,ledger,commissions,products,policy,members) {
       reasons.push('REFUND_ADJUST_WITHOUT_REFUNDED_STATUS');
     var orderCommissions=commissions.filter(function(k){return k.order_id===o.order_id;});
     if(orderCommissions.length>1)reasons.push('COMMISSION_DUPLICATE');
+    // Reversal before the order becomes REFUNDED means a partial refund
+    // may have interrupted. Flag for human reconciliation; never replay money.
+    if(o.status!=='REFUNDED'&&orderCommissions.some(function(k){
+      return k.status==='REVERSED';
+    }))reasons.push('COMMISSION_REVERSED_BEFORE_REFUND');
     if(members&&orderCommissions.some(function(c){
       var buyer=memberIndex[String(c.referred_member_id)];
       var inviter=memberIndex[String(c.referrer_id)];
