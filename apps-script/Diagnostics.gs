@@ -237,7 +237,7 @@ function diagnosticAuthReadOnly() {
 // =====================================
 function diagnosticFinanceReadOnly() {
   diagnosticDb_(); // Do not silently fall back to the bound/production spreadsheet.
-  var started=Date.now(),errors=[],warnings=[];
+  var started=Date.now(),errors=[],warnings=[],amountFindings=[];
   console.log('FINANCE_AUDIT_STARTED');
   var orders=readAll_('orders');
   var ledger=readAll_('credits_ledger');
@@ -273,8 +273,15 @@ function diagnosticFinanceReadOnly() {
       Number.isSafeInteger(code)&&code>=100&&code<=999&&
       Number.isSafeInteger(total)&&total===price-code;
     if(!validPlus){
-      if(legacySubtract)warnings.push('LEGACY_SUBTRACTIVE_AMOUNT_REVIEW');
-      else errors.push('ORDER_TOTAL_INVALID');
+      var reason=legacySubtract?'LEGACY_SUBTRACTIVE_AMOUNT_REVIEW':'ORDER_TOTAL_INVALID';
+      if(legacySubtract)warnings.push(reason);
+      else errors.push(reason);
+      // Evidence only: IDs and invoice amounts, never member PII or writes.
+      amountFindings.push({
+        order_id:id,status:String(o.status||''),reason:reason,
+        formula:total===price-code?'SUBTRACT':'OTHER',
+        actual_total:total,expected_total:Number.isSafeInteger(price+code)?price+code:null
+      });
     }
     if(['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0){
       if(money[total])errors.push('ACTIVE_PAYMENT_AMOUNT_DUPLICATE');
@@ -315,6 +322,10 @@ function diagnosticFinanceReadOnly() {
   if(errors.length||warnings.length){
     var counts={};errors.concat(warnings).forEach(function(e){counts[e]=(counts[e]||0)+1;});
     console.warn('FINANCE_FINDINGS '+JSON.stringify(counts));
+    // Limit log volume; preserve the aggregate count above.
+    amountFindings.slice(0,20).forEach(function(f){
+      console.warn('FINANCE_ORDER_AMOUNT_REVIEW '+JSON.stringify(f));
+    });
   }
   if(errors.length){console.error('FINANCE_AUDIT_FAILED');return 'FINANCE_AUDIT_FAILED';}
   if(warnings.length){console.warn('FINANCE_AUDIT_WARN');return 'FINANCE_AUDIT_WARN';}
