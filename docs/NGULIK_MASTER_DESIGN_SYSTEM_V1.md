@@ -18,7 +18,7 @@ Status: **P1 visual alignment candidate, PR review required**. Single source for
 Avoid emojis in new labels, fake OS traffic-light ornaments, glossy gradients, generic multi-color patterns, and extra navigation bars. Visual design must not imply success for unpaid orders or disabled features.
 
 ## One owner for visual presentation
-- `assets/ngulik-design-system.css` is the **last stylesheet** on `index.html` and `staging/member.html`. It defines canonical global design tokens and cross-route component grammar.
+- `assets/ngulik-design-system.css` is the **last stylesheet** on `index.html` and `staging/member.html`. It defines canonical global design tokens and cross-route component grammar, scoped to the existing `body.ngd-public-app` shell without changing body classes.
 - `assets/ai-studio.css` owns the internal `.ngd-studio` subtree only; master styles intentionally exclude it. Do not duplicate Studio selectors in the master.
 - Legacy styles are temporarily retained for layout and business forms. After screenshot-by-screenshot review and parity, migrate route-specific rules into coherent modules and retire superseded styles one at a time; do not add random overrides in other stylesheets.
 - Existing icons and brand mark are preserved. New components use SVG stroke icons, not Unicode emoji.
