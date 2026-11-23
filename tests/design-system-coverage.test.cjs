@@ -14,7 +14,7 @@ test('all 33 existing screen routes remain defined and design system uses same s
 test('both existing entrypoints enable master design system last and keep routing',()=>{
   for(const file of ['index.html','staging/member.html']){
     const html=read(file);
-    assert.match(html,/<body class="[^"]*ngd-design-system/);
+    assert.match(html,/<body class="[^"]*ngd-public-app/);
     const links=[...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(x=>x[1]);
     assert.ok(links.at(-1).includes('ngulik-design-system.css'),file+' main theme not last');
     assert.ok(links.some(x=>x.includes('ai-studio.css')));
