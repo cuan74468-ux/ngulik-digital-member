@@ -840,3 +840,13 @@ html body.ngd-public-app:not(#ngd) #screen :is(.ngdm-wallet,.ngdl-hero) a:focus-
 @media(prefers-reduced-motion:reduce){
  html body.ngd-public-app:not(#ngd) .topbar #guest-nav button{transition:none!important}
 }
+
+/* Specificity bridge: pre-existing role styles use :not(#ngd) with !important.
+   Chrome confirmed the generic topbar selector lost to those old rules. */
+html body.ngd-public-app[data-app-role]:not(#ngd) .workarea > .topbar{
+ background:#141418!important;background-color:#141418!important;
+ color:#FFFFFF!important;
+ border-bottom:2px solid #141418!important;
+ box-shadow:0 4px 0 #CCF349!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
