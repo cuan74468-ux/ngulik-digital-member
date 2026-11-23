@@ -1488,6 +1488,16 @@ function ngdEligibleReferrer_(buyer,inviter) {
     String(buyer.referred_by||'').trim()===String(inviter.member_id||'').trim()&&
     String(buyer.member_id||'').trim()!==String(inviter.member_id||'').trim());
 }
+// Keep non-formula member balance snapshots aligned with the posted ledger.
+// Spreadsheet formulas remain the source for formula-backed balance cells.
+function ngdSyncMemberCreditSnapshot_(member,balance) {
+  require_(member&&Number.isSafeInteger(Number(balance))&&Number(balance)>=0,
+    'RECONCILIATION_REQUIRED','Saldo hasil transaksi tidak valid.');
+  var mt=tbl_('members'),saldoCol=mt.headers.indexOf('saldo_kredit')+1;
+  require_(saldoCol>0,'RECONCILIATION_REQUIRED','Kolom saldo member tidak tersedia.');
+  var saldoCell=mt.sheet.getRange(member._row,saldoCol);
+  if(!saldoCell.getFormula())saldoCell.setValue(Number(balance));
+}
 function onPaid_(o,actor) {
   var product=byId_('katalog_produk','product_id',o.product_id);
   var member=byId_('members','member_id',o.member_id);
@@ -1526,12 +1536,8 @@ function onPaid_(o,actor) {
   var fulfilled=false,days=Number(product.durasi_hari||0),end;
   if(['TOPUP_TOKEN','TOPUP_KREDIT'].indexOf(product.tipe)>=0){
     var credited=grantCredits_(member.member_id,Number(product.kredit_diberikan),o.order_id,'TOPUP');
-    // Keep the member snapshot aligned with the idempotent ledger posting.
-    // A spreadsheet formula, if present, remains authoritative and is not overwritten.
-    var mt=tbl_('members'),saldoCol=mt.headers.indexOf('saldo_kredit')+1;
-    require_(saldoCol>0,'CONFLICT','Kolom saldo member tidak tersedia.');
-    var saldoCell=mt.sheet.getRange(member._row,saldoCol);
-    if(!saldoCell.getFormula())saldoCell.setValue(credited.balance);
+    // If this fails after posting, leave PAID for reconciliation, not a second credit.
+    ngdSyncMemberCreditSnapshot_(member,credited.balance);
     fulfilled=true;
   }else if(product.tipe==='LANGGANAN_30H'){
     // Read the persisted order, not only the argument: retry callers may hold
@@ -1956,8 +1962,18 @@ function refundOrder_(admin,p) {
       logAudit_(admin.member_id,'ADMIN','COMMISSION_REVERSED','affiliate_commissions',
         k.komisi_id,k.status,'REVERSED',{});
     });
-    if(decision.creditAdjustment!==0)
-      grantCredits_(m.member_id,decision.creditAdjustment,o.order_id,'ADJUST_REFUND');
+    if(decision.creditAdjustment!==0){
+      var adjusted=grantCredits_(m.member_id,decision.creditAdjustment,o.order_id,'ADJUST_REFUND');
+      try{
+        ngdSyncMemberCreditSnapshot_(m,adjusted.balance);
+      }catch(snapshotError){
+        try{logAudit_(admin.member_id,'ADMIN','REFUND_NEEDS_REVIEW','orders',
+          o.order_id,before,before,{stage:'BALANCE_SNAPSHOT',reason:String(snapshotError.message||snapshotError).slice(0,180)});}
+        catch(auditError){}
+        throw ngdError_('RECONCILIATION_REQUIRED',
+          'Kredit refund tercatat tetapi saldo tampilan belum sinkron. Jangan ulangi refund; rekonsiliasi diperlukan.');
+      }
+    }
     try{
       updateRow_('orders',o._row,{status:'REFUNDED',refunded_at:now_(),
         // Retain the original payment reference for duplicate-settlement checks
