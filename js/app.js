@@ -1195,10 +1195,10 @@ function viewAI(){
           '<span class="ai-product-bottom"><span>'+esc(Number(t.kredit_biaya)||0)+' Token</span>'+
           '<span class="ai-product-action">Buka '+icon('arrow')+'</span></span>'+
         '</button>';
-      }).join(''):(showVisual?'':'<div class="ai-catalog-empty"><strong>')+
-        (showVisual?'':!state.publicToolsLoaded&&tools.length===0?'Memuat katalog Studio AI…':'Belum ada tool pada pilihan ini.')+
+      }).join(''):(showVisual?'':'<div class="ai-catalog-empty"><strong>'+
+        (!state.publicToolsLoaded&&tools.length===0?'Memuat katalog Studio AI…':'Belum ada tool pada pilihan ini.')+
         '</strong><p>'+(!state.publicToolsLoaded&&tools.length===0?
-        'Daftar produk sedang dibaca dari sistem.':'Pilih kategori lain atau hapus kata kunci pencarian.')+'</p></div>')+
+        'Daftar produk sedang dibaca dari sistem.':'Pilih kategori lain atau hapus kata kunci pencarian.')+'</p></div>'))+
     '</div></section>';
   return '<div class="ai-catalog">'+intro+navigation+cards+
     (publicMode?'<div class="ai-catalog-access"><strong>Ingin menggunakan alat?</strong>'+
