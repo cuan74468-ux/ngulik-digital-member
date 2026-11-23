@@ -850,3 +850,23 @@ html body.ngd-public-app[data-app-role]:not(#ngd) .workarea > .topbar{
  box-shadow:0 4px 0 #CCF349!important;
  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
 }
+
+
+/* Chrome verified old member-only !important title wins without role weight. */
+html body.ngd-public-app[data-app-role]:not(#ngd) .workarea>.topbar .guest-brand strong{
+ color:#FFFFFF!important;-webkit-text-fill-color:#FFFFFF!important;
+ font-family:var(--ngds-heading)!important;
+ font-size:clamp(16px,1.28vw,19px)!important;
+ font-weight:800!important;
+}
+html body.ngd-public-app[data-app-role]:not(#ngd) .workarea>.topbar .guest-brand small{
+ color:#D7CEFF!important;-webkit-text-fill-color:#D7CEFF!important;
+}
+html body.ngd-public-app[data-app-role]:not(#ngd) .workarea>.topbar #guest-nav button[aria-current="page"]{
+ background:#CCF349!important;color:#141418!important;
+ -webkit-text-fill-color:#141418!important;
+ border-color:#141418!important;
+}
+html body.ngd-public-app[data-app-role]:not(#ngd) .workarea>.topbar #guest-nav button:not([aria-current="page"]){
+ color:#FFFFFF!important;-webkit-text-fill-color:#FFFFFF!important;
+}
