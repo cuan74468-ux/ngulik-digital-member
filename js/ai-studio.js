@@ -12,6 +12,53 @@ const TEMPLATES=[
 {id:'dark-luxury',name:'Dark Luxury Spotlight',category:'Katalog Studio',ratio:'1:1',mood:'gelap',tier:'standar',layout:'darkluxury',product:'Noir Extrait De Parfum',headline:'Aroma Kayu & Rempah yang Tahan Seharian',promo:'EDISI TERBATAS',img:'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=1080&q=85'},
 {id:'story-vertikal',name:'Story & Reels Promo Vertikal',category:'Story 9:16',ratio:'9:16',mood:'hangat',tier:'standar',layout:'story',product:'Es Kopi Susu Gula Aren',headline:'Ngopi Hemat Bareng Teman Kerja Hari Ini',promo:'BELI 2 Rp30.000',img:'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1080&q=85'}
 ];
+
+/* Public option IDs only. No master skill instructions, API keys, or network calls.
+   This mapping is a future live-pipeline contract; SIMULATION stays default. */
+const VISUAL_PRESET_IDS=Object.freeze({
+  'katalog-minimalis':Object.freeze({template_id:'catalog_clean',category_id:'product'}),
+  'kuliner-hangat':Object.freeze({template_id:'food_promo',category_id:'culinary'}),
+  'poster-flash-sale':Object.freeze({template_id:'poster_promo',category_id:'promotion'}),
+  'skincare-podium':Object.freeze({template_id:'skincare_podium',category_id:'product'}),
+  'dark-luxury':Object.freeze({template_id:'dark_luxury',category_id:'product'}),
+  'story-vertikal':Object.freeze({template_id:'story_vertical',category_id:'culinary'})
+});
+const VISUAL_MOOD_IDS=Object.freeze({
+  terang:Object.freeze({mood_id:'clean_neutral',lighting_id:'softbox'}),
+  hangat:Object.freeze({mood_id:'warm_appetite',lighting_id:'soft_window'}),
+  kontras:Object.freeze({mood_id:'editorial',lighting_id:'daylight'}),
+  gelap:Object.freeze({mood_id:'dramatic',lighting_id:'studio_rim'})
+});
+const VISUAL_QUALITY_IDS=Object.freeze({hemat:'economy',standar:'standard',premium:'premium'});
+function buildVisualRequestDraft(){
+  const preset=VISUAL_PRESET_IDS[state.template?.id];
+  const mood=VISUAL_MOOD_IDS[state.mood];
+  const quality=VISUAL_QUALITY_IDS[state.tier];
+  if(!preset||!mood||!quality||!RATIOS[state.ratio])throw Error('VISUAL_OPTION_MAP_INVALID');
+  // The current UI has no authenticated/private upload adapter.
+  // NEVER turn a local data: URL or remote sample image into a trusted asset ID.
+  const badge=String(state.promo||'');
+  const priceMatch=/^Rp\s*([0-9][0-9.]*)$/i.exec(badge.trim());
+  const price=priceMatch?Number(priceMatch[1].replace(/\./g,'')):null;
+  return {
+    mode:'CONTRACT_PREVIEW_ONLY',
+    upload_required:true,
+    payload:{
+      template_id:preset.template_id,
+      category_id:preset.category_id,
+      mood_id:mood.mood_id,
+      lighting_id:mood.lighting_id,
+      ratio_id:state.ratio,
+      quality_tier:quality,
+      product_name:String(state.product||state.template.product||'').slice(0,100),
+      promo_text:String(state.headline||'').slice(0,160),
+      badge_text:priceMatch?'':badge.slice(0,60),
+      price:Number.isSafeInteger(price)&&price>=0&&price<=100000000?price:null,
+      cta:'Pesan Sekarang',
+      reference_image:''
+    }
+  };
+}
 const SAMPLES=[
 {name:'Kopi Susu',img:'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=1080&q=85',product:'Kopi Susu Gula Aren',headline:'Racikan Espresso Asli, Creamy Setiap Tegukan',promo:'Rp18.000'},
 {name:'Kuliner Mie',img:'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1080&q=85',product:'Mie Kuah Kaldu Spesial',headline:'Kuah Gurih Hangat, Siap Antar Cepat',promo:'DISKON 20%'},
@@ -52,5 +99,5 @@ if(target.id==='ns-upload'){node('ns-file')?.click();return}if(target.id==='ns-t
 function handleChange(event){const t=event.target;if(t.id==='ns-ratio-filter'){state.filterRatio=t.value;content()}if(t.id==='ns-file'){const file=t.files?.[0];if(!file)return;if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>8*1024*1024){announce('File harus JPG/PNG/WebP maksimal 8 MB.');return}const reader=new FileReader();reader.onload=()=>{if(!active())return;state.photo=String(reader.result||'');state.img=null;state.loadedUrl='';content()};reader.readAsDataURL(file)}}
 function mount(el){if(!el)return;root=el;root.classList.add('ngd-studio');root.addEventListener('click',handleClick);root.addEventListener('input',e=>maybeEdit(e.target));root.addEventListener('change',handleChange);shell()}
 function unmount(){epoch++;if(root){root.replaceChildren();root=null}}
-global.NGD_STUDIO={mount,unmount,adapterMode:adapter.mode,debugSnapshot:()=>({mode:adapter.mode,creditsSimulated:state.credits,renders:state.renderNo,history:state.history.length})};
+global.NGD_STUDIO={mount,unmount,adapterMode:adapter.mode,debugSnapshot:()=>({mode:adapter.mode,creditsSimulated:state.credits,renders:state.renderNo,history:state.history.length}),requestDraft:buildVisualRequestDraft,presetContracts:()=>Object.keys(VISUAL_PRESET_IDS).map(id=>({id,...VISUAL_PRESET_IDS[id]}))};
 })(window);

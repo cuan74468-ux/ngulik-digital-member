@@ -7,7 +7,7 @@
 var NGD_VISUAL_COMPILER_VERSION_ = 'visual-compiler-v1';
 var NGD_VISUAL_REGISTRY_PROPERTY_ = 'NGD_VISUAL_SKILL_REGISTRY_V1';
 var NGD_VISUAL_ALLOWED_OPTIONS_ = Object.freeze({
-  template_id:['food_promo','catalog_clean','lifestyle','poster_promo'],
+  template_id:['food_promo','catalog_clean','lifestyle','poster_promo','skincare_podium','dark_luxury','story_vertical'],
   category_id:['culinary','product','lifestyle','promotion'],
   mood_id:['warm_appetite','clean_neutral','editorial','dramatic'],
   lighting_id:['soft_window','softbox','daylight','studio_rim'],
@@ -42,7 +42,7 @@ function ngdVisualText_(value,max,field) {
 function ngdVisualInput_(input) {
   ngdVisualRequire_(ngdVisualIsPlain_(input),'PAYLOAD_INVALID');
   var allowed=['template_id','category_id','mood_id','lighting_id','ratio_id',
-    'quality_tier','product_name','promo_text','price','cta','reference_image','request_id'];
+    'quality_tier','product_name','promo_text','badge_text','price','cta','reference_image','request_id'];
   Object.keys(input).forEach(function(key){
     ngdVisualRequire_(allowed.indexOf(key)>=0,'PAYLOAD_UNKNOWN_FIELD');
   });
@@ -64,6 +64,7 @@ function ngdVisualInput_(input) {
     overlay:{
       product_name:ngdVisualText_(input.product_name,100,'product_name'),
       promo_text:ngdVisualText_(input.promo_text,160,'promo_text'),
+      badge_text:ngdVisualText_(input.badge_text,60,'badge_text'),
       price:price==null?null:price,
       cta:ngdVisualText_(input.cta,60,'cta')
     },

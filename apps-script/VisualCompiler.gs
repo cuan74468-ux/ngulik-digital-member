@@ -70,6 +70,7 @@ function ngdVisualCompilePrompt_(payload,registryOverride) {
     // Text, price and CTA are passed to a trusted deterministic compositor.
     product_name:input.overlay.product_name,
     promo_text:input.overlay.promo_text,
+    badge_text:input.overlay.badge_text,
     price:input.overlay.price,
     cta:input.overlay.cta,
     currency:'IDR',
