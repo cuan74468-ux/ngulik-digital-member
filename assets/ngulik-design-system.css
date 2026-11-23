@@ -1,0 +1,148 @@
+/* NGULIK DESIGN SYSTEM 2026.11 — master presentation contract.
+ * Derived from P1 Ngulik Studio; loaded last in both entrypoints.
+ * No role/account/API/payment logic is modified. Studio remains self-contained.
+ */
+:root {
+ --ngds-bg:#F6F5F0;--ngds-board:#ECEAE3;--ngds-paper:#FFFFFF;
+ --ngds-ink:#141418;--ngds-muted:#5C5C6B;--ngds-violet:#5B3DF5;
+ --ngds-lime:#CCF349;--ngds-danger:#9C293A;
+ --ngds-line:1.5px solid #141418;--ngds-shadow:3px 3px 0 #141418;
+ --ngds-radius:13px;--ngds-radius-small:9px;
+ --ngds-heading:'Plus Jakarta Sans',system-ui,sans-serif;
+ --ngds-mono:'JetBrains Mono',ui-monospace,monospace;
+ --ngds-ease:cubic-bezier(.2,.8,.2,1);
+}
+/* All base and component rules are under this opt-in body class. */
+body.ngd-design-system {
+ --bg:var(--ngds-bg);--paper:var(--ngds-paper);
+ --ink:var(--ngds-ink);--text:var(--ngds-ink);
+ --muted:var(--ngds-muted);--line:#141418;
+ --subtle:var(--ngds-board);--surface-2:var(--ngds-board);
+ --green:var(--ngds-ink);--green-deep:var(--ngds-ink);
+ --green-pale:var(--ngds-bg);
+ --brand-blue:var(--ngds-violet);--brand-ink:var(--ngds-violet);
+ --brand-soft:#EDE9FF;
+ --ngd-brand-primary:var(--ngds-violet);
+ --ngd-brand-deep:var(--ngds-ink);
+ --ngd-brand-highlight:var(--ngds-lime);
+ --radius:var(--ngds-radius);--r-md:var(--ngds-radius);
+ --r-sm:var(--ngds-radius-small);
+ --shadow:var(--ngds-shadow);
+ color:var(--ngds-ink);background:var(--ngds-bg);
+ font-family:var(--ngds-heading);
+}
+/* Role-specific reset overrides earlier member-only palette tokens. */
+body.ngd-design-system[data-app-role="member"],
+body.ngd-design-system[data-app-role="admin"],
+body.ngd-design-system[data-app-role="guest"]{
+ --ngdm-ink:var(--ngds-ink);--ngdm-muted:var(--ngds-muted);
+ --ngdm-line:var(--ngds-ink);--ngdm-primary:var(--ngds-violet);
+ --ngdm-gold:var(--ngds-lime);--ngdm-deep:var(--ngds-ink);
+ --ngd-brand-primary:var(--ngds-violet);
+ --ngd-brand-highlight:var(--ngds-lime);
+ background:var(--ngds-bg)!important;color:var(--ngds-ink)!important;
+}
+body.ngd-design-system :is(.workarea,.main-content,#screen){min-width:0;max-width:100%}
+body.ngd-design-system .workarea{background:var(--ngds-bg)!important}
+body.ngd-design-system :is(h1,h2,h3,h4){font-family:var(--ngds-heading);letter-spacing:-.035em}
+body.ngd-design-system :is(button,input,textarea,select){font-family:var(--ngds-heading)}
+body.ngd-design-system :is(.top-header-token,.ngdm-wallet-number,.ngdm-metric>strong,.metric-value,.sidebar-version,.footer,.breadcrumb,.ngdm-kicker,.eyebrow):not(.ngd-studio *){
+ font-variant-numeric:tabular-nums;
+}
+body.ngd-design-system :is(.ngdm-wallet-number,.ngdm-metric>strong,.metric-value):not(.ngd-studio *){font-family:var(--ngds-mono)}
+/* Unified application chrome. Keep existing navigation placement/behavior intact. */
+body.ngd-design-system :is(.topbar,.sidebar,.guest-nav,.ngdm-bottom-nav,.top-nav-drawer):not(.ngd-studio *){
+ background:var(--ngds-bg);color:var(--ngds-ink);
+}
+body.ngd-design-system .sidebar{border-right:1.5px solid var(--ngds-ink)}
+body.ngd-design-system .topbar{border-bottom:1.5px solid var(--ngds-ink)}
+body.ngd-design-system :is(.brand,.guest-brand,.sidebar-caption,.page-label){color:var(--ngds-ink)}
+body.ngd-design-system :is(.desktop-nav button,.guest-nav button,.ngdm-dock-button,.top-nav-drawer button):not(.ngd-studio *){
+ border-radius:var(--ngds-radius-small);
+}
+body.ngd-design-system :is(.desktop-nav button[aria-current="page"],.guest-nav button[aria-current="page"],.ngdm-dock-button[aria-current="page"]):not(.ngd-studio *){
+ background:var(--ngds-lime);color:var(--ngds-ink);
+}
+/* Global form grammar and accessibility: deliberately exclude Studio controls. */
+body.ngd-design-system #screen :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),textarea,select):not(.ngd-studio *){
+ border-radius:var(--ngds-radius-small);
+ border-color:var(--ngds-ink);
+ color:var(--ngds-ink);
+ background-color:var(--ngds-paper);
+}
+body.ngd-design-system :is(button,a,input,select,textarea,[role="button"]):focus-visible{
+ outline:3px solid var(--ngds-violet)!important;outline-offset:3px;
+}
+body.ngd-design-system #screen :is(.btn,.btn-primary,.btn-secondary):not(.ngd-studio *){
+ border:1.5px solid var(--ngds-ink);
+ border-radius:var(--ngds-radius-small);
+ box-shadow:var(--ngds-shadow);
+ font-family:var(--ngds-heading);font-weight:800;
+}
+body.ngd-design-system #screen :is(.btn-primary,[data-action="checkout-create"],[data-checkout-create]):not(.ngd-studio *){
+ background:var(--ngds-violet);color:#fff;
+}
+body.ngd-design-system #screen :is(.btn-secondary):not(.ngd-studio *){background:var(--ngds-paper);color:var(--ngds-ink)}
+body.ngd-design-system #screen :is(.btn,.btn-primary,.btn-secondary):not(.ngd-studio *):active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ngds-ink)}
+/* Apply the same restrained border, surface, and shadow across route-level
+ * guest / member / catalogue / education / admin cards, not to every div. */
+body.ngd-design-system #screen :is(
+ .surface,.metric-card,.market-product-card,.ai-product-card,.service-card,
+ .ngdm-metric,.ngdm-wallet,.ngdm-quick-link,.ngdm-service-card,
+ .admin-runtime-summary,.admin-runtime-flag,.admin-stat,.admin-card,
+ .lms-course-card,.lms-card,.affiliate-card,.commission-card,
+ .support-card,.ticket-card,.order-card,.account-card,
+ .product-card,.ngd-product-card,.ngd-role-gate,
+ .ngd-checkout-summary,.checkout-summary,.checkout-card
+):not(.ngd-studio *){
+ background-color:var(--ngds-paper);
+ border:1.5px solid var(--ngds-ink);
+ border-radius:var(--ngds-radius);
+ box-shadow:var(--ngds-shadow);
+ color:var(--ngds-ink);
+}
+body.ngd-design-system #screen :is(
+ .market-product-card,.ai-product-card,.ngdm-metric,.ngdm-quick-link,.admin-stat,
+ .lms-course-card,.affiliate-card,.commission-card
+):not(.ngd-studio *):hover{
+ box-shadow:2px 2px 0 var(--ngds-ink);
+}
+body.ngd-design-system #screen :is(
+ .ngdm-dashboard,.ai-catalog,.ai-tool-detail,
+ .ngd-landing-v1,.ngd-member-services,.admin-operations-intro
+):not(.ngd-studio *){color:var(--ngds-ink)}
+/* Existing promo illustrations remain content: no invented fake window chrome.
+ * Do not overwrite original product photos, logos or CMS media. */
+body.ngd-design-system #screen :is(.eyebrow,.ngdm-kicker,.ai-product-category,.section-kicker,.ai-tools-count):not(.ngd-studio *){
+ color:var(--ngds-violet);
+}
+body.ngd-design-system #screen :is(.chip,.status-chip,.badge,.ai-product-bottom>span:first-child):not(.ngd-studio *){
+ border-radius:var(--ngds-radius-small);
+}
+body.ngd-design-system #screen :is(.ai-wallet-mini,.ngdm-wallet-chart,.ngdm-chart-empty):not(.ngd-studio *){
+ border-radius:var(--ngds-radius);
+}
+body.ngd-design-system #screen :is(.ai-category-tab.is-current,.ai-product-action):not(.ngd-studio *){
+ background:var(--ngds-lime);color:var(--ngds-ink);
+}
+/* Payment state and status semantics are not recolored to imply success.
+ * Controls disabled by the existing security gates stay disabled. */
+body.ngd-design-system #screen :is(button,input,select,textarea):disabled{cursor:not-allowed}
+/* Unified modal and toast surfaces across public/member/admin. */
+body.ngd-design-system :is(#modal-root .modal,#modal-root [role="dialog"],#toast-root .toast):not(.ngd-studio *){
+ border:1.5px solid var(--ngds-ink);border-radius:var(--ngds-radius);
+ background:var(--ngds-paper);box-shadow:var(--ngds-shadow);
+}
+body.ngd-design-system .footer{background:var(--ngds-bg);color:var(--ngds-muted)}
+body.ngd-design-system #screen :is(.ngd-studio,.ngd-studio *){font-family:inherit}
+/* Studio has authoritative tokens and component styles in ai-studio.css;
+ * leave those unchanged, including canvas and overlay controls. */
+@media(max-width:600px){
+ body.ngd-design-system #screen{max-width:100%;min-width:0}
+ body.ngd-design-system #screen :is(.market-product-card,.ai-product-card,.ngdm-metric,.surface,.ngd-role-gate):not(.ngd-studio *){max-width:100%;min-width:0}
+ body.ngd-design-system #screen :is(.btn,.btn-primary,.btn-secondary):not(.ngd-studio *){min-height:44px}
+ body.ngd-design-system .topbar{max-width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+ body.ngd-design-system #screen :is(.btn,.btn-primary,.btn-secondary):not(.ngd-studio *){transition:none}
+}
