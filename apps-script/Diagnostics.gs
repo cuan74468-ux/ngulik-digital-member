@@ -259,11 +259,23 @@ function diagnosticFinanceReadOnly() {
     if(!mids[String(o.member_id)])errors.push('ORDER_MEMBER_MISSING');
     if(!pids[String(o.product_id)])errors.push('ORDER_PRODUCT_MISSING');
     var price=Number(o.harga_dasar),code=Number(o.kode_unik),total=Number(o.total_bayar);
-    // Historical paid invoices used price + code. The owner-approved 21 Nov
-    // contract uses price - code. Never rewrite a historical invoice merely
-    // because the checkout rule changed; accept either exact formula here.
-    if(!Number.isFinite(price)||!Number.isFinite(code)||!Number.isFinite(total)||
-       (price+code!==total&&price-code!==total))errors.push('ORDER_TOTAL_INVALID');
+    // Current contract: total = base + unique code. A pre-22 Nov terminal
+    // invoice using subtraction is preserved for manual review, not silently
+    // accepted and never rewritten by diagnostics.
+    var validPlus=Number.isSafeInteger(price)&&price>=0&&
+      Number.isSafeInteger(code)&&code>=100&&code<=999&&
+      Number.isSafeInteger(total)&&total===price+code;
+    var createdAt=new Date(o.created_at).getTime();
+    var legacySubtract=Number.isFinite(createdAt)&&
+      createdAt<Date.parse('2026-11-22T00:00:00+07:00')&&
+      ['PAID','FULFILLED','REFUNDED','CANCELLED','EXPIRED'].indexOf(String(o.status))>=0&&
+      Number.isSafeInteger(price)&&price>=0&&
+      Number.isSafeInteger(code)&&code>=100&&code<=999&&
+      Number.isSafeInteger(total)&&total===price-code;
+    if(!validPlus){
+      if(legacySubtract)warnings.push('LEGACY_SUBTRACTIVE_AMOUNT_REVIEW');
+      else errors.push('ORDER_TOTAL_INVALID');
+    }
     if(['PENDING','MENUNGGU_VERIFIKASI'].indexOf(o.status)>=0){
       if(money[total])errors.push('ACTIVE_PAYMENT_AMOUNT_DUPLICATE');
       money[total]=true;
