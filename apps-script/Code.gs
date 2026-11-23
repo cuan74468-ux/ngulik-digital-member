@@ -1951,7 +1951,10 @@ function refundOrder_(admin,p) {
       grantCredits_(m.member_id,decision.creditAdjustment,o.order_id,'ADJUST_REFUND');
     try{
       updateRow_('orders',o._row,{status:'REFUNDED',refunded_at:now_(),
-        catatan_admin:reason+' | Refund ref: '+reference});
+        // Retain the original payment reference for duplicate-settlement checks
+        // after REFUNDED. Never erase evidence to make room for refund notes.
+        catatan_admin:String(o.catatan_admin||'').slice(0,400)+
+          ' | Refund: '+reason.slice(0,180)+' | Refund ref: '+reference});
     }catch(err){
       try{logAudit_(admin.member_id,'ADMIN','REFUND_NEEDS_REVIEW','orders',o.order_id,before,before,
         {reason:String(err&&err.message||'unknown').slice(0,180)});}catch(logErr){}
