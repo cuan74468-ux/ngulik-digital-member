@@ -247,7 +247,7 @@ function ngdFoodMagazineInput_(payload){
  // Client-estimated credit is never authoritative for actual billing.
  ngdVisualRequire_(payload.credit_per_image===undefined,'FOOD_CLIENT_CREDIT_FORBIDDEN');
  var notes=ngdVisualText_(payload.user_notes,240,'food_notes');
- ngdVisualRequire_(!/(ignore (all |previous |prior )?instructions|system prompt|developer message|role:|<\\/?(?:system|assistant|developer)>|\\b(?:api[_ -]?key|secret|password)\\b)/i.test(notes),
+ ngdVisualRequire_(!/(ignore (all |previous |prior )?instructions|system prompt|developer message|role:|api[_ -]?key|secret|password)/i.test(notes),
   'FOOD_NOTES_UNSAFE');
  return {ids:ids,count:count,brand_hex:hex,user_notes:notes,
   reference_asset_id:payload.reference_image,request_id:payload.request_id,
