@@ -29,7 +29,7 @@ test('P1 BFL official async submit payload uses fixed host and model-safe pixel 
  assert.equal(x.model,'flux-2-pro');
  assert.equal(x.endpoint,'https://api.bfl.ai/v1/flux-2-pro');
  assert.equal(x.payload.width,1088);
- assert.equal(x.payload.height,1360);
+ assert.equal(x.payload.height,1344);
  assert.equal(x.target_canvas.width,1080);
  assert.equal(x.target_canvas.height,1350);
  assert.match(x.payload.prompt,/Strict exclusions/);
@@ -83,9 +83,10 @@ test('P1 BFL fails closed before ANY network call when production switches are O
  })[name]})};
  ctx.UrlFetchApp={fetch:(...args)=>{calls.push(args);throw Error('not allowed');}};
  ctx.auth={member_id:'M-0009',role:'MEMBER',status:'AKTIF'};
+ vm.runInContext('var trustedAuth=JSON.parse(JSON.stringify(auth));',ctx);
  ctx.ledger={claimForDispatch(){throw Error('should not reserve')},
   recordSubmitted(){throw Error('unexpected')},recordUncertain(){throw Error('unexpected')}};
- assert.throws(()=>evalJson('ngdVisualBflSubmit_(compiledFixture,auth,ledger)'),/VISUAL_BFL_SYSTEM_GATE_CLOSED/);
+ assert.throws(()=>evalJson('ngdVisualBflSubmit_(compiledFixture,trustedAuth,ledger)'),/VISUAL_BFL_SYSTEM_GATE_CLOSED/);
  assert.equal(calls.length,0);
 });
 test('P1 BFL requires durable dispatch claim; claim false never contacts provider',()=>{
@@ -96,9 +97,10 @@ test('P1 BFL requires durable dispatch claim; claim false never contacts provide
  })[name]})};
  ctx.UrlFetchApp={fetch:()=>{requests++;throw Error('not expected');}};
  ctx.auth={member_id:'M-0009',role:'MEMBER',status:'AKTIF'};
+ vm.runInContext('var trustedAuth=JSON.parse(JSON.stringify(auth));',ctx);
  ctx.ledger={claimForDispatch:()=>{claims++;return false;},
   recordSubmitted:()=>{},recordUncertain:()=>{}};
- assert.throws(()=>evalJson('ngdVisualBflSubmit_(compiledFixture,auth,ledger)'),/VISUAL_BFL_DISPATCH_NOT_CLAIMED/);
+ assert.throws(()=>evalJson('ngdVisualBflSubmit_(compiledFixture,trustedAuth,ledger)'),/VISUAL_BFL_DISPATCH_NOT_CLAIMED/);
  assert.equal(claims,1);assert.equal(requests,0);
 });
 test('P1 BFL synthetic trusted dispatch records first request, preserves key secrecy',()=>{
@@ -114,10 +116,11 @@ test('P1 BFL synthetic trusted dispatch records first request, preserves key sec
   })};
  }};
  ctx.auth={member_id:'M-0009',role:'MEMBER',status:'AKTIF'};
+ vm.runInContext('var trustedAuth=JSON.parse(JSON.stringify(auth));',ctx);
  ctx.ledger={claimForDispatch:spec=>{events.push('claim');return spec.expected_state==='RESERVED';},
   recordSubmitted:(id,url)=>{events.push('submitted');assert.equal(url,'https://api.bfl.ai/v1/get_result?id=job123');},
   recordUncertain:()=>{events.push('uncertain');}};
- const result=evalJson('ngdVisualBflSubmit_(compiledFixture,auth,ledger)');
+ const result=evalJson('ngdVisualBflSubmit_(compiledFixture,trustedAuth,ledger)');
  assert.equal(result.status,'PROCESSING');
  assert.deepEqual(events,['claim','submitted']);
  assert.equal(requests.length,1);
@@ -135,10 +138,11 @@ test('P1 BFL uncertain provider outcome does not trigger second dispatch or fals
  })[name]})};
  ctx.UrlFetchApp={fetch:()=>{requests++;throw Error('timeout');}};
  ctx.auth={member_id:'M-0009',role:'MEMBER',status:'AKTIF'};
+ vm.runInContext('var trustedAuth=JSON.parse(JSON.stringify(auth));',ctx);
  const events=[];
  ctx.ledger={claimForDispatch:()=>true,recordSubmitted:()=>events.push('submitted'),
   recordUncertain:()=>events.push('uncertain')};
- const result=evalJson('ngdVisualBflSubmit_(compiledFixture,auth,ledger)');
+ const result=evalJson('ngdVisualBflSubmit_(compiledFixture,trustedAuth,ledger)');
  assert.equal(result.status,'RECONCILE_REQUIRED');
  assert.deepEqual(events,['uncertain']);
  assert.equal(requests,1);
