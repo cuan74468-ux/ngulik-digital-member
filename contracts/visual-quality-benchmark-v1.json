@@ -1,0 +1,79 @@
+{
+  "benchmark_version": "visual-benchmark-v1",
+  "status": "UNEXECUTED_TEST_DESIGN",
+  "interpretation": "Design only; no generated images or Midjourney parity evaluation has been conducted.",
+  "products": [
+    "bakso_soup",
+    "iced_coffee",
+    "packaged_cookies",
+    "bottled_chili_sauce",
+    "dried_snack",
+    "skincare_serum",
+    "sunscreen_tube",
+    "perfume_bottle",
+    "handmade_soap",
+    "lipstick",
+    "canvas_bag",
+    "leather_wallet",
+    "handmade_sandals",
+    "ceramic_mug",
+    "stainless_tumbler",
+    "wristwatch",
+    "phone_case",
+    "jewelry_ring",
+    "potted_plant",
+    "printed_notebook"
+  ],
+  "visual_styles": [
+    "catalog_clean",
+    "editorial_lifestyle",
+    "promo_campaign",
+    "premium_studio"
+  ],
+  "ratios": [
+    "1:1",
+    "4:5",
+    "9:16"
+  ],
+  "cases_per_model": 240,
+  "source_image_policy": "Each test case requires consented genuine source-product reference photos, a grounded preservation checklist, and lawful rights for use; no stock placeholder counts as proof.",
+  "blind_review": {
+    "required_reviewers": 3,
+    "metrics": [
+      "commercial_appeal",
+      "product_fidelity",
+      "prompt_adherence",
+      "marketing_readiness"
+    ],
+    "scoring_range": [
+      0,
+      5
+    ],
+    "randomize_provider_labels": true,
+    "blind_to_provider": true,
+    "same_brief_input_for_each_model": true,
+    "require_real_output_files": true,
+    "require_preservation_review": true
+  },
+  "minimum_average": {
+    "commercial_appeal": 4.3,
+    "product_fidelity": 4.7,
+    "prompt_adherence": 4.4,
+    "marketing_readiness": 4.5
+  },
+  "critical_blockers": [
+    "identity_changed",
+    "watermark_present",
+    "gibberish_text",
+    "unsafe_content",
+    "overlay_collision"
+  ],
+  "economic_metrics": [
+    "cost_per_generation",
+    "cost_per_accepted_result",
+    "p95_latency",
+    "provider_error_rate",
+    "retry_or_refund_rate"
+  ],
+  "release_policy": "Commercial launch and Midjourney-quality claims require reviewed real outputs, documented comparison conditions, costs and owner approval; unit tests alone never suffice."
+}
