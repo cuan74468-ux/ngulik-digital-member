@@ -127,3 +127,66 @@
  .ngd-studio .ns-board-actions #ns-download{grid-column:1/-1}
  .ngd-studio .ns-artboard{padding:16px}
 }
+
+
+/* V2: guided raw-photo first editor, scoped Disciplined Soft Neubrutalism. */
+.ngd-studio .ns-v2-editor{align-items:start}
+.ngd-studio .ns-v2-editor .ns-side{background:var(--ns-bg)}
+.ngd-studio .ns-v2-editor .ns-form{gap:20px}
+.ngd-studio .ns-v2-step{gap:12px}
+.ngd-studio .ns-v2-step h2{font-size:15px;line-height:1.4;display:flex;align-items:center;gap:4px}
+.ngd-studio .ns-v2-step .ns-hint{margin:0;line-height:1.55}
+.ngd-studio .ns-v2-upload{min-height:98px;padding:14px;gap:12px;background:#FFFFFF}
+.ngd-studio .ns-v2-upload img{width:72px;height:72px}
+.ngd-studio .ns-upload-empty{width:56px;height:56px;display:grid;place-items:center;flex:none;border:1.5px solid var(--ns-ink);background:var(--ns-board);border-radius:11px}
+.ngd-studio .ns-upload-empty svg{width:24px;height:24px}
+.ngd-studio .ns-v2-field{display:grid;gap:8px;min-width:0}
+.ngd-studio .ns-v2-field-header{display:grid;gap:2px}
+.ngd-studio .ns-v2-field-header strong{font-size:12px;font-weight:800;line-height:1.45}
+.ngd-studio .ns-v2-field-header small{font-size:10px;line-height:1.5;color:var(--ns-muted)}
+.ngd-studio .ns-v2-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
+.ngd-studio .ns-v2-choice{display:flex;align-items:center;justify-content:flex-start;min-width:0;min-height:48px;padding:10px 11px;text-align:left;background:white;border:1.5px solid var(--ns-ink);border-radius:10px;font-size:11px;font-weight:800;line-height:1.45;overflow-wrap:anywhere;transition:background .12s,border-color .12s}
+.ngd-studio .ns-v2-choice[aria-pressed="true"]{background:var(--ns-lime);border-color:var(--ns-ink);box-shadow:2px 2px 0 var(--ns-ink)}
+.ngd-studio .ns-v2-choice:disabled{opacity:.48;background:#E5E4DE;box-shadow:none;cursor:not-allowed}
+.ngd-studio .ns-v2-advanced{border:1px solid #CFCBC4;border-radius:11px;padding:12px;background:white}
+.ngd-studio .ns-v2-advanced summary{font-size:12px;font-weight:800;cursor:pointer;min-height:24px}
+.ngd-studio .ns-v2-advanced[open]{display:grid;gap:14px}
+.ngd-studio .ns-v2-optional{background:#F0EEE8;border:1px solid #D7D3C9;border-radius:12px;padding:13px}
+.ngd-studio .ns-v2-overlay-toggle{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.ngd-studio .ns-v2-overlay-toggle input{width:22px;height:22px;min-width:22px;accent-color:var(--ns-purple);margin:0}
+.ngd-studio .ns-v2-overlay-toggle span{display:grid;gap:4px;min-width:0}
+.ngd-studio .ns-v2-overlay-toggle strong{font-size:12px;line-height:1.4}
+.ngd-studio .ns-v2-overlay-toggle small{font-size:10px;color:var(--ns-muted);line-height:1.5}
+.ngd-studio .ns-v2-overlay-fields{display:grid;gap:10px;padding-top:12px}
+.ngd-studio .ns-v2-editor .ns-cost{position:sticky;bottom:0;z-index:3;box-shadow:0 -5px 18px rgba(20,20,24,.05)}
+.ngd-studio .ns-v2-editor .ns-board-panel{position:sticky;top:0;align-self:start}
+.ngd-studio .ns-v2-editor .ns-artboard{min-height:380px}
+.ngd-studio .ns-v2-editor .ns-board-toolbar{gap:8px}
+.ngd-studio .ns-v2-editor .ns-board-actions{min-width:0}
+.ngd-studio .ns-v2-editor .ns-board-actions .ns-cta{min-height:44px}
+@media(max-width:900px){
+.ngd-studio .ns-v2-editor .ns-board-panel{position:static;align-self:stretch}
+.ngd-studio .ns-v2-editor .ns-cost{position:static}
+}
+@media(max-width:650px){
+.ngd-studio .ns-v2-editor{display:flex;flex-direction:column;max-width:100%;min-width:0}
+.ngd-studio .ns-v2-editor .ns-side{width:100%;min-width:0}
+.ngd-studio .ns-v2-editor .ns-side-header{padding:13px 12px}
+.ngd-studio .ns-v2-editor .ns-form{padding:14px 12px;gap:16px}
+.ngd-studio .ns-v2-editor .ns-block{min-width:0}
+.ngd-studio .ns-v2-editor .ns-cost{padding:13px 12px}
+.ngd-studio .ns-v2-editor .ns-board-panel{width:100%;min-width:0}
+.ngd-studio .ns-v2-editor .ns-board-toolbar{display:grid;grid-template-columns:minmax(0,1fr)}
+.ngd-studio .ns-v2-editor .ns-board-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+.ngd-studio .ns-v2-editor .ns-board-actions .ns-cta{min-width:0;white-space:normal}
+.ngd-studio .ns-v2-editor .ns-artboard{min-height:280px;padding:12px}
+.ngd-studio .ns-v2-choice-grid{gap:7px}
+.ngd-studio .ns-v2-choice{min-height:48px;padding:9px;font-size:11px}
+.ngd-studio .ns-v2-upload{min-height:88px}
+}
+@media(max-width:375px){
+.ngd-studio .ns-v2-editor .ns-board-actions{grid-template-columns:1fr}
+.ngd-studio .ns-v2-editor .ns-board-actions #ns-download{grid-column:auto}
+.ngd-studio .ns-v2-editor .ns-form{padding:12px 10px}
+.ngd-studio .ns-v2-choice{font-size:10px}
+}
