@@ -132,7 +132,10 @@ function refundFixture({failOrderUpdate=false}={}){
   h.ctx.findRows_=(name,predicate)=>(name==='credits_ledger'?ledger:
     name==='affiliate_commissions'?commissions:[]).filter(predicate);
   h.ctx.logAudit_=()=>{};
-  h.ctx.grantCredits_=(id,amount,ref,kind)=>{calls.push('credit:'+amount+':'+kind);};
+  h.ctx.grantCredits_=(id,amount,ref,kind)=>{calls.push('credit:'+amount+':'+kind);return {balance:30};};
+  h.ctx.tbl_=()=>({headers:['saldo_kredit'],sheet:{getRange:()=>({
+    getFormula:()=>'=LEDGER_SUM()',setValue:()=>{throw new Error('Formula balance must not be overwritten');}
+  })}});
   h.ctx.updateRow_=(name,row,patch)=>{
     if(name==='orders'&&failOrderUpdate)throw new Error('Sheets gagal');
     calls.push(name+':'+patch.status);};
