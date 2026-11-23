@@ -184,3 +184,97 @@ function ngdVisualLoadPrivateSkillsV2_(){
   try{decoded=JSON.parse(raw);}catch(_){throw new Error('VISUAL_V2_REGISTRY_JSON_INVALID');}
   return ngdVisualPrivateRegistryV2_(decoded);
 }
+
+
+/* Food Magazine V2: PUBLIC IDs only. Actual English recipes remain in the
+ * PRIVATE NGD_VISUAL_FOOD_MAGAZINE_V2 registry, never returned to a client. */
+var NGD_FOOD_MAGAZINE_REGISTRY_KEY_='NGD_VISUAL_FOOD_MAGAZINE_V2';
+var NGD_FOOD_MAGAZINE_IDS_=Object.freeze({
+ food_type:['soup','rice','bakery','snack','drink','dessert'],
+ cover_concept:['classic','minimal','hero','flatlay','dramatic','bright','warung','fine_dining'],
+ camera_angle:['top90','angle45','eye','macro','diagonal','low'],
+ lighting:['window','golden','side','softbox','backlight','candle'],
+ surface:['dark_wood','white_marble','concrete','bamboo','linen','plain_white'],
+ grade:['warm','cool','earthy','vivid','matte','brand'],
+ styling:['minimal','ingredients','steam','sauce','sprinkle','hand'],
+ lens:['mm35','mm50','mm85','macro100'],
+ format:['4:5','1:1','9:16','3:4'],
+ similarity:['exact','enhanced']
+});
+var NGD_FOOD_MAGAZINE_PRESETS_=Object.freeze({
+ classic:{lighting:'golden',surface:'dark_wood',grade:'warm'},
+ minimal:{lighting:'softbox',surface:'white_marble',grade:'matte'},
+ hero:{lighting:'side',surface:'concrete',grade:'vivid'},
+ flatlay:{lighting:'window',surface:'linen',grade:'earthy'},
+ dramatic:{lighting:'side',surface:'dark_wood',grade:'earthy'},
+ bright:{lighting:'window',surface:'white_marble',grade:'vivid'},
+ warung:{lighting:'window',surface:'bamboo',grade:'warm'},
+ fine_dining:{lighting:'softbox',surface:'concrete',grade:'cool'}
+});
+function ngdFoodMagazineCompatible_(ids){
+ return !(ids.cover_concept==='dramatic'&&ids.surface==='plain_white')&&
+   !(ids.cover_concept==='bright'&&ids.lighting==='candle')&&
+   !(ids.camera_angle==='top90'&&ids.styling==='steam');
+}
+function ngdFoodMagazineInput_(payload){
+ ngdVisualRequire_(ngdVisualIsPlain_(payload),'FOOD_PAYLOAD_INVALID');
+ var allowed=Object.keys(NGD_FOOD_MAGAZINE_IDS_).concat([
+  'overlay_enabled','brand_name','headline','tagline','price_label',
+  'brand_hex','user_notes','count','reference_image','request_id','credit_per_image'
+ ]);
+ Object.keys(payload).forEach(function(k){ngdVisualRequire_(
+   allowed.indexOf(k)>=0,'FOOD_UNKNOWN_FIELD');});
+ var ids={};
+ Object.keys(NGD_FOOD_MAGAZINE_IDS_).forEach(function(k){
+  ngdVisualRequire_(ngdVisualOwn_(payload,k)&&
+   typeof payload[k]==='string'&&
+   NGD_FOOD_MAGAZINE_IDS_[k].indexOf(payload[k])>=0,'FOOD_OPTION_'+k.toUpperCase()+'_INVALID');
+  ids[k]=payload[k];
+ });
+ ngdVisualRequire_(ngdFoodMagazineCompatible_(ids),'FOOD_COMBINATION_CONFLICT');
+ var count=payload.count===undefined?1:payload.count;
+ ngdVisualRequire_(count===1||count===2||count===4,'FOOD_COUNT_INVALID');
+ ngdVisualRequire_(payload.overlay_enabled===undefined||
+   typeof payload.overlay_enabled==='boolean','FOOD_OVERLAY_FLAG_INVALID');
+ var hex=payload.brand_hex===undefined?'':payload.brand_hex;
+ ngdVisualRequire_(typeof hex==='string'&&
+  (hex===''||/^#[0-9a-fA-F]{6}$/.test(hex)),'FOOD_BRAND_HEX_INVALID');
+ ngdVisualRequire_(ids.grade!=='brand'||hex!=='','FOOD_BRAND_HEX_REQUIRED');
+ ngdVisualRequire_(typeof payload.reference_image==='string'&&
+  /^asset_[A-Za-z0-9_-]{6,80}$/.test(payload.reference_image),'FOOD_REFERENCE_REQUIRED');
+ ngdVisualRequire_(typeof payload.request_id==='string'&&
+  /^[A-Za-z0-9_-]{16,80}$/.test(payload.request_id),'FOOD_REQUEST_ID_INVALID');
+ // Client-estimated credit is never authoritative for actual billing.
+ ngdVisualRequire_(payload.credit_per_image===undefined,'FOOD_CLIENT_CREDIT_FORBIDDEN');
+ var notes=ngdVisualText_(payload.user_notes,240,'food_notes');
+ ngdVisualRequire_(!/(ignore (all |previous |prior )?instructions|system prompt|developer message|role:|<\\/?(?:system|assistant|developer)>|\\b(?:api[_ -]?key|secret|password)\\b)/i.test(notes),
+  'FOOD_NOTES_UNSAFE');
+ return {ids:ids,count:count,brand_hex:hex,user_notes:notes,
+  reference_asset_id:payload.reference_image,request_id:payload.request_id,
+  overlay:{enabled:payload.overlay_enabled===true,
+   brand_name:ngdVisualText_(payload.brand_name,70,'brand'),
+   headline:ngdVisualText_(payload.headline,100,'headline'),
+   tagline:ngdVisualText_(payload.tagline,100,'tagline'),
+   price_label:ngdVisualText_(payload.price_label,30,'price_label')}};
+}
+function ngdFoodMagazinePrivateRegistry_(r){
+ ngdVisualRequire_(ngdVisualIsPlain_(r)&&
+  typeof r.version==='string'&&/^food-magazine-v2[._-][A-Za-z0-9._-]{1,50}$/.test(r.version),
+  'FOOD_REGISTRY_VERSION_INVALID');
+ ['role','preservation','food_type','cover_concept','camera_angle',
+  'lighting','surface','grade','styling','lens','format','similarity',
+  'quality','negative'].forEach(function(k){
+  ngdVisualRequire_(typeof r[k]==='string'||ngdVisualIsPlain_(r[k]),
+   'FOOD_REGISTRY_'+k.toUpperCase()+'_INVALID');
+ });
+ return r;
+}
+function ngdFoodMagazinePrivateRegistryLoad_(){
+ ngdVisualRequire_(typeof PropertiesService!=='undefined','FOOD_PRIVATE_BACKEND_REQUIRED');
+ var raw=PropertiesService.getScriptProperties().getProperty(NGD_FOOD_MAGAZINE_REGISTRY_KEY_);
+ ngdVisualRequire_(typeof raw==='string'&&raw.length>0&&raw.length<=9000,
+  'FOOD_PRIVATE_REGISTRY_NOT_CONFIGURED');
+ var value;
+ try{value=JSON.parse(raw);}catch(_){throw Error('VISUAL_FOOD_REGISTRY_JSON_INVALID');}
+ return ngdFoodMagazinePrivateRegistry_(value);
+}
