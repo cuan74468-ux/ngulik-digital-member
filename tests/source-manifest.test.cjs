@@ -8,9 +8,14 @@ test('historical manifest preserves 16 November GAS source inventory without cla
  const dir=path.join(root,'apps-script');
  const files=fs.readdirSync(dir).filter(x=>x.endsWith('.gs')).sort();
  const names=manifest.modules.map(x=>x.file).sort();
- assert.deepEqual(names,files);
+ // Immutable 16 November manifest is a historical 15-file snapshot.
+ // New P1 modules must be tracked separately, never backdated into it.
+ assert.equal(names.length,15);
+ assert.deepEqual(files.filter(x=>names.includes(x)),names);
+ assert.deepEqual(files.filter(x=>!names.includes(x)),[
+   'VisualAdapterContract.gs','VisualCompiler.gs','VisualSkills.gs'
+ ]);
  assert.match(manifest.source_snapshot_commit,/^[a-f0-9]{40}$/);
- assert.equal(files.length,15);
  for(const module of manifest.modules){
    const body=fs.readFileSync(path.join(dir,module.file));
    const header=Buffer.from('blob '+body.length+'\0');
