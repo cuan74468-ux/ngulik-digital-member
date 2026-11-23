@@ -239,6 +239,7 @@ function ngdVisualCompileRecipe12_(payload,registryOverride){
   // Mandatory V2 safeguards survive adding the extra private layers.
   output+='\n\n[INPUT_CONDITIONING_AND_PRESERVATION]\n'+
     base.compiled_prompt;
+  ngdVisualRequire_(output.length<=16000,'RECIPE12_COMPILED_TOO_LONG');
   // The fixed lock is also enforced in negative constraints (not rendered).
   var negative=base.negative_prompt+
     '\nNo generated typography, no letters, no numbers, no watermark.';
