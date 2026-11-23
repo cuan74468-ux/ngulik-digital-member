@@ -190,3 +190,21 @@
 .ngd-studio .ns-v2-editor .ns-form{padding:12px 10px}
 .ngd-studio .ns-v2-choice{font-size:10px}
 }
+
+/* P1 food magazine controls: compact, touch accessible and 360px safe. */
+.ngd-studio .ns-food-mode-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
+.ngd-studio .ns-food-mode-switch button{min-height:52px;padding:9px 7px;border:1px solid #c9c4bb;border-radius:10px;background:#fff;color:#24222b;font:700 12px/1.4 inherit;overflow-wrap:anywhere}
+.ngd-studio .ns-food-mode-switch button[aria-pressed="true"]{border:2px solid #5b3df5;background:#eee9ff}
+.ngd-studio .ns-food-magazine,.ngd-studio .ns-food-fields{min-width:0}
+.ngd-studio .ns-food-fields{display:grid;gap:18px}
+.ngd-studio .ns-food-fields .ns-v2-field{gap:8px}
+.ngd-studio .ns-food-fields .ns-v2-field>strong{font-size:12px;line-height:1.5}
+.ngd-studio .ns-food-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;min-width:0}
+.ngd-studio .ns-food-options .ns-v2-choice{min-width:0;min-height:48px;white-space:normal}
+.ngd-studio .ns-food-quality{border:1px solid #d1b782;background:#fff8e8;color:#473817;border-radius:8px;padding:10px;font:600 11px/1.5 inherit;overflow-wrap:anywhere}
+.ngd-studio .ns-food-fields textarea.ns-control{width:100%;min-height:70px;resize:vertical}
+@media(max-width:375px){
+ .ngd-studio .ns-food-options{gap:6px}
+ .ngd-studio .ns-food-options .ns-v2-choice{padding:9px 7px;font-size:10px}
+ .ngd-studio .ns-food-mode-switch button{font-size:11px}
+}
