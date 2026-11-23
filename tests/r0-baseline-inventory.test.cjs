@@ -6,6 +6,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 
+// Owner-authorized scoped P1 V2 UX delta: +4500 bytes in ai-studio.css only;
+// zero added stylesheets and zero additional !important. Preserve ratchet elsewhere.
 const limits = Object.freeze({
   'assets/app.css': [22721, 2],
   'assets/member-mobile.css': [1036, 1],
@@ -20,7 +22,7 @@ const limits = Object.freeze({
   'assets/affiliate-partner.css': [18660, 4],
   'assets/brand-official.css': [2729, 1],
   'assets/ai-catalog.css': [20892, 0],
-  'assets/ai-studio.css': [12969, 3],
+  'assets/ai-studio.css': [17469, 3],
   'assets/content-media.css': [4160, 0],
   'assets/catalog-experience-v3.css': [19782, 0],
   'assets/commission-experience-v2.css': [20944, 5],
@@ -41,8 +43,8 @@ const limits = Object.freeze({
 });
 
 const budgets = Object.freeze({
-  'index.html': { count: 30, bytes: 741117, important: 2109 },
-  'staging/member.html': { count: 31, bytes: 750125, important: 2110 }
+  'index.html': { count: 30, bytes: 745617, important: 2109 },
+  'staging/member.html': { count: 31, bytes: 754625, important: 2110 }
 });
 
 function inspectEntry(entry) {
