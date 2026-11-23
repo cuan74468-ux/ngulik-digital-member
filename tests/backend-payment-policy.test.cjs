@@ -8,7 +8,8 @@ const source=fs.readFileSync(path.join(__dirname,'../apps-script/Code.gs'),'utf8
 function makeHarness(){
   const writes=[],audits=[];
   const order={_row:2,order_id:'ORDER1',member_id:'M1',product_id:'P1',
-    status:'MENUNGGU_VERIFIKASI',total_bayar:10123,created_at:'2026-11-14T00:00:00Z'};
+    status:'MENUNGGU_VERIFIKASI',total_bayar:10123,created_at:'2026-11-14T00:00:00Z',
+    expires_at:'2027-11-14T02:00:00Z'};
   const product={product_id:'P1',tipe:'TOPUP_KREDIT',kredit_diberikan:50,durasi_hari:0};
   const member={member_id:'M1',role:'MEMBER',status:'AKTIF'};
   const ctx=vm.createContext({console:{log(){},error(){},warn(){}},Date,Number,String});
