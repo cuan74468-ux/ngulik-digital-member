@@ -28,7 +28,7 @@ test('V2 exactly matches seven backend option groups and enumerated values',()=>
  const ui=api.optionContracts();
  assert.deepEqual(Object.keys(ui).sort(),Object.keys(options).sort());
  for(const key of Object.keys(options)){
-  assert.deepEqual(ui[key].map(x=>x[0]),options[key],key);
+  assert.deepEqual(Array.from(ui[key],x=>String(x[0])),Array.from(options[key],x=>String(x)),key);
   assert.ok(ui[key].every(x=>x[1]&&x[1].length>3));
  }
 });
