@@ -116,6 +116,28 @@ async function visit(url,label){
     writeFileSync('mobile-qa-artifacts/'+label+'-360x800.png',Buffer.from(shot.data,'base64'));
   }
   if(label==='guest-home'||label==='member-home'){
+    const windowFrame=await request('Runtime.evaluate',{expression:`(()=>{
+      const selector=document.body.dataset.appRole==='member'?
+        '#screen .ngdm-orders.ngd-window-frame':'#screen .ngdl-story.ngd-window-frame';
+      const panel=document.querySelector(selector);
+      const header=panel?.querySelector(':scope > .ngd-window-titlebar');
+      const dots=header?.querySelectorAll('.ngd-window-dots > i')||[];
+      const panelRect=panel?.getBoundingClientRect(),headerRect=header?.getBoundingClientRect();
+      const color=e=>e?getComputedStyle(e).backgroundColor:'';
+      return {panel:!!panel,header:!!header,dots:dots.length,
+        color:color(header),pink:color(dots[1]),yellow:color(dots[2]),
+        horizontalFit:!!panelRect&&!!headerRect&&headerRect.left>=panelRect.left-1&&headerRect.right<=panelRect.right+1,
+        contentVisible:!!panel?.querySelector('h2')&&panel.querySelector('h2').getBoundingClientRect().height>0};
+    })()`,returnByValue:true});
+    const fr=windowFrame.result.value;console.log('NGD_V5_SEMANTIC_FRAME '+label+' '+JSON.stringify(fr));
+    assert.ok(fr.panel&&fr.header&&fr.contentVisible,label+' frame content missing');
+    assert.equal(fr.dots,3);
+    assert.equal(fr.color,'rgb(234, 229, 255)');
+    assert.equal(fr.pink,'rgb(246, 118, 183)');
+    assert.equal(fr.yellow,'rgb(255, 217, 101)');
+    assert.equal(fr.horizontalFit,true,label+' frame titlebar clips or overflows');
+  }
+  if(label==='guest-home'||label==='member-home'){
     const brand=await request('Runtime.evaluate',{expression:`(()=>{
       const head=document.querySelector('.topbar'),mark=head?.querySelector('.guest-brand-icon');
       const title=head?.querySelector('.guest-brand strong');
