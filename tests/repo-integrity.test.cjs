@@ -142,11 +142,11 @@ test('aturan review dan kanal pelaporan privat disiapkan',()=>{
   assert.match(read('.github/CODEOWNERS'),/@cuan74468-ux/);
   assert.match(read('.github/pull_request_template.md'),/Belum terbukti/);
   assert.match(read('SECURITY.md'),/privat/);
-  const codeql=read('.github/workflows/codeql.yml');
-  assert.match(codeql,/schedule:/);
-  assert.match(codeql,/pull_request:/);
-  assert.match(codeql,/upload:\s*false/);
-  assert.doesNotMatch(codeql,/security-events:\s*write/);
+  // Redundant CodeQL scan was retired; security contacts and PR review remain.
+  assert.equal(fs.existsSync(path.join(root,'.github/workflows/codeql.yml')),false);
+  const validate=read('.github/workflows/validate.yml');
+  assert.match(validate,/pull_request:/);
+  assert.match(validate,/node --test tests\/\*\.test\.cjs/);
 });
 
 test('GAS read-only health exposes a manual source revision for drift detection',()=>{
@@ -162,39 +162,17 @@ test('GAS read-only health exposes a manual source revision for drift detection'
   assert.doesNotMatch(workflow,/security-events:\s*write|method:'POST'/);
 });
 
-test('CodeQL menghasilkan bukti nyata: SARIF disimpan dan job gagal bila ada temuan',()=>{
-  const wf=read('.github/workflows/codeql.yml');
-  assert.match(wf,/upload:\s*false/);
-  assert.doesNotMatch(wf,/security-events:\s*write/);
-  assert.match(wf,/actions\/upload-artifact@[0-9a-f]{40}/);
-  assert.match(wf,/if-no-files-found:\s*error/);
-  assert.match(wf,/output:\s*\$\{\{\s*runner\.temp\s*\}\}\/codeql-sarif/);
-  assert.match(wf,/process\.exitCode=1/);
-});
-
-test('skrip pemeriksa SARIF di workflow CodeQL berperilaku benar (uji perilaku)',()=>{
-  const { spawnSync }=require('node:child_process');
-  const os=require('node:os');
-  const wf=read('.github/workflows/codeql.yml');
-  const m=wf.match(/node <<'NODE'\n([\s\S]*?)\n\s*NODE\n?/);
-  assert.ok(m,'skrip pemeriksa tidak ditemukan');
-  const script=m[1].split('\n').map(l=>l.replace(/^ {10}/,'')).join('\n');
-  const run=(files)=>{
-    const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sarif-'));
-    for(const [name,body] of Object.entries(files))fs.writeFileSync(path.join(dir,name),JSON.stringify(body));
-    const r=spawnSync(process.execPath,['-e',script],{env:{...process.env,SARIF_DIR:dir},encoding:'utf8'});
-    return r;
-  };
-  const withResult=(level,ruleDefault)=>({runs:[{tool:{driver:{rules:[{id:'js/x',defaultConfiguration:{level:ruleDefault}}]}},
-    results:[{ruleId:'js/x',...(level?{level}:{}),locations:[{physicalLocation:{artifactLocation:{uri:'js/app.js'},region:{startLine:7}}}]}]}]});
-  assert.equal(run({'javascript.sarif':{runs:[{results:[]}]}}).status,0,'tanpa temuan harus lolos');
-  assert.equal(run({'javascript.sarif':withResult('warning')}).status,1,'warning harus gagal');
-  assert.equal(run({'javascript.sarif':withResult('error')}).status,1,'error harus gagal');
-  assert.equal(run({'javascript.sarif':withResult(null,'error')}).status,1,'level dari aturan harus dipakai');
-  assert.equal(run({'javascript.sarif':withResult('note')}).status,0,'note saja tidak menggagalkan');
-  assert.notEqual(run({}).status,0,'tanpa SARIF harus gagal, bukan lolos diam-diam');
-  const bad=run({'javascript.sarif':withResult('warning')});
-  assert.match(bad.stderr,/CODEQL_FINDING warning js\/x js\/app\.js:7/);
+test('CodeQL automation retired while core CI and security hygiene remain',()=>{
+  assert.equal(fs.existsSync(path.join(root,'.github/workflows/codeql.yml')),false);
+  const workflows=fs.readdirSync(path.join(root,'.github/workflows'));
+  assert.ok(workflows.includes('validate.yml'));
+  const validate=read('.github/workflows/validate.yml');
+  assert.match(validate,/name: Validate backend and frontend \(no deploy\)/);
+  assert.match(validate,/pull_request:/);
+  assert.match(validate,/push:/);
+  assert.match(validate,/timeout-minutes:\s*5/);
+  assert.doesNotMatch(validate,/security-events:\s*write/);
+  assert.match(read('SECURITY.md'),/privat/);
 });
 
 test('PROJECT_CONTROL.md: tabel log utuh dan heading tidak menyatu dengan baris tabel',()=>{
