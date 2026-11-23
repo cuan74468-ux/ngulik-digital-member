@@ -38,8 +38,8 @@ function buildVisualRequestDraft(){
   // The current UI has no authenticated/private upload adapter.
   // NEVER turn a local data: URL or remote sample image into a trusted asset ID.
   const badge=String(state.promo||'');
-  const priceMatch=/^Rp\\s*([0-9][0-9.]*)$/i.exec(badge.trim());
-  const price=priceMatch?Number(priceMatch[1].replace(/\\./g,'')):null;
+  const priceMatch=/^Rp\s*([0-9][0-9.]*)$/i.exec(badge.trim());
+  const price=priceMatch?Number(priceMatch[1].replace(/\./g,'')):null;
   return {
     mode:'CONTRACT_PREVIEW_ONLY',
     upload_required:true,
