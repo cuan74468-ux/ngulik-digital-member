@@ -86,3 +86,14 @@
 @media(max-width:900px){.ngd-studio .ns-editor{grid-template-columns:1fr}.ngd-studio .ns-side{border-right:0;border-bottom:1.5px solid var(--ns-ink)}.ngd-studio .ns-artboard{min-height:350px}.ngd-studio .ns-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.ngd-studio .ns-head .ns-tabs{display:none}.ngd-studio .ns-tab-mobile{display:block}.ngd-studio .ns-head{padding:9px 11px}.ngd-studio .ns-brand{font-size:12px}.ngd-studio .ns-sim{font-size:9px}.ngd-studio .ns-pane{padding:13px 11px}.ngd-studio .ns-grid{grid-template-columns:1fr;gap:15px}.ngd-studio .ns-toolbar{padding:10px;display:block}.ngd-studio .ns-filters{max-width:none;margin-top:9px;grid-template-columns:95px minmax(0,1fr)}.ngd-studio .ns-samples{gap:6px}.ngd-studio .ns-board-toolbar{padding:10px}.ngd-studio .ns-board-actions{gap:6px}.ngd-studio .ns-artboard{min-height:300px;padding:12px}.ngd-studio .ns-form{padding:12px}.ngd-studio .ns-cost{padding:12px}.ngd-studio canvas{max-height:58vh}}
 @media(prefers-reduced-motion:reduce){.ngd-studio *{transition:none!important;animation:none!important}}
+
+
+/* Reference-inspired three-dot window titlebar, scoped only to the Studio frame. */
+.ngd-studio .ns-window-titlebar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:47px;padding:9px 15px;border-bottom:2px solid #141418;background:#EAE5FF;color:#141418}
+.ngd-studio .ns-window-titlebar strong{font:800 12px/1.4 'Plus Jakarta Sans',system-ui,sans-serif;letter-spacing:-.01em}
+.ngd-studio .ns-window-dots{display:inline-flex;gap:8px;align-items:center;flex:none}
+.ngd-studio .ns-window-dots i{display:block;width:12px;height:12px;border:1px solid rgba(20,20,24,.16);border-radius:50%;background:#141418}
+.ngd-studio .ns-window-dots i:nth-child(2){background:#F676B7}
+.ngd-studio .ns-window-dots i:nth-child(3){background:#FFD965}
+.ngd-studio .ns-board-panel{border-left:0;min-width:0}
+@media(max-width:650px){.ngd-studio .ns-window-titlebar{padding:9px 11px;min-height:43px}.ngd-studio .ns-window-dots i{width:11px;height:11px}}

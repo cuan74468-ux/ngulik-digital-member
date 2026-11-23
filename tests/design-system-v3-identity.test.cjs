@@ -11,10 +11,10 @@ test('brand and navigation use actual DOM selectors rather than generic non-matc
  assert.match(css,/--ngds-header:#141418/);
  assert.match(css,/--ngds-select:#CCF349/);
 });
-test('master CSS V3 cache is active in both entrypoints without touching auth or backend',()=>{
+test('master CSS V3 identity remains present with current cache version in both entrypoints',()=>{
  for(const file of ['index.html','staging/member.html']){
   const html=fs.readFileSync(path.join(root,file),'utf8');
-  assert.match(html,/ngulik-design-system\.css\?v=20261123-identity-v3/);
+  assert.match(html,/ngulik-design-system\.css\?v=20261123-(?:identity-v3|framed-v4)/);
   assert.match(html,/class="guest-brand"/);
   assert.match(html,/id="guest-nav"/);
   assert.match(html,/id="top-nav-trigger"/);

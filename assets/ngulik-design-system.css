@@ -870,3 +870,41 @@ html body.ngd-public-app[data-app-role]:not(#ngd) .workarea>.topbar #guest-nav b
 html body.ngd-public-app[data-app-role]:not(#ngd) .workarea>.topbar #guest-nav button:not([aria-current="page"]){
  color:#FFFFFF!important;-webkit-text-fill-color:#FFFFFF!important;
 }
+
+
+/* Frame motif: only narrative/summary panels, never every card or payment form.
+   The three dots are decorative (no fake window actions). */
+html body.ngd-public-app:not(#ngd) #screen :is(.ngdm-orders,.ngdm-recent,.ngdm-owned,.ngdl-story){
+ border:2px solid #141418!important;
+ border-radius:16px!important;
+ box-shadow:5px 5px 0 #5B3DF5!important;
+ overflow:hidden;
+}
+html body.ngd-public-app:not(#ngd) #screen :is(.ngdm-orders,.ngdm-recent,.ngdm-owned,.ngdl-story)::before{
+ content:"";
+ display:block;
+ box-sizing:border-box;
+ width:calc(100% + 42px);
+ height:43px;
+ margin:-21px -21px 19px;
+ border-bottom:2px solid #141418;
+ background:
+  radial-gradient(circle at 22px 21px,#141418 0 6px,transparent 6.8px),
+  radial-gradient(circle at 46px 21px,#F676B7 0 6px,transparent 6.8px),
+  radial-gradient(circle at 70px 21px,#FFD965 0 6px,transparent 6.8px),
+  #EAE5FF;
+ pointer-events:none;
+}
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-story::before{
+ width:calc(100% + 2 * clamp(22px,3vw,34px));
+ margin:calc(-1 * clamp(22px,3vw,34px)) calc(-1 * clamp(22px,3vw,34px)) 18px;
+}
+@media(max-width:600px){
+ html body.ngd-public-app:not(#ngd) #screen :is(.ngdm-orders,.ngdm-recent,.ngdm-owned)::before{
+  width:calc(100% + 42px);
+ }
+ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-story::before{
+  width:calc(100% + 44px);
+  margin:-22px -22px 18px;
+ }
+}
