@@ -1180,7 +1180,7 @@ function viewAI(){
     '<small>Enam template visual UMKM, editor Canvas HD, dan galeri aset sesi. Simulasi tanpa memotong token asli.</small>'+
     '<span class="ai-product-bottom"><span>0 token nyata</span><span class="ai-product-action">Buka '+icon('arrow')+'</span></span></button>':'';
   const cards='<section class="ai-tool-catalog" aria-labelledby="ai-tools-heading">'+
-    '<div class="ai-tools-heading"><div><h2 id="ai-tools-heading">Pilih alat <span class="ai-tools-count">'+filtered.length+'</span></h2></div>'+
+    '<div class="ai-tools-heading"><div><h2 id="ai-tools-heading">Pilih alat <span class="ai-tools-count">'+(filtered.length+(showVisual?1:0))+'</span></h2></div>'+
     '<label class="ai-search-wrap"><span class="sr-only">Cari alat AI</span>'+
     '<input id="ai-tool-search" type="search" placeholder="Cari alat AI" autocomplete="off" value="'+
     esc(state.aiSearch||'')+'" aria-label="Cari alat AI"></label></div>'+
@@ -1195,8 +1195,8 @@ function viewAI(){
           '<span class="ai-product-bottom"><span>'+esc(Number(t.kredit_biaya)||0)+' Token</span>'+
           '<span class="ai-product-action">Buka '+icon('arrow')+'</span></span>'+
         '</button>';
-      }).join(''):'<div class="ai-catalog-empty"><strong>'+
-        (!state.publicToolsLoaded&&tools.length===0?'Memuat katalog Studio AI…':'Belum ada tool pada pilihan ini.')+
+      }).join(''):(showVisual?'':'<div class="ai-catalog-empty"><strong>')+
+        (showVisual?'':!state.publicToolsLoaded&&tools.length===0?'Memuat katalog Studio AI…':'Belum ada tool pada pilihan ini.')+
         '</strong><p>'+(!state.publicToolsLoaded&&tools.length===0?
         'Daftar produk sedang dibaca dari sistem.':'Pilih kategori lain atau hapus kata kunci pencarian.')+'</p></div>')+
     '</div></section>';
