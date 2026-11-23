@@ -106,7 +106,11 @@ function ngdVisualResolvePrivateReference_(auth,assetId,mediaPort,nowMs){
   ngdVisualMediaTime_(record.expires_at_ms);
   ngdVisualRequire_(record.expires_at_ms>nowMs,'PRIVATE_MEDIA_REFERENCE_EXPIRED');
   // Reuse existing structural validator after PRIVATE source attestation.
-  var manifest=ngdVisualMediaManifest_(record,memberId);
+  var manifest=ngdVisualMediaManifest_({
+    asset_id:record.asset_id,owner_member_id:record.owner_member_id,
+    mime_type:record.mime_type,bytes:record.bytes,width:record.width,
+    height:record.height,sha256:record.sha256
+  },memberId);
   return {
     contract_version:NGD_VISUAL_MEDIA_POLICY_V1_.contract_version,
     asset_id:manifest.asset_id,
