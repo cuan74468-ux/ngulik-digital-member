@@ -131,7 +131,7 @@ function ngdContentDateCell_(value) {
     return Number.isFinite(d.getTime())?d.toISOString().slice(0,10):null;
   }
   var text=String(value).trim();
-  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(text))return null;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(text))return null;
   var parsed=new Date(text+'T00:00:00Z');
   return Number.isFinite(parsed.getTime())&&
     parsed.toISOString().slice(0,10)===text?text:null;
