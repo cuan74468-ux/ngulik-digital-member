@@ -209,7 +209,7 @@ async function visit(url,label){
     assert.ok(!magazine.exceptionDetails,'Food Magazine browser exception');
     const food=magazine.result.value;
     console.log('MOBILE_360_FOOD_MAGAZINE '+JSON.stringify(food));
-    assert.equal(food.initial.groups.length,11,'12 guided groups including optional cover overlay');
+    assert.equal(food.initial.groups.length,10,'Product category replaces legacy food_type selector; ten advanced groups remain');
     assert.equal(food.initial.count,1,'default one image');
     assert.equal(food.initial.overlay,false,'default overlay OFF');
     assert.equal(food.preset.lighting,'side');
