@@ -40,11 +40,16 @@
   const name=String(context?.name||'').slice(0,80);
   const welcome=r?inject(r.title,{nama:name}):neutral;
   const routes=['ai','portal','katalog','affiliate'];
+  const allowedRoutes=new Set(['ai','portal','katalog','affiliate','belajar','jasa','dukungan']);
   const cards=[1,2,3,4].map(i=>{
    const d=row(items,'CNT-MEMBER-CARD-'+String(i).padStart(2,'0'),'MEMBER_CARD','member_home');
    const info=d?inject(d.description,{saldo_kredit:context?.balanceKnown?
      String(context.balance):'—'}):neutral;
-   return '<button type="button" class="ngdm-shortcut" data-route="'+routes[i-1]+'">'+
+   // Operational navigation comes from the row's editable cta_route when set.
+   // An unknown route never reaches data-route (XSS or arbitrary navigation).
+   const requested=String(d?.cta_route||'').trim().replace(/^#/,'').toLowerCase();
+   const destination=allowedRoutes.has(requested)?requested:routes[i-1];
+   return '<button type="button" class="ngdm-shortcut" data-route="'+h(destination)+'">'+
      '<span class="ngdm-shortcut-icon" aria-hidden="true">'+['✦','◫','▤','↗'][i-1]+'</span>'+
      '<strong>'+h(d?.title||neutral)+'</strong><small>'+h(info)+'</small></button>';
   });
