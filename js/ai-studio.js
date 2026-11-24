@@ -158,7 +158,63 @@ function announce(message){const n=node('ns-toast');if(n){n.textContent=message;
 function tabbar(){return '<div class="ns-tabs" role="tablist" aria-label="Navigasi Studio">'+[['editor','Buat Foto', 'edit'],['gallery','Inspirasi', 'grid'],['history','Riwayat','history']].map(([id,label,ic])=>'<button type="button" role="tab" data-view="'+id+'" aria-selected="'+(state.view===id)+'">'+ico(ic)+' '+label+(id==='history'&&state.history.length?' ('+state.history.length+')':'')+'</button>').join('')+'</div>'}
 function shell(){if(!active())return;root.innerHTML='<header class="ns-head"><div class="ns-brand"><span class="ns-logo">'+ico('image')+'</span><span>NGULIK STUDIO</span><span class="ns-sim">SIMULASI</span></div>'+tabbar()+'<span class="ns-credit">'+ico('bolt')+' <span id="ns-balance">'+state.credits+' Cr</span></span></header><div class="ns-tab-mobile">'+tabbar()+'</div><div id="ns-toast" class="ns-toast" role="status" hidden></div><div id="ns-content"></div>';content()}
 function content(){const host=node('ns-content');if(!host)return;host.innerHTML=state.view==='gallery'?gallery():state.view==='editor'?editor():historyView();if(state.view==='editor'){draw();if(state.photo)loadImg(state.photo);}}
-function gallery(){const cats=['Semua','Kuliner & F&B','Katalog Studio','Promo & Diskon','Beauty & Skincare','Story 9:16'];const filtered=TEMPLATES.filter(t=>(state.cat==='Semua'||t.category===state.cat)&&(state.filterRatio==='Semua'||t.ratio===state.filterRatio)&&(!state.q||[t.name,t.category,t.product].some(v=>v.toLocaleLowerCase('id-ID').includes(state.q.toLocaleLowerCase('id-ID')))));return '<section class="ns-pane"><div class="ns-toolbar ns-frame"><div class="ns-chips">'+cats.map(c=>'<button class="ns-chip" data-cat="'+htmlEscape(c)+'" aria-pressed="'+(state.cat===c)+'">'+htmlEscape(c)+'</button>').join('')+'</div><div class="ns-filters"><select class="ns-control" id="ns-ratio-filter" aria-label="Filter rasio">'+['Semua','1:1','4:5','9:16'].map(r=>'<option '+(r===state.filterRatio?'selected':'')+'>'+r+'</option>').join('')+'</select><input class="ns-control" id="ns-search" type="search" value="'+htmlEscape(state.q)+'" placeholder="Cari template..." aria-label="Cari template"></div></div><div class="ns-sectiontitle"><h2>Katalog Template Iklan</h2><span class="ns-pill">'+filtered.length+' template</span></div><div class="ns-grid">'+(filtered.length?filtered.map(t=>'<button type="button" class="ns-template ns-frame" data-template="'+t.id+'"><div class="ns-preview"><img src="'+t.img+'" alt="" loading="lazy"><span>'+t.ratio+'</span></div><div class="ns-copy"><span><strong>'+htmlEscape(t.name)+'</strong><small>'+htmlEscape(t.category)+'</small></span><span class="ns-pill">'+TIERS[t.tier]+' Cr</span></div></button>').join(''):'<div class="ns-frame ns-hist-empty">Template tidak ditemukan. Ubah filter atau kata kunci.</div>')+'</div></section>'}
+function gallery(){
+ const query=templateQuery.trim().toLocaleLowerCase('id-ID');
+ const cats=templateCategoryChoices();
+ const scenes=scenarioTemplates().filter(t=>
+  (templateFilter==='Semua'||templateFilter===t.category)&&
+  (!query||[t.name,t.description,CONTEXT_SCENARIOS[t.category].label]
+   .some(v=>v.toLocaleLowerCase('id-ID').includes(query))));
+ const saved=customTemplates.filter(t=>
+  (templateFilter==='Semua'||templateFilter==='saved'||templateFilter===t.product_category)&&
+  (!query||[t.name,CONTEXT_SCENARIOS[t.product_category].label]
+   .some(v=>v.toLocaleLowerCase('id-ID').includes(query))));
+ const showScene=templateFilter!=='saved'&&templateFilter!=='classic';
+ const showSaved=templateFilter==='saved'||templateFilter==='Semua';
+ const legacy=TEMPLATES.filter(t=>
+  (templateFilter==='Semua'||templateFilter==='classic')&&
+  (!query||[t.name,t.category,t.product].some(v=>v.toLocaleLowerCase('id-ID').includes(query))));
+ const card=t=>{
+  const expanded=templateDetail===t.id;
+  return '<article class="ns-inspire-card" data-scene-card="'+t.id+'">'+
+   '<div class="ns-inspire-visual"><img src="'+htmlEscape(t.image)+'" alt="Contoh suasana '+htmlEscape(t.name)+'" loading="lazy">'+
+   '<span class="ns-inspire-ratio">'+t.ratio+'</span>'+
+   '<span class="ns-inspire-caption">Referensi suasana · bukan hasil AI Anda</span></div>'+
+   '<div class="ns-inspire-body"><small>'+htmlEscape(CONTEXT_SCENARIOS[t.category].label)+'</small>'+
+   '<strong>'+htmlEscape(t.name)+'</strong>'+
+   '<p>'+htmlEscape(t.description)+'</p>'+
+   (expanded?'<div class="ns-inspire-detail"><strong>Resep yang diterapkan</strong><span>Scene '+htmlEscape(t.scenario)+' · Pemulihan foto HP aktif · Label asli dijaga · Rasio dapat diubah · Foto asli Anda wajib diunggah.</span></div>':'')+
+   '<div class="ns-inspire-actions"><button type="button" data-scene-template="'+t.id+'" class="ns-cta ns-dark">'+ico('edit')+' Gunakan</button>'+
+   '<button type="button" data-template-detail="'+t.id+'" class="ns-cta" aria-expanded="'+expanded+'">'+(expanded?'Tutup':'Detail')+'</button></div>'+
+   '</div></article>';
+ };
+ const own=t=>{
+  return '<article class="ns-inspire-saved"><span class="ns-inspire-saved-icon">'+ico('grid')+'</span>'+
+   '<div class="ns-inspire-saved-copy"><strong>'+htmlEscape(t.name)+'</strong>'+
+   '<small>'+htmlEscape(CONTEXT_SCENARIOS[t.product_category].label)+' · '+t.format+' · '+t.count+' hasil</small>'+
+   '<div class="ns-inspire-actions"><button type="button" class="ns-cta ns-dark" data-saved-template="'+t.id+'">Gunakan</button>'+
+   '<button type="button" class="ns-cta" data-saved-delete="'+t.id+'">Hapus</button></div></div></article>';
+ };
+ return '<section class="ns-pane ns-inspire-gallery"><div class="ns-inspire-intro">'+
+  '<span class="ns-inspire-eyebrow">PUSTAKA STUDIO</span><h2>Temukan gaya. Gunakan untuk produk Anda.</h2>'+
+  '<p>Pilih skenario yang cocok, ganti foto dengan produk asli, lalu sesuaikan. Template menyimpan komposisi dan resep—bukan foto contoh, teks merek lain, atau biaya API.</p>'+
+  '</div><div class="ns-inspire-toolbar"><div class="ns-inspire-filters" role="group" aria-label="Filter peruntukan">'+
+  cats.map(([id,label])=>'<button type="button" class="ns-chip" data-template-filter="'+id+'" aria-pressed="'+(templateFilter===id)+'">'+htmlEscape(label)+'</button>').join('')+
+  '</div><label class="ns-inspire-search">'+ico('grid')+
+  '<input id="ns-template-query" type="search" class="ns-control" placeholder="Cari gaya studio..." aria-label="Cari template" value="'+htmlEscape(templateQuery)+'"></label></div>'+
+  (showSaved?'<div class="ns-sectiontitle"><h2>Preset Saya</h2><span class="ns-pill">'+saved.length+' tersimpan</span></div>'+
+   (saved.length?'<div class="ns-inspire-saved-list">'+saved.map(own).join('')+'</div>':
+   '<p class="ns-inspire-empty">Belum ada preset. Buka template, sesuaikan, lalu pilih Simpan Preset. Pengaturan tetap tersedia pada perangkat ini.</p>'):'')+
+  (showScene?'<div class="ns-sectiontitle"><h2>Inspirasi fotografi produk</h2><span class="ns-pill">'+scenes.length+' skenario</span></div>'+
+   (scenes.length?'<div class="ns-inspire-grid">'+scenes.map(card).join('')+'</div>':
+   '<p class="ns-inspire-empty">Tidak ada skenario yang cocok. Coba kategori atau pencarian lain.</p>'):'')+
+  (legacy.length?'<div class="ns-sectiontitle"><h2>Desain Cepat · Canvas</h2><span class="ns-pill">'+legacy.length+' desain</span></div>'+
+   '<p class="ns-hint">Template Canvas klasik dapat diedit dan dipratinjau tanpa AI.</p>'+
+   '<div class="ns-grid">'+legacy.map(t=>'<button type="button" class="ns-template ns-frame" data-template="'+t.id+'">'+
+    '<div class="ns-preview"><img src="'+t.img+'" alt="Referensi '+htmlEscape(t.name)+'" loading="lazy"><span>'+t.ratio+'</span></div>'+
+    '<div class="ns-copy"><span><strong>'+htmlEscape(t.name)+'</strong><small>'+htmlEscape(t.category)+'</small></span><span class="ns-pill">Gunakan</span></div></button>').join('')+'</div>':'')+
+  '</section>';
+}
 function choices(items,current,attr,columns){return '<div class="'+(columns===3?'ns-three':'ns-two')+'">'+items.map(([value,title])=>'<button type="button" class="ns-choice" data-'+attr+'="'+htmlEscape(value)+'" aria-pressed="'+(value===current)+'">'+htmlEscape(title)+'</button>').join('')+'</div>'}
 
 function v2Choices(field){
