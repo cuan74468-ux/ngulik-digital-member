@@ -250,6 +250,21 @@ async function visit(url,label){
     assert.equal(quality.clear.disabled,false,'clear well-lit image must enable Generate');
     assert.match(quality.clear.message,/lolos pemeriksaan/);
     assert.ok(quality.clear.overflow<=360);
+
+    const inspiration=await request('Runtime.evaluate',{expression:"(()=>{const root=document.getElementById('ngd-studio-root');root.querySelector('[data-view=gallery]')?.click();const initial=root.querySelectorAll('[data-scene-card]').length;const classic=root.querySelectorAll('[data-template]').length;root.querySelector('[data-template-filter=bottled_liquid]')?.click();const bottles=[...root.querySelectorAll('[data-scene-card]')].map(v=>v.dataset.sceneCard);const details=root.querySelector('[data-template-detail]');details?.click();const expanded=!!root.querySelector('.ns-inspire-detail');root.querySelector('[data-scene-template=scene__bottled_liquid__obsidian_mirror_splash]')?.click();const draft=window.NGD_STUDIO.foodMagazineDraft();return {initial,classic,bottles,expanded,category:draft.payload.product_category,scenario:draft.payload.studio_scenario,editor:!!root.querySelector('.ns-v2-editor'),presetButton:!!root.querySelector('#ns-save-preset'),overflow:document.documentElement.scrollWidth};})()",returnByValue:true});
+    assert.ok(!inspiration.exceptionDetails,'Inspiration gallery browser exception');
+    const library=inspiration.result.value;
+    console.log('MOBILE_360_INSPIRATION_REUSE '+JSON.stringify(library));
+    assert.equal(library.initial,12,'Twelve contextual studio templates');
+    assert.equal(library.classic,6,'Six legacy Canvas designs remain usable');
+    assert.equal(library.bottles.length,3,'Bottle filter returns only relevant scenarios');
+    assert.equal(library.expanded,true,'Template detail shows editable recipe scope');
+    assert.equal(library.category,'bottled_liquid');
+    assert.equal(library.scenario,'obsidian_mirror_splash');
+    assert.equal(library.editor,true);
+    assert.equal(library.presetButton,true);
+    assert.ok(library.overflow<=360,'Inspiration gallery and applied editor overflows 360px');
+
     mkdirSync('mobile-qa-artifacts',{recursive:true});
     const shot=await request('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
     writeFileSync('mobile-qa-artifacts/member-studio-360x800.png',Buffer.from(shot.data,'base64'));
