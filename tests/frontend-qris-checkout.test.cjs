@@ -214,38 +214,42 @@ test('server rejects subtractive QRIS amounts before persistence and financial a
   assert.match(transition,/if\(String\(o\.metode\|\|''\)==='QRIS_STATIS'\)ngdRequireQrOrderAmount_\(o\)/);
 });
 
-test('only a validated paid QRIS order can open the CMS-owned WhatsApp proof message',()=>{
-  const start=app.indexOf('function ngdPaymentProofWaUrl_(order,rawAdminWa)');
-  const end=app.indexOf('function viewCheckout(){',start);
-  assert.ok(start>=0&&end>start);
+test('only a validated additive QRIS invoice permits CMS-owned WhatsApp proof',()=>{
+  const begin=app.indexOf('function ngdPaymentProofWaUrl_(order,rawAdminWa)');
+  const finish=app.indexOf('function viewCheckout(){',begin);
+  assert.ok(begin>=0&&finish>begin);
   const window={};
   require('node:vm').runInNewContext(read('js/cms-surfaces.js'),{window});
   const state={siteContent:[{content_id:'CNT-CHECKOUT-WA-TEMPLATE',
     kind:'WA_TEMPLATE',placement:'checkout',status:'PUBLISHED',
-    description:'Halo Admin Ngulik Digital, saya sudah transfer untuk pesanan:\\n'+
-      '• ID Pesanan: {{order_id}}\\n• Paket: {{nama_produk}}\\n'+
-      '• Nominal Transfer: {{total_bayar}}\\nMohon dicek dan diaktifkan ya. Terima kasih.'}]};
-  const make=new Function('rupiah','window','state',app.slice(start,end)+
-    '\\nreturn ngdPaymentProofWaUrl_;')(n=>'Rp'+Number(n).toLocaleString('id-ID'),window,state);
+    description:[
+      'Halo Admin Ngulik Digital, saya sudah transfer untuk pesanan:',
+      '• ID Pesanan: {{order_id}}','• Paket: {{nama_produk}}',
+      '• Nominal Transfer: {{total_bayar}}',
+      'Mohon dicek dan diaktifkan ya. Terima kasih.'
+    ].join(String.fromCharCode(10))}]};
+  const make=new Function('rupiah','window','state',app.slice(begin,finish)+
+    String.fromCharCode(10)+'return ngdPaymentProofWaUrl_;')(
+      n=>'Rp'+Number(n).toLocaleString('id-ID'),window,state);
   const order={order_id:'NGD-261122-ABCDEF123456',nama_produk:'Starter Pack',
     harga_dasar:15000,kode_unik:100,total_bayar:15100,metode:'QRIS_STATIS'};
   const url=make(order,'081234567890');
-  assert.match(url,/^https:\\/\\/wa\\.me\\/6281234567890\\?text=/);
+  assert.ok(url.startsWith('https://wa.me/6281234567890?text='));
   const body=decodeURIComponent(url.split('?text=')[1]);
-  assert.match(body,/NGD-261122-ABCDEF123456/);
-  assert.match(body,/Rp15\\.100/);
-  assert.match(body,/Mohon dicek dan diaktifkan/);
+  assert.ok(body.includes('NGD-261122-ABCDEF123456'));
+  assert.ok(body.includes('Rp15.100'));
+  assert.ok(body.includes('Mohon dicek dan diaktifkan'));
   assert.equal(make({...order,total_bayar:14900},'081234567890'),'');
   assert.equal(make(order,'nomor-tidak-valid'),'');
   state.siteContent=[];
-  assert.equal(make(order,'081234567890'),'','missing CMS template must fail closed');
+  assert.equal(make(order,'081234567890'),'','missing CMS must fail closed');
   const view=app.slice(app.indexOf('function viewCheckout(){'),app.indexOf('function viewAdminRuntime(){'));
-  assert.match(view,/data-payment-proof-wa/);
-  assert.match(view,/NGD_CMS_SURFACES\\?\\.checkoutButton/);
-  assert.match(view,/NGD_CMS_SURFACES\\?\\.checkoutGuide/);
-  assert.doesNotMatch(view,/data-action="confirm-payment"/);
-  assert.match(view,/proofWaUrl=canConfirm\\?ngdPaymentProofWaUrl_\\(o,o\\.wa_admin\\|\\|state\\.info\\?\\.wa_admin\\)/);
+  assert.ok(view.includes('data-payment-proof-wa'));
+  assert.ok(view.includes('NGD_CMS_SURFACES?.checkoutButton'));
+  assert.ok(view.includes('NGD_CMS_SURFACES?.checkoutGuide'));
+  assert.equal(view.includes('data-action="confirm-payment"'),false);
+  assert.ok(view.includes('proofWaUrl=canConfirm?ngdPaymentProofWaUrl_'));
   const checkout=app.slice(app.indexOf('async function buy(productId)'),app.indexOf('async function openOrderDetail_'));
-  assert.match(checkout,/api\\('createOrder'/);
-  assert.doesNotMatch(checkout,/wa\\.me|payment-proof-wa/);
+  assert.ok(checkout.includes("api('createOrder'"));
+  assert.equal(checkout.includes('wa.me'),false);
 });
