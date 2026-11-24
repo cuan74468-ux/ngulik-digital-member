@@ -2545,11 +2545,64 @@ function render(){
   by('screen').innerHTML=screen;
   if(state.route==='ai-tool'&&state.selectedAiToolId==='ngulik-visual'&&logged()&&!isAdmin()){
     window.NGD_STUDIO?.mount(document.getElementById('ngd-studio-root'));
+    void configureVisualBridgeStaging_();
   }
   syncCheckoutClock_();
   syncHeroRotation_();
   syncMarketplacePolling_();
   document.title=(screens[state.route]?.[0]||'Beranda')+' — Ngulik Digital';
+}
+
+/**
+ * Separate P1 bridge, scoped to member STAGING session only. Never uses
+ * memberWritesEnabled and never enables P0 mutations/finance; GAS enforces
+ * Visual-only flags independently. Local simulation remains the fallback.
+ */
+async function configureVisualBridgeStaging_(){
+ if(!logged()||isAdmin()||!isConnected()||
+  !String(location.pathname).includes('/staging/'))return;
+ try{
+  const health=await api('visualHealth',{},state.token);
+  if(health?.live!==true)return;
+  const sessionToken=state.token;
+  const secureApi=async(action,payload,options={})=>{
+   if(!logged()||state.token!==sessionToken||isAdmin())
+    throw new ApiError('Sesi Visual berakhir. Masuk kembali.','SESSION_INVALID');
+   return api(action,payload,sessionToken,{timeoutMs:40000,...options});
+  };
+  const upload=async(file)=>{
+   if(!(file instanceof File)||!/^image\/(jpeg|png|webp)$/.test(file.type)||
+    file.size<1||file.size>4*1024*1024)
+    throw new ApiError('Foto harus JPG, PNG atau WebP maksimal 4 MB.','IMAGE_SIZE');
+   if(!globalThis.crypto?.subtle)throw new ApiError('Browser aman diperlukan.','SECURE_CONTEXT');
+   const bytes=await file.arrayBuffer();
+   const digest=await crypto.subtle.digest('SHA-256',bytes);
+   const sha=[...new Uint8Array(digest)].map(v=>v.toString(16).padStart(2,'0')).join('');
+   const start=await secureApi('visualUploadStart',{mime:file.type,size:file.size,sha256:sha});
+   if(!/^[a-f0-9]{32}$/.test(start?.upload_id||'')||
+    start.chunk_bytes!==24576)throw new ApiError('Upload privat tidak tersedia.','UPLOAD_INVALID');
+   for(let n=0;n<start.chunk_count;n++){
+    const part=new Uint8Array(bytes.slice(n*start.chunk_bytes,(n+1)*start.chunk_bytes));
+    let binary='';for(let j=0;j<part.length;j+=4096)
+     binary+=String.fromCharCode(...part.subarray(j,j+4096));
+    await secureApi('visualUploadChunk',{upload_id:start.upload_id,index:n,
+     base64:btoa(binary)});
+   }
+   return secureApi('visualUploadFinish',{upload_id:start.upload_id});
+  };
+  window.NGD_STUDIO?.configureVisualPipeline({
+   enabled:true,upload,
+   quote:args=>secureApi('visualQuote',args),
+   create:args=>secureApi('visualCreateJob',args,{
+    requestId:args.idempotency_key,timeoutMs:40000}),
+   poll:id=>secureApi('visualPollJob',{job_id:id}),
+   result:(id,asset)=>secureApi('visualResult',{job_id:id,asset_id:asset},
+    {timeoutMs:40000})
+  });
+ }catch(_){
+  // Fail closed; no error body, credentials or active session is logged.
+  window.NGD_STUDIO?.configureVisualPipeline(null);
+ }
 }
 // Navigation is a small predictable state machine. A product checkout can be
 // bookmarked, and Android/browser Back returns to the previous screen.
