@@ -14,7 +14,7 @@ test('brand and navigation use actual DOM selectors rather than generic non-matc
 test('master CSS V3 identity remains present with current cache version in both entrypoints',()=>{
  for(const file of ['index.html','staging/member.html']){
   const html=fs.readFileSync(path.join(root,file),'utf8');
-  assert.match(html,/ngulik-design-system\.css\?v=20261123-(?:identity-v3|framed-v4|frame-v5)/);
+  assert.match(html,/ngulik-design-system\.css\?v=20261125-frame-v5-cms45-hero3/);
   assert.match(html,/class="guest-brand"/);
   assert.match(html,/id="guest-nav"/);
   assert.match(html,/id="top-nav-trigger"/);
