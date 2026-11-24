@@ -72,7 +72,8 @@ function contentPayload_(p,existing) {
     kind:p.kind,placement:contentPlacement_(p.kind,p.placement),
     title:safeText_(p.title,120),
     description:safeText_(p.description,NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0?1600:400),
-    image_path:contentImagePath_(p.image_path,NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0||
+    image_path:contentImagePath_(p.image_path,p.kind==='HERO'||
+      NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0||
       p.kind==='PROMO'||p.kind==='ANNOUNCEMENT'),
     cta_label:safeText_(p.cta_label,48),cta_route:String(p.cta_route||'').trim().replace(/^#/,'').toLowerCase(),
     sort_order:Number(p.sort_order),
