@@ -227,9 +227,6 @@ body.ngd-public-app #screen > .ngd-cms-unavailable .ngd-cms-unavailable-actions{
 body.ngd-public-app #screen > .ngd-cms-unavailable .btn{
   min-height:46px;white-space:normal;text-align:center;
 }
-body.ngd-public-app #screen .ngd-staging-access-note{
-  color:#514c60;line-height:1.65;margin-top:18px;
-}
 @media(max-width:600px){
   body.ngd-public-app #screen > .ngd-cms-unavailable{
     border-radius:18px;padding:26px 20px;
