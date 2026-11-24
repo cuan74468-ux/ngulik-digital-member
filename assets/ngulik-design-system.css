@@ -84,7 +84,7 @@ body.ngd-public-app #screen :is(.btn,.btn-primary,.btn-secondary):not(.ngd-studi
  font-family:var(--ngds-heading);font-weight:800;
 }
 body.ngd-public-app #screen :is(.btn-primary,[data-action="checkout-create"],[data-checkout-create]):not(.ngd-studio *){
- background:var(--ngds-violet);color:#fff;
+ background:var(--ngds-lime);color:var(--ngds-ink);
 }
 body.ngd-public-app #screen :is(.btn-secondary):not(.ngd-studio *){background:var(--ngds-paper);color:var(--ngds-ink)}
 body.ngd-public-app #screen :is(.btn,.btn-primary,.btn-secondary):not(.ngd-studio *):active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ngds-ink)}
@@ -373,7 +373,7 @@ html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-greetin
  font-family:var(--ngds-mono)!important;font-weight:700!important;
 }
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-wallet{
- background:var(--ngds-violet)!important;
+ background:var(--ngds-ink)!important;
  border:2px solid var(--ngds-ink)!important;
  border-radius:12px!important;
  box-shadow:4px 4px 0 var(--ngds-ink)!important;
@@ -493,7 +493,7 @@ html body.ngd-public-app:not(#ngd) #screen :is(.market-product-card,.ai-product-
 }
 html body.ngd-public-app:not(#ngd) #screen :is(.ai-catalog-intro,.ai-tool-detail-hero,.market-hero-content,.ngd-member-page-intro,.ngd-public-services-hero){
  border:2px solid var(--ngds-ink)!important;
- background:var(--ngds-lime)!important;
+ background:var(--ngds-paper)!important;
  border-radius:12px!important;
  box-shadow:4px 4px 0 var(--ngds-ink)!important;
  padding:var(--ngds-pad)!important;
@@ -508,7 +508,7 @@ html body.ngd-public-app:not(#ngd) #screen .ai-catalog-intro-copy>p:last-child{
  color:var(--ngds-ink)!important;
 }
 html body.ngd-public-app:not(#ngd) #screen :is(.ai-category-tab.is-current,.ai-product-action){
- background:var(--ngds-violet)!important;color:#fff!important;
+ background:var(--ngds-lime)!important;color:var(--ngds-ink)!important;
  border-color:var(--ngds-ink)!important;
 }
 html body.ngd-public-app:not(#ngd) #screen :is(.ai-category-tab,.ai-category-card,.market-category,.ngd-home-service-cta){
@@ -524,7 +524,7 @@ html body.ngd-public-app:not(#ngd) #screen .market-product-price{
 }
 /* AFFILIATE + LMS + SUPPORT — no faded teal/beige second design language */
 html body.ngd-public-app:not(#ngd) #screen :is(.partner-hero,.partner-public-intro,.partner-member-header,.learning-intro,.learning-portal-hero,.learning-portal-promo,.ngd-help-hero){
- background:var(--ngds-lime)!important;color:var(--ngds-ink)!important;
+ background:var(--ngds-paper)!important;color:var(--ngds-ink)!important;
  border:2px solid var(--ngds-ink)!important;
  border-radius:12px!important;box-shadow:4px 4px 0 var(--ngds-ink)!important;
 }
@@ -554,7 +554,7 @@ html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-ope
  background:var(--ngds-paper)!important;
 }
 html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-operations-intro,.admin-start-item:first-child){
- background:var(--ngds-lime)!important;
+ background:var(--ngds-paper)!important;
 }
 html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-operations-intro,.admin-start-item:first-child) :is(h1,h2,h3,p){
  color:var(--ngds-ink)!important;

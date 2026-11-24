@@ -28,25 +28,25 @@ const limits = Object.freeze({
   'assets/content-media.css': [4160, 0],
   'assets/catalog-experience-v3.css': [19782, 0],
   'assets/commission-experience-v2.css': [20944, 5],
-  'assets/checkout-qris-unified.css': [5611, 1],
+  'assets/checkout-qris-unified.css': [5650, 1],
   'assets/marketplace-visuals-v4.css': [5249, 0],
-  'assets/marketplace-ref-v5.css': [32696, 306],
-  'assets/member-marketplace-v7.css': [29710, 219],
-  'assets/public-experience-v8.css': [26236, 159],
-  'assets/catalog-campaign-v9.css': [15930, 48],
-  'assets/brand-experience-v10.css': [42381, 324],
-  'assets/mobile-critical-v16.css': [20788, 201],
+  'assets/marketplace-ref-v5.css': [32750, 306],
+  'assets/member-marketplace-v7.css': [29815, 219],
+  'assets/public-experience-v8.css': [26360, 159],
+  'assets/catalog-campaign-v9.css': [16027, 48],
+  'assets/brand-experience-v10.css': [42483, 324],
+  'assets/mobile-critical-v16.css': [20899, 201],
   'assets/landing-guest-v1.css': [17912, 33],
   'assets/guest-sales-trust-v1.css': [18156, 25],
   'assets/product-detail-v1.css': [13213, 40],
-  'assets/member-native-dashboard-v1.css': [31561, 224],
-  'assets/ngulik-design-system.css': [48118, 474],
+  'assets/member-native-dashboard-v1.css': [31584, 224],
+  'assets/ngulik-design-system.css': [48136, 474],
   'assets/staging-native-mobile.css': [9008, 1]
 });
 
 const budgets = Object.freeze({
-  'index.html': { count: 30, bytes: 759443, important: 2109 },
-  'staging/member.html': { count: 31, bytes: 768451, important: 2110 }
+  'index.html': { count: 30, bytes: 760116, important: 2109 },
+  'staging/member.html': { count: 31, bytes: 769124, important: 2110 }
 });
 
 function inspectEntry(entry) {

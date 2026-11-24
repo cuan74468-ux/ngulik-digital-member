@@ -93,18 +93,18 @@ body.ngd-public-app[data-app-role=member] .ngd-member-hero-actions .btn-secondar
   color:#50328f!important;background:#fff!important;border-color:#cfc2e5!important
 }
 body.ngd-public-app[data-app-role=member] .ngd-member-hero-actions .btn-primary{
-  color:#fff!important;background:#5429b9!important;border-color:#5429b9!important
+  color:var(--ngds-ink)!important;background:var(--ngds-lime)!important;border-color:var(--ngds-ink)!important
 }
 body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading{
-  background:#fff!important;background-image:none!important;color:#252139!important;
-  border-bottom:1px solid #e8e3ef!important
+  background:var(--ngds-paper)!important;background-image:none!important;color:var(--ngds-ink)!important;
+  border-bottom:2px solid var(--ngds-ink)!important
 }
 body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading h1,
 body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading p{
-  color:#28243d!important;-webkit-text-fill-color:#28243d!important
+  color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important
 }
 body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading .eyebrow{
-  color:#624196!important;-webkit-text-fill-color:#624196!important
+  color:var(--ngds-violet)!important;-webkit-text-fill-color:var(--ngds-violet)!important
 }
 /* Constrain deep nested catalog grids and flex rows at the source. */
 body.ngd-public-app :is(.market-shopping,.market-header,.market-product-grid,
@@ -388,6 +388,6 @@ html body.ngd-public-app[data-app-role=member]:not(#ngd) .workarea .main-content
 .ngd-member-services .service-heading h1,
 html body.ngd-public-app[data-app-role=member]:not(#ngd) .workarea .main-content #screen
 .ngd-member-services .service-heading p{
-  color:#28243d!important;-webkit-text-fill-color:#28243d!important;
+  color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;
   text-shadow:none!important
 }

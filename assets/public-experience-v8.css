@@ -18,8 +18,8 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) #screen :is(button,a,input,se
   outline:3px solid #e3ad21;outline-offset:3px;
 }
 body.ngd-public-app[data-app-role=guest]:not(#ngd) #screen :is(.btn-primary,.partner-btn-primary){
-  background:#5b28d6;border-color:#5b28d6;color:#fff;
-  box-shadow:none;
+  background:var(--ngds-lime);border-color:var(--ngds-ink);color:var(--ngds-ink);
+  box-shadow:2px 2px 0 var(--ngds-ink);
 }
 body.ngd-public-app[data-app-role=guest]:not(#ngd) #screen :is(.btn-secondary,.partner-btn-outline){
   border-color:#d0bdf6;color:#5b28d6;background:#fff;
@@ -76,7 +76,7 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro .partne
   padding:10px 16px!important;font:800 12px/1.2 Inter,sans-serif!important;
 }
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro .partner-btn-primary{
-  background:#ffe34d!important;border-color:#ffe34d!important;color:#271548!important;
+  background:var(--ngds-lime)!important;border-color:var(--ngds-ink)!important;color:var(--ngds-ink)!important;
 }
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .partner-public-intro .partner-btn-outline{
   background:transparent!important;border-color:#e6dbff80!important;color:#fff!important;
@@ -172,7 +172,7 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero-actions button
   font:800 12px/1.2 Inter,sans-serif!important;
 }
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero-actions .btn-primary{
-  color:#241445!important;background:#ffe34d!important;border-color:#ffe34d!important;
+  color:var(--ngds-ink)!important;background:var(--ngds-lime)!important;border-color:var(--ngds-ink)!important;
 }
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-help-hero-actions .btn-secondary{
   color:#fff!important;background:transparent!important;border-color:#ffffff8c!important;
@@ -364,7 +364,7 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-services-hero-actions bu
   font:800 12px/1.2 Inter,sans-serif!important;
 }
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-services-hero-actions .btn-primary{
-  background:#ffe34d!important;border-color:#ffe34d!important;color:#211348!important;
+  background:var(--ngds-lime)!important;border-color:var(--ngds-ink)!important;color:var(--ngds-ink)!important;
 }
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-services-hero-actions .btn-secondary{
   background:transparent!important;color:#fff!important;border-color:#ffffff9c!important;
