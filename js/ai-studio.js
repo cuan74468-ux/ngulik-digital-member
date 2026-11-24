@@ -238,12 +238,12 @@ function chooseFood(field,value){
 
 /* Explicitly wired only by a later authorized private API bridge. No public
  * GitHub Pages secret, request, payment or provider endpoint is configured. */
-let visualPipelineBridge=null,selectedLocalFile=null,liveRequestKey='',liveJobId='',livePolling=false;
+let visualPipelineBridge=null,selectedLocalFile=null,liveRequestKey='',liveJobId='',liveInputAsset='',livePolling=false;
 function liveBridgeReady(){
  return !!(visualPipelineBridge&&visualPipelineBridge.enabled===true&&
-  ['upload','create','poll','quote'].every(k=>typeof visualPipelineBridge[k]==='function'));
+  ['upload','create','poll','quote','result'].every(k=>typeof visualPipelineBridge[k]==='function'));
 }
-function resetVisualLiveRequest(){liveRequestKey='';liveJobId='';liveQuote=null;liveStatus='';}
+function resetVisualLiveRequest(){liveRequestKey='';liveJobId='';liveInputAsset='';liveQuote=null;liveStatus='';}
 function chooseMachine(id){if(!FOOD_MACHINES.some(m=>m.id===id))return false;foodMachine=id;resetVisualLiveRequest();return true}
 async function runVisualLive(){
  if(!foodMode||!liveBridgeReady()||livePolling||!selectedLocalFile){
@@ -267,11 +267,14 @@ async function runVisualLive(){
     q.server_authoritative!==true)throw Error('VISUAL_QUOTE_UNAVAILABLE');
    liveQuote=q;liveStatus='Tarif terkonfirmasi server. Mengunggah foto privat…';
    updateLiveStatus();
-   const handle=await visualPipelineBridge.upload(selectedLocalFile,{idempotency_key:liveRequestKey});
-   if(!handle||!/^asset_[A-Za-z0-9_-]{6,80}$/.test(handle.asset_id))
-    throw Error('Upload privat tidak dikonfirmasi');
+   if(!liveInputAsset){
+    const handle=await visualPipelineBridge.upload(selectedLocalFile,{idempotency_key:liveRequestKey});
+    if(!handle||!/^asset_[A-Za-z0-9_-]{6,110}$/.test(handle.asset_id))
+     throw Error('Upload privat tidak dikonfirmasi');
+    liveInputAsset=handle.asset_id;
+   }
    const request=foodDraft();
-   request.payload.reference_image=handle.asset_id;
+   request.payload.reference_image=liveInputAsset;
    request.payload.request_id=liveRequestKey;
    const created=await visualPipelineBridge.create({
     idempotency_key:liveRequestKey,machine_id:foodMachine,payload:request.payload
@@ -289,9 +292,22 @@ async function runVisualLive(){
    updateLiveStatus();
    if(!status||status.job_id!==liveJobId)throw Error('Respons job tidak sah');
    if(status.status==='SETTLED'){
-    announce('AI selesai. Kredit terpakai '+status.settled_credits+
-     ', dikembalikan '+status.refunded_credits+'. Hasil tersimpan privat.');
-    resetVisualLiveRequest();return;
+    const assets=Array.isArray(status.result_asset_ids)?status.result_asset_ids:[];
+    if(assets.length){
+     const picture=await visualPipelineBridge.result(liveJobId,assets[0]);
+     if(!picture||!['image/png','image/jpeg','image/webp'].includes(picture.mime)||
+      typeof picture.base64!=='string'||picture.base64.length<24)
+      throw Error('PRIVATE_RESULT_INVALID');
+     const source='data:'+picture.mime+';base64,'+picture.base64;
+     state.history.unshift({image:source,product:state.product||'Hasil AI',ratio:food.format,cost:status.settled_credits/assets.length,realAI:true});
+     state.photo=source;state.photoChosen=true;selectedLocalFile=null;
+     state.img=null;state.loadedUrl='';state.ratio=food.format;
+     if(state.history.length>8)state.history.length=8;
+     content();
+    }
+    liveStatus='Selesai: '+status.settled_credits+' kredit dipakai, '+status.refunded_credits+' dikembalikan.';
+    updateLiveStatus();
+    announce(liveStatus);resetVisualLiveRequest();return;
    }
    if(['REFUNDED','FAILED'].includes(status.status)){
     announce('Provider gagal; reservasi kredit dikembalikan. Coba lagi setelah layanan pulih.');
@@ -315,7 +331,7 @@ async function runVisualLive(){
 }
 function configureVisualPipeline(bridge){
  if(bridge!==null&&(!bridge||bridge.enabled!==true||
-  ['upload','create','poll','quote'].some(k=>typeof bridge[k]!=='function')))
+  ['upload','create','poll','quote','result'].some(k=>typeof bridge[k]!=='function')))
   throw Error('VISUAL_PRIVATE_BRIDGE_INVALID');
  visualPipelineBridge=bridge;resetVisualLiveRequest();
  if(active()&&state.view==='editor')content();
@@ -401,7 +417,7 @@ function editor(){
  '<p class="ns-hint">Pakai foto dari kamera HP. Hasil simulasi ini belum memperbaiki foto dengan AI.</p>'+
  '<input id="ns-file" type="file" accept="image/png,image/jpeg,image/webp" hidden>'+
  '<button class="ns-drop ns-v2-upload" id="ns-upload" type="button">'+(selected?'<img id="ns-thumb" src="'+htmlEscape(state.photo)+'" alt="Foto sumber yang dipilih">':'<span class="ns-upload-empty">'+ico('upload')+'</span>')+
- '<span><strong>'+(selected?'Ganti foto produk':'Pilih foto dari HP')+'</strong><small>JPG, PNG atau WebP · maks. 8 MB</small></span>'+ico('upload')+'</button>'+
+ '<span><strong>'+(selected?'Ganti foto produk':'Pilih foto dari HP')+'</strong><small>JPG, PNG atau WebP · maks. 4 MB</small></span>'+ico('upload')+'</button>'+
  '<small class="ns-hint">Atau gunakan foto sampel untuk menguji alur:</small>'+
  '<div class="ns-samples">'+SAMPLES.map((v,i)=>'<button type="button" class="ns-sample" data-sample="'+i+'" aria-label="Pakai contoh '+htmlEscape(v.name)+'" aria-pressed="'+(state.photo===v.img)+'"><img src="'+v.img+'" alt="'+htmlEscape(v.name)+'" loading="lazy"></button>').join('')+'</div>'+
  '</section>'+
@@ -423,7 +439,7 @@ function editor(){
   '</section>'
  ))+
  '</div><div class="ns-cost"><div class="ns-cost-row"><strong>Kredit simulasi</strong><span class="ns-status ns-mono">'+getCost()+' Cr</span></div>'+
- foodPreflightMarkup()+'<div class="ns-hint">'+(foodMode?food.count+' × '+(V2_TIERS[state.v2.quality_tier]||4)+' Cr / hasil · estimasi simulasi':'1 hasil · simulasi')+'</div>'+ '<button type="button" id="ns-generate" class="ns-cta ns-primary" '+(!selected||state.busy||(foodMode&&foodQuality.status!=='pass')?'disabled':'')+'>'+ico('spark')+(selected?' Buat Pratinjau Simulasi':' Unggah Foto Dahulu')+'</button>'+
+ foodPreflightMarkup()+'<div class="ns-hint">'+(foodMode?food.count+' × '+selectedMachine().credits+' Cr / hasil · estimasi simulasi':'1 hasil · simulasi')+'</div>'+ '<button type="button" id="ns-generate" class="ns-cta ns-primary" '+(!selected||state.busy||(foodMode&&foodQuality.status!=='pass')?'disabled':'')+'>'+ico('spark')+(selected?' Buat Pratinjau Simulasi':' Unggah Foto Dahulu')+'</button>'+
  (foodMode?'<div id="ns-food-pricing" class="ns-food-pricing" role="status"><strong>Ringkasan Kredit</strong><span>'+htmlEscape(selectedMachine().name)+'</span><b>'+selectedMachine().credits+' kredit × '+food.count+' hasil = '+getCost()+' kredit</b><small>Tarif final dikunci server sebelum Generate. Gagal total: 100% kredit kembali; jika gagal sebagian, hanya hasil sukses ditagih.</small></div><div id="ns-food-job-progress" class="ns-food-job-progress" role="status" aria-live="polite">'+htmlEscape(liveStatus)+'</div>':'')+
  (foodMode&&liveBridgeReady()?'<button type="button" id="ns-food-live-generate" class="ns-cta ns-dark" '+(!selected||!selectedLocalFile||foodQuality.status!=='pass'||livePolling?'disabled':'')+'>Generate AI melalui antrean privat</button>':'')+ '<small class="ns-hint">'+(liveBridgeReady()?'AI memakai antrean privat jika disetujui oleh backend.':'AI nyata masih nonaktif. Foto asli tidak dikirim ke server.')+'</small></div></aside>'+
  '<div class="ns-board-panel"><div class="ns-window-titlebar"><span class="ns-window-dots" aria-hidden="true"><i></i><i></i><i></i></span><strong>Pratinjau Foto Produk</strong></div>'+
@@ -466,7 +482,7 @@ async function simulate(){if(state.busy)return;if(!state.photo){announce('Pilih 
 function handleClick(event){const target=event.target.closest('button');if(!target||!root.contains(target))return;if(target.dataset.view){selectView(target.dataset.view);return}if(target.dataset.cat){state.cat=target.dataset.cat;content();return}if(target.dataset.template){const t=TEMPLATES.find(x=>x.id===target.dataset.template);if(t)setTemplate(t);return}if(target.dataset.sample!==undefined){const i=Number(target.dataset.sample);const s=SAMPLES[i];if(s){selectedLocalFile=null;resetVisualLiveRequest();state.photo=s.img;state.photoChosen=true;state.product=s.product;state.headline=s.headline;state.promo=s.promo;state.v2.product_category=['beverage_bottle','food_culinary','skincare_cosmetic','food_culinary'][i];reconcileV2();state.img=null;state.loadedUrl='';content()}return}
 if(target.dataset.foodMode){foodMode=target.dataset.foodMode==='food';if(foodMode){state.ratio=food.format;state.overlay=false;foodQuality={status:'not_checked',message:'Memeriksa foto sumber…'};if(state.img)evaluateFoodPhoto(state.img)}else{state.ratio=state.v2.aspect_ratio;}content();return}if(target.dataset.contextCategory){if(contextSelectCategory(target.dataset.contextCategory))content();return}if(target.dataset.contextScenario){if(contextSelectScenario(target.dataset.contextScenario))content();return}if(target.dataset.foodMachine){if(chooseMachine(target.dataset.foodMachine))content();return}if(target.dataset.foodField){if(chooseFood(target.dataset.foodField,target.dataset.foodField==='count'?Number(target.dataset.foodValue):target.dataset.foodValue))content();return}if(target.dataset.v2Field){if(selectV2(target.dataset.v2Field,target.dataset.v2Value))content();return}if(target.dataset.mood){state.mood=target.dataset.mood;content();return}if(target.dataset.ratio){state.ratio=target.dataset.ratio;content();return}if(target.dataset.tier){state.tier=target.dataset.tier;content();return}
 if(target.id==='ns-food-live-generate'){void runVisualLive();return}if(target.id==='ns-upload'){node('ns-file')?.click();return}if(target.id==='ns-toggle'){state.overlay=!state.overlay;content();return}if(target.id==='ns-compare'){state.compare=!state.compare;content();return}if(target.id==='ns-generate'){void simulate();return}if(target.id==='ns-download'){const cv=node('ns-canvas');if(cv)try{download(cv.toDataURL('image/png'),'ngulik-studio-simulasi-'+state.ratio.replace(':','x')+'.png')}catch(_){announce('Tidak bisa mengunduh gambar eksternal ini. Unggah foto lokal untuk ekspor HD.')}return}if(target.dataset.preview!==undefined){const item=state.history[Number(target.dataset.preview)];if(item){state.photo=item.image;state.photoChosen=true;state.img=null;state.loadedUrl='';state.ratio=item.ratio;state.product=item.product;state.compare=true;state.view='editor';shell()}return}if(target.dataset.historyDownload!==undefined){const item=state.history[Number(target.dataset.historyDownload)];if(item)download(item.image,'ngulik-studio-aset-'+(Number(target.dataset.historyDownload)+1)+'.png');return}}
-function handleChange(event){const t=event.target;if(t.id==='ns-context-restoration'){contextSelectRestoration(t.checked?'full_phone_restoration':'preserve_source');content();return}if(t.id==='ns-v2-overlay'){resetVisualLiveRequest();state.overlay=t.checked;content();return}if(t.id==='ns-ratio-filter'){state.filterRatio=t.value;content()}if(t.id==='ns-file'){const file=t.files?.[0];if(!file)return;if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>8*1024*1024){announce('File harus JPG/PNG/WebP maksimal 8 MB.');return}const reader=new FileReader();reader.onload=()=>{if(!active())return;state.photo=String(reader.result||'');selectedLocalFile=file;resetVisualLiveRequest();state.photoChosen=true;state.img=null;state.loadedUrl='';foodQuality={status:'not_checked',message:'Sedang memeriksa foto baru…'};content()};reader.readAsDataURL(file)}}
+function handleChange(event){const t=event.target;if(t.id==='ns-context-restoration'){contextSelectRestoration(t.checked?'full_phone_restoration':'preserve_source');content();return}if(t.id==='ns-v2-overlay'){resetVisualLiveRequest();state.overlay=t.checked;content();return}if(t.id==='ns-ratio-filter'){state.filterRatio=t.value;content()}if(t.id==='ns-file'){const file=t.files?.[0];if(!file)return;if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>4*1024*1024){announce('File harus JPG/PNG/WebP maksimal 4 MB.');return}const reader=new FileReader();reader.onload=()=>{if(!active())return;state.photo=String(reader.result||'');selectedLocalFile=file;resetVisualLiveRequest();state.photoChosen=true;state.img=null;state.loadedUrl='';foodQuality={status:'not_checked',message:'Sedang memeriksa foto baru…'};content()};reader.readAsDataURL(file)}}
 function mount(el){if(!el)return;root=el;root.classList.add('ngd-studio');root.addEventListener('click',handleClick);root.addEventListener('input',e=>maybeEdit(e.target));root.addEventListener('change',handleChange);shell()}
 function unmount(){epoch++;livePolling=false;selectedLocalFile=null;if(root){root.replaceChildren();root=null}}
 global.NGD_STUDIO={mount,unmount,adapterMode:adapter.mode,configureVisualPipeline,contextCategorySelect:contextSelectCategory,contextScenarioSelect:contextSelectScenario,contextRestorationSelect:contextSelectRestoration,contextMatrix:()=>JSON.parse(JSON.stringify(CONTEXT_SCENARIOS)),foodMachineSelect:chooseMachine,publicMachineCatalog:()=>FOOD_MACHINES.map(m=>({...m})),debugSnapshot:()=>({mode:adapter.mode,creditsSimulated:state.credits,renders:state.renderNo,history:state.history.length}),requestDraft:buildVisualRequestDraft,img2imgDraft:buildImg2ImgV2Draft,foodMagazineDraft:foodDraft,foodChoose:chooseFood,foodContracts:()=>FOOD_GROUPS,selectOption:selectV2,optionContracts:()=>Object.keys(V2_OPTIONS).reduce((a,k)=>(a[k]=V2_OPTIONS[k].map(x=>[...x]),a),{}),presetContracts:()=>Object.keys(VISUAL_PRESET_IDS).map(id=>({id,...VISUAL_PRESET_IDS[id]}))};
