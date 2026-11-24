@@ -545,25 +545,8 @@ function viewHome(){
     })();
     const format=balanceKnown?balance.toLocaleString('id-ID'):'—';
     return '<div class="ngdm-dashboard" aria-label="Beranda member">'+
-      '<header class="ngdm-greeting">'+
-        '<div><p class="ngdm-kicker">RUANG MEMBER <span aria-hidden="true">·</span> '+esc(greeting)+'</p>'+
-          '<h1>'+esc(greeting)+', '+esc(first)+'</h1>'+
-          '<p>Buat materi jualan, temukan alat usaha, atau belajar langkah demi langkah dari HP.</p></div>'+
-      '</header>'+
-      '<section class="ngdm-quick" aria-labelledby="ngdm-quick-title">'+
-        '<div class="ngdm-section-head"><div><p class="ngdm-kicker">LANGKAH PERTAMA</p>'+
-        '<h2 id="ngdm-quick-title">Mau mulai dari mana?</h2></div></div>'+
-        '<p class="ngdm-quick-intro">Pilih satu kebutuhan. Tidak perlu memahami semua menu untuk memulai.</p>'+
-        '<div class="ngdm-shortcuts">'+[
-          ['spark','Buat Foto Jualan','Unggah foto · pilih gaya','ai'],
-          ['store','Cari Produk Digital','Temukan alat untuk usaha','katalog'],
-          ['book','Mulai Belajar','Panduan untuk pemula','belajar'],
-          ['gift','Minta Bantuan','Ajukan pertanyaan','dukungan']
-        ].map(([symbol,label,description,route])=>
-          '<button type="button" class="ngdm-shortcut" '+(route==='ai'? 'data-ai-open="ngulik-visual"':'data-route="'+route+'"')+'>'+
-            '<span class="ngdm-shortcut-icon">'+icon(symbol)+'</span>'+
-            '<strong>'+label+'</strong><small>'+description+'</small></button>').join('')+
-        '</div></section>'+
+      (window.NGD_CMS_SURFACES?.memberHome(state.siteContent,{
+        name:first,balanceKnown,balance:format})||'<p role="status">Sedang memuat informasi...</p>')+
       '<section class="ngdm-wallet" aria-labelledby="ngdm-wallet-heading">'+
         '<div class="ngdm-wallet-top"><span>'+icon('wallet')+' DOMPET TOKEN</span>'+
           '<span class="ngdm-live"><i></i>'+esc(state.me?.status||'Member')+'</span></div>'+
@@ -998,7 +981,8 @@ function viewPortalGratis_(){
   if(!logged()||isAdmin())return needLogin('Portal Belajar Gratis Member');
   if(!window.NGD_LMS_UI?.memberPortal)
     return '<section class="surface"><h2>Portal sedang dimuat</h2><p>Coba muat ulang halaman untuk membuka sumber belajar gratis.</p></section>';
-  return window.NGD_LMS_UI.memberPortal(state.modules);
+  return window.NGD_LMS_UI.memberPortal(state.modules,
+    window.NGD_CMS_SURFACES?.portalText(state.siteContent));
 }
 function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
@@ -1265,34 +1249,9 @@ function uiCommissionText_(value){
 function viewAffiliate(){
   // Read-only presentation of the member's own backend-provided commission data.
   // Financial actions keep their existing client + server feature gates.
-  if(!logged())return '<div class="partner-public">'+
-    '<header class="partner-public-intro">'+
-      '<img class="ngd-cms-affiliate-art" src="'+esc(cmsPageArt_('affiliate')||ngdPremiumArtSrc_('starter'))+'" alt="" loading="lazy" decoding="async">'+
-      '<p class="partner-kicker">NGULIK DIGITAL · PROGRAM KOMISI</p>'+
-      '<h1>Bagikan manfaat.<br><span>Dapatkan komisi.</span></h1>'+
-      '<p>Rekomendasikan produk digital yang sesuai kebutuhan teman. Komisi hanya tercatat untuk transaksi yang memenuhi ketentuan.</p>'+
-      '<div class="partner-hero-actions">'+
-        (registrationOtpEnabled()?'<button type="button" class="partner-btn partner-btn-primary" data-route="daftar">Daftar Member '+icon('arrow')+'</button>':
-        '<button type="button" class="partner-btn partner-btn-primary" data-route="katalog">Lihat Starter Pack '+icon('arrow')+'</button>')+
-        '<button type="button" class="partner-btn partner-btn-outline" data-route="login">Sudah punya akun?</button>'+
-      '</div><small>Gratis bergabung. Tidak ada jaminan penghasilan atau komisi untuk setiap klik.</small></header>'+
-    '<section class="partner-steps-compact" aria-label="Cara kerja program komisi">'+
-      [['01','Daftar','Buat akun member Ngulik Digital.'],
-       ['02','Aktifkan','Beli Starter Pack dan tunggu verifikasi pembayaran.'],
-       ['03','Bagikan','Setelah aktif, bagikan tautan dan pantau komisi yang memenuhi syarat.']].map(x=>
-        '<article class="partner-step-compact"><span>'+x[0]+'</span><div><h2>'+x[1]+'</h2><p>'+x[2]+'</p></div></article>').join('')+'</section>'+
-    '<section class="partner-pick-products"><div><p class="partner-kicker">MULAI DARI PRODUK YANG COCOK</p>'+
-      '<h2>Punya rekomendasi untuk teman?</h2>'+
-      '<p>Jelajahi katalog dan pilih solusi digital yang benar-benar relevan. Tidak semua produk memberikan komisi.</p></div>'+
-      '<button type="button" class="partner-btn partner-btn-outline" data-route="katalog">Lihat katalog '+icon('arrow')+'</button></section>'+
-    '<section class="partner-public-faq" aria-label="Pertanyaan umum tentang komisi">'+
-      '<h2>Pertanyaan umum</h2>'+
-      [['Komisi dihitung dari apa?','Komisi mengikuti pembelian yang memenuhi syarat dan ketentuan pada masing-masing produk.'],
-       ['Kapan bisa dicairkan?','Setelah lolos verifikasi, masa tahan, dan batas minimum pencairan yang berlaku.'],
-       ['Apakah satu klik langsung menghasilkan komisi?','Tidak. Klik dan pendaftaran tidak otomatis menghasilkan komisi.']].map(x=>
-         '<details class="partner-faq-item"><summary>'+x[0]+'</summary><p>'+x[1]+'</p></details>').join('')+'</section>'+
-    '<p class="partner-public-note">Program komisi tunduk pada ketentuan produk, status akun, dan verifikasi transaksi.</p>'+
-  '</div>';
+  const info=window.NGD_CMS_SURFACES?.affiliateInfo(state.siteContent)||
+    '<p role="status">Sedang memuat informasi...</p>';
+  if(!logged())return '<div class="partner-public">'+info+'</div>';
 
   if(isAdmin())return '<section class="partner-member partner-member-empty"><p class="partner-kicker">AKSES MEMBER</p>'+
     '<h1>Program Komisi</h1><p>Dashboard komisi pribadi hanya tersedia untuk akun member.</p>'+
@@ -1309,12 +1268,7 @@ function viewAffiliate(){
   const url=unlocked&&/^[A-Za-z0-9_-]{3,80}$/.test(code)&&
     String(a.link||'')===referralBase+'?ref='+encodeURIComponent(code)?a.link:'';
   if(!unlocked)return '<section class="partner-member partner-locked">'+
-    '<p class="partner-kicker">AKSES AJAK TEMAN</p><h1>Aktifkan link komisi Anda.</h1>'+
-    '<p>Starter Pack Rp15.000 membuka akses mitra seumur hidup, bonus 15 token AI, dan ruang kurasi. '+ 
-    'Komisi hanya berlaku untuk pembelian yang memenuhi ketentuan setelah pembayaran diverifikasi.</p>'+
-    '<button type="button" class="partner-btn partner-btn-primary" data-checkout-product="P-STARTER-15K">Lihat Starter Pack '+icon('arrow')+'</button>'+
-    '<button type="button" class="partner-btn partner-btn-outline" data-route="katalog">Lihat Katalog</button>'+
-    '</section>';
+    info+'<button type="button" class="partner-btn partner-btn-outline" data-route="katalog">Katalog</button></section>';
   const all=Array.isArray(a.komisi)?a.komisi:[];
   const totals=a.saldo||{};
   const pending=Number(totals.PENDING)||0;
@@ -1327,7 +1281,7 @@ function viewAffiliate(){
   const statusLabel={PENDING:'Dalam masa tahan',APPROVED:'Disetujui',PAID:'Dibayar',REVERSED:'Dibatalkan'};
   const rows=[...all].sort((x,y)=>String(y.created_at||'').localeCompare(String(x.created_at||''))).slice(0,50);
   const waShare=url?'https://wa.me/?text='+encodeURIComponent('Rekomendasi produk digital Ngulik Digital: '+url):'';
-  return '<div class="partner-member">'+
+  return '<div class="partner-member">'+info+
     '<header class="partner-member-header"><div><p class="partner-kicker">DASHBOARD MEMBER</p>'+
       '<h1>Komisi & tautan saya</h1><p>Bagikan rekomendasi dan pantau hasilnya.</p></div>'+
       '<button type="button" class="partner-refresh" data-affiliate-refresh aria-label="Perbarui data komisi">'+icon('arrow')+' <span>Perbarui</span></button></header>'+
@@ -1654,16 +1608,8 @@ function ngdPaymentProofWaUrl_(order,rawAdminWa){
      !Number.isSafeInteger(code)||code<100||code>999||
      !Number.isSafeInteger(total)||total!==base+code||
      String(order.metode||'')!=='QRIS_STATIS')return '';
-  const message=[
-    'Halo Admin Ngulik Digital, saya ingin mengirim bukti pembayaran QRIS.',
-    'No. pesanan: '+id,
-    'Produk: '+String(order.nama_produk||'Produk digital').slice(0,100),
-    'Nominal tagihan: '+rupiah(total),
-    'Merchant: Linggau AI Studio',
-    '',
-    'Saya akan melampirkan screenshot/struk transaksi di chat ini.',
-    'Mohon cocokkan mutasi DANA Bisnis dan nomor pesanan sebelum menyetujui pembayaran.'
-  ].join('\n');
+  const message=window.NGD_CMS_SURFACES?.paymentMessage(state.siteContent,order,rupiah(total))||'';
+  if(!message)return '';
   return 'https://wa.me/'+phone+'?text='+encodeURIComponent(message);
 }
 function viewCheckout(){
@@ -1740,8 +1686,10 @@ function viewCheckout(){
     (open?'<p class="checkout-countdown" id="checkout-countdown" data-expiry="'+esc(o.expires_at||'')+'">Batas pembayaran: '+timer+'</p>':'')+
     '<div class="checkout-status-summary">'+safeBadge(status)+'<p>'+esc(stateNote)+'</p></div></section>'+
     '<section><h2>'+ (open?'Langkah pembayaran':'Status dan bantuan')+'</h2>'+paymentSection+
-    (open&&officialQr?'<div class="checkout-steps"><strong>Setelah Bayar</strong><p>Setelah benar-benar membayar sesuai nominal tagihan, kirim screenshot atau struk transfer melalui WhatsApp Admin. Pesanan baru dinyatakan lunas setelah Admin mencocokkan dana masuk.</p></div>':'')+
-    (proofWaUrl?'<a class="btn btn-primary btn-wide" data-payment-proof-wa href="'+esc(proofWaUrl)+'" target="_blank" rel="noopener noreferrer">Kirim Bukti Pembayaran ke WhatsApp Admin</a>':
+    (open&&officialQr?(window.NGD_CMS_SURFACES?.checkoutGuide(state.siteContent)||
+      '<p role="status">Sedang memuat informasi...</p>'):'')+
+    (proofWaUrl?'<a class="btn btn-primary btn-wide" data-payment-proof-wa href="'+esc(proofWaUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(window.NGD_CMS_SURFACES?.checkoutButton(state.siteContent)||
+  'Sedang memuat informasi...')+'</a>':
       canConfirm?'<p class="checkout-note" role="alert">Nomor WhatsApp Admin belum tersedia atau tidak valid. Hubungi Admin melalui menu Bantuan; jangan kirim bukti ke nomor lain.</p>':'')+
     (open&&(!paymentEnabled()||financeBlocked)?'<p class="checkout-note"><strong>Konfirmasi pembayaran belum tersedia.</strong> Jangan transfer sebelum QRIS resmi aktif.</p>':'')+
     (paid?'<button type="button" class="btn btn-secondary btn-wide" data-route="beranda">Lihat saldo / akses saya</button>':'')+
