@@ -723,8 +723,11 @@ function setTemplate(t){
  if(p){state.v2.product_category=p[0];state.v2.use_case=p[1];state.v2.visual_style=p[2];}
  state.v2.aspect_ratio=t.ratio;
  reconcileV2();
- selectedLocalFile=null;resetVisualLiveRequest();state.template=t;state.photo=state.photo||t.img;state.photoChosen=true;
- state.product=t.product;state.headline=t.headline;state.promo=t.promo;
+ resetVisualLiveRequest();state.template=t;
+ // A template image is inspiration, NEVER an input product photo. Keep only
+ // a genuine locally selected product image; do not copy sample brand text.
+ if(!selectedLocalFile){state.photo='';state.photoChosen=false;state.img=null;state.loadedUrl='';}
+ state.product=state.product||'';state.headline=state.headline||'';state.promo=state.promo||'';
  state.mood=t.mood;state.img=null;state.loadedUrl='';state.compare=false;
  state.rendered=false;state.view='editor';shell();
 }
