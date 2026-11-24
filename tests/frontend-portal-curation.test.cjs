@@ -4,7 +4,7 @@ const root=path.join(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'
 function renderModules(modules){
   const window={};
   vm.runInNewContext(read('js/lms-ui.js'),{window,URL},{timeout:3000});
-  return window.NGD_LMS_UI.memberPortal(modules);
+  return window.NGD_LMS_UI.memberPortal(modules,'Ngulik Digital hanya berperan sebagai kurator. Seluruh syarat, jadwal, kuota, dan ketentuan sertifikat mengikuti kebijakan penyedia layanan terkait.');
 }
 test('all 39 STAGING portal entries render in four distinct groups without checkout',()=>{
   const modules=[
@@ -42,7 +42,7 @@ test('public navigation and partner shelf separate member facilities',()=>{
   const app=read('js/app.js');
   assert.match(app,/const guestNav=\['beranda','katalog','jasa','dukungan'\]/);
   assert.match(app,/guestPrivateRoutes_=new Set\(\['ai'/);
-  assert.match(app,/data-checkout-product="P-STARTER-15K"/);
+  assert.match(app,/NGD_CMS_SURFACES\?\.affiliateInfo\(state\.siteContent\)/);
   assert.doesNotMatch(app,/WARUNG TOOLS AI & BENGKEL KREATIF/);
   assert.match(app,/NGD_PUBLIC_CMS/);
   assert.match(app,/partnerAffiliateUrl_\(x\)/);
