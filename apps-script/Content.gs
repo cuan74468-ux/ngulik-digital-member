@@ -7,9 +7,10 @@
 var NGD_CONTENT_KINDS_=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO','PROMO','ANNOUNCEMENT',
  'HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CARD','FEATURE_BULLET','NOTICE_BOX','SERVICE_CARD',
  'BENEFIT_LIST','BENEFIT_BULLET','SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD',
- 'CHECKOUT_GUIDE','CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO'];
+ 'CHECKOUT_GUIDE','CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO',
+ 'HERO_ACTION','SECTION_HEADER','FEATURE_ITEM','CHECKOUT_COPY','MEMBER_GREETING','DISCLAIMER'];
 var NGD_CONTENT_TEXT_KINDS_=NGD_CONTENT_KINDS_.slice(8);
-var NGD_CONTENT_ROUTES_=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun','daftar','masuk'];
+var NGD_CONTENT_ROUTES_=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun','daftar','masuk','auth','checkout','member','portal-belajar','ajak-teman'];
 var NGD_CONTENT_FIELDS_=[
   'kind','placement','title','description','image_path','cta_label','cta_route',
   'sort_order','start_date','end_date'
