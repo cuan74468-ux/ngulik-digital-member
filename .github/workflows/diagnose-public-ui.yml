@@ -1,0 +1,26 @@
+name: Diagnose public white screen (read-only)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tests/live-public-guest-diagnostics.cjs'
+      - '.github/workflows/diagnose-public-ui.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout without credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Node 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Diagnose public and STAGING guest pages in real Chrome
+        run: CHROME="$(command -v google-chrome || command -v chromium)" node tests/live-public-guest-diagnostics.cjs
