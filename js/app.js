@@ -548,17 +548,31 @@ function viewHome(){
       '<header class="ngdm-greeting">'+
         '<div><p class="ngdm-kicker">RUANG MEMBER <span aria-hidden="true">·</span> '+esc(greeting)+'</p>'+
           '<h1>'+esc(greeting)+', '+esc(first)+'</h1>'+
-          '<p>Token, layanan, dan aktivitas akun Anda.</p></div>'+
+          '<p>Buat materi jualan, temukan alat usaha, atau belajar langkah demi langkah dari HP.</p></div>'+
       '</header>'+
+      '<section class="ngdm-quick" aria-labelledby="ngdm-quick-title">'+
+        '<div class="ngdm-section-head"><div><p class="ngdm-kicker">LANGKAH PERTAMA</p>'+
+        '<h2 id="ngdm-quick-title">Mau mulai dari mana?</h2></div></div>'+
+        '<p class="ngdm-quick-intro">Pilih satu kebutuhan. Tidak perlu memahami semua menu untuk memulai.</p>'+
+        '<div class="ngdm-shortcuts">'+[
+          ['spark','Buat Foto Jualan','Unggah foto · pilih gaya','ai'],
+          ['store','Cari Produk Digital','Temukan alat untuk usaha','katalog'],
+          ['book','Mulai Belajar','Panduan untuk pemula','belajar'],
+          ['gift','Minta Bantuan','Ajukan pertanyaan','dukungan']
+        ].map(([symbol,label,description,route])=>
+          '<button type="button" class="ngdm-shortcut" data-route="'+route+'">'+
+            '<span class="ngdm-shortcut-icon">'+icon(symbol)+'</span>'+
+            '<strong>'+label+'</strong><small>'+description+'</small></button>').join('')+
+        '</div></section>'+
       '<section class="ngdm-wallet" aria-labelledby="ngdm-wallet-heading">'+
         '<div class="ngdm-wallet-top"><span>'+icon('wallet')+' DOMPET TOKEN</span>'+
           '<span class="ngdm-live"><i></i>'+esc(state.me?.status||'Member')+'</span></div>'+
         '<div class="ngdm-wallet-grid"><div class="ngdm-wallet-numbers">'+
           '<p id="ngdm-wallet-heading">Saldo tersedia</p>'+
           '<div class="ngdm-wallet-number"><strong>'+esc(format)+'</strong><span>token</span></div>'+
-          '<p class="ngdm-wallet-hint">Gunakan token untuk fitur Studio AI.</p>'+
+          '<p class="ngdm-wallet-hint">Token untuk layanan tertentu. Saldo dan tarif foto AI Visual terpisah.</p>'+
           '<div class="ngdm-wallet-actions">'+
-             '<button type="button" class="ngdm-wallet-cta" data-route="ai">Pakai token '+icon('arrow')+'</button>'+
+             '<button type="button" class="ngdm-wallet-cta" data-route="ai">Jelajahi Studio '+icon('arrow')+'</button>'+
              '<button type="button" class="ngdm-wallet-secondary" data-route="katalog">Lihat paket</button></div>'+
         '</div><div class="ngdm-wallet-chart">'+
           '<div><strong>Riwayat saldo</strong><small>Aktivitas token terakhir</small></div>'+
@@ -577,19 +591,7 @@ function viewHome(){
           '<strong class="ngdm-metric-money">'+number('affiliate',rupiah(approved))+'</strong>'+
           '<small>'+(!reads.affiliate?'Data belum tersedia':partnerActive?'Program Ajak Teman aktif':'Lihat syarat Ajak Teman')+'</small></div>'+
       '</section>'+
-      '<section class="ngdm-quick" aria-labelledby="ngdm-quick-title">'+
-        '<div class="ngdm-section-head"><div><p class="ngdm-kicker">PINTASAN</p>'+
-        '<h2 id="ngdm-quick-title">Layanan untuk Anda</h2></div></div>'+
-        '<div class="ngdm-shortcuts">'+[
-          ['spark','Studio AI','Buat konten','ai'],
-          ['store','Katalog','Cari produk','katalog'],
-          ['book','Kelas saya','Lanjut belajar','belajar'],
-          ['gift','Jasa digital','Pesan bantuan','jasa']
-        ].map(([symbol,label,description,route])=>
-          '<button type="button" class="ngdm-shortcut" data-route="'+route+'">'+
-            '<span class="ngdm-shortcut-icon">'+icon(symbol)+'</span>'+
-            '<strong>'+label+'</strong><small>'+description+'</small></button>').join('')+
-        '</div></section>'+
+
       '<div class="ngdm-lower">'+
         '<section class="ngdm-orders ngd-window-frame" aria-labelledby="ngdm-orders-title">'+
           '<div class="ngd-window-titlebar" aria-hidden="true"><span class="ngd-window-dots"><i></i><i></i><i></i></span><span class="ngd-window-title">Pesanan</span></div>'+
