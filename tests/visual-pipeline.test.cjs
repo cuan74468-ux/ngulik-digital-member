@@ -235,7 +235,7 @@ test('frontend stays SIMULATION until a bridge is configured; default recommende
  assert.equal(api.foodMagazineDraft().estimated_total_credits,8);
  assert.equal(api.foodMachineSelect('unknown'),false);
  assert.throws(()=>api.configureVisualPipeline({enabled:true}),/VISUAL_PRIVATE_BRIDGE_INVALID/);
- api.configureVisualPipeline({enabled:true,upload:()=>{},create:()=>{},poll:()=>{},quote:()=>{}});
+ api.configureVisualPipeline({enabled:true,upload:()=>{},create:()=>{},poll:()=>{},quote:()=>{},result:()=>{}});
  assert.equal(api.adapterMode,'SIMULATION');
  api.configureVisualPipeline(null);
 });
