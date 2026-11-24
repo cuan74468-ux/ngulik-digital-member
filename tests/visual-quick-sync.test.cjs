@@ -39,8 +39,9 @@ function mockGas(){
  return {ctx,kv,calls};
 }
 test('quick bootstrap requires only two private properties; leaves all P0 and paid switches OFF',()=>{
- const h=mockGas();
- assert.throws(()=>h.ctx.ngdQuickBootstrapVisualStaging(),/ENTER_PRIVATE_FOLDER_ID|/); // validated by setup below
+ const h=mockGas();h.kv.delete('NGD_VISUAL_PRIVATE_FOLDER_ID');
+ assert.throws(()=>h.ctx.ngdQuickBootstrapVisualStaging(),/ENTER_PRIVATE_FOLDER_ID/);
+ assert.equal(h.calls.wallet,0);assert.equal(h.calls.registry,0);
 });
 test('quick bootstrap installs defaults and 12 Visual-only credits ONCE without provider calls or hardcoded secrets',()=>{
  const h=mockGas();
