@@ -28,7 +28,7 @@ test('beginner gallery explains use cases and avoids a distracting empty preset 
  assert.match(js,/Cocok untuk:/);
  assert.match(js,/Kenapa memilih gaya ini/);
  assert.match(js,/saved\.length>0\|\|templateFilter==='saved'/);
- assert.match(js,/Contoh suasana · bukan hasil AI produk Anda/);
+ assert.match(js,/Foto inspirasi · bukan hasil AI dari produk Anda/);
  assert.match(js,/Foto contoh bukan hasil AI dari produk Anda/);
 });
 
