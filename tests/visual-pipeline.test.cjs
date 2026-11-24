@@ -153,3 +153,41 @@ test('provider stays inactive until flags and owner-bound private asset',async()
  assert.equal(api.recoverableFailure('UPSTREAM_BUSY'),true);
  assert.equal(api.recoverableFailure('UNKNOWN_BILLING'),false);
 });
+
+
+test('reusing an idempotency key with different private recipe is rejected',()=>{
+ const r=runtime(),f=fake();
+ f.deps.fingerprint=details=>details.compiled_prompt==='OTHER'?'b'.repeat(64):hex;
+ const api=r.ngdVisualJobs_(f.deps);
+ api.create('alice_session',createRequest());
+ f.compiled.compiled_prompt='OTHER';
+ assert.throws(()=>api.create('alice_session',createRequest()),/IDEMPOTENCY_CONFLICT/);
+ assert.equal(f.counter.reserve,1);
+});
+test('BFL result URL cannot redirect worker to arbitrary host',async()=>{
+ const r=runtime(),job={id:'job_1234567890123',status:'PROCESSING'};
+ let upstream='https://attacker.invalid/results/evil.png';
+ const deps={config:{NGD_VISUAL_LIVE_ENABLED:true,NGD_MUTATIONS_ENABLED:true,NGD_FINANCE_ENABLED:true},
+  secrets:{get:()=> 'secret_abcdefghijkl'},
+  store:{saveSubmissionOnce:()=>{},ownsSubmission:()=>true},
+  transport:{post:async()=>({status:200,body:{id:'provider_id_123'}}),
+   get:async()=>({status:200,body:{status:'Ready',result:{sample:upstream}}})}};
+ const api=r.ngdVpAdapter_(deps);
+ await assert.rejects(api.pollBfl(job,'flux_kontext_pro','provider_id_123'),/UNTRUSTED_RESULT_HOST/);
+ upstream='https://bfldeliveryprod.blob.core.windows.net/results/approved.png';
+ const result=await api.pollBfl(job,'flux_kontext_pro','provider_id_123');
+ assert.equal(result.status,'READY_PRIVATE_IMPORT_REQUIRED');
+});
+test('front-end private bridge is optional and simulated mode remains default',()=>{
+ const source=fs.readFileSync(path.join(base,'js/ai-studio.js'),'utf8');
+ const w={};vm.runInNewContext(source,{window:w,console});
+ const api=w.NGD_STUDIO;
+ assert.equal(api.adapterMode,'SIMULATION');
+ assert.equal(api.foodMagazineDraft().estimated_credits_per_image,2);
+ assert.throws(()=>api.configureVisualPipeline({enabled:true}),/VISUAL_PRIVATE_BRIDGE_INVALID/);
+ api.configureVisualPipeline({enabled:true,upload:()=>{},create:()=>{},poll:()=>{}});
+ assert.equal(api.adapterMode,'SIMULATION');
+ api.configureVisualPipeline(null);
+ assert.equal(api.foodChoose('count',4),true);
+ assert.equal(api.foodMagazineDraft().estimated_total_credits,8);
+});
