@@ -218,6 +218,15 @@ async function visit(url,label){
     assert.equal(food.count,4);
     assert.equal(food.cost,food.unit*4);
     assert.ok(food.overflow<=360,'Food Magazine overflows 360px');
+    const preflight=await request('Runtime.evaluate',{expression:"(async()=>{\n const root=document.getElementById('ngd-studio-root');\n async function upload(mode){\n  const c=document.createElement('canvas');c.width=128;c.height=128;\n  const ctx=c.getContext('2d');\n  if(mode==='dark'){ctx.fillStyle='#030303';ctx.fillRect(0,0,128,128);}\n  else{\n   for(let y=0;y<128;y+=8)for(let x=0;x<128;x+=8){\n    ctx.fillStyle=((x+y)/8)%2===0?'#fff':'#121212';ctx.fillRect(x,y,8,8);\n   }\n  }\n  const blob=await new Promise(resolve=>c.toBlob(resolve,'image/png'));\n  const transfer=new DataTransfer();transfer.items.add(new File([blob],mode+'.png',{type:'image/png'}));\n  const input=root.querySelector('#ns-file');input.files=transfer.files;\n  input.dispatchEvent(new Event('change',{bubbles:true}));\n  await new Promise(resolve=>setTimeout(resolve,350));\n  return {message:root.querySelector('#ns-food-quality')?.textContent||'',\n   disabled:root.querySelector('#ns-generate')?.disabled,\n   overflow:document.documentElement.scrollWidth};\n }\n return {dark:await upload('dark'),clear:await upload('clear')};\n})()",returnByValue:true,awaitPromise:true});
+    assert.ok(!preflight.exceptionDetails,'Food preflight browser exception');
+    const quality=preflight.result.value;
+    console.log('MOBILE_360_FOOD_PREFLIGHT '+JSON.stringify(quality));
+    assert.equal(quality.dark.disabled,true,'extremely dark image must block Generate');
+    assert.match(quality.dark.message,/Peringatan foto/);
+    assert.equal(quality.clear.disabled,false,'clear well-lit image must enable Generate');
+    assert.match(quality.clear.message,/lolos pemeriksaan/);
+    assert.ok(quality.clear.overflow<=360);
     mkdirSync('mobile-qa-artifacts',{recursive:true});
     const shot=await request('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
     writeFileSync('mobile-qa-artifacts/member-studio-360x800.png',Buffer.from(shot.data,'base64'));
