@@ -58,6 +58,8 @@ function ngdVisualJobs_(dependencies){
   ngdVjAssert_(ngdVjHex_(details.sha256),'HASH_REQUIRED');
   ngdVjAssert_(Array.isArray(details.bytes)&&details.bytes.length===details.size&&
    ngdVjSignature_(details.bytes,details.mime),'SIGNATURE_MISMATCH');
+  ngdVjAssert_(typeof d.hashBytes==='function'&&
+   d.hashBytes(details.bytes)===details.sha256.toLowerCase(),'CHECKSUM_MISMATCH');
   // Private store implementation MUST enforce server-side object ACL, encrypted
   // at rest, ownership and TTL; never use a browser-supplied bucket or URL.
   return d.media.putPrivate({
