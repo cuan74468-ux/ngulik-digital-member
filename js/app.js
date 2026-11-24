@@ -1929,6 +1929,10 @@ function viewAdminCatalog(){
   return intro+'<div class="catalog-admin-layout"><div>'+entries+'</div>'+form+'</div>';
 }
 const contentWriteEnabled=()=>isWriteEnabled()&&config.contentEnabled===true;
+const ngdTextContentKinds_=new Set(['HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CARD',
+  'FEATURE_BULLET','NOTICE_BOX','SERVICE_CARD','BENEFIT_LIST','BENEFIT_BULLET',
+  'SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD','CHECKOUT_GUIDE',
+  'CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO']);
 function viewAdminContent(){
   return window.NGD_CONTENT_UI?
     window.NGD_CONTENT_UI.admin({authorized:isAdmin(),items:state.adminContent,
@@ -2383,12 +2387,15 @@ async function submitContentForm_(form){
   payload.sort_order=Number(payload.sort_order);
   const old=id?state.adminContent.find(x=>x.content_id===id):null;
   if(id&&!old)return toast('Konten berubah. Muat ulang halaman.',true);
+  if(!old&&String(fd.get('content_id')||'').trim())
+    payload.content_id=String(fd.get('content_id')).trim();
   if(old){
     if(old.status==='PUBLISHED')
       return toast('Tarik tayang konten terlebih dahulu sebelum mengedit. Ini mencegah perubahan live tanpa persetujuan publikasi ulang.',true);
     payload.content_id=id;payload.revision=old.revision;
   }
-  if(!(payload.kind==='PROMO'||payload.kind==='ANNOUNCEMENT')||payload.image_path){
+  if(!ngdTextContentKinds_.has(payload.kind)&&
+      !['PROMO','ANNOUNCEMENT'].includes(payload.kind)||payload.image_path){
     if(!window.NGD_CONTENT_UI?.mediaPath(payload.image_path))
       return toast('Gunakan URL HTTPS gambar atau path assets/ (PNG, JPG, WebP, AVIF).',true);
   }
@@ -2415,11 +2422,13 @@ async function changeContentStatus_(id,nextStatus){
   const old=state.adminContent.find(x=>x.content_id===id);
   if(!old)return toast('Konten tidak ditemukan.',true);
   if(nextStatus==='PUBLISHED'){
-    if(!['HERO','PRODUCT_IMAGE','FEATURE_ICON','PAGE_COVER','NAV_ICON','BRAND_LOGO','PROMO','ANNOUNCEMENT'].includes(old.kind))
+    if(!['HERO','PRODUCT_IMAGE','FEATURE_ICON','PAGE_COVER','NAV_ICON','BRAND_LOGO',
+      'PROMO','ANNOUNCEMENT'].includes(old.kind)&&!ngdTextContentKinds_.has(old.kind))
       return toast('Format konten lama tidak dapat diterbitkan. Buat konten baru dengan jenis yang didukung.',true);
     const src=window.NGD_CONTENT_UI?.mediaPath(old.image_path);
-    if(!src&&['PROMO','ANNOUNCEMENT'].includes(old.kind)){
-      if(!confirm('Terbitkan '+(old.kind==='PROMO'?'promosi':'pengumuman')+' tanpa gambar?'))return;
+    if(!src&&(['PROMO','ANNOUNCEMENT'].includes(old.kind)||ngdTextContentKinds_.has(old.kind))){
+      if(!ngdTextContentKinds_.has(old.kind)&&
+         !confirm('Terbitkan '+(old.kind==='PROMO'?'promosi':'pengumuman')+' tanpa gambar?'))return;
     }else if(!src)return toast('Alamat gambar tidak valid.',true);
     // A valid path is not evidence that a file exists: verify the image loads
     // before a published CMS row can replace the homepage or product image.
