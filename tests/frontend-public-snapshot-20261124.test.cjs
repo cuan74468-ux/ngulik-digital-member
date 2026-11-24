@@ -120,5 +120,5 @@ test('home polling is read-only, pauses on hidden tabs and keeps its timer acros
 });
 
 test('index.html cache-busts app.js for this change',()=>{
-  assert.match(indexHtml,/js\/app\.js\?v=[^"]*snap1"/);
+  assert.match(indexHtml,/js\/app\.js\?v=[^"]*snap1-seed1"/);
 });
