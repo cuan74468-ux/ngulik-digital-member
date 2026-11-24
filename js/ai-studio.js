@@ -202,7 +202,7 @@ function chooseFood(field,value){
  const next={...food,[field]:value};
  if(field==='cover_concept')Object.assign(next,FOOD_PRESETS[value]);
  if(!foodCompatible(next))return false;
- food=next;liveRequestKey='';
+ food=next;resetVisualLiveRequest();
  if(field==='format'){state.ratio=food.format;}
  state.rendered=false;
  return true;
