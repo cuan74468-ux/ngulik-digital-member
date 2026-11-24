@@ -8,8 +8,8 @@
  */
 var NGD_VISUAL_PIPELINE_DEFAULTS_=Object.freeze({
  live_enabled:false, visual_credits_enabled:false,media_ready:false,worker_ready:false,
- credits:{standard:2,hd:3}, daily_budget_cap_idr:0,
- max_upload_bytes:8*1024*1024, max_asset_age_ms:24*60*60*1000,
+ daily_budget_cap_idr:0, rate_limit_per_hour:6,
+ max_upload_bytes:4*1024*1024, max_asset_age_ms:24*60*60*1000,
  processing_timeout_ms:10*60*1000
 });
 function ngdVjAssert_(ok,code){if(!ok)throw Error('VISUAL_JOB_'+code);}
@@ -29,8 +29,8 @@ function ngdVjPolicy_(config){
   credits_enabled:c.NGD_VISUAL_CREDITS_ENABLED===true,
   media_ready:c.NGD_VISUAL_MEDIA_READY===true,
   worker_ready:c.NGD_VISUAL_WORKER_READY===true,
-  max_daily_idr:Number.isSafeInteger(c.daily_budget_cap_idr)&&c.daily_budget_cap_idr>0?c.daily_budget_cap_idr:0,
-  standard:2,hd:3
+  max_daily_idr:Number.isSafeInteger(c.NGD_VISUAL_DAILY_BUDGET_CAP)&&c.NGD_VISUAL_DAILY_BUDGET_CAP>0?c.NGD_VISUAL_DAILY_BUDGET_CAP:0,
+  rate_per_hour:Number.isSafeInteger(c.NGD_VISUAL_RATE_LIMIT)&&c.NGD_VISUAL_RATE_LIMIT>0&&c.NGD_VISUAL_RATE_LIMIT<=60?c.NGD_VISUAL_RATE_LIMIT:6
  };
 }
 function ngdVjHex_(v){return typeof v==='string'&&/^[a-f0-9]{64}$/i.test(v);}
@@ -44,7 +44,7 @@ function ngdVjSignature_(bytes,mime){
 }
 function ngdVisualJobs_(dependencies){
  var d=dependencies||{},p=ngdVjPolicy_(d.config);
- ngdVjAssert_(d.auth&&d.media&&d.jobs&&d.ledger&&d.clock&&d.budget&&d.queue,'DEPENDENCIES_REQUIRED');
+ ngdVjAssert_(d.auth&&d.media&&d.jobs&&d.ledger&&d.clock&&d.budget&&d.queue&&d.rate,'DEPENDENCIES_REQUIRED');
  function now(){return d.clock.now();}
  function mustLive(){
   ngdVjAssert_(p.live,'LIVE_DISABLED');
@@ -74,7 +74,8 @@ function ngdVisualJobs_(dependencies){
   var member=ngdVjSession_(d.auth,session);
   ngdVjAssert_(request&&typeof request==='object'&&!Array.isArray(request),'REQUEST');
   var key=ngdVjId_(request.idempotency_key,'IDEMPOTENCY');
-  ngdVjAssert_(request.tier==='standard'||request.tier==='hd','TIER');
+  ngdVjAssert_(typeof ngdVisualQuote_==='function','CATALOG_REQUIRED');
+  var quoteCredits=ngdVisualQuote_(request.machine_id,request.payload&&request.payload.count);
   ngdVjAssert_(request.payload&&typeof request.payload==='object','PAYLOAD');
   // Compiler always revalidates option IDs and reference handle server-side.
   ngdVjAssert_(typeof d.compile==='function','COMPILER_REQUIRED');
@@ -84,14 +85,15 @@ function ngdVisualJobs_(dependencies){
    'COMPILER_CONTRACT');
   var count=compiled.image_count;
   ngdVjAssert_(count===1||count===2||count===4,'COUNT');
-  var cost=p[request.tier]*count;
+  var cost=quoteCredits.total_credits;
+  ngdVjAssert_(quoteCredits.count===count,'SERVER_QUOTE_MISMATCH');
   var reference=d.media.getOwned(compiled.media_contract.reference_asset_id,member,now());
   ngdVjAssert_(reference&&reference.owner===member&&reference.expires_at>now()&&
    reference.private===true,'MEDIA_OWNERSHIP_OR_EXPIRY');
   // A SHA256 of canonical server-validated IDs/handles is calculated by an
   // injected cryptographic implementation, NOT a client-provided fingerprint.
   ngdVjAssert_(typeof d.fingerprint==='function','FINGERPRINT_REQUIRED');
-  var digest=d.fingerprint({member:member,tier:request.tier,
+  var digest=d.fingerprint({member:member,machine_id:request.machine_id,
    option_ids:compiled.option_ids,count:count,
    asset_id:compiled.media_contract.reference_asset_id,
    compiled_prompt:compiled.compiled_prompt,negative_prompt:compiled.negative_prompt,
@@ -103,17 +105,21 @@ function ngdVisualJobs_(dependencies){
   var result=d.jobs.createUnique(scope,digest,function(){
    var job_id=d.jobs.newId();
    var item={id:job_id,owner:member,scope:scope,fingerprint:digest,
-    status:'CREATED',tier:request.tier,credit_cost:cost,
+    status:'CREATED',machine_id:request.machine_id,unit_credits:quoteCredits.unit_credits,
+    credit_cost:cost,settled_credits:0,refunded_credits:0,
     count:count,provider:null,created_at:now(),updated_at:now(),
     expires_at:now()+NGD_VISUAL_PIPELINE_DEFAULTS_.processing_timeout_ms,
     input_asset_id:compiled.media_contract.reference_asset_id,
+    compiled_recipe:compiled,
     result_asset_ids:[],error_code:null};
    // Budget must reserve atomically against parallel jobs and per-day cap;
    // quote comes from trusted server price configuration, not client.
    ngdVjAssert_(typeof d.quote==='function','QUOTE_REQUIRED');
-   var quote=d.quote(request.tier,count);
+   var quote=d.quote(request.machine_id,count);
    ngdVjAssert_(Number.isSafeInteger(quote)&&quote>0,'QUOTE_INVALID');
-   d.budget.reserveDaily(job_id,quote,p.max_daily_idr,now());
+   d.rate.consumeOnce(job_id,member,p.rate_per_hour,now());
+   try{d.budget.reserveDaily(job_id,quote,p.max_daily_idr,now());}
+   catch(err){d.rate.releaseOnce(job_id);throw err;}
    try{
     d.ledger.reserveOnce(job_id,member,cost);
     item.status='RESERVED';
@@ -123,6 +129,7 @@ function ngdVisualJobs_(dependencies){
    }catch(err){
     d.ledger.releaseOnce(job_id);
     d.budget.releaseOnce(job_id);
+    d.rate.releaseOnce(job_id);
     throw err;
    }
   });
@@ -131,8 +138,11 @@ function ngdVisualJobs_(dependencies){
   return publicStatus(result);
  }
  function publicStatus(item){
-  return {job_id:item.id,status:item.status,credit_cost:item.credit_cost,
-   count:item.count,result_asset_ids:item.status==='SETTLED'?item.result_asset_ids:[],
+  return {job_id:item.id,status:item.status,machine_id:item.machine_id,
+   unit_credits:item.unit_credits,credit_cost:item.credit_cost,
+   settled_credits:item.settled_credits||0,refunded_credits:item.refunded_credits||0,
+   count:item.count,succeeded_count:item.result_asset_ids.length,
+   result_asset_ids:item.status==='SETTLED'?item.result_asset_ids:[],
    error_code:item.error_code||null};
  }
  function poll(session,id){
@@ -158,15 +168,20 @@ function ngdVisualJobs_(dependencies){
   ngdVjAssert_(d.auth.requireWorker(worker)===true,'WORKER_AUTH_REQUIRED');
   var job=d.jobs.get(ngdVjId_(id,'JOB'));
   ngdVjAssert_(job&&job.status==='PROCESSING','NOT_PROCESSING');
-  ngdVjAssert_(now()<=job.expires_at,'DEADLINE_EXCEEDED');
+  // A timed-out job may still settle already-verified private images;
+  // missing outputs are automatically refunded in the same ledger operation.
   ngdVjAssert_(result&&Array.isArray(result.asset_ids)&&
-    result.asset_ids.length===job.count,'RESULT_COUNT');
+    result.asset_ids.length>0&&result.asset_ids.length<=job.count,'RESULT_COUNT');
+  ngdVjAssert_(new Set(result.asset_ids).size===result.asset_ids.length,
+   'DUPLICATE_RESULT_ASSET');
   result.asset_ids.forEach(function(x){
    ngdVjAssert_(typeof x==='string'&&/^asset_[A-Za-z0-9_-]{6,80}$/.test(x),'RESULT_ASSET');
    var media=d.media.getOwned(x,job.owner,now());
-   ngdVjAssert_(media&&media.private===true,'RESULT_NOT_PRIVATE');
+   ngdVjAssert_(media&&media.private===true&&media.job_id===id&&
+    media.media_kind==='output','RESULT_NOT_PRIVATE');
   });
-  ngdVjAssert_(d.jobs.compareAndSwap(id,'PROCESSING','SUCCEEDED',{
+  var phase=result.asset_ids.length===job.count?'SUCCEEDED':'PARTIAL_SUCCEEDED';
+  ngdVjAssert_(d.jobs.compareAndSwap(id,'PROCESSING',phase,{
    result_asset_ids:result.asset_ids,updated_at:now()}),'CONCURRENT_COMPLETION');
   // Settlement is idempotent; a retry from SUCCEEDED is handled by settle().
   return settle(id,worker);
@@ -174,11 +189,17 @@ function ngdVisualJobs_(dependencies){
  function settle(id,worker){
   mustLive();ngdVjAssert_(d.auth.requireWorker(worker)===true,'WORKER_AUTH_REQUIRED');
   var job=d.jobs.get(id);
-  ngdVjAssert_(job&&['SUCCEEDED','SETTLED'].indexOf(job.status)>=0,'SETTLE_STATUS');
+  ngdVjAssert_(job&&['SUCCEEDED','PARTIAL_SUCCEEDED','SETTLED'].indexOf(job.status)>=0,'SETTLE_STATUS');
   if(job.status==='SETTLED')return publicStatus(job);
-  d.ledger.settleOnce(id);
-  d.budget.settleOnce(id);
-  ngdVjAssert_(d.jobs.compareAndSwap(id,'SUCCEEDED','SETTLED',{updated_at:now()}),'SETTLE_CAS');
+  var succeeded=job.result_asset_ids.length;
+  ngdVjAssert_(succeeded>0&&succeeded<=job.count,'SETTLE_IMAGE_COUNT');
+  var charged=succeeded*job.unit_credits,refunded=job.credit_cost-charged;
+  // Ledger must atomically settle partial and return the rest exactly once.
+  // Budget charges consumed provider capacity, not public credit price.
+  d.ledger.settleOnce(id,charged,refunded);
+  d.budget.settleOnce(id,succeeded,job.count);
+  ngdVjAssert_(d.jobs.compareAndSwap(id,job.status,'SETTLED',{
+   settled_credits:charged,refunded_credits:refunded,updated_at:now()}),'SETTLE_CAS');
   return publicStatus(d.jobs.get(id));
  }
  function fail(id,worker,error_code){
@@ -192,14 +213,25 @@ function ngdVisualJobs_(dependencies){
    d.jobs.compareAndSwap(id,job.status,'FAILED',{error_code:error_code,updated_at:now()}),'FAIL_CAS');
   d.ledger.releaseOnce(id);
   d.budget.releaseOnce(id);
-  ngdVjAssert_(d.jobs.compareAndSwap(id,'FAILED','REFUNDED',{updated_at:now()}),'REFUND_CAS');
+  ngdVjAssert_(d.jobs.compareAndSwap(id,'FAILED','REFUNDED',{
+   settled_credits:0,refunded_credits:job.credit_cost,
+   updated_at:now()}),'REFUND_CAS');
   return publicStatus(d.jobs.get(id));
  }
  function expire(worker){
   mustLive();ngdVjAssert_(d.auth.requireWorker(worker)===true,'WORKER_AUTH_REQUIRED');
   // External scheduler invokes this bounded cleanup, no GAS trigger installed.
   var affected=d.jobs.listExpired(now(),100);
-  return affected.map(function(job){return fail(job.id,worker,'JOB_TIMEOUT');});
+  return affected.map(function(job){
+   if(d.slots&&typeof d.slots.expireUncertain==='function'){
+    d.slots.expireUncertain(job.id,job.count);
+    var partial=d.slots.summary(job.id,job.count);
+    if(partial.succeeded.length){
+     return complete(job.id,worker,{asset_ids:partial.succeeded});
+    }
+   }
+   return fail(job.id,worker,'JOB_TIMEOUT');
+  });
  }
  function cleanup(worker){
   ngdVjAssert_(d.auth.requireWorker(worker)===true,'WORKER_AUTH_REQUIRED');

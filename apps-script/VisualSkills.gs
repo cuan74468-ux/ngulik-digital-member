@@ -278,3 +278,40 @@ function ngdFoodMagazinePrivateRegistryLoad_(){
  try{value=JSON.parse(raw);}catch(_){throw Error('VISUAL_FOOD_REGISTRY_JSON_INVALID');}
  return ngdFoodMagazinePrivateRegistry_(value);
 }
+
+
+/**
+ * Published Visual machine catalogue (public-facing rates, not API costs).
+ * Final quotes and reservations MUST be recalculated on the server.
+ * No provider acquisition prices, margins or secrets in client responses.
+ */
+var NGD_VISUAL_MACHINE_CATALOG_=Object.freeze({
+ gemini_flash_image:Object.freeze({id:'gemini_flash_image',
+  name:'Hemat & Cepat',model:'Gemini 3.1 Flash Image',
+  description:'Eksplorasi konsep kuliner dengan proses cepat.',
+  credits_per_image:2,provider_group:'google'}),
+ flux_kontext_pro:Object.freeze({id:'flux_kontext_pro',
+  name:'Presisi Label & Kemasan',model:'FLUX.1 Kontext Pro',
+  description:'Direkomendasikan untuk mempertahankan bentuk produk dan kemasan.',
+  credits_per_image:3,provider_group:'flux'}),
+ flux_2_pro:Object.freeze({id:'flux_2_pro',
+  name:'Komersial Ultra HD',model:'FLUX.2 Pro',
+  description:'Detail tekstur untuk materi iklan utama.',
+  credits_per_image:4,provider_group:'flux'})
+});
+function ngdVisualPublicCatalog_(){
+ return ['gemini_flash_image','flux_kontext_pro','flux_2_pro'].map(function(id){
+  var item=NGD_VISUAL_MACHINE_CATALOG_[id];
+  return {id:item.id,name:item.name,model:item.model,
+   description:item.description,credits_per_image:item.credits_per_image};
+ });
+}
+function ngdVisualQuote_(machineId,count){
+ ngdVisualRequire_(Object.prototype.hasOwnProperty.call(
+  NGD_VISUAL_MACHINE_CATALOG_,machineId),'VISUAL_MACHINE_UNKNOWN');
+ ngdVisualRequire_(count===1||count===2||count===4,'VISUAL_MACHINE_COUNT_INVALID');
+ var unit=NGD_VISUAL_MACHINE_CATALOG_[machineId].credits_per_image;
+ return Object.freeze({machine_id:machineId,unit_credits:unit,count:count,
+  total_credits:unit*count,currency:'CREDIT',
+  server_authoritative:true});
+}
