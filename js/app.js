@@ -2607,6 +2607,7 @@ async function configureVisualBridgeStaging_(){
   };
   window.NGD_STUDIO?.configureVisualPipeline({
    enabled:true,upload,
+   allowedMachines:Array.isArray(health.allowed_machines)?health.allowed_machines:[],
    quote:args=>secureApi('visualQuote',args),
    create:args=>secureApi('visualCreateJob',args,{
     requestId:args.idempotency_key,timeoutMs:40000}),
