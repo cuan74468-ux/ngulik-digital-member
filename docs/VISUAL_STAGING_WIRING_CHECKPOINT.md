@@ -4,7 +4,7 @@ Status: source-only Draft PR #35, no GAS deploy, no provider requests, no Script
 
 ## Source install
 
-After a full backup of GAS STAGING v28, compare its editor contents with GitHub main. The required Visual files are:
+After a full backup of GAS STAGING v28, compare its editor contents with GitHub main. The required Visual files are (13 files):
 - VisualAdapterContract.gs
 - VisualApi.gs
 - VisualCompiler.gs
@@ -15,6 +15,7 @@ After a full backup of GAS STAGING v28, compare its editor contents with GitHub 
 - VisualRuntime.gs
 - VisualSkills.gs
 - VisualStore.gs
+- VisualTemplates.gs
 - VisualUpload.gs
 - VisualWorker.gs
 
@@ -29,6 +30,7 @@ The two isolated routing additions in Code.gs (Visual-only doPost allowlist and 
 - NGD_VISUAL_PROVIDER_COST_ESTIMATES_IDR = private verified conservative per-image IDR estimates for all enabled models
 - NGD_VISUAL_DAILY_BUDGET_CAP = positive integer rupiah ceiling; zero or absent prevents live jobs
 - NGD_VISUAL_RATE_LIMIT = 1 for initial controlled member UAT
+- NGD_VISUAL_TEMPLATES_ENABLED = false by default; separate authorization for cloud-synced personal presets (does not enable image AI or P0 finance)
 - NGD_VISUAL_FLUX_AGGREGATOR = kie or fal (not relevant to Gemini-only pilot)
 - NGD_KEY_GOOGLE_AI = Google API key only after entitlement/zero-cost limits confirmed
 - NGD_KEY_KIE_AI and NGD_KEY_FAL_AI = remain unset until separately approved
@@ -42,7 +44,7 @@ Visual credit wallet is NOT the member financial token ledger and has no public 
 1. Keep all gates OFF. Test server read-only Visual health/catalog/quote with a valid member session; verify zero provider calls and zero P0 changes.
 2. Copy modules only after backing up current GAS v28 and reviewing the two narrow Code.gs routing changes. Authorize Drive OAuth scope and confirm folder privacy; a NEW STAGING deployment requires separate approval, not performed by this PR.
 3. Test 200–500 KB local JPEG chunk upload; check invalid MIME, unauthorized member, SHA256 mismatch, private output ownership, and scheduled cleanup.
-4. Mock worker/ledger first: full and partial refunds, idempotency and daily budget/rate caps; verify P0 token balances unchanged.
+4. Check 12 inspiration scenarios, local member-scoped 20-template limit, reuse/edit/restore across refresh; after separate template storage gate, test private cloud sync with another member denied. Mock worker/ledger first: full and partial refunds, idempotency and daily budget/rate caps; verify P0 token balances unchanged.
 5. Check official Google AI Studio API free image-generation availability for the exact model. Browser playground free access is NOT proof of a free image API. If the model is paid or requires billing, STOP. Do not turn on LIVE or generate.
 6. Only after documented no-charge entitlement and consent, enable a controlled one-image UAT in a NEW STAGING deployment: select Bakso Len hot_soupy_food + steam_broth_hero or Madu Ku bottled_liquid + obsidian_mirror_splash, restoration full, 4:5, get server quote, upload privately, poll, and retrieve owner-only result. Reconcile Visual credits and cleanup.
 
