@@ -296,12 +296,20 @@ const LOCAL_TEMPLATE_KEY='ngd_visual_member_templates_v1';
 const WORKSPACE_KEY='ngd_visual_editor_workspace_v1';
 const CONTEXT_RATIOS=['4:5','1:1','9:16','3:4'];
 let templateFilter='Semua',templateQuery='',templateDetail='',templateStorage=null;
-let customTemplates=[],selectedSavedId='',presetName='',templateNotice='';
+let customTemplates=[],selectedSavedId='',presetName='',templateNotice='',memberScope='';
+function configureMemberScope(id){
+ const safe=typeof id==='string'&&/^[A-Za-z0-9_-]{3,80}$/.test(id)?id:'';
+ if(memberScope===safe)return;
+ memberScope=safe;selectedSavedId='';presetName='';templateStorage=null;
+ customTemplates=readSavedTemplates();
+}
+function scopedKey(key){return memberScope?key+':'+memberScope:null;}
 function safeStorageGet(key){
- try{return global.localStorage?.getItem(key)||''}catch(_){return ''}
+ try{const scoped=scopedKey(key);return scoped?global.localStorage?.getItem(scoped)||'':''}catch(_){return ''}
 }
 function safeStorageSet(key,value){
- try{global.localStorage?.setItem(key,value);return true}catch(_){return false}
+ try{const scoped=scopedKey(key);if(!scoped||!global.localStorage)return false;
+  global.localStorage.setItem(scoped,value);return true}catch(_){return false}
 }
 function templateCategoryChoices(){
  return [['Semua','Semua'],...Object.entries(CONTEXT_SCENARIOS).map(([id,v])=>[id,v.label]),['saved','Preset Saya'],['classic','Desain Cepat']];
@@ -738,5 +746,5 @@ if(target.id==='ns-food-live-generate'){void runVisualLive();return}if(target.id
 function handleChange(event){const t=event.target;if(t.id==='ns-context-restoration'){contextSelectRestoration(t.checked?'full_phone_restoration':'preserve_source');content();return}if(t.id==='ns-v2-overlay'){resetVisualLiveRequest();state.overlay=t.checked;content();return}if(t.id==='ns-ratio-filter'){state.filterRatio=t.value;content()}if(t.id==='ns-file'){const file=t.files?.[0];if(!file)return;if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>4*1024*1024){announce('File harus JPG/PNG/WebP maksimal 4 MB.');return}const reader=new FileReader();reader.onload=()=>{if(!active())return;state.photo=String(reader.result||'');selectedLocalFile=file;resetVisualLiveRequest();state.photoChosen=true;state.img=null;state.loadedUrl='';foodQuality={status:'not_checked',message:'Sedang memeriksa foto baru…'};content()};reader.readAsDataURL(file)}}
 function mount(el){if(!el)return;customTemplates=readSavedTemplates();restoreWorkspace();root=el;root.classList.add('ngd-studio');root.addEventListener('click',handleClick);root.addEventListener('input',e=>maybeEdit(e.target));root.addEventListener('change',handleChange);shell()}
 function unmount(){rememberWorkspace();epoch++;livePolling=false;selectedLocalFile=null;if(root){root.replaceChildren();root=null}}
-global.NGD_STUDIO={mount,unmount,adapterMode:adapter.mode,configureVisualPipeline,configureTemplateStorage,studioTemplateCatalog:()=>scenarioTemplates().map(t=>({...t})),useScenarioTemplate,applySavedTemplate:applyPreset,savedTemplates:()=>customTemplates.map(t=>({...t})),setTemplateFilter:id=>{if(!templateCategoryChoices().some(x=>x[0]===id))return false;templateFilter=id;return true},contextCategorySelect:contextSelectCategory,contextScenarioSelect:contextSelectScenario,contextRestorationSelect:contextSelectRestoration,contextMatrix:()=>JSON.parse(JSON.stringify(CONTEXT_SCENARIOS)),foodMachineSelect:chooseMachine,publicMachineCatalog:()=>FOOD_MACHINES.map(m=>({...m})),debugSnapshot:()=>({mode:adapter.mode,creditsSimulated:state.credits,renders:state.renderNo,history:state.history.length}),requestDraft:buildVisualRequestDraft,img2imgDraft:buildImg2ImgV2Draft,foodMagazineDraft:foodDraft,foodChoose:chooseFood,foodContracts:()=>FOOD_GROUPS,selectOption:selectV2,optionContracts:()=>Object.keys(V2_OPTIONS).reduce((a,k)=>(a[k]=V2_OPTIONS[k].map(x=>[...x]),a),{}),presetContracts:()=>Object.keys(VISUAL_PRESET_IDS).map(id=>({id,...VISUAL_PRESET_IDS[id]}))};
+global.NGD_STUDIO={mount,unmount,adapterMode:adapter.mode,configureVisualPipeline,configureTemplateStorage,configureMemberScope,saveTemplatePreset:saveCurrentPreset,deleteTemplatePreset:removeSavedPreset,setPresetName:name=>{presetName=String(name||'').slice(0,56)},studioTemplateCatalog:()=>scenarioTemplates().map(t=>({...t})),useScenarioTemplate,applySavedTemplate:applyPreset,savedTemplates:()=>customTemplates.map(t=>({...t})),setTemplateFilter:id=>{if(!templateCategoryChoices().some(x=>x[0]===id))return false;templateFilter=id;return true},contextCategorySelect:contextSelectCategory,contextScenarioSelect:contextSelectScenario,contextRestorationSelect:contextSelectRestoration,contextMatrix:()=>JSON.parse(JSON.stringify(CONTEXT_SCENARIOS)),foodMachineSelect:chooseMachine,publicMachineCatalog:()=>FOOD_MACHINES.map(m=>({...m})),debugSnapshot:()=>({mode:adapter.mode,creditsSimulated:state.credits,renders:state.renderNo,history:state.history.length}),requestDraft:buildVisualRequestDraft,img2imgDraft:buildImg2ImgV2Draft,foodMagazineDraft:foodDraft,foodChoose:chooseFood,foodContracts:()=>FOOD_GROUPS,selectOption:selectV2,optionContracts:()=>Object.keys(V2_OPTIONS).reduce((a,k)=>(a[k]=V2_OPTIONS[k].map(x=>[...x]),a),{}),presetContracts:()=>Object.keys(VISUAL_PRESET_IDS).map(id=>({id,...VISUAL_PRESET_IDS[id]}))};
 })(window);
