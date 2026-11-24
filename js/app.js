@@ -628,7 +628,10 @@ function viewHome(){
   const editorHtml=window.NGD_PUBLIC_CMS?.home(state.siteContent,state.publicSettings);
   const hasHero=Array.isArray(state.siteContent)&&state.siteContent.some(row=>
     row?.content_id==='CNT-HERO-MAIN'&&row?.kind==='HERO'&&
-    row?.status==='PUBLISHED'&&row?.placement==='home');
+    row?.placement==='home');
+  // getPublicContent returns only PUBLISHED records and deliberately omits
+  // 'status' from its projection. Requiring that missing field here hid
+  // valid published content even when STAGING returned all 35 rows.
   if(hasHero||!state.cmsLoaded||state.qa)return editorHtml||
     '<div class="ngd-landing-v1"><p role="status">Sedang memuat informasi...</p></div>';
   const staging=String(location.pathname||'').includes('/staging/');
