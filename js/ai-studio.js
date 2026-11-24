@@ -301,6 +301,12 @@ function configureMemberScope(id){
  const safe=typeof id==='string'&&/^[A-Za-z0-9_-]{3,80}$/.test(id)?id:'';
  if(memberScope===safe)return;
  memberScope=safe;selectedSavedId='';presetName='';templateStorage=null;
+ // Never carry photo bytes, generated assets, private job handles, or drafts
+ // from a previous account into the next member's studio session.
+ state.photo='';state.photoChosen=false;state.img=null;state.loadedUrl='';
+ state.history=[];state.rendered=false;selectedLocalFile=null;
+ livePolling=false;resetVisualLiveRequest();
+ foodQuality={status:'not_checked',message:'Pilih foto baru dari HP untuk memulai.'};
  customTemplates=readSavedTemplates();
 }
 function scopedKey(key){return memberScope?key+':'+memberScope:null;}
