@@ -2,10 +2,10 @@
    Unified guest design for commission, help, catalog, learning & auth.
    Presentation only; no change to live payments, member identity or prices. */
 body.ngd-public-app[data-app-role=guest]:not(#ngd){
-  --ngd-public-purple:#5b28d6;--ngd-public-indigo:#4f46e5;
-  --ngd-public-gold:#ffe34d;--ngd-public-ink:#221a49;
-  --brand-blue:#5b28d6;--brand-soft:#f0ebff;--lds-blue:#5b28d6;
-  background:#fbfaff!important;
+  --ngd-public-purple:var(--ngds-violet);--ngd-public-indigo:var(--ngds-violet);
+  --ngd-public-gold:var(--ngds-lime);--ngd-public-ink:var(--ngds-ink);
+  --brand-blue:var(--ngds-violet);--brand-soft:#EAE5FF;--lds-blue:var(--ngds-violet);
+  background:var(--ngds-bg)!important;
 }
 body.ngd-public-app[data-app-role=guest]:not(#ngd) #screen :is(h1,h2,h3){
   font-family:Inter,system-ui,sans-serif;letter-spacing:-.038em;

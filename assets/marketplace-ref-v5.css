@@ -4,9 +4,9 @@
    Corrects the former fixed, translated header and 900px hero ceiling. */
 
 body.ngd-public-app[data-app-role=guest]:not(#ngd){
-  --mk-violet:#5b28d6;--mk-deep:#1f0c65;--mk-ink:#201943;
-  --mk-muted:#696582;--mk-line:#e7e3f5;--mk-yellow:#ffde43;
-  color:var(--mk-ink);background:#fbfaff;
+  --mk-violet:var(--ngds-violet);--mk-deep:var(--ngds-ink);--mk-ink:var(--ngds-ink);
+  --mk-muted:var(--ngds-muted);--mk-line:var(--ngds-ink);--mk-yellow:var(--ngds-lime);
+  color:var(--mk-ink);background:var(--ngds-bg);
   font-family:Inter,system-ui,-apple-system,sans-serif;
 }
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .app-shell{
@@ -16,7 +16,7 @@ body.ngd-public-app[data-app-role=guest]:not(#ngd) .app-shell{
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .sidebar{display:none!important}
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .workarea{
   display:flex;flex-direction:column;width:100%!important;min-width:0;
-  max-width:none!important;margin:0!important;background:#fbfaff;
+  max-width:none!important;margin:0!important;background:var(--ngds-bg);
 }
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .topbar{
   position:sticky!important;top:0!important;left:0!important;right:auto!important;

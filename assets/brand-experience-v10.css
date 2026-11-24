@@ -4,8 +4,8 @@
    Applies to guest, signed-in member, admin workspace, and login.
    Does NOT alter auth, pricing, ledgers or deployment gates. */
 body.ngd-public-app:not(#ngd){
-  --ngd-brand-deep:#21134f;--ngd-brand-primary:#5b28d6;
-  --ngd-brand-highlight:#ffe34d;
+  --ngd-brand-deep:var(--ngds-ink);--ngd-brand-primary:var(--ngds-violet);
+  --ngd-brand-highlight:var(--ngds-lime);
 }
 body.ngd-public-app:not(#ngd) .ngd-brand-image{
   display:block!important;object-fit:contain!important;object-position:center;

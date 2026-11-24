@@ -35,9 +35,9 @@ body.ngd-public-app {
  font-family:var(--ngds-heading);
 }
 /* Role-specific reset overrides earlier member-only palette tokens. */
-body.ngd-public-app[data-app-role="member"],
-body.ngd-public-app[data-app-role="admin"],
-body.ngd-public-app[data-app-role="guest"]{
+html body.ngd-public-app[data-app-role="member"]:not(#ngd),
+html body.ngd-public-app[data-app-role="admin"]:not(#ngd),
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd){
  --ngdm-ink:var(--ngds-ink);--ngdm-muted:var(--ngds-muted);
  --ngdm-line:var(--ngds-ink);--ngdm-primary:var(--ngds-violet);
  --ngdm-gold:var(--ngds-lime);--ngdm-deep:var(--ngds-ink);

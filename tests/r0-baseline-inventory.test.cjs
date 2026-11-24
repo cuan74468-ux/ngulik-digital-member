@@ -30,23 +30,23 @@ const limits = Object.freeze({
   'assets/commission-experience-v2.css': [20944, 5],
   'assets/checkout-qris-unified.css': [5611, 1],
   'assets/marketplace-visuals-v4.css': [5249, 0],
-  'assets/marketplace-ref-v5.css': [32628, 306],
-  'assets/member-marketplace-v7.css': [29555, 219],
-  'assets/public-experience-v8.css': [26168, 159],
+  'assets/marketplace-ref-v5.css': [32696, 306],
+  'assets/member-marketplace-v7.css': [29710, 219],
+  'assets/public-experience-v8.css': [26236, 159],
   'assets/catalog-campaign-v9.css': [15930, 48],
-  'assets/brand-experience-v10.css': [42353, 324],
+  'assets/brand-experience-v10.css': [42381, 324],
   'assets/mobile-critical-v16.css': [20788, 201],
   'assets/landing-guest-v1.css': [17912, 33],
   'assets/guest-sales-trust-v1.css': [18156, 25],
   'assets/product-detail-v1.css': [13213, 40],
   'assets/member-native-dashboard-v1.css': [31440, 224],
-  'assets/ngulik-design-system.css': [48048, 474],
+  'assets/ngulik-design-system.css': [48093, 474],
   'assets/staging-native-mobile.css': [9008, 1]
 });
 
 const budgets = Object.freeze({
-  'index.html': { count: 30, bytes: 758933, important: 2109 },
-  'staging/member.html': { count: 31, bytes: 767941, important: 2110 }
+  'index.html': { count: 30, bytes: 759297, important: 2109 },
+  'staging/member.html': { count: 31, bytes: 768305, important: 2110 }
 });
 
 function inspectEntry(entry) {

@@ -2,13 +2,13 @@
    Presentation only: no authentication, checkout, ledger or provider logic.
    This layer is member-scoped; admin and public retain their own layouts. */
 body.ngd-public-app[data-app-role=member]:not(#ngd){
-  --ngdm-purple:#5b28d6;--ngdm-indigo:#4f46e5;--ngdm-ink:#211a49;
-  --ngdm-muted:#6d6984;--ngdm-border:#e6e0f4;--ngdm-yellow:#ffe34d;
-  --brand-blue:#5b28d6;--brand-ink:#4320a0;--brand-soft:#f0ebff;
-  --lds-blue:#5b28d6;--lds-blue-soft:#f0ebff;
-  --pf-blue:#5b28d6;--pf-ink:#201a43;--pf-ink-2:#4c4567;
-  --ngd-focus:#5b28d6;--ngd-blue:#5b28d6;
-  color:var(--ngdm-ink);background:#fbfaff!important;
+  --ngdm-purple:var(--ngds-violet);--ngdm-indigo:var(--ngds-violet);--ngdm-ink:var(--ngds-ink);
+  --ngdm-muted:var(--ngds-muted);--ngdm-border:var(--ngds-ink);--ngdm-yellow:var(--ngds-lime);
+  --brand-blue:var(--ngds-violet);--brand-ink:var(--ngds-violet);--brand-soft:#EAE5FF;
+  --lds-blue:var(--ngds-violet);--lds-blue-soft:#EAE5FF;
+  --pf-blue:var(--ngds-violet);--pf-ink:var(--ngds-ink);--pf-ink-2:var(--ngds-muted);
+  --ngd-focus:var(--ngds-violet);--ngd-blue:var(--ngds-violet);
+  color:var(--ngdm-ink);background:var(--ngds-bg)!important;
   font-family:Inter,system-ui,-apple-system,sans-serif;
 }
 body.ngd-public-app[data-app-role=member]:not(#ngd) .app-shell{
@@ -18,7 +18,7 @@ body.ngd-public-app[data-app-role=member]:not(#ngd) .app-shell{
 body.ngd-public-app[data-app-role=member]:not(#ngd) .sidebar{display:none!important}
 body.ngd-public-app[data-app-role=member]:not(#ngd) .workarea{
   display:flex;flex-direction:column;width:100%!important;min-width:0;
-  max-width:none!important;margin:0!important;background:#fbfaff!important;
+  max-width:none!important;margin:0!important;background:var(--ngds-bg)!important;
 }
 body.ngd-public-app[data-app-role=member]:not(#ngd) .topbar{
   display:flex!important;align-items:center;justify-content:space-between;
