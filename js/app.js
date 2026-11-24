@@ -748,14 +748,15 @@ function viewPublicMarketplace(list){
   if(sort==='name')shown=[...shown].sort((a,b)=>String(a.nama||'').localeCompare(String(b.nama||''),'id'));
   // Admin HERO/catalog content is authoritative. The baked-in visual is a
   // reliable fallback when a catalog campaign has not been published yet.
+  const catalogHeading=window.NGD_PUBLIC_CMS?.list(state.siteContent,'SECTION_HEADING','home').find(x=>x.content_id==='CNT-NEXT-HEADER'||x.content_id==='CNT-SECTION-SERVICES');
   const banner=window.NGD_CONTENT_UI?.catalogBanner(state.siteContent)||
     '<section class="ngd-catalog-campaign" data-catalog-banner-source="default">'+
       '<div class="ngd-catalog-campaign-viewport"><article class="ngd-catalog-campaign-slide">'+
       '<div class="ngd-catalog-campaign-picture"><img src="'+esc(ngdPremiumArtSrc_('templates'))+'" alt=""></div>'+
       '<div class="ngd-catalog-campaign-copy">'+
       '<p class="ngd-catalog-campaign-kicker">NGULIK DIGITAL · MARKETPLACE PRODUK DIGITAL</p>'+
-      '<h2>Produk digital untuk belajar dan mengembangkan usaha.</h2>'+
-      '<p class="ngd-catalog-campaign-description">Jelajahi solusi digital yang sesuai kebutuhan Anda.</p>'+
+      '<h2>'+esc(catalogHeading?.title||'Katalog Produk & Jasa')+'</h2>'+
+      (catalogHeading?.description?'<p class="ngd-catalog-campaign-description">'+esc(catalogHeading.description)+'</p>':'')+
       '<div class="ngd-catalog-campaign-actions"><button type="button" class="ngd-catalog-campaign-cta" data-market-browse>Jelajahi Produk</button></div>'+
       '</div></article></div></section>';
   const filterBar='<div class="market-categories" role="group" aria-label="Jelajahi kategori produk">'+
@@ -1128,7 +1129,7 @@ function viewAI(){
     (!search||['ngulik studio','visual','foto produk','poster','iklan','gambar'].some(q=>q.includes(search)||search.includes(q)));
   const visualCard=showVisual?'<button type="button" class="ai-product-card" data-ai-open="ngulik-visual" aria-label="Buka Ngulik Studio Visual Generator">'+
     '<span class="ai-product-icon">'+icon('spark')+'</span>'+
-    '<span class="ai-product-category">DESAIN VISUAL / SIMULASI</span>'+
+    '<span class="ai-product-category">MODE SIMULASI</span>'+
     '<strong>Ngulik Studio — Visual Generator</strong>'+
     '<small>Enam template visual UMKM, editor Canvas HD, dan galeri aset sesi. Simulasi tanpa memotong token asli.</small>'+
     '<span class="ai-product-bottom"><span>0 token nyata</span><span class="ai-product-action">Buka '+icon('arrow')+'</span></span></button>':'';
@@ -2001,16 +2002,12 @@ function viewServiceRequests(){
             '<span class="ngdb-unavailable">Belum dapat dipesan</span>')+
         '</div></article>';
     }).join('');
-    const examples=[
-      ['Video & Konten Promosi','Untuk materi visual jualan dan konten pendek.','ngd-v8-video.webp'],
-      ['Katalog & Website Usaha','Supaya informasi produk dan usaha lebih mudah dibagikan.','ngd-v8-templates.webp'],
-      ['Otomasi Pekerjaan','Untuk pekerjaan berulang yang bisa dibantu alur digital.','ngd-v8-gas.webp']
-    ];
+    const serviceCopy=window.NGD_PUBLIC_CMS?.list(state.siteContent,'SERVICE_CARD','home').find(x=>x.content_id==='CNT-NEXT-02');
     return '<div class="ngd-buyer-services">'+
       '<header class="ngdb-hero">'+
-        '<div class="ngdb-hero-copy"><p class="ngdb-overline">BENGKEL KREATIF · NGULIK DIGITAL</p>'+
-          '<h1>Butuh yang jadi, bukan tambah kerjaan?</h1>'+
-          '<p>Video promosi, katalog usaha, atau pekerjaan digital yang terus tertunda. Ceritakan kebutuhannya, lalu pilih paket yang memang tersedia atau kirim permintaan khusus.</p>'+
+        '<div class="ngdb-hero-copy"><p class="ngdb-overline">'+esc(state.publicSettings?.tagline_brand||'Ngulik Digital')+'</p>'+
+          '<h1>Jasa Kreatif</h1>'+
+          (serviceCopy?.description?'<p>'+esc(serviceCopy.description)+'</p>':'')+
           '<div class="ngdb-actions"><button type="button" class="ngdb-button ngdb-primary" data-services-packages>Lihat paket & harga</button>'+
           '<button type="button" class="ngdb-button ngdb-outline" data-service-request>Ajukan kebutuhan khusus</button></div>'+
           '<small>Harga paket mengikuti katalog. Permintaan khusus perlu dibahas terlebih dahulu.</small>'+
@@ -2018,30 +2015,22 @@ function viewServiceRequests(){
         '<div class="ngdb-hero-visual"><img src="'+guestMediaBase_()+'ngd-v8-video.webp" alt="Ilustrasi layanan produksi materi promosi digital" width="800" height="800" decoding="async"></div>'+
       '</header>'+
       '<section id="ngdb-packages" class="ngdb-packages" aria-labelledby="ngdb-packages-title">'+
-        '<div class="ngdb-heading"><p class="ngdb-overline">HARGA NYATA, BUKAN TEBAK-TEBAKAN</p>'+
-          '<h2 id="ngdb-packages-title">Paket yang dapat dipilih.</h2>'+
+        '<div class="ngdb-heading"><h2 id="ngdb-packages-title">Paket Jasa</h2>'+
           '<p>Daftar dan harga ini diambil dari katalog. Untuk membeli, masuk atau daftar akun WhatsApp terlebih dahulu.</p></div>'+
         (packages?'<div class="ngdb-package-list">'+packages+'</div>':
          '<div class="ngdb-no-packages"><strong>Paket jasa belum dapat ditampilkan.</strong>'+
          '<p>Cek katalog untuk pilihan terbaru, atau masuk sebagai member untuk menyampaikan kebutuhan khusus.</p>'+
          '<button type="button" class="ngdb-button ngdb-outline" data-route="katalog">Buka Katalog</button></div>')+
       '</section>'+
-      '<section class="ngdb-capabilities" aria-labelledby="ngdb-capabilities-title">'+
-        '<div class="ngdb-heading"><p class="ngdb-overline">APA YANG BISA DIBANTU?</p>'+
-          '<h2 id="ngdb-capabilities-title">Mulai dari pekerjaan yang paling menyita waktu.</h2></div>'+
-        '<div class="ngdb-capability-list">'+examples.map(x=>
-          '<article class="ngdb-capability"><img src="'+guestMediaBase_()+x[2]+'" alt="" loading="lazy" decoding="async">'+
-            '<div><h3>'+x[0]+'</h3><p>'+x[1]+'</p></div></article>').join('')+'</div>'+
-      '</section>'+
       '<section class="ngdb-process" aria-labelledby="ngdb-process-title">'+
         '<div class="ngdb-heading"><p class="ngdb-overline">CARA PESAN</p><h2 id="ngdb-process-title">Alurnya sederhana.</h2></div>'+
         '<div class="ngdb-process-steps">'+
           '<div><span>01</span><h3>Pilih paket</h3><p>Baca rincian layanan dan harga yang tersedia.</p></div>'+
-          '<div><span>02</span><h3>Masuk sebagai member</h3><p>Daftar gratis dengan WhatsApp agar pesanan tercatat.</p></div>'+
+          '<div><span>02</span><h3>Masuk sebagai member</h3><p>Masuk atau daftar dengan WhatsApp. Periksa ketentuan Starter Pack sebelum membeli.</p></div>'+
           '<div><span>03</span><h3>Ikuti prosesnya</h3><p>Bayar jika checkout tersedia, lalu pantau status melalui akun.</p></div>'+
         '</div>'+
       '</section>'+
-      '<footer class="ngdb-final"><div><h2>Pekerjaannya tidak cocok dengan paket yang ada?</h2>'+
+      '<footer class="ngdb-final"><div><h2>Permintaan Jasa Khusus</h2>'+
         '<p>Member bisa mengirim brief untuk dibahas sebelum ada penawaran.</p></div>'+
         '<button type="button" class="ngdb-button ngdb-primary" data-service-request>Ajukan brief '+icon('arrow')+'</button>'+
       '</footer>'+

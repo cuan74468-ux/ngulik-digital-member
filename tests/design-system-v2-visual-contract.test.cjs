@@ -33,7 +33,7 @@ test('mobile breakpoints keep route content bounded and readable',()=>{
 
 test('CMS photo fills the hero with copy above the contrast overlay',()=>{
  const landing=fs.readFileSync(path.join(root,'assets/landing-guest-v1.css'),'utf8');
- assert.match(landing,/\.ngd-cms-hero-art\{[^}]*position:absolute;inset:0;z-index:-1[^}]*object-fit:cover/s);
- assert.match(landing,/\.ngdl-hero-copy\{[^}]*z-index:1/s);
+ assert.match(landing,/\.ngd-cms-hero-art\{[^}]*position:absolute;inset:0;z-index:0[^}]*object-fit:cover/s);
+ assert.match(landing,/\.ngdl-hero-copy\{[^}]*z-index:2/s);
  assert.match(css,/\.ngdl-hero::after\{[^}]*linear-gradient/s);
 });

@@ -2,11 +2,11 @@
    CMS is the only source of promotional words and images; no background art.
    Scope keeps member, admin, checkout and the rest of the app unchanged. */
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing{
-  --ngdl-ink:#262337;--ngdl-muted:#686574;--ngdl-line:#e8e5e1;
-  --ngdl-gold:#ffdf79;--ngdl-warm:#fbfaf6;
+  --ngdl-ink:var(--ngds-ink);--ngdl-muted:var(--ngds-muted);--ngdl-line:var(--ngds-ink);
+  --ngdl-gold:var(--ngds-lime);--ngdl-warm:var(--ngds-bg);
   color:var(--ngdl-ink);width:100%;max-width:1140px;min-width:0;
   margin:0 auto;padding:0 clamp(12px,2.3vw,26px) 60px;
-  box-sizing:border-box;display:flex;flex-direction:column;gap:clamp(34px,5vw,72px);
+  box-sizing:border-box;display:flex;flex-direction:column;gap:clamp(32px,4vw,48px);
   overflow-wrap:break-word;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing *,
@@ -16,10 +16,10 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing *::after{
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero{
   position:relative;display:grid;grid-template-columns:minmax(0,1fr);
-  align-items:center;gap:clamp(22px,4vw,54px);
-  min-height:360px;margin:0;padding:clamp(32px,6vw,70px);
-  border-radius:26px;background:#f4f0e9;color:var(--ngdl-ink);
-  border:1px solid #ece6dc;box-shadow:none;isolation:isolate;
+  align-items:center;gap:0;
+  min-height:360px;margin:0;padding:clamp(24px,4vw,48px);
+  border-radius:var(--ngds-radius);background:var(--ngds-ink);color:#fff;
+  border:var(--ngds-line);box-shadow:var(--ngds-shadow);isolation:isolate;overflow:hidden;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero::before,
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero::after{
@@ -29,7 +29,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero:n
   grid-template-columns:minmax(0,1fr);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero-copy{
-  position:relative;z-index:1;max-width:650px;min-width:0;
+  position:relative;z-index:2;max-width:600px;min-width:0;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-eyebrow{
   display:block;max-width:100%;font-size:12px;font-weight:750;letter-spacing:.1em;
@@ -46,7 +46,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero-l
   max-width:650px;margin:20px 0 0;font-weight:400;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngd-cms-hero-art{
-  position:absolute;inset:0;z-index:-1;display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;object-position:65% center;border-radius:0;box-shadow:none;
+  position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;object-position:65% center;border-radius:0;box-shadow:none;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-actions{
   display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:29px;
@@ -70,7 +70,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing button:focus
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-trust{
   display:flex;flex-wrap:wrap;gap:10px 14px;padding:0;border:0;box-shadow:none;
-  background:transparent;margin:-22px 0 -12px;
+  background:transparent;margin:0;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-trust span{
   display:inline-flex;align-items:center;background:#fffdf7;color:#61533d;
@@ -96,7 +96,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-grid{
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer{
-  border:1px solid var(--ngdl-line);border-radius:18px;background:#fff;
+  border:var(--ngds-line);border-radius:var(--ngds-radius);background:var(--ngds-paper);
   min-width:0;margin:0;box-shadow:none;overflow:hidden;display:flex;flex-direction:column;
   transition:box-shadow .16s ease;
 }
@@ -125,12 +125,12 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer 
   margin:0;flex:1;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer-link{
-  appearance:none;border:0;background:transparent;padding:0;cursor:pointer;
+  appearance:none;border:0;background:transparent;padding:10px 18px;min-height:46px;max-width:100%;white-space:normal;cursor:pointer;
   text-align:left;color:#63481d;font-size:14px;font-weight:700;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-story{
-  padding:28px clamp(18px,3vw,38px);background:#f7f5f0;
-  border:1px solid #ece7dd;border-radius:22px;display:block;
+  padding:clamp(18px,2.5vw,24px) clamp(20px,3vw,28px);background:var(--ngds-paper);
+  border:var(--ngds-line);border-radius:var(--ngds-radius);display:block;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-story ul,
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-benefits ul{
@@ -158,8 +158,8 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-end p{
     padding:0 12px 42px;gap:34px;width:100%;max-width:100%;
   }
   body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero{
-    display:flex;flex-direction:column;align-items:stretch;gap:22px;
-    padding:28px 21px;border-radius:20px;min-height:0;
+    display:grid;grid-template-columns:minmax(0,1fr);align-items:end;gap:0;
+    padding:24px 20px;border-radius:var(--ngds-radius);min-height:420px;
   }
   body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngd-cms-hero-art{
     width:100%;height:100%;max-width:none;max-height:none;object-position:60% center;

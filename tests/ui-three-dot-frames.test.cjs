@@ -21,7 +21,7 @@ test('browser cache versions synchronize both entrypoints without new auth or AP
  for(const name of ['index.html','staging/member.html']){
   const html=read(name);
   for(const id of ['ngulik-design-system.css','ai-studio.css','ai-studio.js']){
-   const release=id==='ngulik-design-system.css'?'20261123-frame-v5':id==='ai-studio.css'?'20261124-unique-scenes-v1':'20261124-owned-webp-v1';
+   const release=id==='ngulik-design-system.css'?'20261125-frame-v5-cms45-hero3':id==='ai-studio.css'?'20261124-unique-scenes-v1':'20261124-owned-webp-v1';
    assert.ok(html.includes(id+'?v='+release),name+' '+id);
   }
  }

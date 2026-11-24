@@ -83,7 +83,7 @@ test('browser performance smoke runs in CI with intercepted external traffic', {
   }
   throw Error(failure);
  };
- const run=async(entry,mode)=>{
+ const run=async(entry,mode,width=360,height=800)=>{
   const {child,profile,target}=await launchChrome();
   let ws,seq=0,closed=false;const pending=new Map(),timers=new Set();
   const request=(method,params={})=>new Promise((resolve,reject)=>{const id=++seq;const timer=setTimeout(()=>{pending.delete(id);reject(Error(method+' timeout'));},12000);pending.set(id,{resolve:v=>{clearTimeout(timer);resolve(v);},reject:e=>{clearTimeout(timer);reject(e);}});ws.send(JSON.stringify({id,method,params}));});
@@ -113,7 +113,7 @@ test('browser performance smoke runs in CI with intercepted external traffic', {
     if(req.url.includes('script.google')&&mode==='delay'){const timer=setTimeout(()=>{timers.delete(timer);respond().catch(()=>{});},10000);timers.add(timer);}else respond().catch(()=>{});
    });
    await request('Page.enable');await request('Runtime.enable');
-   await request('Emulation.setDeviceMetricsOverride',{width:360,height:800,deviceScaleFactor:1,mobile:true,screenWidth:360,screenHeight:800});
+   await request('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<=760,screenWidth:width,screenHeight:height});
    await request('Network.enable');await request('Network.setCacheDisabled',{cacheDisabled:true});
    await request('Fetch.enable',{patterns:[{urlPattern:'http*://*'}]});
    await request('Page.addScriptToEvaluateOnNewDocument',{source:`window.__seedHeroMs=null;window.__seedLcp=null;new PerformanceObserver(l=>{const e=l.getEntries().at(-1);if(e)window.__seedLcp=e.startTime}).observe({type:'largest-contentful-paint',buffered:true});new MutationObserver(()=>{if(window.__seedHeroMs===null&&document.querySelector('#ngdl-title'))window.__seedHeroMs=performance.now()}).observe(document,{subtree:true,childList:true});`});
@@ -121,13 +121,16 @@ test('browser performance smoke runs in CI with intercepted external traffic', {
    const evaluate=async expression=>{const out=await request('Runtime.evaluate',{expression,returnByValue:true});assert.ok(!out.exceptionDetails,JSON.stringify(out.exceptionDetails));return out.result.value;};
    let v;for(let i=0;i<100;i++){v=await evaluate(`(()=>({ms:window.__seedHeroMs,title:document.querySelector('#ngdl-title')?.textContent,image:!!document.querySelector('.ngd-cms-hero-art')?.naturalWidth,bad:!!document.querySelector('.ngd-cms-unavailable')||document.querySelector('#screen')?.innerText.includes('Sedang memuat informasi'),fcp:performance.getEntriesByName('first-contentful-paint')[0]?.startTime,lcp:window.__seedLcp}))()`);if(v?.title&&v.image)break;await pause(50);}
    assert.ok(v?.title,entry+' '+mode+' missing hero');assert.ok(v.image,'mock image not loaded');assert.ok(!v.bad,'loading state present');assert.ok(v.ms<1500,'hero exceeds 1500 ms: '+JSON.stringify(v));
-   const geometry=await evaluate(`(()=>{const h=document.querySelector('.ngdl-hero'),i=h.querySelector('.ngd-cms-hero-art'),copy=h.querySelector('.ngdl-hero-copy'),a=h.getBoundingClientRect(),b=i.getBoundingClientRect(),c=copy.getBoundingClientRect();return {fills:b.width>=a.width-5&&b.height>=a.height-5,cover:getComputedStyle(i).objectFit,copyOnTop:Number(getComputedStyle(copy).zIndex)>Number(getComputedStyle(i).zIndex),copyFits:c.left>=a.left&&c.right<=a.right+1,overflow:document.documentElement.scrollWidth}})()`);
-   assert.equal(geometry.cover,'cover');assert.ok(geometry.fills,'hero image does not fill banner');assert.ok(geometry.copyOnTop&&geometry.copyFits,'hero copy layering/fit');assert.ok(geometry.overflow<=360,'seeded home overflow');
+   const geometry=await evaluate(`(()=>{const h=document.querySelector('.ngdl-hero'),i=h.querySelector('.ngd-cms-hero-art'),copy=h.querySelector('.ngdl-hero-copy'),a=h.getBoundingClientRect(),b=i.getBoundingClientRect(),c=copy.getBoundingClientRect();return {fills:b.width>=a.width-5&&b.height>=a.height-5,cover:getComputedStyle(i).objectFit,copyOnTop:Number(getComputedStyle(copy).zIndex)>Number(getComputedStyle(i).zIndex),copyFits:c.left>=a.left&&c.right<=a.right+1&&c.top>=a.top&&c.bottom<=a.bottom+1,position:getComputedStyle(i).position,overlay:getComputedStyle(h,'::after').backgroundImage,heading:getComputedStyle(copy.querySelector('h1')).color,background:getComputedStyle(h).backgroundColor,height:a.height,overflow:document.documentElement.scrollWidth}})()`);
+   assert.equal(geometry.cover,'cover');assert.ok(geometry.fills,'hero image does not fill banner');assert.ok(geometry.copyOnTop&&geometry.copyFits,'hero copy layering/fit');assert.ok(geometry.overflow<=width,'seeded home overflow');
+   assert.equal(geometry.position,'absolute');assert.match(geometry.overlay,/linear-gradient/);assert.equal(geometry.heading,'rgb(255, 255, 255)');assert.equal(geometry.background,'rgb(17, 24, 39)');if(width>760)assert.ok(geometry.height<=520,'desktop hero too tall');
+   console.log('NGD_HERO_GEOMETRY '+JSON.stringify({entry,width,...geometry}));
+   if(mode==='normal'){const shot=await request('Page.captureScreenshot',{format:'png'});const dir=path.join(base,'mobile-qa-artifacts');fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(path.join(dir,'cms-hero-'+env+'-'+width+'.png'),Buffer.from(shot.data,'base64'));}
    if(mode==='update'){for(let i=0;i<100&&v.title!=='CI UPDATED HERO';i++){await pause(50);v.title=await evaluate("document.querySelector('#ngdl-title')?.textContent");}assert.equal(v.title,'CI UPDATED HERO');}
    console.log('NGD_SEED_SIMULATION '+JSON.stringify({entry,mode,...v}));
    assert.ok(await evaluate("!!document.querySelector('[data-route=katalog]')"),'catalog navigation missing');
    assert.ok(await evaluate("!!document.querySelector('[data-route=dukungan]')"),'support navigation missing');
   }finally{closed=true;for(const t of timers)clearTimeout(t);ws?.close();await stopChrome(child,profile);}
  };
- try{for(const entry of ['/','/staging/member.html'])for(const mode of ['normal','delay','abort','update'])await run(entry,mode);}finally{await new Promise(resolve=>server.close(resolve));}
+ try{for(const entry of ['/','/staging/member.html']){for(const mode of ['normal','delay','abort','update'])await run(entry,mode);await run(entry,'normal',1366,768);}}finally{await new Promise(resolve=>server.close(resolve));}
 });

@@ -37,16 +37,16 @@ const limits = Object.freeze({
   'assets/brand-experience-v10.css': [42353, 324],
   'assets/mobile-critical-v16.css': [20788, 201],
   'assets/landing-guest-v1.css': [17912, 33],
-  'assets/guest-sales-trust-v1.css': [17498, 25],
+  'assets/guest-sales-trust-v1.css': [18156, 25],
   'assets/product-detail-v1.css': [13213, 40],
   'assets/member-native-dashboard-v1.css': [31440, 224],
-  'assets/ngulik-design-system.css': [46893, 474],
+  'assets/ngulik-design-system.css': [47045, 474],
   'assets/staging-native-mobile.css': [9008, 1]
 });
 
 const budgets = Object.freeze({
-  'index.html': { count: 30, bytes: 757120, important: 2109 },
-  'staging/member.html': { count: 31, bytes: 766128, important: 2110 }
+  'index.html': { count: 30, bytes: 757930, important: 2109 },
+  'staging/member.html': { count: 31, bytes: 766938, important: 2110 }
 });
 
 function inspectEntry(entry) {

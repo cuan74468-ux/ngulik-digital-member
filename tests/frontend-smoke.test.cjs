@@ -184,7 +184,7 @@ test('guest Jasa shows actual backend-catalog prices and gates checkout behind l
   const {nodes,context}=renderPreview();
   vm.runInContext("state.catalog=[{product_id:'P-SERVICE',nama:'Video & Promosi',deskripsi:'Video promo singkat',tipe:'JASA_SEKALI',harga:50000},{product_id:'P-APP',nama:'Kasir',tipe:'LISENSI_SEKALI',harga:25000}];go('jasa')",context,{timeout:2000});
   assert.match(nodes.screen.innerHTML,/ngd-buyer-services/);
-  assert.match(nodes.screen.innerHTML,/Paket yang dapat dipilih/);
+  assert.match(nodes.screen.innerHTML,/Paket Jasa/);
   assert.match(nodes.screen.innerHTML,/Video &amp; Promosi/);
   assert.match(nodes.screen.innerHTML,/Rp(?:\s|\u00a0)*50\.000/);
   assert.match(nodes.screen.innerHTML,/data-checkout-product="P-SERVICE"/);
