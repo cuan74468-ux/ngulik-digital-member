@@ -9,10 +9,10 @@ test('Studio simulation compiles and exposes local-only adapter; no GAS/provider
   assert.doesNotMatch(js,/\bfetch\s*\(|\bXMLHttpRequest\b|\bsendBeacon\s*\(|\bapi\s*\(|PropertiesService|LockService|script\.google\.com/);
 });
 test('scope CSS and precise visual tokens; no global selectors or emoji',()=>{
-  for(const hex of ['#F6F5F0','#ECEAE3','#FFFFFF','#141418','#5B3DF5','#CCF349'])assert.ok(css.includes(hex),hex);
+  for(const hex of ['#FAF9F5','#ECEAE3','#FFFFFF','#111827','#4338CA','#C8F135'])assert.ok(css.includes(hex),hex);
   assert.match(css,/\.ngd-studio\{/);
-  assert.match(css,/box-shadow:3px 3px 0 var\(--ns-ink\)/);
-  assert.match(css,/border:1\.5px solid var\(--ns-ink\)/);
+  assert.match(css,/box-shadow:4px 4px 0 var\(--ns-ink\)/);
+  assert.match(css,/border:2px solid var\(--ns-ink\)/);
   assert.ok(css.split('\n').filter(x=>x.includes('{')&&!x.startsWith('/*')&&!x.startsWith('@')).every(x=>x.trim().startsWith('.ngd-studio')||x.trim().startsWith('}')),'CSS selector must be scoped');
   assert.doesNotMatch(js,/\p{Extended_Pictographic}/u);
 });
