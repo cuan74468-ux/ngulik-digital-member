@@ -14,7 +14,8 @@ test('three-dot titlebar is scoped to selected frames and Studio editor',()=>{
  assert.doesNotMatch(master,/\.checkout-dialog::before|\.checkout-summary::before/);
  assert.doesNotMatch(master,/\.ngdm-orders,\.ngdm-recent,\.ngdm-owned,\.ngdl-story\)::before/);
  const app=read('js/app.js');
- for(const name of ['ngdm-orders','ngdm-recent','ngdm-owned','ngdl-story'])assert.ok(app.includes(name+' ngd-window-frame'),name);
+ for(const name of ['ngdm-orders','ngdm-recent','ngdm-owned'])assert.ok(app.includes(name+' ngd-window-frame'),name);
+  assert.match(read('js/public-cms-home.js'),/class="ngdl-story"/);
 });
 test('browser cache versions synchronize both entrypoints without new auth or APIs',()=>{
  for(const name of ['index.html','staging/member.html']){
