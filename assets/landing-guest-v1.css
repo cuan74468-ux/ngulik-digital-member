@@ -191,3 +191,51 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-end p{
     transition:none;
   }
 }
+
+/* Service-state UI: never render white text on a pale CMS-loading surface. */
+body.ngd-public-app #screen > .ngd-landing-v1:not(.ngd-cms-landing){
+  color:#262337;min-height:145px;width:100%;max-width:1140px;
+  margin:0 auto;padding:32px clamp(16px,3vw,34px);box-sizing:border-box;
+}
+body.ngd-public-app #screen > .ngd-landing-v1:not(.ngd-cms-landing) [role="status"]{
+  color:#514c60 !important;-webkit-text-fill-color:#514c60 !important;
+  opacity:1;font-size:15px;line-height:1.6;
+}
+body.ngd-public-app #screen > .ngd-cms-unavailable{
+  width:calc(100% - 24px);max-width:880px;
+  margin:clamp(20px,5vw,66px) auto;padding:clamp(24px,5vw,52px);
+  box-sizing:border-box;border:1px solid #e2ddd2;border-radius:22px;
+  background:#fffdf9;color:#262337;box-shadow:none;
+  overflow-wrap:anywhere;
+}
+body.ngd-public-app #screen > .ngd-cms-unavailable .ngd-cms-kicker{
+  color:#72562a;font-size:12px;font-weight:800;letter-spacing:.12em;
+  margin:0 0 14px;
+}
+body.ngd-public-app #screen > .ngd-cms-unavailable h1{
+  color:#262337 !important;-webkit-text-fill-color:#262337 !important;
+  font:800 clamp(25px,4vw,40px)/1.18 Inter,system-ui,sans-serif;
+  letter-spacing:-.035em;margin:0 0 16px;
+}
+body.ngd-public-app #screen > .ngd-cms-unavailable > p:not(.ngd-cms-kicker){
+  color:#555162 !important;-webkit-text-fill-color:#555162 !important;
+  margin:0 0 24px;font-size:15px;line-height:1.75;
+}
+body.ngd-public-app #screen > .ngd-cms-unavailable .ngd-cms-unavailable-actions{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+}
+body.ngd-public-app #screen > .ngd-cms-unavailable .btn{
+  min-height:46px;white-space:normal;text-align:center;
+}
+body.ngd-public-app #screen .ngd-staging-access-note{
+  color:#514c60;line-height:1.65;margin-top:18px;
+}
+@media(max-width:600px){
+  body.ngd-public-app #screen > .ngd-cms-unavailable{
+    border-radius:18px;padding:26px 20px;
+  }
+  body.ngd-public-app #screen > .ngd-cms-unavailable .ngd-cms-unavailable-actions{
+    flex-direction:column;align-items:stretch;
+  }
+  body.ngd-public-app #screen > .ngd-cms-unavailable .btn{width:100%;}
+}
