@@ -1,7 +1,7 @@
 /* Ngulik AI Studio P1. DOM-only simulation: never calls GAS, payment, or AI providers. */
 (function(global){
 'use strict';
-const RATIOS={'1:1':[1080,1080],'4:5':[1080,1350],'9:16':[1080,1920],'16:9':[1920,1080]};
+const RATIOS={'1:1':[1080,1080],'4:5':[1080,1350],'9:16':[1080,1920],'16:9':[1920,1080],'3:4':[1080,1440]};
 const TIERS={hemat:2,standar:4,premium:6};
 const V2_TIERS={standard:4,hd_commercial:6};
 const MOODS={terang:'Terang Bersih',hangat:'Hangat Kafe',kontras:'Kontras Promo',gelap:'Mewah Gelap'};
@@ -145,7 +145,7 @@ const htmlEscape=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<'
 const ico=(kind)=>{const paths={grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',edit:'<path d="m4 20 4-1 12-12-3-3L5 16l-1 4z"/>',history:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5-9 11"/>',download:'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',compare:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18"/>',upload:'<path d="M12 16V3m-5 5 5-5 5 5M4 16v4h16v-4"/>',bolt:'<path d="m13 2-9 12h8l-1 8 9-12h-8z"/>',spark:'<path d="m12 3 2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/>'};return '<svg viewBox="0 0 24 24" aria-hidden="true">'+(paths[kind]||paths.spark)+'</svg>'};
 const state={view:'editor',cat:'Semua',filterRatio:'Semua',q:'',credits:25,history:[],template:TEMPLATES[0],photo:'',photoChosen:false,img:null,product:'',headline:'',promo:'',mood:'terang',ratio:'1:1',tier:'standar',overlay:false,compare:false,v2:{product_category:'general_retail',visual_style:'studio_clean',use_case:'marketplace_main',camera_angle:'hero_45',lighting_mood:'soft_daylight',aspect_ratio:'1:1',quality_tier:'standard'},renderNo:0,busy:false,rendered:false,loadedUrl:''};
 let root=null,epoch=0;const adapter=Object.freeze({mode:'SIMULATION',reserve(cost){if(!Number.isInteger(cost)||cost<1||state.credits<cost)return {ok:false,reason:'INSUFFICIENT_SIM_CREDITS'};return {ok:true,reservation:{cost,id:'SIM-'+(state.renderNo+1)}}},settle(r){state.credits-=r.cost;return {ok:true}},release(){return {ok:true}}});
-function getCost(){return TIERS[state.tier]||4}
+function getCost(){return foodMode?(V2_TIERS[state.v2.quality_tier]||4)*food.count:TIERS[state.tier]||4}
 function active(){return !!(root&&root.isConnected)}
 function node(id){return root&&root.querySelector('#'+id)}
 function announce(message){const n=node('ns-toast');if(n){n.textContent=message;n.hidden=false;clearTimeout(announce.timer);announce.timer=setTimeout(()=>{if(n)n.hidden=true},3800)}}
@@ -165,8 +165,112 @@ function v2Choices(field){
 function v2Field(field,label,description){
  return '<div class="ns-v2-field"><div class="ns-v2-field-header"><strong>'+htmlEscape(label)+'</strong><small>'+htmlEscape(description)+'</small></div>'+v2Choices(field)+'</div>';
 }
+
+const FOOD_GROUPS=Object.freeze({
+ food_type:[['soup','Berkuah · bakso/soto'],['rice','Nasi & lauk'],['bakery','Kue & roti'],['snack','Gorengan & camilan'],['drink','Minuman'],['dessert','Dessert']],
+ cover_concept:[['classic','Kuliner Klasik'],['minimal','Editorial Minimalis'],['hero','Hero Close-up'],['flatlay','Meja Penuh · Flat lay'],['dramatic','Gelap Dramatis'],['bright','Segar Cerah'],['warung','Warung Nusantara Modern'],['fine_dining','Premium Fine Dining']],
+ camera_angle:[['top90','Atas 90°'],['angle45','45°'],['eye','Sejajar mata'],['macro','Macro'],['diagonal','Diagonal berkedalaman'],['low','Rendah · megah']],
+ lighting:[['window','Jendela lembut'],['golden','Golden hour'],['side','Samping dramatis'],['softbox','Softbox studio'],['backlight','Backlight · uap'],['candle','Lilin hangat']],
+ surface:[['dark_wood','Kayu gelap'],['white_marble','Marmer putih'],['concrete','Beton'],['bamboo','Anyaman/daun pisang'],['linen','Kain linen'],['plain_white','Polos putih terang']],
+ grade:[['warm','Hangat'],['cool','Dingin'],['earthy','Earthy'],['vivid','Vivid pop'],['matte','Matte lembut'],['brand','Warna brand (hex)']],
+ styling:[['minimal','Minimal'],['ingredients','Rempah & bahan segar'],['steam','Uap/asap'],['sauce','Tetesan saus'],['sprinkle','Taburan'],['hand','Tangan memegang']],
+ lens:[['mm35','35 mm · luas'],['mm50','50 mm · natural'],['mm85','85 mm · bokeh'],['macro100','100 mm · macro']],
+ format:[['4:5','4:5 · feed'],['1:1','1:1 · persegi'],['9:16','9:16 · story'],['3:4','3:4 · cover majalah']],
+ similarity:[['exact','Persis seperti asli'],['enhanced','Boleh dipercantik']],
+ count:[[1,'1 hasil'],[2,'2 hasil'],[4,'4 hasil']]
+});
+const FOOD_LABELS={food_type:'01 Jenis makanan',cover_concept:'02 Konsep cover',camera_angle:'03 Sudut kamera',lighting:'04 Lighting',surface:'05 Permukaan/latar',grade:'06 Warna',styling:'07 Styling/properti',lens:'08 Lensa',format:'09 Format',similarity:'11 Tingkat kemiripan',count:'12 Jumlah hasil'};
+const FOOD_PRESETS={
+ classic:{lighting:'golden',surface:'dark_wood',grade:'warm'},
+ minimal:{lighting:'softbox',surface:'white_marble',grade:'matte'},
+ hero:{lighting:'side',surface:'concrete',grade:'vivid'},
+ flatlay:{lighting:'window',surface:'linen',grade:'earthy'},
+ dramatic:{lighting:'side',surface:'dark_wood',grade:'earthy'},
+ bright:{lighting:'window',surface:'white_marble',grade:'vivid'},
+ warung:{lighting:'window',surface:'bamboo',grade:'warm'},
+ fine_dining:{lighting:'softbox',surface:'concrete',grade:'cool'}
+};
+const FOOD_DEFAULT=Object.freeze({food_type:'soup',cover_concept:'warung',camera_angle:'angle45',lighting:'window',surface:'bamboo',grade:'warm',styling:'minimal',lens:'mm50',format:'4:5',similarity:'exact',count:1});
+let foodMode=false,food={...FOOD_DEFAULT},foodHex='#B9481B',foodNotes='',foodPrice='',foodQuality={status:'not_checked',message:'Pilih foto untuk memeriksa kualitas dasar.'};
+function foodCompatible(v){
+ return !(v.cover_concept==='dramatic'&&v.surface==='plain_white')&&
+ !(v.cover_concept==='bright'&&v.lighting==='candle')&&
+ !(v.camera_angle==='top90'&&v.styling==='steam');
+}
+function chooseFood(field,value){
+ if(!Object.prototype.hasOwnProperty.call(FOOD_GROUPS,field)||!FOOD_GROUPS[field].some(x=>x[0]===value))return false;
+ const next={...food,[field]:value};
+ if(field==='cover_concept')Object.assign(next,FOOD_PRESETS[value]);
+ if(!foodCompatible(next))return false;
+ food=next;
+ if(field==='format'){state.ratio=food.format;}
+ state.rendered=false;
+ return true;
+}
+function foodDraft(){
+ return {mode:'CONTRACT_PREVIEW_ONLY',contract_version:'visual-food-magazine-img2img-v2',
+  adapter_mode:'SIMULATION',image_source_selected:!!state.photo,
+  reference_asset_pending_private_upload:true,
+  estimated_credits_per_image:V2_TIERS[state.v2.quality_tier]||4,
+  estimated_total_credits:(V2_TIERS[state.v2.quality_tier]||4)*food.count,
+  payload:{...food,overlay_enabled:state.overlay,
+   brand_name:state.overlay?state.product.slice(0,70):'',
+   headline:state.overlay?state.headline.slice(0,100):'',
+   tagline:state.overlay?state.promo.slice(0,100):'',
+   price_label:state.overlay?foodPrice.slice(0,30):'',brand_hex:food.grade==='brand'?foodHex:'',
+   user_notes:foodNotes.slice(0,240),reference_image:'',request_id:''}};
+}
+function foodChoices(field){
+ return '<div class="ns-food-options" role="group" aria-label="'+FOOD_LABELS[field]+'">'+
+ FOOD_GROUPS[field].map(([value,label])=>{
+  const disabled=!foodCompatible({...food,[field]:value});
+  return '<button type="button" class="ns-v2-choice" data-food-field="'+field+'" data-food-value="'+value+
+   '" aria-pressed="'+(food[field]===value)+'" '+(disabled?'disabled title="Tidak cocok dengan pilihan saat ini"':'')+'>'+
+   htmlEscape(label)+'</button>';
+ }).join('')+'</div>';
+}
+function foodFields(){
+ const fields=['food_type','cover_concept','camera_angle','lighting','surface','grade','styling','lens','format'];
+ const detail='<div class="ns-food-fields">'+fields.map((key,i)=>
+  '<div class="ns-v2-field"><strong>'+FOOD_LABELS[key]+'</strong>'+foodChoices(key)+
+  (key==='grade'&&food.grade==='brand'?'<label class="ns-label">Kode warna brand<input class="ns-control" id="ns-food-hex" type="color" value="'+foodHex+'"></label>':'')+'</div>').join('')+
+  '<div class="ns-v2-field"><strong>10 Elemen cover · opsional</strong>'+
+  '<label class="ns-v2-overlay-toggle"><input type="checkbox" id="ns-v2-overlay" '+(state.overlay?'checked':'')+'><span>Tambahkan teks melalui Canvas (OFF default)</span></label>'+
+  (state.overlay?'<div class="ns-v2-overlay-fields">'+[['ns-product','Nama brand',state.product,70],['ns-headline','Headline',state.headline,100],['ns-promo','Tagline',state.promo,100]].map(([id,label,value,max])=>'<label class="ns-label">'+label+'<input id="'+id+'" class="ns-control" maxlength="'+max+'" value="'+htmlEscape(value)+'"></label>').join('')+'<label class="ns-label">Harga<input id="ns-food-price" class="ns-control" maxlength="30" value="'+htmlEscape(foodPrice)+'"></label></div>':'')+
+  '</div><div class="ns-v2-field"><strong>'+FOOD_LABELS.similarity+'</strong>'+foodChoices('similarity')+'</div>'+
+  '<div class="ns-v2-field"><strong>'+FOOD_LABELS.count+'</strong>'+foodChoices('count')+'</div>'+
+  '<label class="ns-label">Catatan kreatif (opsional, maks. 240 karakter)<textarea id="ns-food-notes" maxlength="240" rows="2" class="ns-control">'+htmlEscape(foodNotes)+'</textarea></label></div>';
+ return '<section class="ns-block ns-v2-step ns-food-magazine"><h2><span class="ns-count">02</span> Foto Makanan Gaya Majalah</h2>'+
+ '<p class="ns-hint">12 pilihan terpandu. Konsep mengatur cahaya, permukaan dan warna; Anda bisa menyesuaikannya lagi.</p>'+
+ detail+'</section>';
+}
+function foodPreflightMarkup(){
+ return foodMode?'<div id="ns-food-quality" class="ns-food-quality" role="status" aria-live="polite">'+
+ htmlEscape(foodQuality.message)+'</div>':'';
+}
+function evaluateFoodPhoto(image){
+ if(!foodMode||!image||!image.naturalWidth)return;
+ try{
+  const c=document.createElement('canvas');c.width=64;c.height=64;
+  const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(image,0,0,64,64);
+  const p=x.getImageData(0,0,64,64).data;
+  let total=0,edge=0,prev=new Float32Array(4096);
+  for(let i=0;i<4096;i++){const j=i*4;const v=.2126*p[j]+.7152*p[j+1]+.0722*p[j+2];prev[i]=v;total+=v;}
+  for(let y=1;y<63;y++)for(let x=1;x<63;x++){const i=y*64+x;edge+=Math.abs(4*prev[i]-prev[i-1]-prev[i+1]-prev[i-64]-prev[i+64]);}
+  const mean=total/4096,sharpness=edge/(62*62);
+  const issues=[];
+  if(mean<40)issues.push('terlalu gelap: tambah cahaya jendela');
+  if(sharpness<9)issues.push('sangat buram: bersihkan lensa, fokus ulang dan stabilkan HP');
+  foodQuality={status:issues.length?'warning':'pass',message:issues.length?
+   'Peringatan foto: '+issues.join('; ')+'. Pilih foto lain sebelum Generate.':
+   'Foto lolos pemeriksaan kecerahan dan ketajaman dasar (bukan jaminan hasil AI).'};
+ }catch(_){foodQuality={status:'unavailable',message:'Analisis tidak tersedia untuk gambar eksternal. Gunakan unggahan lokal untuk pemeriksaan kualitas.'};}
+ const n=node('ns-food-quality');if(n)n.textContent=foodQuality.message;
+ const b=node('ns-generate');if(b)b.disabled=foodQuality.status!=='pass'||state.busy;
+}
+
 function editor(){
- const dims=RATIOS[state.v2.aspect_ratio];
+ const dims=RATIOS[foodMode?food.format:state.v2.aspect_ratio];
  const selected=!!state.photo;
  return '<section class="ns-editor ns-v2-editor" aria-label="Studio Foto Produk">'+
  '<aside class="ns-side">'+
@@ -180,22 +284,25 @@ function editor(){
  '<small class="ns-hint">Atau gunakan foto sampel untuk menguji alur:</small>'+
  '<div class="ns-samples">'+SAMPLES.map((v,i)=>'<button type="button" class="ns-sample" data-sample="'+i+'" aria-label="Pakai contoh '+htmlEscape(v.name)+'" aria-pressed="'+(state.photo===v.img)+'"><img src="'+v.img+'" alt="'+htmlEscape(v.name)+'" loading="lazy"></button>').join('')+'</div>'+
  '</section>'+
- '<section class="ns-block ns-v2-step"><h2><span class="ns-count">02</span> Pilih hasil yang diinginkan</h2>'+
- v2Field('product_category','Jenis Produk','Bahan, warna dan tekstur asli dijaga')+
- v2Field('use_case','Untuk Apa?','Kebutuhan menentukan framing dan gaya')+
- v2Field('visual_style','Gaya Foto','Enam panggung fotografi komersial')+
- '<details class="ns-v2-advanced"><summary>Atur lebih lanjut · sudut & cahaya</summary>'+
- v2Field('camera_angle','Sudut Kamera','Atur fokus pada produk')+
- v2Field('lighting_mood','Suasana Cahaya','Pencahayaan studio sesuai karakter produk')+
- '</details>'+
- v2Field('aspect_ratio','Rasio Gambar','Proporsi untuk tempat penggunaan')+
- v2Field('quality_tier','Kualitas','Biaya saat ini hanya kredit simulasi')+
- '</section>'+
- '<section class="ns-block ns-v2-optional"><label class="ns-v2-overlay-toggle"><input id="ns-v2-overlay" type="checkbox" '+(state.overlay?'checked':'')+'><span><strong>Opsional: teks, harga & CTA</strong><small>OFF secara default · hasil utama foto tanpa tulisan</small></span></label>'+
- (state.overlay?'<div class="ns-v2-overlay-fields">'+[['ns-product','Nama Produk / Brand',state.product,40],['ns-headline','Headline Promo',state.headline,54],['ns-promo','Harga / Badge',state.promo,28]].map(([id,l,v,max])=>'<label class="ns-label" for="'+id+'">'+l+'<input id="'+id+'" class="ns-control" maxlength="'+max+'" value="'+htmlEscape(v)+'"></label>').join('')+'</div>':'')+
- '</section>'+
+ '<div class="ns-food-mode-switch"><button type="button" data-food-mode="food" aria-pressed="'+foodMode+'">Foto Makanan Gaya Majalah</button><button type="button" data-food-mode="general" aria-pressed="'+(!foodMode)+'">Studio Produk Umum</button></div>'+
+ (foodMode?foodFields():(
+  '<section class="ns-block ns-v2-step"><h2><span class="ns-count">02</span> Pilih hasil yang diinginkan</h2>'+
+  v2Field('product_category','Jenis Produk','Bahan, warna dan tekstur asli dijaga')+
+  v2Field('use_case','Untuk Apa?','Kebutuhan menentukan framing dan gaya')+
+  v2Field('visual_style','Gaya Foto','Enam panggung fotografi komersial')+
+  '<details class="ns-v2-advanced"><summary>Atur lebih lanjut · sudut & cahaya</summary>'+
+  v2Field('camera_angle','Sudut Kamera','Atur fokus pada produk')+
+  v2Field('lighting_mood','Suasana Cahaya','Pencahayaan studio sesuai karakter produk')+
+  '</details>'+
+  v2Field('aspect_ratio','Rasio Gambar','Proporsi untuk tempat penggunaan')+
+  v2Field('quality_tier','Kualitas','Biaya saat ini hanya kredit simulasi')+
+  '</section>'+
+  '<section class="ns-block ns-v2-optional"><label class="ns-v2-overlay-toggle"><input id="ns-v2-overlay" type="checkbox" '+(state.overlay?'checked':'')+'><span><strong>Opsional: teks, harga & CTA</strong><small>OFF secara default · hasil utama foto tanpa tulisan</small></span></label>'+
+  (state.overlay?'<div class="ns-v2-overlay-fields">'+[['ns-product','Nama Produk / Brand',state.product,40],['ns-headline','Headline Promo',state.headline,54],['ns-promo','Harga / Badge',state.promo,28]].map(([id,l,v,max])=>'<label class="ns-label" for="'+id+'">'+l+'<input id="'+id+'" class="ns-control" maxlength="'+max+'" value="'+htmlEscape(v)+'"></label>').join('')+'</div>':'')+
+  '</section>'
+ ))+
  '</div><div class="ns-cost"><div class="ns-cost-row"><strong>Kredit simulasi</strong><span class="ns-status ns-mono">'+getCost()+' Cr</span></div>'+
- '<button type="button" id="ns-generate" class="ns-cta ns-primary" '+(!selected||state.busy?'disabled':'')+'>'+ico('spark')+(selected?' Buat Pratinjau Simulasi':' Unggah Foto Dahulu')+'</button>'+
+ foodPreflightMarkup()+'<div class="ns-hint">'+(foodMode?food.count+' × '+(V2_TIERS[state.v2.quality_tier]||4)+' Cr / hasil · estimasi simulasi':'1 hasil · simulasi')+'</div>'+ '<button type="button" id="ns-generate" class="ns-cta ns-primary" '+(!selected||state.busy||(foodMode&&foodQuality.status!=='pass')?'disabled':'')+'>'+ico('spark')+(selected?' Buat Pratinjau Simulasi':' Unggah Foto Dahulu')+'</button>'+
  '<small class="ns-hint">Generasi AI sungguhan belum terhubung. Foto asli tidak dikirim ke server.</small></div></aside>'+
  '<div class="ns-board-panel"><div class="ns-window-titlebar"><span class="ns-window-dots" aria-hidden="true"><i></i><i></i><i></i></span><strong>Pratinjau Foto Produk</strong></div>'+
  '<div class="ns-board-toolbar"><span class="ns-pill">'+dims[0]+' × '+dims[1]+' px</span><div class="ns-board-actions">'+
@@ -222,23 +329,23 @@ function setTemplate(t){
  state.mood=t.mood;state.img=null;state.loadedUrl='';state.compare=false;
  state.rendered=false;state.view='editor';shell();
 }
-function loadImg(url){if(!active()||state.loadedUrl===url)return;state.loadedUrl=url;const image=new Image();if(!url.startsWith('data:'))image.crossOrigin='anonymous';image.onload=()=>{if(!active()||state.photo!==url)return;state.img=image;draw()};image.onerror=()=>{if(state.photo===url){state.img=null;draw()}};image.src=url}
+function loadImg(url){if(!active()||state.loadedUrl===url)return;state.loadedUrl=url;const image=new Image();if(!url.startsWith('data:'))image.crossOrigin='anonymous';image.onload=()=>{if(!active()||state.photo!==url)return;state.img=image;draw();evaluateFoodPhoto(image)};image.onerror=()=>{if(state.photo===url){state.img=null;draw()}};image.src=url}
 function roundRect(ctx,x,y,w,h,r,fill){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill()}
 function wrap(ctx,text,maxWidth,maxLines){const words=String(text).split(/\s+/),lines=[];let line='';for(const w of words){const next=line?line+' '+w:w;if(ctx.measureText(next).width>maxWidth&&line){lines.push(line);line=w;if(lines.length>=maxLines)break}else line=next}if(lines.length<maxLines&&line)lines.push(line);return lines}
 function draw(){const canvas=node('ns-canvas');if(!canvas)return;const dims=RATIOS[state.ratio]||RATIOS['1:1'];canvas.width=dims[0];canvas.height=dims[1];const W=dims[0],H=dims[1],ctx=canvas.getContext('2d');if(!ctx)return;ctx.fillStyle=state.mood==='gelap'?'#141418':state.mood==='kontras'?'#CCF349':state.mood==='hangat'?'#E8D6C4':'#ECEAE3';ctx.fillRect(0,0,W,H);
 const image=state.img;if(image&&image.complete&&image.naturalWidth){const scale=Math.max(W/image.naturalWidth,H/image.naturalHeight),iw=image.naturalWidth*scale,ih=image.naturalHeight*scale;ctx.drawImage(image,(W-iw)/2,(H-ih)/2,iw,ih)}else{ctx.fillStyle='#DDD9CE';ctx.fillRect(W*.14,H*.13,W*.72,H*.64);ctx.strokeStyle='#141418';ctx.lineWidth=7;ctx.strokeRect(W*.14,H*.13,W*.72,H*.64);ctx.font='700 40px "Plus Jakarta Sans",sans-serif';ctx.textAlign='center';ctx.fillStyle='#141418';ctx.fillText('FOTO PRODUK',W/2,H/2)}
 if(state.compare)return;if(!state.overlay)return;ctx.textAlign='left';
-const boxH=Math.min(H*.38,420),top=H-boxH;ctx.fillStyle=state.mood==='gelap'?'rgba(20,20,24,.9)':'rgba(246,245,240,.96)';ctx.fillRect(0,top,W,boxH);const dark=state.mood==='gelap';ctx.fillStyle=dark?'#CCF349':'#141418';ctx.font='800 54px "Plus Jakarta Sans",sans-serif';const pad=65;ctx.fillText(state.product||'Produk UMKM',pad,top+85,W-pad*2);ctx.font='700 43px "Plus Jakarta Sans",sans-serif';const lines=wrap(ctx,state.headline||'Visual promosi produk',W-pad*2,3);lines.forEach((line,i)=>ctx.fillText(line,pad,top+155+i*55,W-pad*2));ctx.fillStyle=dark?'#CCF349':'#5B3DF5';roundRect(ctx,pad,H-102,Math.min(W-2*pad,Math.max(260,(state.promo||'PROMO').length*28+55)),61,13,dark?'#CCF349':'#5B3DF5');ctx.fillStyle=dark?'#141418':'#fff';ctx.font='800 30px "Plus Jakarta Sans",sans-serif';ctx.fillText(state.promo||'PROMO',pad+20,H-63,W-pad*2-24)}
+const boxH=Math.min(H*.38,420),top=H-boxH;ctx.fillStyle=state.mood==='gelap'?'rgba(20,20,24,.9)':'rgba(246,245,240,.96)';ctx.fillRect(0,top,W,boxH);const dark=state.mood==='gelap';ctx.fillStyle=dark?'#CCF349':'#141418';ctx.font='800 54px "Plus Jakarta Sans",sans-serif';const pad=65;ctx.fillText(state.product||'Produk UMKM',pad,top+85,W-pad*2);ctx.font='700 43px "Plus Jakarta Sans",sans-serif';const lines=wrap(ctx,state.headline||'Visual promosi produk',W-pad*2,3);lines.forEach((line,i)=>ctx.fillText(line,pad,top+155+i*55,W-pad*2));ctx.fillStyle=dark?'#CCF349':'#5B3DF5';roundRect(ctx,pad,H-102,Math.min(W-2*pad,Math.max(260,(state.promo||'PROMO').length*28+55)),61,13,dark?'#CCF349':'#5B3DF5');ctx.fillStyle=dark?'#141418':'#fff';ctx.font='800 30px "Plus Jakarta Sans",sans-serif';ctx.fillText(state.promo||'PROMO',pad+20,H-63,W-pad*2-24);if(foodMode&&foodPrice){ctx.textAlign='right';ctx.fillStyle=dark?'#CCF349':'#141418';ctx.font='800 31px "Plus Jakarta Sans",sans-serif';ctx.fillText(foodPrice,W-pad,top+84,W*.36)}}
 function recipe(){return ['Commercial product visual simulation','Template: '+state.template.name,'Style: '+MOODS[state.mood],'Canvas: '+state.ratio,'Produk: '+state.product,'Headline: '+state.headline,'Promo: '+state.promo,'Mode: local-only (no AI provider request)'].join('\n')}
 function download(data,filename){const a=document.createElement('a');a.href=data;a.download=filename;document.body.append(a);a.click();a.remove()}
 function selectView(v){if(!['gallery','editor','history'].includes(v))return;state.view=v;shell()}
-function maybeEdit(input){const keys={'ns-product':'product','ns-headline':'headline','ns-promo':'promo'};if(keys[input.id]){state[keys[input.id]]=input.value;draw();const rec=node('ns-recipe');if(rec)rec.textContent=recipe()}if(input.id==='ns-search'){state.q=input.value;const selectionStart=input.selectionStart;content();const fresh=node('ns-search');if(fresh){fresh.focus();fresh.setSelectionRange(selectionStart,selectionStart)}}}
-async function simulate(){if(state.busy)return;if(!state.photo){announce('Pilih foto produk lebih dulu.');return;}const reservation=adapter.reserve(getCost());if(!reservation.ok){announce('Saldo simulasi tidak cukup. Refresh halaman untuk mengulang sesi.');return}state.busy=true;const token=++epoch;const gen=node('ns-generate');if(gen){gen.disabled=true;gen.textContent='Memproses simulasi…'}try{draw();const cv=node('ns-canvas');if(!cv)throw Error('Canvas tidak tersedia');const image=cv.toDataURL('image/png');await Promise.resolve();if(!active()||token!==epoch)return;const settled=adapter.settle(reservation.reservation);if(!settled.ok)throw Error('Simulasi gagal');state.renderNo++;state.rendered=true;state.history.unshift({image,product:state.product,ratio:state.ratio,cost:reservation.reservation.cost});if(state.history.length>8)state.history.pop();shell();announce('Visual simulasi tersimpan di riwayat sesi.')}catch(e){adapter.release(reservation.reservation);state.busy=false;announce('Gagal membuat pratinjau. Gunakan foto lokal atau coba lagi.');}finally{state.busy=false;if(active()&&state.view==='editor'){const btn=node('ns-generate');if(btn){btn.disabled=false;btn.innerHTML=ico('spark')+' Generate Visual'}}}}
+function maybeEdit(input){if(input.id==='ns-food-price'){foodPrice=input.value.slice(0,30);return}if(input.id==='ns-food-notes'){foodNotes=input.value.slice(0,240);return}if(input.id==='ns-food-hex'){foodHex=input.value;return}const keys={'ns-product':'product','ns-headline':'headline','ns-promo':'promo'};if(keys[input.id]){state[keys[input.id]]=input.value;draw();const rec=node('ns-recipe');if(rec)rec.textContent=recipe()}if(input.id==='ns-search'){state.q=input.value;const selectionStart=input.selectionStart;content();const fresh=node('ns-search');if(fresh){fresh.focus();fresh.setSelectionRange(selectionStart,selectionStart)}}}
+async function simulate(){if(state.busy)return;if(!state.photo){announce('Pilih foto produk lebih dulu.');return;}if(foodMode&&foodQuality.status!=='pass'){announce('Pastikan foto sudah diperiksa dan layak. Gunakan unggahan lokal yang terang dan tajam.');return;}const reservation=adapter.reserve(getCost());if(!reservation.ok){announce('Saldo simulasi tidak cukup. Refresh halaman untuk mengulang sesi.');return}state.busy=true;const token=++epoch;const gen=node('ns-generate');if(gen){gen.disabled=true;gen.textContent='Memproses simulasi…'}try{draw();const cv=node('ns-canvas');if(!cv)throw Error('Canvas tidak tersedia');const image=cv.toDataURL('image/png');await Promise.resolve();if(!active()||token!==epoch)return;const settled=adapter.settle(reservation.reservation);if(!settled.ok)throw Error('Simulasi gagal');state.renderNo++;state.rendered=true;const count=foodMode?food.count:1;for(let n=0;n<count;n++)state.history.unshift({image,product:state.product,ratio:state.ratio,cost:reservation.reservation.cost/count});if(state.history.length>8)state.history.length=8;shell();announce(count+' aset simulasi tersimpan di riwayat sesi (tanpa AI).')}catch(e){adapter.release(reservation.reservation);state.busy=false;announce('Gagal membuat pratinjau. Gunakan foto lokal atau coba lagi.');}finally{state.busy=false;if(active()&&state.view==='editor'){const btn=node('ns-generate');if(btn){btn.disabled=foodMode&&foodQuality.status!=='pass';btn.innerHTML=ico('spark')+' Generate Visual'}}}}
 function handleClick(event){const target=event.target.closest('button');if(!target||!root.contains(target))return;if(target.dataset.view){selectView(target.dataset.view);return}if(target.dataset.cat){state.cat=target.dataset.cat;content();return}if(target.dataset.template){const t=TEMPLATES.find(x=>x.id===target.dataset.template);if(t)setTemplate(t);return}if(target.dataset.sample!==undefined){const i=Number(target.dataset.sample);const s=SAMPLES[i];if(s){state.photo=s.img;state.photoChosen=true;state.product=s.product;state.headline=s.headline;state.promo=s.promo;state.v2.product_category=['beverage_bottle','food_culinary','skincare_cosmetic','food_culinary'][i];reconcileV2();state.img=null;state.loadedUrl='';content()}return}
-if(target.dataset.v2Field){if(selectV2(target.dataset.v2Field,target.dataset.v2Value))content();return}if(target.dataset.mood){state.mood=target.dataset.mood;content();return}if(target.dataset.ratio){state.ratio=target.dataset.ratio;content();return}if(target.dataset.tier){state.tier=target.dataset.tier;content();return}
+if(target.dataset.foodMode){foodMode=target.dataset.foodMode==='food';if(foodMode){state.ratio=food.format;state.overlay=false;foodQuality={status:'not_checked',message:'Memeriksa foto sumber…'};if(state.img)evaluateFoodPhoto(state.img)}else{state.ratio=state.v2.aspect_ratio;}content();return}if(target.dataset.foodField){if(chooseFood(target.dataset.foodField,target.dataset.foodField==='count'?Number(target.dataset.foodValue):target.dataset.foodValue))content();return}if(target.dataset.v2Field){if(selectV2(target.dataset.v2Field,target.dataset.v2Value))content();return}if(target.dataset.mood){state.mood=target.dataset.mood;content();return}if(target.dataset.ratio){state.ratio=target.dataset.ratio;content();return}if(target.dataset.tier){state.tier=target.dataset.tier;content();return}
 if(target.id==='ns-upload'){node('ns-file')?.click();return}if(target.id==='ns-toggle'){state.overlay=!state.overlay;content();return}if(target.id==='ns-compare'){state.compare=!state.compare;content();return}if(target.id==='ns-generate'){void simulate();return}if(target.id==='ns-download'){const cv=node('ns-canvas');if(cv)try{download(cv.toDataURL('image/png'),'ngulik-studio-simulasi-'+state.ratio.replace(':','x')+'.png')}catch(_){announce('Tidak bisa mengunduh gambar eksternal ini. Unggah foto lokal untuk ekspor HD.')}return}if(target.dataset.preview!==undefined){const item=state.history[Number(target.dataset.preview)];if(item){state.photo=item.image;state.photoChosen=true;state.img=null;state.loadedUrl='';state.ratio=item.ratio;state.product=item.product;state.compare=true;state.view='editor';shell()}return}if(target.dataset.historyDownload!==undefined){const item=state.history[Number(target.dataset.historyDownload)];if(item)download(item.image,'ngulik-studio-aset-'+(Number(target.dataset.historyDownload)+1)+'.png');return}}
-function handleChange(event){const t=event.target;if(t.id==='ns-v2-overlay'){state.overlay=t.checked;content();return}if(t.id==='ns-ratio-filter'){state.filterRatio=t.value;content()}if(t.id==='ns-file'){const file=t.files?.[0];if(!file)return;if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>8*1024*1024){announce('File harus JPG/PNG/WebP maksimal 8 MB.');return}const reader=new FileReader();reader.onload=()=>{if(!active())return;state.photo=String(reader.result||'');state.photoChosen=true;state.img=null;state.loadedUrl='';content()};reader.readAsDataURL(file)}}
+function handleChange(event){const t=event.target;if(t.id==='ns-v2-overlay'){state.overlay=t.checked;content();return}if(t.id==='ns-ratio-filter'){state.filterRatio=t.value;content()}if(t.id==='ns-file'){const file=t.files?.[0];if(!file)return;if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>8*1024*1024){announce('File harus JPG/PNG/WebP maksimal 8 MB.');return}const reader=new FileReader();reader.onload=()=>{if(!active())return;state.photo=String(reader.result||'');state.photoChosen=true;state.img=null;state.loadedUrl='';foodQuality={status:'not_checked',message:'Sedang memeriksa foto baru…'};content()};reader.readAsDataURL(file)}}
 function mount(el){if(!el)return;root=el;root.classList.add('ngd-studio');root.addEventListener('click',handleClick);root.addEventListener('input',e=>maybeEdit(e.target));root.addEventListener('change',handleChange);shell()}
 function unmount(){epoch++;if(root){root.replaceChildren();root=null}}
-global.NGD_STUDIO={mount,unmount,adapterMode:adapter.mode,debugSnapshot:()=>({mode:adapter.mode,creditsSimulated:state.credits,renders:state.renderNo,history:state.history.length}),requestDraft:buildVisualRequestDraft,img2imgDraft:buildImg2ImgV2Draft,selectOption:selectV2,optionContracts:()=>Object.keys(V2_OPTIONS).reduce((a,k)=>(a[k]=V2_OPTIONS[k].map(x=>[...x]),a),{}),presetContracts:()=>Object.keys(VISUAL_PRESET_IDS).map(id=>({id,...VISUAL_PRESET_IDS[id]}))};
+global.NGD_STUDIO={mount,unmount,adapterMode:adapter.mode,debugSnapshot:()=>({mode:adapter.mode,creditsSimulated:state.credits,renders:state.renderNo,history:state.history.length}),requestDraft:buildVisualRequestDraft,img2imgDraft:buildImg2ImgV2Draft,foodMagazineDraft:foodDraft,foodChoose:chooseFood,foodContracts:()=>FOOD_GROUPS,selectOption:selectV2,optionContracts:()=>Object.keys(V2_OPTIONS).reduce((a,k)=>(a[k]=V2_OPTIONS[k].map(x=>[...x]),a),{}),presetContracts:()=>Object.keys(VISUAL_PRESET_IDS).map(id=>({id,...VISUAL_PRESET_IDS[id]}))};
 })(window);
