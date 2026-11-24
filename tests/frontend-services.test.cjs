@@ -69,3 +69,11 @@ test('commercial service module is loaded on all member/admin routes',()=>{
   assert.match(css,/\.service-columns/);
   assert.match(css,/@media\(max-width:760px\)[\s\S]*?\.service-columns/);
 });
+
+test('guest services use published editorial copy and do not promise free membership or deprecated integration offers',()=>{
+ const app=fs.readFileSync(path.join(root,'js/app.js'),'utf8');
+ const guest=app.slice(app.indexOf('function viewServiceRequests(){'),app.indexOf('function viewAdminServices(){'));
+ assert.match(guest,/CNT-NEXT-02/);assert.match(guest,/serviceCopy\?\.description/);
+ assert.doesNotMatch(guest,/Daftar gratis dengan WhatsApp|Otomasi Pekerjaan|HARGA NYATA, BUKAN TEBAK-TEBAKAN/);
+ assert.match(guest,/Starter Pack/);assert.match(guest,/data-checkout-product/);
+});

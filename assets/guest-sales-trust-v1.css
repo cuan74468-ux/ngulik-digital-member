@@ -1,47 +1,47 @@
 /* Public Jasa + Cara Kerja & Bantuan. Isolated from member/admin CSS. */
 body.ngd-public-app[data-app-role="guest"] #screen :is(.ngd-buyer-services,.ngd-buyer-help){
-  --buyer-ink:#241d38;--buyer-muted:#575267;--buyer-purple:#45238d;--buyer-line:#e6e1ed;
-  color:var(--buyer-ink);width:100%;max-width:1180px;margin-inline:auto;min-width:0;overflow-x:clip;
-  font-family:Inter,system-ui,sans-serif;
+  --buyer-ink:var(--ngds-ink);--buyer-muted:var(--ngds-muted);--buyer-purple:var(--ngds-violet);--buyer-line:var(--ngds-ink);
+  color:var(--buyer-ink);width:100%;max-width:1140px;margin-inline:auto;min-width:0;padding:0 clamp(12px,2.3vw,26px) 42px;overflow-wrap:break-word;
+  font-family:var(--ngds-heading);
 }
 body.ngd-public-app[data-app-role="guest"] #screen :is(.ngd-buyer-services,.ngd-buyer-help) *,
 body.ngd-public-app[data-app-role="guest"] #screen :is(.ngd-buyer-services,.ngd-buyer-help) *::before,
 body.ngd-public-app[data-app-role="guest"] #screen :is(.ngd-buyer-services,.ngd-buyer-help) *::after{box-sizing:border-box}
 body.ngd-public-app[data-app-role="guest"] #screen :is(.ngd-buyer-services,.ngd-buyer-help) :is(h1,h2,h3){
-  margin:0;color:#241d38!important;-webkit-text-fill-color:#241d38!important;
+  margin:0;color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;
   background:none!important;text-shadow:none!important;opacity:1!important;
-  font-family:"Plus Jakarta Sans",Inter,sans-serif;letter-spacing:-.043em;
+  font-family:var(--ngds-heading);letter-spacing:-.043em;
 }
 body.ngd-public-app[data-app-role="guest"] #screen :is(.ngd-buyer-services,.ngd-buyer-help) p{
-  margin:0;color:#575267!important;-webkit-text-fill-color:#575267!important;
+  margin:0;color:var(--ngds-muted)!important;-webkit-text-fill-color:var(--ngds-muted)!important;
   line-height:1.68;font-weight:400;
 }
 body.ngd-public-app[data-app-role="guest"] #screen :is(.ngd-buyer-services,.ngd-buyer-help) .ngdb-overline{
-  color:#513297!important;-webkit-text-fill-color:#513297!important;font:800 11px/1.5 Inter,sans-serif!important;
+  color:var(--ngds-violet)!important;-webkit-text-fill-color:var(--ngds-violet)!important;font:800 11px/1.5 var(--ngds-heading)!important;
   letter-spacing:.12em;text-transform:uppercase;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-button{
-  display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;
-  padding:11px 18px;border:1.5px solid #45238d;border-radius:11px;text-decoration:none;
-  font:750 13px/1.35 Inter,sans-serif;cursor:pointer;max-width:100%;
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;
+  padding:11px 18px;border:var(--ngds-line);border-radius:var(--ngds-radius-small);text-decoration:none;
+  font:750 13px/1.35 var(--ngds-heading);cursor:pointer;max-width:100%;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-primary{
-  color:#fff!important;-webkit-text-fill-color:#fff!important;background:#45238d!important;border-color:#45238d!important;
+  color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;background:var(--ngds-lime)!important;border-color:var(--ngds-ink)!important;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-outline{
-  color:#342452!important;-webkit-text-fill-color:#342452!important;background:#fff!important;border-color:#cabfe0!important;
+  color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;background:#fff!important;border-color:var(--ngds-ink)!important;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-button:focus-visible,
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package button:focus-visible,
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-question summary:focus-visible{
-  outline:3px solid #cc9c28;outline-offset:3px;
+  outline:3px solid var(--ngds-violet);outline-offset:3px;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-actions{
   display:flex;flex-wrap:wrap;gap:10px;margin-top:19px;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-heading{display:grid;gap:8px;max-width:760px;margin-bottom:22px}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-heading h2{
-  font-size:clamp(24px,2.7vw,35px);line-height:1.18;font-weight:800;
+  font-size:clamp(1.25rem,3.8vw,1.75rem);line-height:1.25;font-weight:800;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-heading>p:last-child:not(.ngdb-overline){
   font-size:13px;max-width:65ch;
@@ -50,19 +50,19 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdb-heading>p:last-child:no
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-hero{
   display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
   align-items:center;gap:clamp(22px,4vw,48px);
-  padding:clamp(26px,3.5vw,45px);
-  border-radius:23px;background:#f2effb;overflow:hidden;min-width:0;
+  padding:clamp(18px,3.5vw,28px);
+  border-radius:var(--ngds-radius);background:var(--ngds-paper);border:var(--ngds-line);box-shadow:var(--ngds-shadow);min-width:0;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-hero-copy{display:grid;justify-items:start;gap:11px;min-width:0}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-hero h1{
-  font-size:clamp(31px,3.65vw,49px);font-weight:800;line-height:1.09;
+  font-size:clamp(1.65rem,5vw,2.5rem);font-weight:800;line-height:1.2;
   max-width:17ch;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-hero-copy>p:not(.ngdb-overline){
   font-size:clamp(13px,1.1vw,16px);max-width:57ch;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-hero-copy>small{
-  color:#665c79!important;font:500 11px/1.6 Inter,sans-serif;
+  color:var(--ngds-muted)!important;font:500 11px/1.6 var(--ngds-heading);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-hero-visual{
   min-width:0;display:grid;place-items:center;max-height:315px;
@@ -82,7 +82,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package{
   border-bottom:1px solid var(--buyer-line);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package-media{
-  display:grid;place-items:center;aspect-ratio:1/1;background:#f3f0fa;border-radius:14px;overflow:hidden;padding:12px;
+  display:grid;place-items:center;aspect-ratio:1/1;background:var(--ngds-bg);border-radius:14px;overflow:hidden;padding:12px;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package-media img{
   display:block;width:100%;height:100%;object-fit:contain;min-width:0;
@@ -98,8 +98,8 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package-main>p:not(.ngd
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package-detail{min-width:0;font-size:12px}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package-detail summary{
-  cursor:pointer;font-weight:750;font-size:12px;min-height:28px;color:#45238d;
-  -webkit-text-fill-color:#45238d;
+  cursor:pointer;font-weight:750;font-size:12px;min-height:28px;color:var(--ngds-violet);
+  -webkit-text-fill-color:var(--ngds-violet);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package-detail p{
   padding-top:6px;font-size:12px!important;line-height:1.6!important;
@@ -108,22 +108,22 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package-buy{
   display:grid;justify-items:stretch;gap:7px;min-width:0;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package-buy>span:first-child{
-  color:#6a6376;font-size:11px;font-weight:700;
+  color:var(--ngds-muted);font-size:11px;font-weight:700;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package-buy>strong{
-  color:#241d38;-webkit-text-fill-color:#241d38;font:800 clamp(18px,2vw,24px)/1.3 Inter,sans-serif;
+  color:var(--ngds-ink);-webkit-text-fill-color:var(--ngds-ink);font:800 clamp(18px,2vw,24px)/1.3 var(--ngds-heading);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package-buy>button{
-  cursor:pointer;padding:11px 12px;min-height:43px;border-radius:10px;border:1px solid #45238d;
-  background:#45238d;color:#fff;-webkit-text-fill-color:#fff;font:750 12px/1.3 Inter,sans-serif;
+  cursor:pointer;padding:11px 12px;min-height:46px;border-radius:10px;border:1px solid var(--ngds-violet);
+  background:var(--ngds-violet);color:#fff;-webkit-text-fill-color:#fff;font:750 12px/1.3 var(--ngds-heading);
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngdb-unavailable{font-size:12px;color:#686174}
+body.ngd-public-app[data-app-role="guest"] #screen .ngdb-unavailable{font-size:12px;color:var(--ngds-muted)}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-no-packages{
-  padding:24px;background:#f7f5fb;border:1px solid #e9e3f2;border-radius:15px;display:grid;gap:9px;justify-items:start;
+  padding:24px;background:var(--ngds-paper);border:1px solid var(--ngds-ink);border-radius:15px;display:grid;gap:9px;justify-items:start;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-no-packages>strong{
-  color:#241d38;font-size:16px;
+  color:var(--ngds-ink);font-size:16px;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-no-packages p{font-size:13px}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-capability-list{
@@ -134,7 +134,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdb-capability{
   gap:12px;align-items:center;border-top:1px solid var(--buyer-line);padding:14px 0;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-capability img{
-  display:block;width:90px;height:100px;object-fit:contain;border-radius:10px;background:#f3f0fa;
+  display:block;width:90px;height:100px;object-fit:contain;border-radius:10px;background:var(--ngds-bg);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-capability h3{
   font-weight:800;font-size:15px;line-height:1.3;margin-bottom:7px;
@@ -145,18 +145,18 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdb-process-steps{
   gap:clamp(16px,2vw,28px);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-process-steps>div{
-  min-width:0;border-top:1px solid #dcd4e9;padding:16px 3px 4px;display:grid;align-content:start;gap:9px;
+  min-width:0;border-top:1px solid var(--ngds-ink);padding:16px 3px 4px;display:grid;align-content:start;gap:9px;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-process-steps span{
-  color:#52349c;-webkit-text-fill-color:#52349c;font:800 12px/1.2 Inter,sans-serif;
+  color:var(--ngds-violet);-webkit-text-fill-color:var(--ngds-violet);font:800 12px/1.2 var(--ngds-heading);
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngdb-process-steps h3{font:800 16px/1.35 "Plus Jakarta Sans",Inter,sans-serif}
+body.ngd-public-app[data-app-role="guest"] #screen .ngdb-process-steps h3{font:800 16px/1.35 var(--ngds-heading)}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-process-steps p{font-size:12.5px;line-height:1.62}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-final,
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-foot{
   display:flex;align-items:center;justify-content:space-between;gap:22px;
   margin-top:clamp(40px,5vw,65px);padding:24px clamp(20px,3vw,34px);
-  border-radius:17px;background:#f2effb;
+  border-radius:var(--ngds-radius);background:var(--ngds-paper);border:var(--ngds-line);box-shadow:var(--ngds-shadow);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-final>div,
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-foot>div{min-width:0;display:grid;gap:7px}
@@ -172,10 +172,10 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-foot .ngdb-button{
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-intro{
   display:grid;justify-items:start;gap:12px;min-width:0;
   padding:clamp(24px,4vw,47px) 2% clamp(30px,4vw,47px);
-  border-bottom:1px solid #e4deec;
+  border:var(--ngds-line);border-radius:var(--ngds-radius);box-shadow:var(--ngds-shadow);background:var(--ngds-paper);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-intro h1{
-  font-size:clamp(31px,4.5vw,52px);line-height:1.13;
+  font-size:clamp(1.65rem,5vw,2.5rem);line-height:1.2;
   max-width:19ch;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-intro>p:not(.ngdb-overline){
@@ -194,13 +194,13 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdb-question{
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-question summary{
   position:relative;cursor:pointer;list-style:none;min-height:58px;
   display:flex;align-items:center;gap:16px;justify-content:space-between;
-  padding:15px 30px 15px 0;color:#241d38!important;-webkit-text-fill-color:#241d38!important;
-  font:750 14px/1.5 Inter,sans-serif;
+  padding:15px 30px 15px 0;color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;
+  font:750 14px/1.5 var(--ngds-heading);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-question summary::-webkit-details-marker{display:none}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-question summary::after{
   content:"+";position:absolute;right:3px;top:50%;transform:translateY(-50%);
-  color:#513297;font:600 21px/1 Inter,sans-serif;
+  color:var(--ngds-violet);font:600 21px/1 var(--ngds-heading);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-question[open] summary::after{content:"−"}
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-question p{
@@ -210,8 +210,8 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-free{
   display:flex;flex-wrap:wrap;gap:9px 20px;margin-top:4px;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-free a{
-  color:#45238d!important;-webkit-text-fill-color:#45238d!important;
-  font:750 12px/1.5 Inter,sans-serif;text-underline-offset:4px;
+  color:var(--ngds-violet)!important;-webkit-text-fill-color:var(--ngds-violet)!important;
+  font:750 12px/1.5 var(--ngds-heading);text-underline-offset:4px;
 }
 @media(max-width:900px){
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-package{
@@ -225,10 +225,10 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-free a{
 }
 @media(max-width:600px){
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-hero{
-    grid-template-columns:minmax(0,1fr);gap:15px;border-radius:17px;padding:24px 19px 17px;
+    grid-template-columns:minmax(0,1fr);gap:15px;border-radius:var(--ngds-radius);padding:20px;
   }
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-hero h1{
-    font-size:clamp(29px,8vw,37px);line-height:1.12;max-width:19ch;
+    font-size:clamp(1.65rem,5vw,2.5rem);line-height:1.12;max-width:19ch;
   }
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-hero-copy>p:not(.ngdb-overline){
     font-size:13px;line-height:1.62;
@@ -238,10 +238,10 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-free a{
     height:170px;max-height:170px;max-width:270px;width:100%;object-fit:contain;
   }
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-actions{
-    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:8px;margin-top:12px;
+    display:grid;grid-template-columns:minmax(0,1fr);width:100%;gap:10px;margin-top:12px;
   }
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-actions .ngdb-button{
-    padding:9px 8px;min-height:43px;font-size:11.5px;text-align:center;
+    padding:9px 8px;min-height:46px;font-size:11.5px;text-align:center;
   }
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-heading{gap:6px;margin-bottom:17px}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-heading h2{font-size:clamp(22px,6vw,27px)}
@@ -287,13 +287,13 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-free a{
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-foot h2{font-size:21px}
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-final .ngdb-button,
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-foot .ngdb-button{
-    justify-self:start;min-height:41px;font-size:12px;
+    justify-self:start;min-height:46px;font-size:12px;
   }
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-intro{
-    padding:20px 2% 26px;gap:10px;
+    padding:20px;gap:10px;
   }
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-intro h1{
-    font-size:clamp(29px,8vw,37px);max-width:19ch;
+    font-size:clamp(1.65rem,5vw,2.5rem);max-width:19ch;
   }
   body.ngd-public-app[data-app-role="guest"] #screen .ngdb-help-intro>p:not(.ngdb-overline){
     font-size:13px;line-height:1.66;
