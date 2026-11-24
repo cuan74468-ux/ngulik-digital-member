@@ -63,7 +63,7 @@ test('backend public CMS projection intentionally excludes status while filterin
  assert.doesNotMatch(home,/row\?\.status==='PUBLISHED'/);
 });
 
-test('new CMS hero preserves a real CMS image slot and overrides the legacy purple theme',()=>{
+test('new CMS hero preserves a real CMS image slot and uses the shared indigo theme',()=>{
  const html=read('js/public-cms-home.js');
  const css=read('assets/ngulik-design-system.css');
  assert.match(html,/class="ngd-cms-hero-art"/);
@@ -72,8 +72,8 @@ test('new CMS hero preserves a real CMS image slot and overrides the legacy purp
  const end=css.indexOf('html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-btn{',index);
  const rule=css.slice(index,end);
  assert.ok(index>=0&&end>index);
- assert.match(rule,/background:#111827!important/);
+ assert.match(rule,/background:var\(--ngds-violet\)!important/);
  assert.match(rule,/color:#fff!important/);
- assert.doesNotMatch(rule,/background:#4338CA!important/);
+ assert.match(rule,/rgba\(32,16,102/);
  assert.match(read('assets/landing-guest-v1.css'),/\.ngd-cms-hero-art\{/);
 });

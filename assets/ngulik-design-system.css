@@ -262,13 +262,13 @@ body.ngd-public-app #screen :is(.ngdl-hero,.ngdl-end,.ngd-home-quiet-hero,.ngd-s
 }
 /* PUBLIC — editorial hero */
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero{
- background:#111827!important;color:#fff!important;
+ background:var(--ngds-violet)!important;color:#fff!important;
  padding:clamp(24px,4vw,48px)!important;
  position:relative;display:grid;grid-template-columns:minmax(0,1fr);align-items:center;isolation:isolate;
  min-height:clamp(360px,36vw,480px);overflow:hidden;
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero::after{
- content:""!important;display:block;position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(17,24,39,.96),rgba(17,24,39,.86) 55%,rgba(17,24,39,.18));pointer-events:none;
+ content:""!important;display:block;position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(32,16,102,.97),rgba(32,16,102,.91) 55%,rgba(67,56,202,.20));pointer-events:none;
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero-copy{position:relative;z-index:2;max-width:600px}
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero h1{
@@ -337,12 +337,12 @@ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-offer-li
  box-shadow:2px 2px 0 var(--ngds-ink)!important;
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-benefits{
- background:var(--ngds-lime)!important;
+ background:var(--ngds-violet)!important;
  border:2px solid var(--ngds-ink)!important;
  box-shadow:4px 4px 0 var(--ngds-ink)!important;border-radius:12px!important;
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-benefits :is(h2,h3,li,p,strong){
- color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;
+ color:#fff!important;-webkit-text-fill-color:#fff!important;
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-end{
  background:var(--ngds-paper)!important;
@@ -590,7 +590,7 @@ body.ngd-public-app[data-app-role="admin"] #screen :is(.admin-operations-intro,.
   inset:0!important;
  }
  html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero::after{
-  content:""!important;display:block;background:linear-gradient(180deg,rgba(17,24,39,.35),rgba(17,24,39,.93) 35%,rgba(17,24,39,.97));
+  content:""!important;display:block;background:linear-gradient(180deg,rgba(67,56,202,.20),rgba(32,16,102,.91) 35%,rgba(32,16,102,.97));
  }
  html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero-copy{
   max-width:100%!important;
