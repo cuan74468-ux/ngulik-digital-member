@@ -105,9 +105,13 @@ function ngdVisualWorkerCleanupStaging(){
  // Cleanup remains available even when LIVE is switched OFF, to prevent
  // private media/uploads from accumulating after an emergency stop.
  var auth=ngdVisualServerAuth_();
- var files=ngdVisualMediaDrive_({auth:auth}).purgeExpired(Date.now(),100);
+ var runtime=ngdVisualRuntime_(auth).workerInternals(key);
+ // Reconcile timeouts/refunds BEFORE deleting expired source images. A
+ // disabled provider must not prevent pre-existing credits being returned.
+ var jobs=runtime.jobs.expire(key);
+ var files=runtime.jobs.cleanup(key);
  var chunks=ngdVisualUploadPurgeExpired_();
- return {media:files,uploads:chunks};
+ return {expired_jobs:jobs.length,media:files,uploads:chunks};
 }
 
 /**
