@@ -315,3 +315,65 @@ function ngdVisualQuote_(machineId,count){
   total_credits:unit*count,currency:'CREDIT',
   server_authoritative:true});
 }
+
+
+/* Studio Skill Matrix V1 — validated IDs select specific optical rules.
+ * No client-written prompt fragments are accepted as scenario instructions.
+ * Descriptions below are trusted backend source; optional user notes remain
+ * untrusted/length-limited in the Food Magazine parser. */
+var NGD_VISUAL_CONTEXT_SKILLS_=Object.freeze({
+ hot_soupy_food:Object.freeze({
+  steam_broth_hero:'Commercial 85mm close-focus, f/5.6, three-quarter 45-degree framing. Preserve original bowl shape, broth volume, meat texture and real toppings. A thin physically plausible steam plume rises behind the bowl, lit by a 135-degree rear rim-backlight; preserve translucent broth surface specular highlights and accurate food texture. No extra noodles, garnish, dumplings or imaginary side dishes.',
+  warung_nusantara_modern:'50mm rectilinear lens, f/5.6, 45-degree hero bowl composition. Soft window key at camera-left and warm practical background bokeh, 2:1 key-to-fill. Natural glistening hot broth with restrained steam; authentic bamboo/wood warung context. Bowl, portions and ingredients exactly match the source image.',
+  editorial_dark_bowl:'85mm lens, f/8, low-key editorial studio on dark charcoal; controlled grazing strip-light at 110 degrees and negative fill on opposite side. Keep bowl edge and protein sharply resolved, realistic broth oil sheen and a narrow rim-lit steam trace. No invented garnish.'
+ }),
+ bottled_liquid:Object.freeze({
+  liquid_vortex_splash:'85mm rectilinear commercial lens, f/8, simulated high-speed 1/4000s frozen liquid helix behind the original bottle. Maintain original glass/plastic refractive index cues, honey amber or real liquid hue and opacity. Strong two-sided rim lighting, realistic splash continuity, believable fluid gravity and fine droplets. Enforce Label Safe Zone: no liquid, droplets, glare or graphics over original label, cap, brand logo or printed text.',
+  obsidian_mirror_splash:'85mm rectilinear, f/8, simulated high-speed 1/4000s symmetrical amber liquid crown splash strictly BEHIND the bottle; dual rim lights at 120 and 240 degrees, controlled soft front fill, pure obsidian backdrop, black glossy acrylic base and optically coherent vertical mirror reflection. Preserve original bottle silhouette, cap, liquid color/opacity, orientation and existing label printing pixel-faithfully; Label Safe Zone is strictly unobstructed. No fake brand lettering.',
+  chilled_condensation_studio:'85mm lens, f/8, cool softbox from upper-left, narrow rim from rear-right. Realistic tiny condensation beads physically attached to transparent container with clean controlled refraction, chilled tabletop contact shadow and muted cool neutral background. Do not change original product contents or brand text; keep label zone free from droplets and glare.'
+ }),
+ bakery_snack:Object.freeze({
+  high_speed_topping_rain:'100mm macro lens, f/8, simulated 1/4000s high-speed strobe freeze of a sparse vertical rain of original edible toppings from above. Side-raking strip light at 70 degrees reveals fine bread crumb and crisp edges; falling bits never cover the main product identity or packaging label. Preserve authentic toppings and exact portion size.',
+  macro_crumb_texture:'100mm macro lens, f/5.6, shallow but sufficient depth of field on genuine crumb and crust; 70-degree side-raking daylight and soft fill. Show porous soft center and crisp surface without fabricated filling, decorations or exaggerated material.',
+  sunlit_cafe_marble:'50mm natural commercial lens, f/5.6, window sunlight at 45 degrees through diffusion, clean warm café marble, accurate contact shadow and natural highlight rolloff on original pastry or snack. Preserve product count and actual ingredient textures.'
+ }),
+ packaging_cosmetic:Object.freeze({
+  clean_marketplace_cyclorama:'85mm rectilinear lens, f/11 for sharp packaging corners and label, shadowless off-white infinity cyclorama with softbox at 45 degrees and gentle grounded contact shadow. Preserve exact box edges, bottle silhouette, cap color, SKU print, every original logo/label character. Do not invent text.',
+  podium_light_caustics:'85mm rectilinear lens, f/8, matte mineral podium with accurate grounded contact shadow. Controlled sun caustics refracted behind—not across—original package; side softbox + restrained rim, label fully visible and sharply preserved without warping.',
+  volumetric_forest_pedestal:'85mm rectilinear lens, f/8, natural stone or wood plinth, diffuse forest green background and restrained volumetric god-rays behind the product, coherent contact shadow. Sharp original label and geometry preserved; no foliage obscuring brand/logo and no invented packaging text.'
+ })
+});
+var NGD_VISUAL_CONTEXT_DEFAULTS_=Object.freeze({
+ hot_soupy_food:'steam_broth_hero',
+ bottled_liquid:'obsidian_mirror_splash',
+ bakery_snack:'sunlit_cafe_marble',
+ packaging_cosmetic:'clean_marketplace_cyclorama'
+});
+function ngdVisualContextSkill_(category,scenario){
+ ngdVisualRequire_(typeof category==='string'&&
+  Object.prototype.hasOwnProperty.call(NGD_VISUAL_CONTEXT_SKILLS_,category),
+  'CONTEXT_CATEGORY_INVALID');
+ var choices=NGD_VISUAL_CONTEXT_SKILLS_[category];
+ ngdVisualRequire_(typeof scenario==='string'&&
+  Object.prototype.hasOwnProperty.call(choices,scenario),'CONTEXT_SCENARIO_INVALID');
+ return choices[scenario];
+}
+function ngdVisualContextInput_(payload){
+ ngdVisualRequire_(ngdVisualIsPlain_(payload),'CONTEXT_PAYLOAD_INVALID');
+ var category=payload.product_category===undefined?
+  'hot_soupy_food':payload.product_category;
+ var scenario=payload.studio_scenario===undefined?
+  NGD_VISUAL_CONTEXT_DEFAULTS_[category]:payload.studio_scenario;
+ var restoration=payload.restoration_mode===undefined?
+  'full_phone_restoration':payload.restoration_mode;
+ ngdVisualRequire_(restoration==='full_phone_restoration'||
+  restoration==='preserve_source','CONTEXT_RESTORATION_INVALID');
+ return {category:category,scenario:scenario,restoration:restoration,
+  optics:ngdVisualContextSkill_(category,scenario)};
+}
+function ngdVisualContextPublicMatrix_(){
+ return Object.keys(NGD_VISUAL_CONTEXT_SKILLS_).map(function(category){
+  return {id:category,default_scenario:NGD_VISUAL_CONTEXT_DEFAULTS_[category],
+   scenario_ids:Object.keys(NGD_VISUAL_CONTEXT_SKILLS_[category])};
+ });
+}
