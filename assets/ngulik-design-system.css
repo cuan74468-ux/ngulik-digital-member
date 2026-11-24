@@ -265,7 +265,7 @@ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero{
  min-height:clamp(340px,30vw,450px);
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero::after{
- content:none!important;display:none!important;background:none!important;
+ content:none!important;display:none;background:none;
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero-copy{max-width:650px}
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero h1{
@@ -582,7 +582,7 @@ html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-run
   inset:46% -2% -4% 0!important;
  }
  html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero::after{
-  content:none!important;display:none!important;background:none!important;
+  content:none!important;display:none;background:none;
  }
  html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero-copy{
   max-width:100%!important;
