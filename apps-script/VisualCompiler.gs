@@ -227,12 +227,12 @@ function ngdFoodMagazineCompile_(payload,registryOverride){
   'FULL SMARTPHONE RESTORATION: Denoise sensor grain while retaining true textures; sharpen actual product edges; remove flat ambient room light and color cast; perform complete physically coherent studio relighting without fabricating packaging, food or geometry.':
   'SOURCE PRESERVATION: Retain source exposure and natural photographic material; no aggressive reconstruction.';
  var labelLock='GEOMETRY & LABEL LOCK: Preserve exact product silhouette, bottle cap, transparent liquid opacity, existing brand mark and all actual printed label text from the reference photo without alteration. Maintain an unobstructed Label Safe Zone; never regenerate text.';
- var physics='SCENARIO PHYSICS LOCK ['+context.category+'/'+context.scenario+']: '+context.optics;
+ var physics='MANDATORY SCENARIO PHYSICS (overrides generic optional camera, lighting, lens and environment options) ['+context.category+'/'+context.scenario+']: '+context.optics;
  // Only allowlisted IDs select private recipe text.
  var layers=[
   ['01_ROLE',ngdVisualConfigString_(r.role,'FOOD_ROLE',1400)],
   ['02_SOURCE_PRESERVATION',ngdVisualConfigString_(r.preservation,'FOOD_PRESERVATION',1700)+'\n'+restoration+'\n'+labelLock],
-  ['03_FOOD_CHARACTER',ngdFoodMagazineRegistrySkill_(r,'food_type',ids.food_type)],
+  ['03_FOOD_CHARACTER',context.category==='packaging_cosmetic'?'Preserve the exact physical packaged product, container, ingredients list, manufacturer labels and original visual identity; do not treat it as edible food.':ngdFoodMagazineRegistrySkill_(r,'food_type',ids.food_type)],
   ['04_COVER_CONCEPT',ngdFoodMagazineRegistrySkill_(r,'cover_concept',ids.cover_concept)+'\n'+physics],
   ['05_CAMERA',ngdFoodMagazineRegistrySkill_(r,'camera_angle',ids.camera_angle)],
   ['06_LIGHTING',ngdFoodMagazineRegistrySkill_(r,'lighting',ids.lighting)],
