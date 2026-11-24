@@ -76,8 +76,8 @@ body.ngd-public-app:not(#ngd) .checkout-note{
   color:#6a7974;font-size:.78rem;line-height:1.58;margin:0;
 }
 body.ngd-public-app:not(#ngd) .checkout-dialog .btn-primary{
-  background:var(--ngds-lime);border:var(--ngds-line);color:var(--ngds-ink);
-  border-radius:var(--ngds-radius-small);min-height:46px;font-size:.82rem;font-weight:700;
+  background:#17565b;border:1px solid #17565b;color:#fff;
+  border-radius:11px;min-height:46px;font-size:.82rem;font-weight:700;
 }
 body.ngd-public-app:not(#ngd) .checkout-dialog .btn-primary:disabled{
   background:#edf1ed;color:#7b8d82;border-color:#e1e9e3;cursor:not-allowed;

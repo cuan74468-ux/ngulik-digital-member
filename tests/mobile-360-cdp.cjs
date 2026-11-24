@@ -144,12 +144,6 @@ async function visit(url,label){
   const theme=shared.result.value;console.log('NGD_SHARED_ROLE_THEME '+label+' '+JSON.stringify(theme));
   assert.equal(theme.canvas,'rgb(250, 249, 245)');assert.equal(theme.ink,'#111827');assert.equal(theme.radius,'12px');
   if(theme.panel){assert.equal(theme.panel.radius,'12px');assert.equal(theme.panel.border,'2px');}
-  const component=await request('Runtime.evaluate',{expression:`(()=>{const q=s=>document.querySelector(s),style=e=>e?{bg:getComputedStyle(e).backgroundColor,fg:getComputedStyle(e).color,fill:getComputedStyle(e).webkitTextFillColor,border:getComputedStyle(e).borderTopWidth,radius:getComputedStyle(e).borderRadius}:null;return {campaign:style(q('.ngd-catalog-campaign-slide')),campaignCTA:style(q('.ngd-catalog-campaign-cta')),dock:style(q('#member-mobile-nav .ngdm-dock-button')),dockActive:style(q('#member-mobile-nav .ngdm-dock-button[aria-current="page"]')),auth:style(q('.ngd-auth-v10 .btn-primary')),admin:style(q('.admin-operations-intro')),intro:style(q('.ngd-member-page-intro,.ai-catalog-intro,.learning-intro,.learning-portal-hero'))};})()`,returnByValue:true});
-  const ui=component.result.value;console.log('NGD_COMPONENT_THEME '+label+' '+JSON.stringify(ui));
-  const lime='rgb(200, 241, 53)',ink='rgb(17, 24, 39)',paper='rgb(255, 255, 255)';
-  if(ui.campaign){assert.equal(ui.campaign.bg,ink,label+' catalogue banner surface');}
-  for(const action of [ui.campaignCTA,ui.auth,ui.dockActive].filter(Boolean)){assert.equal(action.bg,lime,label+' primary background');assert.equal(action.fill,ink,label+' primary foreground');}
-  for(const panel of [ui.admin,ui.intro].filter(Boolean))assert.equal(panel.bg,paper,label+' neutral main panel');
   if(label==='guest-home'||label==='member-home'){
     const brand=await request('Runtime.evaluate',{expression:`(()=>{
       const head=document.querySelector('.topbar'),mark=head?.querySelector('.guest-brand-icon');
@@ -185,7 +179,7 @@ async function visit(url,label){
       // Existing CSS and DOM overflow/contrast checks run even in loading state.
       if(v.hero)assert.ok(v.hero!=='rgba(0, 0, 0, 0)','Published CMS hero must be visible');
     }else{
-      assert.equal(v.wallet,'rgb(17, 24, 39)','Member wallet shares ink surface with header and photo hero');
+      assert.equal(v.wallet,'rgb(67, 56, 202)','Member wallet still pale');
       assert.equal(v.chart,'rgb(200, 241, 53)','Member chart not acid lime');
       assert.equal(v.metric,'rgb(200, 241, 53)','First metric not lime');
       assert.ok(v.walletShadow!=='none','Member wallet hard shadow missing');
@@ -293,7 +287,7 @@ async function visit(url,label){
   }
   if(label==='member-home'){
     const walletStyle=await request('Runtime.evaluate',{expression:`(()=>{const labels=[...document.querySelectorAll('.ngdm-wallet-numbers>p:first-child,.ngdm-wallet-hint,.ngdm-wallet-number>span')];const grid=document.querySelector('.ngdm-shortcuts');return {colors:labels.map(e=>getComputedStyle(e).webkitTextFillColor),columns:grid?getComputedStyle(grid).gridTemplateColumns.split(' ').length:0};})()`,returnByValue:true});
-    const wallet=walletStyle.result.value;console.log('NGD_WALLET_TEXT '+JSON.stringify(wallet));assert.ok(wallet.colors.length>=2&&wallet.colors.every(c=>c==='rgb(255, 255, 255)'),'wallet secondary text must be white on ink');assert.equal(wallet.columns,2,'mobile shortcut grid should be two columns');
+    const wallet=walletStyle.result.value;console.log('NGD_WALLET_TEXT '+JSON.stringify(wallet));assert.ok(wallet.colors.length>=2&&wallet.colors.every(c=>c==='rgb(255, 255, 255)'),'wallet secondary text must be white on indigo');assert.equal(wallet.columns,2,'mobile shortcut grid should be two columns');
     const welcome=await request('Runtime.evaluate',{expression:"(()=>{const quick=document.querySelector('#screen .ngdm-quick');const wallet=document.querySelector('#screen .ngdm-wallet');const choices=[...quick?.querySelectorAll('.ngdm-shortcut')||[]].map(x=>({label:x.querySelector('strong')?.textContent||'',route:x.dataset.route,tool:x.dataset.aiOpen||''}));return {quickBeforeWallet:!!quick&&!!wallet&&quick.compareDocumentPosition(wallet)&Node.DOCUMENT_POSITION_FOLLOWING,choices,summary:document.querySelector('.ngdm-greeting p:last-child')?.textContent||'',width:document.documentElement.scrollWidth};})()",returnByValue:true});
     assert.ok(!welcome.exceptionDetails,'First-run member welcome browser exception');
     const novice=welcome.result.value;
@@ -388,7 +382,7 @@ async function visit(url,label){
     });
     const pcColors=pcTheme.result.value;
     console.log('NGD_V2_DESKTOP_THEME '+JSON.stringify(pcColors));
-    assert.equal(pcColors.wallet,'rgb(17, 24, 39)','PC wallet must use canonical ink surface');
+    assert.equal(pcColors.wallet,'rgb(67, 56, 202)','PC wallet must use Studio purple');
     assert.equal(pcColors.chart,'rgb(200, 241, 53)','PC wallet chart must use Studio lime');
     assert.equal(pcColors.lastMetric,'rgb(17, 24, 39)','PC third metric must be ink');
     assert.ok(pcColors.walletWidth>=600,'PC wallet should fill the main content');

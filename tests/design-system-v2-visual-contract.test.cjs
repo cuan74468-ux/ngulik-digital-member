@@ -10,11 +10,11 @@ test('brand system keeps editorial CMS hero calm while preserving the other role
  for(const name of ['ngdl-hero','ngdl-story','ngdl-offer','ngdl-benefits','ngdm-wallet','ngdm-wallet-chart','ngdm-metric','ngdm-shortcut','ngdm-orders','ai-catalog-intro','market-product-card','partner-hero','partner-metric','learning-intro','learning-portal-hero','lms-course-tile','ngd-help-hero','admin-operations-intro','checkout-summary']){
   assert.ok(css.includes('.'+name),'component missing '+name);
  }
- assert.match(css,/\.ngdm-wallet\{[^}]*background:var\(--ngds-ink\)!important/s);
+ assert.match(css,/\.ngdm-wallet\{[^}]*background:var\(--ngds-violet\)!important/s);
  assert.match(css,/\.ngdm-wallet-chart\{[^}]*background:var\(--ngds-lime\)!important/s);
  assert.match(css,/\.ngdm-metric:first-child\{[^}]*background:var\(--ngds-lime\)!important/s);
  assert.match(css,/\.ngdm-metric:last-child\{[^}]*background:var\(--ngds-ink\)!important/s);
- assert.match(css,/\.ngdl-hero\{[^}]*background:#111827!important/s); // Photo-backed hero with dark fallback
+ assert.match(css,/\.ngdl-hero\{[^}]*background:var\(--ngds-violet\)!important/s); // Photo-backed hero shares indigo brand
 });
 test('new design system is single last-loaded css and does not change Studio',()=>{
  for(const html of htmls){

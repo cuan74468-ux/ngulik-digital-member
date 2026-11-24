@@ -18,7 +18,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero{
   position:relative;display:grid;grid-template-columns:minmax(0,1fr);
   align-items:center;gap:0;
   min-height:360px;margin:0;padding:clamp(24px,4vw,48px);
-  border-radius:var(--ngds-radius);background:var(--ngds-ink);color:#fff;
+  border-radius:var(--ngds-radius);background:var(--ngds-violet);color:#fff;
   border:var(--ngds-line);box-shadow:var(--ngds-shadow);isolation:isolate;overflow:hidden;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero::before,
@@ -66,7 +66,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-btn:ho
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-btn:focus-visible,
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing button:focus-visible{
-  outline:3px solid #7b57af;outline-offset:3px;
+  outline:3px solid var(--ngds-violet);outline-offset:3px;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-trust{
   display:flex;flex-wrap:wrap;gap:10px 14px;padding:0;border:0;box-shadow:none;

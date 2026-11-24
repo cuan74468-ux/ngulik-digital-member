@@ -133,9 +133,9 @@ body.ngd-public-app:not(#ngd) .ngd-auth-v10 .input:focus{
   outline:2px solid #bda5ff;outline-offset:1px;border-color:#7854df!important;
 }
 body.ngd-public-app:not(#ngd) .ngd-auth-v10 .btn-primary{
-  min-height:47px!important;background:var(--ngds-lime)!important;border-color:var(--ngds-ink)!important;
-  border-radius:var(--ngds-radius-small)!important;color:var(--ngds-ink)!important;font-weight:800;
-  box-shadow:2px 2px 0 var(--ngds-ink)!important;
+  min-height:47px!important;background:#5b28d6!important;border-color:#5b28d6!important;
+  border-radius:11px!important;color:#fff!important;font-weight:800;
+  box-shadow:none!important;
 }
 body.ngd-public-app:not(#ngd) .ngd-auth-v10 .btn-secondary{
   min-height:44px;border-color:#d8c8fb!important;color:#582ac1!important;
@@ -454,12 +454,12 @@ body.ngd-public-app .ngd-role-gate .btn{margin-top:12px;min-height:45px}
 
 /* Member services: a guided request workflow, not a brochure. */
 body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading{
-  background:var(--ngds-paper)!important;border:var(--ngds-line)!important;
-  border-radius:var(--ngds-radius)!important;box-shadow:var(--ngds-shadow)!important;padding:var(--ngds-pad)!important;
+  background:#fff!important;border:0!important;border-bottom:1px solid #e5e3eb!important;
+  border-radius:0!important;box-shadow:none!important;padding:15px 0 24px!important;
 }
-body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading .eyebrow{color:var(--ngds-violet)!important}
+body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading .eyebrow{color:#487480!important}
 body.ngd-public-app[data-app-role=member] .ngd-member-services .service-heading h1{
-  color:var(--ngds-ink)!important;font:800 clamp(25px,2.7vw,39px)/1.18 "Plus Jakarta Sans",Inter,sans-serif!important;
+  color:#203f4a!important;font:800 clamp(25px,2.7vw,39px)/1.18 "Plus Jakarta Sans",Inter,sans-serif!important;
   letter-spacing:-.045em!important
 }
 body.ngd-public-app[data-app-role=member] .ngd-service-workflow{
@@ -485,8 +485,8 @@ body.ngd-public-app .ngd-role-actions{display:flex;flex-wrap:wrap;gap:10px;margi
  * Desktop assets may be wide; mobile artwork moves into its own visual region.
  */
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .market-banner-shell .ngd-catalog-campaign{
-  max-width:100%;border-radius:var(--ngds-radius)!important;
-  box-shadow:var(--ngds-shadow)!important
+  max-width:100%;border-radius:clamp(15px,1.6vw,21px)!important;
+  box-shadow:0 9px 25px rgba(28,16,85,.09)!important
 }
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-slide{
   min-height:clamp(300px,28vw,410px);max-height:none
@@ -560,13 +560,13 @@ body.ngd-public-app[data-app-role=admin] .ngd-cms-preview-mobile .ngd-cms-previe
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-picture{
     order:1;position:relative!important;inset:auto!important;
     width:100%!important;height:clamp(145px,38vw,235px)!important;flex:0 0 auto;
-    background:var(--ngds-ink);overflow:hidden
+    background:#201066;overflow:hidden
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-picture img{
     width:100%;height:100%;object-fit:contain!important;object-position:center!important
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-catalog-campaign-slide::before{
-    background:linear-gradient(180deg,rgba(17,24,39,.22),transparent 52%)!important;
+    background:linear-gradient(180deg,rgba(25,10,83,.22),transparent 52%)!important;
     pointer-events:none
   }
   body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-shop-hero-art img{
