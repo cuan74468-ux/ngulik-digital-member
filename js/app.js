@@ -1834,7 +1834,8 @@ function viewAdminSettings(){
     ['footer_identitas','Identitas footer',250],
     ['footer_aksesibilitas','Keterangan bantuan & aksesibilitas',500]
   ];
-  const canEditEditorial=isWriteEnabled()&&config.contentEnabled===true;
+  const canEditEditorial=isWriteEnabled()&&config.contentEnabled===true&&
+    state.workspaceInfo?.environment==='STAGING'&&state.workspaceInfo?.mutations_enabled===true;
   const editor=settings?'<section class="surface" aria-label="Editor identitas dan teks publik">'+
     '<h2>Identitas & Teks Publik</h2><p class="card-desc">Konten keuangan dan tarif tidak dapat diubah dari formulir ini.</p>'+
     '<form id="admin-public-settings-form">'+
@@ -4176,7 +4177,8 @@ document.addEventListener('change',(e)=>{
   if(e.target.closest?.('#admin-payment-form'))syncAdminPaymentApproval_();
 });
 async function submitEditorialSettings_(form){
-  if(!isAdmin()||!isWriteEnabled()||config.contentEnabled!==true)
+  if(!isAdmin()||!isWriteEnabled()||config.contentEnabled!==true||
+      state.workspaceInfo?.environment!=='STAGING'||state.workspaceInfo?.mutations_enabled!==true)
     return toast('Edit teks publik masih terkunci.',true);
   const allowed=['nama_brand','tagline_brand','footer_identitas','footer_aksesibilitas'];
   const fd=new FormData(form);
