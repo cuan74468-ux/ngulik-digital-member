@@ -220,7 +220,8 @@ function ngdFoodMagazineInput_(payload){
  ngdVisualRequire_(ngdVisualIsPlain_(payload),'FOOD_PAYLOAD_INVALID');
  var allowed=Object.keys(NGD_FOOD_MAGAZINE_IDS_).concat([
   'overlay_enabled','brand_name','headline','tagline','price_label',
-  'brand_hex','user_notes','count','reference_image','request_id','credit_per_image'
+  'brand_hex','user_notes','count','reference_image','request_id','credit_per_image',
+  'product_category','studio_scenario','restoration_mode'
  ]);
  Object.keys(payload).forEach(function(k){ngdVisualRequire_(
    allowed.indexOf(k)>=0,'FOOD_UNKNOWN_FIELD');});
@@ -250,6 +251,7 @@ function ngdFoodMagazineInput_(payload){
  ngdVisualRequire_(!/(ignore (all |previous |prior )?instructions|system prompt|developer message|role:|api[_ -]?key|secret|password)/i.test(notes),
   'FOOD_NOTES_UNSAFE');
  return {ids:ids,count:count,brand_hex:hex,user_notes:notes,
+  context:ngdVisualContextInput_(payload),
   reference_asset_id:payload.reference_image,request_id:payload.request_id,
   overlay:{enabled:payload.overlay_enabled===true,
    brand_name:ngdVisualText_(payload.brand_name,70,'brand'),
