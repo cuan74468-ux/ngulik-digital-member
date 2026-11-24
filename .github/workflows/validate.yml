@@ -85,7 +85,10 @@ jobs:
             return "$status"
           }
           run_chrome 'http://127.0.0.1:8765/' /tmp/ngd-guest.html
-          grep -q 'class="ngd-landing-v1"' /tmp/ngd-guest.html
+          # A live public CMS can be genuinely unavailable. Accept a clearly
+          # rendered service-state panel, but never an empty #screen.
+          grep -Eq 'class="ngd-landing-v1"|class="ngd-cms-unavailable"' /tmp/ngd-guest.html
+          grep -q 'id="screen"' /tmp/ngd-guest.html
           grep -q 'data-route="daftar"' /tmp/ngd-guest.html
           run_chrome 'http://127.0.0.1:8765/?preview=member#beranda' /tmp/ngd-member.html
           grep -q 'class="ngdm-dashboard"' /tmp/ngd-member.html
