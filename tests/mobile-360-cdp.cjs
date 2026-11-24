@@ -288,8 +288,10 @@ async function visit(url,label){
     console.log('MOBILE_360_MEMBER_FIRST_STEP '+JSON.stringify(novice));
     assert.ok(novice.quickBeforeWallet,'Beginner actions must appear before token metrics');
     assert.equal(novice.choices.length,4);
-    assert.ok(novice.choices.some(x=>x.label==='Buat Foto Jualan'&&x.tool==='ngulik-visual'));
-    assert.match(novice.summary,/Buat materi jualan/);
+    assert.deepEqual(novice.choices.map(x=>x.route),['ai','portal','katalog','affiliate'],
+      'Four member actions must follow the published Doc 06 CMS route contract');
+    assert.ok(novice.choices.every(x=>x.label==='Sedang memuat informasi...'),
+      'Unpublished member content must show a neutral message, never fake campaign copy');
     assert.ok(novice.width<=360,'Beginner member home overflows 360px');
     const click=await request('Runtime.evaluate',{expression:`(()=>{
       const toggle=document.getElementById('top-nav-trigger');
