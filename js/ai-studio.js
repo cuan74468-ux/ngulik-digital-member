@@ -156,7 +156,7 @@ function active(){return !!(root&&root.isConnected)}
 function node(id){return root&&root.querySelector('#'+id)}
 function announce(message){const n=node('ns-toast');if(n){n.textContent=message;n.hidden=false;clearTimeout(announce.timer);announce.timer=setTimeout(()=>{if(n)n.hidden=true},3800)}}
 function tabbar(){return '<div class="ns-tabs" role="tablist" aria-label="Navigasi Studio">'+[['editor','Buat Foto', 'edit'],['gallery','Inspirasi', 'grid'],['history','Riwayat','history']].map(([id,label,ic])=>'<button type="button" role="tab" data-view="'+id+'" aria-selected="'+(state.view===id)+'">'+ico(ic)+' '+label+(id==='history'&&state.history.length?' ('+state.history.length+')':'')+'</button>').join('')+'</div>'}
-function shell(){if(!active())return;root.innerHTML='<header class="ns-head"><div class="ns-brand"><span class="ns-logo">'+ico('image')+'</span><span>NGULIK STUDIO</span><span class="ns-sim">SIMULASI</span></div>'+tabbar()+'<span class="ns-credit">'+ico('bolt')+' <span id="ns-balance">'+state.credits+' Cr</span></span></header><div class="ns-tab-mobile">'+tabbar()+'</div><div id="ns-toast" class="ns-toast" role="status" hidden></div><div id="ns-content"></div>';content()}
+function shell(){if(!active())return;root.innerHTML='<header class="ns-head"><div class="ns-brand"><span class="ns-logo">'+ico('image')+'</span><span>NGULIK STUDIO</span><span class="ns-sim">MODE SIMULASI</span></div>'+tabbar()+'<span class="ns-credit">'+ico('bolt')+' <span id="ns-balance">'+state.credits+' Cr</span></span></header><div class="ns-tab-mobile">'+tabbar()+'</div><div id="ns-toast" class="ns-toast" role="status" hidden></div><div id="ns-content"></div>';content()}
 function content(){const host=node('ns-content');if(!host)return;host.innerHTML=state.view==='gallery'?gallery():state.view==='editor'?editor():historyView();if(state.view==='editor'){draw();if(state.photo)loadImg(state.photo);}}
 function gallery(){
  const query=templateQuery.trim().toLocaleLowerCase('id-ID');
@@ -802,7 +802,7 @@ function advancedEditor(){
  const selected=!!state.photo;
  return '<section class="ns-editor ns-v2-editor" aria-label="Studio Foto Produk">'+
  '<aside class="ns-side">'+
- '<div class="ns-side-header"><div><small>NGULIK VISUAL STUDIO</small><strong>Foto produk profesional</strong></div><span class="ns-status">'+(liveBridgeReady()?'AI TERHUBUNG':'SIMULASI')+'</span></div>'+
+ '<div class="ns-side-header"><div><small>NGULIK VISUAL STUDIO</small><strong>Foto produk profesional</strong></div><span class="ns-status">'+(liveBridgeReady()?'AI TERHUBUNG':'MODE SIMULASI')+'</span></div>'+
  '<div class="ns-form">'+
  '<section class="ns-block ns-v2-step"><h2><span class="ns-count">01</span> Unggah foto produk mentah</h2>'+
  '<p class="ns-hint">Pakai foto dari kamera HP. Hasil simulasi ini belum memperbaiki foto dengan AI.</p>'+

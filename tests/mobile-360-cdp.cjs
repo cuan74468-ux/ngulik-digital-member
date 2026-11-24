@@ -152,9 +152,9 @@ async function visit(url,label){
         headerWidth:Math.round(head?.getBoundingClientRect().width||0)};
     })()`,returnByValue:true});
     const h=brand.result.value;console.log('NGD_V3_HEADER '+label+' '+JSON.stringify(h));
-    assert.equal(h.bg,'rgb(20, 20, 24)','header should use ink background');
+    assert.equal(h.bg,'rgb(17, 24, 39)','header should use ink background');
     assert.equal(h.title,'rgb(255, 255, 255)','brand title must be white on ink');
-    assert.equal(h.iconBg,'rgb(204, 243, 73)','brand icon should be framed in lime');
+    assert.equal(h.iconBg,'rgb(200, 241, 53)','brand icon should be framed in lime');
     assert.equal(h.logoVisible,true,'original brand image must remain visible');
     assert.ok(h.headerWidth<=360,'mobile header overflow');
   }
@@ -175,9 +175,9 @@ async function visit(url,label){
       // Existing CSS and DOM overflow/contrast checks run even in loading state.
       if(v.hero)assert.ok(v.hero!=='rgba(0, 0, 0, 0)','Published CMS hero must be visible');
     }else{
-      assert.equal(v.wallet,'rgb(91, 61, 245)','Member wallet still pale');
-      assert.equal(v.chart,'rgb(204, 243, 73)','Member chart not acid lime');
-      assert.equal(v.metric,'rgb(204, 243, 73)','First metric not lime');
+      assert.equal(v.wallet,'rgb(67, 56, 202)','Member wallet still pale');
+      assert.equal(v.chart,'rgb(200, 241, 53)','Member chart not acid lime');
+      assert.equal(v.metric,'rgb(200, 241, 53)','First metric not lime');
       assert.ok(v.walletShadow!=='none','Member wallet hard shadow missing');
     }
   }
@@ -376,9 +376,9 @@ async function visit(url,label){
     });
     const pcColors=pcTheme.result.value;
     console.log('NGD_V2_DESKTOP_THEME '+JSON.stringify(pcColors));
-    assert.equal(pcColors.wallet,'rgb(91, 61, 245)','PC wallet must use Studio purple');
-    assert.equal(pcColors.chart,'rgb(204, 243, 73)','PC wallet chart must use Studio lime');
-    assert.equal(pcColors.lastMetric,'rgb(20, 20, 24)','PC third metric must be ink');
+    assert.equal(pcColors.wallet,'rgb(67, 56, 202)','PC wallet must use Studio purple');
+    assert.equal(pcColors.chart,'rgb(200, 241, 53)','PC wallet chart must use Studio lime');
+    assert.equal(pcColors.lastMetric,'rgb(17, 24, 39)','PC third metric must be ink');
     assert.ok(pcColors.walletWidth>=600,'PC wallet should fill the main content');
     assert.ok(pcColors.documentWidth<=1366,'PC layout overflow');
     const shellChrome=await request('Runtime.evaluate',{expression:`(()=>{
@@ -394,9 +394,9 @@ async function visit(url,label){
     })()`,returnByValue:true});
     const brandChrome=shellChrome.result.value;
     console.log('NGD_V3_DESKTOP_NAV '+JSON.stringify(brandChrome));
-    assert.equal(brandChrome.head,'rgb(20, 20, 24)');
-    assert.equal(brandChrome.nav,'rgb(20, 20, 24)');
-    assert.equal(brandChrome.active,'rgb(204, 243, 73)');
+    assert.equal(brandChrome.head,'rgb(17, 24, 39)');
+    assert.equal(brandChrome.nav,'rgb(17, 24, 39)');
+    assert.equal(brandChrome.active,'rgb(200, 241, 53)');
     assert.equal(brandChrome.title,'rgb(255, 255, 255)');
     assert.ok(brandChrome.navWidth>200);
     assert.equal(desktop.width,1366);

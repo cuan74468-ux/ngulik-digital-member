@@ -1,12 +1,12 @@
 /* P1 Ngulik Studio — all selectors isolated to .ngd-studio. */
-.ngd-studio{--ns-bg:#F6F5F0;--ns-board:#ECEAE3;--ns-white:#FFFFFF;--ns-ink:#141418;--ns-muted:#5C5C6B;--ns-purple:#5B3DF5;--ns-lime:#CCF349;color:var(--ns-ink);background:var(--ns-bg);font-family:'Plus Jakarta Sans',system-ui,sans-serif;max-width:100%;min-width:0;overflow-x:clip;padding:0 0 24px;border-radius:13px}
+.ngd-studio{--ns-bg:var(--ngds-bg,#FAF9F5);--ns-board:var(--ngds-board,#ECEAE3);--ns-white:var(--ngds-paper,#FFFFFF);--ns-ink:var(--ngds-ink,#111827);--ns-muted:var(--ngds-muted,#374151);--ns-purple:var(--ngds-violet,#4338CA);--ns-lime:var(--ngds-lime,#C8F135);color:var(--ns-ink);background:var(--ns-bg);font-family:'Plus Jakarta Sans',system-ui,sans-serif;max-width:100%;min-width:0;overflow-x:clip;padding:0 0 24px;border-radius:13px}
 .ngd-studio,.ngd-studio *{box-sizing:border-box}
 .ngd-studio button,.ngd-studio input,.ngd-studio select{font:inherit}
 .ngd-studio button{cursor:pointer;color:inherit}
 .ngd-studio button:disabled{opacity:.55;cursor:not-allowed}
 .ngd-studio :is(button,input,select):focus-visible{outline:3px solid var(--ns-purple);outline-offset:3px}
 .ngd-studio .ns-mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
-.ngd-studio .ns-frame,.ngd-studio .ns-cta{background:var(--ns-white);border:1.5px solid var(--ns-ink);box-shadow:3px 3px 0 var(--ns-ink);border-radius:13px}
+.ngd-studio .ns-frame,.ngd-studio .ns-cta{background:var(--ns-white);border:2px solid var(--ns-ink);box-shadow:4px 4px 0 var(--ns-ink);border-radius:12px}
 .ngd-studio .ns-cta{min-height:44px;padding:9px 15px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .14s,box-shadow .14s;text-align:center}
 .ngd-studio .ns-cta:not(:disabled):active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ns-ink)}
 .ngd-studio .ns-primary{background:var(--ns-purple);color:white}
@@ -74,7 +74,7 @@
 .ngd-studio .ns-canvas-wrap{border:1.5px solid var(--ns-ink);box-shadow:4px 4px 0 var(--ns-ink);border-radius:10px;overflow:hidden;background:white;max-width:100%;position:relative}
 .ngd-studio canvas{width:auto;height:auto;max-width:100%;max-height:67vh;display:block;object-fit:contain}
 .ngd-studio .ns-status{background:var(--ns-lime);border:1.5px solid var(--ns-ink);padding:6px 8px;border-radius:7px;font:600 11px 'JetBrains Mono',monospace}
-.ngd-studio .ns-details{background:#141418;color:white;border-radius:8px;padding:11px;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.6 'JetBrains Mono',monospace}
+.ngd-studio .ns-details{background:#111827;color:white;border-radius:8px;padding:11px;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.6 'JetBrains Mono',monospace}
 .ngd-studio .ns-hist-empty{padding:45px 18px;text-align:center}
 .ngd-studio .ns-history-card{overflow:hidden;min-width:0;text-align:left;padding:0;width:100%}
 .ngd-studio .ns-history-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--ns-board)}
@@ -89,10 +89,10 @@
 
 
 /* Reference-inspired three-dot window titlebar, scoped only to the Studio frame. */
-.ngd-studio .ns-window-titlebar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:47px;padding:9px 15px;border-bottom:2px solid #141418;background:#EAE5FF;color:#141418}
+.ngd-studio .ns-window-titlebar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:47px;padding:9px 15px;border-bottom:2px solid #111827;background:#EAE5FF;color:#111827}
 .ngd-studio .ns-window-titlebar strong{font:800 12px/1.4 'Plus Jakarta Sans',system-ui,sans-serif;letter-spacing:-.01em}
 .ngd-studio .ns-window-dots{display:inline-flex;gap:8px;align-items:center;flex:none}
-.ngd-studio .ns-window-dots i{display:block;width:12px;height:12px;border:1px solid rgba(20,20,24,.16);border-radius:50%;background:#141418}
+.ngd-studio .ns-window-dots i{display:block;width:12px;height:12px;border:1px solid rgba(20,20,24,.16);border-radius:50%;background:#111827}
 .ngd-studio .ns-window-dots i:nth-child(2){background:#F676B7}
 .ngd-studio .ns-window-dots i:nth-child(3){background:#FFD965}
 .ngd-studio .ns-board-panel{border-left:0;min-width:0}
@@ -105,21 +105,21 @@
  background:#ECEAE3;
  min-width:0;
 }
-.ngd-studio .ns-window-titlebar{border-bottom:2px solid #141418}
+.ngd-studio .ns-window-titlebar{border-bottom:2px solid #111827}
 .ngd-studio .ns-board-toolbar{
  gap:10px;
  background:#FFFFFF;
- border-bottom:1.5px solid #141418;
+ border-bottom:1.5px solid #111827;
 }
 .ngd-studio .ns-artboard{
  min-width:0;
  background-color:#ECEAE3;
 }
 .ngd-studio .ns-canvas-wrap{
- box-shadow:5px 5px 0 #5B3DF5;
+ box-shadow:5px 5px 0 #4338CA;
 }
 .ngd-studio .ns-window-titlebar strong{
- color:#141418;
+ color:#111827;
 }
 @media(max-width:650px){
  .ngd-studio .ns-board-actions{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -194,7 +194,7 @@
 /* P1 food magazine controls: compact, touch accessible and 360px safe. */
 .ngd-studio .ns-food-mode-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
 .ngd-studio .ns-food-mode-switch button{min-height:52px;padding:9px 7px;border:1px solid #c9c4bb;border-radius:10px;background:#fff;color:#24222b;font:700 12px/1.4 inherit;overflow-wrap:anywhere}
-.ngd-studio .ns-food-mode-switch button[aria-pressed="true"]{border:2px solid #5b3df5;background:#eee9ff}
+.ngd-studio .ns-food-mode-switch button[aria-pressed="true"]{border:2px solid #4338CA;background:#eee9ff}
 .ngd-studio .ns-food-magazine,.ngd-studio .ns-food-fields{min-width:0}
 .ngd-studio .ns-food-fields{display:grid;gap:18px}
 .ngd-studio .ns-food-fields .ns-v2-field{gap:8px}
@@ -212,7 +212,7 @@
 /* P1 machine picker: semantic radio cards, no extra stylesheet/important. */
 .ngd-studio .ns-food-engines{display:grid;gap:8px;min-width:0}
 .ngd-studio .ns-food-engine{display:grid;gap:5px;min-width:0;width:100%;text-align:left;padding:12px;border:1px solid #c9c4bb;border-radius:10px;background:#fff;color:#24222b;cursor:pointer;overflow-wrap:anywhere}
-.ngd-studio .ns-food-engine[aria-checked="true"]{border:2px solid #5b3df5;background:#f4f1ff}
+.ngd-studio .ns-food-engine[aria-checked="true"]{border:2px solid #4338CA;background:#f4f1ff}
 .ngd-studio .ns-food-engine-top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .ngd-studio .ns-food-engine-top strong{font-size:12px}
 .ngd-studio .ns-food-engine-top b{font-size:12px;white-space:nowrap}
@@ -226,7 +226,7 @@
 /* Template library: editorial photo-led cards; all layout scoped to studio. */
 .ngd-studio .ns-inspire-gallery{min-width:0}
 .ngd-studio .ns-inspire-intro{padding:16px 0 12px;max-width:690px}
-.ngd-studio .ns-inspire-eyebrow{font:800 10px/1.4 inherit;letter-spacing:.12em;color:#5b3df5}
+.ngd-studio .ns-inspire-eyebrow{font:800 10px/1.4 inherit;letter-spacing:.12em;color:#4338CA}
 .ngd-studio .ns-inspire-intro h2{font-size:clamp(20px,4vw,29px);line-height:1.2;letter-spacing:-.035em;margin:5px 0}
 .ngd-studio .ns-inspire-intro p{font-size:12px;line-height:1.6;color:#555362}
 .ngd-studio .ns-inspire-toolbar{display:grid;gap:11px;margin:12px 0 20px;min-width:0}
@@ -242,7 +242,7 @@
 .ngd-studio .ns-inspire-ratio{top:8px;right:8px}
 .ngd-studio .ns-inspire-caption{bottom:7px;left:7px;right:7px;font-size:8px}
 .ngd-studio .ns-inspire-body{display:grid;gap:6px;padding:12px;min-width:0}
-.ngd-studio .ns-inspire-body>small{font-size:10px;color:#5b3df5;font-weight:700}
+.ngd-studio .ns-inspire-body>small{font-size:10px;color:#4338CA;font-weight:700}
 .ngd-studio .ns-inspire-body>strong{font-size:13px;line-height:1.35}
 .ngd-studio .ns-inspire-body>p{font-size:11px;line-height:1.45;color:#555362;min-height:30px}
 .ngd-studio .ns-inspire-actions{display:flex;gap:6px;flex-wrap:wrap}

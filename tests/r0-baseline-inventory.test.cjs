@@ -24,7 +24,7 @@ const limits = Object.freeze({
   'assets/affiliate-partner.css': [18660, 4],
   'assets/brand-official.css': [2729, 1],
   'assets/ai-catalog.css': [20892, 0],
-  'assets/ai-studio.css': [28574, 3],
+  'assets/ai-studio.css': [28690, 3],
   'assets/content-media.css': [4160, 0],
   'assets/catalog-experience-v3.css': [19782, 0],
   'assets/commission-experience-v2.css': [20944, 5],
@@ -40,13 +40,13 @@ const limits = Object.freeze({
   'assets/guest-sales-trust-v1.css': [17498, 25],
   'assets/product-detail-v1.css': [13213, 40],
   'assets/member-native-dashboard-v1.css': [31440, 224],
-  'assets/ngulik-design-system.css': [46745, 474],
+  'assets/ngulik-design-system.css': [46893, 474],
   'assets/staging-native-mobile.css': [9008, 1]
 });
 
 const budgets = Object.freeze({
-  'index.html': { count: 30, bytes: 756856, important: 2109 },
-  'staging/member.html': { count: 31, bytes: 765864, important: 2110 }
+  'index.html': { count: 30, bytes: 757120, important: 2109 },
+  'staging/member.html': { count: 31, bytes: 766128, important: 2110 }
 });
 
 function inspectEntry(entry) {

@@ -22,11 +22,11 @@ test('both existing entrypoints enable master design system last and keep routin
     assert.match(html,/js\/app\.js/);
   }
 });
-test('global token contract inherits Studio palette, 1.5px borders and crisp shadows',()=>{
-  const tokens=['#F6F5F0','#ECEAE3','#FFFFFF','#141418','#5B3DF5','#CCF349'];
+test('Doc 06 tokens shared with Studio, 2px borders and crisp shadows',()=>{
+  const tokens=['#FAF9F5','#ECEAE3','#FFFFFF','#111827','#4338CA','#C8F135'];
   for(const token of tokens){assert.ok(css.includes(token),'master missing '+token);assert.ok(studio.includes(token),'Studio missing '+token)}
-  assert.match(css,/--ngds-line:1\.5px solid #141418/);
-  assert.match(css,/--ngds-shadow:3px 3px 0 #141418/);
+  assert.match(css,/--ngds-line:2px solid #111827/);
+  assert.match(css,/--ngds-shadow:4px 4px 0 #111827/);
   assert.match(css,/body\.ngd-public-app/);
   assert.match(css,/\.ngdm-wallet/);
   assert.match(css,/\.ai-product-card/);
