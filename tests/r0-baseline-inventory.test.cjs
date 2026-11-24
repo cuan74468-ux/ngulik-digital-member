@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 
-// P1 Template Gallery +3237 scoped CSS bytes; stylesheet count / important unchanged.
+// Simple Visual Studio +3922 scoped CSS bytes; stylesheet count and !important unchanged.
 // zero added stylesheets and zero additional !important. Preserve ratchet elsewhere.
 const limits = Object.freeze({
   'assets/app.css': [22721, 2],
@@ -22,7 +22,7 @@ const limits = Object.freeze({
   'assets/affiliate-partner.css': [18660, 4],
   'assets/brand-official.css': [2729, 1],
   'assets/ai-catalog.css': [20892, 0],
-  'assets/ai-studio.css': [23320, 3],
+  'assets/ai-studio.css': [27242, 3],
   'assets/content-media.css': [4160, 0],
   'assets/catalog-experience-v3.css': [19782, 0],
   'assets/commission-experience-v2.css': [20944, 5],
@@ -43,8 +43,8 @@ const limits = Object.freeze({
 });
 
 const budgets = Object.freeze({
-  'index.html': { count: 30, bytes: 751465, important: 2109 },
-  'staging/member.html': { count: 31, bytes: 760473, important: 2110 }
+  'index.html': { count: 30, bytes: 755387, important: 2109 },
+  'staging/member.html': { count: 31, bytes: 764395, important: 2110 }
 });
 
 function inspectEntry(entry) {

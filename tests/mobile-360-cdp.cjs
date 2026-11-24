@@ -185,6 +185,11 @@ async function visit(url,label){
       const before=window.NGD_STUDIO?.debugSnapshot();
       const width=root?.getBoundingClientRect().width||0;
       const documentWidth=document.documentElement.scrollWidth;
+      const simpleTitle=root?.querySelector('.ns-simple-intro h1')?.textContent||'';
+      const steps=root?.querySelectorAll('.ns-simple-flow > .ns-simple-step').length||0;
+      const styles=root?.querySelectorAll('[data-quick-style]').length||0;
+      const advancedClosed=!!root?.querySelector('.ns-simple-advanced:not([open])');
+      const onlyPrimary=!!root?.querySelector('#ns-quick-generate:disabled');
       const uploadFirst=!!root?.querySelector('#ns-upload');
       const initialEditor=!!root?.querySelector('.ns-v2-editor');
       const optionGroups=new Set([...root?.querySelectorAll('[data-v2-field]')||[]].map(el=>el.dataset.v2Field)).size;
@@ -196,11 +201,14 @@ async function visit(url,label){
       const editor=root?.querySelector('.ns-editor');
       const visibleCanvas=root?.querySelector('#ns-canvas');
       const ratio=visibleCanvas?visibleCanvas.width+'x'+visibleCanvas.height:'';
-      return {root:!!root,initialCanvas:!!c,tabs:tabs.length,uploadFirst,initialEditor,optionGroups,overlayOff,uploadFirstDisabled,imageCards,editor:!!editor,ratio,width,documentWidth,adapter:before?.mode};
+      return {root:!!root,initialCanvas:!!c,tabs:tabs.length,uploadFirst,initialEditor,optionGroups,overlayOff,uploadFirstDisabled,imageCards,editor:!!editor,ratio,width,documentWidth,adapter:before?.mode,simpleTitle,steps,styles,advancedClosed,onlyPrimary};
     })()`,returnByValue:true});
     const v=r.result.value;
     console.log('MOBILE_360_STUDIO '+JSON.stringify(v));
     assert.ok(v.root&&v.initialEditor&&v.initialCanvas&&v.uploadFirst&&v.overlayOff&&v.uploadFirstDisabled&&v.optionGroups===7,'P1 Img2Img V2 must start at photo-first 7-selector editor, overlay off');
+    assert.equal(v.simpleTitle,'Ubah Foto HP Biasa Jadi Foto Produk Kelas Studio');
+    assert.equal(v.steps,3);assert.equal(v.styles,4);
+    assert.ok(v.advancedClosed&&v.onlyPrimary,'Technical editor closed; primary disabled until photo upload');
     assert.ok(v.imageCards===6&&v.editor,'P1 secondary inspiration gallery and editor must remain functional');
     assert.equal(v.adapter,'SIMULATION','P1 cannot use live credit adapter');
     assert.equal(v.ratio,'1080x1350','P1 Canvas resolution mismatch');
