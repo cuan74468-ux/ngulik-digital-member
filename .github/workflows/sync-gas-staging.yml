@@ -71,8 +71,8 @@ jobs:
           const fs=require('fs');
           const id=process.env.GAS_STAGING_SCRIPT_ID;
           if(!/^[A-Za-z0-9_-]{20,140}$/.test(id))throw Error('Invalid GAS STAGING script ID secret');
-          fs.writeFileSync('_gas_remote/.clasp.json',JSON.stringify({scriptId:id,rootDir:'.'}),{mode:0o600});
-          fs.writeFileSync('.clasp.json',JSON.stringify({scriptId:id,rootDir:'apps-script'}),{mode:0o600});
+          fs.writeFileSync('_gas_remote/.clasp.json',JSON.stringify({scriptId:id,rootDir:'.',scriptExtensions:['.gs','.js']}),{mode:0o600});
+          fs.writeFileSync('.clasp.json',JSON.stringify({scriptId:id,rootDir:'apps-script',scriptExtensions:['.gs','.js']}),{mode:0o600});
           NODE
       - name: Pull actual GAS STAGING editor HEAD into isolated runner
         shell: bash
