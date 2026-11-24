@@ -37,10 +37,31 @@ function ngdVisualConstantTimeEqual_(a,b){
  for(var i=0;i<a.length;i++)mismatch|=a.charCodeAt(i)^b.charCodeAt(i);
  return mismatch===0;
 }
+function ngdVisualActiveMachineIds_(){
+ var props=PropertiesService.getScriptProperties();
+ var raw=props.getProperty('NGD_VISUAL_ALLOWED_MACHINES')||'';
+ if(!/^[a-z0-9_,]{1,160}$/.test(raw))return [];
+ var values=raw.split(','),seen={};
+ if(values.some(function(id){
+  if(!Object.prototype.hasOwnProperty.call(NGD_VISUAL_MACHINE_CATALOG_,id)||
+   seen[id])return true;
+  seen[id]=true;
+  var key=id==='gemini_flash_image'?'NGD_KEY_GOOGLE_AI':
+   props.getProperty('NGD_VISUAL_FLUX_AGGREGATOR')==='fal'?
+   'NGD_KEY_FAL_AI':'NGD_KEY_KIE_AI';
+  var secret=props.getProperty(key);
+  return typeof secret!=='string'||secret.length<16;
+ }))return [];
+ return values;
+}
 function ngdVisualPublicMode_(){
  // Public health returns only boolean; no credentials, balances or prices.
  var props=PropertiesService.getScriptProperties();
  return props.getProperty('NGD_ENVIRONMENT')==='STAGING'&&
+  ngdVisualActiveMachineIds_().length>0&&
+  /^[1-9]\d{0,8}$/.test(props.getProperty('NGD_VISUAL_DAILY_BUDGET_CAP')||'')&&
+  typeof props.getProperty('NGD_VISUAL_WORKER_SECRET')==='string'&&
+  props.getProperty('NGD_VISUAL_WORKER_SECRET').length>=32&&
   ['NGD_VISUAL_LIVE_ENABLED','NGD_VISUAL_CREDITS_ENABLED',
    'NGD_VISUAL_MEDIA_READY','NGD_VISUAL_WORKER_READY'].every(function(k){
     return props.getProperty(k)==='true';
@@ -54,6 +75,7 @@ function ngdVisualApiRoute_(action,token,payload,requestId){
  // Check auth before any media access or property-dependent runtime.
  var input=payload&&typeof payload==='object'&&!Array.isArray(payload)?payload:{};
  if(action==='visualHealth')return {live:ngdVisualPublicMode_(),
+  allowed_machines:ngdVisualPublicMode_()?ngdVisualActiveMachineIds_():[],
   templates_enabled:PropertiesService.getScriptProperties().getProperty('NGD_VISUAL_TEMPLATES_ENABLED')==='true',
   adapter:ngdVisualPublicMode_()?'PRIVATE_VISUAL_QUEUE':'SIMULATION'};
  if(action==='visualCatalog')return {machines:ngdVisualPublicCatalog_(),
@@ -70,14 +92,19 @@ function ngdVisualApiRoute_(action,token,payload,requestId){
   return saved.remove(token,input.id);
  }
  var runtime=ngdVisualRuntime_(auth);
- if(action==='visualQuote')return runtime.publicQuote(token,{
-  machine_id:input.machine_id,count:input.count});
+ if(action==='visualQuote'){
+  if(ngdVisualPublicMode_())ngdVjAssert_(
+   ngdVisualActiveMachineIds_().indexOf(input.machine_id)>=0,'MACHINE_NOT_ENABLED');
+  return runtime.publicQuote(token,{machine_id:input.machine_id,count:input.count});
+ }
  // All further API actions MUST be gated with dedicated Visual-only controls.
  ngdVjAssert_(ngdVisualPublicMode_(),'VISUAL_LIVE_DISABLED');
  if(action==='visualUploadStart')return ngdVisualChunkUpload_(auth).start(token,input);
  if(action==='visualUploadChunk')return ngdVisualChunkUpload_(auth).chunk(token,input);
  if(action==='visualUploadFinish')return ngdVisualChunkUpload_(auth).finish(token,input);
  if(action==='visualCreateJob'){
+  ngdVjAssert_(ngdVisualActiveMachineIds_().indexOf(input.machine_id)>=0,
+   'MACHINE_NOT_ENABLED');
   ngdVjAssert_(requestId===input.idempotency_key,'IDEMPOTENCY_REQUEST_MISMATCH');
   return runtime.createJob(token,input);
  }
