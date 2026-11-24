@@ -257,7 +257,7 @@ function activatePreview(){
 
 const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,qa:false,
-  info:null,catalog:[],catalogLoaded:false,productDetailId:'',productDetailReturnRoute:'katalog',siteContent:[],adminContent:[],contentEditId:'',contentPresetProductId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
+  info:null,catalog:[],catalogLoaded:false,productDetailId:'',productDetailReturnRoute:'katalog',siteContent:[],publicSettings:{},adminContent:[],contentEditId:'',contentPresetProductId:'',contentRequestId:null,legacyCmsTab:'ai_tools',legacyCmsSelectedId:'',legacyCmsItems:{},legacyCmsLoading:false,legacyCmsError:'',heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
   affiliates:null,partnerShelf:[],partnerShelfLoaded:false,waitlist:[],members:[],adminOrders:[],adminSummary:null,
   reconciliation:null,selectedProduct:null,lastOrder:null,checkoutProductId:'',checkoutRequestId:null,orderDetailLoading:false,checkoutReturnRoute:'katalog',loading:false,
   memberProducts:[],creditHistory:[],memberDashboardReads:null,supportTickets:[],supportReleases:[],supportOverview:null,
@@ -545,25 +545,8 @@ function viewHome(){
     })();
     const format=balanceKnown?balance.toLocaleString('id-ID'):'—';
     return '<div class="ngdm-dashboard" aria-label="Beranda member">'+
-      '<header class="ngdm-greeting">'+
-        '<div><p class="ngdm-kicker">RUANG MEMBER <span aria-hidden="true">·</span> '+esc(greeting)+'</p>'+
-          '<h1>'+esc(greeting)+', '+esc(first)+'</h1>'+
-          '<p>Buat materi jualan, temukan alat usaha, atau belajar langkah demi langkah dari HP.</p></div>'+
-      '</header>'+
-      '<section class="ngdm-quick" aria-labelledby="ngdm-quick-title">'+
-        '<div class="ngdm-section-head"><div><p class="ngdm-kicker">LANGKAH PERTAMA</p>'+
-        '<h2 id="ngdm-quick-title">Mau mulai dari mana?</h2></div></div>'+
-        '<p class="ngdm-quick-intro">Pilih satu kebutuhan. Tidak perlu memahami semua menu untuk memulai.</p>'+
-        '<div class="ngdm-shortcuts">'+[
-          ['spark','Buat Foto Jualan','Unggah foto · pilih gaya','ai'],
-          ['store','Cari Produk Digital','Temukan alat untuk usaha','katalog'],
-          ['book','Mulai Belajar','Panduan untuk pemula','belajar'],
-          ['gift','Minta Bantuan','Ajukan pertanyaan','dukungan']
-        ].map(([symbol,label,description,route])=>
-          '<button type="button" class="ngdm-shortcut" '+(route==='ai'? 'data-ai-open="ngulik-visual"':'data-route="'+route+'"')+'>'+
-            '<span class="ngdm-shortcut-icon">'+icon(symbol)+'</span>'+
-            '<strong>'+label+'</strong><small>'+description+'</small></button>').join('')+
-        '</div></section>'+
+      (window.NGD_CMS_SURFACES?.memberHome(state.siteContent,{
+        name:first,balanceKnown,balance:format})||'<p role="status">Sedang memuat informasi...</p>')+
       '<section class="ngdm-wallet" aria-labelledby="ngdm-wallet-heading">'+
         '<div class="ngdm-wallet-top"><span>'+icon('wallet')+' DOMPET TOKEN</span>'+
           '<span class="ngdm-live"><i></i>'+esc(state.me?.status||'Member')+'</span></div>'+
@@ -640,51 +623,10 @@ function viewHome(){
   // Public front door: concise value proposition, without a duplicate product grid.
   // The full catalog owns product cards, prices, filtering and checkout.
   // Guest-only landing; member and admin rendering above remains untouched.
-  const landingCards=[
-    {route:'ai',tag:'STUDIO AI',name:'Coba Tools AI Seperlunya',desc:'Lagi buntu cari ide konten? Coba buat caption, konsep promosi, atau naskah video. Kreditnya dipakai saat Anda menggunakan tools.',img:'ngd-v8-ai-large.webp',alt:'Visual paket alat bantu AI'},
-    {route:'katalog',tag:'PRODUK DIGITAL',name:'Produk Siap Dipakai',desc:'Ada template, paket awal, katalog online, sampai kasir sederhana. Tinggal pilih yang cocok dengan cara kerja usaha Anda.',img:'ngd-v6-pos.webp',alt:'Visual produk sistem kasir digital'},
-    {route:'jasa',tag:'BENGKEL KREATIF',name:'Butuh Dibantu? Bisa.',desc:'Nggak sempat bikin sendiri? Kami bisa bantu urus video promosi, website katalog, atau pekerjaan berulang di Google Sheets.',img:'ngd-v6-video.webp',alt:'Visual jasa pembuatan video promosi'},
-    {route:'affiliate',tag:'AJAK TEMAN',name:'Ajak Teman, Dapat Komisi',desc:'Kalau ada teman yang cocok dengan layanan di sini, bagikan link Anda. Komisi dihitung dari pembelian yang sah, sesuai aturan program.',img:'ngd-v6-bundle.webp',alt:'Visual koleksi produk digital'}
-  ];
-  return `<div class="ngd-landing-v1">
-    <section class="ngdl-hero" aria-labelledby="ngdl-title">
-      <div class="ngdl-hero-copy">
-        <p class="ngdl-eyebrow"><span class="ngdl-spark" aria-hidden="true">✦</span> WARUNG TOOLS AI & BENGKEL KREATIF</p>
-        <h1 id="ngdl-title">Punya usaha? <span>Ngulik digitalnya</span> di sini aja.</h1>
-        <p class="ngdl-hero-lead">Bikin konten jualan, coba AI, atau rapikan usaha? Di sini ada alat, produk, dan orang yang bisa bantu. Bisa dari HP juga.</p>
-        <div class="ngdl-actions">
-          <button type="button" class="ngdl-btn ngdl-btn-gold" data-route="katalog">Lihat Produk & Layanan <span aria-hidden="true">↗</span></button>
-          <button type="button" class="ngdl-btn ngdl-btn-ghost" data-route="daftar">Masuk atau Daftar</button>
-        </div>
-      </div>
-    </section>
-    <div class="ngdl-trust" aria-label="Cara pakai Ngulik Digital">
-      <span>✦ Tools AI pakai kredit</span><span>✦ Bayar dengan QRIS DANA Bisnis</span><span>✦ Bisa dibuka lewat HP</span><span>✦ Ada komisi untuk referal yang berhasil</span>
-    </div>
-    <section class="ngdl-story ngd-window-frame" aria-labelledby="ngdl-story-title">
-      <div class="ngd-window-titlebar" aria-hidden="true"><span class="ngd-window-dots"><i></i><i></i><i></i></span><span class="ngd-window-title">Tentang Ngulik</span></div>
-      <p class="ngdl-kicker">KENAPA NGULIK DIGITAL?</p>
-      <h2 id="ngdl-story-title">Urusan digital, nggak harus bikin repot.</h2>
-      <p>Mau bikin konten, katalog, atau coba AI tapi waktunya mepet? Di sini ada alat yang bisa dipakai seperlunya, produk yang sudah siap, dan bantuan kalau ingin terima beres.</p>
-    </section>
-    <section class="ngdl-offers" aria-labelledby="ngdl-offers-title">
-      <div class="ngdl-section-top"><div><p class="ngdl-kicker">ISI WARUNGNYA</p><h2 id="ngdl-offers-title">Cari yang pas buat Anda.</h2></div><p>Mulai dari satu hal yang sedang dibutuhkan.</p></div>
-      <div class="ngdl-grid">${landingCards.map(c=>`<article class="ngdl-offer">
-        <div class="ngdl-offer-image"><img src="${guestMediaBase_()}${c.img}" loading="lazy" decoding="async" alt="${c.alt}"></div>
-        <div class="ngdl-offer-body"><p class="ngdl-offer-tag">${c.tag}</p><h3>${c.name}</h3><p>${c.desc}</p>
-        <button type="button" data-route="${c.route}" class="ngdl-offer-link">Lihat selengkapnya <span aria-hidden="true">↗</span></button></div>
-      </article>`).join('')}</div>
-    </section>
-    <section class="ngdl-benefits" aria-labelledby="ngdl-benefits-title">
-      <div><p class="ngdl-kicker">KALAU JADI MEMBER</p><h2 id="ngdl-benefits-title">Lebih mudah cari yang Anda perlukan.</h2></div>
-      <ul><li><strong>Pesan tanpa pindah-pindah tempat.</strong> Pilih produk, cek rincian, lalu bayar lewat halaman checkout.</li><li><strong>Nggak harus buka laptop.</strong> Katalog dan ruang member bisa diakses dari browser HP.</li><li><strong>Pembelian tercatat.</strong> Akses produk diberikan setelah pembayaran terverifikasi, sesuai ketentuan masing-masing.</li><li><strong>Materi belajar untuk member.</strong> Buka panduan dan kelas melalui ruang belajar setelah login.</li></ul>
-    </section>
-    <section class="ngdl-end" aria-labelledby="ngdl-end-title">
-      <h2 id="ngdl-end-title">Mau mulai ngulik?</h2>
-      <p>Lihat katalognya dulu, atau masuk kalau sudah punya pilihan.</p>
-      <div class="ngdl-actions"><button type="button" data-route="daftar" class="ngdl-btn ngdl-btn-gold">Masuk / Daftar <span aria-hidden="true">↗</span></button><button type="button" data-route="katalog" class="ngdl-btn ngdl-btn-ghost">Lihat Katalog</button></div>
-    </section>
-  </div>`;
+  // Public front door: published CMS only, no copied marketing fallback.
+  // Nothing in this renderer creates orders, opens P0 finance or grants access.
+  return window.NGD_PUBLIC_CMS?.home(state.siteContent,state.publicSettings) ||
+    '<div class="ngd-landing-v1"><p role="status">Sedang memuat informasi...</p></div>';
 }
 const offerCategories=[
   ['semua','Semua Produk'],['belajar','eBook & Panduan'],
@@ -1039,7 +981,8 @@ function viewPortalGratis_(){
   if(!logged()||isAdmin())return needLogin('Portal Belajar Gratis Member');
   if(!window.NGD_LMS_UI?.memberPortal)
     return '<section class="surface"><h2>Portal sedang dimuat</h2><p>Coba muat ulang halaman untuk membuka sumber belajar gratis.</p></section>';
-  return window.NGD_LMS_UI.memberPortal(state.modules);
+  return window.NGD_LMS_UI.memberPortal(state.modules,
+    window.NGD_CMS_SURFACES?.portalText(state.siteContent));
 }
 function viewLearn(){
   if(window.NGD_LMS_UI&&logged())
@@ -1131,7 +1074,9 @@ function aiRouteFromHash_(){
     }catch(_){}
     return 'ai';
   }
-  return screens[hash]?hash:'beranda';
+  const aliases={'auth':'login','portal-belajar':'portal','ajak-teman':'affiliate'};
+  const target=Object.prototype.hasOwnProperty.call(aliases,hash)?aliases[hash]:hash;
+  return screens[target]?target:'beranda';
 }
 function aiCategoryNav_(tools,publicMode){
   const current=state.aiCategory||'semua';
@@ -1306,34 +1251,9 @@ function uiCommissionText_(value){
 function viewAffiliate(){
   // Read-only presentation of the member's own backend-provided commission data.
   // Financial actions keep their existing client + server feature gates.
-  if(!logged())return '<div class="partner-public">'+
-    '<header class="partner-public-intro">'+
-      '<img class="ngd-cms-affiliate-art" src="'+esc(cmsPageArt_('affiliate')||ngdPremiumArtSrc_('starter'))+'" alt="" loading="lazy" decoding="async">'+
-      '<p class="partner-kicker">NGULIK DIGITAL · PROGRAM KOMISI</p>'+
-      '<h1>Bagikan manfaat.<br><span>Dapatkan komisi.</span></h1>'+
-      '<p>Rekomendasikan produk digital yang sesuai kebutuhan teman. Komisi hanya tercatat untuk transaksi yang memenuhi ketentuan.</p>'+
-      '<div class="partner-hero-actions">'+
-        (registrationOtpEnabled()?'<button type="button" class="partner-btn partner-btn-primary" data-route="daftar">Daftar Member '+icon('arrow')+'</button>':
-        '<button type="button" class="partner-btn partner-btn-primary" data-route="katalog">Lihat Starter Pack '+icon('arrow')+'</button>')+
-        '<button type="button" class="partner-btn partner-btn-outline" data-route="login">Sudah punya akun?</button>'+
-      '</div><small>Gratis bergabung. Tidak ada jaminan penghasilan atau komisi untuk setiap klik.</small></header>'+
-    '<section class="partner-steps-compact" aria-label="Cara kerja program komisi">'+
-      [['01','Daftar','Buat akun member Ngulik Digital.'],
-       ['02','Aktifkan','Beli Starter Pack dan tunggu verifikasi pembayaran.'],
-       ['03','Bagikan','Setelah aktif, bagikan tautan dan pantau komisi yang memenuhi syarat.']].map(x=>
-        '<article class="partner-step-compact"><span>'+x[0]+'</span><div><h2>'+x[1]+'</h2><p>'+x[2]+'</p></div></article>').join('')+'</section>'+
-    '<section class="partner-pick-products"><div><p class="partner-kicker">MULAI DARI PRODUK YANG COCOK</p>'+
-      '<h2>Punya rekomendasi untuk teman?</h2>'+
-      '<p>Jelajahi katalog dan pilih solusi digital yang benar-benar relevan. Tidak semua produk memberikan komisi.</p></div>'+
-      '<button type="button" class="partner-btn partner-btn-outline" data-route="katalog">Lihat katalog '+icon('arrow')+'</button></section>'+
-    '<section class="partner-public-faq" aria-label="Pertanyaan umum tentang komisi">'+
-      '<h2>Pertanyaan umum</h2>'+
-      [['Komisi dihitung dari apa?','Komisi mengikuti pembelian yang memenuhi syarat dan ketentuan pada masing-masing produk.'],
-       ['Kapan bisa dicairkan?','Setelah lolos verifikasi, masa tahan, dan batas minimum pencairan yang berlaku.'],
-       ['Apakah satu klik langsung menghasilkan komisi?','Tidak. Klik dan pendaftaran tidak otomatis menghasilkan komisi.']].map(x=>
-         '<details class="partner-faq-item"><summary>'+x[0]+'</summary><p>'+x[1]+'</p></details>').join('')+'</section>'+
-    '<p class="partner-public-note">Program komisi tunduk pada ketentuan produk, status akun, dan verifikasi transaksi.</p>'+
-  '</div>';
+  const info=window.NGD_CMS_SURFACES?.affiliateInfo(state.siteContent)||
+    '<p role="status">Sedang memuat informasi...</p>';
+  if(!logged())return '<div class="partner-public">'+info+'</div>';
 
   if(isAdmin())return '<section class="partner-member partner-member-empty"><p class="partner-kicker">AKSES MEMBER</p>'+
     '<h1>Program Komisi</h1><p>Dashboard komisi pribadi hanya tersedia untuk akun member.</p>'+
@@ -1350,12 +1270,7 @@ function viewAffiliate(){
   const url=unlocked&&/^[A-Za-z0-9_-]{3,80}$/.test(code)&&
     String(a.link||'')===referralBase+'?ref='+encodeURIComponent(code)?a.link:'';
   if(!unlocked)return '<section class="partner-member partner-locked">'+
-    '<p class="partner-kicker">AKSES AJAK TEMAN</p><h1>Aktifkan link komisi Anda.</h1>'+
-    '<p>Starter Pack Rp15.000 membuka akses mitra seumur hidup, bonus 15 token AI, dan ruang kurasi. '+ 
-    'Komisi hanya berlaku untuk pembelian yang memenuhi ketentuan setelah pembayaran diverifikasi.</p>'+
-    '<button type="button" class="partner-btn partner-btn-primary" data-checkout-product="P-STARTER-15K">Lihat Starter Pack '+icon('arrow')+'</button>'+
-    '<button type="button" class="partner-btn partner-btn-outline" data-route="katalog">Lihat Katalog</button>'+
-    '</section>';
+    info+'<button type="button" class="partner-btn partner-btn-outline" data-route="katalog">Katalog</button></section>';
   const all=Array.isArray(a.komisi)?a.komisi:[];
   const totals=a.saldo||{};
   const pending=Number(totals.PENDING)||0;
@@ -1368,7 +1283,7 @@ function viewAffiliate(){
   const statusLabel={PENDING:'Dalam masa tahan',APPROVED:'Disetujui',PAID:'Dibayar',REVERSED:'Dibatalkan'};
   const rows=[...all].sort((x,y)=>String(y.created_at||'').localeCompare(String(x.created_at||''))).slice(0,50);
   const waShare=url?'https://wa.me/?text='+encodeURIComponent('Rekomendasi produk digital Ngulik Digital: '+url):'';
-  return '<div class="partner-member">'+
+  return '<div class="partner-member">'+info+
     '<header class="partner-member-header"><div><p class="partner-kicker">DASHBOARD MEMBER</p>'+
       '<h1>Komisi & tautan saya</h1><p>Bagikan rekomendasi dan pantau hasilnya.</p></div>'+
       '<button type="button" class="partner-refresh" data-affiliate-refresh aria-label="Perbarui data komisi">'+icon('arrow')+' <span>Perbarui</span></button></header>'+
@@ -1534,36 +1449,36 @@ function viewLogin(register=false,adminMode=false){
   const memberOtp=!adminMode&&!register&&!pinLogin;
   const enabled=adminMode?adminLoginEnabled():
     register?registrationOtpEnabled():pinLogin?isWriteEnabled():memberOtpLoginEnabled();
+  const cmsAuth=window.NGD_CMS_SURFACES?.auth(state.siteContent);
+  const editorial=(key)=>esc(cmsAuth?.[key]||'Sedang memuat informasi...');
+  const authLabel=(i)=>esc(cmsAuth?.label(i)||'Sedang memuat informasi...');
   return '<div class="login-shell ngd-auth-v10">'+
     '<div class="ngd-auth-brand"><img src="'+esc(defaultBrandLogoSrc)+'" alt="" decoding="async">'+
       '<span><strong>Ngulik Digital</strong><small>Marketplace Produk Digital</small></span></div>'+
-    '<p class="eyebrow">'+
-    (adminMode?'AKSES PENGELOLA':register?'BERGABUNG':'SELAMAT DATANG KEMBALI')+'</p>'+
-    '<h1>'+
-    (adminMode?'Masuk sebagai Admin.':register?'Daftar akun.':'Masuk ke akun Anda.')+'</h1>'+
-    '<p class="lead">'+
-    (!adminMode&&state.pendingPurchaseId?'Masuk atau daftar gratis pakai WhatsApp untuk melanjutkan pesanan dan menyimpan akses produk Anda.':adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':
-      register?'Daftar dengan nomor WhatsApp. Verifikasi dilakukan melalui kode WhatsApp.':
-      pinLogin?'Masuk dengan PIN enam angka yang sudah Anda miliki. Tidak mengirim OTP atau memakai kuota Fonnte.':
-      'Masukkan nomor WhatsApp dan kode OTP untuk masuk.')+'</p>'+
+    '<p class="eyebrow">'+(adminMode?'AKSES PENGELOLA':'')+'</p>'+
+    '<h1>'+(adminMode?'Masuk sebagai Admin.':editorial('title'))+'</h1>'+
+    '<p class="lead">'+(adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':
+      editorial('description'))+'</p>'+
     (memberStaging?'<div class="ngd-auth-mode-switch" role="group" aria-label="Metode masuk member">'+
       '<button type="button" data-staging-auth-method="otp" aria-pressed="'+String(!pinLogin)+'">OTP WhatsApp</button>'+
       '<button type="button" data-staging-auth-method="pin" aria-pressed="'+String(pinLogin)+'">PIN Akun</button>'+
       '</div>':'')+
     '<form id="auth-form" class="surface" data-mode="'+(adminMode?'admin':register?'register':pinLogin?'pin':'login')+'">'+
-    (register?'<div class="field"><label for="nama">Nama lengkap</label><input class="input" id="nama" name="nama" autocomplete="name" required minlength="2" maxlength="80"></div>'+
-      '<div class="field"><label for="usaha">Nama usaha</label><input class="input" id="usaha" name="nama_usaha" required minlength="2" maxlength="100"></div>':'')+
-    '<div class="field"><label for="wa">Nomor WhatsApp</label><input class="input" id="wa" name="wa" required inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx"></div>'+
+    (register?'<div class="field"><label for="nama">'+authLabel(2)+'</label><input class="input" id="nama" name="nama" autocomplete="name" required minlength="2" maxlength="80"></div>'+
+      '<div class="field"><label for="usaha">'+authLabel(2)+'</label><input class="input" id="usaha" name="nama_usaha" required minlength="2" maxlength="100"></div>':'')+
+    '<div class="field"><label for="wa">'+authLabel(1)+'</label><input class="input" id="wa" name="wa" required inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx"></div>'+
+    (register?'<div class="field"><label for="ref">'+authLabel(3)+'</label>'+
+      '<input class="input" id="ref" name="ref" maxlength="80" pattern="[A-Za-z0-9_-]{0,80}" autocomplete="off"></div>':'')+
     (memberOtp?'<div class="field"><label for="login-otp">Kode OTP WhatsApp</label><input class="input" id="login-otp" name="otp" required inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="6 digit OTP"></div>'+
       '<label class="small"><input type="checkbox" name="setuju_pengiriman" required> Saya setuju menerima OTP melalui WhatsApp.</label>'+
-      '<div class="actions"><button type="button" class="btn btn-secondary" data-action="member-otp-request" '+(!enabled?'disabled':'')+'>Kirim Kode</button></div>':
+      '<div class="actions"><button type="button" class="btn btn-secondary" data-action="member-otp-request" '+(!enabled?'disabled':'')+'>'+editorial('send')+'</button></div>':
       '<div class="field"><label for="pin">'+(adminMode?'PIN Admin 6 angka':pinLogin?'PIN Akun 6 angka':'PIN registrasi')+'</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>')+
     (register?'<div class="field"><label for="otp">Kode OTP WhatsApp</label><input class="input" id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" type="text" required placeholder="6 digit kode verifikasi"></div>'+
-      '<div class="actions" style="margin-bottom:13px"><button type="button" class="btn btn-secondary" data-action="otp-request" '+(!enabled?'disabled':'')+'>Kirim Kode</button>'+
+      '<div class="actions" style="margin-bottom:13px"><button type="button" class="btn btn-secondary" data-action="otp-request" '+(!enabled?'disabled':'')+'>'+editorial('send')+'</button>'+
       '<button type="button" class="btn btn-ghost" data-action="otp-verify" '+(!enabled?'disabled':'')+'>Verifikasi kode</button></div>':'')+
     (register?'<div class="field"><label><input type="checkbox" name="setuju_kebijakan" required> Saya setuju dengan syarat dan kebijakan privasi.</label></div>':'')+
     '<button class="btn btn-primary btn-wide" type="submit" '+(!enabled?'disabled':'')+'>'+
-    (adminMode?'Masuk admin':register?'Buat akun':'Masuk')+' '+icon('arrow')+'</button>'+
+    (adminMode?'Masuk admin':editorial('submit'))+' '+icon('arrow')+'</button>'+
     '<p class="form-hint" style="margin:13px 0 0">'+
     (enabled?(memberOtp?'Kode berlaku 5 menit, maksimal 3 percobaan. Batas pengiriman per nomor berlaku; gunakan PIN akun jika kuota habis.':adminMode?'Jangan bagikan PIN Admin Anda.':pinLogin?'PIN akun sudah tersimpan saat pendaftaran. Jangan bagikan PIN kepada siapa pun.':'Verifikasi WhatsApp diperlukan sebelum aktivasi akun.'):
       adminMode?'Akses administrator belum diaktifkan pada backend. Akun yang sudah ada tetap aman.':
@@ -1695,16 +1610,8 @@ function ngdPaymentProofWaUrl_(order,rawAdminWa){
      !Number.isSafeInteger(code)||code<100||code>999||
      !Number.isSafeInteger(total)||total!==base+code||
      String(order.metode||'')!=='QRIS_STATIS')return '';
-  const message=[
-    'Halo Admin Ngulik Digital, saya ingin mengirim bukti pembayaran QRIS.',
-    'No. pesanan: '+id,
-    'Produk: '+String(order.nama_produk||'Produk digital').slice(0,100),
-    'Nominal tagihan: '+rupiah(total),
-    'Merchant: Linggau AI Studio',
-    '',
-    'Saya akan melampirkan screenshot/struk transaksi di chat ini.',
-    'Mohon cocokkan mutasi DANA Bisnis dan nomor pesanan sebelum menyetujui pembayaran.'
-  ].join('\n');
+  const message=window.NGD_CMS_SURFACES?.paymentMessage(state.siteContent,order,rupiah(total))||'';
+  if(!message)return '';
   return 'https://wa.me/'+phone+'?text='+encodeURIComponent(message);
 }
 function viewCheckout(){
@@ -1781,8 +1688,10 @@ function viewCheckout(){
     (open?'<p class="checkout-countdown" id="checkout-countdown" data-expiry="'+esc(o.expires_at||'')+'">Batas pembayaran: '+timer+'</p>':'')+
     '<div class="checkout-status-summary">'+safeBadge(status)+'<p>'+esc(stateNote)+'</p></div></section>'+
     '<section><h2>'+ (open?'Langkah pembayaran':'Status dan bantuan')+'</h2>'+paymentSection+
-    (open&&officialQr?'<div class="checkout-steps"><strong>Setelah Bayar</strong><p>Setelah benar-benar membayar sesuai nominal tagihan, kirim screenshot atau struk transfer melalui WhatsApp Admin. Pesanan baru dinyatakan lunas setelah Admin mencocokkan dana masuk.</p></div>':'')+
-    (proofWaUrl?'<a class="btn btn-primary btn-wide" data-payment-proof-wa href="'+esc(proofWaUrl)+'" target="_blank" rel="noopener noreferrer">Kirim Bukti Pembayaran ke WhatsApp Admin</a>':
+    (open&&officialQr?(window.NGD_CMS_SURFACES?.checkoutGuide(state.siteContent)||
+      '<p role="status">Sedang memuat informasi...</p>'):'')+
+    (proofWaUrl?'<a class="btn btn-primary btn-wide" data-payment-proof-wa href="'+esc(proofWaUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(window.NGD_CMS_SURFACES?.checkoutButton(state.siteContent)||
+  'Sedang memuat informasi...')+'</a>':
       canConfirm?'<p class="checkout-note" role="alert">Nomor WhatsApp Admin belum tersedia atau tidak valid. Hubungi Admin melalui menu Bantuan; jangan kirim bukti ke nomor lain.</p>':'')+
     (open&&(!paymentEnabled()||financeBlocked)?'<p class="checkout-note"><strong>Konfirmasi pembayaran belum tersedia.</strong> Jangan transfer sebelum QRIS resmi aktif.</p>':'')+
     (paid?'<button type="button" class="btn btn-secondary btn-wide" data-route="beranda">Lihat saldo / akses saya</button>':'')+
@@ -1859,7 +1768,21 @@ function viewAdminSettings(){
       ['masa_tahan_hari','Masa tahan komisi (hari)'],
       ['min_payout','Minimum pencairan (Rp)']]],
     ['Informasi publik',[
-      ['teks_disclosure_affiliate','Keterangan komisi']]]
+      ['teks_disclosure_affiliate','Keterangan komisi'],
+      ['nama_brand','Nama platform'],
+      ['tagline_brand','Kalimat pengantar'],
+      ['wa_admin','Nomor WA admin'],
+      ['footer_identitas','Identitas footer'],
+      ['footer_aksesibilitas','Bantuan & aksesibilitas']]],
+    ['Pembayaran dan komisi — hanya baca',[
+      ['payment_gateway_mode','Mode pembayaran'],
+      ['qris_atas_nama','Nama penerima QRIS'],
+      ['qris_nmid','ID merchant QRIS'],
+      ['kode_unik_min','Kode unik minimum'],
+      ['kode_unik_max','Kode unik maksimum'],
+      ['order_expiry_menit','Batas pembayaran (menit)'],
+      ['komisi_starter_nominal','Komisi Starter'],
+      ['min_payout_komisi','Minimum pencairan']]]
   ];
   const cell=(key,label)=>{
     const value=settings?.[key];
@@ -1868,6 +1791,28 @@ function viewAdminSettings(){
     return '<div class="surface"><p class="card-kicker">'+esc(label)+'</p>'+
       '<p class="card-desc" style="overflow-wrap:anywhere;margin-top:8px">'+esc(printable)+'</p></div>';
   };
+  // Editorial-only settings form, withheld while STAGING master writes are OFF.
+  const editorialFields=[
+    ['nama_brand','Nama brand',100],
+    ['tagline_brand','Judul kecil beranda',150],
+    ['footer_identitas','Identitas footer',250],
+    ['footer_aksesibilitas','Keterangan bantuan & aksesibilitas',500]
+  ];
+  const canEditEditorial=isWriteEnabled()&&config.contentEnabled===true&&
+    state.workspaceInfo?.environment==='STAGING'&&state.workspaceInfo?.mutations_enabled===true;
+  const editor=settings?'<section class="surface" aria-label="Editor identitas dan teks publik">'+
+    '<h2>Identitas & Teks Publik</h2><p class="card-desc">Konten keuangan dan tarif tidak dapat diubah dari formulir ini.</p>'+
+    '<form id="admin-public-settings-form">'+
+    editorialFields.map(([key,label,max])=>
+      '<div class="field"><label for="pub-setting-'+esc(key)+'">'+esc(label)+'</label>'+
+      '<textarea class="input" id="pub-setting-'+esc(key)+'" name="'+esc(key)+
+      '" maxlength="'+max+'" rows="'+(max>250?'4':'2')+'" '+
+      (canEditEditorial?'':'disabled')+'>'+
+      esc(settings[key]??'')+'</textarea></div>').join('')+
+    '<button type="submit" class="btn btn-primary" '+(canEditEditorial?'':'disabled')+
+      '>Simpan teks publik</button>'+
+    (canEditEditorial?'':'<p class="form-hint">Perubahan belum diaktifkan oleh backend STAGING.</p>')+
+    '</form></section>':'';
   const body=settings?
     groups.map(([heading,fields])=>
       '<section class="section-gap">'+title(heading,'PENGATURAN','Menampilkan pengaturan yang tersimpan.')+
@@ -1878,7 +1823,7 @@ function viewAdminSettings(){
   return '<section class="section-head"><div><p class="eyebrow">ADMIN / PENGATURAN</p>'+
     '<h2>Pengaturan Ngulik Digital</h2><p>Lihat pengaturan layanan yang sedang digunakan.</p></div></section>'+
     '<div class="banner"><div><h3>Pengaturan Layanan</h3><p>'+esc(status)+'</p></div></div>'+
-    body+viewAdminRuntime();
+    editor+body+viewAdminRuntime();
 }
 
 const catalogWriteEnabled=()=>isWriteEnabled()&&config.catalogEnabled===true;
@@ -1970,12 +1915,58 @@ function viewAdminCatalog(){
   return intro+'<div class="catalog-admin-layout"><div>'+entries+'</div>'+form+'</div>';
 }
 const contentWriteEnabled=()=>isWriteEnabled()&&config.contentEnabled===true;
+const ngdTextContentKinds_=new Set(['HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CARD',
+  'FEATURE_BULLET','NOTICE_BOX','SERVICE_CARD','BENEFIT_LIST','BENEFIT_BULLET',
+  'SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD','CHECKOUT_GUIDE',
+  'CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO']);
 function viewAdminContent(){
-  return window.NGD_CONTENT_UI?
+  const editorial=window.NGD_CONTENT_UI?
     window.NGD_CONTENT_UI.admin({authorized:isAdmin(),items:state.adminContent,
-      selectedId:state.contentEditId,defaultPlacement:state.contentPresetProductId,products:adminCatalogItems(),enabled:contentWriteEnabled()}):
+      selectedId:state.contentEditId,defaultPlacement:state.contentPresetProductId,
+      products:adminCatalogItems(),enabled:contentWriteEnabled()}):
     empty('Editor belum tersedia','Komponen pengelolaan konten belum termuat.');
+  const legacy=window.NGD_ADMIN_LEGACY_CMS?.render({
+    authorized:isAdmin(),table:state.legacyCmsTab,items:state.legacyCmsItems[state.legacyCmsTab]||[],
+    selectedId:state.legacyCmsSelectedId,loading:state.legacyCmsLoading,error:state.legacyCmsError,
+    enabled:contentWriteEnabled()&&state.workspaceInfo?.mutations_enabled===true
+  })||'';
+  return editorial+legacy;
 }
+async function loadLegacyCms_(){
+  if(!isAdmin()||!state.token)return;
+  const tab=state.legacyCmsTab;state.legacyCmsLoading=true;state.legacyCmsError='';render();
+  try{
+    const rows=await api('adminListLegacyCms',{table:tab},state.token);
+    if(!isAdmin()||state.legacyCmsTab!==tab)return;
+    if(!Array.isArray(rows))throw Error('Respons tabel CMS tidak sesuai.');
+    state.legacyCmsItems[tab]=rows;
+  }catch(error){state.legacyCmsError=error.message||'Editor belum tersedia pada GAS STAGING.';}
+  finally{state.legacyCmsLoading=false;render();}
+}
+async function saveLegacyCms_(form){
+  if(!isAdmin()||!contentWriteEnabled()||state.workspaceInfo?.mutations_enabled!==true)
+    return toast('Penyuntingan hanya tersedia saat STAGING mengizinkan perubahan.',true);
+  const table=form.dataset.cmsFormTable,spec=window.NGD_ADMIN_LEGACY_CMS?.specs?.[table];
+  if(!spec)return;
+  const id=String(form.elements.namedItem('id')?.value||'').trim();
+  const old=(state.legacyCmsItems[table]||[]).find(x=>String(x[spec.id])===id);
+  const values={};
+  for(const [name,,type] of spec.fields)
+    values[name]=type==='boolean'?!!form.elements.namedItem(name)?.checked:
+      String(form.elements.namedItem(name)?.value||'').trim();
+  if(table==='ai_tools'&&window.NGD_ADMIN_LEGACY_CMS.isVisual({...values,tool_id:id}))
+    values.aktif=false;
+  const button=form.querySelector('[type="submit"]');
+  if(button)button.disabled=true;
+  try{
+    await api('adminSaveLegacyCms',{table,id,is_new:!old,revision:old?.revision||'',values},
+      state.token,{write:true});
+    state.legacyCmsSelectedId=id;
+    await loadLegacyCms_();toast('Konten disimpan di STAGING.');
+  }catch(error){toast(error.message||'Gagal menyimpan konten.',true);
+    if(button)button.disabled=false;}
+}
+
 const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
 function viewServiceRequests(){
   if(!logged()&&!isAdmin()){
@@ -2424,12 +2415,15 @@ async function submitContentForm_(form){
   payload.sort_order=Number(payload.sort_order);
   const old=id?state.adminContent.find(x=>x.content_id===id):null;
   if(id&&!old)return toast('Konten berubah. Muat ulang halaman.',true);
+  if(!old&&String(fd.get('content_id')||'').trim())
+    payload.content_id=String(fd.get('content_id')).trim();
   if(old){
     if(old.status==='PUBLISHED')
       return toast('Tarik tayang konten terlebih dahulu sebelum mengedit. Ini mencegah perubahan live tanpa persetujuan publikasi ulang.',true);
     payload.content_id=id;payload.revision=old.revision;
   }
-  if(!(payload.kind==='PROMO'||payload.kind==='ANNOUNCEMENT')||payload.image_path){
+  if(!ngdTextContentKinds_.has(payload.kind)&&
+      !['HERO','PROMO','ANNOUNCEMENT'].includes(payload.kind)||payload.image_path){
     if(!window.NGD_CONTENT_UI?.mediaPath(payload.image_path))
       return toast('Gunakan URL HTTPS gambar atau path assets/ (PNG, JPG, WebP, AVIF).',true);
   }
@@ -2456,11 +2450,13 @@ async function changeContentStatus_(id,nextStatus){
   const old=state.adminContent.find(x=>x.content_id===id);
   if(!old)return toast('Konten tidak ditemukan.',true);
   if(nextStatus==='PUBLISHED'){
-    if(!['HERO','PRODUCT_IMAGE','FEATURE_ICON','PAGE_COVER','NAV_ICON','BRAND_LOGO','PROMO','ANNOUNCEMENT'].includes(old.kind))
+    if(!['HERO','PRODUCT_IMAGE','FEATURE_ICON','PAGE_COVER','NAV_ICON','BRAND_LOGO',
+      'PROMO','ANNOUNCEMENT'].includes(old.kind)&&!ngdTextContentKinds_.has(old.kind))
       return toast('Format konten lama tidak dapat diterbitkan. Buat konten baru dengan jenis yang didukung.',true);
     const src=window.NGD_CONTENT_UI?.mediaPath(old.image_path);
-    if(!src&&['PROMO','ANNOUNCEMENT'].includes(old.kind)){
-      if(!confirm('Terbitkan '+(old.kind==='PROMO'?'promosi':'pengumuman')+' tanpa gambar?'))return;
+    if(!src&&(['HERO','PROMO','ANNOUNCEMENT'].includes(old.kind)||ngdTextContentKinds_.has(old.kind))){
+      if(!ngdTextContentKinds_.has(old.kind)&&
+         !confirm('Terbitkan '+(old.kind==='HERO'?'banner teks':old.kind==='PROMO'?'promosi':'pengumuman')+' tanpa gambar?'))return;
     }else if(!src)return toast('Alamat gambar tidak valid.',true);
     // A valid path is not evidence that a file exists: verify the image loads
     // before a published CMS row can replace the homepage or product image.
@@ -2666,12 +2662,15 @@ async function refreshPublic(){
   if(state.qa||!isConnected())return;
   // Independent public reads must not discard a valid catalogue when the
   // metadata service is briefly unavailable (or vice versa).
-  const [info,catalog,content,publicTools]=await Promise.allSettled([
-    api('getPublicInfo'),api('getKatalog'),api('getPublicContent'),api('getPublicTools')]);
+  const [info,catalog,content,publicTools,settings]=await Promise.allSettled([
+    api('getPublicInfo'),api('getKatalog'),api('getPublicContent'),api('getPublicTools'),
+    api('getPublicSettings')]);
   if(info.status==='fulfilled'&&info.value&&typeof info.value==='object')state.info=info.value;
   if(catalog.status==='fulfilled'&&Array.isArray(catalog.value))state.catalog=catalog.value;
   state.catalogLoaded=true;
   if(content.status==='fulfilled'&&Array.isArray(content.value))state.siteContent=content.value;
+   if(settings.status==='fulfilled'&&settings.value&&typeof settings.value==='object'&&
+      !Array.isArray(settings.value))state.publicSettings=settings.value;
   if(publicTools.status==='fulfilled'&&Array.isArray(publicTools.value)){
     state.publicTools=publicTools.value;state.publicToolsLoaded=true;
   }else state.publicToolsLoaded=true;
@@ -2822,6 +2821,8 @@ async function loadRoute(route){
     }
     if(route==='konten'&&isAdmin()){
       state.adminContent=await sessionApi('adminListContent',{},token);
+      try{state.workspaceInfo=await sessionApi('getStagingWorkspaceInfo',{},token);}catch{state.workspaceInfo=null;}
+      await loadLegacyCms_();
       if(state.contentPresetProductId){
         const photo=state.adminContent.find(x=>x.kind==='PRODUCT_IMAGE'&&
           x.placement===state.contentPresetProductId&&x.status!=='ARCHIVED');
@@ -3006,8 +3007,11 @@ async function processLogin(form,register){
     if(!registrationOtpEnabled())return toast('Registrasi OTP belum diaktifkan.',true);
     if(!/^[0-9]{6}$/.test(payload.otp)||state.registrationOtpVerifiedWa!==payload.wa)
       return toast('Verifikasi kode OTP WhatsApp terlebih dahulu.',true);
-    const r=captureFirstInviter_();
-    if(r)payload.ref=r;
+    const existingInviter=captureFirstInviter_();
+    const entered=String(fd.get('ref')||'').trim().toUpperCase();
+    // A URL-locked inviter takes precedence to prevent replacing a prior referral.
+    const r=existingInviter||entered;
+    if(/^[A-Z0-9_-]{3,80}$/.test(r))payload.ref=r;
   }
   const btn=form.querySelector('[type=submit]');btn.disabled=true;
   try{
@@ -3050,6 +3054,7 @@ function clearPrivateCommandCenter_(){
   state.services=[];state.waitlist=[];state.members=[];state.adminOrders=[];
   state.adminSummary=null;state.reconciliation=null;state.adminRuntime=null;
   state.adminSettings=null;state.adminContent=[];state.adminCatalog=[];
+  state.legacyCmsItems={};state.legacyCmsSelectedId='';state.legacyCmsError='';
   state.memberSearch=null;state.member360=null;state.selectedMemberId=null;
 }
 async function logout(){
@@ -3944,8 +3949,23 @@ document.addEventListener('click',async(e)=>{
     state.marketplaceSearch='';state.catalogFilter='semua';state.marketplaceSort='default';
     render();return;
   }
-  const target=e.target.closest('[data-product-detail],[data-market-product],[data-checkout-product],[data-checkout-create],[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-create],[data-content-asset],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-image],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-portal-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-payment-open],[data-order-detail]');
+  const target=e.target.closest('[data-cms-table],[data-cms-edit],[data-cms-new],[data-product-detail],[data-market-product],[data-checkout-product],[data-checkout-create],[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-create],[data-content-asset],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-image],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-portal-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-payment-open],[data-order-detail]');
   if(!target)return;
+  if(target.hasAttribute('data-cms-table')){
+    if(!isAdmin())return;
+    const tab=target.dataset.cmsTable;
+    if(!['ai_tools','modul_belajar','etalase_affiliate_luar'].includes(tab))return;
+    state.legacyCmsTab=tab;state.legacyCmsSelectedId='';
+    await loadLegacyCms_();return;
+  }
+  if(target.hasAttribute('data-cms-edit')){
+    if(!isAdmin())return;
+    state.legacyCmsSelectedId=target.dataset.cmsEdit;render();return;
+  }
+  if(target.hasAttribute('data-cms-new')){
+    if(!isAdmin())return;
+    state.legacyCmsSelectedId='';render();return;
+  }
   if(target.hasAttribute('data-checkout-product')){
     openProductCheckout_(target.dataset.checkoutProduct);return;
   }
@@ -4183,17 +4203,46 @@ document.addEventListener('input',(e)=>{
 document.addEventListener('change',(e)=>{
   if(e.target.closest?.('#admin-payment-form'))syncAdminPaymentApproval_();
 });
+async function submitEditorialSettings_(form){
+  if(!isAdmin()||!isWriteEnabled()||config.contentEnabled!==true||
+      state.workspaceInfo?.environment!=='STAGING'||state.workspaceInfo?.mutations_enabled!==true)
+    return toast('Edit teks publik masih terkunci.',true);
+  const allowed=['nama_brand','tagline_brand','footer_identitas','footer_aksesibilitas'];
+  const fd=new FormData(form);
+  const changed=allowed.map(key=>[key,String(fd.get(key)||'').trim()])
+    .filter(([key,value])=>value!==String(state.adminSettings?.[key]||'').trim());
+  if(!changed.length)return toast('Tidak ada teks yang berubah.');
+  for(const [key,value] of changed){
+    if(!value)return toast('Kolom '+key+' tidak boleh kosong.',true);
+  }
+  const button=form.querySelector('[type="submit"]');
+  if(button)button.disabled=true;
+  try{
+    for(const [key,value] of changed){
+      await api('adminUpdateSetting',{key,value},state.token,{write:true});
+    }
+    state.adminSettings=await api('adminGetSettings',{},state.token);
+    render();toast('Teks publik tersimpan.');
+  }catch(e){
+    toast('Perubahan perlu diperiksa: '+e.message,true);
+    try{state.adminSettings=await api('adminGetSettings',{},state.token);}catch(_){}
+    render();
+  }finally{if(button)button.disabled=false;}
+}
 document.addEventListener('submit',(e)=>{
   const id=e.target.id||(e.target.classList?.contains('ai-form')?'ai-run-form':'');
   if(!['admin-pin-form','content-editor-form','service-brief-form','service-quote-form','admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
     'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form',
+    'admin-public-settings-form','admin-legacy-cms-form',
     'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form','ai-run-form','admin-payment-form'].includes(id))return;
   e.preventDefault();
   if(id==='admin-pin-form')changeAdminPin_(e.target);
   if(id==='content-editor-form')submitContentForm_(e.target);
+  if(id==='admin-legacy-cms-form')saveLegacyCms_(e.target);
   if(id==='service-brief-form')submitServiceBrief(e.target);
   if(id==='service-quote-form')submitServiceQuote(e.target);
   if(id==='admin-catalog-form')submitCatalogForm(e.target);
+  if(id==='admin-public-settings-form')submitEditorialSettings_(e.target);
   if(id==='profile-form')submitProfileForm(e.target);
   if(id==='auth-form')processLogin(e.target,e.target.dataset.mode==='register');
   if(id==='admin-payment-form')submitAdminPaymentForm_(e.target);

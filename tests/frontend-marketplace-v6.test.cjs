@@ -37,7 +37,8 @@ test('real source assets are efficient WebP images, not decorative fake QR or pr
 });
 test('no duplicate service cards appear below the storefront; checkout gates unchanged',()=>{
   const home=app.slice(app.indexOf('function viewHome(){'),app.indexOf('const offerCategories='));
-  assert.match(home,/ngdl-actions/);
+  assert.match(home,/NGD_PUBLIC_CMS/);
+  assert.match(read('js/public-cms-home.js'),/ngdl-actions/);
   assert.doesNotMatch(home,/hero\+trust\+showcase\+signup|viewPublicMarketplace\(curated/);
   assert.match(app,/function ngdCommissionLabel_\(p\)/);
   assert.match(app,/function viewCheckout\(\)/);

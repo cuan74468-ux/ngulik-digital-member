@@ -75,7 +75,7 @@ test('both page entrypoints load the campaign CSS after all older marketing styl
 
 test('public page artwork remains contextual while quiet home does not repeat CMS hero art',()=>{
   assert.doesNotMatch(app.slice(app.indexOf('  // Public front door:'),app.indexOf('const offerCategories=')),/published\(state\.siteContent,'HERO','home'\)/);
-  assert.match(app,/cmsPageArt_\('affiliate'\)/);
+  assert.match(app,/NGD_CMS_SURFACES\?\.affiliateInfo\(state\.siteContent\)/);
   assert.match(app,/function viewServiceRequests\(\)/);
   assert.match(app,/cmsPageArt_\('ai'\)/);
   assert.match(app,/function viewSupport\(\)/); // Help is text-first, no decorative cover dependency.
@@ -97,6 +97,6 @@ test('V13 public banner maintains proportional desktop layout and content-driven
   assert.match(ui,/\.market-product-media\{[\s\S]*?aspect-ratio:6\/5/);
   assert.match(ui,/\.ngd-cms-preview-desktop \.ngd-cms-preview-image\{[\s\S]*?aspect-ratio:8\/3/);
   assert.match(ui,/\.ngd-cms-preview-mobile \.ngd-cms-preview-image\{[\s\S]*?aspect-ratio:4\/5/);
-  assert.match(app,/Bikin konten jualan, coba AI, atau rapikan usaha/);
+  assert.match(app,/NGD_PUBLIC_CMS\?\.home\(state\.siteContent,state\.publicSettings\)/);
   assert.match(content,/CMS saat ini menggunakan satu gambar per penempatan/);
 });

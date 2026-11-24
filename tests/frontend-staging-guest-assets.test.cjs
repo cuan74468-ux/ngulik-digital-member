@@ -21,7 +21,7 @@ test('guest landing and services use the correct media base for each route',()=>
   const factory=new Function('location',app.slice(start,end+1)+'return guestMediaBase_;');
   assert.equal(factory({pathname:'/ngulik-digital-member/staging/member.html'})(),'../assets/media/');
   assert.equal(factory({pathname:'/ngulik-digital-member/'})(),'./assets/media/');
-  assert.match(app,/src="\$\{guestMediaBase_\(\)\}\$\{c\.img\}"/);
+  for(const html of [stage,pub])assert.match(html,/js\/public-cms-home\.js/);
   assert.match(app,/guestMediaBase_\(\)\+'ngd-v8-video.webp"/);
   assert.match(app,/guestMediaBase_\(\)\+x\[2\]/);
   assert.doesNotMatch(app,/src="\.\/assets\/media/);

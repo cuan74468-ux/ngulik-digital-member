@@ -4,8 +4,13 @@
  * session and NGD_MUTATIONS_ENABLED. No binary uploads.
  * Image paths may use assets/, external HTTPS, or small raster data URIs.
  */
-var NGD_CONTENT_KINDS_=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO','PROMO','ANNOUNCEMENT'];
-var NGD_CONTENT_ROUTES_=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun'];
+var NGD_CONTENT_KINDS_=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO','PROMO','ANNOUNCEMENT',
+ 'HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CARD','FEATURE_BULLET','NOTICE_BOX','SERVICE_CARD',
+ 'BENEFIT_LIST','BENEFIT_BULLET','SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD',
+ 'CHECKOUT_GUIDE','CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO',
+ 'HERO_ACTION','SECTION_HEADER','FEATURE_ITEM','CHECKOUT_COPY','MEMBER_GREETING','DISCLAIMER'];
+var NGD_CONTENT_TEXT_KINDS_=NGD_CONTENT_KINDS_.slice(8);
+var NGD_CONTENT_ROUTES_=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun','daftar','masuk','auth','checkout','member','portal','portal-belajar','ajak-teman'];
 var NGD_CONTENT_FIELDS_=[
   'kind','placement','title','description','image_path','cta_label','cta_route',
   'sort_order','start_date','end_date'
@@ -45,13 +50,15 @@ function contentPlacement_(kind,value) {
   if(kind==='BRAND_LOGO')valid=place==='brand';
   if(kind==='PROMO'||kind==='ANNOUNCEMENT')
     valid=['home','catalog','member_home','ai','belajar'].indexOf(place)>=0;
+  if(NGD_CONTENT_TEXT_KINDS_.indexOf(kind)>=0)
+    valid=['home','auth','checkout','member_home','member_portal','member_affiliate'].indexOf(place)>=0;
   require_(valid,'VALIDATION','Lokasi gambar tidak dikenali untuk jenis konten ini.');
   return place;
 }
 function contentPayload_(p,existing) {
   require_(p&&typeof p==='object'&&!Array.isArray(p),
     'VALIDATION','Konten tidak valid.');
-  var allowed=NGD_CONTENT_FIELDS_.concat(existing?['content_id','revision']:[]);
+  var allowed=NGD_CONTENT_FIELDS_.concat(existing?['content_id','revision']:['content_id']);
   require_(Object.keys(p).every(function(key){return allowed.indexOf(key)>=0;}),
     'VALIDATION','Kolom konten tidak diizinkan.');
   require_(NGD_CONTENT_FIELDS_.every(function(key){
@@ -64,8 +71,11 @@ function contentPayload_(p,existing) {
     'VALIDATION','Judul, keterangan, dan tombol harus berupa teks.');
   var draft={
     kind:p.kind,placement:contentPlacement_(p.kind,p.placement),
-    title:safeText_(p.title,120),description:safeText_(p.description,400),
-    image_path:contentImagePath_(p.image_path,p.kind==='PROMO'||p.kind==='ANNOUNCEMENT'),
+    title:safeText_(p.title,NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0?1600:120),
+    description:safeText_(p.description,NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0?1600:400),
+    image_path:contentImagePath_(p.image_path,p.kind==='HERO'||
+      NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0||
+      p.kind==='PROMO'||p.kind==='ANNOUNCEMENT'),
     cta_label:safeText_(p.cta_label,48),cta_route:String(p.cta_route||'').trim().replace(/^#/,'').toLowerCase(),
     sort_order:Number(p.sort_order),
     start_date:contentDate_(p.start_date,'mulai'),
@@ -75,7 +85,9 @@ function contentPayload_(p,existing) {
     'VALIDATION','Urutan tampilan tidak valid.');
   require_(!draft.cta_route||NGD_CONTENT_ROUTES_.indexOf(draft.cta_route)>=0,
     'VALIDATION','Tujuan tombol tidak diizinkan.');
-  require_(!draft.cta_label||!!draft.cta_route,
+  require_(!draft.cta_label||!!draft.cta_route||
+    (draft.placement==='auth'&&draft.kind==='CTA_BUTTON')||
+    (draft.placement==='checkout'&&draft.kind==='CHECKOUT_GUIDE'),
     'VALIDATION','Tombol harus memiliki tujuan.');
   require_(!draft.end_date||!draft.start_date||draft.end_date>=draft.start_date,
     'VALIDATION','Tanggal akhir tidak boleh sebelum tanggal mulai.');
@@ -123,7 +135,10 @@ function contentCreate_(admin,p,requestId) {
   require_(/^[A-Za-z0-9_-]{16,80}$/.test(String(requestId||'')),
     'VALIDATION','ID permintaan tidak valid.');
   var patch=contentPayload_(p,null);
-  var id='C-'+sha256_(admin.member_id+':CONTENT:'+requestId).slice(0,14).toUpperCase();
+  var customId=String(p.content_id||'').trim();
+  require_(!customId||/^CNT-[A-Za-z0-9_-]{2,60}$/.test(customId),
+    'VALIDATION','ID konten editorial tidak valid.');
+  var id=customId||'C-'+sha256_(admin.member_id+':CONTENT:'+requestId).slice(0,14).toUpperCase();
   return withLock_(function(){
     var old=byId_('site_content','content_id',id);
     if(old){
@@ -233,4 +248,22 @@ function installContentSchemaStaging() {
     return {created:true,tabs_checked:Object.keys(NGD.HEADERS).length,
       message:'Tab site_content ditambahkan tanpa mengubah tabel lain.'};
   });
+}
+
+/** Public-facing settings are allowlisted; never return internal keys/secrets. */
+var NGD_PUBLIC_SETTINGS_KEYS_=[
+ 'nama_brand','tagline_brand','wa_admin','payment_gateway_mode','qris_atas_nama',
+ 'qris_nmid','kode_unik_min','kode_unik_max','order_expiry_menit',
+ 'komisi_starter_nominal','min_payout_komisi','footer_identitas','footer_aksesibilitas'
+];
+function ngdPublicSettings_(){
+ var all=settings_(),output={};
+ NGD_PUBLIC_SETTINGS_KEYS_.forEach(function(key){
+  if(Object.prototype.hasOwnProperty.call(all,key)){
+   var value=all[key];
+   if(typeof value==='string'||typeof value==='number'||typeof value==='boolean')
+     output[key]=value;
+  }
+ });
+ return output;
 }

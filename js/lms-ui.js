@@ -82,9 +82,9 @@ function portalGroup_(m){
   if(/^KUR-A3-/.test(id)||/^\[Fasilitas Resmi UMKM\]/i.test(name))return 'fasilitas';
   return 'internal';
 }
-function memberPortal_(old){
+function memberPortal_(old,editorialDisclaimer){
   var resources=Array.isArray(old)?old:[];
-  var disclosure='Ngulik Digital hanya berperan sebagai kurator dan penghubung informasi. Semua kelas, layanan, akun, jadwal, biaya tambahan bila ada, serta sertifikat berada di bawah ketentuan masing-masing penyedia. Anda akan membuka situs penyedia di tab baru; tidak ada checkout atau komisi affiliate dari halaman ini.';
+  var disclosure=String(editorialDisclaimer||'Sedang memuat informasi...');
   var groups=[
     {id:'internal',title:'Materi Internal Ngulik Digital',hint:'Panduan pengantar dan materi dari tim Ngulik Digital.'},
     {id:'ai',title:'AI & Digital Marketing',hint:'Belajar membuat konten dan mempromosikan usaha.'},
@@ -101,8 +101,7 @@ function memberPortal_(old){
       '<span class="learning-portal-total">'+count+' materi dan tautan kurasi</span></div></div>'+
     '</header>'+
     '<div class="learning-portal-disclaimer" role="note" aria-label="Disclaimer resmi">'+
-      '<strong>Informasi penting sebelum membuka tautan</strong><p>'+e(disclosure)+
-      ' Seluruh syarat, jadwal, kuota, dan ketentuan sertifikat mengikuti kebijakan penyedia layanan terkait.</p>'+
+      '<strong>Informasi penting sebelum membuka tautan</strong><p>'+e(disclosure)+'</p>'+
     '</div>'+
     (count?
       '<div class="learning-portal-tools">'+

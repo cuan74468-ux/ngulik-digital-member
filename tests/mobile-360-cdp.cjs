@@ -115,7 +115,10 @@ async function visit(url,label){
       fromSurface:true});
     writeFileSync('mobile-qa-artifacts/'+label+'-360x800.png',Buffer.from(shot.data,'base64'));
   }
-  if(label==='guest-home'||label==='member-home'){
+  // A newly provisioned CMS with no published rows must show a neutral loader,
+  // not invent a marketing campaign. Test its mobile fit above; legacy window
+  // chrome checks continue for authenticated member panels below.
+  if(label==='member-home'){
     const windowFrame=await request('Runtime.evaluate',{expression:`(()=>{
       const selector=document.body.dataset.appRole==='member'?
         '#screen .ngdm-orders.ngd-window-frame':'#screen .ngdl-story.ngd-window-frame';
@@ -168,8 +171,9 @@ async function visit(url,label){
     })()`,returnByValue:true});
     const v=themed.result.value;console.log('NGD_V2_THEME '+label+' '+JSON.stringify(v));
     if(label==='guest-home'){
-      assert.equal(v.hero,'rgb(91, 61, 245)','Guest hero not electric purple');
-      assert.ok(v.heroShadow!=='none','Guest hero hard shadow missing');
+      // The public CMS hero may be absent before its DRAFT is published.
+      // Existing CSS and DOM overflow/contrast checks run even in loading state.
+      if(v.hero)assert.ok(v.hero!=='rgba(0, 0, 0, 0)','Published CMS hero must be visible');
     }else{
       assert.equal(v.wallet,'rgb(91, 61, 245)','Member wallet still pale');
       assert.equal(v.chart,'rgb(204, 243, 73)','Member chart not acid lime');
@@ -284,8 +288,10 @@ async function visit(url,label){
     console.log('MOBILE_360_MEMBER_FIRST_STEP '+JSON.stringify(novice));
     assert.ok(novice.quickBeforeWallet,'Beginner actions must appear before token metrics');
     assert.equal(novice.choices.length,4);
-    assert.ok(novice.choices.some(x=>x.label==='Buat Foto Jualan'&&x.tool==='ngulik-visual'));
-    assert.match(novice.summary,/Buat materi jualan/);
+    assert.deepEqual(novice.choices.map(x=>x.route),['ai','portal','katalog','affiliate'],
+      'Four member actions must follow the published Doc 06 CMS route contract');
+    assert.ok(novice.choices.every(x=>x.label==='Sedang memuat informasi...'),
+      'Unpublished member content must show a neutral message, never fake campaign copy');
     assert.ok(novice.width<=360,'Beginner member home overflows 360px');
     const click=await request('Runtime.evaluate',{expression:`(()=>{
       const toggle=document.getElementById('top-nav-trigger');

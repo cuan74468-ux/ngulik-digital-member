@@ -13,7 +13,7 @@ test('historical manifest preserves 16 November GAS source inventory without cla
  assert.equal(names.length,15);
  assert.deepEqual(files.filter(x=>names.includes(x)),names);
  assert.deepEqual(files.filter(x=>!names.includes(x)),[
-   'VisualAdapterContract.gs','VisualApi.gs','VisualCompiler.gs','VisualJobs.gs','VisualMedia.gs','VisualProvider.gs',
+   'AdminLegacyCms.gs','VisualAdapterContract.gs','VisualApi.gs','VisualCompiler.gs','VisualJobs.gs','VisualMedia.gs','VisualProvider.gs',
    'VisualQuality.gs','VisualRuntime.gs','VisualSkills.gs','VisualStore.gs','VisualTemplates.gs','VisualUpload.gs','VisualWorker.gs'
  ]);
  assert.match(manifest.source_snapshot_commit,/^[a-f0-9]{40}$/);

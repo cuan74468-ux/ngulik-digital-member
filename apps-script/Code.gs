@@ -848,6 +848,16 @@ function validatedAdminSetting_(key,value) {
       'VALIDATION','Nilai pengaturan di luar batas.');
     return n;
   }
+  // Editorial settings only. P0 financial parameters stay separately guarded
+  // and are deliberately NOT added to this editable allowlist.
+  var editorial={nama_brand:100,tagline_brand:150,footer_identitas:250,
+    footer_aksesibilitas:500};
+  if(Object.prototype.hasOwnProperty.call(editorial,key)){
+    require_(typeof value==='string'&&value.trim().length>0&&
+      value.length<=editorial[key]&&!/[\u0000-\u001F\u007F]/.test(value),
+      'VALIDATION','Teks pengaturan tidak valid.');
+    return value.trim();
+  }
   if(key==='link_classroom'){
     require_(typeof value==='string'&&value.length<=500&&/^https:\/\/classroom\.google\.com\//i.test(value),
       'VALIDATION','Tautan Google Classroom harus HTTPS resmi.');
@@ -2686,6 +2696,7 @@ function apiRouter_(action,token,p,requestId) {
       .map(function(r){return {tool_id:r.tool_id,nama:r.nama,deskripsi:r.deskripsi,
         kredit_biaya:r.kredit_biaya};});
     case 'getPublicContent':return contentPublicList_();
+    case 'getPublicSettings':return ngdPublicSettings_();
     // Both OTP actions are write-gated by doPost and STAGING-only guard.
     case 'requestRegistrationOtp':return ngdOtpRequest_(p);
     case 'verifyRegistrationOtp':return ngdOtpVerify_(p);
@@ -2756,6 +2767,8 @@ function apiRouter_(action,token,p,requestId) {
   admin=admin_(token);
   switch(action){
     case 'adminListContent':return contentAdminList_();
+    case 'adminListLegacyCms':return ngdLegacyCmsList_(p);
+    case 'adminSaveLegacyCms':return ngdLegacyCmsSave_(admin,p,requestId);
     case 'adminCreateContent':return contentCreate_(admin,p,requestId);
     case 'adminUpdateContent':return contentUpdate_(admin,p);
     case 'adminSetContentStatus':return contentSetStatus_(admin,p);
@@ -2923,11 +2936,11 @@ function requirePublicTrackingEnabled_() {
     'MAINTENANCE','Pencatatan klik belum diaktifkan.');
 }
 function apiReadActions_() {
-  return ['getStagingWorkspaceInfo','getPublicInfo','getPublicContent','getPublicTools','getMe','getBeranda','getModulBelajar','getKatalog',
+  return ['getStagingWorkspaceInfo','getPublicInfo','getPublicContent','getPublicSettings','getPublicTools','getMe','getBeranda','getModulBelajar','getKatalog',
     'getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase',
     'getAffiliateDashboard','getMyNotifications','getMyServiceRequests',
     'adminListServiceRequests','adminGetDashboard','adminGetRuntimeStatus','adminListOrders','adminListMembers',
-    'adminListWaitingList','adminListCommissions','adminGetSettings','adminListCatalog','adminListContent',
+    'adminListWaitingList','adminListCommissions','adminGetSettings','adminListCatalog','adminListContent','adminListLegacyCms',
     'adminGetReconciliation',
     'getMyProducts','getMyTickets','getTicket','getMyProductReleases',
     'adminSearchMembers','adminGetMember360','adminGetProductImpact','adminGetSupportOverview',

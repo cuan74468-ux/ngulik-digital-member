@@ -30,6 +30,7 @@ function preview(mode='member',route='beranda'){
     ApiError:class ApiError extends Error{},
     setTimeout,clearTimeout
   });
+  vm.runInContext(fs.readFileSync(path.join(base,'js/cms-surfaces.js'),'utf8'),ctx,{timeout:3000});
   vm.runInContext(lms,ctx,{timeout:3000});
   vm.runInContext(js,ctx,{timeout:5000});
   const go=route=>vm.runInContext('go('+JSON.stringify(route)+')',ctx,{timeout:2000});

@@ -17,12 +17,9 @@ test('affiliate landing separates public and authenticated member experience',()
   assert.ok(begin>=0&&end>begin);
   assert.match(section,/if\(!logged\(\)\)return '<div class="partner-public"/);
   assert.match(section,/class="partner-member/);
-  assert.match(section,/data-route="daftar"/);
-  assert.match(section,/data-route="login"/);
+  assert.match(section,/NGD_CMS_SURFACES\?\.affiliateInfo\(state\.siteContent\)/);
   assert.match(section,/data-route="katalog"/);
-  assert.match(section,/Tidak ada jaminan penghasilan/);
-  assert.match(section,/class="partner-steps-compact"/);
-  assert.match(section,/class="partner-faq-item"/);
+  assert.doesNotMatch(section,/Gratis bergabung|Tidak ada jaminan penghasilan|class="partner-steps-compact"|class="partner-faq-item"/);
 });
 test('member dashboard uses real backend data and distinguishes requested from approved balances',()=>{
   assert.match(app,/state\.affiliates/);

@@ -39,7 +39,7 @@ test('public and STAGING use identical branded favicon and correct relative sour
 test('all dynamic brand placements use same canonical official image',()=>{
   assert.match(app,/const defaultBrandLogoSrc=document\.querySelector\?\.\('\.guest-brand-icon \.ngd-brand-image'\)/);
   assert.match(app,/by\('brand-mark'\)/);
-  assert.match(app,/class="ngdl-hero"|ngdl-hero/);
+  assert.match(read('js/public-cms-home.js'),/class="ngdl-hero"|ngdl-hero/);
   assert.doesNotMatch(app.slice(app.indexOf('  \/\/ Public front door:'),app.indexOf('const offerCategories=')),/ngd-floating-logo|ngd-home-artwork/);
   // The compact commission page intentionally removed its decorative logo art.
   assert.match(app,/function viewAffiliate\(\)/);

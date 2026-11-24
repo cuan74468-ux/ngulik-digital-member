@@ -30,7 +30,8 @@ test('member uses OTP by default, optional hashed-PIN login only in STAGING',()=
   assert.match(app,/const memberOtp=!adminMode&&!register&&!pinLogin;/);
   assert.match(app,/memberOtpLoginEnabled\(\)/);
   assert.match(app,/Login OTP member belum diaktifkan/);
-  assert.match(app,/Masukkan nomor WhatsApp dan kode OTP untuk masuk/);
+  assert.match(app,/NGD_CMS_SURFACES\?\.auth\(state\.siteContent\)/);
+  assert.doesNotMatch(app,/Masukkan nomor WhatsApp dan kode OTP untuk masuk/);
   assert.match(app,/PIN Admin 6 angka/);
   assert.match(app,/PIN Akun 6 angka/);
   assert.match(app,/pinLogin=memberStaging&&state.stagingPinLogin===true/);

@@ -1,240 +1,193 @@
-/* Guest landing page only. Do not alter topbar, drawer, member, admin, or shared navigation. */
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1{--night:#161238;--gold:#ffd25e;--ink:#211e32;--muted:#625d72;max-width:1220px;width:100%;min-width:0;margin:0 auto;color:var(--ink);font-family:Inter,system-ui,sans-serif;overflow:clip}
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 *,body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 *::before,body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 *::after{box-sizing:border-box}
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 :where(h1,h2,h3,p){margin:0;max-width:100%;overflow-wrap:break-word}
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 :where(button,a){font:inherit}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero{
-position:relative;
-  display:flex;
-  align-items:center;
-  width:100%;
-  min-width:0;
-  min-height:clamp(342px,29vw,396px);
-  padding:clamp(28px,3.3vw,43px);
-  border-radius:23px;
-  isolation:isolate;
-  overflow:hidden;
-  color:#fff;
-  background:linear-gradient(110deg,#161238 0%,#271d66 61%,#3625a6 100%);
+/* Ngulik Digital: quiet public CMS storefront.
+   CMS is the only source of promotional words and images; no background art.
+   Scope keeps member, admin, checkout and the rest of the app unchanged. */
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing{
+  --ngdl-ink:#262337;--ngdl-muted:#686574;--ngdl-line:#e8e5e1;
+  --ngdl-gold:#ffdf79;--ngdl-warm:#fbfaf6;
+  color:var(--ngdl-ink);width:100%;max-width:1140px;min-width:0;
+  margin:0 auto;padding:0 clamp(12px,2.3vw,26px) 60px;
+  box-sizing:border-box;display:flex;flex-direction:column;gap:clamp(34px,5vw,72px);
+  overflow-wrap:break-word;
 }
-/* Embedded original artwork, blended into the banner rather than inset as a second card.
-   URL is relative to /assets/landing-guest-v1.css, NOT to index.html. */
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::before{
-  content:"";position:absolute;inset:-3% -2% -3% 30%;z-index:0;pointer-events:none;
-  background:url("./media/ngd-catalog-v9-wide.webp") 72% center / cover no-repeat;
-  opacity:.95;
-  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.85) 36%,#000 65%);
-  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.85) 36%,#000 65%);
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing *,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing *::before,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing *::after{
+  box-sizing:border-box;min-width:0;
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::after{
-  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:linear-gradient(90deg,rgba(19,14,47,.99) 0%,rgba(22,16,53,.96) 30%,rgba(24,17,62,.82) 50%,rgba(31,21,83,.17) 100%);
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero{
+  position:relative;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.8fr);
+  align-items:center;gap:clamp(22px,4vw,54px);
+  min-height:360px;margin:0;padding:clamp(32px,6vw,70px);
+  border-radius:26px;background:#f4f0e9;color:var(--ngdl-ink);
+  border:1px solid #ece6dc;box-shadow:none;isolation:isolate;
 }
-
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero-copy{
-position:relative;z-index:2;display:grid;justify-items:start;gap:clamp(11px,1.1vw,13px);
-  width:min(100%,640px);max-width:61%;min-width:0;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero::before,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero::after{
+  content:none;display:none;background:none;
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-eyebrow{display:inline-flex;align-items:center;gap:9px;letter-spacing:.095em;font-size:11px;font-weight:800;line-height:1.5;color:#f8e9ad}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-spark{font-size:19px;color:var(--gold)}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero h1{
-font-family:"Plus Jakarta Sans",Inter,sans-serif;
-  font-size:clamp(34px,3.6vw,46px);
-  font-weight:800;line-height:1.1;letter-spacing:-.052em;
-  color:#fff!important;-webkit-text-fill-color:#fff!important;
-  max-width:23ch;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero:not(:has(.ngd-cms-hero-art)){
+  grid-template-columns:minmax(0,1fr);
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero h1 span{color:var(--gold)!important;-webkit-text-fill-color:var(--gold)!important}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero-lead{
-font-size:clamp(14px,1.1vw,16px);line-height:1.62;
-  color:#f8f5ff!important;max-width:56ch;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero-copy{
+  position:relative;z-index:1;max-width:730px;
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;width:100%}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-btn{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:48px;max-width:100%;padding:13px 20px;border-radius:12px;border:1.5px solid transparent;font-weight:750;font-size:14px;line-height:1.3;text-decoration:none;cursor:pointer;transition:transform .18s ease,background .18s ease}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-btn:hover{transform:translateY(-2px)}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-btn-gold{color:#201532!important;background:#ffd25e!important;border-color:#ffd25e!important}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-btn-ghost{background:transparent!important;border-color:rgba(255,255,255,.86)!important;color:#fff!important}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero-caption{
-font-size:11px;line-height:1.4;color:#f0eaff!important;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-eyebrow{
+  display:block;max-width:100%;font-size:12px;font-weight:750;letter-spacing:.1em;
+  color:#765423;text-transform:uppercase;margin:0 0 19px;
 }
-
-
-
-
-
-
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-trust{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:25px 0;border-bottom:1px solid #e7e2ed}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-trust span{font-size:12px;line-height:1.55;font-weight:700;color:#463b66;min-width:0}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:12px clamp(24px,4vw,45px);align-items:start;padding:clamp(30px,4vw,55px) 2% clamp(24px,3vw,42px)}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-kicker{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.14em;color:#5641a1}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story h2,body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top h2,body.ngd-public-app[data-app-role="guest"] #screen .ngdl-benefits h2,body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end h2{
-  grid-column:1;grid-row:1;
-  color:#fff!important;-webkit-text-fill-color:#fff!important;
-  font-size:clamp(23px,2.3vw,30px);
-  line-height:1.18;
-  max-width:none;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing h1{
+  color:var(--ngdl-ink);font-family:Inter,system-ui,sans-serif;
+  font-size:clamp(31px,4.3vw,58px);line-height:1.12;
+  font-weight:800;letter-spacing:-.048em;margin:0;
+  -webkit-text-fill-color:currentColor;
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story h2 em{font-style:normal;color:#5740a8}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story>p:last-child{font-size:clamp(14px,1.4vw,17px);line-height:1.85;color:#514b60}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offers{padding:0 0 clamp(36px,5vw,64px)}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:18px}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top>div{display:grid;gap:10px}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top>p{max-width:260px;color:#655f72;font-size:14px;line-height:1.6}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offer{min-width:0;background:#fff;border:1px solid #e9e4ef;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 6px 25px #27194308}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offer-image{aspect-ratio:1.25;background:#eeeafb;overflow:hidden}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offer-image img{display:block;width:100%;height:100%;object-fit:cover}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offer-body{padding:21px;display:flex;flex:1;flex-direction:column;align-items:flex-start;gap:12px}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offer-tag{font-size:10px;font-weight:800;letter-spacing:.12em;color:#5a44a4}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offer h3{font-family:"Plus Jakarta Sans",Inter,sans-serif;font-size:18px;font-weight:800;line-height:1.35;letter-spacing:-.025em;color:#251e38}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offer-body>p:not(.ngdl-offer-tag){font-size:13px;line-height:1.7;color:#5d576a}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offer-link{border:0;border-bottom:1px solid #4a339f;border-radius:0;padding:5px 0;background:none;color:#3b278f;font-weight:800;font-size:12px;line-height:1.5;text-align:left;cursor:pointer;margin-top:auto}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-benefits{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:35px;background:#f2eefb;border-radius:24px;padding:clamp(26px,5vw,62px)}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-benefits>div{display:grid;align-content:start;gap:14px}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-benefits ul{display:grid;gap:16px;margin:0;padding:0;list-style:none}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-benefits li{position:relative;padding-left:27px;color:#514a63;font-size:14px;line-height:1.7}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-benefits li::before{content:'✓';position:absolute;left:0;top:0;color:#4f389e;font-weight:900}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-benefits li strong{color:#251e38}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 198px;
-  column-gap:clamp(18px,3vw,34px);
-  row-gap:9px;
-  align-items:center;
-  justify-items:stretch;
-  text-align:left;
-  margin-top:32px;
-  border-radius:19px;
-  background:#211646;
-  padding:clamp(22px,2.8vw,32px);
-  color:#fff;
-  min-width:0;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero-lead{
+  color:#565262;font-size:clamp(15px,1.5vw,19px);line-height:1.7;
+  max-width:650px;margin:20px 0 0;font-weight:400;
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end .ngdl-kicker{color:#ffd25e}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end h2{color:#fff!important;-webkit-text-fill-color:#fff!important;max-width:20ch}
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end>p:not(.ngdl-kicker){
-  grid-column:1;grid-row:2;
-  color:#eee7fa!important;
-  line-height:1.55;font-size:13px;max-width:49ch;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngd-cms-hero-art{
+  display:block;width:100%;max-width:450px;aspect-ratio:4/5;object-fit:cover;
+  border-radius:18px;box-shadow:0 18px 42px rgba(38,35,55,.1);
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end .ngdl-actions{
-  grid-column:2;grid-row:1 / span 2;
-  display:grid;grid-template-columns:1fr;
-  align-content:center;justify-content:stretch;
-  gap:8px;width:100%;min-width:0;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-actions{
+  display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:29px;
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-free{
-  grid-column:1/-1;grid-row:3;
-  display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;
-  gap:9px 20px;margin-top:4px;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-btn{
+  display:inline-flex;align-items:center;justify-content:center;text-align:center;
+  width:auto;max-width:100%;padding:14px 22px;min-height:48px;cursor:pointer;
+  background:#fff;color:#2d2b35;border:1px solid #d7d2c9;border-radius:12px;
+  text-decoration:none;font-size:14px;font-weight:700;line-height:1.3;
+  box-shadow:none;transition:transform .16s ease,border-color .16s ease;
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-free a{
-  color:#fff;font-weight:650;font-size:12px;
-  line-height:1.45;text-underline-offset:4px;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-btn-gold{
+  background:#ffdf79;color:#2d2617;border-color:#efc85c;
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end .ngdl-btn{min-height:41px;padding:9px 14px;border-radius:10px;font-size:12px;}
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 :focus-visible{outline:3px solid #e4a626;outline-offset:4px}
-@media(max-width:900px){
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero{min-height:0;padding:34px 30px;border-radius:21px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero-copy{max-width:75%;width:100%}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::before{inset:0 0 0 16%;background-position:70% center;opacity:.8}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::after{background:linear-gradient(90deg,rgba(19,14,47,.99) 0%,rgba(19,14,47,.91) 52%,rgba(22,16,53,.43) 100%)}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-trust{grid-template-columns:repeat(2,minmax(0,1fr))}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-btn:hover{
+  transform:translateY(-2px);border-color:#947e5c;
 }
-@media(max-width:600px){
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero{min-height:0;padding:24px 18px 155px;border-radius:18px;align-items:flex-start}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero-copy{max-width:100%;width:100%;gap:11px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::before{inset:0;height:auto;background-position:98% 49%;background-size:cover;opacity:1;-webkit-mask-image:none;mask-image:none}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero::after{background:linear-gradient(180deg,#161238 0%,rgba(22,18,56,.98) 38%,rgba(22,18,56,.87) 58%,rgba(22,18,56,.38) 78%,rgba(22,18,56,.03) 100%)}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-eyebrow{font-size:9px;letter-spacing:.07em}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero h1{font-size:clamp(29px,8.1vw,37px)!important;line-height:1.13!important;max-width:18ch}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero-lead{font-size:13px;line-height:1.58;max-width:100%}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:9px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero .ngdl-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-btn{width:100%;min-width:0;min-height:44px;padding:10px 9px;font-size:12px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-hero .ngdl-btn{font-size:11.5px;gap:5px;padding-inline:6px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-trust{gap:12px 14px;padding:22px 4px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-trust span{font-size:11px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story{display:grid;grid-template-columns:1fr;padding:23px 2% 20px;gap:8px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story h2,body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top h2,body.ngd-public-app[data-app-role="guest"] #screen .ngdl-benefits h2,body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end h2{font-size:27px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-story>p:last-child{font-size:13px;line-height:1.62;color:#514b60}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offers{padding:0 0 34px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top{display:grid;gap:6px;margin-bottom:15px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-section-top>p{font-size:12px;line-height:1.5}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-grid{grid-template-columns:1fr;gap:16px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offer-image{aspect-ratio:1.85}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-offer-body{padding:18px;gap:9px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-benefits{grid-template-columns:1fr;gap:22px;border-radius:18px;padding:26px 19px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end{grid-template-columns:minmax(0,1fr);row-gap:10px;margin-top:28px;border-radius:16px;padding:21px 18px;text-align:left;justify-items:stretch}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end h2{grid-column:1;grid-row:auto;font-size:clamp(21px,6vw,25px)!important;line-height:1.22;max-width:100%}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end>p:not(.ngdl-kicker){grid-column:1;grid-row:auto;font-size:12px;line-height:1.5;max-width:100%}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end .ngdl-actions{grid-column:1;grid-row:auto;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end .ngdl-btn{min-height:41px;padding:8px 7px;font-size:11.5px;line-height:1.25}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end .ngdl-free{grid-column:1;grid-row:auto;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px 16px;margin-top:2px}
-  body.ngd-public-app[data-app-role="guest"] #screen .ngdl-end .ngdl-free a{font-size:11.5px}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-btn:focus-visible,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing button:focus-visible{
+  outline:3px solid #7b57af;outline-offset:3px;
 }
-@media(prefers-reduced-motion:reduce){body.ngd-public-app[data-app-role="guest"] #screen .ngdl-btn{transition:none}}
-
-/* Portrait product artwork: keep the whole cover visible on every viewport.
-   Scoped to the four guest landing cards; hero artwork keeps its wide ratio. */
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-offer-image{
-  aspect-ratio:4 / 5;
-  min-width:0;
-  display:grid;
-  place-items:center;
-  padding:clamp(10px,1.6vw,20px);
-  background:#f0ecf8;
-  overflow:hidden;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-trust{
+  display:flex;flex-wrap:wrap;gap:10px 14px;padding:0;border:0;box-shadow:none;
+  background:transparent;margin:-22px 0 -12px;
 }
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-offer-image img{
-  display:block;
-  width:100%;
-  height:100%;
-  max-width:100%;
-  max-height:100%;
-  object-fit:contain;
-  object-position:center;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-trust span{
+  display:inline-flex;align-items:center;background:#fffdf7;color:#61533d;
+  padding:8px 12px;border-radius:100px;border:1px solid #eee6d8;
+  font-size:12px;line-height:1.5;font-weight:550;
 }
-@media(max-width:600px){
-  body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-offer-image{
-    aspect-ratio:4 / 5;
-    padding:16px;
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offers,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-story,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-benefits,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-end{
+  width:100%;max-width:100%;margin:0;padding:0;background:transparent;
+  color:var(--ngdl-ink);border:0;box-shadow:none;display:block;min-height:0;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-section-top{
+  display:block;padding:0;margin:0 0 22px;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing h2{
+  margin:0 0 18px;color:var(--ngdl-ink);font-size:clamp(23px,2.7vw,33px);
+  line-height:1.25;font-weight:760;letter-spacing:-.035em;
+  -webkit-text-fill-color:currentColor;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer{
+  border:1px solid var(--ngdl-line);border-radius:18px;background:#fff;
+  min-width:0;margin:0;box-shadow:none;overflow:hidden;display:flex;flex-direction:column;
+  transition:box-shadow .16s ease;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer:hover{
+  box-shadow:0 10px 28px rgba(30,24,41,.055);
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer-image{
+  position:relative;width:100%;height:180px;background:#f6f5f2;overflow:hidden;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer-image img{
+  display:block;width:100%;height:100%;object-fit:cover;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer-body{
+  display:flex;flex-direction:column;align-items:flex-start;gap:12px;
+  flex:1;padding:clamp(18px,2.2vw,26px);
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer h3{
+  margin:0;color:var(--ngdl-ink);font-size:clamp(17px,1.7vw,22px);line-height:1.35;
+  font-weight:750;letter-spacing:-.02em;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing p,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing li{
+  color:var(--ngdl-muted);line-height:1.65;font-size:15px;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer p{
+  margin:0;flex:1;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer-link{
+  appearance:none;border:0;background:transparent;padding:0;cursor:pointer;
+  text-align:left;color:#63481d;font-size:14px;font-weight:700;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-story{
+  padding:28px clamp(18px,3vw,38px);background:#f7f5f0;
+  border:1px solid #ece7dd;border-radius:22px;display:block;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-story ul,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-benefits ul{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 24px;
+  padding:0;margin:20px 0 0;list-style:none;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-story li,
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-benefits li{
+  padding:14px 0;border-top:1px solid #e6e2da;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing strong{
+  color:var(--ngdl-ink);font-weight:730;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-benefits{
+  padding:0;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-end{
+  border-top:1px solid var(--ngdl-line);padding:24px 0 8px;max-width:100%;
+}
+body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-end p{
+  margin:8px 0 0;font-size:13px;
+}
+@media(max-width:760px){
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing{
+    padding:0 12px 42px;gap:34px;width:100%;max-width:100%;
+  }
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero{
+    display:flex;flex-direction:column;align-items:stretch;gap:22px;
+    padding:28px 21px;border-radius:20px;min-height:0;
+  }
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngd-cms-hero-art{
+    width:100%;max-width:100%;max-height:260px;aspect-ratio:16/10;object-fit:cover;
+  }
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing h1{
+    font-size:clamp(28px,8vw,39px);line-height:1.17;
+  }
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-trust{
+    margin:0;
+  }
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-grid{
+    grid-template-columns:minmax(0,1fr);gap:12px;
+  }
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-actions{
+    display:grid;grid-template-columns:minmax(0,1fr);gap:10px;
+  }
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-btn{
+    width:100%;
+  }
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-story ul,
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-benefits ul{
+    grid-template-columns:minmax(0,1fr);gap:3px;
   }
 }
-
-/* Guest catalog detail disclosure stays read-only until member sign-in. */
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-card-public-detail{flex:1 1 100%;min-width:0;color:#2c2450;font-size:13px;line-height:1.6}
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-card-public-detail summary{display:inline-flex;align-items:center;min-height:42px;cursor:pointer;font-weight:700;text-decoration:underline;text-underline-offset:3px}
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-card-public-detail p{margin:8px 0;color:#554f66}
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-card-public-detail strong{display:block;margin:5px 0 10px;font-size:14px}
-
-/* Public editorial headings must remain ink-dark on the light canvas.
-   Explicit text-fill overrides legacy gradient/white headings. */
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-story h2,
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-section-top h2,
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-benefits h2 {
-  color:#241d38!important;
-  -webkit-text-fill-color:#241d38!important;
-  background:none!important;
-  -webkit-background-clip:border-box!important;
-  background-clip:border-box!important;
-  opacity:1!important;
-  text-shadow:none!important;
-}
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-story .ngdl-kicker,
-body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-section-top .ngdl-kicker {
-  color:#59429a!important;
-  -webkit-text-fill-color:#59429a!important;
-}
-@media(max-width:600px){
-  body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-story h2,
-  body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-section-top h2 {
-    font-size:clamp(22px,6.25vw,27px)!important;
-    line-height:1.22!important;
-    letter-spacing:-.035em!important;
-  }
-  body.ngd-public-app[data-app-role="guest"] #screen .ngd-landing-v1 .ngdl-story h2 {
-    margin:0!important;
+@media(prefers-reduced-motion:reduce){
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-btn,
+  body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer{
+    transition:none;
   }
 }
