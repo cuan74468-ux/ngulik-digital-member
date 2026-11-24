@@ -83,7 +83,7 @@ function ngdVisualCompilePrompt_(payload,registryOverride) {
   return {
     compiler_version:NGD_VISUAL_COMPILER_VERSION_,
     skill_version:r.version,
-    option_ids:Object.assign({},ids,{product_category:context.category,studio_scenario:context.scenario,restoration_mode:context.restoration}),
+    option_ids:ids,
     compiled_prompt:layers.map(function(l){return l.text;}).join('\n\n'),
     negative_prompt:neg.join('\n'),
     layer_trace:layers.map(function(l){return l.id;}),
@@ -264,7 +264,7 @@ function ngdFoodMagazineCompile_(payload,registryOverride){
   release_authorized:false,
   image_generation_mode:'IMAGE_TO_IMAGE_REQUIRED',
   request_id:input.request_id,
-  option_ids:ids,
+  option_ids:Object.assign({},ids,{product_category:context.category,studio_scenario:context.scenario,restoration_mode:context.restoration}),
   image_count:input.count,
   credit_multiplier:input.count,
   compiled_prompt:layers.map(function(item){return '['+item[0]+']\n'+item[1];}).join('\n\n'),
