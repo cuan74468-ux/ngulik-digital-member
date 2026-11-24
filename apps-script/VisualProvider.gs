@@ -108,6 +108,8 @@ function ngdVpAdapter_(dependencies){
      typeof payload.result.sample==='string','POLL_INVALID_RESULT');
     // Result URL is not a user-facing asset. Worker must fetch with strict
     // hostname allowlist, content-type/size limits and save private bytes.
+    ngdVpRequire_(/^https:\/\/bfldeliveryprod\.blob\.core\.windows\.net\/results\/[A-Za-z0-9_./%?=&-]+$/.test(payload.result.sample),
+     'UNTRUSTED_RESULT_HOST');
     return {status:'READY_PRIVATE_IMPORT_REQUIRED',provider_url:payload.result.sample};
   });
  }
