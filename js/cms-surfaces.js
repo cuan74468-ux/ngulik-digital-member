@@ -5,11 +5,15 @@
 (function(global){
  'use strict';
  const neutral='Sedang memuat informasi...';
+ const aliases=Object.freeze({
+  MEMBER_COPY:['MEMBER_GREETING'],PORTAL_NOTICE:['DISCLAIMER'],
+  AFFILIATE_INFO:['NOTICE_BOX'],CHECKOUT_GUIDE:['CHECKOUT_COPY']
+ });
  const h=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({
   '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function row(items,id,kind,placement){
   return (Array.isArray(items)?items:[]).find(x=>x&&x.content_id===id&&
-   x.kind===kind&&x.placement===placement&&
+   (x.kind===kind||(aliases[kind]||[]).includes(x.kind))&&x.placement===placement&&
    (x.status===undefined||x.status==='PUBLISHED'))||null;
  }
  function field(items,id,kind,placement,key='title'){
@@ -25,7 +29,9 @@
    title:field(items,'CNT-AUTH-INTRO','AUTH_COPY','auth'),
    description:field(items,'CNT-AUTH-INTRO','AUTH_COPY','auth','description'),
    label:(i)=>field(items,'CNT-AUTH-FIELD-'+String(i).padStart(2,'0'),'AUTH_FIELD','auth'),
-   send:field(items,'CNT-AUTH-OTP-BUTTON','CTA_BUTTON','auth','cta_label'),
+   send:row(items,'CNT-AUTH-OTP-BUTTON','CTA_BUTTON','auth')
+     ?field(items,'CNT-AUTH-OTP-BUTTON','CTA_BUTTON','auth','cta_label')
+     :field(items,'CNT-AUTH-INTRO','AUTH_COPY','auth','cta_label'),
    submit:field(items,'CNT-AUTH-LOGIN-BUTTON','CTA_BUTTON','auth','cta_label')
   };
  }
@@ -60,9 +66,11 @@
   const r=row(items,'CNT-CHECKOUT-GUIDE','CHECKOUT_GUIDE','checkout');
   const steps=[1,2,3].map(i=>row(items,'CNT-CHECKOUT-STEP-'+
    String(i).padStart(2,'0'),'CHECKOUT_STEP','checkout'));
+  // The live Doc06 Sheet packs three steps into one description with |.
+  const packed=String(r?.description||'').split(/\s*\|\s*/).map(x=>x.trim()).filter(Boolean);
   return '<div class="checkout-steps" role="group" aria-label="Langkah pembayaran">'+
     '<strong>'+h(r?.title||neutral)+'</strong>'+
-    '<ol>'+steps.map(x=>'<li>'+h(x?.title||neutral)+'</li>').join('')+'</ol></div>';
+    '<ol>'+steps.map((x,i)=>'<li>'+h(x?.title||packed[i]||neutral)+'</li>').join('')+'</ol></div>';
  }
  function checkoutButton(items){
   return field(items,'CNT-CHECKOUT-GUIDE','CHECKOUT_GUIDE','checkout','cta_label');
