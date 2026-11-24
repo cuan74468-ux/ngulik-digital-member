@@ -2681,24 +2681,132 @@ async function refreshPublic(){
   // Offline/QA previews have no real CMS endpoint. Keep their neutral loading
   // fixture; a configured endpoint that returns an error gets an explicit status.
   if(state.qa||!isConnected())return;
-  // Independent public reads must not discard a valid catalogue when the
-  // metadata service is briefly unavailable (or vice versa).
-  const [info,catalog,content,publicTools,settings]=await Promise.allSettled([
-    api('getPublicInfo'),api('getKatalog'),api('getPublicContent'),api('getPublicTools'),
-    api('getPublicSettings')]);
-  if(info.status==='fulfilled'&&info.value&&typeof info.value==='object')state.info=info.value;
-  if(catalog.status==='fulfilled'&&Array.isArray(catalog.value))state.catalog=catalog.value;
-  state.catalogLoaded=true;
+  // One load at a time: init, the retry button and visibility events share it.
+  if(publicLoading_)return publicLoading_;
+  publicLoading_=loadPublic_();
+  try{await publicLoading_;}finally{publicLoading_=null;}
+}
+// ---- public snapshot begin
+// Last-known-good PUBLIC snapshot (published CMS rows, public settings,
+// catalogue, public tools). Never holds member, admin, token or order data.
+// The key is scoped by API endpoint and STAGING/PRODUCTION path, so one
+// environment can never paint the other. Every load revalidates it.
+let publicLoading_=null;
+const publicSnapVersion_=1;
+const publicSnapMaxAgeMs_=24*60*60*1000;
+const publicSnapMaxBytes_=400000;
+function publicSnapKey_(){
+  const url=String(window.NGD_CONFIG?.apiUrl||'');
+  let h=5381;
+  for(let i=0;i<url.length;i++)h=((h*33)^url.charCodeAt(i))>>>0;
+  const env=String(location?.pathname||'').includes('/staging/')?'stg':'prd';
+  return 'ngd_public_snap_v'+publicSnapVersion_+':'+env+':'+h.toString(36);
+}
+function publicSnapHasHero_(rows){
+  return Array.isArray(rows)&&rows.some(r=>r?.content_id==='CNT-HERO-MAIN'&&
+    r?.kind==='HERO'&&r?.placement==='home');
+}
+function publicSnapRead_(){
+  try{
+    if(typeof localStorage==='undefined')return null;
+    const raw=localStorage.getItem(publicSnapKey_());
+    if(!raw||raw.length>publicSnapMaxBytes_)return null;
+    const snap=JSON.parse(raw);
+    if(!snap||snap.v!==publicSnapVersion_||typeof snap.savedAt!=='number')return null;
+    const age=Date.now()-snap.savedAt;
+    if(age<0||age>publicSnapMaxAgeMs_)return null;
+    if(!Array.isArray(snap.siteContent)||snap.siteContent.length>300)return null;
+    // Only rows that were published may be replayed; drafts never pass.
+    const rows=snap.siteContent.filter(r=>r&&typeof r==='object'&&
+      (r.status===undefined||r.status==='PUBLISHED'));
+    if(!publicSnapHasHero_(rows))return null;
+    return {
+      siteContent:rows,
+      publicSettings:snap.publicSettings&&typeof snap.publicSettings==='object'&&
+        !Array.isArray(snap.publicSettings)?snap.publicSettings:{},
+      catalog:Array.isArray(snap.catalog)?snap.catalog:[],
+      publicTools:Array.isArray(snap.publicTools)?snap.publicTools:[]
+    };
+  }catch(_){return null;}
+}
+function publicSnapWrite_(){
+  try{
+    if(typeof localStorage==='undefined'||!publicSnapHasHero_(state.siteContent))return false;
+    const raw=JSON.stringify({v:publicSnapVersion_,savedAt:Date.now(),
+      siteContent:state.siteContent,publicSettings:state.publicSettings,
+      catalog:state.catalog,publicTools:state.publicTools});
+    if(raw.length>publicSnapMaxBytes_)return false;
+    localStorage.setItem(publicSnapKey_(),raw);
+    return true;
+  }catch(_){return false;}
+}
+function publicSnapClear_(){
+  try{if(typeof localStorage!=='undefined')localStorage.removeItem(publicSnapKey_());}catch(_){}
+}
+// Paint the last valid public data at once; fresh data replaces it on arrival.
+function applyPublicSnap_(){
+  if(state.qa||!isConnected())return false;
+  const snap=publicSnapRead_();
+  if(!snap)return false;
+  state.siteContent=snap.siteContent;
+  state.publicSettings=snap.publicSettings;
+  state.catalog=snap.catalog;
+  state.publicTools=snap.publicTools;
   state.cmsLoaded=true;
-  state.cmsReadError=content.status!=='fulfilled'||!Array.isArray(content.value);
-  if(!state.cmsReadError)state.siteContent=content.value;
-   if(settings.status==='fulfilled'&&settings.value&&typeof settings.value==='object'&&
-      !Array.isArray(settings.value))state.publicSettings=settings.value;
-  if(publicTools.status==='fulfilled'&&Array.isArray(publicTools.value)){
-    state.publicTools=publicTools.value;state.publicToolsLoaded=true;
-  }else state.publicToolsLoaded=true;
+  state.catalogLoaded=snap.catalog.length>0;
+  state.publicToolsLoaded=snap.publicTools.length>0;
+  return true;
+}
+// ---- public snapshot end
+const publicRetryDelayMs_=1200;
+// GAS cold starts and brief network drops are common: retry network-level
+// failures once. Server answers (validation, forbidden, ...) are never retried.
+async function publicRead_(action){
+  try{return await api(action);}
+  catch(first){
+    if(first?.code!=='NETWORK_ERROR'||typeof setTimeout!=='function')throw first;
+    await new Promise(r=>setTimeout(r,publicRetryDelayMs_));
+    return await api(action);
+  }
+}
+function settlePublic_(promise){
+  return promise.then(value=>({status:'fulfilled',value}),reason=>({status:'rejected',reason}));
+}
+// Progressive load: each read applies as soon as it arrives, so the hero can
+// paint without waiting for catalogue, tools or member counters.
+async function loadPublic_(){
+  // Independent public reads must not discard valid data when one service is
+  // briefly unavailable (or vice versa).
+  const homeNow=()=>{if(state.route==='beranda')render();};
+  const content=settlePublic_(publicRead_('getPublicContent')).then(r=>{
+    state.cmsLoaded=true;
+    state.cmsReadError=r.status!=='fulfilled'||!Array.isArray(r.value);
+    if(!state.cmsReadError)state.siteContent=r.value;
+    homeNow();return r;
+  });
+  const settings=settlePublic_(publicRead_('getPublicSettings')).then(r=>{
+    if(r.status==='fulfilled'&&r.value&&typeof r.value==='object'&&
+      !Array.isArray(r.value)){state.publicSettings=r.value;homeNow();}
+    return r;
+  });
+  const info=settlePublic_(publicRead_('getPublicInfo')).then(r=>{
+    if(r.status==='fulfilled'&&r.value&&typeof r.value==='object')state.info=r.value;
+    return r;
+  });
+  const catalog=settlePublic_(publicRead_('getKatalog')).then(r=>{
+    if(r.status==='fulfilled'&&Array.isArray(r.value))state.catalog=r.value;
+    state.catalogLoaded=true;return r;
+  });
+  const tools=settlePublic_(publicRead_('getPublicTools')).then(r=>{
+    if(r.status==='fulfilled'&&Array.isArray(r.value))state.publicTools=r.value;
+    state.publicToolsLoaded=true;return r;
+  });
+  const [contentR,,infoR,catalogR]=await Promise.all([content,settings,info,catalog,tools]);
+  // Persist only after a fresh, valid CMS read; a failed read keeps the older snapshot.
+  // A fresh read without a hero means it was unpublished: drop the old snapshot.
+  if(!state.cmsReadError&&contentR.status==='fulfilled'&&!publicSnapWrite_())publicSnapClear_();
   render();
-  if(info.status==='rejected'&&catalog.status==='rejected')
+  if(infoR.status==='rejected'&&catalogR.status==='rejected')
     toast('Informasi terbaru belum dapat dimuat. Coba muat ulang halaman.',true);
 }
 // Near-real-time sync: two read-only GAS calls while the catalogue is visible.
@@ -2720,16 +2828,56 @@ async function refreshMarketplaceData_(){
     return okCatalog;
   }finally{marketplaceUpdating_=false;}
 }
+// Home revalidation reads only published CMS rows (one GAS call per tick) and
+// repaints only when the payload actually changed, so the hero is not reset.
+const homePollMs_=60000;
+let homeUpdating_=false,homeLastSyncAt_=0,pollMode_='';
+async function refreshHomeContent_(){
+  if(homeUpdating_||state.qa||!isConnected())return false;
+  homeUpdating_=true;
+  try{
+    const content=await api('getPublicContent');
+    if(!Array.isArray(content))return false;
+    homeLastSyncAt_=Date.now();
+    const changed=JSON.stringify(content)!==JSON.stringify(state.siteContent);
+    state.cmsReadError=false;
+    if(changed){
+      state.siteContent=content;
+      if(!publicSnapWrite_())publicSnapClear_();
+      if(state.route==='beranda')render();
+    }
+    return true;
+  }catch(_){return false;}
+  finally{homeUpdating_=false;}
+}
 function syncMarketplacePolling_(){
+  const mode=state.qa||!isConnected()||typeof setInterval!=='function'?'':
+    state.route==='katalog'?'katalog':state.route==='beranda'?'beranda':'';
+  // render() calls this on every paint; keep the running timer when unchanged.
+  if(mode===pollMode_&&(mode===''||marketplacePoll_!==null))return;
   if(marketplacePoll_!==null&&typeof clearInterval==='function'){
     clearInterval(marketplacePoll_);marketplacePoll_=null;
   }
-  if(state.route!=='katalog'||state.qa||!isConnected()||
-    typeof setInterval!=='function')return;
-  marketplacePoll_=setInterval(()=>{
-    if(document.hidden||marketplaceUpdating_)return;
-    void refreshMarketplaceData_().catch(()=>{});
-  },90000);
+  pollMode_=mode;
+  if(mode==='katalog'){
+    marketplacePoll_=setInterval(()=>{
+      if(document.hidden||marketplaceUpdating_)return;
+      void refreshMarketplaceData_().catch(()=>{});
+    },90000);
+  }else if(mode==='beranda'){
+    marketplacePoll_=setInterval(()=>{
+      if(document.hidden||homeUpdating_)return;
+      void refreshHomeContent_().catch(()=>{});
+    },homePollMs_);
+  }
+}
+// Returning to a stale tab revalidates the home at once instead of waiting a tick.
+if(typeof document!=='undefined'&&typeof document.addEventListener==='function'){
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden||state.route!=='beranda'||state.qa||!isConnected())return;
+    if(Date.now()-homeLastSyncAt_<30000)return;
+    void refreshHomeContent_().catch(()=>{});
+  });
 }
 async function restoreSession(){
   if(state.qa||!isConnected()||!state.token)return;
@@ -4323,6 +4471,9 @@ async function init(){
   if(!previewActive){
     state.catalog=[];
     state.info=null;
+    // Last valid public snapshot (same endpoint and environment only);
+    // loadPublic_ revalidates it right after this first paint.
+    applyPublicSnap_();
     render();
     // Public catalog/content and a private session are independent. Do not
     // hold back the member/admin route behind slower public asset requests.
