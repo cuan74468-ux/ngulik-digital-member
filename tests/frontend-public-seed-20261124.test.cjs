@@ -49,16 +49,47 @@ test('browser performance smoke runs in CI with intercepted external traffic', {
  const server=http.createServer((req,res)=>{const u=new URL(req.url,'http://localhost');let p=path.resolve(base,'.'+(u.pathname==='/'?'/index.html':u.pathname));if(!p.startsWith(base+path.sep)){res.writeHead(403).end();return;}fs.readFile(p,(err,b)=>{if(err){res.writeHead(404).end();return;}res.writeHead(200,{'Content-Type':mime[path.extname(p)]||'application/octet-stream'}).end(b);});});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;
  const mockImage='<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="1200" height="800" fill="#aabbaa"/></svg>';
+ // Retry browser startup only, never a page assertion or the hero timing.
+ const stopChrome=async(child,profile)=>{
+  if(child.exitCode===null&&child.signalCode===null)child.kill();
+  for(let i=0;i<40&&child.exitCode===null&&child.signalCode===null;i++)await pause(50);
+  if(child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await pause(200);}
+  try{fs.rmSync(profile,{recursive:true,force:true,maxRetries:3,retryDelay:100});}catch(_){}
+ };
+ const launchChrome=async()=>{
+  let failure='';
+  for(let attempt=1;attempt<=2;attempt++){
+   const profile=fs.mkdtempSync(path.join(os.tmpdir(),'ngd-seed-'));
+   const child=spawn(chrome,['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check','--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:['ignore','ignore','pipe']});
+   let stderr='',spawnError=null;
+   child.stderr.on('data',b=>{stderr=(stderr+String(b)).slice(-3000);});
+   child.on('error',e=>{spawnError=e;});
+   const portFile=path.join(profile,'DevToolsActivePort'),deadline=Date.now()+20000;
+   while(Date.now()<deadline&&!spawnError&&child.exitCode===null&&child.signalCode===null){
+    if(fs.existsSync(portFile)){
+     try{
+      const port=Number(fs.readFileSync(portFile,'utf8').split('\n')[0]);
+      if(port>0){
+       const targets=await (await fetch('http://127.0.0.1:'+port+'/json',{signal:AbortSignal.timeout(1500)})).json();
+       const target=targets.find(x=>x.type==='page'&&x.webSocketDebuggerUrl);
+       if(target)return {child,profile,target};
+      }
+     }catch(_){}
+    }
+    await pause(100);
+   }
+   failure='Chrome startup attempt '+attempt+': '+(spawnError?.message||'DevTools endpoint unavailable')+'; exit='+child.exitCode+'; '+stderr;
+   await stopChrome(child,profile);
+  }
+  throw Error(failure);
+ };
  const run=async(entry,mode)=>{
-  const profile=fs.mkdtempSync(path.join(os.tmpdir(),'ngd-seed-'));
-  const child=spawn(chrome,['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--no-first-run','--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+  const {child,profile,target}=await launchChrome();
   let ws,seq=0,closed=false;const pending=new Map(),timers=new Set();
   const request=(method,params={})=>new Promise((resolve,reject)=>{const id=++seq;const timer=setTimeout(()=>{pending.delete(id);reject(Error(method+' timeout'));},12000);pending.set(id,{resolve:v=>{clearTimeout(timer);resolve(v);},reject:e=>{clearTimeout(timer);reject(e);}});ws.send(JSON.stringify({id,method,params}));});
   const env=entry.includes('staging')?'stg':'prd',d=seed.envs[env],hero=d.siteContent.find(r=>r.content_id==='CNT-HERO-MAIN');
   try{
-   const portFile=path.join(profile,'DevToolsActivePort');for(let i=0;i<150&&!fs.existsSync(portFile);i++)await pause(50);
-   const port=Number(fs.readFileSync(portFile,'utf8').split('\n')[0]);const targets=await (await fetch('http://127.0.0.1:'+port+'/json')).json();
-   ws=new WebSocket(targets.find(x=>x.type==='page').webSocketDebuggerUrl);
+   ws=new WebSocket(target.webSocketDebuggerUrl);
    await new Promise((resolve,reject)=>{ws.addEventListener('open',resolve,{once:true});ws.addEventListener('error',reject,{once:true});});
    ws.addEventListener('message',evt=>{
     const m=JSON.parse(String(evt.data));
@@ -96,7 +127,7 @@ test('browser performance smoke runs in CI with intercepted external traffic', {
    console.log('NGD_SEED_SIMULATION '+JSON.stringify({entry,mode,...v}));
    assert.ok(await evaluate("!!document.querySelector('[data-route=katalog]')"),'catalog navigation missing');
    assert.ok(await evaluate("!!document.querySelector('[data-route=dukungan]')"),'support navigation missing');
-  }finally{closed=true;for(const t of timers)clearTimeout(t);ws?.close();child.kill();await pause(150);try{fs.rmSync(profile,{recursive:true,force:true});}catch(_){}}
+  }finally{closed=true;for(const t of timers)clearTimeout(t);ws?.close();await stopChrome(child,profile);}
  };
  try{for(const entry of ['/','/staging/member.html'])for(const mode of ['normal','delay','abort','update'])await run(entry,mode);}finally{await new Promise(resolve=>server.close(resolve));}
 });
