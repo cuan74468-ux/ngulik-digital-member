@@ -12,14 +12,24 @@
     const id=String(row?.cta_route||'').replace(/^#/,'').trim().toLowerCase();
     return allowed.has(id)?id==='masuk'?'login':id:'';
   }
+  // The published STAGING rows predate this renderer. Recognize their declared
+  // editorial kind aliases without mutating Sheet IDs or content.
+  const kindAliases=Object.freeze({
+    CTA_BUTTON:['HERO_ACTION'],SECTION_HEADING:['SECTION_HEADER'],
+    FEATURE_BULLET:['FEATURE_ITEM']
+  });
+  const idAliases=Object.freeze({
+    'CNT-SECTION-USECASES':'CNT-USECASE-HEADER',
+    'CNT-SECTION-SERVICES':'CNT-NEXT-HEADER'
+  });
   function list(items,kind,placement){
     return (Array.isArray(items)?items:[])
-      .filter(x=>x&&x.kind===kind&&x.placement===placement&&
+      .filter(x=>x&&(x.kind===kind||(kindAliases[kind]||[]).includes(x.kind))&&x.placement===placement&&
         (x.status===undefined||x.status==='PUBLISHED'))
       .sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0));
   }
   function entry(items,id,kind,place){
-    return list(items,kind,place).find(x=>x.content_id===id);
+    return list(items,kind,place).find(x=>x.content_id===id||x.content_id===idAliases[id]);
   }
   function button(row,css){
     const to=route(row),label=String(row?.cta_label||'').trim();
@@ -49,6 +59,15 @@
     const services=list(items,'SERVICE_CARD','home');
     const benefit=entry(items,'CNT-MEMBER-BENEFIT','BENEFIT_LIST','home');
     const benefits=list(items,'BENEFIT_BULLET','home');
+    // Doc06 STAGING also permits four items packed into the section's
+    // description separated by " | ". Derive each item from stored text only.
+    const benefitItems=benefits.length?benefits:
+      String(benefit?.description||'').split(/\s*\|\s*/).map(segment=>{
+        const clean=segment.replace(/^\d+\.\s*/,'').trim();
+        const cut=clean.indexOf(' — ');
+        return cut<0?{title:clean,description:''}:
+          {title:clean.slice(0,cut),description:clean.slice(cut+3)};
+      }).filter(x=>x.title);
     const second=entry(items,'CNT-HERO-SECONDARY','CTA_BUTTON','home');
     const useHeading=entry(items,'CNT-SECTION-USECASES','SECTION_HEADING','home');
     const svcHeading=entry(items,'CNT-SECTION-SERVICES','SECTION_HEADING','home');
@@ -88,7 +107,7 @@
         '<div class="ngdl-grid">'+services.map(x=>card(x,'ngdl-offer')).join('')+'</div>'+
       '</section>':'')+
       (benefit?'<section class="ngdl-benefits">'+title(benefit)+
-        '<ul>'+benefits.map(x=>'<li><strong>'+escape(x.title||'')+
+        '<ul>'+benefitItems.map(x=>'<li><strong>'+escape(x.title||'')+
         '</strong> — '+escape(x.description||'')+'</li>').join('')+'</ul></section>':'')+
       ((footerA||footerB)?'<footer class="ngdl-end">'+
         (footerA?'<strong>'+escape(footerA)+'</strong>':'')+
