@@ -2395,7 +2395,7 @@ async function submitContentForm_(form){
     payload.content_id=id;payload.revision=old.revision;
   }
   if(!ngdTextContentKinds_.has(payload.kind)&&
-      !['PROMO','ANNOUNCEMENT'].includes(payload.kind)||payload.image_path){
+      !['HERO','PROMO','ANNOUNCEMENT'].includes(payload.kind)||payload.image_path){
     if(!window.NGD_CONTENT_UI?.mediaPath(payload.image_path))
       return toast('Gunakan URL HTTPS gambar atau path assets/ (PNG, JPG, WebP, AVIF).',true);
   }
@@ -2426,9 +2426,9 @@ async function changeContentStatus_(id,nextStatus){
       'PROMO','ANNOUNCEMENT'].includes(old.kind)&&!ngdTextContentKinds_.has(old.kind))
       return toast('Format konten lama tidak dapat diterbitkan. Buat konten baru dengan jenis yang didukung.',true);
     const src=window.NGD_CONTENT_UI?.mediaPath(old.image_path);
-    if(!src&&(['PROMO','ANNOUNCEMENT'].includes(old.kind)||ngdTextContentKinds_.has(old.kind))){
+    if(!src&&(['HERO','PROMO','ANNOUNCEMENT'].includes(old.kind)||ngdTextContentKinds_.has(old.kind))){
       if(!ngdTextContentKinds_.has(old.kind)&&
-         !confirm('Terbitkan '+(old.kind==='PROMO'?'promosi':'pengumuman')+' tanpa gambar?'))return;
+         !confirm('Terbitkan '+(old.kind==='HERO'?'banner teks':old.kind==='PROMO'?'promosi':'pengumuman')+' tanpa gambar?'))return;
     }else if(!src)return toast('Alamat gambar tidak valid.',true);
     // A valid path is not evidence that a file exists: verify the image loads
     // before a published CMS row can replace the homepage or product image.
