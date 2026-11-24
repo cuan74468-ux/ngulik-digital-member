@@ -270,13 +270,13 @@ async function visit(url,label){
     writeFileSync('mobile-qa-artifacts/member-studio-360x800.png',Buffer.from(shot.data,'base64'));
   }
   if(label==='member-home'){
-    const welcome=await request('Runtime.evaluate',{expression:"(()=>{const quick=document.querySelector('#screen .ngdm-quick');const wallet=document.querySelector('#screen .ngdm-wallet');const choices=[...quick?.querySelectorAll('.ngdm-shortcut')||[]].map(x=>({label:x.querySelector('strong')?.textContent||'',route:x.dataset.route}));return {quickBeforeWallet:!!quick&&!!wallet&&quick.compareDocumentPosition(wallet)&Node.DOCUMENT_POSITION_FOLLOWING,choices,summary:document.querySelector('.ngdm-greeting p:last-child')?.textContent||'',width:document.documentElement.scrollWidth};})()",returnByValue:true});
+    const welcome=await request('Runtime.evaluate',{expression:"(()=>{const quick=document.querySelector('#screen .ngdm-quick');const wallet=document.querySelector('#screen .ngdm-wallet');const choices=[...quick?.querySelectorAll('.ngdm-shortcut')||[]].map(x=>({label:x.querySelector('strong')?.textContent||'',route:x.dataset.route,tool:x.dataset.aiOpen||''}));return {quickBeforeWallet:!!quick&&!!wallet&&quick.compareDocumentPosition(wallet)&Node.DOCUMENT_POSITION_FOLLOWING,choices,summary:document.querySelector('.ngdm-greeting p:last-child')?.textContent||'',width:document.documentElement.scrollWidth};})()",returnByValue:true});
     assert.ok(!welcome.exceptionDetails,'First-run member welcome browser exception');
     const novice=welcome.result.value;
     console.log('MOBILE_360_MEMBER_FIRST_STEP '+JSON.stringify(novice));
     assert.ok(novice.quickBeforeWallet,'Beginner actions must appear before token metrics');
     assert.equal(novice.choices.length,4);
-    assert.ok(novice.choices.some(x=>x.label==='Buat Foto Jualan'&&x.route==='ai'));
+    assert.ok(novice.choices.some(x=>x.label==='Buat Foto Jualan'&&x.tool==='ngulik-visual'));
     assert.match(novice.summary,/Buat materi jualan/);
     assert.ok(novice.width<=360,'Beginner member home overflows 360px');
     const click=await request('Runtime.evaluate',{expression:`(()=>{
