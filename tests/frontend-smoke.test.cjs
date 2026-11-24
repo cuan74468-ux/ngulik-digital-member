@@ -52,7 +52,9 @@ test('public config exposes owner-enabled features while secrets stay server-sid
 test('guest homepage renders the guest-only visual landing',()=>{
   const {nodes,document}=renderPreview();
   assert.match(nodes.screen.innerHTML,/ngd-landing-v1/);
-  assert.match(nodes.screen.innerHTML,/Sedang memuat informasi/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/Sedang memuat informasi/);
+  assert.match(nodes.screen.innerHTML,/data-route="katalog"/);
+  assert.match(nodes.screen.innerHTML,/data-route="dukungan"/);
   assert.doesNotMatch(nodes.screen.innerHTML,/Punya usaha\?/);
   assert.doesNotMatch(nodes.screen.innerHTML,/ngdl-hero-art|ngdl-art-main|ngdl-art-caption/);
   assert.equal((nodes.screen.innerHTML.match(/class="ngdl-offer"/g)||[]).length,0);
@@ -88,7 +90,9 @@ test('mobile hero reveals background art and closing CTA is compact',()=>{
   const markup=renderPreview().nodes.screen.innerHTML;
   assert.match(source,/@media\(max-width:760px\)/);
   assert.match(source,/grid-template-columns:minmax\(0,1fr\)/);
-  assert.match(markup,/Sedang memuat informasi/);
+  assert.doesNotMatch(markup,/Sedang memuat informasi/);
+  assert.match(markup,/data-route="katalog"/);
+  assert.match(markup,/data-route="dukungan"/);
   assert.doesNotMatch(markup,/Urusan digital|Mau mulai ngulik/);
 });
 test('guest drawer exposes four public routes and a single member entrance',()=>{

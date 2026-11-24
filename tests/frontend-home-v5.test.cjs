@@ -52,7 +52,9 @@ test('homepage-only CSS preserves payment and account logic',()=>{
 });
 
 test('both entrypoints load current homepage copy rather than cached 16 November module',()=>{
-  assert.match(cms,/Sedang memuat informasi/);
+  assert.doesNotMatch(cms,/Sedang memuat informasi/);
+  assert.match(cms,/data-route="katalog"/);
+  assert.match(cms,/data-route="dukungan"/);
   assert.doesNotMatch(app,/Bikin konten jualan, coba AI, atau rapikan usaha/);
   assert.match(publicHtml,/js\/app\.js\?v=20261122-private-gates-v5/);
   assert.match(stagingHtml,/js\/app\.js\?v=20261122-private-gates-v5/);

@@ -37,7 +37,9 @@ function preview(query=''){
 test('public hub is a calm mobile-first entry with accessible product navigation',()=>{
   const h=preview(),html=h.nodes.screen.innerHTML;
   assert.match(html,/ngd-landing-v1/);
-  assert.match(html,/Sedang memuat informasi/);
+  assert.doesNotMatch(html,/Sedang memuat informasi/);
+  assert.match(html,/data-route="katalog"/);
+  assert.match(html,/data-route="dukungan"/);
   assert.doesNotMatch(html,/Bikin konten jualan, coba AI, atau rapikan usaha/);
   assert.doesNotMatch(html,/eBook Gratis|Kelas Gratis/);
   assert.doesNotMatch(html,/market-product-card|ngd-shop-featured|ngd-shop-signup/);
@@ -176,7 +178,9 @@ test('guest Beranda keeps a lean route-first layout without products or banner a
   const h=preview();
   const page=h.nodes.screen.innerHTML;
   assert.match(page,/ngd-landing-v1/);
-  assert.match(page,/Sedang memuat informasi/);
+  assert.doesNotMatch(page,/Sedang memuat informasi/);
+  assert.match(page,/data-route="katalog"/);
+  assert.match(page,/data-route="dukungan"/);
   assert.doesNotMatch(page,/data-route="jasa"|data-route="ai"/);
   assert.doesNotMatch(page,/eBook Gratis|Kelas Gratis/);
   assert.doesNotMatch(page,/market-product-card|ngd-shop-featured|ngd-shop-signup|ngd-home-artwork/);

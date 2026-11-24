@@ -49,8 +49,9 @@ test('real getPublicContent projection has no status; guest page still shows pub
 test('no published hero after completed fetch still shows meaningful service state',()=>{
  const {ctx,nodes}=preview();
  vm.runInContext('state.siteContent=[];state.cmsLoaded=true;render()',ctx);
- assert.match(nodes.screen.innerHTML,/Beranda publik sedang disiapkan/);
- assert.match(nodes.screen.innerHTML,/Coba muat ulang konten/);
+ assert.match(nodes.screen.innerHTML,/Konten belum tersedia/);
+ assert.match(nodes.screen.innerHTML,/data-route="katalog"/);
+ assert.match(nodes.screen.innerHTML,/data-route="dukungan"/);
 });
 test('backend public CMS projection intentionally excludes status while filtering published rows',()=>{
  const backend=read('apps-script/Content.gs'),app=read('js/app.js');
