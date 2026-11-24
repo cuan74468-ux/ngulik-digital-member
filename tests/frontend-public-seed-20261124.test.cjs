@@ -17,11 +17,13 @@ test('public seed exact field allowlists, valid dated hero, separate environment
   assert.ok(data.siteContent.some(r=>r.content_id==='CNT-HERO-MAIN'&&r.kind==='HERO'&&r.placement==='home'&&r.image_path));
   assert.ok(data.siteContent.every(r=>(!r.start_date||r.start_date<='2026-11-24')&&(!r.end_date||r.end_date>='2026-11-24')));
   assert.ok(data.catalog.every(r=>r.product_id!=='P-B36AA0054926'&&!/^P-QA-/.test(r.product_id)));
+  assert.ok(!data.siteContent.some(r=>r.content_id==='CNT-HONESTY-BOX'));
+  assert.ok(!data.catalog.some(r=>['P-INTEGRASI-GAS','P-INTEGRASI-SUPA'].includes(r.product_id)));
  }
 });
 test('seed installed before app at both real entry points with high priority hero',()=>{
  for(const file of ['index.html','staging/member.html']){
-  const h=read(file);assert.ok(h.indexOf('js/public-seed.js?v=20261124-seed1')<h.indexOf('js/app.js?v='));
+  const h=read(file);assert.ok(h.indexOf('js/public-seed.js?v=20261124-seed2')<h.indexOf('js/app.js?v='));
   assert.match(h,/rel="preload" as="image"[^>]+fetchpriority="high"/);
  }
  assert.match(home,/loading="eager" fetchpriority="high" width="1200" height="800"/);

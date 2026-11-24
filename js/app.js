@@ -2721,6 +2721,8 @@ function publicSnapRead_(){
     if(!raw||raw.length>publicSnapMaxBytes_)return null;
     const snap=JSON.parse(raw);
     if(!snap||snap.v!==publicSnapVersion_||typeof snap.savedAt!=='number')return null;
+    const publishedAt=Date.parse(window.NGD_PUBLIC_SEED?.generatedAt||'');
+    if(Number.isFinite(publishedAt)&&snap.savedAt<publishedAt)return null;
     const age=Date.now()-snap.savedAt;
     if(age<0||age>publicSnapMaxAgeMs_)return null;
     if(!Array.isArray(snap.siteContent)||snap.siteContent.length>300)return null;
