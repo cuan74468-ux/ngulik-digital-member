@@ -14,3 +14,9 @@ mobile-qa-artifacts/
 .DS_Store
 Thumbs.db
 *.zip
+
+# Local clasp auth and GAS comparison snapshots
+.clasprc.json
+.clasp.json
+_gas_remote/
+_gas_snapshot/
