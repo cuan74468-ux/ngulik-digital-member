@@ -1,3 +1,5 @@
+> **Cara yang lebih ringkas (opsional):** gunakan panduan `docs/VISUAL_GAS_BROWSER_SYNC_QUICKSTART.md` untuk audit otomatis GitHub Actions sebelum sinkronisasi. Jangan gunakan metode Push/Pull apa pun sampai perbandingan `Code.gs` GAS STAGING v28 lulus; `clasp push` mengirim seluruh source. Setelah source aman, `ngdQuickBootstrapVisualStaging` mengisi default Visual dengan hanya dua Script Properties privat, tanpa mengaktifkan AI LIVE atau P0.
+
 # Ngulik Visual Studio — GAS STAGING manual activation (operator checkpoint)
 
 **Status:** GitHub source and unit/Chrome checks are not a verified GAS deployment. Never overwrite GAS STAGING v28 or any production source blindly. **Starter Pack transactions stay NO-GO:** `NGD_MUTATIONS_ENABLED=false`, `NGD_FINANCE_ENABLED=false`. No source change to P0 financial logic, `Diagnostics.gs`, any database table, or historical STAGING rows.
