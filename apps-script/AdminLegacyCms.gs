@@ -27,6 +27,11 @@ var NGD_EDITOR_LEGACY_SCHEMAS_={
   }
 };
 function ngdLegacyCmsGuard_(){
+  // Verify the bound STAGING database and isolated administrator, not flags alone.
+  var identity=ngdStagingWorkspaceInfo_();
+  require_(identity&&identity.environment==='STAGING'&&
+    identity.workspace==='NGD_STAGING'&&identity.admin_login_enabled===true,
+    'FORBIDDEN','Identitas database STAGING belum terverifikasi.');
   var p=PropertiesService.getScriptProperties();
   require_(p.getProperty('NGD_ENVIRONMENT')==='STAGING'&&
     p.getProperty('NGD_ADMIN_LOGIN_DB_ID')===p.getProperty('NGD_DB_ID')&&
@@ -34,7 +39,9 @@ function ngdLegacyCmsGuard_(){
     'FORBIDDEN','Editor ini hanya tersedia pada STAGING terverifikasi.');
 }
 function ngdLegacyCmsSpec_(table){
-  var spec=NGD_EDITOR_LEGACY_SCHEMAS_[String(table||'')];
+  var name=String(table||'');
+  var spec=Object.prototype.hasOwnProperty.call(NGD_EDITOR_LEGACY_SCHEMAS_,name)?
+    NGD_EDITOR_LEGACY_SCHEMAS_[name]:null;
   require_(!!spec,'VALIDATION','Tabel CMS tidak diizinkan.');
   return spec;
 }
