@@ -498,7 +498,7 @@ html body.ngd-public-app:not(#ngd) #screen :is(.ai-catalog-intro,.ai-tool-detail
  box-shadow:4px 4px 0 var(--ngds-ink)!important;
  padding:var(--ngds-pad)!important;
 }
-html body.ngd-public-app:not(#ngd) #screen :is(.ai-catalog-intro,.ai-tool-detail-hero,.ngd-public-services-hero) :is(h1,h2,h3){
+html body.ngd-public-app:not(#ngd) #screen :is(.ai-catalog-intro,.ai-tool-detail-hero,.ngd-public-services-hero,.ngd-member-page-intro) :is(h1,h2,h3,p){
  color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;
 }
 html body.ngd-public-app:not(#ngd) #screen .ai-catalog-intro .eyebrow{

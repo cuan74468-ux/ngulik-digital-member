@@ -286,6 +286,8 @@ async function visit(url,label){
     writeFileSync('mobile-qa-artifacts/member-studio-360x800.png',Buffer.from(shot.data,'base64'));
   }
   if(label==='member-home'){
+    const walletStyle=await request('Runtime.evaluate',{expression:`(()=>{const labels=[...document.querySelectorAll('.ngdm-wallet-numbers>p:first-child,.ngdm-wallet-hint,.ngdm-wallet-number>span')];const grid=document.querySelector('.ngdm-shortcuts');return {colors:labels.map(e=>getComputedStyle(e).webkitTextFillColor),columns:grid?getComputedStyle(grid).gridTemplateColumns.split(' ').length:0};})()`,returnByValue:true});
+    const wallet=walletStyle.result.value;console.log('NGD_WALLET_TEXT '+JSON.stringify(wallet));assert.ok(wallet.colors.length>=2&&wallet.colors.every(c=>c==='rgb(255, 255, 255)'),'wallet secondary text must be white on indigo');assert.equal(wallet.columns,2,'mobile shortcut grid should be two columns');
     const welcome=await request('Runtime.evaluate',{expression:"(()=>{const quick=document.querySelector('#screen .ngdm-quick');const wallet=document.querySelector('#screen .ngdm-wallet');const choices=[...quick?.querySelectorAll('.ngdm-shortcut')||[]].map(x=>({label:x.querySelector('strong')?.textContent||'',route:x.dataset.route,tool:x.dataset.aiOpen||''}));return {quickBeforeWallet:!!quick&&!!wallet&&quick.compareDocumentPosition(wallet)&Node.DOCUMENT_POSITION_FOLLOWING,choices,summary:document.querySelector('.ngdm-greeting p:last-child')?.textContent||'',width:document.documentElement.scrollWidth};})()",returnByValue:true});
     assert.ok(!welcome.exceptionDetails,'First-run member welcome browser exception');
     const novice=welcome.result.value;
