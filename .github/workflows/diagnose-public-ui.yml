@@ -4,10 +4,14 @@ on:
     branches: [main]
     paths:
       - 'tests/live-public-guest-diagnostics.cjs'
+      - 'tests/live-cms-api-diagnostics.cjs'
       - '.github/workflows/diagnose-public-ui.yml'
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ngd-diagnose-public-ui-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   live-public:
     runs-on: ubuntu-latest
@@ -22,5 +26,7 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
+      - name: Inspect public CMS response per configured GAS backend (read-only)
+        run: node tests/live-cms-api-diagnostics.cjs
       - name: Diagnose public and STAGING guest pages in real Chrome
         run: CHROME="$(command -v google-chrome || command -v chromium)" node tests/live-public-guest-diagnostics.cjs
