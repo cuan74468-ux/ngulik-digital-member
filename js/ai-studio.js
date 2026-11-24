@@ -419,13 +419,15 @@ function localSavePreset(){
  selectedSavedId=id;return saved;
 }
 async function saveCurrentPreset(){
- if(!foodMode)return;
+ if(!foodMode||!memberScope)return;
+ const ownerAtStart=memberScope;
  const local=localSavePreset();
  if(!local){announce('Tidak dapat menyimpan preset. Maksimal 20 preset atau penyimpanan browser tidak tersedia.');return;}
  templateNotice='Disimpan di perangkat ini';
  if(templateStorage&&typeof templateStorage.save==='function'){
   try{
    const remote=await templateStorage.save({...local,id:local.id.startsWith('vt_local_')?undefined:local.id});
+   if(ownerAtStart!==memberScope)return;
    if(remote?.id){
     selectedSavedId=remote.id;
     const cleaned=scrubPreset(remote);
@@ -440,10 +442,12 @@ async function saveCurrentPreset(){
  announce(templateNotice);if(active())content();
 }
 async function removeSavedPreset(id){
+ const ownerAtStart=memberScope;
  if(!/^vt_[A-Za-z0-9_-]{12,50}$/.test(id))return;
  const found=customTemplates.find(x=>x.id===id);if(!found)return;
  if(templateStorage&&typeof templateStorage.remove==='function'&&!id.startsWith('vt_local_')){
-  try{await templateStorage.remove(id)}catch(_){announce('Penghapusan akun gagal. Coba lagi.');return;}
+  try{await templateStorage.remove(id);if(ownerAtStart!==memberScope)return;}
+  catch(_){announce('Penghapusan akun gagal. Coba lagi.');return;}
  }
  customTemplates=customTemplates.filter(x=>x.id!==id);
  safeStorageSet(LOCAL_TEMPLATE_KEY,JSON.stringify(customTemplates));
@@ -454,10 +458,12 @@ async function configureTemplateStorage(adapter){
  if(adapter!==null&&(!adapter||['list','save','remove'].some(k=>typeof adapter[k]!=='function')))
   throw Error('VISUAL_TEMPLATE_STORAGE_INVALID');
  templateStorage=adapter;
- if(!adapter)return;
+ const ownerAtStart=memberScope;
+ if(!adapter||!ownerAtStart)return;
  try{
   const remote=await adapter.list();
   if(!Array.isArray(remote))return;
+  if(ownerAtStart!==memberScope||templateStorage!==adapter)return;
   const cleaned=remote.slice(0,20).map(scrubPreset).filter(Boolean);
   const local=readSavedTemplates().filter(p=>p.id.startsWith('vt_local_'));
   customTemplates=[...cleaned,...local].slice(0,20);
