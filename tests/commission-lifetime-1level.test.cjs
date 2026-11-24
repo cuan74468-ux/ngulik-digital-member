@@ -29,7 +29,9 @@ test('30-day first click retained across reload and second inviter cannot overwr
   url='?ref=<script>';assert.equal(vm.runInContext('captureFirstInviter_()',ctx),'OTHER9');
 });
 test('first inviter captured in registration payload, never URL-only at submit',()=>{
-  assert.match(app,/const r=captureFirstInviter_\(\);\s*if\(r\)payload.ref=r;/);
+  assert.match(app,/const existingInviter=captureFirstInviter_\(\);/);
+  assert.match(app,/const r=existingInviter\|\|entered;/);
+  assert.match(app,/if\(\/\^\[A-Z0-9_-\]\{3,80\}\$\/.test\(r\)\)payload.ref=r;/);
   assert.match(app,/async function init\(\)\{\s*captureFirstInviter_\(\);/);
 });
 test('member first-inviter field is immutable after first assignment',()=>{
