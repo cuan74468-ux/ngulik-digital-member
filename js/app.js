@@ -257,7 +257,7 @@ function activatePreview(){
 
 const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,qa:false,
-  info:null,catalog:[],catalogLoaded:false,productDetailId:'',productDetailReturnRoute:'katalog',siteContent:[],adminContent:[],contentEditId:'',contentPresetProductId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
+  info:null,catalog:[],catalogLoaded:false,productDetailId:'',productDetailReturnRoute:'katalog',siteContent:[],publicSettings:{},adminContent:[],contentEditId:'',contentPresetProductId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
   affiliates:null,partnerShelf:[],partnerShelfLoaded:false,waitlist:[],members:[],adminOrders:[],adminSummary:null,
   reconciliation:null,selectedProduct:null,lastOrder:null,checkoutProductId:'',checkoutRequestId:null,orderDetailLoading:false,checkoutReturnRoute:'katalog',loading:false,
   memberProducts:[],creditHistory:[],memberDashboardReads:null,supportTickets:[],supportReleases:[],supportOverview:null,
@@ -640,51 +640,10 @@ function viewHome(){
   // Public front door: concise value proposition, without a duplicate product grid.
   // The full catalog owns product cards, prices, filtering and checkout.
   // Guest-only landing; member and admin rendering above remains untouched.
-  const landingCards=[
-    {route:'ai',tag:'STUDIO AI',name:'Coba Tools AI Seperlunya',desc:'Lagi buntu cari ide konten? Coba buat caption, konsep promosi, atau naskah video. Kreditnya dipakai saat Anda menggunakan tools.',img:'ngd-v8-ai-large.webp',alt:'Visual paket alat bantu AI'},
-    {route:'katalog',tag:'PRODUK DIGITAL',name:'Produk Siap Dipakai',desc:'Ada template, paket awal, katalog online, sampai kasir sederhana. Tinggal pilih yang cocok dengan cara kerja usaha Anda.',img:'ngd-v6-pos.webp',alt:'Visual produk sistem kasir digital'},
-    {route:'jasa',tag:'BENGKEL KREATIF',name:'Butuh Dibantu? Bisa.',desc:'Nggak sempat bikin sendiri? Kami bisa bantu urus video promosi, website katalog, atau pekerjaan berulang di Google Sheets.',img:'ngd-v6-video.webp',alt:'Visual jasa pembuatan video promosi'},
-    {route:'affiliate',tag:'AJAK TEMAN',name:'Ajak Teman, Dapat Komisi',desc:'Kalau ada teman yang cocok dengan layanan di sini, bagikan link Anda. Komisi dihitung dari pembelian yang sah, sesuai aturan program.',img:'ngd-v6-bundle.webp',alt:'Visual koleksi produk digital'}
-  ];
-  return `<div class="ngd-landing-v1">
-    <section class="ngdl-hero" aria-labelledby="ngdl-title">
-      <div class="ngdl-hero-copy">
-        <p class="ngdl-eyebrow"><span class="ngdl-spark" aria-hidden="true">✦</span> WARUNG TOOLS AI & BENGKEL KREATIF</p>
-        <h1 id="ngdl-title">Punya usaha? <span>Ngulik digitalnya</span> di sini aja.</h1>
-        <p class="ngdl-hero-lead">Bikin konten jualan, coba AI, atau rapikan usaha? Di sini ada alat, produk, dan orang yang bisa bantu. Bisa dari HP juga.</p>
-        <div class="ngdl-actions">
-          <button type="button" class="ngdl-btn ngdl-btn-gold" data-route="katalog">Lihat Produk & Layanan <span aria-hidden="true">↗</span></button>
-          <button type="button" class="ngdl-btn ngdl-btn-ghost" data-route="daftar">Masuk atau Daftar</button>
-        </div>
-      </div>
-    </section>
-    <div class="ngdl-trust" aria-label="Cara pakai Ngulik Digital">
-      <span>✦ Tools AI pakai kredit</span><span>✦ Bayar dengan QRIS DANA Bisnis</span><span>✦ Bisa dibuka lewat HP</span><span>✦ Ada komisi untuk referal yang berhasil</span>
-    </div>
-    <section class="ngdl-story ngd-window-frame" aria-labelledby="ngdl-story-title">
-      <div class="ngd-window-titlebar" aria-hidden="true"><span class="ngd-window-dots"><i></i><i></i><i></i></span><span class="ngd-window-title">Tentang Ngulik</span></div>
-      <p class="ngdl-kicker">KENAPA NGULIK DIGITAL?</p>
-      <h2 id="ngdl-story-title">Urusan digital, nggak harus bikin repot.</h2>
-      <p>Mau bikin konten, katalog, atau coba AI tapi waktunya mepet? Di sini ada alat yang bisa dipakai seperlunya, produk yang sudah siap, dan bantuan kalau ingin terima beres.</p>
-    </section>
-    <section class="ngdl-offers" aria-labelledby="ngdl-offers-title">
-      <div class="ngdl-section-top"><div><p class="ngdl-kicker">ISI WARUNGNYA</p><h2 id="ngdl-offers-title">Cari yang pas buat Anda.</h2></div><p>Mulai dari satu hal yang sedang dibutuhkan.</p></div>
-      <div class="ngdl-grid">${landingCards.map(c=>`<article class="ngdl-offer">
-        <div class="ngdl-offer-image"><img src="${guestMediaBase_()}${c.img}" loading="lazy" decoding="async" alt="${c.alt}"></div>
-        <div class="ngdl-offer-body"><p class="ngdl-offer-tag">${c.tag}</p><h3>${c.name}</h3><p>${c.desc}</p>
-        <button type="button" data-route="${c.route}" class="ngdl-offer-link">Lihat selengkapnya <span aria-hidden="true">↗</span></button></div>
-      </article>`).join('')}</div>
-    </section>
-    <section class="ngdl-benefits" aria-labelledby="ngdl-benefits-title">
-      <div><p class="ngdl-kicker">KALAU JADI MEMBER</p><h2 id="ngdl-benefits-title">Lebih mudah cari yang Anda perlukan.</h2></div>
-      <ul><li><strong>Pesan tanpa pindah-pindah tempat.</strong> Pilih produk, cek rincian, lalu bayar lewat halaman checkout.</li><li><strong>Nggak harus buka laptop.</strong> Katalog dan ruang member bisa diakses dari browser HP.</li><li><strong>Pembelian tercatat.</strong> Akses produk diberikan setelah pembayaran terverifikasi, sesuai ketentuan masing-masing.</li><li><strong>Materi belajar untuk member.</strong> Buka panduan dan kelas melalui ruang belajar setelah login.</li></ul>
-    </section>
-    <section class="ngdl-end" aria-labelledby="ngdl-end-title">
-      <h2 id="ngdl-end-title">Mau mulai ngulik?</h2>
-      <p>Lihat katalognya dulu, atau masuk kalau sudah punya pilihan.</p>
-      <div class="ngdl-actions"><button type="button" data-route="daftar" class="ngdl-btn ngdl-btn-gold">Masuk / Daftar <span aria-hidden="true">↗</span></button><button type="button" data-route="katalog" class="ngdl-btn ngdl-btn-ghost">Lihat Katalog</button></div>
-    </section>
-  </div>`;
+  // Public front door: published CMS only, no copied marketing fallback.
+  // Nothing in this renderer creates orders, opens P0 finance or grants access.
+  return window.NGD_PUBLIC_CMS?.home(state.siteContent,state.publicSettings) ||
+    '<div class="ngd-landing-v1"><p role="status">Sedang memuat informasi...</p></div>';
 }
 const offerCategories=[
   ['semua','Semua Produk'],['belajar','eBook & Panduan'],
@@ -2666,12 +2625,15 @@ async function refreshPublic(){
   if(state.qa||!isConnected())return;
   // Independent public reads must not discard a valid catalogue when the
   // metadata service is briefly unavailable (or vice versa).
-  const [info,catalog,content,publicTools]=await Promise.allSettled([
-    api('getPublicInfo'),api('getKatalog'),api('getPublicContent'),api('getPublicTools')]);
+  const [info,catalog,content,publicTools,settings]=await Promise.allSettled([
+    api('getPublicInfo'),api('getKatalog'),api('getPublicContent'),api('getPublicTools'),
+    api('getPublicSettings')]);
   if(info.status==='fulfilled'&&info.value&&typeof info.value==='object')state.info=info.value;
   if(catalog.status==='fulfilled'&&Array.isArray(catalog.value))state.catalog=catalog.value;
   state.catalogLoaded=true;
   if(content.status==='fulfilled'&&Array.isArray(content.value))state.siteContent=content.value;
+   if(settings.status==='fulfilled'&&settings.value&&typeof settings.value==='object'&&
+      !Array.isArray(settings.value))state.publicSettings=settings.value;
   if(publicTools.status==='fulfilled'&&Array.isArray(publicTools.value)){
     state.publicTools=publicTools.value;state.publicToolsLoaded=true;
   }else state.publicToolsLoaded=true;
