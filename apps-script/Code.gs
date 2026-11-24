@@ -848,6 +848,16 @@ function validatedAdminSetting_(key,value) {
       'VALIDATION','Nilai pengaturan di luar batas.');
     return n;
   }
+  // Editorial settings only. P0 financial parameters stay separately guarded
+  // and are deliberately NOT added to this editable allowlist.
+  var editorial={nama_brand:100,tagline_brand:150,footer_identitas:250,
+    footer_aksesibilitas:500};
+  if(Object.prototype.hasOwnProperty.call(editorial,key)){
+    require_(typeof value==='string'&&value.trim().length>0&&
+      value.length<=editorial[key]&&!/[\u0000-\u001F\u007F]/.test(value),
+      'VALIDATION','Teks pengaturan tidak valid.');
+    return value.trim();
+  }
   if(key==='link_classroom'){
     require_(typeof value==='string'&&value.length<=500&&/^https:\/\/classroom\.google\.com\//i.test(value),
       'VALIDATION','Tautan Google Classroom harus HTTPS resmi.');
