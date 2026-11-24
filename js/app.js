@@ -1455,8 +1455,6 @@ function viewLogin(register=false,adminMode=false){
       (state.pendingPurchaseId?'<p>Produk yang dipilih belum dipesan atau ditagihkan.</p>':'')+
       '<div class="ngd-role-actions"><button type="button" class="btn btn-primary" data-route="katalog">Lihat Katalog '+icon('arrow')+'</button>'+
       '<button type="button" class="btn btn-secondary" data-route="dukungan">Cara Kerja &amp; Bantuan</button></div>'+
-      '<p class="ngd-staging-access-note">Untuk pengujian akun yang sudah terdaftar, gunakan layanan STAGING terpisah.</p>'+
-      '<a class="btn btn-ghost" href="./staging/member.html#login">Buka login STAGING (uji coba)</a>'+
     '</section>';
   }
   // A verified PIN is an existing server-side auth option for STAGING QA only.
