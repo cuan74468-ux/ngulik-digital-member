@@ -43,7 +43,8 @@ test('public navigation and partner shelf separate member facilities',()=>{
   assert.match(app,/const guestNav=\['beranda','katalog','jasa','dukungan'\]/);
   assert.match(app,/guestPrivateRoutes_=new Set\(\['ai'/);
   assert.match(app,/data-checkout-product="P-STARTER-15K"/);
-  assert.match(app,/WARUNG TOOLS AI & BENGKEL KREATIF/);
+  assert.doesNotMatch(app,/WARUNG TOOLS AI & BENGKEL KREATIF/);
+  assert.match(app,/NGD_PUBLIC_CMS/);
   assert.match(app,/partnerAffiliateUrl_\(x\)/);
   assert.match(app,/api\('trackOutbound'/);
   const begin=app.indexOf('const partnerAffiliateUrl_=');
