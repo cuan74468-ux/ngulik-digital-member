@@ -263,7 +263,10 @@ async function runVisualLive(){
   }
   announce('Job masih diproses. Cek status dari akun sebelum mengirim permintaan baru.');
  }catch(err){
-  announce('Belum bisa memproses AI: '+String(err.message||'layanan tidak tersedia').slice(0,90));
+  const reason=String(err?.code||'');
+  announce(['UPSTREAM_BUSY','UPSTREAM_RATE_LIMITED','UPSTREAM_UNAVAILABLE'].includes(reason)?
+   'Provider AI sedang sibuk. Permintaan belum dapat diselesaikan; cek status job sebelum mencoba ulang.':
+   'Layanan AI belum tersedia atau akses belum diaktifkan. Tidak ada pembayaran nyata yang diproses.');
  }finally{
   livePolling=false;
   const current=node('ns-food-live-generate');if(current)current.disabled=false;
