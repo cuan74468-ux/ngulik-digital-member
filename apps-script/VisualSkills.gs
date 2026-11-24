@@ -233,6 +233,14 @@ function ngdFoodMagazineInput_(payload){
   ids[k]=payload[k];
  });
  ngdVisualRequire_(ngdFoodMagazineCompatible_(ids),'FOOD_COMBINATION_CONFLICT');
+ var type=payload.product_category;
+ if(type!==undefined){
+  ngdVisualRequire_(type!=='hot_soupy_food'||ids.food_type==='soup','CONTEXT_FOOD_TYPE_MISMATCH');
+  ngdVisualRequire_(type!=='bottled_liquid'||ids.food_type==='drink','CONTEXT_FOOD_TYPE_MISMATCH');
+  ngdVisualRequire_(type!=='bakery_snack'||
+   ['bakery','snack','dessert'].indexOf(ids.food_type)>=0,
+   'CONTEXT_FOOD_TYPE_MISMATCH');
+ }
  var count=payload.count===undefined?1:payload.count;
  ngdVisualRequire_(count===1||count===2||count===4,'FOOD_COUNT_INVALID');
  ngdVisualRequire_(payload.overlay_enabled===undefined||
