@@ -86,8 +86,13 @@ async function ngdVisualWorkerTickStaging(){
 }
 function ngdVisualWorkerCleanupStaging(){
  ngdVisualStagingGuard_();
- ngdVjAssert_(ngdVisualPublicMode_(),'VISUAL_LIVE_DISABLED');
  var key=PropertiesService.getScriptProperties().getProperty('NGD_VISUAL_WORKER_SECRET');
- ngdVjAssert_(typeof key==='string'&&key.length>=32,'WORKER_KEY_MISSING');
- return ngdVisualWorker_(ngdVisualServerAuth_(),key).cleanup();
+ ngdVjAssert_(typeof key==='string'&&key.length>=32&&
+  ngdVisualServerAuth_().requireWorker(key)===true,'WORKER_KEY_MISSING');
+ // Cleanup remains available even when LIVE is switched OFF, to prevent
+ // private media/uploads from accumulating after an emergency stop.
+ var auth=ngdVisualServerAuth_();
+ var files=ngdVisualMediaDrive_({auth:auth}).purgeExpired(Date.now(),100);
+ var chunks=ngdVisualUploadPurgeExpired_();
+ return {media:files,uploads:chunks};
 }
