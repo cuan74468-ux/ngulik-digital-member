@@ -257,7 +257,7 @@ function activatePreview(){
 
 const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,qa:false,
-  info:null,catalog:[],catalogLoaded:false,productDetailId:'',productDetailReturnRoute:'katalog',siteContent:[],publicSettings:{},adminContent:[],contentEditId:'',contentPresetProductId:'',contentRequestId:null,heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
+  info:null,catalog:[],catalogLoaded:false,productDetailId:'',productDetailReturnRoute:'katalog',siteContent:[],publicSettings:{},adminContent:[],contentEditId:'',contentPresetProductId:'',contentRequestId:null,legacyCmsTab:'ai_tools',legacyCmsSelectedId:'',legacyCmsItems:{},legacyCmsLoading:false,legacyCmsError:'',heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
   affiliates:null,partnerShelf:[],partnerShelfLoaded:false,waitlist:[],members:[],adminOrders:[],adminSummary:null,
   reconciliation:null,selectedProduct:null,lastOrder:null,checkoutProductId:'',checkoutRequestId:null,orderDetailLoading:false,checkoutReturnRoute:'katalog',loading:false,
   memberProducts:[],creditHistory:[],memberDashboardReads:null,supportTickets:[],supportReleases:[],supportOverview:null,
@@ -1970,11 +1970,53 @@ const ngdTextContentKinds_=new Set(['HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CAR
   'SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD','CHECKOUT_GUIDE',
   'CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO']);
 function viewAdminContent(){
-  return window.NGD_CONTENT_UI?
+  const editorial=window.NGD_CONTENT_UI?
     window.NGD_CONTENT_UI.admin({authorized:isAdmin(),items:state.adminContent,
-      selectedId:state.contentEditId,defaultPlacement:state.contentPresetProductId,products:adminCatalogItems(),enabled:contentWriteEnabled()}):
+      selectedId:state.contentEditId,defaultPlacement:state.contentPresetProductId,
+      products:adminCatalogItems(),enabled:contentWriteEnabled()}):
     empty('Editor belum tersedia','Komponen pengelolaan konten belum termuat.');
+  const legacy=window.NGD_ADMIN_LEGACY_CMS?.render({
+    authorized:isAdmin(),table:state.legacyCmsTab,items:state.legacyCmsItems[state.legacyCmsTab]||[],
+    selectedId:state.legacyCmsSelectedId,loading:state.legacyCmsLoading,error:state.legacyCmsError,
+    enabled:contentWriteEnabled()&&state.workspaceInfo?.mutations_enabled===true
+  })||'';
+  return editorial+legacy;
 }
+async function loadLegacyCms_(){
+  if(!isAdmin()||!state.token)return;
+  const tab=state.legacyCmsTab;state.legacyCmsLoading=true;state.legacyCmsError='';render();
+  try{
+    const rows=await api('adminListLegacyCms',{table:tab},state.token);
+    if(!isAdmin()||state.legacyCmsTab!==tab)return;
+    if(!Array.isArray(rows))throw Error('Respons tabel CMS tidak sesuai.');
+    state.legacyCmsItems[tab]=rows;
+  }catch(error){state.legacyCmsError=error.message||'Editor belum tersedia pada GAS STAGING.';}
+  finally{state.legacyCmsLoading=false;render();}
+}
+async function saveLegacyCms_(form){
+  if(!isAdmin()||!contentWriteEnabled()||state.workspaceInfo?.mutations_enabled!==true)
+    return toast('Penyuntingan hanya tersedia saat STAGING mengizinkan perubahan.',true);
+  const table=form.dataset.cmsFormTable,spec=window.NGD_ADMIN_LEGACY_CMS?.specs?.[table];
+  if(!spec)return;
+  const id=String(form.elements.namedItem('id')?.value||'').trim();
+  const old=(state.legacyCmsItems[table]||[]).find(x=>String(x[spec.id])===id);
+  const values={};
+  for(const [name,,type] of spec.fields)
+    values[name]=type==='boolean'?!!form.elements.namedItem(name)?.checked:
+      String(form.elements.namedItem(name)?.value||'').trim();
+  if(table==='ai_tools'&&window.NGD_ADMIN_LEGACY_CMS.isVisual({...values,tool_id:id}))
+    values.aktif=false;
+  const button=form.querySelector('[type="submit"]');
+  if(button)button.disabled=true;
+  try{
+    await api('adminSaveLegacyCms',{table,id,is_new:!old,revision:old?.revision||'',values},
+      state.token,{write:true});
+    state.legacyCmsSelectedId=id;
+    await loadLegacyCms_();toast('Konten disimpan di STAGING.');
+  }catch(error){toast(error.message||'Gagal menyimpan konten.',true);
+    if(button)button.disabled=false;}
+}
+
 const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
 function viewServiceRequests(){
   if(!logged()&&!isAdmin()){
@@ -2829,6 +2871,8 @@ async function loadRoute(route){
     }
     if(route==='konten'&&isAdmin()){
       state.adminContent=await sessionApi('adminListContent',{},token);
+      try{state.workspaceInfo=await sessionApi('getStagingWorkspaceInfo',{},token);}catch{state.workspaceInfo=null;}
+      await loadLegacyCms_();
       if(state.contentPresetProductId){
         const photo=state.adminContent.find(x=>x.kind==='PRODUCT_IMAGE'&&
           x.placement===state.contentPresetProductId&&x.status!=='ARCHIVED');
@@ -3057,6 +3101,7 @@ function clearPrivateCommandCenter_(){
   state.services=[];state.waitlist=[];state.members=[];state.adminOrders=[];
   state.adminSummary=null;state.reconciliation=null;state.adminRuntime=null;
   state.adminSettings=null;state.adminContent=[];state.adminCatalog=[];
+  state.legacyCmsItems={};state.legacyCmsSelectedId='';state.legacyCmsError='';
   state.memberSearch=null;state.member360=null;state.selectedMemberId=null;
 }
 async function logout(){
@@ -3951,8 +3996,23 @@ document.addEventListener('click',async(e)=>{
     state.marketplaceSearch='';state.catalogFilter='semua';state.marketplaceSort='default';
     render();return;
   }
-  const target=e.target.closest('[data-product-detail],[data-market-product],[data-checkout-product],[data-checkout-create],[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-create],[data-content-asset],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-image],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-portal-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-payment-open],[data-order-detail]');
+  const target=e.target.closest('[data-cms-table],[data-cms-edit],[data-cms-new],[data-product-detail],[data-market-product],[data-checkout-product],[data-checkout-create],[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-create],[data-content-asset],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-image],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-portal-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-payment-open],[data-order-detail]');
   if(!target)return;
+  if(target.hasAttribute('data-cms-table')){
+    if(!isAdmin())return;
+    const tab=target.dataset.cmsTable;
+    if(!['ai_tools','modul_belajar','etalase_affiliate_luar'].includes(tab))return;
+    state.legacyCmsTab=tab;state.legacyCmsSelectedId='';
+    await loadLegacyCms_();return;
+  }
+  if(target.hasAttribute('data-cms-edit')){
+    if(!isAdmin())return;
+    state.legacyCmsSelectedId=target.dataset.cmsEdit;render();return;
+  }
+  if(target.hasAttribute('data-cms-new')){
+    if(!isAdmin())return;
+    state.legacyCmsSelectedId='';render();return;
+  }
   if(target.hasAttribute('data-checkout-product')){
     openProductCheckout_(target.dataset.checkoutProduct);return;
   }
@@ -4220,11 +4280,12 @@ document.addEventListener('submit',(e)=>{
   const id=e.target.id||(e.target.classList?.contains('ai-form')?'ai-run-form':'');
   if(!['admin-pin-form','content-editor-form','service-brief-form','service-quote-form','admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
     'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form',
-    'admin-public-settings-form',
+    'admin-public-settings-form','admin-legacy-cms-form',
     'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form','ai-run-form','admin-payment-form'].includes(id))return;
   e.preventDefault();
   if(id==='admin-pin-form')changeAdminPin_(e.target);
   if(id==='content-editor-form')submitContentForm_(e.target);
+  if(id==='admin-legacy-cms-form')saveLegacyCms_(e.target);
   if(id==='service-brief-form')submitServiceBrief(e.target);
   if(id==='service-quote-form')submitServiceQuote(e.target);
   if(id==='admin-catalog-form')submitCatalogForm(e.target);
