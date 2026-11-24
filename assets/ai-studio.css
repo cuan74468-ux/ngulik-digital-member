@@ -208,3 +208,17 @@
  .ngd-studio .ns-food-options .ns-v2-choice{padding:9px 7px;font-size:10px}
  .ngd-studio .ns-food-mode-switch button{font-size:11px}
 }
+
+/* P1 machine picker: semantic radio cards, no extra stylesheet/important. */
+.ngd-studio .ns-food-engines{display:grid;gap:8px;min-width:0}
+.ngd-studio .ns-food-engine{display:grid;gap:5px;min-width:0;width:100%;text-align:left;padding:12px;border:1px solid #c9c4bb;border-radius:10px;background:#fff;color:#24222b;cursor:pointer;overflow-wrap:anywhere}
+.ngd-studio .ns-food-engine[aria-checked="true"]{border:2px solid #5b3df5;background:#f4f1ff}
+.ngd-studio .ns-food-engine-top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.ngd-studio .ns-food-engine-top strong{font-size:12px}
+.ngd-studio .ns-food-engine-top b{font-size:12px;white-space:nowrap}
+.ngd-studio .ns-food-engine small{font-size:11px;line-height:1.4;color:#555362}
+.ngd-studio .ns-food-pricing{display:grid;gap:5px;padding:13px;border:1px solid #373143;border-radius:10px;background:#f9f8fb;color:#24222b;min-width:0}
+.ngd-studio .ns-food-pricing strong,.ngd-studio .ns-food-pricing b{font-size:13px}
+.ngd-studio .ns-food-pricing small{font-size:11px;line-height:1.5}
+.ngd-studio .ns-food-job-progress:empty{display:none}
+.ngd-studio .ns-food-job-progress{font-size:12px;line-height:1.5;color:#33286a}

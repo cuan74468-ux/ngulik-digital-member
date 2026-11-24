@@ -1,196 +1,241 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-const base=path.join(__dirname,'..');
-const script=name=>fs.readFileSync(path.join(base,'apps-script',name),'utf8');
+const root=path.resolve(__dirname,'..');
+const code=name=>fs.readFileSync(path.join(root,'apps-script',name),'utf8');
+const hex='a'.repeat(64),ref='asset_valid123456',requestId='idempotent_request_001';
 function runtime(){
- const context=vm.createContext({console,Promise});
- for(const file of ['VisualJobs.gs','VisualProvider.gs'])vm.runInContext(script(file),context,{filename:file});
- return context;
+ const c=vm.createContext({console,Promise});
+ for(const name of ['VisualSkills.gs','VisualJobs.gs','VisualProvider.gs','VisualMedia.gs','VisualStore.gs'])
+  vm.runInContext(code(name),c,{filename:name});
+ return c;
 }
-const hex='a'.repeat(64),ref='asset_valid123456',idempotency='idempotent_request_001';
-function fake(){
- let time=1700000000000,sequence=0;
- const items=new Map(),byScope=new Map(),files=new Map(),ledger=new Map(),heldBudget=new Map(),queues=new Set();
- const counter={reserve:0,settle:0,refund:0,budget:0,queued:0,upstream:0};
- const compiled={
-  contract_version:'visual-food-magazine-img2img-v2',
+function fake(count=1){
+ let time=1700000000000,seq=0;
+ const records=new Map(),scopes=new Map(),files=new Map(),reservations=new Map(),budget=new Map(),rates=new Set(),queue=new Set();
+ const stats={reserve:0,settle:0,refund:0,queued:0,rate:0};
+ const compiled={contract_version:'visual-food-magazine-img2img-v2',
   image_generation_mode:'IMAGE_TO_IMAGE_REQUIRED',release_authorized:false,
-  image_count:1,option_ids:{food_type:'soup'},
-  overlay_specification:{enabled:false},
-  compiled_prompt:'x',media_contract:{reference_asset_id:ref}
- };
- const deps={
-  config:{NGD_VISUAL_LIVE_ENABLED:true,NGD_VISUAL_CREDITS_ENABLED:true,NGD_VISUAL_MEDIA_READY:true,NGD_VISUAL_WORKER_READY:true,NGD_MUTATIONS_ENABLED:false,NGD_FINANCE_ENABLED:false,daily_budget_cap_idr:10000},
-  auth:{requireMember:s=>s==='alice_session'?{member_id:'alice'}:s==='bob_session'?{member_id:'bob'}:null,requireWorker:w=>w==='trusted_worker'},
-  media:{putPrivate:o=>{const id='asset_upload_'+String(++sequence).padStart(7,'0');const item={id,owner:o.owner,private:true,mime:o.mime,bytes:o.bytes,expires_at:o.expires_at};files.set(id,item);return {asset_id:id,expires_at:item.expires_at}},
-   getOwned:(id,member,now)=>{const f=files.get(id);return f&&f.owner===member&&f.expires_at>now?f:null;},purgeExpired:now=>{let count=0;for(const [id,v] of files)if(v.expires_at<=now){files.delete(id);count++}return count}},
-  jobs:{newId:()=> 'job_'+String(++sequence).padStart(13,'0'),
-   createUnique:(scope,digest,fn)=>{
-    const old=byScope.get(scope);
-    if(old)return old;
-    const job=fn();items.set(job.id,job);byScope.set(scope,job);return job;
-   },get:id=>items.get(id),
-   compareAndSwap:(id,from,to,patch)=>{const job=items.get(id);if(!job||job.status!==from)return false;job.status=to;Object.assign(job,patch);return true},
-   listExpired:(now,limit)=>[...items.values()].filter(j=>j.expires_at<now&&['PROCESSING','RESERVED'].includes(j.status)).slice(0,limit)},
-  ledger:{reserveOnce:(id,user,credits)=>{if(!ledger.has(id)){ledger.set(id,'reserved');counter.reserve++}},
-   settleOnce:id=>{if(ledger.get(id)==='reserved'){ledger.set(id,'settled');counter.settle++}else if(ledger.get(id)!=='settled')throw Error('LEDGER_NOT_RESERVED')},
-   releaseOnce:id=>{if(ledger.get(id)==='reserved'){ledger.set(id,'released');counter.refund++}}},
-  budget:{reserveDaily:(id,amount,cap)=>{
-   if(!heldBudget.has(id)){const total=[...heldBudget.values()].reduce((sum,v)=>sum+v.amount,0);
-    if(total+amount>cap)throw Error('BUDGET_EXCEEDED');heldBudget.set(id,{amount,status:'reserved'});counter.budget++;}},
-   settleOnce:id=>{if(heldBudget.has(id))heldBudget.get(id).status='settled';},
-   releaseOnce:id=>{if(heldBudget.has(id)){heldBudget.delete(id);}}},
-  queue:{enqueueOnce:id=>{if(!queues.has(id)){queues.add(id);counter.queued++}}},
-  clock:{now:()=>time},quote:(tier,count)=>count*(tier==='hd'?900:600),
+  image_count:count,option_ids:{food_type:'soup'},
+  compiled_prompt:'[08_NO_MODEL_TYPOGRAPHY]\nDo NOT render any text, letters, numbers',
+  negative_prompt:'No text',overlay_specification:{enabled:false},
+  media_contract:{reference_asset_id:ref}};
+ const d={
+  config:{NGD_VISUAL_LIVE_ENABLED:true,NGD_VISUAL_CREDITS_ENABLED:true,
+   NGD_VISUAL_MEDIA_READY:true,NGD_VISUAL_WORKER_READY:true,
+   NGD_VISUAL_DAILY_BUDGET_CAP:10000,NGD_VISUAL_RATE_LIMIT:4,
+   NGD_MUTATIONS_ENABLED:false,NGD_FINANCE_ENABLED:false},
+  auth:{requireMember:s=>s==='alice_session'?{member_id:'alice'}:
+   s==='bob_session'?{member_id:'bob'}:null,requireWorker:w=>w==='trusted_worker'},
+  media:{putPrivate:o=>{let id='asset_upload_'+String(++seq).padStart(7,'0');files.set(id,{...o,id,private:true});return {asset_id:id,expires_at:o.expires_at}},
+   getOwned:(id,owner,now)=>{let v=files.get(id);return v&&v.owner===owner&&v.expires_at>now?v:null},
+   purgeExpired:(now)=>{let n=0;for(let [id,v] of files)if(v.expires_at<=now){files.delete(id);n++}return n;}},
+  jobs:{newId:()=> 'job_'+String(++seq).padStart(13,'0'),
+   createUnique:(scope,fingerprint,fn)=>{
+    if(scopes.has(scope)){const old=records.get(scopes.get(scope));
+     if(old.fingerprint!==fingerprint)throw Error('IDEMPOTENCY_CONFLICT');
+     return old}
+    const job=fn();records.set(job.id,job);scopes.set(scope,job.id);return job},
+   get:id=>records.get(id),compareAndSwap:(id,from,to,patch)=>{
+    let j=records.get(id);if(!j||j.status!==from)return false;
+    j.status=to;Object.assign(j,patch);return true},
+   listExpired:now=>[...records.values()].filter(j=>j.expires_at<now&&
+    ['PROCESSING','RESERVED'].includes(j.status))},
+  ledger:{reserveOnce:(id,user,amount)=>{
+    if(!reservations.has(id)){reservations.set(id,{user,amount,status:'RESERVED'});stats.reserve++}},
+   settleOnce:(id,spent,returned)=>{
+    let row=reservations.get(id);
+    if(row.status==='SETTLED'){if(row.spent!==spent||row.returned!==returned)throw Error('CONFLICT');return}
+    assert.equal(row.amount,spent+returned);row.status='SETTLED';
+    row.spent=spent;row.returned=returned;stats.settle++;stats.refund+=returned>0?1:0},
+   releaseOnce:id=>{let row=reservations.get(id);if(row&&row.status==='RESERVED'){
+    row.status='REFUNDED';stats.refund++}}},
+  budget:{reserveDaily:(id,estimate,cap)=>{
+    let used=[...budget.values()].reduce((a,x)=>a+x.estimate,0);
+    if(used+estimate>cap)throw Error('BUDGET_EXCEEDED');
+    if(!budget.has(id))budget.set(id,{estimate});},
+   settleOnce:()=>{},releaseOnce:()=>{}},
+  rate:{consumeOnce:(id,user,limit)=>{
+    if(rates.has(id))return;if(rates.size>=limit)throw Error('RATE_LIMIT');
+    rates.add(id);stats.rate++},releaseOnce:()=>{}},
+  queue:{enqueueOnce:id=>{if(!queue.has(id)){queue.add(id);stats.queued++}}},
+  clock:{now:()=>time},quote:(machine,count)=>count*(machine==='flux_2_pro'?900:600),
   compile:()=>compiled,fingerprint:()=>hex,hashBytes:()=>hex
  };
- files.set(ref,{id:ref,owner:'alice',private:true,expires_at:time+1000000});
- return {deps,counter,compiled,files,items,ledger,queues,advance:ms=>{time+=ms}};
+ files.set(ref,{owner:'alice',private:true,expires_at:time+3000000});
+ return {d,stats,files,compiled,records,reservations,budget,
+  advance:ms=>{time+=ms}};
 }
-function createRequest(){return {idempotency_key:idempotency,tier:'standard',payload:{}}}
-test('default config fails closed for live, AI-only gates and daily cap',()=>{
- const r=runtime(),f=fake(),engine=r.ngdVisualJobs_({...f.deps,config:{}});
- assert.equal(engine.policy.live,false);
- assert.throws(()=>engine.create('alice_session',createRequest()),/LIVE_DISABLED/);
- for(const key of ['NGD_VISUAL_CREDITS_ENABLED','NGD_VISUAL_MEDIA_READY','NGD_VISUAL_WORKER_READY']){
-  const config={...f.deps.config,[key]:false};
-  assert.throws(()=>r.ngdVisualJobs_({...f.deps,config}).create('alice_session',createRequest()),/VISUAL_INFRA_NOT_AUTHORIZED/);
+const request=(machine_id='flux_kontext_pro',key=requestId)=>({idempotency_key:key,machine_id,payload:{count:1}});
+function image(f,id,owner='alice',jobId){
+ f.files.set(id,{owner,private:true,expires_at:1700002000000,job_id:jobId,media_kind:'output'});
+}
+test('backend catalog is authoritative and returns only public prices',()=>{
+ const c=runtime();
+ const prices=Array.from(c.ngdVisualPublicCatalog_()).map(x=>x.credits_per_image);
+ assert.deepEqual(prices,[2,3,4]);
+ assert.equal(c.ngdVisualQuote_('flux_kontext_pro',4).total_credits,12);
+ assert.equal(c.ngdVisualQuote_('gemini_flash_image',2).total_credits,4);
+ assert.equal(c.ngdVisualQuote_('flux_2_pro',4).total_credits,16);
+ assert.throws(()=>c.ngdVisualQuote_('cheap_fake',1),/VISUAL_MACHINE_UNKNOWN/);
+ assert.throws(()=>c.ngdVisualQuote_('flux_2_pro',3),/VISUAL_MACHINE_COUNT_INVALID/);
+ assert.equal(JSON.stringify(c.ngdVisualPublicCatalog_()).includes('api_key'),false);
+});
+test('no live operation when four AI gates or daily cap are OFF; P0 remains false',()=>{
+ const c=runtime(),f=fake();
+ assert.throws(()=>c.ngdVisualJobs_({...f.d,config:{}}).create('alice_session',request()),/LIVE_DISABLED/);
+ for(const k of ['NGD_VISUAL_CREDITS_ENABLED','NGD_VISUAL_MEDIA_READY','NGD_VISUAL_WORKER_READY']){
+  assert.throws(()=>c.ngdVisualJobs_({...f.d,config:{...f.d.config,[k]:false}})
+   .create('alice_session',request()),/VISUAL_INFRA_NOT_AUTHORIZED/);
  }
- assert.equal(f.deps.config.NGD_MUTATIONS_ENABLED,false);
- assert.equal(f.deps.config.NGD_FINANCE_ENABLED,false);
- const config={...f.deps.config,daily_budget_cap_idr:0};
- assert.throws(()=>r.ngdVisualJobs_({...f.deps,config}).create('alice_session',createRequest()),/BUDGET_CAP_REQUIRED/);
+ assert.throws(()=>c.ngdVisualJobs_({...f.d,config:{...f.d.config,NGD_VISUAL_DAILY_BUDGET_CAP:0}})
+  .create('alice_session',request()),/BUDGET_CAP_REQUIRED/);
+ assert.equal(f.d.config.NGD_FINANCE_ENABLED,false);
+ assert.equal(f.d.config.NGD_MUTATIONS_ENABLED,false);
 });
-test('private upload validates membership, MIME, size, signature and TTL',()=>{
- const r=runtime(),f=fake(),api=r.ngdVisualJobs_(f.deps);
+test('private upload validates session, MIME signature, size, SHA and TTL',()=>{
+ const c=runtime(),f=fake(),api=c.ngdVisualJobs_(f.d);
  const bytes=[137,80,78,71,13,10,26,10,0,0,0,0];
- const sample={mime:'image/png',bytes,size:bytes.length,sha256:hex};
- assert.throws(()=>api.upload('bob_invalid',sample),/SESSION_REQUIRED/);
+ const sample={mime:'image/png',size:bytes.length,bytes,sha256:hex};
+ assert.throws(()=>api.upload('unknown',sample),/SESSION_REQUIRED/);
  assert.throws(()=>api.upload('alice_session',{...sample,mime:'image/svg+xml'}),/MIME/);
- assert.throws(()=>api.upload('alice_session',{...sample,size:1}),/SIGNATURE_MISMATCH/);
- assert.throws(()=>api.upload('alice_session',{...sample,bytes:new Array(12).fill(0)}),/SIGNATURE_MISMATCH/);
- assert.throws(()=>api.upload('alice_session',{...sample,sha256:'b'.repeat(64)}),/CHECKSUM_MISMATCH/);
- const u=api.upload('alice_session',sample);assert.match(u.asset_id,/^asset_/);
- assert.ok(f.files.has(u.asset_id));
- f.advance(25*60*60*1000);api.cleanup('trusted_worker');assert.equal(f.files.has(u.asset_id),false);
+ assert.throws(()=>api.upload('alice_session',{...sample,bytes:Array(12).fill(0)}),/SIGNATURE/);
+ assert.throws(()=>api.upload('alice_session',{...sample,sha256:'b'.repeat(64)}),/CHECKSUM/);
+ const output=api.upload('alice_session',sample);assert.match(output.asset_id,/^asset_/);
+ f.advance(25*60*60*1000);api.cleanup('trusted_worker');
+ assert.equal(f.files.has(output.asset_id),false);
 });
-test('atomic idempotency prevents double reservation and duplicate queue',()=>{
- const r=runtime(),f=fake(),api=r.ngdVisualJobs_(f.deps);
- const one=api.create('alice_session',createRequest()),two=api.create('alice_session',createRequest());
- assert.equal(one.job_id,two.job_id);assert.equal(one.status,'RESERVED');
- assert.equal(one.credit_cost,2);
- assert.equal(f.counter.reserve,1);assert.equal(f.counter.budget,1);assert.equal(f.counter.queued,1);
- assert.throws(()=>api.poll('bob_session',one.job_id),/JOB_NOT_FOUND/);
- assert.throws(()=>api.create('bob_session',createRequest()),/MEDIA_OWNERSHIP_OR_EXPIRY/);
+test('default machine is 3 credits, repeated idempotency key never reserves twice',()=>{
+ const c=runtime(),f=fake(),api=c.ngdVisualJobs_(f.d);
+ const a=api.create('alice_session',request()),b=api.create('alice_session',request());
+ assert.equal(a.job_id,b.job_id);assert.equal(a.credit_cost,3);
+ assert.equal(a.unit_credits,3);assert.equal(f.stats.reserve,1);
+ assert.equal(f.stats.rate,1);assert.equal(f.stats.queued,1);
+ assert.throws(()=>api.poll('bob_session',a.job_id),/JOB_NOT_FOUND/);
 });
-test('happy path CREATED/RESERVED/PROCESSING/SUCCEEDED/SETTLED is idempotent',()=>{
- const r=runtime(),f=fake(),api=r.ngdVisualJobs_(f.deps);
- const created=api.create('alice_session',createRequest()),id=created.job_id;
- assert.throws(()=>api.process(id,'invalid_worker'),/WORKER_AUTH_REQUIRED/);
+test('successful one-image job charges credits once and stores only private owner result',()=>{
+ const c=runtime(),f=fake(),api=c.ngdVisualJobs_(f.d),id=api.create('alice_session',request()).job_id;
+ assert.throws(()=>api.process(id,'untrusted'),/WORKER_AUTH_REQUIRED/);
  assert.equal(api.process(id,'trusted_worker').status,'PROCESSING');
  assert.equal(api.process(id,'trusted_worker').status,'PROCESSING');
- f.files.set('asset_result_1234',{owner:'alice',private:true,expires_at:1700001000000});
- const done=api.complete(id,'trusted_worker',{asset_ids:['asset_result_1234']});
- assert.equal(done.status,'SETTLED');assert.deepEqual(Array.from(done.result_asset_ids),['asset_result_1234']);
+ image(f,'asset_result_1234','alice',id);
+ const result=api.complete(id,'trusted_worker',{asset_ids:['asset_result_1234']});
+ assert.equal(result.status,'SETTLED');assert.equal(result.settled_credits,3);
+ assert.equal(result.refunded_credits,0);
  assert.equal(api.settle(id,'trusted_worker').status,'SETTLED');
- assert.equal(f.counter.settle,1);
- assert.equal(api.fail(id,'trusted_worker','PROVIDER_FAILED').status,'SETTLED');
- assert.equal(f.counter.refund,0);
+ assert.equal(f.stats.settle,1);assert.equal(f.stats.refund,0);
 });
-test('provider failure and timeout refund exactly once, no double settlement',()=>{
- const r=runtime(),f=fake(),api=r.ngdVisualJobs_(f.deps);
- const id=api.create('alice_session',createRequest()).job_id;
+test('4 requested, only 3 succeeded => charge 9, refund 3, no repeated debit',()=>{
+ const c=runtime(),f=fake(4);const api=c.ngdVisualJobs_(f.d);
+ const id=api.create('alice_session',{...request(),payload:{count:4}}).job_id;
+ assert.equal(api.poll('alice_session',id).credit_cost,12);
+ api.process(id,'trusted_worker');
+ const imgs=['asset_result_001','asset_result_002','asset_result_003'];
+ imgs.forEach(x=>image(f,x,'alice',id));
+ const out=api.complete(id,'trusted_worker',{asset_ids:imgs});
+ assert.equal(out.status,'SETTLED');assert.equal(out.succeeded_count,3);
+ assert.equal(out.settled_credits,9);assert.equal(out.refunded_credits,3);
+ assert.equal(api.settle(id,'trusted_worker').refunded_credits,3);
+ assert.equal(f.stats.reserve,1);assert.equal(f.stats.settle,1);
+});
+test('all results fail => full refund once; timeout also returns all credits',()=>{
+ const c=runtime(),f=fake(),api=c.ngdVisualJobs_(f.d);
+ const id=api.create('alice_session',request()).job_id;
  api.process(id,'trusted_worker');
  assert.equal(api.fail(id,'trusted_worker','PROVIDER_FAILED').status,'REFUNDED');
- assert.equal(api.fail(id,'trusted_worker','PROVIDER_FAILED').status,'REFUNDED');
- assert.equal(f.counter.refund,1);assert.equal(f.counter.settle,0);
- const id2=api.create('alice_session',{...createRequest(),idempotency_key:'idempotent_request_002'}).job_id;
- api.process(id2,'trusted_worker');
- f.advance(11*60*1000);
- const expired=api.expire('trusted_worker');assert.equal(expired.length,1);
- assert.equal(expired[0].status,'REFUNDED');assert.equal(f.counter.refund,2);
+ assert.equal(api.fail(id,'trusted_worker','PROVIDER_FAILED').refunded_credits,3);
+ const id2=api.create('alice_session',request('flux_2_pro','idempotent_request_002')).job_id;
+ api.process(id2,'trusted_worker');f.advance(11*60*1000);
+ assert.equal(api.expire('trusted_worker')[0].refunded_credits,4);
+ assert.equal(f.stats.refund,2);
 });
-test('budget cap blocks expensive concurrent generation and never reserves credits',()=>{
- const r=runtime(),f=fake();f.deps.config.daily_budget_cap_idr=700;
- const api=r.ngdVisualJobs_(f.deps);
- api.create('alice_session',createRequest());
- assert.throws(()=>api.create('alice_session',{...createRequest(),idempotency_key:'idempotent_request_003'}),/BUDGET_EXCEEDED/);
- assert.equal(f.counter.reserve,1);
+test('credit must only settle owner-job private output',()=>{
+ const c=runtime(),f=fake(),api=c.ngdVisualJobs_(f.d);
+ const id=api.create('alice_session',request()).job_id;api.process(id,'trusted_worker');
+ image(f,'asset_result_other','alice','other_job_123456789012');
+ assert.throws(()=>api.complete(id,'trusted_worker',{asset_ids:['asset_result_other']}),/RESULT_NOT_PRIVATE/);
+ image(f,'asset_result_other','alice',id);
+ assert.equal(api.complete(id,'trusted_worker',{asset_ids:['asset_result_other']}).status,'SETTLED');
 });
-test('provider mapping requires image reference, tier, 12 layers and forbids typography',()=>{
- const r=runtime(),compiled={contract_version:'visual-food-magazine-img2img-v2',
-  image_generation_mode:'IMAGE_TO_IMAGE_REQUIRED',layer_trace:Array(12).fill('layer'),
-  compiled_prompt:'Do NOT render any text, letters, numbers. Retouch food photograph.',
-  negative_prompt:'No letters'};
- const good={tier:'standard',provider:'flux_kontext_pro',compiled,image_base64:'A'.repeat(120),mime:'image/png'};
- const spec=r.ngdVpPrepare_(good);
- assert.equal(spec.body.input_image,good.image_base64);
- assert.equal(spec.auth_scheme,'x-key');
- assert.equal(spec.asynchronous,true);
- assert.throws(()=>r.ngdVpPrepare_({...good,image_base64:''}),/PRIVATE_REFERENCE_REQUIRED/);
- assert.throws(()=>r.ngdVpPrepare_({...good,provider:'flux2_pro'}),/TIER_PROVIDER_MISMATCH/);
- assert.throws(()=>r.ngdVpPrepare_({...good,compiled:{...compiled,layer_trace:[]}}),/COMPILER_REQUIRED/);
- assert.throws(()=>r.ngdVpPrepare_({...good,compiled:{...compiled,compiled_prompt:'hello'}}),/TYPOGRAPHY_GUARD/);
- const hd=r.ngdVpPrepare_({...good,tier:'hd',provider:'flux2_pro'});assert.match(hd.url,/flux-2-pro/);
- const gem=r.ngdVpPrepare_({...good,provider:'gemini_flash_image'});
- assert.equal(gem.body.contents[0].parts[1].inlineData.data,good.image_base64);
- assert.equal(gem.auth_scheme,'x-goog-api-key');
+test('rate and IDR cap block request before reserving wallet',()=>{
+ const c=runtime(),f=fake();f.d.config.NGD_VISUAL_DAILY_BUDGET_CAP=700;
+ const api=c.ngdVisualJobs_(f.d);api.create('alice_session',request());
+ assert.throws(()=>api.create('alice_session',request('flux_kontext_pro','idempotent_request_003')),
+  /BUDGET_EXCEEDED/);
+ assert.equal(f.stats.reserve,1);
+ const g=fake();g.d.config.NGD_VISUAL_RATE_LIMIT=1;
+ const throttled=c.ngdVisualJobs_(g.d);throttled.create('alice_session',request());
+ assert.throws(()=>throttled.create('alice_session',request('flux_kontext_pro','idempotent_request_004')),
+  /RATE_LIMIT/);
 });
-test('provider stays inactive until flags and owner-bound private asset',async()=>{
- const r=runtime(),counter={calls:0},id='job_1234567890123';
- const context={job:{id,status:'PROCESSING',tier:'standard',owner:'alice'},member:'alice',
-  asset:{private:true,owner:'alice',mime:'image/jpeg',bytes_base64:'A'.repeat(120)},
-  compiled:{contract_version:'visual-food-magazine-img2img-v2',image_generation_mode:'IMAGE_TO_IMAGE_REQUIRED',
-   layer_trace:Array(12).fill('x'),compiled_prompt:'Do NOT render any text, letters, numbers.',negative_prompt:'No text'},
-  provider:'flux_kontext_pro'};
- const deps={config:{NGD_VISUAL_LIVE_ENABLED:false,NGD_VISUAL_CREDITS_ENABLED:true,NGD_VISUAL_MEDIA_READY:true,NGD_VISUAL_WORKER_READY:true,NGD_MUTATIONS_ENABLED:false,NGD_FINANCE_ENABLED:false},
-  secrets:{get:()=> 'secret_abcdefghijkl'},store:{saveSubmissionOnce:()=>{},ownsSubmission:()=>true},
-  transport:{post:async()=>{counter.calls++;return {status:200,body:{id:'provider_id_123'}}},
-   get:async()=>({status:200,body:{status:'Pending'}})}};
- const api=r.ngdVpAdapter_(deps);
- assert.throws(()=>api.submit(context),/LIVE_DISABLED/);
+test('reuse key with changed machine or prompt cannot charge again',()=>{
+ const c=runtime(),f=fake();f.d.fingerprint=x=>x.machine_id==='flux_2_pro'||x.compiled_prompt==='DIFFERENT'?'b'.repeat(64):hex;
+ const api=c.ngdVisualJobs_(f.d);api.create('alice_session',request());
+ assert.throws(()=>api.create('alice_session',request('flux_2_pro')),/IDEMPOTENCY_CONFLICT/);
+ f.compiled.compiled_prompt='DIFFERENT';
+ assert.throws(()=>api.create('alice_session',request()),/IDEMPOTENCY_CONFLICT/);
+ assert.equal(f.stats.reserve,1);
+});
+test('provider builds Gemini inline and fal/Kie reference-conditioned edit requests',()=>{
+ const c=runtime();
+ const compiled={contract_version:'visual-food-magazine-img2img-v2',
+  image_generation_mode:'IMAGE_TO_IMAGE_REQUIRED',
+  layer_trace:Array(12).fill('x'),
+  compiled_prompt:'[08_NO_MODEL_TYPOGRAPHY]\nDo NOT render any text, letters, numbers.',
+  negative_prompt:'No text'};
+ const reference={private:true,owner:'alice',mime:'image/png',base64:'A'.repeat(128)};
+ const base={compiled,reference};
+ const google=c.ngdVpPrepare_({...base,machine_id:'gemini_flash_image'});
+ assert.match(google.url,/gemini-3.1-flash-image/);
+ assert.equal(google.body.contents[0].parts[1].inlineData.data,reference.base64);
+ const fal=c.ngdVpPrepare_({...base,machine_id:'flux_kontext_pro',transport:'fal',
+  provider_upload_url:'https://v3.fal.media/files/a/b.png'});
+ assert.match(fal.url,/queue.fal.run/);assert.ok(fal.body.image_url);
+ const falInline=c.ngdVpPrepare_({...base,machine_id:'flux_kontext_pro',transport:'fal'});
+ assert.match(falInline.body.image_url,/^data:image\/png;base64,/);
+ assert.equal(falInline.body.image_url.includes('https://'),false);
+ const kie=c.ngdVpPrepare_({...base,machine_id:'flux_2_pro',transport:'kie',
+  provider_upload_url:'https://v3.fal.media/files/a/b.png'});
+ assert.match(kie.url,/createTask/);assert.ok(kie.body.input.input_urls);
+ assert.throws(()=>c.ngdVpPrepare_({...base,machine_id:'flux_2_pro',
+  provider_upload_url:'https://evil.example/image.png'}),/EPHEMERAL_HOST_INVALID/);
+ assert.throws(()=>c.ngdVpPrepare_({...base,machine_id:'flux_kontext_pro',
+  provider_upload_url:'https://v3.fal.media/files/a/b.png',compiled:{...compiled,layer_trace:[]}}),/COMPILER_REQUIRED/);
+});
+test('provider cannot submit until authorized, never leaks secrets in frontend',async()=>{
+ const c=runtime(),counter={calls:0},config={
+  NGD_VISUAL_LIVE_ENABLED:false,NGD_VISUAL_CREDITS_ENABLED:true,
+  NGD_VISUAL_MEDIA_READY:true,NGD_VISUAL_WORKER_READY:true};
+ const deps={config,secrets:{get:()=> 'secret_not_printed_123'},
+  submissions:{saveOnce:()=>{},get:()=>null},
+  uploadReference:async()=>({url:'https://v3.fal.media/files/a/b.png'}),
+  privateImport:{inline:()=>({state:'READY'}),remote:()=>({state:'READY'})},
+  transport:{post:async()=>{counter.calls++;return {status:200,body:{request_id:'provider_task_123'}}},
+   get:async()=>({status:200,body:{status:'IN_QUEUE'}})}};
+ const api=c.ngdVisualProvider_(deps);
+ const ref={private:true,owner:'alice',mime:'image/png',base64:'A'.repeat(128)};
+ const compiled={contract_version:'visual-food-magazine-img2img-v2',image_generation_mode:'IMAGE_TO_IMAGE_REQUIRED',
+  layer_trace:Array(12).fill('x'),compiled_prompt:'[08_NO_MODEL_TYPOGRAPHY]\nDo NOT render any text, letters, numbers',negative_prompt:'No text'};
+ const job={id:'job_1234567890123',owner:'alice',status:'PROCESSING',machine_id:'flux_kontext_pro',count:1};
+ assert.throws(()=>api.submit(job,ref,compiled,'fal',0),/LIVE_DISABLED/);
  assert.equal(counter.calls,0);
- deps.config.NGD_VISUAL_LIVE_ENABLED=true;
- await api.submit(context);assert.equal(counter.calls,1);
- assert.equal(api.options('hd')[0],'flux2_pro');
- assert.equal(api.recoverableFailure('UPSTREAM_BUSY'),true);
- assert.equal(api.recoverableFailure('UNKNOWN_BILLING'),false);
+ config.NGD_VISUAL_LIVE_ENABLED=true;
+ const out=await api.submit(job,ref,compiled,'fal',0);
+ assert.equal(out.state,'QUEUED');assert.equal(counter.calls,1);
 });
-
-
-test('reusing an idempotency key with different private recipe is rejected',()=>{
- const r=runtime(),f=fake();
- f.deps.fingerprint=details=>details.compiled_prompt==='OTHER'?'b'.repeat(64):hex;
- const api=r.ngdVisualJobs_(f.deps);
- api.create('alice_session',createRequest());
- f.compiled.compiled_prompt='OTHER';
- assert.throws(()=>api.create('alice_session',createRequest()),/IDEMPOTENCY_CONFLICT/);
- assert.equal(f.counter.reserve,1);
-});
-test('BFL result URL cannot redirect worker to arbitrary host',async()=>{
- const r=runtime(),job={id:'job_1234567890123',status:'PROCESSING'};
- let upstream='https://attacker.invalid/results/evil.png';
- const deps={config:{NGD_VISUAL_LIVE_ENABLED:true,NGD_VISUAL_CREDITS_ENABLED:true,NGD_VISUAL_MEDIA_READY:true,NGD_VISUAL_WORKER_READY:true,NGD_MUTATIONS_ENABLED:false,NGD_FINANCE_ENABLED:false},
-  secrets:{get:()=> 'secret_abcdefghijkl'},
-  store:{saveSubmissionOnce:()=>{},ownsSubmission:()=>true},
-  transport:{post:async()=>({status:200,body:{id:'provider_id_123'}}),
-   get:async()=>({status:200,body:{status:'Ready',result:{sample:upstream}}})}};
- const api=r.ngdVpAdapter_(deps);
- await assert.rejects(api.pollBfl(job,'flux_kontext_pro','provider_id_123'),/UNTRUSTED_RESULT_HOST/);
- upstream='https://bfldeliveryprod.blob.core.windows.net/results/approved.png';
- const result=await api.pollBfl(job,'flux_kontext_pro','provider_id_123');
- assert.equal(result.status,'READY_PRIVATE_IMPORT_REQUIRED');
-});
-test('front-end private bridge is optional and simulated mode remains default',()=>{
- const source=fs.readFileSync(path.join(base,'js/ai-studio.js'),'utf8');
- const w={};vm.runInNewContext(source,{window:w,console});
+test('frontend stays SIMULATION until a bridge is configured; default recommended machine 3 Cr',()=>{
+ const script=fs.readFileSync(path.join(root,'js/ai-studio.js'),'utf8');
+ const w={};vm.runInNewContext(script,{window:w,console});
  const api=w.NGD_STUDIO;
  assert.equal(api.adapterMode,'SIMULATION');
- assert.equal(api.foodMagazineDraft().estimated_credits_per_image,2);
+ assert.equal(api.foodMagazineDraft().machine_id,'flux_kontext_pro');
+ assert.equal(api.foodMagazineDraft().estimated_credits_per_image,3);
+ assert.equal(api.foodChoose('count',4),true);
+ assert.equal(api.foodMagazineDraft().estimated_total_credits,12);
+ assert.equal(api.foodMachineSelect('gemini_flash_image'),true);
+ assert.equal(api.foodMagazineDraft().estimated_total_credits,8);
+ assert.equal(api.foodMachineSelect('unknown'),false);
  assert.throws(()=>api.configureVisualPipeline({enabled:true}),/VISUAL_PRIVATE_BRIDGE_INVALID/);
- api.configureVisualPipeline({enabled:true,upload:()=>{},create:()=>{},poll:()=>{}});
+ api.configureVisualPipeline({enabled:true,upload:()=>{},create:()=>{},poll:()=>{},quote:()=>{}});
  assert.equal(api.adapterMode,'SIMULATION');
  api.configureVisualPipeline(null);
- assert.equal(api.foodChoose('count',4),true);
- assert.equal(api.foodMagazineDraft().estimated_total_credits,8);
 });
