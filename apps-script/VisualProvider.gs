@@ -51,8 +51,9 @@ function ngdVpAdapter_(dependencies){
  ngdVpRequire_(d.transport&&d.secrets&&d.config&&d.store,'DEPENDENCIES_REQUIRED');
  function enabled(){
   ngdVpRequire_(d.config.NGD_VISUAL_LIVE_ENABLED===true,'LIVE_DISABLED');
-  ngdVpRequire_(d.config.NGD_MUTATIONS_ENABLED===true&&
-   d.config.NGD_FINANCE_ENABLED===true,'GLOBAL_GATES_OFF');
+  ngdVpRequire_(d.config.NGD_VISUAL_CREDITS_ENABLED===true&&
+   d.config.NGD_VISUAL_MEDIA_READY===true&&
+   d.config.NGD_VISUAL_WORKER_READY===true,'VISUAL_INFRA_NOT_AUTHORIZED');
  }
  function submit(context){
   enabled();
