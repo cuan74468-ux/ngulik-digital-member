@@ -196,7 +196,14 @@ let contextCategory='hot_soupy_food',contextScenario='steam_broth_hero',restorat
 function contextOptions(){return CONTEXT_SCENARIOS[contextCategory].options}
 function contextSelectCategory(id){
  if(!Object.prototype.hasOwnProperty.call(CONTEXT_SCENARIOS,id))return false;
- contextCategory=id;contextScenario=contextOptions()[0][0];resetVisualLiveRequest();return true;
+ contextCategory=id;contextScenario=contextOptions()[0][0];
+ food.food_type=id==='hot_soupy_food'?'soup':id==='bottled_liquid'?'drink':
+  id==='bakery_snack'?'bakery':'drink';
+ // Reset optional legacy fields to neutral settings. Studio physics always
+ // overrides advanced generic suggestions in the backend compiler.
+ food.cover_concept='minimal';food.camera_angle='angle45';
+ food.lighting='softbox';food.surface='concrete';food.grade='warm';
+ food.styling='minimal';food.lens='mm85';resetVisualLiveRequest();return true;
 }
 function contextSelectScenario(id){
  if(!contextOptions().some(item=>item[0]===id))return false;
@@ -361,7 +368,7 @@ function foodChoices(field){
  }).join('')+'</div>';
 }
 function foodFields(){
- const fields=['food_type','cover_concept','camera_angle','lighting','surface','grade','styling','lens','format'];
+ const fields=['cover_concept','camera_angle','lighting','surface','grade','styling','lens','format'];
  const context='<div class="ns-v2-field"><strong>Peruntukan Produk</strong><div class="ns-food-options" role="group" aria-label="Peruntukan Produk">'+
   Object.entries(CONTEXT_SCENARIOS).map(([id,item])=>'<button type="button" class="ns-v2-choice" data-context-category="'+id+'" aria-pressed="'+(contextCategory===id)+'">'+htmlEscape(item.label)+'</button>').join('')+'</div></div>'+
   '<div class="ns-v2-field"><strong>Skenario Studio · khusus '+htmlEscape(CONTEXT_SCENARIOS[contextCategory].label)+'</strong><div class="ns-food-options" role="group" aria-label="Skenario Studio">'+
