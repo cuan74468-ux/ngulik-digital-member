@@ -36,7 +36,7 @@ function harness(){
    base64Encode:bytes=>Buffer.from(bytes).toString('base64'),
    newBlob:(bytes,mime)=>({mime,getBytes:()=>Array.from(bytes)})}
  });
- for(const name of ['VisualSkills.gs','VisualJobs.gs','VisualMedia.gs','VisualStore.gs','VisualRuntime.gs'])
+ for(const name of ['VisualSkills.gs','VisualJobs.gs','VisualMedia.gs','VisualStore.gs','VisualRuntime.gs','VisualTemplates.gs'])
   vm.runInContext(fileContent(name),ctx,{filename:name});
  const auth={requireMember:s=>s==='alice_token'?{member_id:'alice'}:
   s==='bob_token'?{member_id:'bob'}:null,
@@ -115,4 +115,32 @@ test('slot transitions cannot duplicate an upstream submission',()=>{
  assert.equal(summary.all_terminal,true);
  assert.equal(summary.succeeded.length,1);
  assert.equal(summary.failed,3);
+});
+
+
+test('member-owned reusable templates survive new store instance and reject cross-member edits',()=>{
+ const h=harness();
+ const store=h.ctx.ngdVisualStoreDrive_({now:h.now});
+ const payload={name:'Madu Ku 4:5',product_category:'bottled_liquid',
+  studio_scenario:'obsidian_mirror_splash',restoration_mode:'full_phone_restoration',
+  format:'4:5',machine_id:'flux_kontext_pro',count:1,overlay_enabled:false};
+ const clean=h.ctx.ngdVisualTemplateValidate_(
+  vm.runInContext('('+JSON.stringify(payload)+')',h.ctx));
+ const created=store.templates.save('alice',null,clean);
+ assert.match(created.id,/^vt_[A-Za-z0-9_-]{12,50}$/);
+ assert.equal(store.templates.list('alice').length,1);
+ assert.equal(store.templates.list('bob').length,0);
+ assert.throws(()=>store.templates.save('bob',created.id,clean),/TEMPLATE_NOT_OWNED/);
+ assert.throws(()=>store.templates.remove('bob',created.id),/TEMPLATE_NOT_OWNED/);
+ const reopened=h.ctx.ngdVisualStoreDrive_({now:h.now});
+ assert.equal(reopened.templates.list('alice')[0].studio_scenario,'obsidian_mirror_splash');
+ reopened.templates.save('alice',created.id,{...clean,name:'Madu Ku Edit'});
+ assert.equal(reopened.templates.list('alice').length,1);
+ assert.equal(reopened.templates.list('alice')[0].name,'Madu Ku Edit');
+ for(let i=1;i<20;i++)reopened.templates.save('alice',null,{...clean,name:'Preset '+i});
+ assert.equal(reopened.templates.list('alice').length,20);
+ assert.throws(()=>reopened.templates.save('alice',null,clean),/TEMPLATE_QUOTA_EXCEEDED/);
+ assert.deepEqual(reopened.ledger.balance('alice'),null);
+ reopened.templates.remove('alice',created.id);
+ assert.equal(reopened.templates.list('alice').length,19);
 });
