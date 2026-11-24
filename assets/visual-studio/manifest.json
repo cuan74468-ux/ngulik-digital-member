@@ -1,0 +1,71 @@
+{
+  "product": "Ngulik Visual Studio",
+  "status": "editorial inspiration (not tool output)",
+  "source": "generated asset pack, 2026-11-24",
+  "dimensions": {
+    "width": 362,
+    "height": 362
+  },
+  "items": [
+    {
+      "id": "steam_broth_hero",
+      "file": "steam_broth_hero.webp",
+      "sha256": "3783987984d5775ca71f2f8f7201cf5e7f0d7506e5ae219a1d5449dd9a4bd175"
+    },
+    {
+      "id": "warung_nusantara_modern",
+      "file": "warung_nusantara_modern.webp",
+      "sha256": "8ab9c47f8ab4a8f593661f2dd37b61de9183ac7c542b4cfd1ad0845987b9602e"
+    },
+    {
+      "id": "editorial_dark_bowl",
+      "file": "editorial_dark_bowl.webp",
+      "sha256": "1da22a4c903ee48e368eeabcd1207b2083377483ccc6137c68e08261ac9316cd"
+    },
+    {
+      "id": "liquid_vortex_splash",
+      "file": "liquid_vortex_splash.webp",
+      "sha256": "f9d014ad8ee9950c8db7c1802439e19bb651f763c95398c7b9c64581a6079edf"
+    },
+    {
+      "id": "obsidian_mirror_splash",
+      "file": "obsidian_mirror_splash.webp",
+      "sha256": "b630654d65f1c99993dd3b02574061c31f8a655ca3f727c2001869f68fe3f0f6"
+    },
+    {
+      "id": "chilled_condensation_studio",
+      "file": "chilled_condensation_studio.webp",
+      "sha256": "bb4b2614109a371a6a0c1067b51d25edc46efeffc23973b6a699aeb1719d43d7"
+    },
+    {
+      "id": "high_speed_topping_rain",
+      "file": "high_speed_topping_rain.webp",
+      "sha256": "893900df87243c3df72e49fec8a803164d053777bde75ab16c9ee1951d712830"
+    },
+    {
+      "id": "macro_crumb_texture",
+      "file": "macro_crumb_texture.webp",
+      "sha256": "9df1cc2c765df6c6314d1672368deb6e491ac4bc1e7f4fa7f5628dec57e62581"
+    },
+    {
+      "id": "sunlit_cafe_marble",
+      "file": "sunlit_cafe_marble.webp",
+      "sha256": "92761689e1a547a8219f23214f2034177326a4ab8996f3cbec69e693e805e4a6"
+    },
+    {
+      "id": "clean_marketplace_cyclorama",
+      "file": "clean_marketplace_cyclorama.webp",
+      "sha256": "2ef179df15aab69d11be827e82a61bdb9e80628576c6b0fd3abd5d0be3476642"
+    },
+    {
+      "id": "podium_light_caustics",
+      "file": "podium_light_caustics.webp",
+      "sha256": "6747693d110cb314a88d5b718bfd22ed5bd2cfd51bff07b7e26a9055df0ef38d"
+    },
+    {
+      "id": "volumetric_forest_pedestal",
+      "file": "volumetric_forest_pedestal.webp",
+      "sha256": "c998143937c7fe05802d7dccff3840950e15219706e84ea9212b4b42c8d8b655"
+    }
+  ]
+}
