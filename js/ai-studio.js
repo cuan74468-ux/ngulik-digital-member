@@ -347,7 +347,7 @@ function localSavePreset(){
  if(id&&!items.some(t=>t.id===id))id='';
  if(!id){
   if(items.length>=20)return null;
-  id='vt_'+(global.crypto?.randomUUID?.().replace(/-/g,'')||
+  id='vt_local_'+(global.crypto?.randomUUID?.().replace(/-/g,'')||
    (Math.random().toString(36).slice(2)+Date.now().toString(36)));
  }
  const saved={...draft,id};customTemplates=[saved,...items.filter(x=>x.id!==id)].slice(0,20);
@@ -361,7 +361,7 @@ async function saveCurrentPreset(){
  templateNotice='Disimpan di perangkat ini';
  if(templateStorage&&typeof templateStorage.save==='function'){
   try{
-   const remote=await templateStorage.save({...local,id:local.id.startsWith('vt_local_')?undefined:undefined});
+   const remote=await templateStorage.save({...local,id:local.id.startsWith('vt_local_')?undefined:local.id});
    if(remote?.id){
     selectedSavedId=remote.id;
     const cleaned=scrubPreset(remote);
