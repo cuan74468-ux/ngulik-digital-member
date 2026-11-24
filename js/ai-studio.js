@@ -516,7 +516,10 @@ function liveBridgeReady(){
   ['upload','create','poll','quote','result'].every(k=>typeof visualPipelineBridge[k]==='function'));
 }
 function resetVisualLiveRequest(){liveRequestKey='';liveJobId='';liveInputAsset='';liveQuote=null;liveStatus='';}
-function chooseMachine(id){if(!FOOD_MACHINES.some(m=>m.id===id))return false;foodMachine=id;resetVisualLiveRequest();rememberWorkspace();return true}
+function chooseMachine(id){if(!FOOD_MACHINES.some(m=>m.id===id)||
+ (liveBridgeReady()&&Array.isArray(visualPipelineBridge.allowedMachines)&&
+ !visualPipelineBridge.allowedMachines.includes(id)))return false;
+ foodMachine=id;resetVisualLiveRequest();rememberWorkspace();return true}
 async function runVisualLive(){
  if(!foodMode||!liveBridgeReady()||livePolling||!selectedLocalFile){
   announce('AI nyata belum aktif. Pilih foto lokal dan tunggu aktivasi layanan.');return;
@@ -605,6 +608,12 @@ function configureVisualPipeline(bridge){
  if(bridge!==null&&(!bridge||bridge.enabled!==true||
   ['upload','create','poll','quote','result'].some(k=>typeof bridge[k]!=='function')))
   throw Error('VISUAL_PRIVATE_BRIDGE_INVALID');
+ if(bridge&&Array.isArray(bridge.allowedMachines)){
+  const allowed=bridge.allowedMachines;
+  if(!allowed.length||allowed.some(id=>!FOOD_MACHINES.some(m=>m.id===id)))
+   throw Error('VISUAL_MACHINE_ALLOWLIST_INVALID');
+  if(!allowed.includes(foodMachine))foodMachine=allowed[0];
+ }
  visualPipelineBridge=bridge;resetVisualLiveRequest();
  if(active()&&state.view==='editor')content();
 }
@@ -647,7 +656,7 @@ function foodFields(){
   '<label class="ns-v2-overlay-toggle"><input type="checkbox" id="ns-v2-overlay" '+(state.overlay?'checked':'')+'><span>Tambahkan teks melalui Canvas (OFF default)</span></label>'+
   (state.overlay?'<div class="ns-v2-overlay-fields">'+[['ns-product','Nama brand',state.product,70],['ns-headline','Headline',state.headline,100],['ns-promo','Tagline',state.promo,100]].map(([id,label,value,max])=>'<label class="ns-label">'+label+'<input id="'+id+'" class="ns-control" maxlength="'+max+'" value="'+htmlEscape(value)+'"></label>').join('')+'<label class="ns-label">Harga<input id="ns-food-price" class="ns-control" maxlength="30" value="'+htmlEscape(foodPrice)+'"></label></div>':'')+
   '</div><div class="ns-v2-field"><strong>'+FOOD_LABELS.similarity+'</strong>'+foodChoices('similarity')+'</div>'+
-  '<div class="ns-v2-field"><strong>'+FOOD_LABELS.count+'</strong>'+foodChoices('count')+'</div>'+ '<div class="ns-v2-field"><strong>Mesin AI · tarif per gambar</strong><div class="ns-food-engines" role="radiogroup" aria-label="Mesin AI">'+FOOD_MACHINES.map(m=>'<button type="button" role="radio" class="ns-food-engine" data-food-machine="'+m.id+'" aria-checked="'+(m.id===foodMachine)+'"><span class="ns-food-engine-top"><strong>'+htmlEscape(m.name)+'</strong><b>'+m.credits+' kredit</b></span><small>'+htmlEscape(m.model)+'</small><small>'+htmlEscape(m.use)+'</small></button>').join('')+'</div></div>'+
+  '<div class="ns-v2-field"><strong>'+FOOD_LABELS.count+'</strong>'+foodChoices('count')+'</div>'+ '<div class="ns-v2-field"><strong>Mesin AI · tarif per gambar</strong><div class="ns-food-engines" role="radiogroup" aria-label="Mesin AI">'+FOOD_MACHINES.map(m=>'<button type="button" role="radio" class="ns-food-engine" data-food-machine="'+m.id+'" aria-checked="'+(m.id===foodMachine)+'" '+(liveBridgeReady()&&Array.isArray(visualPipelineBridge.allowedMachines)&&!visualPipelineBridge.allowedMachines.includes(m.id)?'disabled aria-label="'+htmlEscape(m.name)+' belum aktif"':'')+'><span class="ns-food-engine-top"><strong>'+htmlEscape(m.name)+'</strong><b>'+m.credits+' kredit</b></span><small>'+htmlEscape(m.model)+'</small><small>'+htmlEscape(m.use)+'</small></button>').join('')+'</div></div>'+
   '<label class="ns-label">Catatan kreatif (opsional, maks. 240 karakter)<textarea id="ns-food-notes" maxlength="240" rows="2" class="ns-control">'+htmlEscape(foodNotes)+'</textarea></label>'+ 
   '<div class="ns-inspire-preset-editor"><label class="ns-label" for="ns-preset-name">Simpan pengaturan sebagai preset pribadi<input id="ns-preset-name" class="ns-control" type="text" maxlength="56" value="'+htmlEscape(presetName||CONTEXT_SCENARIOS[contextCategory].options.find(([id])=>id===contextScenario)?.[1]||'Preset Studio')+'" aria-label="Nama preset pribadi"></label><button type="button" class="ns-cta ns-dark" id="ns-save-preset">'+ico('grid')+' Simpan Preset</button><small>Disimpan: resep & pengaturan, bukan foto produk atau API key.</small></div></div>';
  return '<section class="ns-block ns-v2-step ns-food-magazine"><h2><span class="ns-count">02</span> Foto Makanan Gaya Majalah</h2>'+
