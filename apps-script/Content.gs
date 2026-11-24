@@ -70,7 +70,7 @@ function contentPayload_(p,existing) {
     'VALIDATION','Judul, keterangan, dan tombol harus berupa teks.');
   var draft={
     kind:p.kind,placement:contentPlacement_(p.kind,p.placement),
-    title:safeText_(p.title,120),
+    title:safeText_(p.title,NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0?1600:120),
     description:safeText_(p.description,NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0?1600:400),
     image_path:contentImagePath_(p.image_path,p.kind==='HERO'||
       NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0||
