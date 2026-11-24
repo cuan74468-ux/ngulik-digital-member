@@ -560,7 +560,7 @@ function viewHome(){
           ['book','Mulai Belajar','Panduan untuk pemula','belajar'],
           ['gift','Minta Bantuan','Ajukan pertanyaan','dukungan']
         ].map(([symbol,label,description,route])=>
-          '<button type="button" class="ngdm-shortcut" data-route="'+route+'">'+
+          '<button type="button" class="ngdm-shortcut" '+(route==='ai'? 'data-ai-open="ngulik-visual"':'data-route="'+route+'"')+'>'+
             '<span class="ngdm-shortcut-icon">'+icon(symbol)+'</span>'+
             '<strong>'+label+'</strong><small>'+description+'</small></button>').join('')+
         '</div></section>'+
