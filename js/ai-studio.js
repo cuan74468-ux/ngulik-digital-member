@@ -274,19 +274,29 @@ function contextSelectRestoration(id){
  * The six legacy Canvas templates remain available as separate quick designs.
  * No template may contain an API key, arbitrary prompt or a user's photo. */
 /* Editorial reference photos: inspiration only, never the member's AI result. */
+/* Asset URLs follow the actual studio JS script, so both root and /staging/ work.
+ * Each reference is an owned illustration, NOT the user's AI-generated result. */
+const NGD_VISUAL_ASSET_BASE_=(function(){
+ try {
+  const script=global.document?.currentScript ||
+   global.document?.querySelector('script[src*="ai-studio.js"]');
+  if(script?.src)return new URL('../assets/visual-studio/',script.src).href;
+ }catch(_){}
+ return 'assets/visual-studio/';
+})();
 const SCENE_VISUALS=Object.freeze({
- steam_broth_hero:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=720&q=78",
- warung_nusantara_modern:"https://images.unsplash.com/photo-1771308457245-36bda18c21d9?auto=format&fit=crop&w=720&q=78",
- editorial_dark_bowl:"https://images.unsplash.com/photo-1780130714671-4a62458fa58c?auto=format&fit=crop&w=720&q=78",
- liquid_vortex_splash:"https://images.unsplash.com/photo-1513558161293-cdaf765edfd4?auto=format&fit=crop&w=720&q=78",
- obsidian_mirror_splash:"https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=720&q=78",
- chilled_condensation_studio:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=720&q=78",
- high_speed_topping_rain:"https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=720&q=78",
- macro_crumb_texture:"https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=720&q=78",
- sunlit_cafe_marble:"https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=720&q=78",
- clean_marketplace_cyclorama:"https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=720&q=78",
- podium_light_caustics:"https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=720&q=78",
- volumetric_forest_pedestal:"https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=720&q=78"
+ steam_broth_hero:NGD_VISUAL_ASSET_BASE_+'steam_broth_hero.webp',
+ warung_nusantara_modern:NGD_VISUAL_ASSET_BASE_+'warung_nusantara_modern.webp',
+ editorial_dark_bowl:NGD_VISUAL_ASSET_BASE_+'editorial_dark_bowl.webp',
+ liquid_vortex_splash:NGD_VISUAL_ASSET_BASE_+'liquid_vortex_splash.webp',
+ obsidian_mirror_splash:NGD_VISUAL_ASSET_BASE_+'obsidian_mirror_splash.webp',
+ chilled_condensation_studio:NGD_VISUAL_ASSET_BASE_+'chilled_condensation_studio.webp',
+ high_speed_topping_rain:NGD_VISUAL_ASSET_BASE_+'high_speed_topping_rain.webp',
+ macro_crumb_texture:NGD_VISUAL_ASSET_BASE_+'macro_crumb_texture.webp',
+ sunlit_cafe_marble:NGD_VISUAL_ASSET_BASE_+'sunlit_cafe_marble.webp',
+ clean_marketplace_cyclorama:NGD_VISUAL_ASSET_BASE_+'clean_marketplace_cyclorama.webp',
+ podium_light_caustics:NGD_VISUAL_ASSET_BASE_+'podium_light_caustics.webp',
+ volumetric_forest_pedestal:NGD_VISUAL_ASSET_BASE_+'volumetric_forest_pedestal.webp'
 });
 const SCENE_DESCRIPTIONS=Object.freeze({
  steam_broth_hero:"Cahaya hangat dan kuah menggugah selera.",

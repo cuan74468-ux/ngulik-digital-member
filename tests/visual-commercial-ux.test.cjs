@@ -4,6 +4,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
+const crypto=require('node:crypto');
 const root=path.join(__dirname,'..');
 const js=fs.readFileSync(path.join(root,'js/ai-studio.js'),'utf8');
 const css=fs.readFileSync(path.join(root,'assets/ai-studio.css'),'utf8');
@@ -15,7 +16,7 @@ test('12 Visual scenarios have distinct reference images and plain-language help
  assert.equal(new Set(scenes.map(x=>x.id)).size,12);
  assert.equal(new Set(scenes.map(x=>x.image)).size,12,'one reference per scene, not one per category');
  for(const scene of scenes){
-  assert.match(scene.image,/^https:\/\/images\.unsplash\.com\/photo-[0-9A-Za-z-]+\?/);
+  assert.match(scene.image,/^assets\/visual-studio\/[a-z_]+\.webp$/);
   assert.ok(scene.name.length>=10);
   assert.ok(scene.description.length>=20);
   assert.ok(scene.useFor.length>=8);
@@ -48,4 +49,32 @@ test('advanced settings contain beginner help and duplicate photo upload stays v
  assert.match(js,/ns-field-guide/);
  assert.match(css,/\.ns-simple-advanced \.ns-v2-editor \.ns-form>\.ns-block:first-child\{display:none\}/);
  assert.match(css,/@media\(max-width:420px\)/);
+});
+
+test('owned WebP image files are present, valid and match signed manifest',()=>{
+ const manifest=JSON.parse(fs.readFileSync(path.join(root,'assets/visual-studio/manifest.json'),'utf8'));
+ const scenes=studio().studioTemplateCatalog();
+ assert.equal(manifest.items.length,12);
+ assert.equal(scenes.length,manifest.items.length);
+ for(const image of manifest.items){
+  const scene=scenes.find(s=>s.scenario===image.id);
+  assert.ok(scene,'missing scene '+image.id);
+  assert.equal(scene.image,'assets/visual-studio/'+image.file);
+  const file=path.join(root,'assets/visual-studio',image.file);
+  assert.ok(fs.existsSync(file),'asset must be uploaded first: '+image.file);
+  const bytes=fs.readFileSync(file);
+  assert.equal(bytes.subarray(0,4).toString(),'RIFF');
+  assert.equal(bytes.subarray(8,12).toString(),'WEBP');
+  assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),image.sha256);
+ }
+});
+test('owned asset URL handles public and /staging/ entrypoints',()=>{
+ const scripts=['https://cuan74468-ux.github.io/ngulik-digital-member/js/ai-studio.js',
+  'https://cuan74468-ux.github.io/ngulik-digital-member/js/ai-studio.js?v=local'];
+ for(const src of scripts){
+  const window={document:{currentScript:{src}}};
+  vm.runInNewContext(js,{window,URL,console});
+  const refs=window.NGD_STUDIO.studioTemplateCatalog().map(s=>s.image);
+  assert.ok(refs.every(x=>x.startsWith('https://cuan74468-ux.github.io/ngulik-digital-member/assets/visual-studio/')));
+ }
 });
