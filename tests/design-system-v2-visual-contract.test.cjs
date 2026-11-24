@@ -6,7 +6,7 @@ const root=path.join(__dirname,'..');
 const css=fs.readFileSync(path.join(root,'assets/ngulik-design-system.css'),'utf8');
 const studio=fs.readFileSync(path.join(root,'assets/ai-studio.css'),'utf8');
 const htmls=['index.html','staging/member.html'].map(p=>fs.readFileSync(path.join(root,p),'utf8'));
-test('vivid Neubrutalism v2 targets guest member catalog learning affiliate support and admin',()=>{
+test('brand system keeps editorial CMS hero calm while preserving the other role components',()=>{
  for(const name of ['ngdl-hero','ngdl-story','ngdl-offer','ngdl-benefits','ngdm-wallet','ngdm-wallet-chart','ngdm-metric','ngdm-shortcut','ngdm-orders','ai-catalog-intro','market-product-card','partner-hero','partner-metric','learning-intro','learning-portal-hero','lms-course-tile','ngd-help-hero','admin-operations-intro','checkout-summary']){
   assert.ok(css.includes('.'+name),'component missing '+name);
  }
@@ -14,7 +14,7 @@ test('vivid Neubrutalism v2 targets guest member catalog learning affiliate supp
  assert.match(css,/\.ngdm-wallet-chart\{[^}]*background:var\(--ngds-lime\)!important/s);
  assert.match(css,/\.ngdm-metric:first-child\{[^}]*background:var\(--ngds-lime\)!important/s);
  assert.match(css,/\.ngdm-metric:last-child\{[^}]*background:var\(--ngds-ink\)!important/s);
- assert.match(css,/\.ngdl-hero\{[^}]*background:#5B3DF5!important/s);
+ assert.match(css,/\.ngdl-hero\{[^}]*background:#f7f7f1!important/s); // Owner: quiet editorial CMS hero, not obsolete purple art
 });
 test('new design system is single last-loaded css and does not change Studio',()=>{
  for(const html of htmls){
