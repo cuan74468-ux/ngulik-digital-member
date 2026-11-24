@@ -55,10 +55,11 @@ function ngdVisualActiveMachineIds_(){
  return values;
 }
 function ngdVisualPublicMode_(){
- // Public health returns only boolean; no credentials, balances or prices.
+ // Health reports true only after validating every private dependency,
+ // never solely because a browser-visible switch was set to 'true'.
  var props=PropertiesService.getScriptProperties();
- return props.getProperty('NGD_ENVIRONMENT')==='STAGING'&&
-  ngdVisualActiveMachineIds_().length>0&&
+ var allowed=ngdVisualActiveMachineIds_();
+ var ready=props.getProperty('NGD_ENVIRONMENT')==='STAGING'&&allowed.length>0&&
   /^[1-9]\d{0,8}$/.test(props.getProperty('NGD_VISUAL_DAILY_BUDGET_CAP')||'')&&
   typeof props.getProperty('NGD_VISUAL_WORKER_SECRET')==='string'&&
   props.getProperty('NGD_VISUAL_WORKER_SECRET').length>=32&&
@@ -66,6 +67,13 @@ function ngdVisualPublicMode_(){
    'NGD_VISUAL_MEDIA_READY','NGD_VISUAL_WORKER_READY'].every(function(k){
     return props.getProperty(k)==='true';
    });
+ if(!ready)return false;
+ try{
+  ngdVmDriveFolder_(); // owned private Drive folder with OAuth
+  ngdFoodMagazinePrivateRegistryLoad_(); // schema-validated private recipes
+  allowed.forEach(function(id){ngdVisualProviderPrivateQuote_(id,1);});
+  return true;
+ }catch(_){return false;}
 }
 function ngdVisualApiRoute_(action,token,payload,requestId){
  ngdVisualStagingGuard_();
