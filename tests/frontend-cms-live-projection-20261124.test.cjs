@@ -72,8 +72,8 @@ test('new CMS hero preserves a real CMS image slot and overrides the legacy purp
  const end=css.indexOf('html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-btn{',index);
  const rule=css.slice(index,end);
  assert.ok(index>=0&&end>index);
- assert.match(rule,/background:#f7f7f1!important/);
- assert.match(rule,/color:#141418!important/);
- assert.doesNotMatch(rule,/background:#5B3DF5!important/);
+ assert.match(rule,/background:#111827!important/);
+ assert.match(rule,/color:#fff!important/);
+ assert.doesNotMatch(rule,/background:#4338CA!important/);
  assert.match(read('assets/landing-guest-v1.css'),/\.ngd-cms-hero-art\{/);
 });

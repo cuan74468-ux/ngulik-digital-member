@@ -20,7 +20,7 @@ function snapshotApi(env){
   };
   const state=env.state||{qa:false,siteContent:[],publicSettings:{},catalog:[],publicTools:[],
     cmsLoaded:false,catalogLoaded:false,publicToolsLoaded:false};
-  const window={NGD_CONFIG:{apiUrl:env.apiUrl||'https://script.google.com/macros/s/AAA/exec'}};
+  const window={NGD_CONFIG:{apiUrl:env.apiUrl||'https://script.google.com/macros/s/AAA/exec'},NGD_PUBLIC_SEED:env.seed};
   const location={pathname:env.pathname||'/ngulik-digital-member/'};
   const fn=new Function('state','window','location','localStorage','isConnected','Date',
     block+';return {publicSnapKey_,publicSnapRead_,publicSnapWrite_,publicSnapClear_,applyPublicSnap_};');
@@ -120,5 +120,11 @@ test('home polling is read-only, pauses on hidden tabs and keeps its timer acros
 });
 
 test('index.html cache-busts app.js for this change',()=>{
-  assert.match(indexHtml,/js\/app\.js\?v=[^"]*snap1-seed1"/);
+  assert.match(indexHtml,/js\/app\.js\?v=[^"]*snap1-seed2"/);
+});
+
+test('editorial publication invalidates older snapshots',()=>{
+ const a=snapshotApi({});a.state.siteContent=[hero];a.api.publicSnapWrite_();
+ const b=snapshotApi({store:a.store,seed:{generatedAt:new Date(Date.now()+1000).toISOString()}});
+ assert.equal(b.api.publicSnapRead_(),null);
 });

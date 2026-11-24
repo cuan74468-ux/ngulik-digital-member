@@ -14,7 +14,7 @@ test('brand system keeps editorial CMS hero calm while preserving the other role
  assert.match(css,/\.ngdm-wallet-chart\{[^}]*background:var\(--ngds-lime\)!important/s);
  assert.match(css,/\.ngdm-metric:first-child\{[^}]*background:var\(--ngds-lime\)!important/s);
  assert.match(css,/\.ngdm-metric:last-child\{[^}]*background:var\(--ngds-ink\)!important/s);
- assert.match(css,/\.ngdl-hero\{[^}]*background:#f7f7f1!important/s); // Owner: quiet editorial CMS hero, not obsolete purple art
+ assert.match(css,/\.ngdl-hero\{[^}]*background:#111827!important/s); // Photo-backed hero with dark fallback
 });
 test('new design system is single last-loaded css and does not change Studio',()=>{
  for(const html of htmls){
@@ -29,4 +29,11 @@ test('mobile breakpoints keep route content bounded and readable',()=>{
  assert.match(css,/@media\(max-width:430px\)/);
  assert.match(css,/\.ngdm-metrics\{\s*grid-template-columns:1fr!important/s);
  assert.match(css,/\.ngdl-trust\{\s*grid-template-columns:1fr!important/s);
+});
+
+test('CMS photo fills the hero with copy above the contrast overlay',()=>{
+ const landing=fs.readFileSync(path.join(root,'assets/landing-guest-v1.css'),'utf8');
+ assert.match(landing,/\.ngd-cms-hero-art\{[^}]*position:absolute;inset:0;z-index:-1[^}]*object-fit:cover/s);
+ assert.match(landing,/\.ngdl-hero-copy\{[^}]*z-index:1/s);
+ assert.match(css,/\.ngdl-hero::after\{[^}]*linear-gradient/s);
 });

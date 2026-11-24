@@ -17,11 +17,13 @@ test('public seed exact field allowlists, valid dated hero, separate environment
   assert.ok(data.siteContent.some(r=>r.content_id==='CNT-HERO-MAIN'&&r.kind==='HERO'&&r.placement==='home'&&r.image_path));
   assert.ok(data.siteContent.every(r=>(!r.start_date||r.start_date<='2026-11-24')&&(!r.end_date||r.end_date>='2026-11-24')));
   assert.ok(data.catalog.every(r=>r.product_id!=='P-B36AA0054926'&&!/^P-QA-/.test(r.product_id)));
+  assert.ok(!data.siteContent.some(r=>r.content_id==='CNT-HONESTY-BOX'));
+  assert.ok(!data.catalog.some(r=>['P-INTEGRASI-GAS','P-INTEGRASI-SUPA'].includes(r.product_id)));
  }
 });
 test('seed installed before app at both real entry points with high priority hero',()=>{
  for(const file of ['index.html','staging/member.html']){
-  const h=read(file);assert.ok(h.indexOf('js/public-seed.js?v=20261124-seed1')<h.indexOf('js/app.js?v='));
+  const h=read(file);assert.ok(h.indexOf('js/public-seed.js?v=20261124-seed2')<h.indexOf('js/app.js?v='));
   assert.match(h,/rel="preload" as="image"[^>]+fetchpriority="high"/);
  }
  assert.match(home,/loading="eager" fetchpriority="high" width="1200" height="800"/);
@@ -47,16 +49,47 @@ test('browser performance smoke runs in CI with intercepted external traffic', {
  const server=http.createServer((req,res)=>{const u=new URL(req.url,'http://localhost');let p=path.resolve(base,'.'+(u.pathname==='/'?'/index.html':u.pathname));if(!p.startsWith(base+path.sep)){res.writeHead(403).end();return;}fs.readFile(p,(err,b)=>{if(err){res.writeHead(404).end();return;}res.writeHead(200,{'Content-Type':mime[path.extname(p)]||'application/octet-stream'}).end(b);});});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;
  const mockImage='<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="1200" height="800" fill="#aabbaa"/></svg>';
+ // Retry browser startup only, never a page assertion or the hero timing.
+ const stopChrome=async(child,profile)=>{
+  if(child.exitCode===null&&child.signalCode===null)child.kill();
+  for(let i=0;i<40&&child.exitCode===null&&child.signalCode===null;i++)await pause(50);
+  if(child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await pause(200);}
+  try{fs.rmSync(profile,{recursive:true,force:true,maxRetries:3,retryDelay:100});}catch(_){}
+ };
+ const launchChrome=async()=>{
+  let failure='';
+  for(let attempt=1;attempt<=2;attempt++){
+   const profile=fs.mkdtempSync(path.join(os.tmpdir(),'ngd-seed-'));
+   const child=spawn(chrome,['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check','--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:['ignore','ignore','pipe']});
+   let stderr='',spawnError=null;
+   child.stderr.on('data',b=>{stderr=(stderr+String(b)).slice(-3000);});
+   child.on('error',e=>{spawnError=e;});
+   const portFile=path.join(profile,'DevToolsActivePort'),deadline=Date.now()+20000;
+   while(Date.now()<deadline&&!spawnError&&child.exitCode===null&&child.signalCode===null){
+    if(fs.existsSync(portFile)){
+     try{
+      const port=Number(fs.readFileSync(portFile,'utf8').split('\n')[0]);
+      if(port>0){
+       const targets=await (await fetch('http://127.0.0.1:'+port+'/json',{signal:AbortSignal.timeout(1500)})).json();
+       const target=targets.find(x=>x.type==='page'&&x.webSocketDebuggerUrl);
+       if(target)return {child,profile,target};
+      }
+     }catch(_){}
+    }
+    await pause(100);
+   }
+   failure='Chrome startup attempt '+attempt+': '+(spawnError?.message||'DevTools endpoint unavailable')+'; exit='+child.exitCode+'; '+stderr;
+   await stopChrome(child,profile);
+  }
+  throw Error(failure);
+ };
  const run=async(entry,mode)=>{
-  const profile=fs.mkdtempSync(path.join(os.tmpdir(),'ngd-seed-'));
-  const child=spawn(chrome,['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--no-first-run','--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+  const {child,profile,target}=await launchChrome();
   let ws,seq=0,closed=false;const pending=new Map(),timers=new Set();
   const request=(method,params={})=>new Promise((resolve,reject)=>{const id=++seq;const timer=setTimeout(()=>{pending.delete(id);reject(Error(method+' timeout'));},12000);pending.set(id,{resolve:v=>{clearTimeout(timer);resolve(v);},reject:e=>{clearTimeout(timer);reject(e);}});ws.send(JSON.stringify({id,method,params}));});
   const env=entry.includes('staging')?'stg':'prd',d=seed.envs[env],hero=d.siteContent.find(r=>r.content_id==='CNT-HERO-MAIN');
   try{
-   const portFile=path.join(profile,'DevToolsActivePort');for(let i=0;i<150&&!fs.existsSync(portFile);i++)await pause(50);
-   const port=Number(fs.readFileSync(portFile,'utf8').split('\n')[0]);const targets=await (await fetch('http://127.0.0.1:'+port+'/json')).json();
-   ws=new WebSocket(targets.find(x=>x.type==='page').webSocketDebuggerUrl);
+   ws=new WebSocket(target.webSocketDebuggerUrl);
    await new Promise((resolve,reject)=>{ws.addEventListener('open',resolve,{once:true});ws.addEventListener('error',reject,{once:true});});
    ws.addEventListener('message',evt=>{
     const m=JSON.parse(String(evt.data));
@@ -88,11 +121,13 @@ test('browser performance smoke runs in CI with intercepted external traffic', {
    const evaluate=async expression=>{const out=await request('Runtime.evaluate',{expression,returnByValue:true});assert.ok(!out.exceptionDetails,JSON.stringify(out.exceptionDetails));return out.result.value;};
    let v;for(let i=0;i<100;i++){v=await evaluate(`(()=>({ms:window.__seedHeroMs,title:document.querySelector('#ngdl-title')?.textContent,image:!!document.querySelector('.ngd-cms-hero-art')?.naturalWidth,bad:!!document.querySelector('.ngd-cms-unavailable')||document.querySelector('#screen')?.innerText.includes('Sedang memuat informasi'),fcp:performance.getEntriesByName('first-contentful-paint')[0]?.startTime,lcp:window.__seedLcp}))()`);if(v?.title&&v.image)break;await pause(50);}
    assert.ok(v?.title,entry+' '+mode+' missing hero');assert.ok(v.image,'mock image not loaded');assert.ok(!v.bad,'loading state present');assert.ok(v.ms<1500,'hero exceeds 1500 ms: '+JSON.stringify(v));
+   const geometry=await evaluate(`(()=>{const h=document.querySelector('.ngdl-hero'),i=h.querySelector('.ngd-cms-hero-art'),copy=h.querySelector('.ngdl-hero-copy'),a=h.getBoundingClientRect(),b=i.getBoundingClientRect(),c=copy.getBoundingClientRect();return {fills:b.width>=a.width-5&&b.height>=a.height-5,cover:getComputedStyle(i).objectFit,copyOnTop:Number(getComputedStyle(copy).zIndex)>Number(getComputedStyle(i).zIndex),copyFits:c.left>=a.left&&c.right<=a.right+1,overflow:document.documentElement.scrollWidth}})()`);
+   assert.equal(geometry.cover,'cover');assert.ok(geometry.fills,'hero image does not fill banner');assert.ok(geometry.copyOnTop&&geometry.copyFits,'hero copy layering/fit');assert.ok(geometry.overflow<=360,'seeded home overflow');
    if(mode==='update'){for(let i=0;i<100&&v.title!=='CI UPDATED HERO';i++){await pause(50);v.title=await evaluate("document.querySelector('#ngdl-title')?.textContent");}assert.equal(v.title,'CI UPDATED HERO');}
    console.log('NGD_SEED_SIMULATION '+JSON.stringify({entry,mode,...v}));
    assert.ok(await evaluate("!!document.querySelector('[data-route=katalog]')"),'catalog navigation missing');
    assert.ok(await evaluate("!!document.querySelector('[data-route=dukungan]')"),'support navigation missing');
-  }finally{closed=true;for(const t of timers)clearTimeout(t);ws?.close();child.kill();await pause(150);try{fs.rmSync(profile,{recursive:true,force:true});}catch(_){}}
+  }finally{closed=true;for(const t of timers)clearTimeout(t);ws?.close();await stopChrome(child,profile);}
  };
  try{for(const entry of ['/','/staging/member.html'])for(const mode of ['normal','delay','abort','update'])await run(entry,mode);}finally{await new Promise(resolve=>server.close(resolve));}
 });
