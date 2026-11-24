@@ -6,11 +6,12 @@
   'use strict';
   const h=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const routes=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun','daftar','masuk'];
+  const routes=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun','daftar','masuk','auth','checkout','member','portal-belajar','ajak-teman'];
   const kinds=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO','PROMO','ANNOUNCEMENT',
     'HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CARD','FEATURE_BULLET','NOTICE_BOX','SERVICE_CARD',
     'BENEFIT_LIST','BENEFIT_BULLET','SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD',
-    'CHECKOUT_GUIDE','CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO'];
+    'CHECKOUT_GUIDE','CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO',
+    'HERO_ACTION','SECTION_HEADER','FEATURE_ITEM','CHECKOUT_COPY','MEMBER_GREETING','DISCLAIMER'];
   const textKinds=new Set(kinds.slice(8));
   // Resolve assets against the shared project root, never the current page folder.
   // Works identically for /index.html and /staging/member.html.
@@ -164,7 +165,9 @@
     AUTH_COPY:'Teks masuk / daftar',AUTH_FIELD:'Label formulir',
     CHECKOUT_GUIDE:'Panduan pembayaran',CHECKOUT_STEP:'Langkah QRIS',
     WA_TEMPLATE:'Pesan WhatsApp',MEMBER_COPY:'Sapaan member',MEMBER_CARD:'Menu member',
-    PORTAL_NOTICE:'Disclaimer portal',AFFILIATE_INFO:'Informasi ajak teman'};
+    PORTAL_NOTICE:'Disclaimer portal',AFFILIATE_INFO:'Informasi ajak teman',
+     HERO_ACTION:'Tombol beranda',SECTION_HEADER:'Judul seksi',FEATURE_ITEM:'Rincian paket',
+     CHECKOUT_COPY:'Instruksi QRIS',MEMBER_GREETING:'Sapaan member',DISCLAIMER:'Disclaimer resmi'};
   const places=[
     ['HERO','home','Beranda publik'],['HERO','catalog','Banner promosi marketplace publik'],['HERO','member_home','Beranda member'],
     ...['belajar','aplikasi','ai','jasa','katalog','affiliate','dukungan','login']
