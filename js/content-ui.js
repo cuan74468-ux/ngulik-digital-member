@@ -252,7 +252,7 @@
             '" alt="" loading="lazy"><span>'+h(p[0])+'</span></button>'
         ).join('')+'</div></div>'+
       '<div class="field"><label for="content-title">Judul / teks gambar</label>'+
-      '<input class="input" id="content-title" name="title" maxlength="120" value="'+h(draft.title||'')+'"></div>'+
+      '<input class="input" id="content-title" name="title" maxlength="'+(textKinds.has(draft.kind)?'1600':'120')+'" value="'+h(draft.title||'')+'"></div>'+
       '<div class="field"><label for="content-description">'+
       (draft.kind==='PRODUCT_IMAGE'?'Badge produk (opsional, maks 24 karakter)':'Deskripsi (opsional)')+'</label>'+
       '<textarea class="input" id="content-description" name="description" maxlength="'+
