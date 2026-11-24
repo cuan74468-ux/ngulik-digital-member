@@ -1,5 +1,6 @@
 'use strict';
 // R-0: reproducible read-only inventory and CSS ratchet. No dependency/build required.
+// Doc06 photo-backed hero: reviewed byte-only change; no added stylesheets or !important.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -39,13 +40,13 @@ const limits = Object.freeze({
   'assets/guest-sales-trust-v1.css': [17498, 25],
   'assets/product-detail-v1.css': [13213, 40],
   'assets/member-native-dashboard-v1.css': [31440, 224],
-  'assets/ngulik-design-system.css': [46608, 474],
+  'assets/ngulik-design-system.css': [46745, 474],
   'assets/staging-native-mobile.css': [9008, 1]
 });
 
 const budgets = Object.freeze({
-  'index.html': { count: 30, bytes: 756719, important: 2109 },
-  'staging/member.html': { count: 31, bytes: 765727, important: 2110 }
+  'index.html': { count: 30, bytes: 756856, important: 2109 },
+  'staging/member.html': { count: 31, bytes: 765864, important: 2110 }
 });
 
 function inspectEntry(entry) {
