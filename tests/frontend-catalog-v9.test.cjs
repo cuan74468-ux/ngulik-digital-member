@@ -75,7 +75,7 @@ test('both page entrypoints load the campaign CSS after all older marketing styl
 
 test('public page artwork remains contextual while quiet home does not repeat CMS hero art',()=>{
   assert.doesNotMatch(app.slice(app.indexOf('  // Public front door:'),app.indexOf('const offerCategories=')),/published\(state\.siteContent,'HERO','home'\)/);
-  assert.match(app,/cmsPageArt_\('affiliate'\)/);
+  assert.match(app,/NGD_CMS_SURFACES\?\.affiliateInfo\(state\.siteContent\)/);
   assert.match(app,/function viewServiceRequests\(\)/);
   assert.match(app,/cmsPageArt_\('ai'\)/);
   assert.match(app,/function viewSupport\(\)/); // Help is text-first, no decorative cover dependency.
