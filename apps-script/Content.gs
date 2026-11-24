@@ -115,13 +115,37 @@ function contentSame_(row,patch) {
     return String(row[key]||'')===String(patch[key]||'');
   });
 }
+// Sheets.getValues() returns Date objects for date-formatted cells. Comparing
+// String(Date) with YYYY-MM-DD incorrectly hides every published CMS row.
+// Normalize date-only cells for visibility; fail closed for malformed dates.
+function ngdContentDateCell_(value) {
+  if(value===''||value===null||value===undefined)return '';
+  if(Object.prototype.toString.call(value)==='[object Date]'){
+    if(!Number.isFinite(value.getTime()))return null;
+    return Utilities.formatDate(value,NGD.TZ,'yyyy-MM-dd');
+  }
+  if(typeof value==='number'){
+    if(!Number.isSafeInteger(value)||value<1||value>2958465)return null;
+    // Google Sheets numeric date serial: 1899-12-30 = day 0.
+    var d=new Date(Date.UTC(1899,11,30)+value*86400000);
+    return Number.isFinite(d.getTime())?d.toISOString().slice(0,10):null;
+  }
+  var text=String(value).trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(text))return null;
+  var parsed=new Date(text+'T00:00:00Z');
+  return Number.isFinite(parsed.getTime())&&
+    parsed.toISOString().slice(0,10)===text?text:null;
+}
 function contentPublicList_() {
   var nowWib=Utilities.formatDate(now_(),NGD.TZ,'yyyy-MM-dd');
   return readAll_('site_content').filter(function(row){
+    var starts=ngdContentDateCell_(row.start_date);
+    var ends=ngdContentDateCell_(row.end_date);
     return row.status==='PUBLISHED'&&
       NGD_CONTENT_KINDS_.indexOf(row.kind)>=0&&
-      (!row.start_date||String(row.start_date)<=nowWib)&&
-      (!row.end_date||String(row.end_date)>=nowWib);
+      starts!==null&&ends!==null&&
+      (!starts||starts<=nowWib)&&
+      (!ends||ends>=nowWib);
   }).sort(function(a,b){
     return Number(a.sort_order||0)-Number(b.sort_order||0);
   }).slice(0,300).map(function(row){
