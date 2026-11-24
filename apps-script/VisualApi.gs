@@ -172,3 +172,54 @@ function ngdVisualPilotWalletStatusStaging(){
   'PILOT_MEMBER_PROPERTY_REQUIRED');
  return ngdVisualStoreDrive_().ledger.balance(id);
 }
+
+/**
+ * Optional explicit operator-only private-recipe bootstrap for STAGING.
+ * Never invoked by doPost or by the webapp. Refuses to overwrite existing
+ * private registry. Core category optics remain locked in VisualSkills.gs.
+ */
+function ngdVisualPreparePrivateRegistryStaging(){
+ ngdVisualStagingGuard_();
+ var props=PropertiesService.getScriptProperties();
+ ngdVjAssert_(props.getProperty('NGD_VISUAL_PRIVATE_REGISTRY_SETUP_APPROVED')===
+  'I_APPROVE_STAGING_RECIPE_INSTALL_ONLY','REGISTRY_OPERATOR_APPROVAL_REQUIRED');
+ ngdVjAssert_(props.getProperty('NGD_VISUAL_LIVE_ENABLED')!=='true',
+  'REGISTRY_LIVE_MUST_BE_OFF');
+ var key=NGD_FOOD_MAGAZINE_REGISTRY_KEY_;
+ var existing=props.getProperty(key);
+ if(existing){
+  ngdFoodMagazinePrivateRegistryLoad_();
+  return {ready:true,already_configured:true,overwritten:false};
+ }
+ var registry={
+  version:'food-magazine-v2.1',
+  role:'Commercial photographic retouch of the UPLOADED real product photo only.',
+  preservation:'Preserve genuine product geometry, original ingredients, packaging, logo, and printed label; never invent items or words.',
+  quality:'Plausible optics, texture, gravity, contact shadows, accurate real glass and liquid refraction.',
+  negative:'No invented product, fake garnish, hallucinated characters, artificial labels, watermark or floating badges.'
+ };
+ var neutral={
+  food_type:'Preserve the reference product type',
+  cover_concept:'Optional composition preference only',
+  camera_angle:'Optional camera angle subordinate to context physics',
+  lighting:'Optional lighting mood subordinate to context physics',
+  surface:'Optional supporting surface subordinate to context physics',
+  grade:'Optional color grading without recoloring products',
+  styling:'Only existing material and props, no fabricated items',
+  lens:'Optional lens preference subordinate to context optics',
+  format:'Frame composition to specified aspect ratio without distortion',
+  similarity:'Preserve original product identity and proportions'
+ };
+ Object.keys(NGD_FOOD_MAGAZINE_IDS_).forEach(function(group){
+  registry[group]={};
+  NGD_FOOD_MAGAZINE_IDS_[group].forEach(function(id){
+   registry[group][id]=neutral[group]+' (selection '+id+').';
+  });
+ });
+ var json=JSON.stringify(registry);
+ ngdVjAssert_(json.length<=9000,'REGISTRY_TOO_LARGE');
+ ngdFoodMagazinePrivateRegistry_(registry);
+ props.setProperty(key,json);
+ return {ready:true,already_configured:false,overwritten:false,
+  registry_version:registry.version};
+}
