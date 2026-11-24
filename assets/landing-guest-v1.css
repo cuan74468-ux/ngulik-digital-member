@@ -1,5 +1,5 @@
 /* Ngulik Digital: quiet public CMS storefront.
-   CMS is the only source of promotional words and images; no background art.
+   CMS is the only source of promotional words and images; shared visual tokens.
    Scope keeps member, admin, checkout and the rest of the app unchanged. */
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing{
   --ngdl-ink:var(--ngds-ink);--ngdl-muted:var(--ngds-muted);--ngdl-line:var(--ngds-ink);
@@ -33,17 +33,17 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero-c
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-eyebrow{
   display:block;max-width:100%;font-size:12px;font-weight:750;letter-spacing:.1em;
-  color:#765423;text-transform:uppercase;margin:0 0 19px;
+  color:var(--ngds-lime);text-transform:uppercase;margin:0 0 12px;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing h1{
-  color:var(--ngdl-ink);font-family:Inter,system-ui,sans-serif;
-  font-size:clamp(31px,4.3vw,58px);line-height:1.12;
-  font-weight:800;letter-spacing:-.048em;margin:0;
+  color:#fff;font-family:var(--ngds-heading);
+  font-size:var(--ngds-h1);line-height:1.2;
+  font-weight:800;letter-spacing:-.025em;margin:0;
   -webkit-text-fill-color:currentColor;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero-lead{
-  color:#565262;font-size:clamp(15px,1.5vw,19px);line-height:1.7;
-  max-width:650px;margin:20px 0 0;font-weight:400;
+  color:#fff;font-size:var(--ngds-body);line-height:1.55;
+  max-width:60ch;margin:14px 0 0;font-weight:400;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngd-cms-hero-art{
   position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;object-position:65% center;border-radius:0;box-shadow:none;
@@ -54,12 +54,12 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-action
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-btn{
   display:inline-flex;align-items:center;justify-content:center;text-align:center;
   width:auto;max-width:100%;padding:14px 22px;min-height:48px;cursor:pointer;
-  background:#fff;color:#2d2b35;border:1px solid #d7d2c9;border-radius:12px;
+  background:var(--ngds-paper);color:var(--ngds-ink);border:var(--ngds-line);border-radius:var(--ngds-radius-small);
   text-decoration:none;font-size:14px;font-weight:700;line-height:1.3;
   box-shadow:none;transition:transform .16s ease,border-color .16s ease;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-btn-gold{
-  background:#ffdf79;color:#2d2617;border-color:#efc85c;
+  background:var(--ngds-lime);color:var(--ngds-ink);border-color:var(--ngds-ink);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-btn:hover{
   transform:translateY(-2px);border-color:#947e5c;
@@ -73,8 +73,8 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-trust{
   background:transparent;margin:0;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-trust span{
-  display:inline-flex;align-items:center;background:#fffdf7;color:#61533d;
-  padding:8px 12px;border-radius:100px;border:1px solid #eee6d8;
+  display:inline-flex;align-items:center;background:var(--ngds-paper);color:var(--ngds-ink);
+  padding:8px 12px;border-radius:var(--ngds-radius-small);border:var(--ngds-line);
   font-size:12px;line-height:1.5;font-weight:550;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offers,
@@ -88,7 +88,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-sectio
   display:block;padding:0;margin:0 0 22px;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing h2{
-  margin:0 0 18px;color:var(--ngdl-ink);font-size:clamp(1.25rem,3.8vw,1.75rem);
+  margin:0 0 18px;color:var(--ngdl-ink);font-size:var(--ngds-h2);
   line-height:1.25;font-weight:760;letter-spacing:-.035em;
   -webkit-text-fill-color:currentColor;
 }
@@ -101,7 +101,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer{
   transition:box-shadow .16s ease;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer:hover{
-  box-shadow:0 10px 28px rgba(30,24,41,.055);
+  box-shadow:2px 2px 0 var(--ngds-ink);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer-image{
   position:relative;width:100%;height:180px;background:#f6f5f2;overflow:hidden;
@@ -111,25 +111,25 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer-
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer-body{
   display:flex;flex-direction:column;align-items:flex-start;gap:12px;
-  flex:1;padding:clamp(18px,2.2vw,24px) clamp(20px,2.5vw,28px);
+  flex:1;padding:var(--ngds-pad);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer h3{
-  margin:0;color:var(--ngdl-ink);font-size:clamp(1.05rem,1.7vw,1.15rem);line-height:1.35;
+  margin:0;color:var(--ngdl-ink);font-size:var(--ngds-h3);line-height:1.35;
   font-weight:750;letter-spacing:-.02em;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing p,
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing li{
-  color:var(--ngdl-muted);line-height:1.65;font-size:15px;
+  color:var(--ngdl-muted);line-height:1.55;font-size:var(--ngds-body);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer p{
   margin:0;flex:1;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-offer-link{
   appearance:none;border:0;background:transparent;padding:10px 18px;min-height:46px;max-width:100%;white-space:normal;cursor:pointer;
-  text-align:left;color:#63481d;font-size:14px;font-weight:700;
+  text-align:left;color:var(--ngds-ink);font-size:14px;font-weight:700;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-story{
-  padding:clamp(18px,2.5vw,24px) clamp(20px,3vw,28px);background:var(--ngds-paper);
+  padding:var(--ngds-pad);background:var(--ngds-paper);
   border:var(--ngds-line);border-radius:var(--ngds-radius);display:block;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-story ul,
@@ -145,7 +145,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing strong{
   color:var(--ngdl-ink);font-weight:730;
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-benefits{
-  padding:clamp(18px,2.5vw,24px) clamp(20px,3vw,28px);
+  padding:var(--ngds-pad);
 }
 body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-end{
   border-top:1px solid var(--ngdl-line);padding:18px 20px;max-width:100%;
@@ -165,7 +165,7 @@ body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-end p{
     width:100%;height:100%;max-width:none;max-height:none;object-position:60% center;
   }
   body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing h1{
-    font-size:clamp(28px,8vw,39px);line-height:1.17;
+    font-size:var(--ngds-h1);line-height:1.2;
   }
   body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-trust{
     margin:0;

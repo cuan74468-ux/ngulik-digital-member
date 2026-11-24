@@ -109,7 +109,7 @@ async function visit(url,label){
   assert.equal(x.bottomVisible,false,label+' old bottom navigation visible');
   assert.equal(x.drawerPresent,true,label+' top drawer missing');
   assert.deepEqual(x.critical,[],label+' clipped cards/headings');
-  if(['member-home','member-services','member-catalog'].includes(label)){
+  if(label!=='member-studio'){
     mkdirSync('mobile-qa-artifacts',{recursive:true});
     const shot=await request('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,
       fromSurface:true});
@@ -140,6 +140,10 @@ async function visit(url,label){
     assert.equal(fr.yellow,'rgb(255, 217, 101)');
     assert.equal(fr.horizontalFit,true,label+' frame titlebar clips or overflows');
   }
+  const shared=await request('Runtime.evaluate',{expression:`(()=>{const b=getComputedStyle(document.body),p=document.querySelector('#screen .admin-operations-intro,#screen .ngdm-wallet,#screen .ngdb-hero,#screen .ngdl-hero');return {role:document.body.dataset.appRole,canvas:b.backgroundColor,ink:b.getPropertyValue('--ngds-ink').trim(),radius:b.getPropertyValue('--ngds-radius').trim(),panel:p?{radius:getComputedStyle(p).borderRadius,border:getComputedStyle(p).borderTopWidth}:null};})()`,returnByValue:true});
+  const theme=shared.result.value;console.log('NGD_SHARED_ROLE_THEME '+label+' '+JSON.stringify(theme));
+  assert.equal(theme.canvas,'rgb(250, 249, 245)');assert.equal(theme.ink,'#111827');assert.equal(theme.radius,'12px');
+  if(theme.panel){assert.equal(theme.panel.radius,'12px');assert.equal(theme.panel.border,'2px');}
   if(label==='guest-home'||label==='member-home'){
     const brand=await request('Runtime.evaluate',{expression:`(()=>{
       const head=document.querySelector('.topbar'),mark=head?.querySelector('.guest-brand-icon');
@@ -329,13 +333,13 @@ async function visit(url,label){
     await connect();
     const host='http://127.0.0.1:8765/';
     for(const [label,part] of [
-      ['guest-home',''],['guest-catalog','#katalog'],['guest-services','#jasa'],
+      ['guest-home',''],['guest-catalog','#katalog'],['guest-services','#jasa'],['guest-help','#dukungan'],['guest-login','#login'],
       ['member-home','?preview=member#beranda'],
       ['member-catalog','?preview=member#katalog'],
       ['member-services','?preview=member#jasa'],
       ['member-ai','?preview=member#ai'],
       ['member-studio','?preview=member#ai-tool/ngulik-visual'],
-      ['member-learning','?preview=member#belajar'],
+      ['member-learning','?preview=member#belajar'],['member-portal','?preview=member#portal'],
       ['member-support','?preview=member#dukungan'],
       ['member-account','?preview=member#akun'],
       ['member-referral','?preview=member#affiliate'],
@@ -343,7 +347,7 @@ async function visit(url,label){
       ['admin-home','?preview=admin#admin'],
       ['admin-catalog','?preview=admin#produk'],
       ['admin-members','?preview=admin#member'],
-      ['admin-lms','?preview=admin#lms'],
+      ['admin-lms','?preview=admin#lms'],['admin-content','?preview=admin#konten'],['admin-settings','?preview=admin#pengaturan'],['admin-support','?preview=admin#tiket'],
       ['member-affiliate','?preview=member#affiliate'],
       ['member-orders','?preview=member#pesanan']
     ])await visit(host+part,label);
@@ -415,6 +419,15 @@ async function visit(url,label){
     });
     assert.deepEqual(dropdown.result.value,{open:true,routes:['pesanan','affiliate','dukungan','akun']});
     console.log('MEMBER_DESKTOP_NAV_OK');
+    for(const [label,part] of [['guest-catalog','#katalog'],['guest-services','#jasa'],['guest-help','#dukungan'],['member-learning','?preview=member#belajar'],['admin-home','?preview=admin#admin'],['admin-content','?preview=admin#konten'],['admin-settings','?preview=admin#pengaturan']]){
+      await request('Page.navigate',{url:host+part});await pause(1500);
+      const probe=await request('Runtime.evaluate',{expression:jsCheck,returnByValue:true,awaitPromise:true});
+      assert.ok(!probe.exceptionDetails,label+' desktop exception');assert.ok(probe.result.value.screen&&probe.result.value.scrollWidth<=1366,label+' desktop overflow');
+      assert.deepEqual(probe.result.value.critical,[],label+' desktop clipped elements');
+      const shot=await request('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
+      writeFileSync('mobile-qa-artifacts/'+label+'-1366x800.png',Buffer.from(shot.data,'base64'));
+    }
+    console.log('NGD_SHARED_DESKTOP_ROUTES_OK');
   }finally{
     try{ws?.close();}catch(e){}
     child.kill('SIGTERM');
