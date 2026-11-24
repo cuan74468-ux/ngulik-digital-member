@@ -2686,6 +2686,7 @@ function apiRouter_(action,token,p,requestId) {
       .map(function(r){return {tool_id:r.tool_id,nama:r.nama,deskripsi:r.deskripsi,
         kredit_biaya:r.kredit_biaya};});
     case 'getPublicContent':return contentPublicList_();
+    case 'getPublicSettings':return ngdPublicSettings_();
     // Both OTP actions are write-gated by doPost and STAGING-only guard.
     case 'requestRegistrationOtp':return ngdOtpRequest_(p);
     case 'verifyRegistrationOtp':return ngdOtpVerify_(p);
@@ -2923,7 +2924,7 @@ function requirePublicTrackingEnabled_() {
     'MAINTENANCE','Pencatatan klik belum diaktifkan.');
 }
 function apiReadActions_() {
-  return ['getStagingWorkspaceInfo','getPublicInfo','getPublicContent','getPublicTools','getMe','getBeranda','getModulBelajar','getKatalog',
+  return ['getStagingWorkspaceInfo','getPublicInfo','getPublicContent','getPublicSettings','getPublicTools','getMe','getBeranda','getModulBelajar','getKatalog',
     'getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase',
     'getAffiliateDashboard','getMyNotifications','getMyServiceRequests',
     'adminListServiceRequests','adminGetDashboard','adminGetRuntimeStatus','adminListOrders','adminListMembers',
