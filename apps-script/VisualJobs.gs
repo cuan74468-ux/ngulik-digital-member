@@ -164,7 +164,8 @@ function ngdVisualJobs_(dependencies){
   return publicStatus(d.jobs.get(id));
  }
  function complete(id,worker,result){
-  mustLive();
+  // A trusted worker must finish an already-reserved job even after an
+  // emergency LIVE OFF. Disabling generation must not strand held credits.
   ngdVjAssert_(d.auth.requireWorker(worker)===true,'WORKER_AUTH_REQUIRED');
   var job=d.jobs.get(ngdVjId_(id,'JOB'));
   ngdVjAssert_(job&&job.status==='PROCESSING','NOT_PROCESSING');
@@ -187,7 +188,7 @@ function ngdVisualJobs_(dependencies){
   return settle(id,worker);
  }
  function settle(id,worker){
-  mustLive();ngdVjAssert_(d.auth.requireWorker(worker)===true,'WORKER_AUTH_REQUIRED');
+  ngdVjAssert_(d.auth.requireWorker(worker)===true,'WORKER_AUTH_REQUIRED');
   var job=d.jobs.get(id);
   ngdVjAssert_(job&&['SUCCEEDED','PARTIAL_SUCCEEDED','SETTLED'].indexOf(job.status)>=0,'SETTLE_STATUS');
   if(job.status==='SETTLED')return publicStatus(job);
@@ -203,7 +204,7 @@ function ngdVisualJobs_(dependencies){
   return publicStatus(d.jobs.get(id));
  }
  function fail(id,worker,error_code){
-  mustLive();ngdVjAssert_(d.auth.requireWorker(worker)===true,'WORKER_AUTH_REQUIRED');
+  ngdVjAssert_(d.auth.requireWorker(worker)===true,'WORKER_AUTH_REQUIRED');
   var job=d.jobs.get(ngdVjId_(id,'JOB'));
   ngdVjAssert_(job,'JOB_NOT_FOUND');
   if(['SETTLED','REFUNDED'].indexOf(job.status)>=0)return publicStatus(job);
@@ -219,7 +220,7 @@ function ngdVisualJobs_(dependencies){
   return publicStatus(d.jobs.get(id));
  }
  function expire(worker){
-  mustLive();ngdVjAssert_(d.auth.requireWorker(worker)===true,'WORKER_AUTH_REQUIRED');
+  ngdVjAssert_(d.auth.requireWorker(worker)===true,'WORKER_AUTH_REQUIRED');
   // External scheduler invokes this bounded cleanup, no GAS trigger installed.
   var affected=d.jobs.listExpired(now(),100);
   return affected.map(function(job){

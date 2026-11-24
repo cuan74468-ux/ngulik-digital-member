@@ -36,7 +36,7 @@ function harness(){
    base64Encode:bytes=>Buffer.from(bytes).toString('base64'),
    newBlob:(bytes,mime)=>({mime,getBytes:()=>Array.from(bytes)})}
  });
- for(const name of ['VisualSkills.gs','VisualJobs.gs','VisualMedia.gs','VisualStore.gs','VisualRuntime.gs'])
+ for(const name of ['VisualSkills.gs','VisualJobs.gs','VisualMedia.gs','VisualStore.gs','VisualRuntime.gs','VisualTemplates.gs'])
   vm.runInContext(fileContent(name),ctx,{filename:name});
  const auth={requireMember:s=>s==='alice_token'?{member_id:'alice'}:
   s==='bob_token'?{member_id:'bob'}:null,
@@ -115,4 +115,71 @@ test('slot transitions cannot duplicate an upstream submission',()=>{
  assert.equal(summary.all_terminal,true);
  assert.equal(summary.succeeded.length,1);
  assert.equal(summary.failed,3);
+});
+
+
+test('member-owned reusable templates survive new store instance and reject cross-member edits',()=>{
+ const h=harness();
+ const store=h.ctx.ngdVisualStoreDrive_({now:h.now});
+ const payload={name:'Madu Ku 4:5',product_category:'bottled_liquid',
+  studio_scenario:'obsidian_mirror_splash',restoration_mode:'full_phone_restoration',
+  format:'4:5',machine_id:'flux_kontext_pro',count:1,overlay_enabled:false};
+ const clean=h.ctx.ngdVisualTemplateValidate_(
+  vm.runInContext('('+JSON.stringify(payload)+')',h.ctx));
+ const created=store.templates.save('alice',null,clean);
+ assert.match(created.id,/^vt_[A-Za-z0-9_-]{12,50}$/);
+ assert.equal(store.templates.list('alice').length,1);
+ assert.equal(store.templates.list('bob').length,0);
+ assert.throws(()=>store.templates.save('bob',created.id,clean),/TEMPLATE_NOT_OWNED/);
+ assert.throws(()=>store.templates.remove('bob',created.id),/TEMPLATE_NOT_OWNED/);
+ const reopened=h.ctx.ngdVisualStoreDrive_({now:h.now});
+ assert.equal(reopened.templates.list('alice')[0].studio_scenario,'obsidian_mirror_splash');
+ reopened.templates.save('alice',created.id,{...clean,name:'Madu Ku Edit'});
+ assert.equal(reopened.templates.list('alice').length,1);
+ assert.equal(reopened.templates.list('alice')[0].name,'Madu Ku Edit');
+ for(let i=1;i<20;i++)reopened.templates.save('alice',null,{...clean,name:'Preset '+i});
+ assert.equal(reopened.templates.list('alice').length,20);
+ assert.throws(()=>reopened.templates.save('alice',null,clean),/TEMPLATE_QUOTA_EXCEEDED/);
+ assert.deepEqual(reopened.ledger.balance('alice'),null);
+ reopened.templates.remove('alice',created.id);
+ assert.equal(reopened.templates.list('alice').length,19);
+});
+
+
+test('STAGING Visual wallet seed is exactly once, <=20, and never updates P0 tokens',()=>{
+ const h=harness(),store=h.ctx.ngdVisualStoreDrive_({now:h.now});
+ const seed=store.ledger.provisionPilotOnce('M-0009',12);
+ assert.equal(seed.available,12);
+ assert.equal(seed.funding_source,'STAGING_VISUAL_TEST_ONLY');
+ assert.equal(store.ledger.balance('M-0009').available,12);
+ assert.throws(()=>store.ledger.provisionPilotOnce('M-0009',12),/PILOT_WALLET_ALREADY_EXISTS/);
+ assert.throws(()=>store.ledger.provisionPilotOnce('M-0010',1000),/PILOT_CREDIT_LIMIT/);
+ const snap=store.snapshot();
+ assert.equal(snap.wallets,1);
+ assert.equal(snap.reservations,0);
+});
+test('worker may refund expired held credits safely while LIVE flag stays OFF',()=>{
+ const h=harness(),store=h.ctx.ngdVisualStoreDrive_({now:h.now});
+ store.ledger.provisionPilotOnce('M-0009',12);
+ const id='job_staging_12345678',digest='a'.repeat(64);
+ store.jobs.createUnique('M-0009:request_safe_12345678',digest,()=>{
+   store.ledger.reserveOnce(id,'M-0009',12);
+   return {id,owner:'M-0009',fingerprint:digest,
+    unit_credits:3,credit_cost:12,count:4,status:'PROCESSING',
+    result_asset_ids:[],expires_at:h.now()-1};
+ });
+ const auth={requireMember:()=>({member_id:'M-0009'}),
+  requireWorker:secret=>secret==='authorized_worker'};
+ const fakeMedia={getOwned:()=>null,purgeExpired:()=>({purged:0})};
+ const api=h.ctx.ngdVisualJobs_({
+  config:{NGD_VISUAL_LIVE_ENABLED:false},auth,media:fakeMedia,
+  jobs:store.jobs,ledger:store.ledger,budget:store.budget,
+  queue:store.queue,rate:store.rate,slots:store.slots,clock:{now:h.now}});
+ const outcome=api.expire('authorized_worker');
+ assert.equal(outcome.length,1);
+ assert.equal(outcome[0].status,'REFUNDED');
+ assert.equal(store.ledger.balance('M-0009').available,12);
+ assert.equal(store.ledger.balance('M-0009').held,0);
+ assert.equal(api.expire('authorized_worker').length,0);
+ assert.throws(()=>api.expire('wrong'),/WORKER_AUTH_REQUIRED/);
 });

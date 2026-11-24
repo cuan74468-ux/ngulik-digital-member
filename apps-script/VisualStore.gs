@@ -11,7 +11,7 @@ var NGD_VISUAL_STATE_FILENAME_='NGD_VISUAL_STATE_V1.json';
 function ngdVsRequire_(ok,code){if(!ok)throw Error('VISUAL_STORE_'+code);}
 function ngdVsBlank_(){
  return {version:1,jobs:{},scope:{},wallets:{},ledger:{},
-  budget:{},rate:{},queue:{},submissions:{},slots:{}};
+  budget:{},rate:{},queue:{},submissions:{},slots:{},templates:{}};
 }
 function ngdVsFile_(){
  var folder=ngdVmDriveFolder_();
@@ -142,8 +142,22 @@ function ngdVisualStoreDrive_(clock){
     row.refunded=row.reserved;row.state='REFUNDED';
    });
   },
-  // Credit seeding intentionally NOT exported. Finance owner must approve
-  // dedicated Visual wallet funding and perform out-of-band reconciliation.
+  // Operator-only dedicated STAGING Visual wallet; never accepts an API action.
+  // Idempotent one-time provision. No P0 token/financial Sheet interaction.
+  provisionPilotOnce:function(member,credits){
+   return txn(function(s){
+    ngdVsRequire_(typeof member==='string'&&/^[A-Za-z0-9_-]{3,80}$/.test(member),
+      'PILOT_MEMBER_INVALID');
+    ngdVsRequire_(Number.isSafeInteger(credits)&&credits>=1&&credits<=20,
+      'PILOT_CREDIT_LIMIT');
+    ngdVsRequire_(!s.wallets[member]&&
+      !Object.values(s.ledger).some(function(row){return row.member===member;}),
+      'PILOT_WALLET_ALREADY_EXISTS');
+    s.wallets[member]={available:credits,held:0};
+    return {member_id:member,available:credits,held:0,
+      funding_source:'STAGING_VISUAL_TEST_ONLY'};
+   });
+  },
   balance:function(member){
    return read(function(s){
     var w=s.wallets[member];
@@ -284,8 +298,53 @@ function ngdVisualStoreDrive_(clock){
    });
   }
  };
+
+ var templates={
+  list:function(member){
+   ngdVsRequire_(typeof member==='string'&&/^[A-Za-z0-9_-]{3,80}$/.test(member),
+    'TEMPLATE_MEMBER_INVALID');
+   return read(function(state){
+    var own=state.templates&&state.templates[member]||{};
+    return Object.keys(own).map(function(id){return Object.assign({id:id},own[id]);})
+     .sort(function(a,b){return b.updated_at-a.updated_at;})
+     .slice(0,NGD_VISUAL_TEMPLATE_MAX_PER_MEMBER_);
+   });
+  },
+  save:function(member,id,clean){
+   ngdVsRequire_(typeof member==='string'&&/^[A-Za-z0-9_-]{3,80}$/.test(member),
+    'TEMPLATE_MEMBER_INVALID');
+   ngdVsRequire_(clean&&typeof clean==='object'&&!Array.isArray(clean),
+    'TEMPLATE_INVALID');
+   return txn(function(state){
+    state.templates=state.templates||{};
+    var own=state.templates[member]||(state.templates[member]={});
+    if(id)ngdVsRequire_(Object.prototype.hasOwnProperty.call(own,id),
+     'TEMPLATE_NOT_OWNED');
+    if(!id){
+     ngdVsRequire_(Object.keys(own).length<NGD_VISUAL_TEMPLATE_MAX_PER_MEMBER_,
+      'TEMPLATE_QUOTA_EXCEEDED');
+     id='vt_'+Utilities.getUuid().replace(/-/g,'');
+    }
+    var created=own[id]&&own[id].created_at||now();
+    own[id]=Object.assign({},clean,{created_at:created,updated_at:now()});
+    return Object.assign({id:id},own[id]);
+   });
+  },
+  remove:function(member,id){
+   ngdVsRequire_(typeof member==='string'&&/^[A-Za-z0-9_-]{3,80}$/.test(member),
+    'TEMPLATE_MEMBER_INVALID');
+   ngdVsRequire_(typeof id==='string'&&/^vt_[A-Za-z0-9_-]{12,50}$/.test(id),
+    'TEMPLATE_ID_INVALID');
+   return txn(function(state){
+    state.templates=state.templates||{};
+    var own=state.templates[member]||{};
+    ngdVsRequire_(Object.prototype.hasOwnProperty.call(own,id),'TEMPLATE_NOT_OWNED');
+    delete own[id];return {removed:true,id:id};
+   });
+  }
+ };
  return {jobs:jobs,ledger:ledger,budget:budget,rate:rate,
-  queue:queue,submissions:submissions,slots:slots,
+  queue:queue,submissions:submissions,slots:slots,templates:templates,
   snapshot:function(){return read(function(s){return {
    jobs:Object.keys(s.jobs).length,
    reservations:Object.keys(s.ledger).length,

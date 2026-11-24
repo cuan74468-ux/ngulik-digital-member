@@ -222,3 +222,39 @@
 .ngd-studio .ns-food-pricing small{font-size:11px;line-height:1.5}
 .ngd-studio .ns-food-job-progress:empty{display:none}
 .ngd-studio .ns-food-job-progress{font-size:12px;line-height:1.5;color:#33286a}
+
+/* Template library: editorial photo-led cards; all layout scoped to studio. */
+.ngd-studio .ns-inspire-gallery{min-width:0}
+.ngd-studio .ns-inspire-intro{padding:16px 0 12px;max-width:690px}
+.ngd-studio .ns-inspire-eyebrow{font:800 10px/1.4 inherit;letter-spacing:.12em;color:#5b3df5}
+.ngd-studio .ns-inspire-intro h2{font-size:clamp(20px,4vw,29px);line-height:1.2;letter-spacing:-.035em;margin:5px 0}
+.ngd-studio .ns-inspire-intro p{font-size:12px;line-height:1.6;color:#555362}
+.ngd-studio .ns-inspire-toolbar{display:grid;gap:11px;margin:12px 0 20px;min-width:0}
+.ngd-studio .ns-inspire-filters{display:flex;gap:7px;overflow-x:auto;scrollbar-width:thin;padding-bottom:5px}
+.ngd-studio .ns-inspire-filters button{flex-shrink:0}
+.ngd-studio .ns-inspire-search{display:flex;align-items:center;gap:8px}
+.ngd-studio .ns-inspire-search svg{width:17px;height:17px;flex-shrink:0}
+.ngd-studio .ns-inspire-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
+.ngd-studio .ns-inspire-card{min-width:0;overflow:hidden;border:1px solid #d7d2dc;border-radius:12px;background:#fff}
+.ngd-studio .ns-inspire-visual{aspect-ratio:4/4.7;position:relative;overflow:hidden;background:#ebe8e4}
+.ngd-studio .ns-inspire-visual img{width:100%;height:100%;object-fit:cover}
+.ngd-studio .ns-inspire-ratio,.ngd-studio .ns-inspire-caption{position:absolute;background:#fff;color:#24222b;border-radius:4px;padding:3px 5px;font-size:9px;font-weight:700}
+.ngd-studio .ns-inspire-ratio{top:8px;right:8px}
+.ngd-studio .ns-inspire-caption{bottom:7px;left:7px;right:7px;font-size:8px}
+.ngd-studio .ns-inspire-body{display:grid;gap:6px;padding:12px;min-width:0}
+.ngd-studio .ns-inspire-body>small{font-size:10px;color:#5b3df5;font-weight:700}
+.ngd-studio .ns-inspire-body>strong{font-size:13px;line-height:1.35}
+.ngd-studio .ns-inspire-body>p{font-size:11px;line-height:1.45;color:#555362;min-height:30px}
+.ngd-studio .ns-inspire-actions{display:flex;gap:6px;flex-wrap:wrap}
+.ngd-studio .ns-inspire-actions .ns-cta{min-height:38px;flex:1 1 auto;font-size:11px;padding:7px}
+.ngd-studio .ns-inspire-detail{display:grid;gap:5px;font-size:11px;line-height:1.5;padding:10px;background:#f7f5fb;border-radius:6px}
+.ngd-studio .ns-inspire-saved-list{display:grid;gap:8px}
+.ngd-studio .ns-inspire-saved{display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid #d7d2dc;border-radius:10px;background:#fff;min-width:0}
+.ngd-studio .ns-inspire-saved-icon svg{width:22px;height:22px}
+.ngd-studio .ns-inspire-saved-copy{display:grid;gap:6px;flex:1;min-width:0}
+.ngd-studio .ns-inspire-saved-copy strong{font-size:13px}
+.ngd-studio .ns-inspire-saved-copy small,.ngd-studio .ns-inspire-empty{font-size:11px;line-height:1.5;color:#555362}
+.ngd-studio .ns-inspire-preset-editor{display:grid;gap:10px;padding:12px;background:#f7f5fb;border-radius:10px}
+.ngd-studio .ns-inspire-preset-editor>small{font-size:11px;line-height:1.5}
+@media(min-width:680px){.ngd-studio .ns-inspire-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:375px){.ngd-studio .ns-inspire-grid{gap:8px}.ngd-studio .ns-inspire-body{padding:9px}.ngd-studio .ns-inspire-actions{flex-direction:column}.ngd-studio .ns-inspire-actions .ns-cta{width:100%}}

@@ -209,7 +209,7 @@ async function visit(url,label){
     assert.ok(!magazine.exceptionDetails,'Food Magazine browser exception');
     const food=magazine.result.value;
     console.log('MOBILE_360_FOOD_MAGAZINE '+JSON.stringify(food));
-    assert.equal(food.initial.groups.length,11,'12 guided groups including optional cover overlay');
+    assert.equal(food.initial.groups.length,10,'Product category replaces legacy food_type selector; ten advanced groups remain');
     assert.equal(food.initial.count,1,'default one image');
     assert.equal(food.initial.overlay,false,'default overlay OFF');
     assert.equal(food.preset.lighting,'side');
@@ -218,6 +218,18 @@ async function visit(url,label){
     assert.equal(food.count,4);
     assert.equal(food.cost,food.unit*4);
     assert.ok(food.overflow<=360,'Food Magazine overflows 360px');
+
+    const context=await request('Runtime.evaluate',{expression:"(()=>{const root=document.getElementById('ngd-studio-root');root.querySelector('[data-context-category=bottled_liquid]')?.click();const available=[...root.querySelectorAll('[data-context-scenario]')].map(x=>x.dataset.contextScenario);root.querySelector('[data-context-scenario=obsidian_mirror_splash]')?.click();const draft=window.NGD_STUDIO.foodMagazineDraft();return {available,category:draft.payload.product_category,scenario:draft.payload.studio_scenario,restoration:draft.payload.restoration_mode,overflow:document.documentElement.scrollWidth};})()",returnByValue:true});
+    assert.ok(!context.exceptionDetails,'Context Skill Matrix browser exception');
+    const match=context.result.value;
+    console.log('MOBILE_360_CONTEXT_MATRIX '+JSON.stringify(match));
+    assert.equal(match.category,'bottled_liquid');
+    assert.equal(match.scenario,'obsidian_mirror_splash');
+    assert.equal(match.restoration,'full_phone_restoration');
+    assert.equal(match.available.length,3,'Only three bottle scenarios available');
+    assert.ok(!match.available.includes('steam_broth_hero'),'Soup scenario hidden for bottle');
+    assert.ok(match.overflow<=360,'Context matrix overflows 360px');
+
     const machine=await request('Runtime.evaluate',{expression:"(()=>{const root=document.getElementById('ngd-studio-root');const initial=window.NGD_STUDIO.foodMagazineDraft();const original=root.querySelector('#ns-food-pricing')?.textContent||'';const options=root.querySelectorAll('[data-food-machine]').length;root.querySelector('[data-food-machine=gemini_flash_image]').click();const gemini=window.NGD_STUDIO.foodMagazineDraft();const summary=root.querySelector('#ns-food-pricing')?.textContent||'';root.querySelector('[data-food-machine=flux_2_pro]').click();const hd=window.NGD_STUDIO.foodMagazineDraft();return {initial,original,options,gemini,summary,hd,overflow:document.documentElement.scrollWidth};})()",returnByValue:true});
     assert.ok(!machine.exceptionDetails,'Visual machine selector exception');
     const pick=machine.result.value;
@@ -238,11 +250,35 @@ async function visit(url,label){
     assert.equal(quality.clear.disabled,false,'clear well-lit image must enable Generate');
     assert.match(quality.clear.message,/lolos pemeriksaan/);
     assert.ok(quality.clear.overflow<=360);
+
+    const inspiration=await request('Runtime.evaluate',{expression:"(()=>{const root=document.getElementById('ngd-studio-root');root.querySelector('[data-view=gallery]')?.click();const initial=root.querySelectorAll('[data-scene-card]').length;const classic=root.querySelectorAll('[data-template]').length;root.querySelector('[data-template-filter=bottled_liquid]')?.click();const bottles=[...root.querySelectorAll('[data-scene-card]')].map(v=>v.dataset.sceneCard);const details=root.querySelector('[data-template-detail]');details?.click();const expanded=!!root.querySelector('.ns-inspire-detail');root.querySelector('[data-scene-template=scene__bottled_liquid__obsidian_mirror_splash]')?.click();const draft=window.NGD_STUDIO.foodMagazineDraft();return {initial,classic,bottles,expanded,category:draft.payload.product_category,scenario:draft.payload.studio_scenario,editor:!!root.querySelector('.ns-v2-editor'),presetButton:!!root.querySelector('#ns-save-preset'),overflow:document.documentElement.scrollWidth};})()",returnByValue:true});
+    assert.ok(!inspiration.exceptionDetails,'Inspiration gallery browser exception');
+    const library=inspiration.result.value;
+    console.log('MOBILE_360_INSPIRATION_REUSE '+JSON.stringify(library));
+    assert.equal(library.initial,12,'Twelve contextual studio templates');
+    assert.equal(library.classic,6,'Six legacy Canvas designs remain usable');
+    assert.equal(library.bottles.length,3,'Bottle filter returns only relevant scenarios');
+    assert.equal(library.expanded,true,'Template detail shows editable recipe scope');
+    assert.equal(library.category,'bottled_liquid');
+    assert.equal(library.scenario,'obsidian_mirror_splash');
+    assert.equal(library.editor,true);
+    assert.equal(library.presetButton,true);
+    assert.ok(library.overflow<=360,'Inspiration gallery and applied editor overflows 360px');
+
     mkdirSync('mobile-qa-artifacts',{recursive:true});
     const shot=await request('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
     writeFileSync('mobile-qa-artifacts/member-studio-360x800.png',Buffer.from(shot.data,'base64'));
   }
   if(label==='member-home'){
+    const welcome=await request('Runtime.evaluate',{expression:"(()=>{const quick=document.querySelector('#screen .ngdm-quick');const wallet=document.querySelector('#screen .ngdm-wallet');const choices=[...quick?.querySelectorAll('.ngdm-shortcut')||[]].map(x=>({label:x.querySelector('strong')?.textContent||'',route:x.dataset.route,tool:x.dataset.aiOpen||''}));return {quickBeforeWallet:!!quick&&!!wallet&&quick.compareDocumentPosition(wallet)&Node.DOCUMENT_POSITION_FOLLOWING,choices,summary:document.querySelector('.ngdm-greeting p:last-child')?.textContent||'',width:document.documentElement.scrollWidth};})()",returnByValue:true});
+    assert.ok(!welcome.exceptionDetails,'First-run member welcome browser exception');
+    const novice=welcome.result.value;
+    console.log('MOBILE_360_MEMBER_FIRST_STEP '+JSON.stringify(novice));
+    assert.ok(novice.quickBeforeWallet,'Beginner actions must appear before token metrics');
+    assert.equal(novice.choices.length,4);
+    assert.ok(novice.choices.some(x=>x.label==='Buat Foto Jualan'&&x.tool==='ngulik-visual'));
+    assert.match(novice.summary,/Buat materi jualan/);
+    assert.ok(novice.width<=360,'Beginner member home overflows 360px');
     const click=await request('Runtime.evaluate',{expression:`(()=>{
       const toggle=document.getElementById('top-nav-trigger');
       toggle.click();

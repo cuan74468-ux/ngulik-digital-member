@@ -52,9 +52,11 @@ test('browser probe permits only credential-free public reads',()=>{
 });
 
 test('every literal frontend API action is handled by Apps Script router',()=>{
-  const frontend=read('js/app.js'),backend=read('apps-script/Code.gs');
+  const frontend=read('js/app.js'),backend=read('apps-script/Code.gs'),visualApi=read('apps-script/VisualApi.gs');
   const actions=[...frontend.matchAll(/\bapi\(\s*['"]([^'"]+)['"]/g)].map(m=>m[1]);
   const handled=new Set([...backend.matchAll(/\bcase\s+['"]([^'"]+)['"]\s*:/g)].map(m=>m[1]));
   assert.ok(actions.length>=10);
-  for(const action of actions)assert.equal(handled.has(action),true,'Missing backend action: '+action);
+  const visual=new Set([...visualApi.matchAll(/'visual[A-Za-z]+'/g)].map(m=>m[0].slice(1,-1)));
+  assert.match(backend,/ngdVisualApiRoute_\(/);
+  for(const action of actions)assert.equal(handled.has(action)||visual.has(action),true,'Missing backend action: '+action);
 });

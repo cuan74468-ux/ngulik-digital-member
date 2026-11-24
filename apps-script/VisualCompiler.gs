@@ -222,20 +222,25 @@ function ngdFoodMagazineCompile_(payload,registryOverride){
  var input=ngdFoodMagazineInput_(payload);
  var r=ngdFoodMagazinePrivateRegistry_(
   registryOverride||ngdFoodMagazinePrivateRegistryLoad_());
- var ids=input.ids;
+ var ids=input.ids,context=input.context;
+ var restoration=context.restoration==='full_phone_restoration'?
+  'FULL SMARTPHONE RESTORATION: Denoise sensor grain while retaining true textures; sharpen actual product edges; remove flat ambient room light and color cast; perform complete physically coherent studio relighting without fabricating packaging, food or geometry.':
+  'SOURCE PRESERVATION: Retain source exposure and natural photographic material; no aggressive reconstruction.';
+ var labelLock='GEOMETRY & LABEL LOCK: Preserve exact product silhouette, bottle cap, transparent liquid opacity, existing brand mark and all actual printed label text from the reference photo without alteration. Maintain an unobstructed Label Safe Zone; never regenerate text.';
+ var physics='MANDATORY SCENARIO PHYSICS (overrides generic optional camera, lighting, lens and environment options) ['+context.category+'/'+context.scenario+']: '+context.optics;
  // Only allowlisted IDs select private recipe text.
  var layers=[
   ['01_ROLE',ngdVisualConfigString_(r.role,'FOOD_ROLE',1400)],
-  ['02_SOURCE_PRESERVATION',ngdVisualConfigString_(r.preservation,'FOOD_PRESERVATION',1700)],
-  ['03_FOOD_CHARACTER',ngdFoodMagazineRegistrySkill_(r,'food_type',ids.food_type)],
-  ['04_COVER_CONCEPT',ngdFoodMagazineRegistrySkill_(r,'cover_concept',ids.cover_concept)],
+  ['02_SOURCE_PRESERVATION',ngdVisualConfigString_(r.preservation,'FOOD_PRESERVATION',1700)+'\n'+restoration+'\n'+labelLock],
+  ['03_FOOD_CHARACTER',context.category==='packaging_cosmetic'?'Preserve the exact physical packaged product, container, ingredients list, manufacturer labels and original visual identity; do not treat it as edible food.':ngdFoodMagazineRegistrySkill_(r,'food_type',ids.food_type)],
+  ['04_COVER_CONCEPT',ngdFoodMagazineRegistrySkill_(r,'cover_concept',ids.cover_concept)+'\n'+physics],
   ['05_CAMERA',ngdFoodMagazineRegistrySkill_(r,'camera_angle',ids.camera_angle)],
   ['06_LIGHTING',ngdFoodMagazineRegistrySkill_(r,'lighting',ids.lighting)],
   ['07_SURFACE_AND_GRADE',
    ngdFoodMagazineRegistrySkill_(r,'surface',ids.surface)+'\n'+
    ngdFoodMagazineRegistrySkill_(r,'grade',ids.grade)],
   ['08_NO_MODEL_TYPOGRAPHY',
-   'Do NOT render any text, letters, numbers, or magazine typography; keep cover layout zones blank. Overlay typography is exclusively applied by a deterministic browser Canvas compositor.'],
+   'Do NOT render any text, letters, numbers, or magazine typography; keep cover layout zones blank. This prohibits adding or redrawing typography, but preserve existing original label lettering from input photo as unchanged texture. No watermarks. Overlay typography is exclusively applied by a deterministic browser Canvas compositor.'],
   ['09_STYLING',ngdFoodMagazineRegistrySkill_(r,'styling',ids.styling)],
   ['10_LENS_AND_FORMAT',
    ngdFoodMagazineRegistrySkill_(r,'lens',ids.lens)+'\n'+
@@ -259,7 +264,7 @@ function ngdFoodMagazineCompile_(payload,registryOverride){
   release_authorized:false,
   image_generation_mode:'IMAGE_TO_IMAGE_REQUIRED',
   request_id:input.request_id,
-  option_ids:ids,
+  option_ids:Object.assign({},ids,{product_category:context.category,studio_scenario:context.scenario,restoration_mode:context.restoration}),
   image_count:input.count,
   credit_multiplier:input.count,
   compiled_prompt:layers.map(function(item){return '['+item[0]+']\n'+item[1];}).join('\n\n'),

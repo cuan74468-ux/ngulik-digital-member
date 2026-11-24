@@ -548,17 +548,31 @@ function viewHome(){
       '<header class="ngdm-greeting">'+
         '<div><p class="ngdm-kicker">RUANG MEMBER <span aria-hidden="true">·</span> '+esc(greeting)+'</p>'+
           '<h1>'+esc(greeting)+', '+esc(first)+'</h1>'+
-          '<p>Token, layanan, dan aktivitas akun Anda.</p></div>'+
+          '<p>Buat materi jualan, temukan alat usaha, atau belajar langkah demi langkah dari HP.</p></div>'+
       '</header>'+
+      '<section class="ngdm-quick" aria-labelledby="ngdm-quick-title">'+
+        '<div class="ngdm-section-head"><div><p class="ngdm-kicker">LANGKAH PERTAMA</p>'+
+        '<h2 id="ngdm-quick-title">Mau mulai dari mana?</h2></div></div>'+
+        '<p class="ngdm-quick-intro">Pilih satu kebutuhan. Tidak perlu memahami semua menu untuk memulai.</p>'+
+        '<div class="ngdm-shortcuts">'+[
+          ['spark','Buat Foto Jualan','Unggah foto · pilih gaya','ai'],
+          ['store','Cari Produk Digital','Temukan alat untuk usaha','katalog'],
+          ['book','Mulai Belajar','Panduan untuk pemula','belajar'],
+          ['gift','Minta Bantuan','Ajukan pertanyaan','dukungan']
+        ].map(([symbol,label,description,route])=>
+          '<button type="button" class="ngdm-shortcut" '+(route==='ai'? 'data-ai-open="ngulik-visual"':'data-route="'+route+'"')+'>'+
+            '<span class="ngdm-shortcut-icon">'+icon(symbol)+'</span>'+
+            '<strong>'+label+'</strong><small>'+description+'</small></button>').join('')+
+        '</div></section>'+
       '<section class="ngdm-wallet" aria-labelledby="ngdm-wallet-heading">'+
         '<div class="ngdm-wallet-top"><span>'+icon('wallet')+' DOMPET TOKEN</span>'+
           '<span class="ngdm-live"><i></i>'+esc(state.me?.status||'Member')+'</span></div>'+
         '<div class="ngdm-wallet-grid"><div class="ngdm-wallet-numbers">'+
           '<p id="ngdm-wallet-heading">Saldo tersedia</p>'+
           '<div class="ngdm-wallet-number"><strong>'+esc(format)+'</strong><span>token</span></div>'+
-          '<p class="ngdm-wallet-hint">Gunakan token untuk fitur Studio AI.</p>'+
+          '<p class="ngdm-wallet-hint">Token untuk layanan tertentu. Saldo dan tarif foto AI Visual terpisah.</p>'+
           '<div class="ngdm-wallet-actions">'+
-             '<button type="button" class="ngdm-wallet-cta" data-route="ai">Pakai token '+icon('arrow')+'</button>'+
+             '<button type="button" class="ngdm-wallet-cta" data-route="ai">Jelajahi Studio '+icon('arrow')+'</button>'+
              '<button type="button" class="ngdm-wallet-secondary" data-route="katalog">Lihat paket</button></div>'+
         '</div><div class="ngdm-wallet-chart">'+
           '<div><strong>Riwayat saldo</strong><small>Aktivitas token terakhir</small></div>'+
@@ -577,19 +591,7 @@ function viewHome(){
           '<strong class="ngdm-metric-money">'+number('affiliate',rupiah(approved))+'</strong>'+
           '<small>'+(!reads.affiliate?'Data belum tersedia':partnerActive?'Program Ajak Teman aktif':'Lihat syarat Ajak Teman')+'</small></div>'+
       '</section>'+
-      '<section class="ngdm-quick" aria-labelledby="ngdm-quick-title">'+
-        '<div class="ngdm-section-head"><div><p class="ngdm-kicker">PINTASAN</p>'+
-        '<h2 id="ngdm-quick-title">Layanan untuk Anda</h2></div></div>'+
-        '<div class="ngdm-shortcuts">'+[
-          ['spark','Studio AI','Buat konten','ai'],
-          ['store','Katalog','Cari produk','katalog'],
-          ['book','Kelas saya','Lanjut belajar','belajar'],
-          ['gift','Jasa digital','Pesan bantuan','jasa']
-        ].map(([symbol,label,description,route])=>
-          '<button type="button" class="ngdm-shortcut" data-route="'+route+'">'+
-            '<span class="ngdm-shortcut-icon">'+icon(symbol)+'</span>'+
-            '<strong>'+label+'</strong><small>'+description+'</small></button>').join('')+
-        '</div></section>'+
+
       '<div class="ngdm-lower">'+
         '<section class="ngdm-orders ngd-window-frame" aria-labelledby="ngdm-orders-title">'+
           '<div class="ngd-window-titlebar" aria-hidden="true"><span class="ngd-window-dots"><i></i><i></i><i></i></span><span class="ngd-window-title">Pesanan</span></div>'+
@@ -2544,12 +2546,79 @@ function render(){
   // Catalog has a single authoritative HERO slot; do not stack PAGE_COVER above it.
   by('screen').innerHTML=screen;
   if(state.route==='ai-tool'&&state.selectedAiToolId==='ngulik-visual'&&logged()&&!isAdmin()){
+    window.NGD_STUDIO?.configureMemberScope(String(state.me?.member_id||''));
     window.NGD_STUDIO?.mount(document.getElementById('ngd-studio-root'));
+    void configureVisualBridgeStaging_();
   }
   syncCheckoutClock_();
   syncHeroRotation_();
   syncMarketplacePolling_();
   document.title=(screens[state.route]?.[0]||'Beranda')+' — Ngulik Digital';
+}
+
+/**
+ * Separate P1 bridge, scoped to member STAGING session only. Never uses
+ * memberWritesEnabled and never enables P0 mutations/finance; GAS enforces
+ * Visual-only flags independently. Local simulation remains the fallback.
+ */
+async function configureVisualBridgeStaging_(){
+ if(!logged()||isAdmin()||!isConnected()||
+  !String(location.pathname).includes('/staging/'))return;
+ try{
+  const health=await api('visualHealth',{},state.token);
+  const sessionToken=state.token;
+  const safeVisualMember=()=>{if(!logged()||isAdmin()||state.token!==sessionToken)
+    throw new ApiError('Sesi Visual berakhir. Masuk kembali.','SESSION_INVALID');};
+  if(health?.templates_enabled===true){
+   void window.NGD_STUDIO?.configureTemplateStorage({
+    list:async()=>{safeVisualMember();const result=await api('visualTemplateList',{},sessionToken);safeVisualMember();return result?.templates||[]},
+    save:async(draft)=>{safeVisualMember();const result=await api('visualTemplateSave',draft,sessionToken,
+      {requestId:createRequestId()});safeVisualMember();return result?.template},
+    remove:async id=>{safeVisualMember();return api('visualTemplateDelete',{id},sessionToken,{requestId:createRequestId()})}
+   });
+  }else{
+   void window.NGD_STUDIO?.configureTemplateStorage(null);
+  }
+  if(health?.live!==true){window.NGD_STUDIO?.configureVisualPipeline(null);return;}
+  const secureApi=async(action,payload,options={})=>{
+   if(!logged()||state.token!==sessionToken||isAdmin())
+    throw new ApiError('Sesi Visual berakhir. Masuk kembali.','SESSION_INVALID');
+   return api(action,payload,sessionToken,{timeoutMs:40000,...options});
+  };
+  const upload=async(file)=>{
+   if(!(file instanceof File)||!/^image\/(jpeg|png|webp)$/.test(file.type)||
+    file.size<1||file.size>4*1024*1024)
+    throw new ApiError('Foto harus JPG, PNG atau WebP maksimal 4 MB.','IMAGE_SIZE');
+   if(!globalThis.crypto?.subtle)throw new ApiError('Browser aman diperlukan.','SECURE_CONTEXT');
+   const bytes=await file.arrayBuffer();
+   const digest=await crypto.subtle.digest('SHA-256',bytes);
+   const sha=[...new Uint8Array(digest)].map(v=>v.toString(16).padStart(2,'0')).join('');
+   const start=await secureApi('visualUploadStart',{mime:file.type,size:file.size,sha256:sha});
+   if(!/^[a-f0-9]{32}$/.test(start?.upload_id||'')||
+    start.chunk_bytes!==24576)throw new ApiError('Upload privat tidak tersedia.','UPLOAD_INVALID');
+   for(let n=0;n<start.chunk_count;n++){
+    const part=new Uint8Array(bytes.slice(n*start.chunk_bytes,(n+1)*start.chunk_bytes));
+    let binary='';for(let j=0;j<part.length;j+=4096)
+     binary+=String.fromCharCode(...part.subarray(j,j+4096));
+    await secureApi('visualUploadChunk',{upload_id:start.upload_id,index:n,
+     base64:btoa(binary)});
+   }
+   return secureApi('visualUploadFinish',{upload_id:start.upload_id});
+  };
+  window.NGD_STUDIO?.configureVisualPipeline({
+   enabled:true,upload,
+   allowedMachines:Array.isArray(health.allowed_machines)?health.allowed_machines:[],
+   quote:args=>secureApi('visualQuote',args),
+   create:args=>secureApi('visualCreateJob',args,{
+    requestId:args.idempotency_key,timeoutMs:40000}),
+   poll:id=>secureApi('visualPollJob',{job_id:id}),
+   result:(id,asset)=>secureApi('visualResult',{job_id:id,asset_id:asset},
+    {timeoutMs:40000})
+  });
+ }catch(_){
+  // Fail closed; no error body, credentials or active session is logged.
+  window.NGD_STUDIO?.configureVisualPipeline(null);
+ }
 }
 // Navigation is a small predictable state machine. A product checkout can be
 // bookmarked, and Android/browser Back returns to the previous screen.

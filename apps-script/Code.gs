@@ -2883,6 +2883,7 @@ function doGet(e) {
   return apiOutput_({ok:true,data:{app:'Ngulik Digital API',version:NGD.VERSION,
     source_revision:NGD.SOURCE_REVISION,
     writes_enabled:mutationsEnabled_(),payments_enabled:financeEnabled_(),
+    visual_staging_ready:typeof ngdVisualPublicMode_==='function'&&ngdVisualPublicMode_(),
     time:isoWib_(now_())},server_time:isoWib_(now_())});
 }
 // Hard fail-closed release gate. Frontend demoMode is NOT a security boundary.
@@ -3106,6 +3107,16 @@ function doPost(e) {
     require_(payload&&typeof payload==='object'&&!Array.isArray(payload),'BAD_REQUEST','Payload tidak valid.');
     // Pembatasan payload dan request_id sebelum mengambil kunci mutasi.
     var id=String(body.request_id||'');
+    // Narrow, independently guarded P1 STAGING Visual API. Every visual*
+    // request validates session + Visual runtime flags inside VisualApi.gs.
+    // No payment action or general write flag is modified or bypassed.
+    if(typeof NGD_VISUAL_API_ACTIONS_!=='undefined'&&
+       NGD_VISUAL_API_ACTIONS_.indexOf(action)>=0){
+      require_(/^[a-zA-Z0-9_-]{16,80}$/.test(id),'VALIDATION',
+        'ID permintaan Visual tidak valid.');
+      var visualResult=ngdVisualApiRoute_(action,String(body.token||''),payload,id);
+      return apiOutput_({ok:true,data:visualResult,server_time:isoWib_(now_())});
+    }
     var reads=apiReadActions_();
     var isolatedAdmin=['adminLogin','adminLogout','adminChangePin'];
     // Isolated STAGING member OTP: NOT a release of general writes or finance.
