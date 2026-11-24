@@ -938,3 +938,61 @@ html body.ngd-public-app:not(#ngd) #screen .ngd-window-frame>.ngdm-section-head{
   --ngd-window-pad-y:22px;
  }
 }
+
+/* Published CMS home (Doc06): editorial photo-led hero.
+   Override the older purple campaign rules above ONLY for the new CMS
+   landing. Hero media is supplied by site_content.image_path, never a
+   hardcoded background or an unpublished/archived asset. */
+html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr)!important;
+  background:#f7f7f1!important;color:#141418!important;
+  padding:clamp(26px,4.4vw,62px)!important;min-height:390px!important;
+  gap:clamp(20px,3vw,48px)!important;align-items:center;
+  border:1px solid #e0e2d6!important;border-radius:22px!important;
+  box-shadow:none!important;
+}
+html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero:not(:has(.ngd-cms-hero-art)){
+  grid-template-columns:minmax(0,1fr)!important;
+}
+html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero::before,
+html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero::after{
+  content:none!important;display:none!important;background:none!important;
+}
+html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero h1{
+  color:#141418!important;-webkit-text-fill-color:#141418!important;
+  font-size:clamp(34px,4.3vw,60px)!important;line-height:1.09!important;
+  letter-spacing:-.045em!important;max-width:770px;
+}
+html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-eyebrow{
+  color:#465b20!important;-webkit-text-fill-color:#465b20!important;
+}
+html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero-lead{
+  color:#52564c!important;-webkit-text-fill-color:#52564c!important;
+  max-width:600px;line-height:1.65!important;
+}
+html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngd-cms-hero-art{
+  width:100%;max-width:none;min-width:0;max-height:485px;
+  aspect-ratio:4/4.3;object-fit:cover;object-position:center;
+  border-radius:16px;box-shadow:none;border:0;display:block;
+}
+html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-btn-gold{
+  background:#ccf349!important;color:#141418!important;border-color:#141418!important;
+}
+@media(max-width:760px){
+  html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero{
+    display:flex!important;flex-direction:column!important;align-items:stretch!important;
+    gap:20px!important;padding:25px 20px!important;min-height:0!important;
+    border-radius:17px!important;
+  }
+  html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero h1{
+    font-size:clamp(30px,8vw,40px)!important;line-height:1.13!important;
+  }
+  html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngd-cms-hero-art{
+    aspect-ratio:16/10;max-height:310px;border-radius:12px;
+  }
+  html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero::before,
+  html body.ngd-public-app[data-app-role="guest"] #screen .ngd-cms-landing .ngdl-hero::after{
+    content:none!important;display:none!important;
+  }
+}
