@@ -1818,7 +1818,21 @@ function viewAdminSettings(){
       ['masa_tahan_hari','Masa tahan komisi (hari)'],
       ['min_payout','Minimum pencairan (Rp)']]],
     ['Informasi publik',[
-      ['teks_disclosure_affiliate','Keterangan komisi']]]
+      ['teks_disclosure_affiliate','Keterangan komisi'],
+      ['nama_brand','Nama platform'],
+      ['tagline_brand','Kalimat pengantar'],
+      ['wa_admin','Nomor WA admin'],
+      ['footer_identitas','Identitas footer'],
+      ['footer_aksesibilitas','Bantuan & aksesibilitas']]],
+    ['Pembayaran dan komisi — hanya baca',[
+      ['payment_gateway_mode','Mode pembayaran'],
+      ['qris_atas_nama','Nama penerima QRIS'],
+      ['qris_nmid','ID merchant QRIS'],
+      ['kode_unik_min','Kode unik minimum'],
+      ['kode_unik_max','Kode unik maksimum'],
+      ['order_expiry_menit','Batas pembayaran (menit)'],
+      ['komisi_starter_nominal','Komisi Starter'],
+      ['min_payout_komisi','Minimum pencairan']]]
   ];
   const cell=(key,label)=>{
     const value=settings?.[key];
