@@ -36,7 +36,7 @@ const tool=(over={})=>({
  placeholder_input:'Nama produk',prompt_template:'Tulis promosi dengan sopan',
  kredit_biaya:1,aktif:true,urut:1,...over
 });
-const module=(over={})=>({
+const learningRow=(over={})=>({
  urut:1,judul:'Panduan NIB',deskripsi:'Prosedur resmi',
  url_classroom:'https://oss.go.id/id',aktif:true,...over
 });
@@ -57,7 +57,7 @@ test('new CMS modules are valid GAS V8 JS and reject non-STAGING even on read',(
 test('all three tables allow draft creation and prevent mutation when master gate OFF',()=>{
  for(const [table,id,values] of [
    ['ai_tools','TOOL_20261124',tool()],
-   ['modul_belajar','MOD_20261124',module()],
+   ['modul_belajar','MOD_20261124',learningRow()],
    ['etalase_affiliate_luar','AFF_20261124',shelf()]
  ]){
    const blocked=fixture({mutations:false});
