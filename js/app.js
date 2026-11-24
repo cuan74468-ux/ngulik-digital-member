@@ -1074,7 +1074,9 @@ function aiRouteFromHash_(){
     }catch(_){}
     return 'ai';
   }
-  return screens[hash]?hash:'beranda';
+  const aliases={'auth':'login','portal-belajar':'portal','ajak-teman':'affiliate'};
+  const target=Object.prototype.hasOwnProperty.call(aliases,hash)?aliases[hash]:hash;
+  return screens[target]?target:'beranda';
 }
 function aiCategoryNav_(tools,publicMode){
   const current=state.aiCategory||'semua';
