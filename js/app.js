@@ -2677,10 +2677,9 @@ async function refreshStagingReadiness_(){
   if(state.route==='daftar'||state.route==='login')render();
 }
 async function refreshPublic(){
-  if(state.qa)return;
-  if(!isConnected()){
-    state.cmsLoaded=true;state.cmsReadError=true;render();return;
-  }
+  // Offline/QA previews have no real CMS endpoint. Keep their neutral loading
+  // fixture; a configured endpoint that returns an error gets an explicit status.
+  if(state.qa||!isConnected())return;
   // Independent public reads must not discard a valid catalogue when the
   // metadata service is briefly unavailable (or vice versa).
   const [info,catalog,content,publicTools,settings]=await Promise.allSettled([
