@@ -90,6 +90,7 @@ function ngdVisualJobs_(dependencies){
   var digest=d.fingerprint({member:member,tier:request.tier,
    option_ids:compiled.option_ids,count:count,
    asset_id:compiled.media_contract.reference_asset_id,
+   compiled_prompt:compiled.compiled_prompt,negative_prompt:compiled.negative_prompt,
    overlay:compiled.overlay_specification});
   ngdVjAssert_(ngdVjHex_(digest),'FINGERPRINT_INVALID');
   var scope=member+':'+key;
