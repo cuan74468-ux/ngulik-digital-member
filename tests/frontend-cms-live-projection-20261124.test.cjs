@@ -60,3 +60,17 @@ test('backend public CMS projection intentionally excludes status while filterin
  const home=app.slice(app.indexOf('const editorHtml=window.NGD_PUBLIC_CMS'),app.indexOf('const offerCategories=',app.indexOf('const editorHtml=window.NGD_PUBLIC_CMS')));
  assert.doesNotMatch(home,/row\?\.status==='PUBLISHED'/);
 });
+
+test('new CMS hero preserves a real CMS image slot and overrides the legacy purple theme',()=>{
+ const html=read('js/public-cms-home.js');
+ const css=read('assets/ngulik-design-system.css');
+ assert.match(html,/class="ngd-cms-hero-art"/);
+ assert.match(html,/const heroImage=photo\(hero\.image_path\)/);
+ assert.match(css,/#screen \.ngd-cms-landing \.ngdl-hero\{/);
+ const index=css.lastIndexOf('/* Published CMS home (Doc06)');
+ const override=css.slice(index);
+ assert.ok(index>=0);
+ assert.match(override,/background:#f7f7f1!important/);
+ assert.match(override,/\.ngd-cms-hero-art\{/);
+ assert.doesNotMatch(override,/ngd-v6-hero\.webp|ngd-catalog-v9-wide\.webp/);
+});
