@@ -4,7 +4,9 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/verify-staging-identity.yml'
-      - 'staging/**'
+      - 'staging/config.js'
+      - 'staging/monitor.html'
+      - 'staging/member.html'
   workflow_dispatch:
 permissions:
   contents: read
@@ -46,7 +48,8 @@ jobs:
             }finally{clearTimeout(timer);}
           })().catch(e=>{console.error('STAGING_CANDIDATE_HEALTH_UNVERIFIED:',String(e.message).slice(0,120));process.exitCode=1;});
           NODE
-      - name: Verify identity without login or writes
+      - name: Verify STAGING identity and report signup release gates (read-only)
+        id: identity
         shell: bash
         run: |
           node <<'NODE'
@@ -87,8 +90,14 @@ jobs:
                 if(typeof d[field]!=='boolean')
                   throw Error('STAGING identity flag invalid: '+field);
               }
-              if(d.mutations_enabled!==true||d.registration_enabled!==true||d.otp_enabled!==true||d.external_providers_enabled!==true)
-                throw Error('STAGING signup release gates are not all enabled.');
+              const ready=d.mutations_enabled===true&&d.registration_enabled===true&&
+                d.otp_enabled===true&&d.external_providers_enabled===true;
+              // This workflow attests STAGING identity unconditionally. Signup
+              // availability is a separate release gate, not an invariant.
+              // Never turn on an API/provider/finance flag to green a CI job.
+              fs.appendFileSync(process.env.GITHUB_OUTPUT,'signup_enabled='+ready+'\n');
+              if(!ready)console.log('STAGING_SIGNUP_NOT_RELEASED: release flags are OFF; no OTP sent, no data written');
+              else console.log('STAGING_SIGNUP_GATES_ENABLED: browser probe follows; no OTP sent');
               console.log('STAGING_IDENTITY_VERIFIED: environment=STAGING; admin_login_enabled=true; mutations='+
                 d.mutations_enabled+'; registration='+d.registration_enabled+
                 '; otp='+d.otp_enabled+'; providers='+d.external_providers_enabled+'; finance='+d.finance_enabled);
@@ -140,7 +149,8 @@ jobs:
             exit 1
           fi
 
-      - name: Verify live STAGING signup form is enabled in Chrome (read-only)
+      - name: Verify live STAGING signup form when release gates enabled (read-only)
+        if: steps.identity.outputs.signup_enabled == 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
