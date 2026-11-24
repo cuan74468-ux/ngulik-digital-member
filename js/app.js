@@ -2563,8 +2563,18 @@ async function configureVisualBridgeStaging_(){
   !String(location.pathname).includes('/staging/'))return;
  try{
   const health=await api('visualHealth',{},state.token);
-  if(health?.live!==true)return;
   const sessionToken=state.token;
+  if(health?.templates_enabled===true){
+   void window.NGD_STUDIO?.configureTemplateStorage({
+    list:async()=>{const result=await api('visualTemplateList',{},sessionToken);return result?.templates||[]},
+    save:async(draft)=>{const result=await api('visualTemplateSave',draft,sessionToken,
+      {requestId:createRequestId()});return result?.template},
+    remove:async id=>api('visualTemplateDelete',{id},sessionToken,{requestId:createRequestId()})
+   });
+  }else{
+   void window.NGD_STUDIO?.configureTemplateStorage(null);
+  }
+  if(health?.live!==true){window.NGD_STUDIO?.configureVisualPipeline(null);return;}
   const secureApi=async(action,payload,options={})=>{
    if(!logged()||state.token!==sessionToken||isAdmin())
     throw new ApiError('Sesi Visual berakhir. Masuk kembali.','SESSION_INVALID');
