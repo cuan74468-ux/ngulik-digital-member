@@ -104,3 +104,27 @@ function ngdVisualChunkUpload_(auth){
  }
  return {start:create,chunk:put,finish:finish};
 }
+
+/**
+ * Safe periodic cleanup: remove expired multipart uploads including orphans.
+ * Called only from editor-owned scheduled maintenance, never by a member.
+ */
+function ngdVisualUploadPurgeExpired_(){
+ var folder=ngdVmDriveFolder_(),cursor=folder.getFiles(),now=Date.now();
+ var removed=0,scanned=0,files=[],expired={};
+ while(cursor.hasNext()&&scanned<800){
+  var file=cursor.next(),name=file.getName();scanned++;
+  if(!/^NGD_VU_[a-f0-9]{32}_(MANIFEST|CHUNK_\d+)$/.test(name))continue;
+  files.push(file);
+  if(name.endsWith('_MANIFEST')){
+   try{var metadata=JSON.parse(file.getBlob().getDataAsString());
+    if(metadata.expires_at<=now)expired[name.slice(7,39)]=true;
+   }catch(_){expired[name.slice(7,39)]=true;}
+  }
+ }
+ files.forEach(function(file){
+  var id=file.getName().slice(7,39);
+  if(expired[id]){file.setTrashed(true);removed++;}
+ });
+ return {scanned:scanned,purged:removed,has_more:cursor.hasNext()};
+}
