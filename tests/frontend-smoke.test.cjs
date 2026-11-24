@@ -51,11 +51,11 @@ test('public config exposes owner-enabled features while secrets stay server-sid
 test('guest homepage renders the guest-only visual landing',()=>{
   const {nodes,document}=renderPreview();
   assert.match(nodes.screen.innerHTML,/ngd-landing-v1/);
-  assert.match(nodes.screen.innerHTML,/Punya usaha\?/);
-  assert.match(nodes.screen.innerHTML,/ngdl-hero-copy/);
+  assert.match(nodes.screen.innerHTML,/Sedang memuat informasi/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/Punya usaha\?/);
   assert.doesNotMatch(nodes.screen.innerHTML,/ngdl-hero-art|ngdl-art-main|ngdl-art-caption/);
-  assert.equal((nodes.screen.innerHTML.match(/class="ngdl-offer"/g)||[]).length,4);
-  assert.match(nodes.screen.innerHTML,/data-route="daftar"/);
+  assert.equal((nodes.screen.innerHTML.match(/class="ngdl-offer"/g)||[]).length,0);
+  assert.doesNotMatch(nodes.screen.innerHTML,/data-route="daftar"/);
   assert.doesNotMatch(nodes.screen.innerHTML,/Baca eBook Gratis|Ikut Kelas Gratis|ngdl-free/);
   assert.doesNotMatch(nodes.screen.innerHTML,/market-product-card|ngd-home-artwork/);
   assert.equal(nodes['notice-slot'].innerHTML,'');
@@ -77,24 +77,18 @@ test('free ebook and classroom links only render in authenticated member learnin
 test('guest hero image is a layered background, not a small inline artwork card',()=>{
   const source=fs.readFileSync(path.join(base,'assets/landing-guest-v1.css'),'utf8');
   const markup=renderPreview().nodes.screen.innerHTML;
-  assert.match(source,/url\("\.\/media\/ngd-catalog-v9-wide\.webp"\)/);
+  assert.doesNotMatch(source,/ngd-catalog-v9-wide\.webp/);
   assert.match(source,/\.ngdl-hero::after/);
-  assert.match(source,/linear-gradient/);
-  assert.match(source,/@media\(max-width:600px\)/);
+  assert.match(source,/@media\(max-width:760px\)/);
   assert.doesNotMatch(markup,/ngdl-hero-art|ngdl-art-caption/);
 });
 test('mobile hero reveals background art and closing CTA is compact',()=>{
   const source=fs.readFileSync(path.join(base,'assets/landing-guest-v1.css'),'utf8');
   const markup=renderPreview().nodes.screen.innerHTML;
-  assert.match(source,/\.ngdl-hero::before\{inset:0;height:auto;background-position:98% 49%;background-size:cover;opacity:1/);
-  assert.match(source,/\.ngdl-story\{display:grid;grid-template-columns:1fr;padding:23px 2% 20px;gap:8px/);
-  assert.match(source,/-webkit-text-fill-color:#241d38!important/);
-  assert.match(markup,/Urusan digital, nggak harus bikin repot/);
-  assert.match(markup,/Cari yang pas buat Anda/);
-  assert.match(source,/\.ngdl-end\{grid-template-columns:minmax\(0,1fr\);row-gap:10px;margin-top:28px/);
-  assert.match(source,/\.ngdl-end \.ngdl-actions\{grid-column:1;grid-row:auto;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(markup,/Mau mulai ngulik\?/);
-  assert.doesNotMatch(markup,/MAU MULAI\?/);
+  assert.match(source,/@media\(max-width:760px\)/);
+  assert.match(source,/grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(markup,/Sedang memuat informasi/);
+  assert.doesNotMatch(markup,/Urusan digital|Mau mulai ngulik/);
 });
 test('guest drawer exposes four public routes and a single member entrance',()=>{
   const {nodes,context}=renderPreview();
