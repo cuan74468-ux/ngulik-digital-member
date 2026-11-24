@@ -14,7 +14,8 @@ function preview(){
  const window={NGD_CONFIG:{demoMode:true,apiUrl:'',siteUrl:'https://example.invalid/',
    paymentsEnabled:false,supportEnabled:false,notificationsEnabled:false,
    lmsEnabled:false,qrisMerchant:'',qrisImageUrl:''},
-   NGD_CONTENT_UI:{mediaPath(raw){
+   NGD_CONTENT_UI:{media(){return '';},published(){return [];},catalogBanner(){return '';},cover(){return '';},
+   mediaPath(raw){
     return /^assets\/[A-Za-z0-9_./-]+\.webp$/.test(String(raw||''))?'./'+raw:'';
    }},addEventListener(){},scrollTo(){}};
  const ctx=vm.createContext({window,document,
@@ -66,11 +67,12 @@ test('new CMS hero preserves a real CMS image slot and overrides the legacy purp
  const css=read('assets/ngulik-design-system.css');
  assert.match(html,/class="ngd-cms-hero-art"/);
  assert.match(html,/const heroImage=photo\(hero\.image_path\)/);
- assert.match(css,/#screen \.ngd-cms-landing \.ngdl-hero\{/);
- const index=css.lastIndexOf('/* Published CMS home (Doc06)');
- const override=css.slice(index);
- assert.ok(index>=0);
- assert.match(override,/background:#f7f7f1!important/);
- assert.match(override,/\.ngd-cms-hero-art\{/);
- assert.doesNotMatch(override,/ngd-v6-hero\.webp|ngd-catalog-v9-wide\.webp/);
+ const index=css.indexOf('/* PUBLIC — editorial hero */');
+ const end=css.indexOf('html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-btn{',index);
+ const rule=css.slice(index,end);
+ assert.ok(index>=0&&end>index);
+ assert.match(rule,/background:#f7f7f1!important/);
+ assert.match(rule,/color:#141418!important/);
+ assert.doesNotMatch(rule,/background:#5B3DF5!important/);
+ assert.match(read('assets/landing-guest-v1.css'),/\.ngd-cms-hero-art\{/);
 });
