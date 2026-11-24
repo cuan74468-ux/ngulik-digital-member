@@ -3,7 +3,7 @@
 'use strict';
 const RATIOS={'1:1':[1080,1080],'4:5':[1080,1350],'9:16':[1080,1920],'16:9':[1920,1080],'3:4':[1080,1440]};
 const TIERS={hemat:2,standar:4,premium:6};
-const V2_TIERS={standard:4,hd_commercial:6};
+const V2_TIERS={standard:2,hd_commercial:3};
 const MOODS={terang:'Terang Bersih',hangat:'Hangat Kafe',kontras:'Kontras Promo',gelap:'Mewah Gelap'};
 const TEMPLATES=[
 {id:'katalog-minimalis',name:'Katalog Studio Minimalis',category:'Katalog Studio',ratio:'1:1',mood:'terang',tier:'hemat',layout:'catalog',product:'Jam Tangan Minimalis Series',headline:'Desain Presisi untuk Aktivitas Harian',promo:'Rp149.000',img:'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1080&q=85'},
@@ -202,10 +202,79 @@ function chooseFood(field,value){
  const next={...food,[field]:value};
  if(field==='cover_concept')Object.assign(next,FOOD_PRESETS[value]);
  if(!foodCompatible(next))return false;
- food=next;
+ food=next;liveRequestKey='';
  if(field==='format'){state.ratio=food.format;}
  state.rendered=false;
  return true;
+}
+
+/* Explicitly wired only by a later authorized private API bridge. No public
+ * GitHub Pages secret, request, payment or provider endpoint is configured. */
+let visualPipelineBridge=null,selectedLocalFile=null,liveRequestKey='',liveJobId='',livePolling=false;
+function liveBridgeReady(){
+ return !!(visualPipelineBridge&&visualPipelineBridge.enabled===true&&
+  ['upload','create','poll'].every(k=>typeof visualPipelineBridge[k]==='function'));
+}
+function resetVisualLiveRequest(){liveRequestKey='';liveJobId='';}
+async function runVisualLive(){
+ if(!foodMode||!liveBridgeReady()||livePolling||!selectedLocalFile){
+  announce('AI nyata belum aktif. Pilih foto lokal dan tunggu aktivasi layanan.');return;
+ }
+ if(foodQuality.status!=='pass'){announce('Foto belum lolos pemeriksaan kualitas.');return;}
+ const button=node('ns-food-live-generate');
+ if(button)button.disabled=true;
+ livePolling=true;
+ const token=epoch;
+ try{
+  if(!liveRequestKey){
+   if(!global.crypto?.randomUUID)throw Error('Browser tidak mendukung ID aman');
+   liveRequestKey=global.crypto.randomUUID().replace(/-/g,'');
+  }
+  if(!liveJobId){
+   const handle=await visualPipelineBridge.upload(selectedLocalFile,{idempotency_key:liveRequestKey});
+   if(!handle||!/^asset_[A-Za-z0-9_-]{6,80}$/.test(handle.asset_id))
+    throw Error('Upload privat tidak dikonfirmasi');
+   const request=foodDraft();
+   request.payload.reference_image=handle.asset_id;
+   request.payload.request_id=liveRequestKey;
+   const tier=state.v2.quality_tier==='hd_commercial'?'hd':'standard';
+   const created=await visualPipelineBridge.create({
+    idempotency_key:liveRequestKey,tier,payload:request.payload
+   });
+   if(!created||!/^[A-Za-z0-9_-]{16,80}$/.test(created.job_id))
+    throw Error('Antrean tidak memberi ID job yang sah');
+   liveJobId=created.job_id;
+  }
+  for(let i=0;i<60;i++){
+   if(!active()||token!==epoch)break;
+   const status=await visualPipelineBridge.poll(liveJobId);
+   if(!status||status.job_id!==liveJobId)throw Error('Respons job tidak sah');
+   if(status.status==='SETTLED'){
+    announce('Transformasi AI berhasil. Hasil tersimpan privat; buka galeri hasil melalui akun.');
+    resetVisualLiveRequest();return;
+   }
+   if(['REFUNDED','FAILED'].includes(status.status)){
+    announce('Provider gagal; reservasi kredit dikembalikan. Coba lagi setelah layanan pulih.');
+    resetVisualLiveRequest();return;
+   }
+   if(['CREATED','RESERVED','PROCESSING','SUCCEEDED'].indexOf(status.status)<0)
+    throw Error('Status antrean tidak dikenal');
+   await new Promise(resolve=>setTimeout(resolve,3000));
+  }
+  announce('Job masih diproses. Cek status dari akun sebelum mengirim permintaan baru.');
+ }catch(err){
+  announce('Belum bisa memproses AI: '+String(err.message||'layanan tidak tersedia').slice(0,90));
+ }finally{
+  livePolling=false;
+  const current=node('ns-food-live-generate');if(current)current.disabled=false;
+ }
+}
+function configureVisualPipeline(bridge){
+ if(bridge!==null&&(!bridge||bridge.enabled!==true||
+  ['upload','create','poll'].some(k=>typeof bridge[k]!=='function')))
+  throw Error('VISUAL_PRIVATE_BRIDGE_INVALID');
+ visualPipelineBridge=bridge;resetVisualLiveRequest();
+ if(active()&&state.view==='editor')content();
 }
 function foodDraft(){
  return {mode:'CONTRACT_PREVIEW_ONLY',contract_version:'visual-food-magazine-img2img-v2',
@@ -238,7 +307,7 @@ function foodFields(){
   '<label class="ns-v2-overlay-toggle"><input type="checkbox" id="ns-v2-overlay" '+(state.overlay?'checked':'')+'><span>Tambahkan teks melalui Canvas (OFF default)</span></label>'+
   (state.overlay?'<div class="ns-v2-overlay-fields">'+[['ns-product','Nama brand',state.product,70],['ns-headline','Headline',state.headline,100],['ns-promo','Tagline',state.promo,100]].map(([id,label,value,max])=>'<label class="ns-label">'+label+'<input id="'+id+'" class="ns-control" maxlength="'+max+'" value="'+htmlEscape(value)+'"></label>').join('')+'<label class="ns-label">Harga<input id="ns-food-price" class="ns-control" maxlength="30" value="'+htmlEscape(foodPrice)+'"></label></div>':'')+
   '</div><div class="ns-v2-field"><strong>'+FOOD_LABELS.similarity+'</strong>'+foodChoices('similarity')+'</div>'+
-  '<div class="ns-v2-field"><strong>'+FOOD_LABELS.count+'</strong>'+foodChoices('count')+'</div>'+
+  '<div class="ns-v2-field"><strong>'+FOOD_LABELS.count+'</strong>'+foodChoices('count')+'</div>'+ '<div class="ns-v2-field"><strong>Kualitas hasil</strong><div class="ns-food-options">'+ [['standard','Standar · 2 kredit/hasil'],['hd_commercial','HD · 3 kredit/hasil']].map(([id,label])=> '<button type="button" class="ns-v2-choice" data-food-tier="'+id+'" aria-pressed="'+(state.v2.quality_tier===id)+'">'+label+'</button>').join('')+'</div></div>'+
   '<label class="ns-label">Catatan kreatif (opsional, maks. 240 karakter)<textarea id="ns-food-notes" maxlength="240" rows="2" class="ns-control">'+htmlEscape(foodNotes)+'</textarea></label></div>';
  return '<section class="ns-block ns-v2-step ns-food-magazine"><h2><span class="ns-count">02</span> Foto Makanan Gaya Majalah</h2>'+
  '<p class="ns-hint">12 pilihan terpandu. Konsep mengatur cahaya, permukaan dan warna; Anda bisa menyesuaikannya lagi.</p>'+
@@ -303,7 +372,7 @@ function editor(){
  ))+
  '</div><div class="ns-cost"><div class="ns-cost-row"><strong>Kredit simulasi</strong><span class="ns-status ns-mono">'+getCost()+' Cr</span></div>'+
  foodPreflightMarkup()+'<div class="ns-hint">'+(foodMode?food.count+' × '+(V2_TIERS[state.v2.quality_tier]||4)+' Cr / hasil · estimasi simulasi':'1 hasil · simulasi')+'</div>'+ '<button type="button" id="ns-generate" class="ns-cta ns-primary" '+(!selected||state.busy||(foodMode&&foodQuality.status!=='pass')?'disabled':'')+'>'+ico('spark')+(selected?' Buat Pratinjau Simulasi':' Unggah Foto Dahulu')+'</button>'+
- '<small class="ns-hint">Generasi AI sungguhan belum terhubung. Foto asli tidak dikirim ke server.</small></div></aside>'+
+ (foodMode&&liveBridgeReady()?'<button type="button" id="ns-food-live-generate" class="ns-cta ns-dark" '+(!selected||!selectedLocalFile||foodQuality.status!=='pass'||livePolling?'disabled':'')+'>Generate AI melalui antrean privat</button>':'')+ '<small class="ns-hint">'+(liveBridgeReady()?'AI memakai antrean privat jika disetujui oleh backend.':'AI nyata masih nonaktif. Foto asli tidak dikirim ke server.')+'</small></div></aside>'+
  '<div class="ns-board-panel"><div class="ns-window-titlebar"><span class="ns-window-dots" aria-hidden="true"><i></i><i></i><i></i></span><strong>Pratinjau Foto Produk</strong></div>'+
  '<div class="ns-board-toolbar"><span class="ns-pill">'+dims[0]+' × '+dims[1]+' px</span><div class="ns-board-actions">'+
  '<button type="button" class="ns-cta" id="ns-compare" aria-pressed="'+state.compare+'">'+ico('compare')+' '+(state.compare?'Lihat Pratinjau':'Bandingkan Sumber')+'</button>'+
@@ -324,7 +393,7 @@ function setTemplate(t){
  if(p){state.v2.product_category=p[0];state.v2.use_case=p[1];state.v2.visual_style=p[2];}
  state.v2.aspect_ratio=t.ratio;
  reconcileV2();
- state.template=t;state.photo=state.photo||t.img;state.photoChosen=true;
+ selectedLocalFile=null;resetVisualLiveRequest();state.template=t;state.photo=state.photo||t.img;state.photoChosen=true;
  state.product=t.product;state.headline=t.headline;state.promo=t.promo;
  state.mood=t.mood;state.img=null;state.loadedUrl='';state.compare=false;
  state.rendered=false;state.view='editor';shell();
@@ -339,13 +408,13 @@ const boxH=Math.min(H*.38,420),top=H-boxH;ctx.fillStyle=state.mood==='gelap'?'rg
 function recipe(){return ['Commercial product visual simulation','Template: '+state.template.name,'Style: '+MOODS[state.mood],'Canvas: '+state.ratio,'Produk: '+state.product,'Headline: '+state.headline,'Promo: '+state.promo,'Mode: local-only (no AI provider request)'].join('\n')}
 function download(data,filename){const a=document.createElement('a');a.href=data;a.download=filename;document.body.append(a);a.click();a.remove()}
 function selectView(v){if(!['gallery','editor','history'].includes(v))return;state.view=v;shell()}
-function maybeEdit(input){if(input.id==='ns-food-price'){foodPrice=input.value.slice(0,30);return}if(input.id==='ns-food-notes'){foodNotes=input.value.slice(0,240);return}if(input.id==='ns-food-hex'){foodHex=input.value;return}const keys={'ns-product':'product','ns-headline':'headline','ns-promo':'promo'};if(keys[input.id]){state[keys[input.id]]=input.value;draw();const rec=node('ns-recipe');if(rec)rec.textContent=recipe()}if(input.id==='ns-search'){state.q=input.value;const selectionStart=input.selectionStart;content();const fresh=node('ns-search');if(fresh){fresh.focus();fresh.setSelectionRange(selectionStart,selectionStart)}}}
+function maybeEdit(input){if(input.id==='ns-food-price'){resetVisualLiveRequest();foodPrice=input.value.slice(0,30);return}if(input.id==='ns-food-notes'){resetVisualLiveRequest();foodNotes=input.value.slice(0,240);return}if(input.id==='ns-food-hex'){resetVisualLiveRequest();foodHex=input.value;return}const keys={'ns-product':'product','ns-headline':'headline','ns-promo':'promo'};if(keys[input.id]){resetVisualLiveRequest();state[keys[input.id]]=input.value;draw();const rec=node('ns-recipe');if(rec)rec.textContent=recipe()}if(input.id==='ns-search'){state.q=input.value;const selectionStart=input.selectionStart;content();const fresh=node('ns-search');if(fresh){fresh.focus();fresh.setSelectionRange(selectionStart,selectionStart)}}}
 async function simulate(){if(state.busy)return;if(!state.photo){announce('Pilih foto produk lebih dulu.');return;}if(foodMode&&foodQuality.status!=='pass'){announce('Pastikan foto sudah diperiksa dan layak. Gunakan unggahan lokal yang terang dan tajam.');return;}const reservation=adapter.reserve(getCost());if(!reservation.ok){announce('Saldo simulasi tidak cukup. Refresh halaman untuk mengulang sesi.');return}state.busy=true;const token=++epoch;const gen=node('ns-generate');if(gen){gen.disabled=true;gen.textContent='Memproses simulasi…'}try{draw();const cv=node('ns-canvas');if(!cv)throw Error('Canvas tidak tersedia');const image=cv.toDataURL('image/png');await Promise.resolve();if(!active()||token!==epoch)return;const settled=adapter.settle(reservation.reservation);if(!settled.ok)throw Error('Simulasi gagal');state.renderNo++;state.rendered=true;const count=foodMode?food.count:1;for(let n=0;n<count;n++)state.history.unshift({image,product:state.product,ratio:state.ratio,cost:reservation.reservation.cost/count});if(state.history.length>8)state.history.length=8;shell();announce(count+' aset simulasi tersimpan di riwayat sesi (tanpa AI).')}catch(e){adapter.release(reservation.reservation);state.busy=false;announce('Gagal membuat pratinjau. Gunakan foto lokal atau coba lagi.');}finally{state.busy=false;if(active()&&state.view==='editor'){const btn=node('ns-generate');if(btn){btn.disabled=foodMode&&foodQuality.status!=='pass';btn.innerHTML=ico('spark')+' Generate Visual'}}}}
-function handleClick(event){const target=event.target.closest('button');if(!target||!root.contains(target))return;if(target.dataset.view){selectView(target.dataset.view);return}if(target.dataset.cat){state.cat=target.dataset.cat;content();return}if(target.dataset.template){const t=TEMPLATES.find(x=>x.id===target.dataset.template);if(t)setTemplate(t);return}if(target.dataset.sample!==undefined){const i=Number(target.dataset.sample);const s=SAMPLES[i];if(s){state.photo=s.img;state.photoChosen=true;state.product=s.product;state.headline=s.headline;state.promo=s.promo;state.v2.product_category=['beverage_bottle','food_culinary','skincare_cosmetic','food_culinary'][i];reconcileV2();state.img=null;state.loadedUrl='';content()}return}
-if(target.dataset.foodMode){foodMode=target.dataset.foodMode==='food';if(foodMode){state.ratio=food.format;state.overlay=false;foodQuality={status:'not_checked',message:'Memeriksa foto sumber…'};if(state.img)evaluateFoodPhoto(state.img)}else{state.ratio=state.v2.aspect_ratio;}content();return}if(target.dataset.foodField){if(chooseFood(target.dataset.foodField,target.dataset.foodField==='count'?Number(target.dataset.foodValue):target.dataset.foodValue))content();return}if(target.dataset.v2Field){if(selectV2(target.dataset.v2Field,target.dataset.v2Value))content();return}if(target.dataset.mood){state.mood=target.dataset.mood;content();return}if(target.dataset.ratio){state.ratio=target.dataset.ratio;content();return}if(target.dataset.tier){state.tier=target.dataset.tier;content();return}
-if(target.id==='ns-upload'){node('ns-file')?.click();return}if(target.id==='ns-toggle'){state.overlay=!state.overlay;content();return}if(target.id==='ns-compare'){state.compare=!state.compare;content();return}if(target.id==='ns-generate'){void simulate();return}if(target.id==='ns-download'){const cv=node('ns-canvas');if(cv)try{download(cv.toDataURL('image/png'),'ngulik-studio-simulasi-'+state.ratio.replace(':','x')+'.png')}catch(_){announce('Tidak bisa mengunduh gambar eksternal ini. Unggah foto lokal untuk ekspor HD.')}return}if(target.dataset.preview!==undefined){const item=state.history[Number(target.dataset.preview)];if(item){state.photo=item.image;state.photoChosen=true;state.img=null;state.loadedUrl='';state.ratio=item.ratio;state.product=item.product;state.compare=true;state.view='editor';shell()}return}if(target.dataset.historyDownload!==undefined){const item=state.history[Number(target.dataset.historyDownload)];if(item)download(item.image,'ngulik-studio-aset-'+(Number(target.dataset.historyDownload)+1)+'.png');return}}
-function handleChange(event){const t=event.target;if(t.id==='ns-v2-overlay'){state.overlay=t.checked;content();return}if(t.id==='ns-ratio-filter'){state.filterRatio=t.value;content()}if(t.id==='ns-file'){const file=t.files?.[0];if(!file)return;if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>8*1024*1024){announce('File harus JPG/PNG/WebP maksimal 8 MB.');return}const reader=new FileReader();reader.onload=()=>{if(!active())return;state.photo=String(reader.result||'');state.photoChosen=true;state.img=null;state.loadedUrl='';foodQuality={status:'not_checked',message:'Sedang memeriksa foto baru…'};content()};reader.readAsDataURL(file)}}
+function handleClick(event){const target=event.target.closest('button');if(!target||!root.contains(target))return;if(target.dataset.view){selectView(target.dataset.view);return}if(target.dataset.cat){state.cat=target.dataset.cat;content();return}if(target.dataset.template){const t=TEMPLATES.find(x=>x.id===target.dataset.template);if(t)setTemplate(t);return}if(target.dataset.sample!==undefined){const i=Number(target.dataset.sample);const s=SAMPLES[i];if(s){selectedLocalFile=null;resetVisualLiveRequest();state.photo=s.img;state.photoChosen=true;state.product=s.product;state.headline=s.headline;state.promo=s.promo;state.v2.product_category=['beverage_bottle','food_culinary','skincare_cosmetic','food_culinary'][i];reconcileV2();state.img=null;state.loadedUrl='';content()}return}
+if(target.dataset.foodMode){foodMode=target.dataset.foodMode==='food';if(foodMode){state.ratio=food.format;state.overlay=false;foodQuality={status:'not_checked',message:'Memeriksa foto sumber…'};if(state.img)evaluateFoodPhoto(state.img)}else{state.ratio=state.v2.aspect_ratio;}content();return}if(target.dataset.foodTier){if(['standard','hd_commercial'].includes(target.dataset.foodTier)){state.v2.quality_tier=target.dataset.foodTier;resetVisualLiveRequest();content()}return}if(target.dataset.foodField){if(chooseFood(target.dataset.foodField,target.dataset.foodField==='count'?Number(target.dataset.foodValue):target.dataset.foodValue))content();return}if(target.dataset.v2Field){if(selectV2(target.dataset.v2Field,target.dataset.v2Value))content();return}if(target.dataset.mood){state.mood=target.dataset.mood;content();return}if(target.dataset.ratio){state.ratio=target.dataset.ratio;content();return}if(target.dataset.tier){state.tier=target.dataset.tier;content();return}
+if(target.id==='ns-food-live-generate'){void runVisualLive();return}if(target.id==='ns-upload'){node('ns-file')?.click();return}if(target.id==='ns-toggle'){state.overlay=!state.overlay;content();return}if(target.id==='ns-compare'){state.compare=!state.compare;content();return}if(target.id==='ns-generate'){void simulate();return}if(target.id==='ns-download'){const cv=node('ns-canvas');if(cv)try{download(cv.toDataURL('image/png'),'ngulik-studio-simulasi-'+state.ratio.replace(':','x')+'.png')}catch(_){announce('Tidak bisa mengunduh gambar eksternal ini. Unggah foto lokal untuk ekspor HD.')}return}if(target.dataset.preview!==undefined){const item=state.history[Number(target.dataset.preview)];if(item){state.photo=item.image;state.photoChosen=true;state.img=null;state.loadedUrl='';state.ratio=item.ratio;state.product=item.product;state.compare=true;state.view='editor';shell()}return}if(target.dataset.historyDownload!==undefined){const item=state.history[Number(target.dataset.historyDownload)];if(item)download(item.image,'ngulik-studio-aset-'+(Number(target.dataset.historyDownload)+1)+'.png');return}}
+function handleChange(event){const t=event.target;if(t.id==='ns-v2-overlay'){resetVisualLiveRequest();state.overlay=t.checked;content();return}if(t.id==='ns-ratio-filter'){state.filterRatio=t.value;content()}if(t.id==='ns-file'){const file=t.files?.[0];if(!file)return;if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>8*1024*1024){announce('File harus JPG/PNG/WebP maksimal 8 MB.');return}const reader=new FileReader();reader.onload=()=>{if(!active())return;state.photo=String(reader.result||'');selectedLocalFile=file;resetVisualLiveRequest();state.photoChosen=true;state.img=null;state.loadedUrl='';foodQuality={status:'not_checked',message:'Sedang memeriksa foto baru…'};content()};reader.readAsDataURL(file)}}
 function mount(el){if(!el)return;root=el;root.classList.add('ngd-studio');root.addEventListener('click',handleClick);root.addEventListener('input',e=>maybeEdit(e.target));root.addEventListener('change',handleChange);shell()}
-function unmount(){epoch++;if(root){root.replaceChildren();root=null}}
-global.NGD_STUDIO={mount,unmount,adapterMode:adapter.mode,debugSnapshot:()=>({mode:adapter.mode,creditsSimulated:state.credits,renders:state.renderNo,history:state.history.length}),requestDraft:buildVisualRequestDraft,img2imgDraft:buildImg2ImgV2Draft,foodMagazineDraft:foodDraft,foodChoose:chooseFood,foodContracts:()=>FOOD_GROUPS,selectOption:selectV2,optionContracts:()=>Object.keys(V2_OPTIONS).reduce((a,k)=>(a[k]=V2_OPTIONS[k].map(x=>[...x]),a),{}),presetContracts:()=>Object.keys(VISUAL_PRESET_IDS).map(id=>({id,...VISUAL_PRESET_IDS[id]}))};
+function unmount(){epoch++;livePolling=false;selectedLocalFile=null;if(root){root.replaceChildren();root=null}}
+global.NGD_STUDIO={mount,unmount,adapterMode:adapter.mode,configureVisualPipeline,debugSnapshot:()=>({mode:adapter.mode,creditsSimulated:state.credits,renders:state.renderNo,history:state.history.length}),requestDraft:buildVisualRequestDraft,img2imgDraft:buildImg2ImgV2Draft,foodMagazineDraft:foodDraft,foodChoose:chooseFood,foodContracts:()=>FOOD_GROUPS,selectOption:selectV2,optionContracts:()=>Object.keys(V2_OPTIONS).reduce((a,k)=>(a[k]=V2_OPTIONS[k].map(x=>[...x]),a),{}),presetContracts:()=>Object.keys(VISUAL_PRESET_IDS).map(id=>({id,...VISUAL_PRESET_IDS[id]}))};
 })(window);
