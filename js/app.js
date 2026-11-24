@@ -1472,11 +1472,11 @@ function viewLogin(register=false,adminMode=false){
       '<div class="actions"><button type="button" class="btn btn-secondary" data-action="member-otp-request" '+(!enabled?'disabled':'')+>'+editorial('send')+'</button></div>':
       '<div class="field"><label for="pin">'+(adminMode?'PIN Admin 6 angka':pinLogin?'PIN Akun 6 angka':'PIN registrasi')+'</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>')+
     (register?'<div class="field"><label for="otp">Kode OTP WhatsApp</label><input class="input" id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" type="text" required placeholder="6 digit kode verifikasi"></div>'+
-      '<div class="actions" style="margin-bottom:13px"><button type="button" class="btn btn-secondary" data-action="otp-request" '+(!enabled?'disabled':'')+'>Kirim Kode</button>'+
+      '<div class="actions" style="margin-bottom:13px"><button type="button" class="btn btn-secondary" data-action="otp-request" '+(!enabled?'disabled':'')+'>'+editorial('send')+'</button>'+
       '<button type="button" class="btn btn-ghost" data-action="otp-verify" '+(!enabled?'disabled':'')+'>Verifikasi kode</button></div>':'')+
     (register?'<div class="field"><label><input type="checkbox" name="setuju_kebijakan" required> Saya setuju dengan syarat dan kebijakan privasi.</label></div>':'')+
     '<button class="btn btn-primary btn-wide" type="submit" '+(!enabled?'disabled':'')+'>'+
-    (adminMode?'Masuk admin':register?'Buat akun':'Masuk')+' '+icon('arrow')+'</button>'+
+    (adminMode?'Masuk admin':editorial('submit'))+' '+icon('arrow')+'</button>'+
     '<p class="form-hint" style="margin:13px 0 0">'+
     (enabled?(memberOtp?'Kode berlaku 5 menit, maksimal 3 percobaan. Batas pengiriman per nomor berlaku; gunakan PIN akun jika kuota habis.':adminMode?'Jangan bagikan PIN Admin Anda.':pinLogin?'PIN akun sudah tersimpan saat pendaftaran. Jangan bagikan PIN kepada siapa pun.':'Verifikasi WhatsApp diperlukan sebelum aktivasi akun.'):
       adminMode?'Akses administrator belum diaktifkan pada backend. Akun yang sudah ada tetap aman.':
@@ -3005,8 +3005,11 @@ async function processLogin(form,register){
     if(!registrationOtpEnabled())return toast('Registrasi OTP belum diaktifkan.',true);
     if(!/^[0-9]{6}$/.test(payload.otp)||state.registrationOtpVerifiedWa!==payload.wa)
       return toast('Verifikasi kode OTP WhatsApp terlebih dahulu.',true);
-    const r=captureFirstInviter_();
-    if(r)payload.ref=r;
+    const existingInviter=captureFirstInviter_();
+    const entered=String(fd.get('ref')||'').trim().toUpperCase();
+    // A URL-locked inviter takes precedence to prevent replacing a prior referral.
+    const r=existingInviter||entered;
+    if(/^[A-Z0-9_-]{3,80}$/.test(r))payload.ref=r;
   }
   const btn=form.querySelector('[type=submit]');btn.disabled=true;
   try{
