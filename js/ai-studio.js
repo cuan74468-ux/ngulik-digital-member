@@ -163,7 +163,7 @@ function gallery(){
  const cats=templateCategoryChoices();
  const scenes=scenarioTemplates().filter(t=>
   (templateFilter==='Semua'||templateFilter===t.category)&&
-  (!query||[t.name,t.description,CONTEXT_SCENARIOS[t.category].label]
+  (!query||[t.name,t.description,t.useFor,t.purpose,CONTEXT_SCENARIOS[t.category].label]
    .some(v=>v.toLocaleLowerCase('id-ID').includes(query))));
  const saved=customTemplates.filter(t=>
   (templateFilter==='Semua'||templateFilter==='saved'||templateFilter===t.product_category)&&
@@ -179,11 +179,11 @@ function gallery(){
   return '<article class="ns-inspire-card" data-scene-card="'+t.id+'">'+
    '<div class="ns-inspire-visual"><img src="'+htmlEscape(t.image)+'" alt="Contoh suasana '+htmlEscape(t.name)+'" loading="lazy">'+
    '<span class="ns-inspire-ratio">'+t.ratio+'</span>'+
-   '<span class="ns-inspire-caption">Referensi suasana · bukan hasil AI Anda</span></div>'+
+   '<span class="ns-inspire-caption">Foto inspirasi · bukan hasil AI dari produk Anda</span></div>'+
    '<div class="ns-inspire-body"><small>'+htmlEscape(CONTEXT_SCENARIOS[t.category].label)+'</small>'+
    '<strong>'+htmlEscape(t.name)+'</strong>'+
-   '<p>'+htmlEscape(t.description)+'</p>'+
-   (expanded?'<div class="ns-inspire-detail"><strong>Resep yang diterapkan</strong><span>Scene '+htmlEscape(t.scenario)+' · Pemulihan foto HP aktif · Label asli dijaga · Rasio dapat diubah · Foto asli Anda wajib diunggah.</span></div>':'')+
+   '<p>'+htmlEscape(t.description)+'</p><p class="ns-inspire-use"><b>Cocok untuk:</b> '+htmlEscape(t.useFor)+'</p>'+
+   (expanded?'<div class="ns-inspire-detail"><strong>Kenapa memilih gaya ini?</strong><span>'+htmlEscape(t.purpose)+'</span><small>Setelah memilih, unggah foto asli. AI berusaha menjaga kemasan dan label, tetapi hasilnya perlu diperiksa sebelum dipublikasikan.</small></div>':'')+
    '<div class="ns-inspire-actions"><button type="button" data-scene-template="'+t.id+'" class="ns-cta ns-dark">'+ico('edit')+' Gunakan</button>'+
    '<button type="button" data-template-detail="'+t.id+'" class="ns-cta" aria-expanded="'+expanded+'">'+(expanded?'Tutup':'Detail')+'</button></div>'+
    '</div></article>';
@@ -197,12 +197,12 @@ function gallery(){
  };
  return '<section class="ns-pane ns-inspire-gallery"><div class="ns-inspire-intro">'+
   '<span class="ns-inspire-eyebrow">PUSTAKA STUDIO</span><h2>Temukan gaya. Gunakan untuk produk Anda.</h2>'+
-  '<p>Pilih skenario yang cocok, ganti foto dengan produk asli, lalu sesuaikan. Template menyimpan komposisi dan resep—bukan foto contoh, teks merek lain, atau biaya API.</p>'+
+  '<p>Setiap gaya punya foto contoh berbeda. Pilih yang sesuai, lalu unggah foto asli produk Anda. Foto contoh bukan hasil AI dari produk Anda.</p>'+
   '</div><div class="ns-inspire-toolbar"><div class="ns-inspire-filters" role="group" aria-label="Filter peruntukan">'+
   cats.map(([id,label])=>'<button type="button" class="ns-chip" data-template-filter="'+id+'" aria-pressed="'+(templateFilter===id)+'">'+htmlEscape(label)+'</button>').join('')+
   '</div><label class="ns-inspire-search">'+ico('grid')+
   '<input id="ns-template-query" type="search" class="ns-control" placeholder="Cari gaya studio..." aria-label="Cari template" value="'+htmlEscape(templateQuery)+'"></label></div>'+
-  (showSaved?'<div class="ns-sectiontitle"><h2>Preset Saya</h2><span class="ns-pill">'+saved.length+' tersimpan</span></div>'+
+  (showSaved&&(saved.length>0||templateFilter==='saved')?'<div class="ns-sectiontitle"><h2>Preset Saya</h2><span class="ns-pill">'+saved.length+' tersimpan</span></div>'+
    (saved.length?'<div class="ns-inspire-saved-list">'+saved.map(own).join('')+'</div>':
    '<p class="ns-inspire-empty">Belum ada preset. Buka template, sesuaikan, lalu pilih Simpan Preset. Pengaturan tetap tersedia pada perangkat ini.</p>'):'')+
   (showScene?'<div class="ns-sectiontitle"><h2>Inspirasi fotografi produk</h2><span class="ns-pill">'+scenes.length+' skenario</span></div>'+
@@ -217,11 +217,12 @@ function gallery(){
 }
 function choices(items,current,attr,columns){return '<div class="'+(columns===3?'ns-three':'ns-two')+'">'+items.map(([value,title])=>'<button type="button" class="ns-choice" data-'+attr+'="'+htmlEscape(value)+'" aria-pressed="'+(value===current)+'">'+htmlEscape(title)+'</button>').join('')+'</div>'}
 
+const OPTION_HELP=Object.freeze({"studio_clean":"Latar bersih agar pembeli fokus ke produk.","splash_levitation":"Percikan dramatis untuk produk yang cocok.","dark_mirror_splash":"Refleksi gelap untuk kesan premium.","dark_action_drop":"Kesan masakan panas yang dramatis.","bright_lifestyle_table":"Meja hangat seperti suasana sehari-hari.","moody_nature_wood":"Kayu dan warna alami untuk kesan organik.","marketplace_main":"Foto utama yang jelas untuk calon pembeli.","social_feed":"Tampilan cocok untuk linimasa sosial.","story_reels_wa":"Vertikal untuk layar penuh HP.","promo_banner":"Komposisi lebar untuk materi promosi.","eye_level":"Bentuk produk terlihat dari depan.","hero_45":"Sudut serbaguna untuk memperlihatkan dimensi.","macro_closeup":"Sorot detail tekstur dari jarak dekat.","flatlay_top":"Dari atas, cocok untuk produk di meja.","soft_daylight":"Lembut seperti dekat jendela.","warm_appetizing":"Hangat agar makanan tampak menggoda.","dramatic_rim":"Cahaya tepi untuk kesan dramatis.","crisp_commercial":"Terang agar detail mudah dilihat.","1:1":"Persegi untuk katalog dan marketplace.","4:5":"Tinggi sedang untuk feed Instagram.","9:16":"Vertikal untuk Story dan status WA.","16:9":"Lebar untuk banner dan website.","standard":"Kualitas untuk kebutuhan ringan.","hd_commercial":"Detail lebih tinggi; cek tarif server."});
 function v2Choices(field){
  const items=V2_OPTIONS[field];
  return '<div class="ns-v2-choice-grid" role="group" aria-label="'+htmlEscape(field)+'">'+items.map(([id,title])=>{
  const ok=optionAllowed(field,id);
- return '<button type="button" class="ns-v2-choice" data-v2-field="'+field+'" data-v2-value="'+id+'" aria-pressed="'+(state.v2[field]===id)+'" '+(ok?'':'disabled aria-disabled="true" title="Tidak cocok dengan pilihan sebelumnya"')+'>'+htmlEscape(title)+'</button>';
+ return '<button type="button" class="ns-v2-choice" data-v2-field="'+field+'" data-v2-value="'+id+'" aria-pressed="'+(state.v2[field]===id)+'" '+(ok?'':'disabled aria-disabled="true" title="Tidak cocok dengan pilihan sebelumnya"')+'><span class="ns-v2-option-copy"><b>'+htmlEscape(title)+'</b><small>'+htmlEscape(OPTION_HELP[id]||'Pilih sesuai kebutuhan produk.')+'</small></span></button>';
  }).join('')+'</div>';
 }
 function v2Field(field,label,description){
@@ -243,10 +244,10 @@ const FOOD_GROUPS=Object.freeze({
 });
 
 const CONTEXT_SCENARIOS=Object.freeze({
- hot_soupy_food:{label:'Makanan Berkuah & Panas',options:[['steam_broth_hero','Steam & Broth Hero'],['warung_nusantara_modern','Warung Nusantara Modern'],['editorial_dark_bowl','Editorial Dark Bowl']]},
- bottled_liquid:{label:'Minuman, Madu & Botol/Jar',options:[['liquid_vortex_splash','360° Liquid Vortex Splash'],['obsidian_mirror_splash','Obsidian Mirror Crown Splash'],['chilled_condensation_studio','Chilled Condensation Studio']]},
- bakery_snack:{label:'Roti, Kue & Camilan',options:[['high_speed_topping_rain','High-Speed Topping Rain'],['macro_crumb_texture','Macro Crumb Texture (100mm)'],['sunlit_cafe_marble','Sunlit Café Marble']]},
- packaging_cosmetic:{label:'Kemasan, Herbal & Skincare',options:[['clean_marketplace_cyclorama','Clean Marketplace Cyclorama'],['podium_light_caustics','Podium & Light Caustics'],['volumetric_forest_pedestal','Volumetric Forest Pedestal']]}
+ hot_soupy_food:{label:'Makanan Berkuah & Panas',options:[['steam_broth_hero','Bakso Hangat Menggoda'],['warung_nusantara_modern','Warung Nusantara Modern'],['editorial_dark_bowl','Kuah Dramatis Premium']]},
+ bottled_liquid:{label:'Minuman, Madu & Botol/Jar',options:[['liquid_vortex_splash','Minuman Segar Berpercikan'],['obsidian_mirror_splash','Botol Mewah Latar Gelap'],['chilled_condensation_studio','Botol Dingin & Segar']]},
+ bakery_snack:{label:'Roti, Kue & Camilan',options:[['high_speed_topping_rain','Camilan dengan Taburan'],['macro_crumb_texture','Detail Tekstur Kue'],['sunlit_cafe_marble','Kue di Meja Kafe']]},
+ packaging_cosmetic:{label:'Kemasan, Herbal & Skincare',options:[['clean_marketplace_cyclorama','Katalog Putih Bersih'],['podium_light_caustics','Skincare di Podium Mewah'],['volumetric_forest_pedestal','Produk Alami di Alam']]}
 });
 let contextCategory='hot_soupy_food',contextScenario='steam_broth_hero',restorationMode='full_phone_restoration';
 function contextOptions(){return CONTEXT_SCENARIOS[contextCategory].options}
@@ -272,25 +273,62 @@ function contextSelectRestoration(id){
 /* Templates are editable recipe configurations, never copied product images.
  * The six legacy Canvas templates remain available as separate quick designs.
  * No template may contain an API key, arbitrary prompt or a user's photo. */
+/* Editorial reference photos: inspiration only, never the member's AI result. */
 const SCENE_VISUALS=Object.freeze({
- hot_soupy_food:'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1080&q=85',
- bottled_liquid:'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=1080&q=85',
- bakery_snack:'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=1080&q=85',
- packaging_cosmetic:'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1080&q=85'
+ steam_broth_hero:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=720&q=78",
+ warung_nusantara_modern:"https://images.unsplash.com/photo-1771308457245-36bda18c21d9?auto=format&fit=crop&w=720&q=78",
+ editorial_dark_bowl:"https://images.unsplash.com/photo-1780130714671-4a62458fa58c?auto=format&fit=crop&w=720&q=78",
+ liquid_vortex_splash:"https://images.unsplash.com/photo-1513558161293-cdaf765edfd4?auto=format&fit=crop&w=720&q=78",
+ obsidian_mirror_splash:"https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=720&q=78",
+ chilled_condensation_studio:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=720&q=78",
+ high_speed_topping_rain:"https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=720&q=78",
+ macro_crumb_texture:"https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=720&q=78",
+ sunlit_cafe_marble:"https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=720&q=78",
+ clean_marketplace_cyclorama:"https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=720&q=78",
+ podium_light_caustics:"https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=720&q=78",
+ volumetric_forest_pedestal:"https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=720&q=78"
 });
 const SCENE_DESCRIPTIONS=Object.freeze({
- steam_broth_hero:'Uap rim-light 135° dan kilau kuah alami',
- warung_nusantara_modern:'Jendela hangat, tekstur kaldu, nuansa warung',
- editorial_dark_bowl:'Mangkuk dramatis, strip light dan kontras terarah',
- liquid_vortex_splash:'Cairan beku 1/4000s di belakang botol',
- obsidian_mirror_splash:'Crown splash emas dan refleksi akrilik hitam',
- chilled_condensation_studio:'Embun dingin, sorotan kontainer transparan',
- high_speed_topping_rain:'Taburan vertikal beku, detail remah',
- macro_crumb_texture:'Makro 100mm, detail lembut dan renyah',
- sunlit_cafe_marble:'Cahaya jendela hangat dan marmer kafe',
- clean_marketplace_cyclorama:'Latar putih, kemasan lurus, label utuh',
- podium_light_caustics:'Podium mineral dan caustics terkontrol',
- volumetric_forest_pedestal:'Podium batu, sinar volumetrik halus'
+ steam_broth_hero:"Cahaya hangat dan kuah menggugah selera.",
+ warung_nusantara_modern:"Suasana warung yang rapi dan hangat.",
+ editorial_dark_bowl:"Fokus pada mangkuk di latar gelap.",
+ liquid_vortex_splash:"Kesan segar dengan percikan dinamis.",
+ obsidian_mirror_splash:"Refleksi gelap untuk kesan eksklusif.",
+ chilled_condensation_studio:"Tampilan embun dan kesan dingin.",
+ high_speed_topping_rain:"Taburan dan tekstur camilan menonjol.",
+ macro_crumb_texture:"Tekstur lembut dan renyah dari dekat.",
+ sunlit_cafe_marble:"Cahaya lembut seperti di kafe.",
+ clean_marketplace_cyclorama:"Produk jelas di latar sederhana.",
+ podium_light_caustics:"Pantulan cahaya lembut dan podium.",
+ volumetric_forest_pedestal:"Tumbuhan dan cahaya alami."
+});
+const SCENE_USES=Object.freeze({
+ steam_broth_hero:"Bakso, soto, mi kuah",
+ warung_nusantara_modern:"Soto, bakso, masakan rumahan",
+ editorial_dark_bowl:"Mi pedas, bakso spesial",
+ liquid_vortex_splash:"Es teh, jus",
+ obsidian_mirror_splash:"Madu, kopi botolan",
+ chilled_condensation_studio:"Es kopi, jus botolan",
+ high_speed_topping_rain:"Kukis, snack, gorengan",
+ macro_crumb_texture:"Brownies, roti isi",
+ sunlit_cafe_marble:"Roti, pastry, dessert",
+ clean_marketplace_cyclorama:"Skincare, herbal, sabun",
+ podium_light_caustics:"Serum, parfum",
+ volumetric_forest_pedestal:"Herbal, skincare alami"
+});
+const SCENE_PURPOSES=Object.freeze({
+ steam_broth_hero:"Menu utama warung",
+ warung_nusantara_modern:"Katalog warung",
+ editorial_dark_bowl:"Menu premium",
+ liquid_vortex_splash:"Poster minuman",
+ obsidian_mirror_splash:"Promosi premium",
+ chilled_condensation_studio:"Menu minuman",
+ high_speed_topping_rain:"Promo camilan",
+ macro_crumb_texture:"Katalog produk",
+ sunlit_cafe_marble:"Feed dan menu kafe",
+ clean_marketplace_cyclorama:"Marketplace",
+ podium_light_caustics:"Katalog premium",
+ volumetric_forest_pedestal:"Cerita merek"
 });
 const LOCAL_TEMPLATE_KEY='ngd_visual_member_templates_v1';
 const WORKSPACE_KEY='ngd_visual_editor_workspace_v1';
@@ -325,7 +363,7 @@ function scenarioTemplates(){
   group.options.map(([scenario,title])=>({
    id:'scene__'+category+'__'+scenario,category,scenario,
    name:title,description:SCENE_DESCRIPTIONS[scenario],
-   image:SCENE_VISUALS[category],ratio:'4:5'
+   image:SCENE_VISUALS[scenario],useFor:SCENE_USES[scenario],purpose:SCENE_PURPOSES[scenario],ratio:'4:5'
   })));
 }
 function scrubPreset(value){
@@ -641,22 +679,23 @@ function foodChoices(field){
    htmlEscape(label)+'</button>';
  }).join('')+'</div>';
 }
+const FOOD_FIELD_HELP=Object.freeze({"cover_concept":"Suasana akhir foto: pilih sesuai kesan yang ingin dijual.","camera_angle":"Arah kamera; 45 derajat pilihan aman bila ragu.","lighting":"Cahaya menonjolkan warna, bentuk dan kesan produk.","surface":"Tempat produk diletakkan agar hasil terlihat rapi.","grade":"Nuansa warna. Pastikan warna asli tetap akurat.","styling":"Elemen dekorasi yang cocok dengan produk asli.","lens":"Area fokus dan kedalaman foto.","format":"1:1 untuk katalog, 4:5 untuk feed, 9:16 untuk story.","similarity":"Seberapa ketat produk asli dijaga.","count":"Jumlah gambar. Makin banyak hasil, makin besar biaya."});
 function foodFields(){
  const fields=['cover_concept','camera_angle','lighting','surface','grade','styling','lens','format'];
  const context='<div class="ns-v2-field"><strong>Peruntukan Produk</strong><div class="ns-food-options" role="group" aria-label="Peruntukan Produk">'+
   Object.entries(CONTEXT_SCENARIOS).map(([id,item])=>'<button type="button" class="ns-v2-choice" data-context-category="'+id+'" aria-pressed="'+(contextCategory===id)+'">'+htmlEscape(item.label)+'</button>').join('')+'</div></div>'+
   '<div class="ns-v2-field"><strong>Skenario Studio · khusus '+htmlEscape(CONTEXT_SCENARIOS[contextCategory].label)+'</strong><div class="ns-food-options" role="group" aria-label="Skenario Studio">'+
-  contextOptions().map(([id,label])=>'<button type="button" class="ns-v2-choice" data-context-scenario="'+id+'" aria-pressed="'+(contextScenario===id)+'">'+htmlEscape(label)+'</button>').join('')+'</div></div>'+
+  contextOptions().map(([id,label])=>'<button type="button" class="ns-v2-choice" data-context-scenario="'+id+'" aria-pressed="'+(contextScenario===id)+'"><span class="ns-v2-option-copy"><b>'+htmlEscape(label)+'</b><small>'+htmlEscape(SCENE_DESCRIPTIONS[id])+'</small></span></button>').join('')+'</div></div>'+
   '<div class="ns-v2-field"><strong>Pemulihan Foto HP</strong><label class="ns-v2-overlay-toggle"><input type="checkbox" id="ns-context-restoration" '+(restorationMode==='full_phone_restoration'?'checked':'')+'><span>Perbaiki Total Foto HP · denoise, sharpen & full studio relighting (default ON)</span></label></div>';
  const detail='<div class="ns-food-fields">'+context+
   '<details class="ns-v2-advanced"><summary>Pengaturan fotografi lanjutan · opsional</summary>'+fields.map((key,i)=>
-  '<div class="ns-v2-field"><strong>'+FOOD_LABELS[key]+'</strong>'+foodChoices(key)+
+  '<div class="ns-v2-field"><strong>'+FOOD_LABELS[key]+'</strong><small class="ns-field-guide">'+htmlEscape(FOOD_FIELD_HELP[key])+'</small>'+foodChoices(key)+
   (key==='grade'&&food.grade==='brand'?'<label class="ns-label">Kode warna brand<input class="ns-control" id="ns-food-hex" type="color" value="'+foodHex+'"></label>':'')+'</div>').join('')+'</details>'+
   '<div class="ns-v2-field"><strong>10 Elemen cover · opsional</strong>'+
   '<label class="ns-v2-overlay-toggle"><input type="checkbox" id="ns-v2-overlay" '+(state.overlay?'checked':'')+'><span>Tambahkan teks melalui Canvas (OFF default)</span></label>'+
   (state.overlay?'<div class="ns-v2-overlay-fields">'+[['ns-product','Nama brand',state.product,70],['ns-headline','Headline',state.headline,100],['ns-promo','Tagline',state.promo,100]].map(([id,label,value,max])=>'<label class="ns-label">'+label+'<input id="'+id+'" class="ns-control" maxlength="'+max+'" value="'+htmlEscape(value)+'"></label>').join('')+'<label class="ns-label">Harga<input id="ns-food-price" class="ns-control" maxlength="30" value="'+htmlEscape(foodPrice)+'"></label></div>':'')+
   '</div><div class="ns-v2-field"><strong>'+FOOD_LABELS.similarity+'</strong>'+foodChoices('similarity')+'</div>'+
-  '<div class="ns-v2-field"><strong>'+FOOD_LABELS.count+'</strong>'+foodChoices('count')+'</div>'+ '<div class="ns-v2-field"><strong>Mesin AI · tarif per gambar</strong><div class="ns-food-engines" role="radiogroup" aria-label="Mesin AI">'+FOOD_MACHINES.map(m=>'<button type="button" role="radio" class="ns-food-engine" data-food-machine="'+m.id+'" aria-checked="'+(m.id===foodMachine)+'" '+(liveBridgeReady()&&Array.isArray(visualPipelineBridge.allowedMachines)&&!visualPipelineBridge.allowedMachines.includes(m.id)?'disabled aria-label="'+htmlEscape(m.name)+' belum aktif"':'')+'><span class="ns-food-engine-top"><strong>'+htmlEscape(m.name)+'</strong><b>'+m.credits+' kredit</b></span><small>'+htmlEscape(m.model)+'</small><small>'+htmlEscape(m.use)+'</small></button>').join('')+'</div></div>'+
+  '<div class="ns-v2-field"><strong>'+FOOD_LABELS.count+'</strong><small class="ns-field-guide">'+htmlEscape(FOOD_FIELD_HELP.count)+'</small>'+foodChoices('count')+'</div>'+ '<div class="ns-v2-field"><strong>Mesin AI · tarif per gambar</strong><div class="ns-food-engines" role="radiogroup" aria-label="Mesin AI">'+FOOD_MACHINES.map(m=>'<button type="button" role="radio" class="ns-food-engine" data-food-machine="'+m.id+'" aria-checked="'+(m.id===foodMachine)+'" '+(liveBridgeReady()&&Array.isArray(visualPipelineBridge.allowedMachines)&&!visualPipelineBridge.allowedMachines.includes(m.id)?'disabled aria-label="'+htmlEscape(m.name)+' belum aktif"':'')+'><span class="ns-food-engine-top"><strong>'+htmlEscape(m.name)+'</strong><b>'+m.credits+' kredit</b></span><small>'+htmlEscape(m.model)+'</small><small>'+htmlEscape(m.use)+'</small></button>').join('')+'</div></div>'+
   '<label class="ns-label">Catatan kreatif (opsional, maks. 240 karakter)<textarea id="ns-food-notes" maxlength="240" rows="2" class="ns-control">'+htmlEscape(foodNotes)+'</textarea></label>'+ 
   '<div class="ns-inspire-preset-editor"><label class="ns-label" for="ns-preset-name">Simpan pengaturan sebagai preset pribadi<input id="ns-preset-name" class="ns-control" type="text" maxlength="56" value="'+htmlEscape(presetName||CONTEXT_SCENARIOS[contextCategory].options.find(([id])=>id===contextScenario)?.[1]||'Preset Studio')+'" aria-label="Nama preset pribadi"></label><button type="button" class="ns-cta ns-dark" id="ns-save-preset">'+ico('grid')+' Simpan Preset</button><small>Disimpan: resep & pengaturan, bukan foto produk atau API key.</small></div></div>';
  return '<section class="ns-block ns-v2-step ns-food-magazine"><h2><span class="ns-count">02</span> Foto Makanan Gaya Majalah</h2>'+
@@ -724,7 +763,7 @@ function editor(){
  return '<section class="ns-simple" aria-label="Buat Foto Produk dalam Tiga Langkah">'+
   '<div class="ns-simple-hero"><div class="ns-simple-intro"><span class="ns-simple-kicker">NGULIK VISUAL STUDIO</span>'+
   '<h1>Ubah Foto HP Biasa Jadi Foto Produk Kelas Studio</h1>'+
-  '<p>Upload foto jualan, pilih gaya, lalu buat. Tidak perlu paham kamera atau desain.</p></div>'+
+  '<p>Unggah foto produk asli, pilih suasana yang cocok, lalu buat. Pengaturan kamera tidak perlu dipahami.</p></div>'+
   '<div class="ns-simple-compare" aria-label="Gambaran foto sebelum dan sesudah">'+
    '<figure class="ns-simple-before"><img src="'+htmlEscape(photo)+'" alt="Contoh foto produk sebelum penataan studio"><figcaption>BEFORE <small>'+(state.photo?'Foto HP Anda':'Contoh foto')+'</small></figcaption></figure>'+
    '<span class="ns-simple-arrow" aria-hidden="true">→</span>'+
@@ -742,8 +781,8 @@ function editor(){
      QUICK_STYLES.map(item=>'<button type="button" data-quick-style="'+item.id+'" class="ns-simple-style" aria-pressed="'+(item.id===current.id)+'"><strong>'+htmlEscape(item.name)+'</strong><small>'+htmlEscape(item.subtitle)+'</small></button>').join('')+
     '</div></section>'+
    '<section class="ns-simple-step ns-simple-create"><h2><span>3</span> Buat Foto</h2>'+
-    '<button type="button" id="ns-quick-generate" class="ns-cta ns-primary ns-simple-primary" '+(!ready?'disabled':'')+'>'+ico('spark')+' Buat Foto Sekarang</button>'+
-    '<p class="ns-simple-mode">'+(liveBridgeReady()?'AI aktif sesuai izin STAGING · biaya mengikuti konfirmasi server.':'Mode simulasi · belum menghasilkan foto AI nyata.')+'</p>'+
+    '<button type="button" id="ns-quick-generate" class="ns-cta ns-primary ns-simple-primary" '+(!ready?'disabled':'')+'>'+ico('spark')+(liveBridgeReady()?' Buat Foto dengan AI':' Coba Pratinjau Tanpa AI')+'</button>'+
+    '<p class="ns-simple-mode">'+(liveBridgeReady()?'AI aktif sesuai izin STAGING · biaya mengikuti konfirmasi server.':'Latihan tanpa AI · foto diproses lokal di perangkat Anda.')+'</p>'+
    '</section></div>'+
   '<details class="ns-simple-advanced"><summary>Pengaturan Lanjutan (Opsional)</summary>'+advancedEditor()+'</details>'+
  '</section>';
@@ -753,7 +792,7 @@ function advancedEditor(){
  const selected=!!state.photo;
  return '<section class="ns-editor ns-v2-editor" aria-label="Studio Foto Produk">'+
  '<aside class="ns-side">'+
- '<div class="ns-side-header"><div><small>NGULIK VISUAL STUDIO</small><strong>Foto produk profesional</strong></div><span class="ns-status">SIMULASI</span></div>'+
+ '<div class="ns-side-header"><div><small>NGULIK VISUAL STUDIO</small><strong>Foto produk profesional</strong></div><span class="ns-status">'+(liveBridgeReady()?'AI TERHUBUNG':'SIMULASI')+'</span></div>'+
  '<div class="ns-form">'+
  '<section class="ns-block ns-v2-step"><h2><span class="ns-count">01</span> Unggah foto produk mentah</h2>'+
  '<p class="ns-hint">Pakai foto dari kamera HP. Hasil simulasi ini belum memperbaiki foto dengan AI.</p>'+
@@ -780,7 +819,7 @@ function advancedEditor(){
   (state.overlay?'<div class="ns-v2-overlay-fields">'+[['ns-product','Nama Produk / Brand',state.product,40],['ns-headline','Headline Promo',state.headline,54],['ns-promo','Harga / Badge',state.promo,28]].map(([id,l,v,max])=>'<label class="ns-label" for="'+id+'">'+l+'<input id="'+id+'" class="ns-control" maxlength="'+max+'" value="'+htmlEscape(v)+'"></label>').join('')+'</div>':'')+
   '</section>'
  ))+
- '</div><div class="ns-cost"><div class="ns-cost-row"><strong>Kredit simulasi</strong><span class="ns-status ns-mono">'+getCost()+' Cr</span></div>'+
+ '</div><div class="ns-cost"><div class="ns-cost-row"><strong>'+(liveBridgeReady()?'Estimasi kredit (konfirmasi server)':'Kredit latihan — bukan saldo Member')+'</strong><span class="ns-status ns-mono">'+getCost()+' Cr</span></div>'+
  foodPreflightMarkup()+'<div class="ns-hint">'+(foodMode?food.count+' × '+selectedMachine().credits+' Cr / hasil · estimasi simulasi':'1 hasil · simulasi')+'</div>'+ '<button type="button" id="ns-generate" class="ns-cta ns-primary" '+(!selected||state.busy||(foodMode&&foodQuality.status!=='pass')?'disabled':'')+'>'+ico('spark')+(selected?' Buat Pratinjau Simulasi':' Unggah Foto Dahulu')+'</button>'+
  (foodMode?'<div id="ns-food-pricing" class="ns-food-pricing" role="status"><strong>Ringkasan Kredit</strong><span>'+htmlEscape(selectedMachine().name)+'</span><b>'+selectedMachine().credits+' kredit × '+food.count+' hasil = '+getCost()+' kredit</b><small>Tarif final dikunci server sebelum Generate. Gagal total: 100% kredit kembali; jika gagal sebagian, hanya hasil sukses ditagih.</small></div><div id="ns-food-job-progress" class="ns-food-job-progress" role="status" aria-live="polite">'+htmlEscape(liveStatus)+'</div>':'')+
  (foodMode&&liveBridgeReady()?'<button type="button" id="ns-food-live-generate" class="ns-cta ns-dark" '+(!selected||!selectedLocalFile||foodQuality.status!=='pass'||livePolling?'disabled':'')+'>Generate AI melalui antrean privat</button>':'')+ '<small class="ns-hint">'+(liveBridgeReady()?'AI memakai antrean privat jika disetujui oleh backend.':'AI nyata masih nonaktif. Foto asli tidak dikirim ke server.')+'</small></div></aside>'+
