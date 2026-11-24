@@ -2544,6 +2544,7 @@ function render(){
   // Catalog has a single authoritative HERO slot; do not stack PAGE_COVER above it.
   by('screen').innerHTML=screen;
   if(state.route==='ai-tool'&&state.selectedAiToolId==='ngulik-visual'&&logged()&&!isAdmin()){
+    window.NGD_STUDIO?.configureMemberScope(String(state.me?.member_id||''));
     window.NGD_STUDIO?.mount(document.getElementById('ngd-studio-root'));
     void configureVisualBridgeStaging_();
   }
@@ -2564,12 +2565,14 @@ async function configureVisualBridgeStaging_(){
  try{
   const health=await api('visualHealth',{},state.token);
   const sessionToken=state.token;
+  const safeVisualMember=()=>{if(!logged()||isAdmin()||state.token!==sessionToken)
+    throw new ApiError('Sesi Visual berakhir. Masuk kembali.','SESSION_INVALID');};
   if(health?.templates_enabled===true){
    void window.NGD_STUDIO?.configureTemplateStorage({
-    list:async()=>{const result=await api('visualTemplateList',{},sessionToken);return result?.templates||[]},
-    save:async(draft)=>{const result=await api('visualTemplateSave',draft,sessionToken,
-      {requestId:createRequestId()});return result?.template},
-    remove:async id=>api('visualTemplateDelete',{id},sessionToken,{requestId:createRequestId()})
+    list:async()=>{safeVisualMember();const result=await api('visualTemplateList',{},sessionToken);safeVisualMember();return result?.templates||[]},
+    save:async(draft)=>{safeVisualMember();const result=await api('visualTemplateSave',draft,sessionToken,
+      {requestId:createRequestId()});safeVisualMember();return result?.template},
+    remove:async id=>{safeVisualMember();return api('visualTemplateDelete',{id},sessionToken,{requestId:createRequestId()})}
    });
   }else{
    void window.NGD_STUDIO?.configureTemplateStorage(null);
