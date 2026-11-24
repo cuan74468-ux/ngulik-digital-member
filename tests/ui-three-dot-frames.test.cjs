@@ -19,7 +19,10 @@ test('three-dot titlebar is scoped to selected frames and Studio editor',()=>{
 test('browser cache versions synchronize both entrypoints without new auth or APIs',()=>{
  for(const name of ['index.html','staging/member.html']){
   const html=read(name);
-  for(const id of ['ngulik-design-system.css','ai-studio.css','ai-studio.js'])assert.ok(html.includes(id+'?v=20261123-frame-v5'),name+' '+id);
+  for(const id of ['ngulik-design-system.css','ai-studio.css','ai-studio.js']){
+   const release=id==='ngulik-design-system.css'?'20261123-frame-v5':'20261124-unique-scenes-v1';
+   assert.ok(html.includes(id+'?v='+release),name+' '+id);
+  }
  }
  assert.doesNotMatch(read('js/ai-studio.js'),/\bfetch\s*\(|XMLHttpRequest|sendBeacon/);
 });
