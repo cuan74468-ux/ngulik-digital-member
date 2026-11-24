@@ -213,6 +213,195 @@ function contextSelectRestoration(id){
  if(!['full_phone_restoration','preserve_source'].includes(id))return false;
  restorationMode=id;resetVisualLiveRequest();return true;
 }
+/* Templates are editable recipe configurations, never copied product images.
+ * The six legacy Canvas templates remain available as separate quick designs.
+ * No template may contain an API key, arbitrary prompt or a user's photo. */
+const SCENE_VISUALS=Object.freeze({
+ hot_soupy_food:'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1080&q=85',
+ bottled_liquid:'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=1080&q=85',
+ bakery_snack:'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=1080&q=85',
+ packaging_cosmetic:'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1080&q=85'
+});
+const SCENE_DESCRIPTIONS=Object.freeze({
+ steam_broth_hero:'Uap rim-light 135° dan kilau kuah alami',
+ warung_nusantara_modern:'Jendela hangat, tekstur kaldu, nuansa warung',
+ editorial_dark_bowl:'Mangkuk dramatis, strip light dan kontras terarah',
+ liquid_vortex_splash:'Cairan beku 1/4000s di belakang botol',
+ obsidian_mirror_splash:'Crown splash emas dan refleksi akrilik hitam',
+ chilled_condensation_studio:'Embun dingin, sorotan kontainer transparan',
+ high_speed_topping_rain:'Taburan vertikal beku, detail remah',
+ macro_crumb_texture:'Makro 100mm, detail lembut dan renyah',
+ sunlit_cafe_marble:'Cahaya jendela hangat dan marmer kafe',
+ clean_marketplace_cyclorama:'Latar putih, kemasan lurus, label utuh',
+ podium_light_caustics:'Podium mineral dan caustics terkontrol',
+ volumetric_forest_pedestal:'Podium batu, sinar volumetrik halus'
+});
+const LOCAL_TEMPLATE_KEY='ngd_visual_member_templates_v1';
+const WORKSPACE_KEY='ngd_visual_editor_workspace_v1';
+const CONTEXT_RATIOS=['4:5','1:1','9:16','3:4'];
+let templateFilter='Semua',templateQuery='',templateDetail='',templateStorage=null;
+let customTemplates=[],selectedSavedId='',presetName='',templateNotice='';
+function safeStorageGet(key){
+ try{return global.localStorage?.getItem(key)||''}catch(_){return ''}
+}
+function safeStorageSet(key,value){
+ try{global.localStorage?.setItem(key,value);return true}catch(_){return false}
+}
+function templateCategoryChoices(){
+ return [['Semua','Semua'],...Object.entries(CONTEXT_SCENARIOS).map(([id,v])=>[id,v.label]),['saved','Preset Saya'],['classic','Desain Cepat']];
+}
+function scenarioTemplates(){
+ return Object.entries(CONTEXT_SCENARIOS).flatMap(([category,group])=>
+  group.options.map(([scenario,title])=>({
+   id:'scene__'+category+'__'+scenario,category,scenario,
+   name:title,description:SCENE_DESCRIPTIONS[scenario],
+   image:SCENE_VISUALS[category],ratio:'4:5'
+  })));
+}
+function scrubPreset(value){
+ if(!value||typeof value!=='object'||Array.isArray(value))return null;
+ const category=String(value.product_category||'');
+ if(!Object.prototype.hasOwnProperty.call(CONTEXT_SCENARIOS,category))return null;
+ const scenario=String(value.studio_scenario||'');
+ if(!CONTEXT_SCENARIOS[category].options.some(([id])=>id===scenario))return null;
+ const machine=String(value.machine_id||'');
+ if(!FOOD_MACHINES.some(v=>v.id===machine))return null;
+ if(!CONTEXT_RATIOS.includes(value.format)||![1,2,4].includes(value.count))return null;
+ if(!['full_phone_restoration','preserve_source'].includes(value.restoration_mode))return null;
+ const text=(v,max)=>String(v||'').slice(0,max).replace(/[<>]/g,'').trim();
+ const id=String(value.id||'');
+ if(id&&!/^vt_[A-Za-z0-9_-]{12,50}$/.test(id))return null;
+ return {id,name:text(value.name,56),product_category:category,studio_scenario:scenario,
+  restoration_mode:value.restoration_mode,format:value.format,machine_id:machine,count:value.count,
+  overlay_enabled:value.overlay_enabled===true,
+  brand_name:text(value.brand_name,70),headline:text(value.headline,100),
+  tagline:text(value.tagline,100),price_label:text(value.price_label,30),
+  brand_hex:/^#[a-fA-F0-9]{6}$/.test(value.brand_hex||'')?value.brand_hex:''};
+}
+function readSavedTemplates(){
+ try{
+  const saved=JSON.parse(safeStorageGet(LOCAL_TEMPLATE_KEY)||'[]');
+  return Array.isArray(saved)?saved.slice(0,20).map(scrubPreset).filter(x=>x&&x.name.length>=3):[];
+ }catch(_){return []}
+}
+function rememberWorkspace(){
+ const snapshot={category:contextCategory,scenario:contextScenario,
+  restoration:restorationMode,machine:foodMachine,ratio:food.format,count:food.count,
+  overlay:state.overlay};
+ safeStorageSet(WORKSPACE_KEY,JSON.stringify(snapshot));
+}
+function restoreWorkspace(){
+ try{
+  const d=JSON.parse(safeStorageGet(WORKSPACE_KEY)||'null');
+  if(!d||typeof d!=='object')return;
+  if(!contextSelectCategory(d.category))return;
+  if(d.scenario)contextSelectScenario(d.scenario);
+  if(d.restoration)contextSelectRestoration(d.restoration);
+  if(d.machine)chooseMachine(d.machine);
+  if(CONTEXT_RATIOS.includes(d.ratio))food.format=d.ratio;
+  if([1,2,4].includes(d.count))food.count=d.count;
+  state.overlay=d.overlay===true;
+ }catch(_){}
+}
+function currentPreset(){
+ return scrubPreset({id:selectedSavedId||undefined,name:presetName||
+  CONTEXT_SCENARIOS[contextCategory].options.find(([id])=>id===contextScenario)?.[1]||'Preset Studio',
+  product_category:contextCategory,studio_scenario:contextScenario,
+  restoration_mode:restorationMode,format:food.format,machine_id:foodMachine,
+  count:food.count,overlay_enabled:state.overlay,
+  brand_name:state.overlay?state.product:'',headline:state.overlay?state.headline:'',
+  tagline:state.overlay?state.promo:'',price_label:state.overlay?foodPrice:'',
+  brand_hex:foodHex});
+}
+function applyPreset(saved){
+ const p=scrubPreset(saved);if(!p)return false;
+ contextSelectCategory(p.product_category);
+ contextSelectScenario(p.studio_scenario);
+ contextSelectRestoration(p.restoration_mode);
+ chooseMachine(p.machine_id);food.format=p.format;food.count=p.count;
+ state.ratio=p.format;state.overlay=p.overlay_enabled;
+ state.product=p.brand_name;state.headline=p.headline;state.promo=p.tagline;
+ foodPrice=p.price_label;foodHex=p.brand_hex||foodHex;
+ selectedSavedId=p.id||'';presetName=p.name;foodMode=true;
+ state.view='editor';state.rendered=false;
+ // A sample thumbnail is NEVER a product reference. Keep a genuine
+ // local user-selected photo, or demand a fresh private upload.
+ if(!selectedLocalFile){state.photo='';state.img=null;state.loadedUrl='';state.photoChosen=false;
+  foodQuality={status:'not_checked',message:'Unggah foto asli Anda untuk memakai template.'};}
+ rememberWorkspace();if(active())shell();return true;
+}
+function useScenarioTemplate(id){
+ const match=scenarioTemplates().find(t=>t.id===id);
+ if(!match)return false;
+ const name=match.name;
+ const applied=applyPreset({name,product_category:match.category,studio_scenario:match.scenario,
+  restoration_mode:'full_phone_restoration',format:match.ratio,
+  machine_id:'flux_kontext_pro',count:1,overlay_enabled:false});
+ if(applied){selectedSavedId='';presetName=name;}
+ return applied;
+}
+function localSavePreset(){
+ const draft=currentPreset();if(!draft||draft.name.length<3)return null;
+ const items=readSavedTemplates();
+ let id=draft.id;
+ if(id&&!items.some(t=>t.id===id))id='';
+ if(!id){
+  if(items.length>=20)return null;
+  id='vt_'+(global.crypto?.randomUUID?.().replace(/-/g,'')||
+   (Math.random().toString(36).slice(2)+Date.now().toString(36)));
+ }
+ const saved={...draft,id};customTemplates=[saved,...items.filter(x=>x.id!==id)].slice(0,20);
+ if(!safeStorageSet(LOCAL_TEMPLATE_KEY,JSON.stringify(customTemplates)))return null;
+ selectedSavedId=id;return saved;
+}
+async function saveCurrentPreset(){
+ if(!foodMode)return;
+ const local=localSavePreset();
+ if(!local){announce('Tidak dapat menyimpan preset. Maksimal 20 preset atau penyimpanan browser tidak tersedia.');return;}
+ templateNotice='Disimpan di perangkat ini';
+ if(templateStorage&&typeof templateStorage.save==='function'){
+  try{
+   const remote=await templateStorage.save({...local,id:local.id.startsWith('vt_local_')?undefined:undefined});
+   if(remote?.id){
+    selectedSavedId=remote.id;
+    const cleaned=scrubPreset(remote);
+    if(cleaned){
+     customTemplates=[cleaned,...customTemplates.filter(x=>x.id!==local.id&&x.id!==cleaned.id)];
+     safeStorageSet(LOCAL_TEMPLATE_KEY,JSON.stringify(customTemplates));
+    }
+    templateNotice='Tersimpan di akun STAGING dan perangkat ini';
+   }
+  }catch(_){templateNotice='Tersimpan di perangkat ini (sinkronisasi belum tersedia)';}
+ }
+ announce(templateNotice);if(active())content();
+}
+async function removeSavedPreset(id){
+ if(!/^vt_[A-Za-z0-9_-]{12,50}$/.test(id))return;
+ const found=customTemplates.find(x=>x.id===id);if(!found)return;
+ if(templateStorage&&typeof templateStorage.remove==='function'&&!id.startsWith('vt_local_')){
+  try{await templateStorage.remove(id)}catch(_){announce('Penghapusan akun gagal. Coba lagi.');return;}
+ }
+ customTemplates=customTemplates.filter(x=>x.id!==id);
+ safeStorageSet(LOCAL_TEMPLATE_KEY,JSON.stringify(customTemplates));
+ if(selectedSavedId===id)selectedSavedId='';
+ if(active())content();
+}
+async function configureTemplateStorage(adapter){
+ if(adapter!==null&&(!adapter||['list','save','remove'].some(k=>typeof adapter[k]!=='function')))
+  throw Error('VISUAL_TEMPLATE_STORAGE_INVALID');
+ templateStorage=adapter;
+ if(!adapter)return;
+ try{
+  const remote=await adapter.list();
+  if(!Array.isArray(remote))return;
+  const cleaned=remote.slice(0,20).map(scrubPreset).filter(Boolean);
+  const local=readSavedTemplates().filter(p=>p.id.startsWith('vt_local_'));
+  customTemplates=[...cleaned,...local].slice(0,20);
+  safeStorageSet(LOCAL_TEMPLATE_KEY,JSON.stringify(customTemplates));
+  if(active()&&state.view==='gallery')content();
+ }catch(_){/* Retain local presets without disclosing auth/session errors. */}
+}
+
 const FOOD_LABELS={food_type:'01 Jenis makanan',cover_concept:'02 Konsep cover',camera_angle:'03 Sudut kamera',lighting:'04 Lighting',surface:'05 Permukaan/latar',grade:'06 Warna',styling:'07 Styling/properti',lens:'08 Lensa',format:'09 Format',similarity:'11 Tingkat kemiripan',count:'12 Jumlah hasil'};
 const FOOD_PRESETS={
  classic:{lighting:'golden',surface:'dark_wood',grade:'warm'},
