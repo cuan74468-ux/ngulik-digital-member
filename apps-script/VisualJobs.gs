@@ -7,7 +7,8 @@
  * fake adapters and never touch member balances.
  */
 var NGD_VISUAL_PIPELINE_DEFAULTS_=Object.freeze({
- live_enabled:false, credits:{standard:2,hd:3}, daily_budget_cap_idr:0,
+ live_enabled:false, visual_credits_enabled:false,media_ready:false,worker_ready:false,
+ credits:{standard:2,hd:3}, daily_budget_cap_idr:0,
  max_upload_bytes:8*1024*1024, max_asset_age_ms:24*60*60*1000,
  processing_timeout_ms:10*60*1000
 });
@@ -25,8 +26,9 @@ function ngdVjPolicy_(config){
  var c=config||{};
  return {
   live:c.NGD_VISUAL_LIVE_ENABLED===true,
-  global_mutations:c.NGD_MUTATIONS_ENABLED===true,
-  global_finance:c.NGD_FINANCE_ENABLED===true,
+  credits_enabled:c.NGD_VISUAL_CREDITS_ENABLED===true,
+  media_ready:c.NGD_VISUAL_MEDIA_READY===true,
+  worker_ready:c.NGD_VISUAL_WORKER_READY===true,
   max_daily_idr:Number.isSafeInteger(c.daily_budget_cap_idr)&&c.daily_budget_cap_idr>0?c.daily_budget_cap_idr:0,
   standard:2,hd:3
  };
@@ -46,7 +48,7 @@ function ngdVisualJobs_(dependencies){
  function now(){return d.clock.now();}
  function mustLive(){
   ngdVjAssert_(p.live,'LIVE_DISABLED');
-  ngdVjAssert_(p.global_mutations&&p.global_finance,'P0_GUARD_OFF');
+  ngdVjAssert_(p.credits_enabled&&p.media_ready&&p.worker_ready,'VISUAL_INFRA_NOT_AUTHORIZED');
   ngdVjAssert_(p.max_daily_idr>0,'BUDGET_CAP_REQUIRED');
  }
  function asset(session,details){
