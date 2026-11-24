@@ -109,3 +109,35 @@ function ngdVisualWorkerCleanupStaging(){
  var chunks=ngdVisualUploadPurgeExpired_();
  return {media:files,uploads:chunks};
 }
+
+/**
+ * MANUAL OPERATOR ACTION. Run only from an authorized GAS STAGING editor,
+ * never from doPost, after setting the exact one-time operator approval and
+ * an existing ACTIVE member ID. Does not add real P0 tokens.
+ */
+function ngdVisualProvisionPilotWalletStaging(){
+ ngdVisualStagingGuard_();
+ var props=PropertiesService.getScriptProperties();
+ ngdVjAssert_(props.getProperty('NGD_VISUAL_UAT_SEED_APPROVED')===
+  'I_APPROVE_STAGING_VISUAL_TEST_CREDITS_ONLY','PILOT_APPROVAL_REQUIRED');
+ // Pilot provisioning is only allowed before the Visual provider goes LIVE.
+ ngdVjAssert_(props.getProperty('NGD_VISUAL_LIVE_ENABLED')!=='true'&&
+  props.getProperty('NGD_VISUAL_CREDITS_ENABLED')!=='true','PILOT_MUST_BE_OFF');
+ var id=props.getProperty('NGD_VISUAL_UAT_MEMBER_ID');
+ ngdVjAssert_(typeof id==='string'&&/^[A-Za-z0-9_-]{3,80}$/.test(id),
+  'PILOT_MEMBER_PROPERTY_REQUIRED');
+ var user=byId_('members','member_id',id);
+ ngdVjAssert_(user&&user.member_id===id&&user.status==='AKTIF',
+  'PILOT_MEMBER_NOT_ACTIVE');
+ // Fixed 12 demonstration credits: one 4-result Kontext job or test retries.
+ // This does not use, alter or mirror the member token balance.
+ return ngdVisualStoreDrive_().ledger.provisionPilotOnce(id,12);
+}
+function ngdVisualPilotWalletStatusStaging(){
+ ngdVisualStagingGuard_();
+ var props=PropertiesService.getScriptProperties();
+ var id=props.getProperty('NGD_VISUAL_UAT_MEMBER_ID');
+ ngdVjAssert_(typeof id==='string'&&/^[A-Za-z0-9_-]{3,80}$/.test(id),
+  'PILOT_MEMBER_PROPERTY_REQUIRED');
+ return ngdVisualStoreDrive_().ledger.balance(id);
+}
