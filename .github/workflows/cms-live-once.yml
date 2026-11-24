@@ -1,0 +1,46 @@
+name: One-time CMS deployment attestation
+on:
+  push:
+    branches: [fix/cms-live-hero-20261124]
+    paths: ['.github/workflows/cms-live-once.yml']
+permissions:
+  contents: read
+concurrency:
+  group: ngd-cms-live-once
+  cancel-in-progress: true
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout read-only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Compare GAS live public responses (no auth, no writes)
+        env:
+          STAGING_API: ${{ 'https://script.google.com/macros/s/AKfycbyQYrRKN0mvIuoYFyWwQVNaA6Vc9hYYj4ycQSy3B1NXPJ4PbvbRIfZo7YVT4NL4IIlh/exec' }}
+        run: |
+          node <<'NODE'
+          'use strict';
+          (async()=>{
+            for(const action of ['getStagingWorkspaceInfo','getPublicInfo','getPublicContent','getPublicSettings']){
+              const c=new AbortController(),timeout=setTimeout(()=>c.abort(),18000);
+              try{
+                const r=await fetch(process.env.STAGING_API,{
+                  method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+                  body:JSON.stringify({action,payload:{},token:'',request_id:'ngd_readonly_cms_probe_20261124'}),
+                  signal:c.signal
+                });
+                const data=await r.json(),v=data?.data;
+                const result={action,http:r.status,ok:data.ok===true,error:data.error?.code||null,
+                  count:Array.isArray(v)?v.length:null,
+                  heroIdPresent:Array.isArray(v)?v.some(x=>x?.content_id==='CNT-HERO-MAIN'):null,
+                  publicSettingKeys:action==='getPublicSettings'&&v?Object.keys(v).filter(k=>['nama_brand','tagline_brand','footer_identitas'].includes(k)):null,
+                  identity:action==='getStagingWorkspaceInfo'&&v?{environment:v.environment,admin_login_enabled:v.admin_login_enabled}:null};
+                console.log('NGD_CMS_LIVE_ATTEST '+JSON.stringify(result));
+              }catch(e){console.log('NGD_CMS_LIVE_ATTEST '+JSON.stringify({action,networkError:String(e.message).slice(0,120)}));}
+              finally{clearTimeout(timeout);}
+            }
+          })().catch(e=>{console.error('CMS_PROBE_ABORT: '+String(e.message));process.exitCode=1;});
+          NODE
