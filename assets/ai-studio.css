@@ -294,3 +294,25 @@
 .ngd-studio .ns-simple-advanced>.ns-v2-editor{margin-top:12px}
 @media(max-width:800px){.ngd-studio .ns-simple-hero{grid-template-columns:1fr}.ngd-studio .ns-simple-flow{grid-template-columns:1fr}}
 @media(max-width:430px){.ngd-studio .ns-simple{padding:10px;gap:10px}.ngd-studio .ns-simple-hero{padding:13px;gap:12px}.ngd-studio .ns-simple-compare figure{aspect-ratio:5/4}.ngd-studio .ns-simple-step{padding:11px}.ngd-studio .ns-simple-upload{min-height:85px}}
+
+/* Visual Studio: readable templates and progressive disclosure for beginners. */
+.ngd-studio .ns-inspire-visual{aspect-ratio:4/3}
+.ngd-studio .ns-inspire-use{font-size:11px;line-height:1.45;color:#3b3750;margin:0}
+.ngd-studio .ns-inspire-use b{color:#18151f}
+.ngd-studio .ns-inspire-body{gap:7px}
+.ngd-studio .ns-inspire-body>strong{font-size:14px;line-height:1.35}
+.ngd-studio .ns-inspire-body>p{min-height:0;margin:0}
+.ngd-studio .ns-inspire-detail small{font-size:10px;color:#555362;line-height:1.5}
+.ngd-studio .ns-v2-choice{align-items:center}
+.ngd-studio .ns-v2-option-copy{display:grid;gap:3px;min-width:0}
+.ngd-studio .ns-v2-option-copy b{font-size:11px;line-height:1.3}
+.ngd-studio .ns-v2-option-copy small{font-size:10px;font-weight:500;line-height:1.4;color:#575267}
+.ngd-studio .ns-v2-choice[aria-pressed="true"] .ns-v2-option-copy small{color:#282121}
+.ngd-studio .ns-field-guide{display:block;font-size:11px;line-height:1.5;color:#555362;margin:5px 0 8px}
+.ngd-studio .ns-simple-advanced .ns-v2-editor .ns-form>.ns-block:first-child{display:none}
+@media(max-width:420px){
+.ngd-studio .ns-inspire-grid{grid-template-columns:minmax(0,1fr)}
+.ngd-studio .ns-inspire-visual{aspect-ratio:5/3}
+.ngd-studio .ns-inspire-body>strong{font-size:15px}
+.ngd-studio .ns-inspire-body>p,.ngd-studio .ns-inspire-use{font-size:12px}
+}
