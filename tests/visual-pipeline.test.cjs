@@ -42,7 +42,7 @@ function fake(){
    releaseOnce:id=>{if(heldBudget.has(id)){heldBudget.delete(id);}}},
   queue:{enqueueOnce:id=>{if(!queues.has(id)){queues.add(id);counter.queued++}}},
   clock:{now:()=>time},quote:(tier,count)=>count*(tier==='hd'?900:600),
-  compile:()=>compiled,fingerprint:()=>hex
+  compile:()=>compiled,fingerprint:()=>hex,hashBytes:()=>hex
  };
  files.set(ref,{id:ref,owner:'alice',private:true,expires_at:time+1000000});
  return {deps,counter,compiled,files,items,ledger,queues,advance:ms=>{time+=ms}};
@@ -67,6 +67,7 @@ test('private upload validates membership, MIME, size, signature and TTL',()=>{
  assert.throws(()=>api.upload('alice_session',{...sample,mime:'image/svg+xml'}),/MIME/);
  assert.throws(()=>api.upload('alice_session',{...sample,size:1}),/SIGNATURE_MISMATCH/);
  assert.throws(()=>api.upload('alice_session',{...sample,bytes:new Array(12).fill(0)}),/SIGNATURE_MISMATCH/);
+ assert.throws(()=>api.upload('alice_session',{...sample,sha256:'b'.repeat(64)}),/CHECKSUM_MISMATCH/);
  const u=api.upload('alice_session',sample);assert.match(u.asset_id,/^asset_/);
  assert.ok(f.files.has(u.asset_id));
  f.advance(25*60*60*1000);api.cleanup('trusted_worker');assert.equal(f.files.has(u.asset_id),false);
