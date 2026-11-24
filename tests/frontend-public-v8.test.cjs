@@ -32,7 +32,7 @@ test('public Help uses a readable purchase guide while member routes remain priv
  assert.match(app,/class="ngdb-questions"/);
  assert.match(app,/data-route="login"/);
  assert.match(sales,/\.ngdb-help-intro/);
- assert.match(sales,/-webkit-text-fill-color:#241d38!important/);
+ assert.match(sales,/-webkit-text-fill-color:var\(--ngds-ink\)!important/);
  assert.match(css,/\.partner-public-intro/);
  assert.match(css,/\.ai-catalog-intro/);
  assert.match(css,/\.login-shell/);

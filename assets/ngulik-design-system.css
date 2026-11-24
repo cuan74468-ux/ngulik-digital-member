@@ -257,18 +257,19 @@ body.ngd-public-app .ngdm-bottom-nav [aria-current="page"]{
    Bold flat colors replace the legacy multicolored gradient decorations. */
 body.ngd-public-app #screen :is(.ngdl-hero,.ngdl-end,.ngd-home-quiet-hero,.ngd-shop-hero,.ngd-shop-hero-content,.ngd-purpose-hero,.ngd-public-services-hero,.ngd-member-hero):not(.ngd-studio *){
  border:2px solid var(--ngds-ink)!important;
- border-radius:16px!important;box-shadow:5px 5px 0 var(--ngds-ink)!important;
+ border-radius:12px!important;box-shadow:4px 4px 0 var(--ngds-ink)!important;
 }
 /* PUBLIC — editorial hero */
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero{
  background:#111827!important;color:#fff!important;
- padding:clamp(24px,5vw,64px)!important;
- min-height:clamp(400px,44vw,540px);overflow:hidden;
+ padding:clamp(24px,4vw,48px)!important;
+ position:relative;display:grid;grid-template-columns:minmax(0,1fr);align-items:center;isolation:isolate;
+ min-height:clamp(360px,36vw,480px);overflow:hidden;
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero::after{
- content:""!important;display:block;position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,rgba(17,24,39,.94),rgba(17,24,39,.87) 55%,rgba(17,24,39,.25));pointer-events:none;
+ content:""!important;display:block;position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(17,24,39,.96),rgba(17,24,39,.86) 55%,rgba(17,24,39,.18));pointer-events:none;
 }
-html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero-copy{max-width:650px}
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero-copy{position:relative;z-index:2;max-width:600px}
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero h1{
  color:#fff!important;-webkit-text-fill-color:#fff!important;
  font-size:clamp(1.65rem,5vw,2.5rem)!important;line-height:1.2!important;letter-spacing:-.02em;
@@ -309,7 +310,7 @@ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-trust sp
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-story{
  background:var(--ngds-paper)!important;
  border:2px solid var(--ngds-ink)!important;box-shadow:4px 4px 0 var(--ngds-ink)!important;
- border-radius:15px!important;padding:clamp(22px,3vw,34px)!important;
+ border-radius:12px!important;padding:clamp(18px,2.5vw,24px) clamp(20px,3vw,28px)!important;
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-story h2{
  color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;
@@ -350,8 +351,8 @@ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-end{
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-end :is(h2,strong,p){
  color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;
 }
-html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-end .ngdl-kicker{
- color:var(--ngds-lime)!important;
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen  .ngdl-end .ngdl-kicker{
+ color:var(--ngds-violet)!important;
 }
 /* MEMBER — dark violet wallet + lime ledger plot, crisp cards, not white-on-white */
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-dashboard{
@@ -576,8 +577,8 @@ html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-run
  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-metric:last-child{
   grid-column:1/-1!important;
  }
- html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero{
-  padding:24px 20px!important;min-height:420px!important;justify-content:flex-end;
+ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen  .ngdl-hero{
+  padding:24px 20px!important;min-height:420px!important;align-items:end;
  }
  html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero::before{
   inset:0!important;
