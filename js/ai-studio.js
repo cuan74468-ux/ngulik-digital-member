@@ -163,7 +163,7 @@ function gallery(){
  const cats=templateCategoryChoices();
  const scenes=scenarioTemplates().filter(t=>
   (templateFilter==='Semua'||templateFilter===t.category)&&
-  (!query||[t.name,t.description,CONTEXT_SCENARIOS[t.category].label]
+  (!query||[t.name,t.description,t.useFor,t.purpose,CONTEXT_SCENARIOS[t.category].label]
    .some(v=>v.toLocaleLowerCase('id-ID').includes(query))));
  const saved=customTemplates.filter(t=>
   (templateFilter==='Semua'||templateFilter==='saved'||templateFilter===t.product_category)&&
@@ -179,11 +179,11 @@ function gallery(){
   return '<article class="ns-inspire-card" data-scene-card="'+t.id+'">'+
    '<div class="ns-inspire-visual"><img src="'+htmlEscape(t.image)+'" alt="Contoh suasana '+htmlEscape(t.name)+'" loading="lazy">'+
    '<span class="ns-inspire-ratio">'+t.ratio+'</span>'+
-   '<span class="ns-inspire-caption">Referensi suasana · bukan hasil AI Anda</span></div>'+
+   '<span class="ns-inspire-caption">Foto inspirasi · bukan hasil AI dari produk Anda</span></div>'+
    '<div class="ns-inspire-body"><small>'+htmlEscape(CONTEXT_SCENARIOS[t.category].label)+'</small>'+
    '<strong>'+htmlEscape(t.name)+'</strong>'+
-   '<p>'+htmlEscape(t.description)+'</p>'+
-   (expanded?'<div class="ns-inspire-detail"><strong>Resep yang diterapkan</strong><span>Scene '+htmlEscape(t.scenario)+' · Pemulihan foto HP aktif · Label asli dijaga · Rasio dapat diubah · Foto asli Anda wajib diunggah.</span></div>':'')+
+   '<p>'+htmlEscape(t.description)+'</p><p class="ns-inspire-use"><b>Cocok untuk:</b> '+htmlEscape(t.useFor)+'</p>'+
+   (expanded?'<div class="ns-inspire-detail"><strong>Kenapa memilih gaya ini?</strong><span>'+htmlEscape(t.purpose)+'</span><small>Setelah memilih, unggah foto asli. AI berusaha menjaga kemasan dan label, tetapi hasilnya perlu diperiksa sebelum dipublikasikan.</small></div>':'')+
    '<div class="ns-inspire-actions"><button type="button" data-scene-template="'+t.id+'" class="ns-cta ns-dark">'+ico('edit')+' Gunakan</button>'+
    '<button type="button" data-template-detail="'+t.id+'" class="ns-cta" aria-expanded="'+expanded+'">'+(expanded?'Tutup':'Detail')+'</button></div>'+
    '</div></article>';
@@ -197,12 +197,12 @@ function gallery(){
  };
  return '<section class="ns-pane ns-inspire-gallery"><div class="ns-inspire-intro">'+
   '<span class="ns-inspire-eyebrow">PUSTAKA STUDIO</span><h2>Temukan gaya. Gunakan untuk produk Anda.</h2>'+
-  '<p>Pilih skenario yang cocok, ganti foto dengan produk asli, lalu sesuaikan. Template menyimpan komposisi dan resep—bukan foto contoh, teks merek lain, atau biaya API.</p>'+
+  '<p>Setiap gaya punya foto contoh berbeda. Pilih yang sesuai, lalu unggah foto asli produk Anda. Foto contoh bukan hasil AI dari produk Anda.</p>'+
   '</div><div class="ns-inspire-toolbar"><div class="ns-inspire-filters" role="group" aria-label="Filter peruntukan">'+
   cats.map(([id,label])=>'<button type="button" class="ns-chip" data-template-filter="'+id+'" aria-pressed="'+(templateFilter===id)+'">'+htmlEscape(label)+'</button>').join('')+
   '</div><label class="ns-inspire-search">'+ico('grid')+
   '<input id="ns-template-query" type="search" class="ns-control" placeholder="Cari gaya studio..." aria-label="Cari template" value="'+htmlEscape(templateQuery)+'"></label></div>'+
-  (showSaved?'<div class="ns-sectiontitle"><h2>Preset Saya</h2><span class="ns-pill">'+saved.length+' tersimpan</span></div>'+
+  (showSaved&&(saved.length>0||templateFilter==='saved')?'<div class="ns-sectiontitle"><h2>Preset Saya</h2><span class="ns-pill">'+saved.length+' tersimpan</span></div>'+
    (saved.length?'<div class="ns-inspire-saved-list">'+saved.map(own).join('')+'</div>':
    '<p class="ns-inspire-empty">Belum ada preset. Buka template, sesuaikan, lalu pilih Simpan Preset. Pengaturan tetap tersedia pada perangkat ini.</p>'):'')+
   (showScene?'<div class="ns-sectiontitle"><h2>Inspirasi fotografi produk</h2><span class="ns-pill">'+scenes.length+' skenario</span></div>'+
@@ -761,7 +761,7 @@ function editor(){
  return '<section class="ns-simple" aria-label="Buat Foto Produk dalam Tiga Langkah">'+
   '<div class="ns-simple-hero"><div class="ns-simple-intro"><span class="ns-simple-kicker">NGULIK VISUAL STUDIO</span>'+
   '<h1>Ubah Foto HP Biasa Jadi Foto Produk Kelas Studio</h1>'+
-  '<p>Upload foto jualan, pilih gaya, lalu buat. Tidak perlu paham kamera atau desain.</p></div>'+
+  '<p>Unggah foto produk asli, pilih suasana yang cocok, lalu buat. Pengaturan kamera tidak perlu dipahami.</p></div>'+
   '<div class="ns-simple-compare" aria-label="Gambaran foto sebelum dan sesudah">'+
    '<figure class="ns-simple-before"><img src="'+htmlEscape(photo)+'" alt="Contoh foto produk sebelum penataan studio"><figcaption>BEFORE <small>'+(state.photo?'Foto HP Anda':'Contoh foto')+'</small></figcaption></figure>'+
    '<span class="ns-simple-arrow" aria-hidden="true">→</span>'+
@@ -779,8 +779,8 @@ function editor(){
      QUICK_STYLES.map(item=>'<button type="button" data-quick-style="'+item.id+'" class="ns-simple-style" aria-pressed="'+(item.id===current.id)+'"><strong>'+htmlEscape(item.name)+'</strong><small>'+htmlEscape(item.subtitle)+'</small></button>').join('')+
     '</div></section>'+
    '<section class="ns-simple-step ns-simple-create"><h2><span>3</span> Buat Foto</h2>'+
-    '<button type="button" id="ns-quick-generate" class="ns-cta ns-primary ns-simple-primary" '+(!ready?'disabled':'')+'>'+ico('spark')+' Buat Foto Sekarang</button>'+
-    '<p class="ns-simple-mode">'+(liveBridgeReady()?'AI aktif sesuai izin STAGING · biaya mengikuti konfirmasi server.':'Mode simulasi · belum menghasilkan foto AI nyata.')+'</p>'+
+    '<button type="button" id="ns-quick-generate" class="ns-cta ns-primary ns-simple-primary" '+(!ready?'disabled':'')+'>'+ico('spark')+(liveBridgeReady()?' Buat Foto dengan AI':' Coba Pratinjau Tanpa AI')+'</button>'+
+    '<p class="ns-simple-mode">'+(liveBridgeReady()?'AI aktif sesuai izin STAGING · biaya mengikuti konfirmasi server.':'Latihan tanpa AI · foto diproses lokal di perangkat Anda.')+'</p>'+
    '</section></div>'+
   '<details class="ns-simple-advanced"><summary>Pengaturan Lanjutan (Opsional)</summary>'+advancedEditor()+'</details>'+
  '</section>';
@@ -790,7 +790,7 @@ function advancedEditor(){
  const selected=!!state.photo;
  return '<section class="ns-editor ns-v2-editor" aria-label="Studio Foto Produk">'+
  '<aside class="ns-side">'+
- '<div class="ns-side-header"><div><small>NGULIK VISUAL STUDIO</small><strong>Foto produk profesional</strong></div><span class="ns-status">SIMULASI</span></div>'+
+ '<div class="ns-side-header"><div><small>NGULIK VISUAL STUDIO</small><strong>Foto produk profesional</strong></div><span class="ns-status">'+(liveBridgeReady()?'AI TERHUBUNG':'SIMULASI')+'</span></div>'+
  '<div class="ns-form">'+
  '<section class="ns-block ns-v2-step"><h2><span class="ns-count">01</span> Unggah foto produk mentah</h2>'+
  '<p class="ns-hint">Pakai foto dari kamera HP. Hasil simulasi ini belum memperbaiki foto dengan AI.</p>'+
@@ -817,7 +817,7 @@ function advancedEditor(){
   (state.overlay?'<div class="ns-v2-overlay-fields">'+[['ns-product','Nama Produk / Brand',state.product,40],['ns-headline','Headline Promo',state.headline,54],['ns-promo','Harga / Badge',state.promo,28]].map(([id,l,v,max])=>'<label class="ns-label" for="'+id+'">'+l+'<input id="'+id+'" class="ns-control" maxlength="'+max+'" value="'+htmlEscape(v)+'"></label>').join('')+'</div>':'')+
   '</section>'
  ))+
- '</div><div class="ns-cost"><div class="ns-cost-row"><strong>Kredit simulasi</strong><span class="ns-status ns-mono">'+getCost()+' Cr</span></div>'+
+ '</div><div class="ns-cost"><div class="ns-cost-row"><strong>'+(liveBridgeReady()?'Estimasi kredit (konfirmasi server)':'Kredit latihan — bukan saldo Member')+'</strong><span class="ns-status ns-mono">'+getCost()+' Cr</span></div>'+
  foodPreflightMarkup()+'<div class="ns-hint">'+(foodMode?food.count+' × '+selectedMachine().credits+' Cr / hasil · estimasi simulasi':'1 hasil · simulasi')+'</div>'+ '<button type="button" id="ns-generate" class="ns-cta ns-primary" '+(!selected||state.busy||(foodMode&&foodQuality.status!=='pass')?'disabled':'')+'>'+ico('spark')+(selected?' Buat Pratinjau Simulasi':' Unggah Foto Dahulu')+'</button>'+
  (foodMode?'<div id="ns-food-pricing" class="ns-food-pricing" role="status"><strong>Ringkasan Kredit</strong><span>'+htmlEscape(selectedMachine().name)+'</span><b>'+selectedMachine().credits+' kredit × '+food.count+' hasil = '+getCost()+' kredit</b><small>Tarif final dikunci server sebelum Generate. Gagal total: 100% kredit kembali; jika gagal sebagian, hanya hasil sukses ditagih.</small></div><div id="ns-food-job-progress" class="ns-food-job-progress" role="status" aria-live="polite">'+htmlEscape(liveStatus)+'</div>':'')+
  (foodMode&&liveBridgeReady()?'<button type="button" id="ns-food-live-generate" class="ns-cta ns-dark" '+(!selected||!selectedLocalFile||foodQuality.status!=='pass'||livePolling?'disabled':'')+'>Generate AI melalui antrean privat</button>':'')+ '<small class="ns-hint">'+(liveBridgeReady()?'AI memakai antrean privat jika disetujui oleh backend.':'AI nyata masih nonaktif. Foto asli tidak dikirim ke server.')+'</small></div></aside>'+
