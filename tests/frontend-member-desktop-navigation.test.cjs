@@ -19,7 +19,7 @@ test('desktop hides hamburger graphic, redundant order and status, and duplicate
     const html=read(file);
     assert.match(html,/ngdm-desktop-more-text" aria-hidden="true">Lainnya/);
     assert.match(html,/member-native-dashboard-v1\.css\?v=20261122-qris-contract-safe-v4/);
-    assert.match(html,/app\.js\?v=\d{8}-[a-z0-9-]+/); // cache-busted, versioned entrypoint
+    assert.match(html,/app\.js\?v=20261122-private-gates-v5/);
   }
 });
 test('phone dock and existing More drawer keep every member destination reachable',()=>{
