@@ -97,6 +97,6 @@ test('V13 public banner maintains proportional desktop layout and content-driven
   assert.match(ui,/\.market-product-media\{[\s\S]*?aspect-ratio:6\/5/);
   assert.match(ui,/\.ngd-cms-preview-desktop \.ngd-cms-preview-image\{[\s\S]*?aspect-ratio:8\/3/);
   assert.match(ui,/\.ngd-cms-preview-mobile \.ngd-cms-preview-image\{[\s\S]*?aspect-ratio:4\/5/);
-  assert.match(app,/Bikin konten jualan, coba AI, atau rapikan usaha/);
+  assert.match(app,/NGD_PUBLIC_CMS\?\.home\(state\.siteContent,state\.publicSettings\)/);
   assert.match(content,/CMS saat ini menggunakan satu gambar per penempatan/);
 });
