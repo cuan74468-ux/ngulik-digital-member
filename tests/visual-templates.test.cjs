@@ -98,3 +98,18 @@ test('template storage bridge requires list/save/remove and never activates prov
  assert.equal(api.adapterMode,'SIMULATION');
  await api.configureTemplateStorage(null);
 });
+
+test('beginner studio keeps four locked quick styles and does not expose arbitrary prompt or image URLs',()=>{
+ const w={};vm.runInNewContext(read('js/ai-studio.js'),{window:w,console});
+ const studio=w.NGD_STUDIO;
+ const presets=studio.quickStyles();
+ assert.deepEqual(presets.map(x=>x.name),['Katalog Bersih','Kuliner Hangat','Percikan Dinamis','Hitam Mewah']);
+ assert.equal(studio.quickStyleSelect('luxury'),true);
+ const draft=studio.foodMagazineDraft();
+ assert.equal(draft.payload.product_category,'bottled_liquid');
+ assert.equal(draft.payload.studio_scenario,'obsidian_mirror_splash');
+ assert.equal(draft.payload.restoration_mode,'full_phone_restoration');
+ assert.equal(studio.quickStyleSelect('script:inject'),false);
+ assert.equal(studio.quickStyleSelect('culinary'),true);
+ assert.equal(studio.foodMagazineDraft().payload.studio_scenario,'steam_broth_hero');
+});
