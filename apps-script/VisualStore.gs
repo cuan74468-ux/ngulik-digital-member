@@ -142,8 +142,22 @@ function ngdVisualStoreDrive_(clock){
     row.refunded=row.reserved;row.state='REFUNDED';
    });
   },
-  // Credit seeding intentionally NOT exported. Finance owner must approve
-  // dedicated Visual wallet funding and perform out-of-band reconciliation.
+  // Operator-only dedicated STAGING Visual wallet; never accepts an API action.
+  // Idempotent one-time provision. No P0 token/financial Sheet interaction.
+  provisionPilotOnce:function(member,credits){
+   return txn(function(s){
+    ngdVsRequire_(typeof member==='string'&&/^[A-Za-z0-9_-]{3,80}$/.test(member),
+      'PILOT_MEMBER_INVALID');
+    ngdVsRequire_(Number.isSafeInteger(credits)&&credits>=1&&credits<=20,
+      'PILOT_CREDIT_LIMIT');
+    ngdVsRequire_(!s.wallets[member]&&
+      !Object.values(s.ledger).some(function(row){return row.member===member;}),
+      'PILOT_WALLET_ALREADY_EXISTS');
+    s.wallets[member]={available:credits,held:0};
+    return {member_id:member,available:credits,held:0,
+      funding_source:'STAGING_VISUAL_TEST_ONLY'};
+   });
+  },
   balance:function(member){
    return read(function(s){
     var w=s.wallets[member];
