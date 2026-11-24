@@ -76,8 +76,12 @@ function ngdVisualChunkUpload_(auth){
   return {accepted:true,index:p.index};
  }
  function finish(token,p){
-  var owner=member(token),info=ngdVuManifest_(p.upload_id,owner),meta=info.meta;
-  if(meta.completed_asset)return {asset_id:meta.completed_asset};
+  var owner=member(token);
+  var lock=LockService.getScriptLock();
+  ngdVuNeed_(lock.tryLock(15000),'FINISH_LOCK_BUSY');
+  try{
+   var info=ngdVuManifest_(p.upload_id,owner),meta=info.meta;
+   if(meta.completed_asset)return {asset_id:meta.completed_asset};
   var bytes=[];
   for(var i=0;i<meta.count;i++){
    var part=ngdVuFile_('NGD_VU_'+p.upload_id+'_CHUNK_'+i).file;
@@ -86,7 +90,7 @@ function ngdVisualChunkUpload_(auth){
    var data=part.getBlob().getBytes();
    ngdVuNeed_(part.getDescription()===owner+':'+ngdVmSha256_(data),
     'CHUNK_TAMPERED');
-   bytes=bytes.concat(data);
+   Array.prototype.push.apply(bytes,data); // linear accumulation, not O(n²) copies
   }
   ngdVuNeed_(bytes.length===meta.size&&
    ngdVmSha256_(bytes)===meta.sha256,'FINAL_CHECKSUM_MISMATCH');
@@ -101,6 +105,7 @@ function ngdVisualChunkUpload_(auth){
    if(chunk)chunk.setTrashed(true);
   }
   return result;
+  }finally{lock.releaseLock();}
  }
  return {start:create,chunk:put,finish:finish};
 }
