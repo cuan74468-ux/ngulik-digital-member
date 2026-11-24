@@ -50,7 +50,9 @@
   function home(items,settings){
     const hero=entry(items,'CNT-HERO-MAIN','HERO','home');
     if(!hero)return '<div class="ngd-landing-v1" aria-live="polite">'+
-      '<p role="status" class="ngdl-hero-lead">Sedang memuat informasi...</p></div>';
+      '<h1>Ngulik Digital</h1><p>Konten belum tersedia.</p>'+
+      '<button type="button" data-route="katalog">Buka Katalog</button>'+
+      '<button type="button" data-route="dukungan">Bantuan</button></div>';
     const pills=list(items,'HIGHLIGHT_PILL','home');
     const cases=list(items,'USECASE_CARD','home');
     const starter=entry(items,'CNT-STARTER-MAIN','FEATURE_CARD','home');
@@ -85,7 +87,7 @@
           '<div class="ngdl-actions">'+button(hero,'ngdl-btn ngdl-btn-gold')+
             button(second,'ngdl-btn ngdl-btn-ghost')+'</div>'+
         '</div>'+
-        (heroImage?'<img src="'+escape(heroImage)+'" alt="" class="ngd-cms-hero-art" loading="eager">':'')+
+        (heroImage?'<img src="'+escape(heroImage)+'" alt="" class="ngd-cms-hero-art" loading="eager" fetchpriority="high" width="1200" height="800">':'')+
       '</section>'+
       (pills.length?'<div class="ngdl-trust" aria-label="Informasi layanan">'+
         pills.map(x=>'<span>'+escape(x.title||'')+'</span>').join('')+'</div>':'')+

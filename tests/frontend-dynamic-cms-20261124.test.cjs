@@ -48,7 +48,9 @@ test('public home renders only CMS-provided copy and safe route actions',()=>{
 });
 test('missing published HERO is neutral and never fabricates promotional fallback',()=>{
  const cmsUi=cms();
- assert.match(cmsUi.home([],{}),/Sedang memuat informasi\.\.\./);
+ assert.match(cmsUi.home([],{}),/data-route="katalog"/);
+ assert.match(cmsUi.home([],{}),/data-route="dukungan"/);
+ assert.doesNotMatch(cmsUi.home([],{}),/Sedang memuat informasi/);
  assert.doesNotMatch(cmsUi.home([],{}),/Rp15\.000|komisi|QRIS/);
 });
 test('untrusted admin strings and routes cannot inject markup or navigation',()=>{

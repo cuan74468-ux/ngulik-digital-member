@@ -626,26 +626,9 @@ function viewHome(){
   // Public front door: published CMS only, no copied marketing fallback.
   // Nothing in this renderer creates orders, opens P0 finance or grants access.
   const editorHtml=window.NGD_PUBLIC_CMS?.home(state.siteContent,state.publicSettings);
-  const hasHero=Array.isArray(state.siteContent)&&state.siteContent.some(row=>
-    row?.content_id==='CNT-HERO-MAIN'&&row?.kind==='HERO'&&
-    row?.placement==='home');
-  // getPublicContent returns only PUBLISHED records and deliberately omits
-  // 'status' from its projection. Requiring that missing field here hid
-  // valid published content even when STAGING returned all 35 rows.
-  if(hasHero||!state.cmsLoaded||state.qa)return editorHtml||
-    '<div class="ngd-landing-v1"><p role="status">Sedang memuat informasi...</p></div>';
-  const staging=String(location.pathname||'').includes('/staging/');
-  const heading=staging?'Konten STAGING belum terbaca.':'Beranda publik sedang disiapkan.';
-  const detail=staging?
-    'Konten yang sudah diterbitkan di Google Sheets belum dikirim oleh API STAGING. Periksa versi deployment Apps Script, khususnya Content.gs.':
-    'Konten CMS belum tersedia di layanan publik yang aktif. Beranda STAGING dan Produksi menggunakan layanan data berbeda.';
-  return '<section class="ngd-cms-unavailable" role="status" aria-live="polite">'+
-    '<p class="ngd-cms-kicker">INFORMASI LAYANAN</p>'+
-    '<h1>'+esc(heading)+'</h1><p>'+esc(detail)+'</p>'+
-    '<div class="ngd-cms-unavailable-actions">'+
-    '<button type="button" data-action="retry-public-content" class="btn btn-primary">Coba muat ulang konten</button>'+
-    '<button type="button" data-route="katalog" class="btn btn-secondary">Buka katalog</button>'+
-    '</div></section>';
+  return editorHtml||'<div class="ngd-landing-v1"><h1>Ngulik Digital</h1>'+
+    '<button type="button" data-route="katalog">Buka Katalog</button>'+
+    '<button type="button" data-route="dukungan">Bantuan</button></div>';
 }
 const offerCategories=[
   ['semua','Semua Produk'],['belajar','eBook & Panduan'],
@@ -2706,6 +2689,31 @@ function publicSnapHasHero_(rows){
   return Array.isArray(rows)&&rows.some(r=>r?.content_id==='CNT-HERO-MAIN'&&
     r?.kind==='HERO'&&r?.placement==='home');
 }
+function publicSeedDate_(v){
+  if(v===''||v===null||v===undefined)return '';
+  if(typeof v==='number'){
+    if(!Number.isSafeInteger(v)||v<1||v>2958465)return null;
+    return new Date(Date.UTC(1899,11,30)+v*86400000).toISOString().slice(0,10);
+  }
+  const t=String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(t)){
+    const d=new Date(t+'T00:00:00Z');
+    return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===t?t:null;
+  }
+  if(/^\d{4}-\d{2}-\d{2}T/.test(t)){
+    const d=new Date(t);
+    return Number.isFinite(d.getTime())?new Date(d.getTime()+7*3600000).toISOString().slice(0,10):null;
+  }
+  return null;
+}
+function publicActiveRows_(rows){
+  const today=new Date(Date.now()+7*3600000).toISOString().slice(0,10);
+  return (Array.isArray(rows)?rows:[]).filter(r=>{
+    if(!r||typeof r!=='object'||(r.status!==undefined&&r.status!=='PUBLISHED'))return false;
+    const a=publicSeedDate_(r.start_date),b=publicSeedDate_(r.end_date);
+    return a!==null&&b!==null&&(!a||a<=today)&&(!b||b>=today);
+  });
+}
 function publicSnapRead_(){
   try{
     if(typeof localStorage==='undefined')return null;
@@ -2717,8 +2725,7 @@ function publicSnapRead_(){
     if(age<0||age>publicSnapMaxAgeMs_)return null;
     if(!Array.isArray(snap.siteContent)||snap.siteContent.length>300)return null;
     // Only rows that were published may be replayed; drafts never pass.
-    const rows=snap.siteContent.filter(r=>r&&typeof r==='object'&&
-      (r.status===undefined||r.status==='PUBLISHED'));
+    const rows=publicActiveRows_(snap.siteContent);
     if(!publicSnapHasHero_(rows))return null;
     return {
       siteContent:rows,
@@ -2758,6 +2765,26 @@ function applyPublicSnap_(){
   return true;
 }
 // ---- public snapshot end
+function applyPublicSeed_(){
+  if(state.qa||!isConnected())return false;
+  const seed=window.NGD_PUBLIC_SEED;
+  const env=String(location.pathname||'').includes('/staging/')?'stg':'prd';
+  const data=seed?.v===1?seed.envs?.[env]:null;
+  if(!data||!Array.isArray(data.siteContent)||data.siteContent.length>300)return false;
+  const rows=publicActiveRows_(data.siteContent);
+  if(!publicSnapHasHero_(rows))return false;
+  state.siteContent=rows;
+  state.publicSettings=data.publicSettings||{};
+  state.catalog=Array.isArray(data.catalog)?data.catalog:[];
+  state.publicTools=Array.isArray(data.publicTools)?data.publicTools:[];
+  // Display-only fields; do not seed effective registration mode or counters.
+  const info=data.publicInfo||{};
+  state.info={nama_brand:info.nama_brand,wa_admin:info.wa_admin,disclosure:info.disclosure};
+  state.cmsLoaded=true;
+  state.catalogLoaded=state.catalog.length>0;
+  state.publicToolsLoaded=state.publicTools.length>0;
+  return true;
+}
 const publicRetryDelayMs_=1200;
 // GAS cold starts and brief network drops are common: retry network-level
 // failures once. Server answers (validation, forbidden, ...) are never retried.
@@ -2775,45 +2802,54 @@ function settlePublic_(promise){
 // Progressive load: each read applies as soon as it arrives, so the hero can
 // paint without waiting for catalogue, tools or member counters.
 async function loadPublic_(){
-  // Independent public reads must not discard valid data when one service is
-  // briefly unavailable (or vice versa).
-  const homeNow=()=>{if(state.route==='beranda')render();};
+  let otherChanged=false;
+  const apply=(key,value)=>{
+    if(JSON.stringify(state[key])===JSON.stringify(value))return false;
+    state[key]=value;return true;
+  };
+  const homeNow=changed=>{if(changed&&state.route==='beranda')render();else if(changed)otherChanged=true;};
   const content=settlePublic_(publicRead_('getPublicContent')).then(r=>{
     state.cmsLoaded=true;
     state.cmsReadError=r.status!=='fulfilled'||!Array.isArray(r.value);
-    if(!state.cmsReadError)state.siteContent=r.value;
-    homeNow();return r;
+    if(!state.cmsReadError){
+      const changed=apply('siteContent',r.value);
+      if(!publicSnapHasHero_(r.value))publicSnapClear_();
+      homeNow(changed);
+    }
+    return r;
   });
   const settings=settlePublic_(publicRead_('getPublicSettings')).then(r=>{
     if(r.status==='fulfilled'&&r.value&&typeof r.value==='object'&&
-      !Array.isArray(r.value)){state.publicSettings=r.value;homeNow();}
+      !Array.isArray(r.value))homeNow(apply('publicSettings',r.value));
     return r;
   });
   const info=settlePublic_(publicRead_('getPublicInfo')).then(r=>{
-    if(r.status==='fulfilled'&&r.value&&typeof r.value==='object')state.info=r.value;
+    if(r.status==='fulfilled'&&r.value&&typeof r.value==='object')
+      otherChanged=apply('info',r.value)||otherChanged;
     return r;
   });
   const catalog=settlePublic_(publicRead_('getKatalog')).then(r=>{
-    if(r.status==='fulfilled'&&Array.isArray(r.value))state.catalog=r.value;
+    if(r.status==='fulfilled'&&Array.isArray(r.value))
+      otherChanged=apply('catalog',r.value)||otherChanged;
+    otherChanged=!state.catalogLoaded||otherChanged;
     state.catalogLoaded=true;return r;
   });
   const tools=settlePublic_(publicRead_('getPublicTools')).then(r=>{
-    if(r.status==='fulfilled'&&Array.isArray(r.value))state.publicTools=r.value;
+    if(r.status==='fulfilled'&&Array.isArray(r.value))
+      otherChanged=apply('publicTools',r.value)||otherChanged;
+    otherChanged=!state.publicToolsLoaded||otherChanged;
     state.publicToolsLoaded=true;return r;
   });
-  const [contentR,,infoR,catalogR]=await Promise.all([content,settings,info,catalog,tools]);
-  // Persist only after a fresh, valid CMS read; a failed read keeps the older snapshot.
-  // A fresh read without a hero means it was unpublished: drop the old snapshot.
+  const [contentR]=await Promise.all([content,settings,info,catalog,tools]);
+  // An error preserves the last valid data; a successful empty response revokes it.
   if(!state.cmsReadError&&contentR.status==='fulfilled'&&!publicSnapWrite_())publicSnapClear_();
-  render();
-  if(infoR.status==='rejected'&&catalogR.status==='rejected')
-    toast('Informasi terbaru belum dapat dimuat. Coba muat ulang halaman.',true);
+  if(otherChanged&&state.route!=='beranda')render();
 }
 // Near-real-time sync: two read-only GAS calls while the catalogue is visible.
 // No order creation, member data access, or mutations.
 let marketplacePoll_=null,marketplaceUpdating_=false;
 async function refreshMarketplaceData_(){
-  if(marketplaceUpdating_||state.qa||!isConnected())return false;
+  if(marketplaceUpdating_||publicLoading_||homeUpdating_||state.qa||!isConnected())return false;
   marketplaceUpdating_=true;
   try{
     const [catalog,content]=await Promise.allSettled([
@@ -2822,7 +2858,10 @@ async function refreshMarketplaceData_(){
     const okCatalog=catalog.status==='fulfilled'&&Array.isArray(catalog.value);
     const okContent=content.status==='fulfilled'&&Array.isArray(content.value);
     if(okCatalog)state.catalog=catalog.value;
-    if(okContent)state.siteContent=content.value;
+    if(okContent){
+      state.siteContent=content.value;state.cmsLoaded=true;state.cmsReadError=false;
+      if(!publicSnapHasHero_(content.value))publicSnapClear_();
+    }
     if(state.route==='katalog'&&(okCatalog||okContent))render();
     // Catalog refresh succeeds even when optional CMS images are temporarily unavailable.
     return okCatalog;
@@ -2833,14 +2872,14 @@ async function refreshMarketplaceData_(){
 const homePollMs_=60000;
 let homeUpdating_=false,homeLastSyncAt_=0,pollMode_='';
 async function refreshHomeContent_(){
-  if(homeUpdating_||state.qa||!isConnected())return false;
+  if(homeUpdating_||marketplaceUpdating_||publicLoading_||state.qa||!isConnected())return false;
   homeUpdating_=true;
   try{
     const content=await api('getPublicContent');
     if(!Array.isArray(content))return false;
     homeLastSyncAt_=Date.now();
     const changed=JSON.stringify(content)!==JSON.stringify(state.siteContent);
-    state.cmsReadError=false;
+    state.cmsReadError=false;state.cmsLoaded=true;
     if(changed){
       state.siteContent=content;
       if(!publicSnapWrite_())publicSnapClear_();
@@ -4473,7 +4512,7 @@ async function init(){
     state.info=null;
     // Last valid public snapshot (same endpoint and environment only);
     // loadPublic_ revalidates it right after this first paint.
-    applyPublicSnap_();
+    if(!applyPublicSnap_())applyPublicSeed_();
     render();
     // Public catalog/content and a private session are independent. Do not
     // hold back the member/admin route behind slower public asset requests.

@@ -99,13 +99,13 @@ test('refreshPublic loads progressively with one in-flight load and a single net
   assert.match(sec,/first\?\.code!=='NETWORK_ERROR'/);
   assert.doesNotMatch(sec,/write:\s*true|createOrder|adminUpdate/);
   // Hero paints on content arrival, before slower reads finish.
-  assert.ok(sec.indexOf('homeNow();return r;')<sec.indexOf('await Promise.all'));
+  assert.ok(sec.indexOf('homeNow(changed);')<sec.indexOf('await Promise.all'));
 });
 
 test('init paints the validated snapshot before the first render',()=>{
   const init=app.slice(app.indexOf('async function init(){'));
-  assert.ok(init.indexOf('applyPublicSnap_();')>0);
-  assert.ok(init.indexOf('applyPublicSnap_();')<init.indexOf('render();'));
+  assert.ok(init.indexOf('applyPublicSnap_()')>0);
+  assert.ok(init.indexOf('applyPublicSnap_()')<init.indexOf('render();'));
 });
 
 test('home polling is read-only, pauses on hidden tabs and keeps its timer across renders',()=>{
