@@ -222,7 +222,7 @@ function v2Choices(field){
  const items=V2_OPTIONS[field];
  return '<div class="ns-v2-choice-grid" role="group" aria-label="'+htmlEscape(field)+'">'+items.map(([id,title])=>{
  const ok=optionAllowed(field,id);
- return '<button type="button" class="ns-v2-choice" data-v2-field="'+field+'" data-v2-value="'+id+'" aria-pressed="'+(state.v2[field]===id)+'" '+(ok?'':'disabled aria-disabled="true" title="Tidak cocok dengan pilihan sebelumnya"')+'>' <span class="ns-v2-option-copy"><b>'+htmlEscape(title)+'</b><small>'+htmlEscape(OPTION_HELP[id]||'Pilih sesuai kebutuhan produk.')+'</small></span></button>';
+ return '<button type="button" class="ns-v2-choice" data-v2-field="'+field+'" data-v2-value="'+id+'" aria-pressed="'+(state.v2[field]===id)+'" '+(ok?'':'disabled aria-disabled="true" title="Tidak cocok dengan pilihan sebelumnya"')+'><span class="ns-v2-option-copy"><b>'+htmlEscape(title)+'</b><small>'+htmlEscape(OPTION_HELP[id]||'Pilih sesuai kebutuhan produk.')+'</small></span></button>';
  }).join('')+'</div>';
 }
 function v2Field(field,label,description){
