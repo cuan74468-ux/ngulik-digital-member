@@ -8,6 +8,9 @@
  --ngds-lime:#C8F135;--ngds-danger:#9C293A;
  --ngds-line:2px solid #111827;--ngds-shadow:4px 4px 0 #111827;
  --ngds-radius:12px;--ngds-radius-small:9px;
+ --ngds-pad:clamp(18px,2.5vw,24px) clamp(20px,3vw,28px);
+ --ngds-h1:clamp(1.65rem,5vw,2.5rem);--ngds-h2:clamp(1.25rem,3.8vw,1.75rem);
+ --ngds-h3:1.125rem;--ngds-body:.975rem;
  --ngds-heading:'Plus Jakarta Sans',system-ui,sans-serif;
  --ngds-mono:'JetBrains Mono',ui-monospace,monospace;
  --ngds-ease:cubic-bezier(.2,.8,.2,1);
@@ -32,9 +35,9 @@ body.ngd-public-app {
  font-family:var(--ngds-heading);
 }
 /* Role-specific reset overrides earlier member-only palette tokens. */
-body.ngd-public-app[data-app-role="member"],
-body.ngd-public-app[data-app-role="admin"],
-body.ngd-public-app[data-app-role="guest"]{
+html body.ngd-public-app[data-app-role="member"]:not(#ngd),
+html body.ngd-public-app[data-app-role="admin"]:not(#ngd),
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd){
  --ngdm-ink:var(--ngds-ink);--ngdm-muted:var(--ngds-muted);
  --ngdm-line:var(--ngds-ink);--ngdm-primary:var(--ngds-violet);
  --ngdm-gold:var(--ngds-lime);--ngdm-deep:var(--ngds-ink);
@@ -207,8 +210,6 @@ body.ngd-public-app .footer{background:var(--ngds-bg);color:var(--ngds-muted)}
    without modifying layout ownership, route policy, or backend.
    ================================================================ */
 body.ngd-public-app {
- --ngds-violet:#4338CA;--ngds-lime:#C8F135;--ngds-ink:#111827;
- --ngds-paper:#FFFFFF;--ngds-bg:#FAF9F5;--ngds-board:#ECEAE3;
  background-color:var(--ngds-bg)!important;
 }
 html body.ngd-public-app:not(#ngd) .workarea,
@@ -217,7 +218,7 @@ html body.ngd-public-app:not(#ngd) .main-content{
 }
 body.ngd-public-app #screen{color:var(--ngds-ink);font-family:var(--ngds-heading);min-width:0}
 body.ngd-public-app #screen :is(h1,h2,h3,h4):not(.ngd-studio *){
- font-family:var(--ngds-heading)!important;letter-spacing:-.04em;
+ font-family:var(--ngds-heading)!important;letter-spacing:-.025em;overflow-wrap:break-word;word-break:normal;
 }
 body.ngd-public-app #screen :is(.eyebrow,.ngdm-kicker,.ngdl-kicker,.partner-kicker,.learning-overline):not(.ngd-studio *){
  font-family:var(--ngds-mono)!important;letter-spacing:.045em!important;
@@ -272,7 +273,7 @@ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero::af
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero-copy{position:relative;z-index:2;max-width:600px}
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero h1{
  color:#fff!important;-webkit-text-fill-color:#fff!important;
- font-size:clamp(1.65rem,5vw,2.5rem)!important;line-height:1.2!important;letter-spacing:-.02em;
+ font-size:var(--ngds-h1)!important;line-height:1.2!important;letter-spacing:-.02em;
  font-weight:800!important;
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero h1 span{
@@ -310,7 +311,7 @@ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-trust sp
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-story{
  background:var(--ngds-paper)!important;
  border:2px solid var(--ngds-ink)!important;box-shadow:4px 4px 0 var(--ngds-ink)!important;
- border-radius:12px!important;padding:clamp(18px,2.5vw,24px) clamp(20px,3vw,28px)!important;
+ border-radius:12px!important;padding:var(--ngds-pad)!important;
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-story h2{
  color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;
@@ -338,7 +339,7 @@ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-offer-li
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-benefits{
  background:var(--ngds-lime)!important;
  border:2px solid var(--ngds-ink)!important;
- box-shadow:4px 4px 0 var(--ngds-ink)!important;border-radius:15px!important;
+ box-shadow:4px 4px 0 var(--ngds-ink)!important;border-radius:12px!important;
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-benefits :is(h2,h3,li,p,strong){
  color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;
@@ -363,7 +364,7 @@ html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-greetin
  padding:16px 4px 4px!important;
 }
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-greeting h1{
- font-size:clamp(27px,3.4vw,43px)!important;line-height:1.1!important;
+ font-size:var(--ngds-h1)!important;line-height:1.2!important;
  font-weight:800!important;
  color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;
 }
@@ -374,9 +375,9 @@ html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-greetin
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-wallet{
  background:var(--ngds-violet)!important;
  border:2px solid var(--ngds-ink)!important;
- border-radius:18px!important;
- box-shadow:6px 6px 0 var(--ngds-ink)!important;
- color:#fff!important;padding:clamp(19px,2.4vw,30px)!important;
+ border-radius:12px!important;
+ box-shadow:4px 4px 0 var(--ngds-ink)!important;
+ color:#fff!important;padding:var(--ngds-pad)!important;
 }
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-wallet :is(p,span,strong,small){
  color:#fff!important;-webkit-text-fill-color:#fff!important;
@@ -436,7 +437,7 @@ html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-metric{
  border:2px solid var(--ngds-ink)!important;border-radius:12px!important;
  box-shadow:4px 4px 0 var(--ngds-ink)!important;
  background:var(--ngds-paper)!important;min-width:0!important;
- padding:19px!important;
+ padding:var(--ngds-pad)!important;
 }
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-metric:first-child{
  background:var(--ngds-lime)!important;
@@ -476,7 +477,7 @@ html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-shortcu
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen :is(.ngdm-orders,.ngdm-recent,.ngdm-owned){
  background:var(--ngds-paper)!important;
  border:2px solid var(--ngds-ink)!important;
- border-radius:14px!important;
+ border-radius:12px!important;
  box-shadow:4px 4px 0 var(--ngds-ink)!important;
 }
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-section-head h2{
@@ -493,11 +494,11 @@ html body.ngd-public-app:not(#ngd) #screen :is(.market-product-card,.ai-product-
 html body.ngd-public-app:not(#ngd) #screen :is(.ai-catalog-intro,.ai-tool-detail-hero,.market-hero-content,.ngd-member-page-intro,.ngd-public-services-hero){
  border:2px solid var(--ngds-ink)!important;
  background:var(--ngds-lime)!important;
- border-radius:14px!important;
+ border-radius:12px!important;
  box-shadow:4px 4px 0 var(--ngds-ink)!important;
- padding:clamp(18px,2.5vw,33px)!important;
+ padding:var(--ngds-pad)!important;
 }
-html body.ngd-public-app:not(#ngd) #screen :is(.ai-catalog-intro,.ai-tool-detail-hero,.ngd-public-services-hero) :is(h1,h2,h3){
+html body.ngd-public-app:not(#ngd) #screen :is(.ai-catalog-intro,.ai-tool-detail-hero,.ngd-public-services-hero,.ngd-member-page-intro) :is(h1,h2,h3,p){
  color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;
 }
 html body.ngd-public-app:not(#ngd) #screen .ai-catalog-intro .eyebrow{
@@ -525,7 +526,7 @@ html body.ngd-public-app:not(#ngd) #screen .market-product-price{
 html body.ngd-public-app:not(#ngd) #screen :is(.partner-hero,.partner-public-intro,.partner-member-header,.learning-intro,.learning-portal-hero,.learning-portal-promo,.ngd-help-hero){
  background:var(--ngds-lime)!important;color:var(--ngds-ink)!important;
  border:2px solid var(--ngds-ink)!important;
- border-radius:15px!important;box-shadow:4px 4px 0 var(--ngds-ink)!important;
+ border-radius:12px!important;box-shadow:4px 4px 0 var(--ngds-ink)!important;
 }
 html body.ngd-public-app:not(#ngd) #screen :is(.partner-hero,.partner-public-intro,.learning-intro,.learning-portal-hero,.ngd-help-hero) :is(h1,h2,h3,p,strong){
  color:var(--ngds-ink)!important;-webkit-text-fill-color:var(--ngds-ink)!important;
@@ -562,6 +563,11 @@ html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-ope
  font-family:var(--ngds-heading)!important;
 }
 html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-runtime-flags,.admin-stats,.admin-modules) {min-width:0}
+/* Shared page hierarchy, not a separate role theme. Preserve widget-specific headings. */
+body.ngd-public-app #screen :is(.market-header,.ngdb-hero,.ngdb-help-intro,.ai-catalog-intro,.ngd-member-page-intro,.ngd-member-services,.partner-public-intro,.partner-hero,.learning-intro,.learning-portal-hero,.ngd-help-hero,.admin-operations-intro,.checkout-heading) h1{font-size:var(--ngds-h1);line-height:1.2}
+body.ngd-public-app #screen :is(.ngdl-section-top,.ngdb-heading,.ngdm-section-head,.market-results-header,.admin-module-card) h2{font-size:var(--ngds-h2);line-height:1.25}
+body.ngd-public-app #screen :is(.ngdl-offer,.market-product-card,.ai-product-card,.admin-module-card) h3{font-size:var(--ngds-h3);line-height:1.35;overflow-wrap:break-word}
+body.ngd-public-app[data-app-role="admin"] #screen :is(.admin-operations-intro,.admin-module-card,.admin-card){padding:var(--ngds-pad);min-width:0}
 /* Security and payment state presentations retain their original severity semantics.
    No fake green 'paid', no hiding readonly notices or gates. */
 @media(max-width:760px){
@@ -607,7 +613,7 @@ html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-run
   grid-template-columns:1fr!important;
  }
  html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-wallet{
-  padding:18px!important;
+  padding:var(--ngds-pad)!important;
  }
 }
 
@@ -617,7 +623,7 @@ html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-run
 html body.ngd-public-app:not(#ngd){
  --ngds-header:#111827;
  --ngds-header-text:#FFFFFF;
- --ngds-header-secondary:#D7CEFF;
+ --ngds-header-secondary:#EAE5FF;
  --ngds-select:#C8F135;
  --ngds-select-ink:#111827;
 }
@@ -862,7 +868,7 @@ html body.ngd-public-app[data-app-role]:not(#ngd) .workarea>.topbar .guest-brand
  font-weight:800!important;
 }
 html body.ngd-public-app[data-app-role]:not(#ngd) .workarea>.topbar .guest-brand small{
- color:#D7CEFF!important;-webkit-text-fill-color:#D7CEFF!important;
+ color:var(--ngds-header-secondary)!important;-webkit-text-fill-color:var(--ngds-header-secondary)!important;
 }
 html body.ngd-public-app[data-app-role]:not(#ngd) .workarea>.topbar #guest-nav button[aria-current="page"]{
  background:#C8F135!important;color:#111827!important;
@@ -881,8 +887,8 @@ html body.ngd-public-app:not(#ngd) #screen .ngd-window-frame{
  --ngd-window-pad-x:17px;
  --ngd-window-pad-y:18px;
  border:2px solid #111827!important;
- border-radius:16px!important;
- box-shadow:5px 5px 0 #4338CA!important;
+ border-radius:12px!important;
+ box-shadow:4px 4px 0 var(--ngds-ink)!important;
  overflow:hidden;
  min-width:0;
 }

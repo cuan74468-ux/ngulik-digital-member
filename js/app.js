@@ -319,6 +319,8 @@ const mobileNavRoute=(route)=>({
   member360:'member'
 })[route]||route;
 function renderNav(){
+  const tagline=String(state.publicSettings?.tagline_brand||'');
+  document.querySelectorAll?.('.guest-brand small,.brand-copy small').forEach(el=>{el.textContent=tagline;});
   const items=isAdmin()?adminNav:logged()?memberNav:guestNav;
   const navIcon=(route)=>window.NGD_CONTENT_UI?.media(state.siteContent,'NAV_ICON',route,'nav-custom-icon','')||icon(screens[route][1]);
   const button=(route)=>'<button type="button" class="nav-item" data-route="'+route+'" '+(state.route===route?'aria-current="page"':'')+'>'+navIcon(route)+'<span>'+esc(screens[route][0])+'</span></button>';
@@ -1457,7 +1459,7 @@ function viewLogin(register=false,adminMode=false){
   const authLabel=(i)=>esc(cmsAuth?.label(i)||'Sedang memuat informasi...');
   return '<div class="login-shell ngd-auth-v10">'+
     '<div class="ngd-auth-brand"><img src="'+esc(defaultBrandLogoSrc)+'" alt="" decoding="async">'+
-      '<span><strong>Ngulik Digital</strong><small>Marketplace Produk Digital</small></span></div>'+
+      '<span><strong>Ngulik Digital</strong><small>'+esc(state.publicSettings?.tagline_brand||'')+'</small></span></div>'+
     '<p class="eyebrow">'+(adminMode?'AKSES PENGELOLA':'')+'</p>'+
     '<h1>'+(adminMode?'Masuk sebagai Admin.':editorial('title'))+'</h1>'+
     '<p class="lead">'+(adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':
