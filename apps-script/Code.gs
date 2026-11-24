@@ -2767,6 +2767,8 @@ function apiRouter_(action,token,p,requestId) {
   admin=admin_(token);
   switch(action){
     case 'adminListContent':return contentAdminList_();
+    case 'adminListLegacyCms':return ngdLegacyCmsList_(p);
+    case 'adminSaveLegacyCms':return ngdLegacyCmsSave_(admin,p,requestId);
     case 'adminCreateContent':return contentCreate_(admin,p,requestId);
     case 'adminUpdateContent':return contentUpdate_(admin,p);
     case 'adminSetContentStatus':return contentSetStatus_(admin,p);
@@ -2938,7 +2940,7 @@ function apiReadActions_() {
     'getOrder','listMyOrders','getTools','getKreditRiwayat','getEtalase',
     'getAffiliateDashboard','getMyNotifications','getMyServiceRequests',
     'adminListServiceRequests','adminGetDashboard','adminGetRuntimeStatus','adminListOrders','adminListMembers',
-    'adminListWaitingList','adminListCommissions','adminGetSettings','adminListCatalog','adminListContent',
+    'adminListWaitingList','adminListCommissions','adminGetSettings','adminListCatalog','adminListContent','adminListLegacyCms',
     'adminGetReconciliation',
     'getMyProducts','getMyTickets','getTicket','getMyProductReleases',
     'adminSearchMembers','adminGetMember360','adminGetProductImpact','adminGetSupportOverview',
