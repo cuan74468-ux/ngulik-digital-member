@@ -103,7 +103,7 @@ test('beginner studio keeps four locked quick styles and does not expose arbitra
  const w={};vm.runInNewContext(read('js/ai-studio.js'),{window:w,console});
  const studio=w.NGD_STUDIO;
  const presets=studio.quickStyles();
- assert.deepEqual(presets.map(x=>x.name),['Katalog Bersih','Kuliner Hangat','Percikan Dinamis','Hitam Mewah']);
+ assert.deepEqual(Array.from(presets,x=>String(x.name)),['Katalog Bersih','Kuliner Hangat','Percikan Dinamis','Hitam Mewah']);
  assert.equal(studio.quickStyleSelect('luxury'),true);
  const draft=studio.foodMagazineDraft();
  assert.equal(draft.payload.product_category,'bottled_liquid');
