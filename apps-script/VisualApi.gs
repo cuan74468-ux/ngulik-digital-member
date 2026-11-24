@@ -54,6 +54,7 @@ function ngdVisualApiRoute_(action,token,payload,requestId){
  // Check auth before any media access or property-dependent runtime.
  var input=payload&&typeof payload==='object'&&!Array.isArray(payload)?payload:{};
  if(action==='visualHealth')return {live:ngdVisualPublicMode_(),
+  templates_enabled:PropertiesService.getScriptProperties().getProperty('NGD_VISUAL_TEMPLATES_ENABLED')==='true',
   adapter:ngdVisualPublicMode_()?'PRIVATE_VISUAL_QUEUE':'SIMULATION'};
  if(action==='visualCatalog')return {machines:ngdVisualPublicCatalog_(),
   matrix:ngdVisualContextPublicMatrix_()};
