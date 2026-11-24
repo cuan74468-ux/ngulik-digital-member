@@ -1827,6 +1827,27 @@ function viewAdminSettings(){
     return '<div class="surface"><p class="card-kicker">'+esc(label)+'</p>'+
       '<p class="card-desc" style="overflow-wrap:anywhere;margin-top:8px">'+esc(printable)+'</p></div>';
   };
+  // Editorial-only settings form, withheld while STAGING master writes are OFF.
+  const editorialFields=[
+    ['nama_brand','Nama brand',100],
+    ['tagline_brand','Judul kecil beranda',150],
+    ['footer_identitas','Identitas footer',250],
+    ['footer_aksesibilitas','Keterangan bantuan & aksesibilitas',500]
+  ];
+  const canEditEditorial=isWriteEnabled()&&config.contentEnabled===true;
+  const editor=settings?'<section class="surface" aria-label="Editor identitas dan teks publik">'+
+    '<h2>Identitas & Teks Publik</h2><p class="card-desc">Konten keuangan dan tarif tidak dapat diubah dari formulir ini.</p>'+
+    '<form id="admin-public-settings-form">'+
+    editorialFields.map(([key,label,max])=>
+      '<div class="field"><label for="pub-setting-'+esc(key)+'">'+esc(label)+'</label>'+
+      '<textarea class="input" id="pub-setting-'+esc(key)+'" name="'+esc(key)+
+      '" maxlength="'+max+'" rows="'+(max>250?'4':'2')+'" '+
+      (canEditEditorial?'':'disabled')+'>'+
+      esc(settings[key]??'')+'</textarea></div>').join('')+
+    '<button type="submit" class="btn btn-primary" '+(canEditEditorial?'':'disabled')+
+      '>Simpan teks publik</button>'+
+    (canEditEditorial?'':'<p class="form-hint">Perubahan belum diaktifkan oleh backend STAGING.</p>')+
+    '</form></section>':'';
   const body=settings?
     groups.map(([heading,fields])=>
       '<section class="section-gap">'+title(heading,'PENGATURAN','Menampilkan pengaturan yang tersimpan.')+
@@ -1837,7 +1858,7 @@ function viewAdminSettings(){
   return '<section class="section-head"><div><p class="eyebrow">ADMIN / PENGATURAN</p>'+
     '<h2>Pengaturan Ngulik Digital</h2><p>Lihat pengaturan layanan yang sedang digunakan.</p></div></section>'+
     '<div class="banner"><div><h3>Pengaturan Layanan</h3><p>'+esc(status)+'</p></div></div>'+
-    body+viewAdminRuntime();
+    editor+body+viewAdminRuntime();
 }
 
 const catalogWriteEnabled=()=>isWriteEnabled()&&config.catalogEnabled===true;
@@ -4154,10 +4175,36 @@ document.addEventListener('input',(e)=>{
 document.addEventListener('change',(e)=>{
   if(e.target.closest?.('#admin-payment-form'))syncAdminPaymentApproval_();
 });
+async function submitEditorialSettings_(form){
+  if(!isAdmin()||!isWriteEnabled()||config.contentEnabled!==true)
+    return toast('Edit teks publik masih terkunci.',true);
+  const allowed=['nama_brand','tagline_brand','footer_identitas','footer_aksesibilitas'];
+  const fd=new FormData(form);
+  const changed=allowed.map(key=>[key,String(fd.get(key)||'').trim()])
+    .filter(([key,value])=>value!==String(state.adminSettings?.[key]||'').trim());
+  if(!changed.length)return toast('Tidak ada teks yang berubah.');
+  for(const [key,value] of changed){
+    if(!value)return toast('Kolom '+key+' tidak boleh kosong.',true);
+  }
+  const button=form.querySelector('[type="submit"]');
+  if(button)button.disabled=true;
+  try{
+    for(const [key,value] of changed){
+      await api('adminUpdateSetting',{key,value},state.token,{write:true});
+    }
+    state.adminSettings=await api('adminGetSettings',{},state.token);
+    render();toast('Teks publik tersimpan.');
+  }catch(e){
+    toast('Perubahan perlu diperiksa: '+e.message,true);
+    try{state.adminSettings=await api('adminGetSettings',{},state.token);}catch(_){}
+    render();
+  }finally{if(button)button.disabled=false;}
+}
 document.addEventListener('submit',(e)=>{
   const id=e.target.id||(e.target.classList?.contains('ai-form')?'ai-run-form':'');
   if(!['admin-pin-form','content-editor-form','service-brief-form','service-quote-form','admin-catalog-form','profile-form','auth-form','support-create-form','ticket-reply-form',
     'ticket-status-form','ticket-priority-form','release-create-form','member-search-form','support-filter-form',
+    'admin-public-settings-form',
     'lms-course-form','lms-lesson-form','lms-ai-form','lms-ai-result-form','ai-run-form','admin-payment-form'].includes(id))return;
   e.preventDefault();
   if(id==='admin-pin-form')changeAdminPin_(e.target);
@@ -4165,6 +4212,7 @@ document.addEventListener('submit',(e)=>{
   if(id==='service-brief-form')submitServiceBrief(e.target);
   if(id==='service-quote-form')submitServiceQuote(e.target);
   if(id==='admin-catalog-form')submitCatalogForm(e.target);
+  if(id==='admin-public-settings-form')submitEditorialSettings_(e.target);
   if(id==='profile-form')submitProfileForm(e.target);
   if(id==='auth-form')processLogin(e.target,e.target.dataset.mode==='register');
   if(id==='admin-payment-form')submitAdminPaymentForm_(e.target);
