@@ -8,7 +8,8 @@
 var NGD_VISUAL_API_ACTIONS_=Object.freeze([
  'visualHealth','visualCatalog','visualQuote',
  'visualUploadStart','visualUploadChunk','visualUploadFinish',
- 'visualCreateJob','visualPollJob','visualResult'
+ 'visualCreateJob','visualPollJob','visualResult',
+ 'visualTemplateList','visualTemplateSave','visualTemplateDelete'
 ]);
 function ngdVisualStagingGuard_(){
  var p=PropertiesService.getScriptProperties();
@@ -56,6 +57,17 @@ function ngdVisualApiRoute_(action,token,payload,requestId){
   adapter:ngdVisualPublicMode_()?'PRIVATE_VISUAL_QUEUE':'SIMULATION'};
  if(action==='visualCatalog')return {machines:ngdVisualPublicCatalog_(),
   matrix:ngdVisualContextPublicMatrix_()};
+ if(['visualTemplateList','visualTemplateSave','visualTemplateDelete'].indexOf(action)>=0){
+  // Template drafts are nonfinancial, but require their own isolated
+  // provisioning flag and verified private Drive storage.
+  var props=PropertiesService.getScriptProperties();
+  ngdVjAssert_(props.getProperty('NGD_VISUAL_TEMPLATES_ENABLED')==='true',
+   'VISUAL_TEMPLATES_DISABLED');
+  var saved=ngdVisualMemberTemplates_(auth,ngdVisualStoreDrive_());
+  if(action==='visualTemplateList')return {templates:saved.list(token)};
+  if(action==='visualTemplateSave')return {template:saved.save(token,input)};
+  return saved.remove(token,input.id);
+ }
  var runtime=ngdVisualRuntime_(auth);
  if(action==='visualQuote')return runtime.publicQuote(token,{
   machine_id:input.machine_id,count:input.count});
