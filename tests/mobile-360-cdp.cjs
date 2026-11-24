@@ -218,6 +218,18 @@ async function visit(url,label){
     assert.equal(food.count,4);
     assert.equal(food.cost,food.unit*4);
     assert.ok(food.overflow<=360,'Food Magazine overflows 360px');
+
+    const context=await request('Runtime.evaluate',{expression:"(()=>{const root=document.getElementById('ngd-studio-root');root.querySelector('[data-context-category=bottled_liquid]')?.click();const available=[...root.querySelectorAll('[data-context-scenario]')].map(x=>x.dataset.contextScenario);root.querySelector('[data-context-scenario=obsidian_mirror_splash]')?.click();const draft=window.NGD_STUDIO.foodMagazineDraft();return {available,category:draft.payload.product_category,scenario:draft.payload.studio_scenario,restoration:draft.payload.restoration_mode,overflow:document.documentElement.scrollWidth};})()",returnByValue:true});
+    assert.ok(!context.exceptionDetails,'Context Skill Matrix browser exception');
+    const match=context.result.value;
+    console.log('MOBILE_360_CONTEXT_MATRIX '+JSON.stringify(match));
+    assert.equal(match.category,'bottled_liquid');
+    assert.equal(match.scenario,'obsidian_mirror_splash');
+    assert.equal(match.restoration,'full_phone_restoration');
+    assert.equal(match.available.length,3,'Only three bottle scenarios available');
+    assert.ok(!match.available.includes('steam_broth_hero'),'Soup scenario hidden for bottle');
+    assert.ok(match.overflow<=360,'Context matrix overflows 360px');
+
     const machine=await request('Runtime.evaluate',{expression:"(()=>{const root=document.getElementById('ngd-studio-root');const initial=window.NGD_STUDIO.foodMagazineDraft();const original=root.querySelector('#ns-food-pricing')?.textContent||'';const options=root.querySelectorAll('[data-food-machine]').length;root.querySelector('[data-food-machine=gemini_flash_image]').click();const gemini=window.NGD_STUDIO.foodMagazineDraft();const summary=root.querySelector('#ns-food-pricing')?.textContent||'';root.querySelector('[data-food-machine=flux_2_pro]').click();const hd=window.NGD_STUDIO.foodMagazineDraft();return {initial,original,options,gemini,summary,hd,overflow:document.documentElement.scrollWidth};})()",returnByValue:true});
     assert.ok(!machine.exceptionDetails,'Visual machine selector exception');
     const pick=machine.result.value;
