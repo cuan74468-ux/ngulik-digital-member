@@ -257,7 +257,7 @@ function activatePreview(){
 
 const state={
   route:'beranda',token:sessionStorage.getItem(tokenKey)||'',me:null,qa:false,
-  info:null,catalog:[],catalogLoaded:false,productDetailId:'',productDetailReturnRoute:'katalog',siteContent:[],publicSettings:{},adminContent:[],contentEditId:'',contentPresetProductId:'',contentRequestId:null,legacyCmsTab:'ai_tools',legacyCmsSelectedId:'',legacyCmsItems:{},legacyCmsLoading:false,legacyCmsError:'',heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
+  info:null,catalog:[],catalogLoaded:false,cmsLoaded:false,cmsReadError:false,productDetailId:'',productDetailReturnRoute:'katalog',siteContent:[],publicSettings:{},adminContent:[],contentEditId:'',contentPresetProductId:'',contentRequestId:null,legacyCmsTab:'ai_tools',legacyCmsSelectedId:'',legacyCmsItems:{},legacyCmsLoading:false,legacyCmsError:'',heroIndex:0,heroPaused:false,home:null,modules:[],tools:[],publicTools:[],publicToolsLoaded:false,orders:[],
   affiliates:null,partnerShelf:[],partnerShelfLoaded:false,waitlist:[],members:[],adminOrders:[],adminSummary:null,
   reconciliation:null,selectedProduct:null,lastOrder:null,checkoutProductId:'',checkoutRequestId:null,orderDetailLoading:false,checkoutReturnRoute:'katalog',loading:false,
   memberProducts:[],creditHistory:[],memberDashboardReads:null,supportTickets:[],supportReleases:[],supportOverview:null,
@@ -625,8 +625,24 @@ function viewHome(){
   // Guest-only landing; member and admin rendering above remains untouched.
   // Public front door: published CMS only, no copied marketing fallback.
   // Nothing in this renderer creates orders, opens P0 finance or grants access.
-  return window.NGD_PUBLIC_CMS?.home(state.siteContent,state.publicSettings) ||
+  const editorHtml=window.NGD_PUBLIC_CMS?.home(state.siteContent,state.publicSettings);
+  const hasHero=Array.isArray(state.siteContent)&&state.siteContent.some(row=>
+    row?.content_id==='CNT-HERO-MAIN'&&row?.kind==='HERO'&&
+    row?.status==='PUBLISHED'&&row?.placement==='home');
+  if(hasHero||!state.cmsLoaded||state.qa)return editorHtml||
     '<div class="ngd-landing-v1"><p role="status">Sedang memuat informasi...</p></div>';
+  const staging=String(location.pathname||'').includes('/staging/');
+  const heading=staging?'Konten STAGING belum terbaca.':'Beranda publik sedang disiapkan.';
+  const detail=staging?
+    'Konten yang sudah diterbitkan di Google Sheets belum dikirim oleh API STAGING. Periksa versi deployment Apps Script, khususnya Content.gs.':
+    'Konten CMS belum tersedia di layanan publik yang aktif. Beranda STAGING dan Produksi menggunakan layanan data berbeda.';
+  return '<section class="ngd-cms-unavailable" role="status" aria-live="polite">'+
+    '<p class="ngd-cms-kicker">INFORMASI LAYANAN</p>'+
+    '<h1>'+esc(heading)+'</h1><p>'+esc(detail)+'</p>'+
+    '<div class="ngd-cms-unavailable-actions">'+
+    '<button type="button" data-action="retry-public-content" class="btn btn-primary">Coba muat ulang konten</button>'+
+    '<button type="button" data-route="katalog" class="btn btn-secondary">Buka katalog</button>'+
+    '</div></section>';
 }
 const offerCategories=[
   ['semua','Semua Produk'],['belajar','eBook & Panduan'],
@@ -1439,6 +1455,8 @@ function viewLogin(register=false,adminMode=false){
       (state.pendingPurchaseId?'<p>Produk yang dipilih belum dipesan atau ditagihkan.</p>':'')+
       '<div class="ngd-role-actions"><button type="button" class="btn btn-primary" data-route="katalog">Lihat Katalog '+icon('arrow')+'</button>'+
       '<button type="button" class="btn btn-secondary" data-route="dukungan">Cara Kerja &amp; Bantuan</button></div>'+
+      '<p class="ngd-staging-access-note">Untuk pengujian akun yang sudah terdaftar, gunakan layanan STAGING terpisah.</p>'+
+      '<a class="btn btn-ghost" href="./staging/member.html#login">Buka login STAGING (uji coba)</a>'+
     '</section>';
   }
   // A verified PIN is an existing server-side auth option for STAGING QA only.
@@ -2659,7 +2677,10 @@ async function refreshStagingReadiness_(){
   if(state.route==='daftar'||state.route==='login')render();
 }
 async function refreshPublic(){
-  if(state.qa||!isConnected())return;
+  if(state.qa)return;
+  if(!isConnected()){
+    state.cmsLoaded=true;state.cmsReadError=true;render();return;
+  }
   // Independent public reads must not discard a valid catalogue when the
   // metadata service is briefly unavailable (or vice versa).
   const [info,catalog,content,publicTools,settings]=await Promise.allSettled([
@@ -2668,7 +2689,9 @@ async function refreshPublic(){
   if(info.status==='fulfilled'&&info.value&&typeof info.value==='object')state.info=info.value;
   if(catalog.status==='fulfilled'&&Array.isArray(catalog.value))state.catalog=catalog.value;
   state.catalogLoaded=true;
-  if(content.status==='fulfilled'&&Array.isArray(content.value))state.siteContent=content.value;
+  state.cmsLoaded=true;
+  state.cmsReadError=content.status!=='fulfilled'||!Array.isArray(content.value);
+  if(!state.cmsReadError)state.siteContent=content.value;
    if(settings.status==='fulfilled'&&settings.value&&typeof settings.value==='object'&&
       !Array.isArray(settings.value))state.publicSettings=settings.value;
   if(publicTools.status==='fulfilled'&&Array.isArray(publicTools.value)){
@@ -3951,6 +3974,11 @@ document.addEventListener('click',async(e)=>{
   }
   const target=e.target.closest('[data-cms-table],[data-cms-edit],[data-cms-new],[data-product-detail],[data-market-product],[data-checkout-product],[data-checkout-create],[data-public-step],[data-partner-scroll],[data-partner-out],[data-ai-category],[data-ai-open],[data-ai-select],[data-hero-step],[data-hero-index],[data-hero-pause],[data-content-new],[data-content-create],[data-content-asset],[data-content-edit],[data-content-status],[data-service-id],[data-service-go],[data-catalog-edit],[data-catalog-image],[data-catalog-active],[data-route],[data-buy],[data-catalog-filter],[data-catalog-go],[data-action],[data-copy],[data-ticket-id],[data-member-id],[data-publish-release],[data-impact-action],[data-lms-action],[data-lms-filter],[data-portal-filter],[data-lms-lesson-open],[data-lms-next],[data-payment-admin],[data-payment-open],[data-order-detail]');
   if(!target)return;
+  if(target.dataset.action==='retry-public-content'){
+    if(state.qa)return;
+    state.cmsLoaded=false;render();
+    await refreshPublic();return;
+  }
   if(target.hasAttribute('data-cms-table')){
     if(!isAdmin())return;
     const tab=target.dataset.cmsTable;
