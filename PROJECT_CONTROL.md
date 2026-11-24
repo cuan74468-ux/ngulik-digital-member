@@ -2,14 +2,22 @@
 
 Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan membuat daftar registry, dokumen kontrol, atau backup baru untuk pengujian rutin.
 
+## Status aktif dan tata kelola
+
+- Rujukan permanen: [SYSTEM_GOVERNANCE.md](docs/SYSTEM_GOVERNANCE.md). Dokumen 06 (24 November 2026) mengatur copywriting dan desain; isi Sheet tetap otoritatif.
+- Baseline terverifikasi: PR #47, `04374523`, CI 871 PASS / 0 FAIL, Pages SUCCESS. Identitas STAGING pada run 45416990578: API 1.0.3, mutasi dan finance OFF; registration, OTP, providers ON tetapi signup belum dirilis. Ini bukan bukti UAT transaksi.
+- P0-E tetap terbuka, produksi NO-GO. Tidak ada izin perubahan saldo, order historis, konfigurasi atau deployment GAS dalam PR presentasi ini.
+- Seed publik perlu diregenerasi setiap rilis editorial; cache lama ditolak berdasarkan waktu publikasi. Hasil CI PR baru harus dibaca di GitHub, bukan diasumsikan.
+- PR #26, #29, #30 closed-unmerged; pertahankan referensi teknis unik. Tidak ada penghapusan aset tanpa audit dependensi dan persetujuan.
+
 ## Empat tautan utama
 
 | Komponen | Tautan |
 | --- | --- |
 | GitHub — source code (`main`) | https://github.com/cuan74468-ux/ngulik-digital-member |
-| Editor Apps Script STAGING (dikonfirmasi operator) | https://script.google.com/home/projects/1hyfzUBrTJOYATVAbBzX_-p1YGCOIN1W8Ty0A2-JB-7THzq2GF1XVKQNz/edit |
-| Google Sheets STAGING — 29 tab (nama file lama masih menyebut 27 tab) | https://docs.google.com/spreadsheets/d/1ByEd2hSyvSGTy_FjuRfCLoKrrZ3T1RpmUNSC1EMQuTE/edit |
-| Google Sheets PRODUKSI — 16 tab | https://docs.google.com/spreadsheets/d/19lJS-Re7TLfINjoo-wKoDkG_ikeEWNgGe9yf5Rywvm8/edit |
+| Editor Apps Script STAGING (dikonfirmasi operator) | (tautan privat di registry Drive Owner) |
+| Google Sheets STAGING — 29 tab (nama file lama masih menyebut 27 tab) | (tautan privat di registry Drive Owner) |
+| Google Sheets PRODUKSI — 16 tab | (tautan privat di registry Drive Owner) |
 
 ## Log perubahan
 

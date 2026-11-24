@@ -100,7 +100,7 @@
         title(starter)+(starter.description?'<p>'+escape(starter.description)+'</p>':'')+
         (bullets.length?'<ul>'+bullets.map(x=>
           '<li><strong>'+escape(x.title||'')+'</strong> — '+escape(x.description||'')+'</li>').join('')+
-        '</ul>':'')+'</section>':'')+
+        '</ul>':'')+button(starter,'ngdl-btn ngdl-btn-gold')+'</section>':'')+
       (honesty?'<section class="ngdl-benefits" aria-label="'+escape(honesty.title||'')+'">'+
         title(honesty)+'<p>'+escape(honesty.description||'')+'</p></section>':'')+
       (services.length?'<section class="ngdl-offers" aria-labelledby="ngd-cms-svc-title">'+

@@ -1,6 +1,6 @@
 # Ngulik Digital
 
-**Solusi digital praktis untuk UMKM dan kreator.**
+**Tools AI & Kreasi Digital UMKM**
 
 Ngulik Digital adalah ekosistem layanan dari **Linggau AI Studio** untuk membantu usaha kecil tampil lebih profesional, bekerja lebih praktis, dan berkembang dengan dukungan teknologi.
 
@@ -12,7 +12,7 @@ Ngulik Digital adalah ekosistem layanan dari **Linggau AI Studio** untuk membant
 - **Aplikasi kasir & pencatatan** — bantu operasional penjualan sehari-hari.
 - **Konten promosi kreatif** — visual produk, materi pemasaran, dan video iklan.
 - **Produk & layanan digital** — pilihan alat bantu, template, dan layanan sesuai kebutuhan usaha.
-- **Ruang member** — akses layanan dan aktivitas melalui satu akun.
+- **Ruang member** — akses fasilitas awal melalui Starter Pack; produk dan jasa lanjutan mengikuti penawaran yang tersedia.
 
 ## Dibuat untuk UMKM
 
