@@ -6,8 +6,12 @@
   'use strict';
   const h=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const routes=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun'];
-  const kinds=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO','PROMO','ANNOUNCEMENT'];
+  const routes=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun','daftar','masuk'];
+  const kinds=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_ICON','BRAND_LOGO','PROMO','ANNOUNCEMENT',
+    'HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CARD','FEATURE_BULLET','NOTICE_BOX','SERVICE_CARD',
+    'BENEFIT_LIST','BENEFIT_BULLET','SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD',
+    'CHECKOUT_GUIDE','CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO'];
+  const textKinds=new Set(kinds.slice(8));
   // Resolve assets against the shared project root, never the current page folder.
   // Works identically for /index.html and /staging/member.html.
   const projectRoot=typeof URL==='function'&&typeof location!=='undefined' ?
@@ -151,7 +155,16 @@
   }
   const names={HERO:'Banner hero',FEATURE_ICON:'Ikon fitur',PRODUCT_IMAGE:'Gambar produk',
     PAGE_COVER:'Sampul halaman',NAV_ICON:'Ikon navigasi',BRAND_LOGO:'Logo',
-    PROMO:'Promosi',ANNOUNCEMENT:'Pengumuman'};
+    PROMO:'Promosi',ANNOUNCEMENT:'Pengumuman',
+    HIGHLIGHT_PILL:'Poin keunggulan',USECASE_CARD:'Kartu kegunaan',
+    FEATURE_CARD:'Kartu Starter Pack',FEATURE_BULLET:'Manfaat Starter Pack',
+    NOTICE_BOX:'Catatan kejujuran',SERVICE_CARD:'Layanan tambahan',
+    BENEFIT_LIST:'Judul keuntungan member',BENEFIT_BULLET:'Keuntungan member',
+    SECTION_HEADING:'Judul bagian',CTA_BUTTON:'Tombol tambahan',
+    AUTH_COPY:'Teks masuk / daftar',AUTH_FIELD:'Label formulir',
+    CHECKOUT_GUIDE:'Panduan pembayaran',CHECKOUT_STEP:'Langkah QRIS',
+    WA_TEMPLATE:'Pesan WhatsApp',MEMBER_COPY:'Sapaan member',MEMBER_CARD:'Menu member',
+    PORTAL_NOTICE:'Disclaimer portal',AFFILIATE_INFO:'Informasi ajak teman'};
   const places=[
     ['HERO','home','Beranda publik'],['HERO','catalog','Banner promosi marketplace publik'],['HERO','member_home','Beranda member'],
     ...['belajar','aplikasi','ai','jasa','katalog','affiliate','dukungan','login']
@@ -161,7 +174,9 @@
       .map(x=>['PAGE_COVER',x,'Sampul '+x]),
     ['PROMO','member_home','Promosi beranda member'],
     ['ANNOUNCEMENT','member_home','Pengumuman beranda member'],
-    ['BRAND_LOGO','brand','Logo Ngulik Digital']
+    ['BRAND_LOGO','brand','Logo Ngulik Digital'],
+    ...[...textKinds].flatMap(kind=>['home','auth','checkout','member_home',
+      'member_portal','member_affiliate'].map(place=>[kind,place,'Konten '+place]))
   ];
   function admin(ctx){
     if(!ctx.authorized)return '<div class="empty"><h3>Khusus Admin</h3></div>';
@@ -211,6 +226,10 @@
       '<div class="ngd-media-help"><div><strong>Panduan gambar menurut fungsi halaman</strong><p>Hero Beranda: artwork lanskap 1600 × 900 px, subjek di kanan dan ruang teks di kiri. Banner Katalog: 1600 × 640 px; versi seluler menata teks dan gambar bertumpuk sehingga artwork tidak terpotong. Produk: 1200 × 1000 px, fokus produk di tengah. Sampul halaman: ilustrasi relevan, bukan salinan banner Beranda. Jangan masukkan harga, testimoni, atau tombol palsu ke gambar.</p><p>CMS saat ini menggunakan satu gambar per penempatan untuk HP dan desktop. Periksa keduanya pada pratinjau sebelum terbit.</p></div>'+ 
       '<a class="btn btn-secondary btn-sm" href="https://github.com/cuan74468-ux/ngulik-digital-member/upload/main/assets/media" target="_blank" rel="noopener noreferrer">Unggah gambar ↗</a></div>'+
       '<form id="content-editor-form" data-content-id="'+h(selected?.content_id||'')+'" class="content-form">'+
+      '<div class="field"><label for="content-id">ID konten (opsional; tetap setelah dibuat)</label>'+
+      '<input class="input" id="content-id" name="content_id" maxlength="64" '+
+      (selected?'readonly ':'placeholder="CNT-HERO-MAIN" ')+
+      'value="'+h(selected?.content_id||'')+'"></div>'+
       '<div class="grid-2"><div class="field"><label for="content-kind">Jenis gambar</label>'+
       (selected?'<input class="input" value="'+h(names[draft.kind]||draft.kind)+'" disabled>'+
         '<input type="hidden" name="kind" value="'+h(draft.kind)+'">':
@@ -237,7 +256,7 @@
       '<div class="field"><label for="content-description">'+
       (draft.kind==='PRODUCT_IMAGE'?'Badge produk (opsional, maks 24 karakter)':'Deskripsi (opsional)')+'</label>'+
       '<textarea class="input" id="content-description" name="description" maxlength="'+
-      (draft.kind==='PRODUCT_IMAGE'?'24':'400')+'" rows="3">'+h(draft.description||'')+'</textarea></div>'+
+      (draft.kind==='PRODUCT_IMAGE'?'24':textKinds.has(draft.kind)?'1600':'400')+'" rows="3">'+h(draft.description||'')+'</textarea></div>'+
       '<div class="grid-2"><div class="field"><label for="content-cta">Label tombol</label>'+
       '<input class="input" id="content-cta" name="cta_label" maxlength="48" value="'+h(draft.cta_label||'')+'"></div>'+
       '<div class="field"><label for="content-route">Halaman tujuan</label>'+
