@@ -1447,29 +1447,29 @@ function viewLogin(register=false,adminMode=false){
   const memberOtp=!adminMode&&!register&&!pinLogin;
   const enabled=adminMode?adminLoginEnabled():
     register?registrationOtpEnabled():pinLogin?isWriteEnabled():memberOtpLoginEnabled();
+  const cmsAuth=window.NGD_CMS_SURFACES?.auth(state.siteContent);
+  const editorial=(key)=>esc(cmsAuth?.[key]||'Sedang memuat informasi...');
+  const authLabel=(i)=>esc(cmsAuth?.label(i)||'Sedang memuat informasi...');
   return '<div class="login-shell ngd-auth-v10">'+
     '<div class="ngd-auth-brand"><img src="'+esc(defaultBrandLogoSrc)+'" alt="" decoding="async">'+
       '<span><strong>Ngulik Digital</strong><small>Marketplace Produk Digital</small></span></div>'+
-    '<p class="eyebrow">'+
-    (adminMode?'AKSES PENGELOLA':register?'BERGABUNG':'SELAMAT DATANG KEMBALI')+'</p>'+
-    '<h1>'+
-    (adminMode?'Masuk sebagai Admin.':register?'Daftar akun.':'Masuk ke akun Anda.')+'</h1>'+
-    '<p class="lead">'+
-    (!adminMode&&state.pendingPurchaseId?'Masuk atau daftar gratis pakai WhatsApp untuk melanjutkan pesanan dan menyimpan akses produk Anda.':adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':
-      register?'Daftar dengan nomor WhatsApp. Verifikasi dilakukan melalui kode WhatsApp.':
-      pinLogin?'Masuk dengan PIN enam angka yang sudah Anda miliki. Tidak mengirim OTP atau memakai kuota Fonnte.':
-      'Masukkan nomor WhatsApp dan kode OTP untuk masuk.')+'</p>'+
+    '<p class="eyebrow">'+(adminMode?'AKSES PENGELOLA':'')+'</p>'+
+    '<h1>'+(adminMode?'Masuk sebagai Admin.':editorial('title'))+'</h1>'+
+    '<p class="lead">'+(adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':
+      editorial('description'))+'</p>'+
     (memberStaging?'<div class="ngd-auth-mode-switch" role="group" aria-label="Metode masuk member">'+
       '<button type="button" data-staging-auth-method="otp" aria-pressed="'+String(!pinLogin)+'">OTP WhatsApp</button>'+
       '<button type="button" data-staging-auth-method="pin" aria-pressed="'+String(pinLogin)+'">PIN Akun</button>'+
       '</div>':'')+
     '<form id="auth-form" class="surface" data-mode="'+(adminMode?'admin':register?'register':pinLogin?'pin':'login')+'">'+
-    (register?'<div class="field"><label for="nama">Nama lengkap</label><input class="input" id="nama" name="nama" autocomplete="name" required minlength="2" maxlength="80"></div>'+
-      '<div class="field"><label for="usaha">Nama usaha</label><input class="input" id="usaha" name="nama_usaha" required minlength="2" maxlength="100"></div>':'')+
-    '<div class="field"><label for="wa">Nomor WhatsApp</label><input class="input" id="wa" name="wa" required inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx"></div>'+
+    (register?'<div class="field"><label for="nama">'+authLabel(2)+'</label><input class="input" id="nama" name="nama" autocomplete="name" required minlength="2" maxlength="80"></div>'+
+      '<div class="field"><label for="usaha">'+authLabel(2)+'</label><input class="input" id="usaha" name="nama_usaha" required minlength="2" maxlength="100"></div>':'')+
+    '<div class="field"><label for="wa">'+authLabel(1)+'</label><input class="input" id="wa" name="wa" required inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx"></div>'+
+    (register?'<div class="field"><label for="ref">'+authLabel(3)+'</label>'+
+      '<input class="input" id="ref" name="ref" maxlength="80" pattern="[A-Za-z0-9_-]{0,80}" autocomplete="off"></div>':'')+
     (memberOtp?'<div class="field"><label for="login-otp">Kode OTP WhatsApp</label><input class="input" id="login-otp" name="otp" required inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="6 digit OTP"></div>'+
       '<label class="small"><input type="checkbox" name="setuju_pengiriman" required> Saya setuju menerima OTP melalui WhatsApp.</label>'+
-      '<div class="actions"><button type="button" class="btn btn-secondary" data-action="member-otp-request" '+(!enabled?'disabled':'')+'>Kirim Kode</button></div>':
+      '<div class="actions"><button type="button" class="btn btn-secondary" data-action="member-otp-request" '+(!enabled?'disabled':'')+>'+editorial('send')+'</button></div>':
       '<div class="field"><label for="pin">'+(adminMode?'PIN Admin 6 angka':pinLogin?'PIN Akun 6 angka':'PIN registrasi')+'</label><input class="input" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" type="password" autocomplete="'+(register?'new-password':'current-password')+'" placeholder="••••••"></div>')+
     (register?'<div class="field"><label for="otp">Kode OTP WhatsApp</label><input class="input" id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" type="text" required placeholder="6 digit kode verifikasi"></div>'+
       '<div class="actions" style="margin-bottom:13px"><button type="button" class="btn btn-secondary" data-action="otp-request" '+(!enabled?'disabled':'')+'>Kirim Kode</button>'+
