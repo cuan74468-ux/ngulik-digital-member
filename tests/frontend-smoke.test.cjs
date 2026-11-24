@@ -30,6 +30,7 @@ function renderPreview(search=''){
     isConnected:()=>false,isWriteEnabled:()=>false,
     setTimeout,clearTimeout,Intl,URL,URLSearchParams,Date,Number,Object,String
   });
+  vm.runInContext(fs.readFileSync(path.join(base,'js/cms-surfaces.js'),'utf8'),context,{timeout:3000});
   vm.runInContext(stripModule(app),context,{filename:'app.js',timeout:3000});
   vm.runInContext('state.catalog='+JSON.stringify(QA_CATALOG)+';render()',context,{timeout:2000});
   return {nodes,context,document};
