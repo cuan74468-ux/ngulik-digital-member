@@ -77,3 +77,23 @@ test('actual STAGING combined rows are rendered safely without inventing missing
    '<script>alert(1)</script>','1. <img src=x onerror=1> | 2. Aman')]);
  assert.ok(!unsafe.includes('<script>')&&!unsafe.includes('<img src=x'));
 });
+
+test('member card CTA destinations come from safe published rows, not arbitrary HTML',()=>{
+ const w=front();
+ const rows=[
+  row('CNT-MEMBER-WELCOME','MEMBER_GREETING','member_home','Halo, {{nama}}!'),
+  row('CNT-MEMBER-CARD-01','MEMBER_CARD','member_home','Tulis Promosi','Buat tulisan',{cta_route:'#belajar'}),
+  row('CNT-MEMBER-CARD-02','MEMBER_CARD','member_home','Portal UMKM','Buka panduan',{cta_route:'portal'}),
+  row('CNT-MEMBER-CARD-03','MEMBER_CARD','member_home','Katalog','Lihat barang',{cta_route:'javascript:alert(1)'}),
+  row('CNT-MEMBER-CARD-04','MEMBER_CARD','member_home','Ajak Teman','Salin tautan',{cta_route:'affiliate'})
+ ];
+ const html=w.NGD_CMS_SURFACES.memberHome(rows,{name:'Pelanggan',balanceKnown:true,balance:10});
+ assert.ok(html.includes('data-route="belajar"'));
+ assert.ok(html.includes('data-route="portal"'));
+ assert.ok(html.includes('data-route="katalog"'));
+ assert.ok(html.includes('data-route="affiliate"'));
+ assert.ok(!html.includes('javascript:alert(1)'));
+ assert.equal((html.match(/class="ngdm-shortcut"/g)||[]).length,4);
+ const back=read('apps-script/Content.gs');
+ assert.match(back,/'portal','portal-belajar'/);
+});
