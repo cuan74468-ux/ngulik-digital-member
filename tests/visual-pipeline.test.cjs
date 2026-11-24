@@ -20,7 +20,7 @@ function fake(){
   compiled_prompt:'x',media_contract:{reference_asset_id:ref}
  };
  const deps={
-  config:{NGD_VISUAL_LIVE_ENABLED:true,NGD_MUTATIONS_ENABLED:true,NGD_FINANCE_ENABLED:true,daily_budget_cap_idr:10000},
+  config:{NGD_VISUAL_LIVE_ENABLED:true,NGD_VISUAL_CREDITS_ENABLED:true,NGD_VISUAL_MEDIA_READY:true,NGD_VISUAL_WORKER_READY:true,NGD_MUTATIONS_ENABLED:false,NGD_FINANCE_ENABLED:false,daily_budget_cap_idr:10000},
   auth:{requireMember:s=>s==='alice_session'?{member_id:'alice'}:s==='bob_session'?{member_id:'bob'}:null,requireWorker:w=>w==='trusted_worker'},
   media:{putPrivate:o=>{const id='asset_upload_'+String(++sequence).padStart(7,'0');const item={id,owner:o.owner,private:true,mime:o.mime,bytes:o.bytes,expires_at:o.expires_at};files.set(id,item);return {asset_id:id,expires_at:item.expires_at}},
    getOwned:(id,member,now)=>{const f=files.get(id);return f&&f.owner===member&&f.expires_at>now?f:null;},purgeExpired:now=>{let count=0;for(const [id,v] of files)if(v.expires_at<=now){files.delete(id);count++}return count}},
@@ -48,14 +48,16 @@ function fake(){
  return {deps,counter,compiled,files,items,ledger,queues,advance:ms=>{time+=ms}};
 }
 function createRequest(){return {idempotency_key:idempotency,tier:'standard',payload:{}}}
-test('default config fails closed for live, global P0 gates and daily cap',()=>{
+test('default config fails closed for live, AI-only gates and daily cap',()=>{
  const r=runtime(),f=fake(),engine=r.ngdVisualJobs_({...f.deps,config:{}});
  assert.equal(engine.policy.live,false);
  assert.throws(()=>engine.create('alice_session',createRequest()),/LIVE_DISABLED/);
- for(const key of ['NGD_MUTATIONS_ENABLED','NGD_FINANCE_ENABLED']){
+ for(const key of ['NGD_VISUAL_CREDITS_ENABLED','NGD_VISUAL_MEDIA_READY','NGD_VISUAL_WORKER_READY']){
   const config={...f.deps.config,[key]:false};
-  assert.throws(()=>r.ngdVisualJobs_({...f.deps,config}).create('alice_session',createRequest()),/P0_GUARD_OFF/);
+  assert.throws(()=>r.ngdVisualJobs_({...f.deps,config}).create('alice_session',createRequest()),/VISUAL_INFRA_NOT_AUTHORIZED/);
  }
+ assert.equal(f.deps.config.NGD_MUTATIONS_ENABLED,false);
+ assert.equal(f.deps.config.NGD_FINANCE_ENABLED,false);
  const config={...f.deps.config,daily_budget_cap_idr:0};
  assert.throws(()=>r.ngdVisualJobs_({...f.deps,config}).create('alice_session',createRequest()),/BUDGET_CAP_REQUIRED/);
 });
@@ -141,7 +143,7 @@ test('provider stays inactive until flags and owner-bound private asset',async()
   compiled:{contract_version:'visual-food-magazine-img2img-v2',image_generation_mode:'IMAGE_TO_IMAGE_REQUIRED',
    layer_trace:Array(12).fill('x'),compiled_prompt:'Do NOT render any text, letters, numbers.',negative_prompt:'No text'},
   provider:'flux_kontext_pro'};
- const deps={config:{NGD_VISUAL_LIVE_ENABLED:false,NGD_MUTATIONS_ENABLED:true,NGD_FINANCE_ENABLED:true},
+ const deps={config:{NGD_VISUAL_LIVE_ENABLED:false,NGD_VISUAL_CREDITS_ENABLED:true,NGD_VISUAL_MEDIA_READY:true,NGD_VISUAL_WORKER_READY:true,NGD_MUTATIONS_ENABLED:false,NGD_FINANCE_ENABLED:false},
   secrets:{get:()=> 'secret_abcdefghijkl'},store:{saveSubmissionOnce:()=>{},ownsSubmission:()=>true},
   transport:{post:async()=>{counter.calls++;return {status:200,body:{id:'provider_id_123'}}},
    get:async()=>({status:200,body:{status:'Pending'}})}};
@@ -168,7 +170,7 @@ test('reusing an idempotency key with different private recipe is rejected',()=>
 test('BFL result URL cannot redirect worker to arbitrary host',async()=>{
  const r=runtime(),job={id:'job_1234567890123',status:'PROCESSING'};
  let upstream='https://attacker.invalid/results/evil.png';
- const deps={config:{NGD_VISUAL_LIVE_ENABLED:true,NGD_MUTATIONS_ENABLED:true,NGD_FINANCE_ENABLED:true},
+ const deps={config:{NGD_VISUAL_LIVE_ENABLED:true,NGD_VISUAL_CREDITS_ENABLED:true,NGD_VISUAL_MEDIA_READY:true,NGD_VISUAL_WORKER_READY:true,NGD_MUTATIONS_ENABLED:false,NGD_FINANCE_ENABLED:false},
   secrets:{get:()=> 'secret_abcdefghijkl'},
   store:{saveSubmissionOnce:()=>{},ownsSubmission:()=>true},
   transport:{post:async()=>({status:200,body:{id:'provider_id_123'}}),
