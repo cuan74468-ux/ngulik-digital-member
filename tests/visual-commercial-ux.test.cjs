@@ -42,15 +42,17 @@ test('Visual never markets a preview as an AI result or a real Member credit cha
  assert.doesNotMatch(js,/fetch\s*\(|XMLHttpRequest|sendBeacon/);
 });
 
-test('advanced settings contain beginner help and duplicate photo upload stays visually hidden',()=>{
- assert.match(js,/OPTION_HELP=Object\.freeze/);
- assert.match(js,/FOOD_FIELD_HELP=Object\.freeze/);
- assert.match(js,/ns-v2-option-copy/);
- assert.match(js,/ns-field-guide/);
- assert.match(css,/\.ns-simple-advanced \.ns-v2-editor \.ns-form>\.ns-block:first-child\{display:none\}/);
- assert.match(css,/@media\(max-width:420px\)/);
+test('single direct editor exposes real contract controls without duplicate technical form',()=>{
+ const editor=js.slice(js.indexOf('function editor(){'),js.indexOf('function advancedEditor(){'));
+ assert.match(editor,/Deskripsi produk/);assert.match(editor,/id="ns-food-notes"/);
+ assert.match(editor,/data-context-category/);assert.match(editor,/data-context-scenario/);
+ assert.match(editor,/foodChoices\('format'\)/);assert.match(editor,/foodChoices\('count'\)/);
+ assert.doesNotMatch(editor,/ns-simple-advanced|Pengaturan Lanjutan/);
+ assert.equal((editor.match(/id="ns-file"/g)||[]).length,1);
+ assert.match(js,/syncQuickAction\(\)/);
+ assert.match(css,/\.ns-direct-layout\{/);
+ assert.match(js,/Satu pratinjau lokal tersimpan/);
 });
-
 test('owned WebP image files are present, valid and match signed manifest',()=>{
  const manifest=JSON.parse(fs.readFileSync(path.join(root,'assets/visual-studio/manifest.json'),'utf8'));
  const scenes=studio().studioTemplateCatalog();
