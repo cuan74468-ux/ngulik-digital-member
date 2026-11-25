@@ -591,7 +591,7 @@ function viewHome(){
             '<div class="ngdm-order-legend">'+
               '<div><span class="ngdm-indicator ngdm-indicator-finished"></span><span>Selesai / dibayar</span><strong>'+number('orders',String(completed))+'</strong></div>'+
               '<div><span class="ngdm-indicator ngdm-indicator-pending"></span><span>Menunggu</span><strong>'+number('orders',String(pending))+'</strong></div>'+
-              '<p>Grafik menampilkan status pesanan yang tercatat.</p>'+
+              '<p>Grafik menampilkan status pesanan tercatat, bukan estimasi penjualan.</p>'+
             '</div>'+
           '</div></section>'+
         '<section class="ngdm-recent ngd-window-frame" aria-labelledby="ngdm-recent-title">'+
@@ -1118,7 +1118,7 @@ function viewAI(){
   const balance=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
   const publicMode=!logged()||isAdmin();
   const intro='<header class="ai-catalog-intro"><div class="ai-catalog-intro-copy">'+
-    '<p class="eyebrow">'+(publicMode?'JELAJAH PUBLIK / STUDIO AI':'RUANG MEMBER / STUDIO AI')+'</p><h1>'+(publicMode?'Studio AI':'Studio AI')+'</h1>'+
+    '<p class="eyebrow">'+(publicMode?'JELAJAH PUBLIK / STUDIO AI':'RUANG MEMBER / STUDIO AI')+'</p><h1>Studio AI</h1>'+
     '<p>'+(publicMode?'Temukan alat AI untuk menulis, merencanakan konten, dan membantu pekerjaan usaha. Masuk sebagai member untuk menggunakannya.':'Pilih alat dan periksa biaya token sebelum mulai.')+'</p></div>'+
     (publicMode?'<img class="ngd-ai-hero-art" src="'+esc(cmsPageArt_('ai')||ngdPremiumArtSrc_('ai-pack'))+'" alt="" loading="lazy" decoding="async">':'')+
     (!publicMode?'<div class="ai-wallet-mini"><small>Saldo</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+

@@ -18,6 +18,7 @@
  --ngds-section-gap:clamp(28px,4vw,44px);--ngds-grid-gap:clamp(12px,1.8vw,20px);
  --ngds-photo-overlay:linear-gradient(90deg,rgba(32,16,102,.97),rgba(32,16,102,.91) 55%,rgba(67,56,202,.20));
  --ngds-photo-overlay-mobile:linear-gradient(180deg,rgba(67,56,202,.20),rgba(32,16,102,.91) 35%,rgba(32,16,102,.97));
+ --ngds-photo-overlay-top:linear-gradient(180deg,rgba(32,16,102,.98),rgba(32,16,102,.94) 48%,rgba(67,56,202,.20));
 }
 /* All base and component rules are under this opt-in body class. */
 body.ngd-public-app {

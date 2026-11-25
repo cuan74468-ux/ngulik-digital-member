@@ -236,7 +236,7 @@ body.ngd-public-app[data-app-role=admin]:not(#ngd) .ngd-cms-legacy-warning{
   object-position:center center;object-fit:cover;
  }
  body.ngd-public-app[data-app-role]:not(#ngd) .ngd-catalog-campaign-slide::before{
-  background:var(--ngds-photo-overlay-mobile);
+  background:var(--ngds-photo-overlay-top);
  }
  body.ngd-public-app[data-app-role]:not(#ngd) .ngd-catalog-campaign-copy{
   width:100%;max-width:none;padding:26px 22px 0;justify-content:flex-start;
