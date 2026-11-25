@@ -59,7 +59,7 @@ function session(work,id,deployId){
 async function health(endpoint,files){
  const request=async init=>{
   const r=await fetch(endpoint,{...init,redirect:'follow',signal:AbortSignal.timeout(25000)});
-  check(r.ok,'STAGING_HTTP_UNVERIFIED');const j=await r.json();check(j.ok===true&&j.data,'STAGING_RESPONSE_UNVERIFIED');return j.data;
+  check(r.ok,'STAGING_HTTP_UNVERIFIED');let j;try{j=await r.json();}catch{throw Error('STAGING_NON_JSON_RESPONSE');}check(j.ok===true&&j.data,'STAGING_RESPONSE_UNVERIFIED');return j.data;
  };
  const info=await request({method:'GET'});
  const identity=await request({method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'getStagingWorkspaceInfo',payload:{},token:'',request_id:crypto.randomUUID().replace(/-/g,'')+'aa'})});
@@ -91,6 +91,8 @@ async function run(mode){
   if(mode==='audit'){console.log('NGD_STAGING_AUDIT_COMPLETE_NO_REMOTE_WRITE');return;}
   p.authorize(r,live.versionNumber);
   check(head.digest===backup.digest,'EDITOR_DIFFERS_FROM_IMMUTABLE_BACKUP');
+  // Keep STAGING write gates closed; do not modify any Script Properties.
+  check(JSON.parse(beforeFlags)[0]===false,'STAGING_MUTATIONS_MUST_REMAIN_OFF');
   const candidateDir=g.packageDir(r.candidate),restoreDir=g.packageDir(backup.files);
   // The existing immutable deployed version is the recovery source. No new
   // version is necessary before the push when HEAD is exactly identical.

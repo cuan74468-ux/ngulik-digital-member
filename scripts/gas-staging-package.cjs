@@ -34,10 +34,26 @@ function globals(files,parse){
   if(file==='appsscript.json')continue;
   try{new vm.Script(src,{filename:file});}catch{fail('SYNTAX_ERROR: '+file);}
   let ast;try{ast=parse(src,{ecmaVersion:'latest',sourceType:'script'});}catch{fail('AST_ERROR: '+file);}
-  for(const n of ast.body){
-   if(n.type==='FunctionDeclaration'||n.type==='ClassDeclaration')add(n.id.name,file);
-   if(n.type==='VariableDeclaration')n.declarations.forEach(d=>pattern(d.id,file));
+  // Top-level lexical bindings and all program-scope var bindings (also
+  // inside top-level blocks). Do not count nested function-local names.
+  function walk(n,top=false){
+   if(!n||typeof n!=='object')return;
+   if(n.type==='FunctionDeclaration'||n.type==='ClassDeclaration'){
+    if(!top&&n.type==='FunctionDeclaration')fail('BLOCK_FUNCTION_REVIEW_REQUIRED: '+file);
+    if(top)add(n.id.name,file);
+    return;
+   }
+   if(['FunctionExpression','ArrowFunctionExpression','ClassExpression'].includes(n.type))return;
+   if(n.type==='VariableDeclaration'){
+    if(top||n.kind==='var')n.declarations.forEach(d=>pattern(d.id,file));
+    return;
+   }
+   for(const v of Object.values(n)){
+    if(Array.isArray(v))v.forEach(x=>{if(x&&typeof x.type==='string')walk(x);});
+    else if(v&&typeof v.type==='string')walk(v);
+   }
   }
+  ast.body.forEach(n=>walk(n,true));
  }
  // Also detects cross-file lexical declaration collisions.
  try{new vm.Script([...files].filter(([n])=>n!=='appsscript.json').map(([,v])=>v).join('\n;\n'));}catch{fail('COMBINED_SYNTAX_ERROR');}
@@ -61,25 +77,37 @@ function build(repoFiles,remote,parse,p=policy){
  if(JSON.stringify(actual)!==JSON.stringify(old)&&JSON.stringify(actual)!==JSON.stringify(next)){
   fail('REMOTE_INVENTORY_DRIFT: missing='+old.filter(n=>!remote.has(n)).join(',')+'; unmapped='+actual.filter(n=>!old.includes(n)&&!next.includes(n)).join(','));
  }
- const manifest=JSON.parse(repoFiles.get('appsscript.json'));
- same(manifest,JSON.parse(remote.get('appsscript.json')),'MANIFEST_DRIFT');
- if(manifest.runtimeVersion!=='V8'||manifest.timeZone!=='Asia/Jakarta'||manifest.webapp?.executeAs!=='USER_DEPLOYING'||manifest.webapp?.access!=='ANYONE_ANONYMOUS')fail('MANIFEST_POLICY');
+ let manifest,rManifest;
+ try{manifest=JSON.parse(repoFiles.get('appsscript.json'));rManifest=JSON.parse(remote.get('appsscript.json'));}catch{fail('MANIFEST_JSON_INVALID');}
+ same(manifest,rManifest,'MANIFEST_DRIFT');
+ if(manifest.runtimeVersion!=='V8'||manifest.timeZone!=='Asia/Jakarta'||manifest.exceptionLogging!=='STACKDRIVER'||manifest.webapp?.executeAs!=='USER_DEPLOYING'||manifest.webapp?.access!=='ANYONE_ANONYMOUS')fail('MANIFEST_POLICY');
+ same(sorted(manifest.oauthScopes||[]),sorted([
+  'https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/script.scriptapp',
+  'https://www.googleapis.com/auth/script.external_request','https://www.googleapis.com/auth/userinfo.email',
+  'https://www.googleapis.com/auth/drive'
+ ]),'MANIFEST_SCOPE_POLICY');
  const candidate=new Map([['appsscript.json',repoFiles.get('appsscript.json')]]);
  for(const [from,to] of Object.entries(p.managed))candidate.set(to,repoFiles.get(from));
  for(const n of p.preserve)candidate.set(n,remote.get(n));
  if(candidate.has(p.legacyBundle)||candidate.size!==next.length)fail('PACKAGE_INVENTORY');
  const before=globals(remote,parse),after=globals(candidate,parse);
- for(const [n,file] of before)if(!after.has(n))fail('UNMAPPED_GLOBAL: '+n+' in '+file);
+ const visualTargets=new Set(p.visual.map(n=>p.managed[n]));
+ for(const [n,file] of before){
+  if(!after.has(n))fail('UNMAPPED_GLOBAL: '+n+' in '+file);
+  if(file===p.legacyBundle?!visualTargets.has(after.get(n)):after.get(n)!==file)
+   fail('UNMAPPED_GLOBAL_OWNER: '+n+' in '+file);
+ }
  for(const n of p.preserve)if(candidate.get(n)!==remote.get(n))fail('PRESERVE_DRIFT');
  return {candidate,before,after,baselineDigest:digest(remote),candidateDigest:digest(candidate),changed:names(candidate).filter(n=>candidate.get(n)!==remote.get(n)),removed:names(remote).filter(n=>!candidate.has(n))};
 }
 function authorize(r,version,p=policy){
  const a=p.approval;
  if(a.status!=='APPROVED'||typeof a.reviewReference!=='string'||!a.reviewReference.trim())fail('GEMINI_RECONCILIATION_PENDING');
- if(a.baselineVersion!==version||a.baselineDigest!==r.baselineDigest||a.candidateDigest!==r.candidateDigest)fail('REVIEWED_DIGEST_OR_VERSION_MISMATCH');
- if(!Array.isArray(a.triggerHandlers)||a.triggerHandlers.some(n=>typeof n!=='string'||!r.after.has(n)))fail('UNMAPPED_TRIGGER');
+ if(a.triggerAuditComplete!==true||a.sideEffectsReviewed!==true)fail('TRIGGER_OR_SIDE_EFFECT_REVIEW_PENDING');
+ if(!Number.isSafeInteger(version)||version<1||!(/^[a-f0-9]{64}$/.test(a.baselineDigest||'')&&/^[a-f0-9]{64}$/.test(a.candidateDigest||''))||a.baselineVersion!==version||a.baselineDigest!==r.baselineDigest||a.candidateDigest!==r.candidateDigest)fail('REVIEWED_DIGEST_OR_VERSION_MISMATCH');
+ if(!Array.isArray(a.triggerHandlers)||new Set(a.triggerHandlers).size!==a.triggerHandlers.length||a.triggerHandlers.some(n=>typeof n!=='string'||!r.after.has(n)))fail('UNMAPPED_TRIGGER');
 }
-function writePackage(dir,files){fs.mkdirSync(dir,{mode:0o700});for(const [n,s] of files)fs.writeFileSync(path.join(dir,n),s,{mode:0o600,flag:'wx'});}
+function writePackage(dir,files){fs.mkdirSync(dir,{mode:0o700});for(const [n,s] of files){if(path.basename(n)!==n||!/^(?:[A-Za-z0-9_.$-]+\.js|appsscript\.json)$/.test(n))fail('UNSAFE_PACKAGE_NAME');fs.writeFileSync(path.join(dir,n),s,{mode:0o600,flag:'wx'});}}
 module.exports={root,policy,readDir,digest,globals,build,authorize,writePackage,endpoint,names};
 if(require.main===module){
  try{

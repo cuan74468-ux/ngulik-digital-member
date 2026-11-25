@@ -67,6 +67,8 @@
     "baselineDigest": null,
     "candidateDigest": null,
     "triggerHandlers": null,
-    "baselineVersion": null
+    "baselineVersion": null,
+    "triggerAuditComplete": false,
+    "sideEffectsReviewed": false
   }
 }

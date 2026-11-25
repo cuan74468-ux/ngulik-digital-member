@@ -46,11 +46,12 @@ jobs:
             node -e "if(require('./contracts/gas-staging-sync.json').approval.status!=='APPROVED')process.exit(1)"
           fi
           npm install --prefix "$RUNNER_TEMP/ngd-tooling" --ignore-scripts --no-audit --no-fund --no-save @google/clasp@3.4.1 acorn@8.15.0
+          NODE_PATH="$RUNNER_TEMP/ngd-tooling/node_modules" node --test scripts/gas-staging-ast.test.cjs
       - name: STAGING audit or explicitly gated deployment
         env:
           MODE: ${{ inputs.mode }}
-          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
-          GAS_STAGING_SCRIPT_ID: ${{ secrets.GAS_STAGING_SCRIPT_ID }}
+          CLASPRC_JSON: ${{ secrets.NGD_STAGING_CLASPRC_JSON }}
+          GAS_STAGING_SCRIPT_ID: ${{ secrets.NGD_STAGING_SCRIPT_ID }}
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |

@@ -16,10 +16,12 @@ test('digest detects any changed, missing or extra source; order independent',()
  for(const n of [new Map([['a.js','z'],['b.js','y']]),new Map([['a.js','x']]),new Map([...m,['c.js','']])])a.notEqual(p.digest(m),p.digest(n));
 });
 test('pending approval and changed fingerprints fail closed',()=>{
- const r={baselineDigest:'a',candidateDigest:'b',after:new Map([['report','Report.js']])};
+ const r={baselineDigest:'a'.repeat(64),candidateDigest:'b'.repeat(64),after:new Map([['report','Report.js']])};
  a.throws(()=>p.authorize(r,34),/PENDING/);
- const approved={approval:{status:'APPROVED',reviewReference:'review',baselineVersion:34,baselineDigest:'a',candidateDigest:'b',triggerHandlers:['report']}};
+ const approved={approval:{status:'APPROVED',reviewReference:'review',baselineVersion:34,baselineDigest:r.baselineDigest,candidateDigest:r.candidateDigest,triggerHandlers:['report'],triggerAuditComplete:true,sideEffectsReviewed:true}};
  a.doesNotThrow(()=>p.authorize(r,34,approved));
+ a.throws(()=>p.authorize(r,34,{approval:{...approved.approval,triggerAuditComplete:false}}),/REVIEW_PENDING/);
+ a.throws(()=>p.authorize(r,34,{approval:{...approved.approval,sideEffectsReviewed:false}}),/REVIEW_PENDING/);
  a.throws(()=>p.authorize(r,35,approved),/MISMATCH/);
  a.throws(()=>p.authorize({...r,candidateDigest:'x'},34,approved),/MISMATCH/);
  a.throws(()=>p.authorize(r,34,{approval:{...approved.approval,triggerHandlers:['missing']}}),/TRIGGER/);
