@@ -273,3 +273,10 @@ test('GAS signed binary signatures and uncertain request keys remain safe',()=>{
  assert.match(js,/if\(q.total_credits!==getCost\(\)\)\{if\(!liveInputAsset\)resetVisualLiveRequest/);
  assert.match(js,/if\(liveRequestKey\)\{if\(liveBridgeReady\(\)\)void runVisualLive/);
 });
+
+test('manual Visual Studio bundle matches all 13 canonical GAS modules',()=>{
+ const bundle=fs.readFileSync(path.join(root,'handoff/VisualStudioBundle.gs'),'utf8');
+ const modules=[...bundle.matchAll(/^\/\/ ==================== (Visual\w+\.gs) : BEGIN ====================\n([\s\S]*?)^\/\/ ==================== \1 : END ======================/gm)];
+ assert.equal(modules.length,13);
+ for(const m of modules)assert.equal(m[2].trimEnd(),code(m[1]).trimEnd(),m[1]);
+});
