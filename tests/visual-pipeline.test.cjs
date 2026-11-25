@@ -239,3 +239,44 @@ test('frontend stays SIMULATION until a bridge is configured; default recommende
  assert.equal(api.adapterMode,'SIMULATION');
  api.configureVisualPipeline(null);
 });
+
+test('interrupted settlement and refund are recovered without another dispatch or reserve',()=>{
+ const c=runtime(),f=fake(),api=c.ngdVisualJobs_(f.d);
+ const id=api.create('alice_session',request()).job_id;api.process(id,'trusted_worker');
+ image(f,'asset_recovery_001','alice',id);
+ const row=f.records.get(id);row.status='SUCCEEDED';row.result_asset_ids=['asset_recovery_001'];
+ const id2=api.create('alice_session',request('flux_kontext_pro','idempotent_recovery_002')).job_id;
+ f.records.get(id2).status='FAILED';f.records.get(id2).error_code='PROVIDER_FAILED';
+ f.d.jobs.listExpired=()=>Array.from(f.records.values()).filter(j=>['SUCCEEDED','PARTIAL_SUCCEEDED','FAILED'].includes(j.status));
+ api.expire('trusted_worker');api.expire('trusted_worker');
+ assert.equal(f.records.get(id).status,'SETTLED');
+ assert.equal(f.records.get(id2).status,'REFUNDED');
+ assert.equal(f.stats.reserve,2);assert.equal(f.stats.settle,1);assert.equal(f.stats.refund,1);
+ assert.equal(f.stats.queued,2);
+});
+
+test('studio does not claim refund at intermediate failure and requires a verified Visual wallet quote',()=>{
+ const js=fs.readFileSync(path.join(root,'js/ai-studio.js'),'utf8');
+ assert.match(js,/q.wallet_kind!=='VISUAL'/);
+ assert.match(js,/q.available_credits<q.total_credits/);
+ assert.match(js,/if\(status.status==='REFUNDED'\)/);
+ assert.match(js,/PARTIAL_SUCCEEDED','FAILED'/);
+ assert.doesNotMatch(js,/Tidak ada pembayaran nyata yang diproses/);
+ assert.match(code('VisualWorker.gs'),/ngdVisualOutputGeometry_\(bytes,mime,format\)/);
+});
+
+test('GAS signed binary signatures and uncertain request keys remain safe',()=>{
+ const c=runtime();
+ assert.equal(c.ngdVjSignature_([-119,80,78,71,13,10,26,10,0,0,0,0],'image/png'),true);
+ assert.equal(c.ngdVjSignature_([-1,-40,-1,0,0,0,0,0,0,0,0,0],'image/jpeg'),true);
+ const js=fs.readFileSync(path.join(root,'js/ai-studio.js'),'utf8');
+ assert.match(js,/if\(q.total_credits!==getCost\(\)\)\{if\(!liveInputAsset\)resetVisualLiveRequest/);
+ assert.match(js,/if\(liveRequestKey\)\{if\(liveBridgeReady\(\)\)void runVisualLive/);
+});
+
+test('manual Visual Studio bundle matches all 13 canonical GAS modules',()=>{
+ const bundle=fs.readFileSync(path.join(root,'handoff/VisualStudioBundle.gs'),'utf8');
+ const modules=[...bundle.matchAll(/^\/\/ ==================== (Visual\w+\.gs) : BEGIN ====================\n([\s\S]*?)^\/\/ ==================== \1 : END ======================/gm)];
+ assert.equal(modules.length,13);
+ for(const m of modules)assert.equal(m[2].trimEnd(),code(m[1]).trimEnd(),m[1]);
+});

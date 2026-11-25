@@ -5,9 +5,9 @@ const RATIOS={'1:1':[1080,1080],'4:5':[1080,1350],'9:16':[1080,1920],'16:9':[192
 const TIERS={hemat:2,standar:4,premium:6};
 const V2_TIERS={standard:2,hd_commercial:3}; // legacy V2 only
 const FOOD_MACHINES=Object.freeze([
- {id:'gemini_flash_image',name:'Hemat & Cepat',model:'Gemini 3.1 Flash Image',use:'Eksplorasi konsep kuliner',credits:2},
+ {id:'gemini_flash_image',name:'Hemat & Cepat',model:'Gemini 3.1 Flash Image',use:'Pilihan hemat untuk eksplorasi foto',credits:2},
  {id:'flux_kontext_pro',name:'Presisi Label & Kemasan',model:'FLUX.1 Kontext Pro',use:'Rekomendasi · menjaga bentuk produk',credits:3},
- {id:'flux_2_pro',name:'Komersial Ultra HD',model:'FLUX.2 Pro',use:'Detail tekstur materi iklan utama',credits:4}
+ {id:'flux_2_pro',name:'Detail Komersial',model:'FLUX.2 Pro',use:'Prioritas detail tekstur; resolusi bergantung provider',credits:4}
 ]);
 const MOODS={terang:'Terang Bersih',hangat:'Hangat Kafe',kontras:'Kontras Promo',gelap:'Mewah Gelap'};
 const TEMPLATES=[
@@ -569,29 +569,36 @@ function chooseMachine(id){if(!FOOD_MACHINES.some(m=>m.id===id)||
  !visualPipelineBridge.allowedMachines.includes(id)))return false;
  foodMachine=id;resetVisualLiveRequest();rememberWorkspace();return true}
 async function runVisualLive(){
- if(!foodMode||!liveBridgeReady()||livePolling||!selectedLocalFile){
+ if(!foodMode||!liveBridgeReady()||livePolling||(!selectedLocalFile&&!liveJobId&&!liveInputAsset)){
   announce('AI nyata belum aktif. Pilih foto lokal dan tunggu aktivasi layanan.');return;
  }
- if(foodQuality.status!=='pass'){announce('Foto belum lolos pemeriksaan kualitas.');return;}
+ if(!liveJobId&&!liveInputAsset&&foodQuality.status!=='pass'){announce('Foto belum lolos pemeriksaan kualitas.');return;}
  const button=node('ns-quick-generate')||node('ns-food-live-generate');
  if(button)button.disabled=true;
  livePolling=true;content();
- const token=epoch;
+ const token=epoch,scope=memberScope,bridge=visualPipelineBridge;
+ const current=()=>active()&&token===epoch&&scope===memberScope&&bridge===visualPipelineBridge;
  try{
   if(!liveRequestKey){
    if(!global.crypto?.randomUUID)throw Error('Browser tidak mendukung ID aman');
    liveRequestKey=global.crypto.randomUUID().replace(/-/g,'');
   }
   if(!liveJobId){
-   const q=await visualPipelineBridge.quote({machine_id:foodMachine,count:food.count});
+   const q=await bridge.quote({machine_id:foodMachine,count:food.count});
+   if(!current())return;
    if(!q||q.machine_id!==foodMachine||q.count!==food.count||
     !Number.isSafeInteger(q.unit_credits)||q.unit_credits<1||
     !Number.isSafeInteger(q.total_credits)||q.total_credits!==q.unit_credits*q.count||
     q.server_authoritative!==true)throw Error('VISUAL_QUOTE_UNAVAILABLE');
+   if(q.total_credits!==getCost()){if(!liveInputAsset)resetVisualLiveRequest();announce('Tarif server berubah. Jangan lanjut sebelum tarif diperbarui.');return;}
+   // Older deployments cannot safely report the actual dedicated wallet.
+   if(q.wallet_kind!=='VISUAL'||!Number.isSafeInteger(q.available_credits)||q.available_credits<0){if(!liveInputAsset)resetVisualLiveRequest();announce('Saldo Visual belum dapat diverifikasi.');return;}
+   if(!liveInputAsset&&q.available_credits<q.total_credits){resetVisualLiveRequest();liveStatus='Saldo Visual '+q.available_credits+' kredit, dibutuhkan '+q.total_credits+'. Top-up token member belum mengisi dompet Visual.';updateLiveStatus();announce(liveStatus);return;}
    liveQuote=q;liveStatus='Tarif terkonfirmasi server. Mengunggah foto privat…';
    updateLiveStatus();
    if(!liveInputAsset){
-    const handle=await visualPipelineBridge.upload(selectedLocalFile,{idempotency_key:liveRequestKey});
+    const handle=await bridge.upload(selectedLocalFile,{idempotency_key:liveRequestKey});
+    if(!current())return;
     if(!handle||!/^asset_[A-Za-z0-9_-]{6,110}$/.test(handle.asset_id))
      throw Error('Upload privat tidak dikonfirmasi');
     liveInputAsset=handle.asset_id;
@@ -599,16 +606,18 @@ async function runVisualLive(){
    const request=foodDraft();
    request.payload.reference_image=liveInputAsset;
    request.payload.request_id=liveRequestKey;
-   const created=await visualPipelineBridge.create({
+   const created=await bridge.create({
     idempotency_key:liveRequestKey,machine_id:foodMachine,payload:request.payload
    });
+   if(!current())return;
    if(!created||!/^[A-Za-z0-9_-]{16,80}$/.test(created.job_id))
     throw Error('Antrean tidak memberi ID job yang sah');
    liveJobId=created.job_id;
   }
   for(let i=0;i<60;i++){
    if(!active()||token!==epoch)break;
-   const status=await visualPipelineBridge.poll(liveJobId);
+   const status=await bridge.poll(liveJobId);
+   if(!current())return;
    liveStatus='Proses: '+String(status?.status||'MEMERIKSA').replace(/_/g,' ')+
     ' · '+(Number.isInteger(status?.succeeded_count)?status.succeeded_count:0)+
     ' dari '+food.count+' gambar';
@@ -620,7 +629,8 @@ async function runVisualLive(){
      const results=[];
      if(assets.length>food.count||new Set(assets).size!==assets.length)throw Error('PRIVATE_RESULT_INVALID');
      for(const asset of assets){
-     const picture=await visualPipelineBridge.result(liveJobId,asset);
+     const picture=await bridge.result(liveJobId,asset);
+     if(!current())return;
      if(!picture||!['image/png','image/jpeg','image/webp'].includes(picture.mime)||
       typeof picture.base64!=='string'||picture.base64.length<24)
       throw Error('PRIVATE_RESULT_INVALID');
@@ -636,24 +646,24 @@ async function runVisualLive(){
     updateLiveStatus();
     announce(liveStatus);resetVisualLiveRequest();return;
    }
-   if(['REFUNDED','FAILED'].includes(status.status)){
+   if(status.status==='REFUNDED'){
     announce('Provider gagal; reservasi kredit dikembalikan. Coba lagi setelah layanan pulih.');
     resetVisualLiveRequest();return;
    }
-   if(['CREATED','RESERVED','PROCESSING','SUCCEEDED'].indexOf(status.status)<0)
+   if(['CREATED','RESERVED','PROCESSING','SUCCEEDED','PARTIAL_SUCCEEDED','FAILED'].indexOf(status.status)<0)
     throw Error('Status antrean tidak dikenal');
    await new Promise(resolve=>setTimeout(resolve,3000));
   }
   announce('Job masih diproses. Cek status dari akun sebelum mengirim permintaan baru.');
  }catch(err){
+  if(!current())return;
   const reason=String(err?.code||'');
   liveStatus='Layanan AI belum tersedia atau job perlu dicek ulang.';updateLiveStatus();
   announce(['UPSTREAM_BUSY','UPSTREAM_RATE_LIMITED','UPSTREAM_UNAVAILABLE'].includes(reason)?
    'Provider AI sedang sibuk. Permintaan belum dapat diselesaikan; cek status job sebelum mencoba ulang.':
-   'Layanan AI belum tersedia atau akses belum diaktifkan. Tidak ada pembayaran nyata yang diproses.');
+   'Status permintaan belum dapat dipastikan. Periksa job dan saldo sebelum membuat permintaan baru.');
  }finally{
-  livePolling=false;
-  if(active()&&token===epoch)content();
+  if(token===epoch&&scope===memberScope){livePolling=false;if(active())content();}
  }
 }
 function configureVisualPipeline(bridge){
@@ -664,9 +674,9 @@ function configureVisualPipeline(bridge){
   const allowed=bridge.allowedMachines;
   if(!allowed.length||allowed.some(id=>!FOOD_MACHINES.some(m=>m.id===id)))
    throw Error('VISUAL_MACHINE_ALLOWLIST_INVALID');
-  if(!allowed.includes(foodMachine))foodMachine=allowed[0];
+  if(!allowed.includes(foodMachine)&&!liveRequestKey)foodMachine=allowed[0];
  }
- visualPipelineBridge=bridge;resetVisualLiveRequest();
+ visualPipelineBridge=bridge;if(!liveRequestKey)resetVisualLiveRequest();
  if(active()&&state.view==='editor')content();
 }
 function updateLiveStatus(){const el=node('ns-food-job-progress');if(el)el.textContent=liveStatus}
@@ -766,7 +776,7 @@ function chooseQuickStyle(id){
  return true;
 }
 function quickLocked(){return livePolling||!!liveRequestKey;}
-function quickReady(){return !!selectedLocalFile&&foodQuality.status==='pass'&&!state.busy&&!livePolling;}
+function quickReady(){return (!liveRequestKey||liveBridgeReady())&&(!!liveJobId||!!liveInputAsset||!!selectedLocalFile&&foodQuality.status==='pass')&&!state.busy&&!livePolling;}
 function syncQuickAction(){
  const button=node('ns-quick-generate');if(button)button.disabled=!quickReady();
 }
@@ -803,7 +813,7 @@ function editor(){
  '<section class="ns-simple-step"><h2><span>6</span> Kualitas &amp; biaya</h2>'+
  '<div class="ns-food-engines" role="radiogroup" aria-label="Mesin AI">'+FOOD_MACHINES.map(m=>'<button type="button" role="radio" class="ns-food-engine" data-food-machine="'+m.id+'" aria-checked="'+(m.id===foodMachine)+'" '+(live&&Array.isArray(visualPipelineBridge.allowedMachines)&&!visualPipelineBridge.allowedMachines.includes(m.id)?'disabled':'')+'><span class="ns-food-engine-top"><strong>'+htmlEscape(m.name)+'</strong><b>'+m.credits+' kredit / foto</b></span><small>'+htmlEscape(m.use)+'</small></button>').join('')+'</div></section>'+
  '</fieldset>'+
- '<section class="ns-simple-step ns-simple-create"><div id="ns-food-pricing" class="ns-food-pricing" role="status"><strong>Estimasi biaya AI</strong><b>'+selectedMachine().credits+' kredit × '+food.count+' hasil = '+getCost()+' kredit</b><small>'+ (live?'Tarif final dikonfirmasi oleh server sebelum proses.':'Kredit latihan — bukan saldo Member. Latihan membuat satu pratinjau lokal, tanpa AI.')+'</small></div>'+
+ '<section class="ns-simple-step ns-simple-create"><div id="ns-food-pricing" class="ns-food-pricing" role="status"><strong>Estimasi biaya AI</strong><b>'+selectedMachine().credits+' kredit × '+food.count+' hasil = '+getCost()+' kredit</b><small>'+ (live?'Tarif dan saldo Visual dikonfirmasi server sebelum proses. Top-up token member belum mengisi dompet Visual.':'Kredit latihan — bukan saldo Member. Latihan membuat satu pratinjau lokal, tanpa AI.')+'</small></div>'+
  '<button type="button" id="ns-quick-generate" class="ns-cta ns-primary ns-simple-primary" '+(!ready?'disabled':'')+'>'+ico('spark')+(live?(liveRequestKey?' Lanjutkan proses':' Buat Foto dengan AI'):' Coba Pratinjau Tanpa AI')+'</button>'+
  '<div id="ns-food-job-progress" class="ns-food-job-progress" role="status" aria-live="polite">'+htmlEscape(liveStatus)+'</div>'+
  '<p class="ns-simple-mode">'+(live?'AI aktif sesuai izin server.':'Latihan tanpa AI. Tema belum diterapkan oleh provider; foto asli tidak dikirim ke server.')+'</p></section>'+
@@ -894,6 +904,7 @@ async function simulate(){if(state.busy)return;if(!state.photo){announce('Pilih 
 function handleClick(event){const target=event.target.closest('button');if(!target||!root.contains(target))return;if(quickLocked()&&target.id!=='ns-quick-generate'&&target.id!=='ns-food-live-generate'){announce('Selesaikan atau periksa status job sebelum mengubah pengaturan.');return}if(target.id==='ns-quick-upload'){node('ns-file')?.click();return}
 if(target.dataset.quickStyle){chooseQuickStyle(target.dataset.quickStyle);return}
 if(target.id==='ns-quick-generate'){
+ if(liveRequestKey){if(liveBridgeReady())void runVisualLive();else announce('Job menunggu pemeriksaan. Jangan membuat permintaan baru.');return;}
  if(!selectedLocalFile){announce('Unggah foto produk dari HP terlebih dahulu.');return}
  if(foodQuality.status!=='pass'){announce('Foto belum lolos pemeriksaan dasar. Coba foto yang lebih terang dan fokus.');return}
  if(liveBridgeReady()){void runVisualLive();return}
@@ -903,7 +914,7 @@ if(target.dataset.view){selectView(target.dataset.view);return}if(target.dataset
 if(target.dataset.foodMode){foodMode=target.dataset.foodMode==='food';classicEditor=!foodMode;if(foodMode){state.ratio=food.format;state.overlay=false;foodQuality={status:'not_checked',message:'Memeriksa foto sumber…'};if(state.img)evaluateFoodPhoto(state.img)}else{state.ratio=state.v2.aspect_ratio;}content();return}if(target.dataset.contextCategory){if(contextSelectCategory(target.dataset.contextCategory))content();return}if(target.dataset.contextScenario){if(contextSelectScenario(target.dataset.contextScenario))content();return}if(target.dataset.foodMachine){if(chooseMachine(target.dataset.foodMachine))content();return}if(target.dataset.foodField){if(chooseFood(target.dataset.foodField,target.dataset.foodField==='count'?Number(target.dataset.foodValue):target.dataset.foodValue))content();return}if(target.dataset.v2Field){if(selectV2(target.dataset.v2Field,target.dataset.v2Value))content();return}if(target.dataset.mood){state.mood=target.dataset.mood;content();return}if(target.dataset.ratio){state.ratio=target.dataset.ratio;content();return}if(target.dataset.tier){state.tier=target.dataset.tier;content();return}
 if(target.id==='ns-food-live-generate'){void runVisualLive();return}if(target.id==='ns-upload'){node('ns-file')?.click();return}if(target.id==='ns-toggle'){state.overlay=!state.overlay;content();return}if(target.id==='ns-compare'){state.compare=!state.compare;content();return}if(target.id==='ns-generate'){void simulate();return}if(target.id==='ns-download'){const cv=node('ns-canvas');if(cv)try{download(cv.toDataURL('image/png'),'ngulik-studio-simulasi-'+state.ratio.replace(':','x')+'.png')}catch(_){announce('Tidak bisa mengunduh gambar eksternal ini. Unggah foto lokal untuk ekspor HD.')}return}if(target.dataset.preview!==undefined){const item=state.history[Number(target.dataset.preview)];if(item){selectedLocalFile=null;foodQuality={status:'not_checked',message:'Unggah foto asli untuk membuat foto baru.'};state.photo=item.image;state.photoChosen=true;state.img=null;state.loadedUrl='';state.ratio=item.ratio;state.product=item.product;state.compare=true;state.view='editor';shell()}return}if(target.dataset.historyDownload!==undefined){const item=state.history[Number(target.dataset.historyDownload)];if(item)download(item.image,'ngulik-studio-aset-'+(Number(target.dataset.historyDownload)+1)+(item.image.startsWith('data:image/jpeg')?'.jpg':item.image.startsWith('data:image/webp')?'.webp':'.png'));return}}
 function handleChange(event){if(quickLocked())return;const t=event.target;if(t.id==='ns-context-restoration'){contextSelectRestoration(t.checked?'full_phone_restoration':'preserve_source');content();return}if(t.id==='ns-v2-overlay'){resetVisualLiveRequest();state.overlay=t.checked;content();return}if(t.id==='ns-ratio-filter'){state.filterRatio=t.value;content()}if(t.id==='ns-file'){const file=t.files?.[0];if(!file)return;if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>4*1024*1024){announce('File harus JPG/PNG/WebP maksimal 4 MB.');return}const request=++uploadReadSeq,scope=memberScope;selectedLocalFile=null;syncQuickAction();const reader=new FileReader();reader.onload=()=>{if(!active()||request!==uploadReadSeq||scope!==memberScope)return;state.photo=String(reader.result||'');selectedLocalFile=file;resetVisualLiveRequest();state.photoChosen=true;state.img=null;state.loadedUrl='';foodQuality={status:'not_checked',message:'Sedang memeriksa foto baru…'};content()};reader.readAsDataURL(file)}}
-function mount(el){if(!el)return;customTemplates=readSavedTemplates();restoreWorkspace();root=el;root.classList.add('ngd-studio');root.addEventListener('click',handleClick);root.addEventListener('input',e=>maybeEdit(e.target));root.addEventListener('change',handleChange);shell()}
-function unmount(){rememberWorkspace();epoch++;uploadReadSeq++;livePolling=false;selectedLocalFile=null;if(root){root.replaceChildren();root=null}}
+function mount(el){if(!el)return;customTemplates=readSavedTemplates();if(!liveRequestKey)restoreWorkspace();root=el;root.classList.add('ngd-studio');root.addEventListener('click',handleClick);root.addEventListener('input',e=>maybeEdit(e.target));root.addEventListener('change',handleChange);shell()}
+function unmount(){rememberWorkspace();epoch++;uploadReadSeq++;livePolling=false;if(!liveRequestKey)selectedLocalFile=null;if(root){root.replaceChildren();root=null}}
 global.NGD_STUDIO={mount,unmount,adapterMode:adapter.mode,configureVisualPipeline,configureTemplateStorage,configureMemberScope,saveTemplatePreset:saveCurrentPreset,deleteTemplatePreset:removeSavedPreset,setPresetName:name=>{presetName=String(name||'').slice(0,56)},studioTemplateCatalog:()=>scenarioTemplates().map(t=>({...t})),useScenarioTemplate,applySavedTemplate:applyPreset,savedTemplates:()=>customTemplates.map(t=>({...t})),setTemplateFilter:id=>{if(!templateCategoryChoices().some(x=>x[0]===id))return false;templateFilter=id;return true},quickStyleSelect:chooseQuickStyle,quickStyles:()=>QUICK_STYLES.map(v=>({...v})),contextCategorySelect:contextSelectCategory,contextScenarioSelect:contextSelectScenario,contextRestorationSelect:contextSelectRestoration,contextMatrix:()=>JSON.parse(JSON.stringify(CONTEXT_SCENARIOS)),foodMachineSelect:chooseMachine,publicMachineCatalog:()=>FOOD_MACHINES.map(m=>({...m})),debugSnapshot:()=>({mode:adapter.mode,creditsSimulated:state.credits,renders:state.renderNo,history:state.history.length}),requestDraft:buildVisualRequestDraft,img2imgDraft:buildImg2ImgV2Draft,foodMagazineDraft:foodDraft,foodChoose:chooseFood,foodContracts:()=>FOOD_GROUPS,selectOption:selectV2,optionContracts:()=>Object.keys(V2_OPTIONS).reduce((a,k)=>(a[k]=V2_OPTIONS[k].map(x=>[...x]),a),{}),presetContracts:()=>Object.keys(VISUAL_PRESET_IDS).map(id=>({id,...VISUAL_PRESET_IDS[id]}))};
 })(window);
