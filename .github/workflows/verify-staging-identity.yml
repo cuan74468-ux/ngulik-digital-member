@@ -4,6 +4,11 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/verify-staging-identity.yml'
+      - '.github/workflows/gas-staging-sync.yml'
+      - 'apps-script/**'
+      - 'scripts/gas-staging-*'
+      - 'contracts/gas-staging-sync.json'
+      - 'tests/gas-staging-sync.test.cjs'
       - 'staging/config.js'
       - 'staging/monitor.html'
       - 'staging/member.html'

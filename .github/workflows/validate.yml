@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'apps-script/**'
+      - 'scripts/gas-staging-*'
       - 'js/**'
       - 'assets/**'
       - 'tests/**'
@@ -24,6 +25,7 @@ on:
     branches: [main]
     paths:
       - 'apps-script/**'
+      - 'scripts/gas-staging-*'
       - 'js/**'
       - 'assets/**'
       - 'tests/**'
@@ -60,6 +62,13 @@ jobs:
           package-manager-cache: false
       - name: Verify pure backend rules and frontend smoke
         run: node --test tests/*.test.cjs
+      - name: Verify STAGING package AST and fail-closed guards (no credentials)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/ngd-ast" --ignore-scripts --no-audit --no-fund --no-save acorn@8.15.0
+          NODE_PATH="$RUNNER_TEMP/ngd-ast/node_modules" node --test scripts/gas-staging-ast.test.cjs
+          node --check scripts/gas-staging-run.cjs
       - name: Smoke-test static UI in real headless Chrome (no deployment)
         shell: bash
         run: |
