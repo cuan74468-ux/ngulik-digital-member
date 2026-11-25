@@ -14,7 +14,11 @@ function ngdVisualWorker_(auth,worker){
  var secret=ngdVisualProviderGasSecrets_();
  function storeImage(job,mime,base64){
   ngdVpRequire_(['image/jpeg','image/png','image/webp'].indexOf(mime)>=0,'RESULT_MIME');
-  var bytes=ngdVmBytes_(base64,mime);
+  var bytes;
+  try{bytes=ngdVmBytes_(base64,mime);}catch(_){return {state:'FAILED',reason:'OUTPUT_BINARY_INVALID'};}
+  var format=job.compiled_recipe&&job.compiled_recipe.option_ids&&job.compiled_recipe.option_ids.format;
+  var geometry=ngdVisualOutputGeometry_(bytes,mime,format);
+  if(!geometry.ok)return {state:'FAILED',reason:geometry.reason};
   var uploaded=media.putPrivate({owner:job.owner,job_id:job.id,
    media_kind:'output',mime:mime,bytes:bytes});
   return {state:'READY',asset_id:uploaded.asset_id};
@@ -86,7 +90,7 @@ function ngdVisualWorker_(auth,worker){
       'SUCCEEDED',result.asset_id,null);
     }else if(result&&result.state==='FAILED'){
      store.slots.mark(id,task.index,mode==='POLL'?'QUEUED':'SUBMITTING',
-      'FAILED',null,'PROVIDER_FAILED');
+      'FAILED',null,/^OUTPUT_(?:HEADER_INVALID|BINARY_INVALID|SIZE_INVALID|RATIO_MISMATCH)$/.test(result.reason||'')?result.reason:'PROVIDER_FAILED');
     }else if(!result||result.state!=='PROCESSING'){
      throw Error('VISUAL_WORKER_RESULT_INVALID');
     }

@@ -62,9 +62,13 @@ function ngdVisualRuntime_(auth){
  return {
   publicCatalog:function(){return ngdVisualPublicCatalog_();},
   publicQuote:function(session,request){
-   member(session);
+   var id=member(session);
    ngdVjAssert_(request&&typeof request==='object','QUOTE_REQUEST_INVALID');
-   return ngdVisualQuote_(request.machine_id,request.count);
+   var quote=ngdVisualQuote_(request.machine_id,request.count),wallet=store.ledger.balance(id);
+   var available=wallet?wallet.available:0,held=wallet?wallet.held:0;
+   ngdVjAssert_(Number.isSafeInteger(available)&&available>=0&&Number.isSafeInteger(held)&&held>=0,'WALLET_CORRUPT');
+   return Object.assign({},quote,{wallet_kind:'VISUAL',available_credits:available,held_credits:held,
+    sufficient:available>=quote.total_credits});
   },
   uploadPrivate:function(session,request){
    ngdVjAssert_(config.NGD_VISUAL_LIVE_ENABLED&&config.NGD_VISUAL_MEDIA_READY&&

@@ -206,18 +206,6 @@ function ngdVisualPreparePrivateRegistryStaging(){
   quality:'Plausible optics, texture, gravity, contact shadows, accurate real glass and liquid refraction.',
   negative:'No invented product, fake garnish, hallucinated characters, artificial labels, watermark or floating badges.'
  };
- var neutral={
-  food_type:'Preserve the reference product type',
-  cover_concept:'Optional composition preference only',
-  camera_angle:'Optional camera angle subordinate to context physics',
-  lighting:'Optional lighting mood subordinate to context physics',
-  surface:'Optional supporting surface subordinate to context physics',
-  grade:'Optional color grading without recoloring products',
-  styling:'Only existing material and props, no fabricated items',
-  lens:'Optional lens preference subordinate to context optics',
-  format:'Frame composition to specified aspect ratio without distortion',
-  similarity:'Preserve original product identity and proportions'
- };
  Object.keys(NGD_FOOD_MAGAZINE_IDS_).forEach(function(group){
   registry[group]={};
   NGD_FOOD_MAGAZINE_IDS_[group].forEach(function(id){

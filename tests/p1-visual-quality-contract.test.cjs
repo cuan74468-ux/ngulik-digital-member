@@ -117,3 +117,18 @@ test('P1 benchmark is exactly 240 unexecuted blind scenarios, never fabricated m
  }
  assert.doesNotMatch(JSON.stringify(b),/provider_winner|actual_score|midjourney_parity_passed/i);
 });
+
+test('output geometry uses binary headers and rejects wrong ratio, size and unknown format',()=>{
+ const png=(w,h)=>{const a=Array(33).fill(0);a.splice(0,16,137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82);for(let i=0;i<4;i++){a[16+i]=(w>>>(24-8*i))&255;a[20+i]=(h>>>(24-8*i))&255;}return a;};
+ assert.equal(c.ngdVisualOutputGeometry_(png(1080,1350),'image/png','4:5').ok,true);
+ assert.equal(c.ngdVisualOutputGeometry_(png(1080,1080),'image/png','4:5').reason,'OUTPUT_RATIO_MISMATCH');
+ assert.equal(c.ngdVisualOutputGeometry_(png(400,500),'image/png','4:5').reason,'OUTPUT_SIZE_INVALID');
+ assert.equal(c.ngdVisualOutputGeometry_(png(1080,1350),'image/png','2:3').ok,false);
+ assert.equal(c.ngdVisualOutputGeometry_(Array(33).fill(0),'image/png','4:5').ok,false);
+ const jpeg=[255,216,255,192,0,17,8,5,70,4,56,3,1,17,0,2,17,0,3,17,0,255,217,0];
+ assert.equal(c.ngdVisualOutputGeometry_(jpeg,'image/jpeg','4:5').ok,true);
+ const webp=Array(30).fill(0);webp.splice(0,20,82,73,70,70,22,0,0,0,87,69,66,80,86,80,56,88,10,0,0,0);
+ webp[24]=55;webp[25]=4;webp[27]=69;webp[28]=5;
+ assert.equal(c.ngdVisualOutputGeometry_(webp,'image/webp','4:5').ok,true);
+ assert.equal(c.ngdVisualOutputGeometry_(webp,'image/webp','4:5').semantic_quality_verified,false);
+});

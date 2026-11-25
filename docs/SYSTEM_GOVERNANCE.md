@@ -22,7 +22,7 @@ Standar permanen Linggau AI Studio. PROJECT_CONTROL.md mencatat status operasion
 
 ### Gerbang foto produk AI
 - Server mengunci kategori, tema, rasio, kamera, cahaya, permukaan, grading, styling, lensa dan kesamaan produk. Deskripsi pengguna hanya data yang tidak tepercaya; prompt lock membantu tetapi tidak menjamin kepatuhan model. Registry privat operator tidak ditimpa otomatis.
-- Hasil wajib diperiksa terhadap foto sumber: identitas/label, komposisi, rasio, detail, warna, cacat visual. Rubrik visual yang ada bukan evaluator piksel. Sebelum aktivasi komersial, wajib memasang evaluator tepercaya atau QA operator serta menguji setiap tema dan engine yang akan dijual. Tidak menjanjikan Ultra HD atau label sempurna sebelum pengukuran.
+- Hasil wajib diperiksa terhadap foto sumber: identitas/label, komposisi, rasio, detail, warna, cacat visual. Preflight binary header memeriksa dimensi minimum 512 px, batas 20 MP/8192 px, dan rasio dengan toleransi relatif 2%; hasil di luar kontrak ditolak sebelum penyimpanan/settlement. Pemeriksaan header tidak membuktikan dekode lengkap atau kesamaan visual. Rubrik visual yang ada bukan evaluator piksel. Sebelum aktivasi komersial, wajib memasang evaluator tepercaya atau QA operator serta menguji setiap tema dan engine yang akan dijual. Tidak menjanjikan Ultra HD atau label sempurna sebelum pengukuran.
 - Wallet Visual terpisah dari token member. Pilot 12 kredit bukan top-up komersial. Jangan menjual atau mencampur saldo hingga jalur fulfillment QRIS resmi, ledger idempoten, HPP aktual, refund, rekonsiliasi, dan UAT disetujui. Kredit gagal dikembalikan sesuai hasil, biaya upstream tetap dihitung. Status settlement/refund antara harus dipulihkan tanpa dispatch ulang.
 
 ## Zero-patchwork dan kualitas

@@ -254,3 +254,13 @@ test('interrupted settlement and refund are recovered without another dispatch o
  assert.equal(f.stats.reserve,2);assert.equal(f.stats.settle,1);assert.equal(f.stats.refund,1);
  assert.equal(f.stats.queued,2);
 });
+
+test('studio does not claim refund at intermediate failure and requires a verified Visual wallet quote',()=>{
+ const js=fs.readFileSync(path.join(root,'js/ai-studio.js'),'utf8');
+ assert.match(js,/q.wallet_kind!=='VISUAL'/);
+ assert.match(js,/q.available_credits<q.total_credits/);
+ assert.match(js,/if\(status.status==='REFUNDED'\)/);
+ assert.match(js,/PARTIAL_SUCCEEDED','FAILED'/);
+ assert.doesNotMatch(js,/Tidak ada pembayaran nyata yang diproses/);
+ assert.match(code('VisualWorker.gs'),/ngdVisualOutputGeometry_\(bytes,mime,format\)/);
+});
