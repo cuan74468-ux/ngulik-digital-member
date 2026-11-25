@@ -702,7 +702,7 @@ body.ngd-public-app:not(#ngd) .admin-start-actions h2{
   font-size:clamp(1.32rem,2.25vw,1.8rem);margin:0;
 }
 body.ngd-public-app:not(#ngd) .admin-start-grid{
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--ngds-grid-gap);
 }
 body.ngd-public-app:not(#ngd) .admin-start-item{
   display:flex;flex-direction:column;text-align:left;align-items:flex-start;

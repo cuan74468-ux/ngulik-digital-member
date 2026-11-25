@@ -150,8 +150,8 @@ body.ngd-public-app .ai-tools-count{font-size:.72rem;color:#647d77;font-weight:6
 body.ngd-public-app .ai-search-wrap{flex:0 1 260px}
 body.ngd-public-app .ai-search-wrap input{min-height:42px;background:#f6f8f6;border-color:#e1e7e4}
 body.ngd-public-app .ai-catalog .ai-catalog-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-body.ngd-public-app .ai-catalog .ai-product-card{border-radius:16px;min-height:220px;padding:0 16px 16px;gap:8px;box-shadow:none}
-body.ngd-public-app .ai-catalog .ai-product-card:before{height:56px;margin:0 -16px 3px;background:#f2f5ef}
+body.ngd-public-app .ai-catalog .ai-product-card{border-radius:16px;min-height:220px;padding:0 18px 18px;gap:10px;box-shadow:none}
+body.ngd-public-app .ai-catalog .ai-product-card:before{height:64px;margin:0 -18px 3px;background:var(--ngds-tint)}
 body.ngd-public-app .ai-catalog .ai-product-icon{height:46px;width:46px;border-radius:12px;margin-top:-37px}
 body.ngd-public-app .ai-catalog .ai-product-card strong{font-size:.99rem;line-height:1.3}
 body.ngd-public-app .ai-catalog .ai-product-card small{font-size:.74rem;line-height:1.45;-webkit-line-clamp:2}
@@ -178,7 +178,7 @@ body.ngd-public-app .ai-tool-detail .ai-wallet-mini{padding:13px 16px;border-rad
  body.ngd-public-app .ai-catalog-intro h1{font-size:1.65rem}
  body.ngd-public-app .ai-catalog .ai-catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
  body.ngd-public-app .ai-catalog .ai-product-card{min-height:200px;padding:0 12px 13px;gap:7px;border-radius:14px}
- body.ngd-public-app .ai-catalog .ai-product-card:before{height:47px;margin:0 -12px 3px}
+ body.ngd-public-app .ai-catalog .ai-product-card:before{height:52px;margin:0 -12px 3px}
  body.ngd-public-app .ai-catalog .ai-product-icon{height:40px;width:40px;margin-top:-33px;border-radius:11px}
  body.ngd-public-app .ai-catalog .ai-product-card strong{font-size:.9rem;line-height:1.28}
  body.ngd-public-app .ai-catalog .ai-product-card small{font-size:.72rem}
