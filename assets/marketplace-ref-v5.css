@@ -305,8 +305,8 @@ body.ngd-public-app[data-app-role]:not(#ngd) .market-category-icon{
 }
 body.ngd-public-app[data-app-role]:not(#ngd) .market-product-grid,
 body.ngd-public-app[data-app-role=guest]:not(#ngd) .ngd-shop-featured .market-product-grid{
-  display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;
-  align-items:stretch;gap:12px!important;min-width:0;width:100%;
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  align-items:stretch;gap:var(--ngds-grid-gap)!important;min-width:0;width:100%;
 }
 body.ngd-public-app[data-app-role]:not(#ngd) .market-product-card{
   display:flex;flex-direction:column;min-width:0;overflow:hidden;

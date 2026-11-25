@@ -81,16 +81,16 @@ body.ngd-public-app[data-app-role=admin]:not(#ngd) .topbar .guest-brand{
 }
 /* Login is a calm, clear workspace gate. No fake PIN requirement for Member. */
 body.ngd-public-app:not(#ngd) .login-shell.ngd-auth-v10{
-  display:block!important;width:min(100%,510px)!important;max-width:510px!important;
+  display:block!important;width:min(100%,520px)!important;max-width:520px!important;
   margin:clamp(18px,4vw,54px) auto 65px!important;
   padding:clamp(23px,3.8vw,44px)!important;
-  background:#fff!important;border:1px solid #e8e0f5!important;
-  border-radius:22px!important;box-shadow:0 17px 51px rgba(39,24,96,.07)!important;
+  background:var(--ngds-paper)!important;border:var(--ngds-line)!important;
+  border-radius:var(--ngds-radius)!important;box-shadow:var(--ngds-shadow)!important;
   color:#261e4f!important;text-align:left!important;
 }
 body.ngd-public-app:not(#ngd) .ngd-auth-brand{
   display:flex;align-items:center;gap:10px;min-width:0;
-  margin:0 0 27px;padding:0 0 21px;border-bottom:1px solid #ece7f6;
+  margin:0 0 24px;padding:14px 16px;border:var(--ngds-line);border-radius:var(--ngds-radius);background:var(--ngds-tint);
 }
 body.ngd-public-app:not(#ngd) .ngd-auth-brand img{
   flex:0 0 53px;width:53px;height:53px;object-fit:contain;
@@ -126,16 +126,16 @@ body.ngd-public-app:not(#ngd) .ngd-auth-v10 .field label{
 }
 body.ngd-public-app:not(#ngd) .ngd-auth-v10 .input{
   width:100%;min-height:47px;padding:11px 13px;
-  background:#fdfcff!important;color:#302452!important;
-  border:1px solid #e2d8f5!important;border-radius:11px!important;
+  background:var(--ngds-paper)!important;color:var(--ngds-ink)!important;
+  border:var(--ngds-line)!important;border-radius:var(--ngds-radius-small)!important;
 }
 body.ngd-public-app:not(#ngd) .ngd-auth-v10 .input:focus{
   outline:2px solid #bda5ff;outline-offset:1px;border-color:#7854df!important;
 }
 body.ngd-public-app:not(#ngd) .ngd-auth-v10 .btn-primary{
-  min-height:47px!important;background:#5b28d6!important;border-color:#5b28d6!important;
-  border-radius:11px!important;color:#fff!important;font-weight:800;
-  box-shadow:none!important;
+  min-height:47px!important;background:var(--ngds-violet)!important;border-color:var(--ngds-ink)!important;
+  border-radius:var(--ngds-radius-small)!important;color:#fff!important;font-weight:800;
+  box-shadow:2px 2px 0 var(--ngds-ink)!important;
 }
 body.ngd-public-app:not(#ngd) .ngd-auth-v10 .btn-secondary{
   min-height:44px;border-color:#d8c8fb!important;color:#582ac1!important;

@@ -14,7 +14,7 @@ test('V6 resets old translated floating header and 900px hero ceiling',()=>{
   assert.match(css,/width:100%!important;max-width:none!important/);
   assert.match(css,/\.pf-home-minimal\.ngd-shop-hero\{/);
   assert.match(css,/max-width:none!important/);
-  assert.match(css,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)!important/);
+  assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)!important/);
 });
 test('responsive storefront contains genuine touch navigation and no overflow-masking hacks',()=>{
   assert.match(css,/@media\(max-width:920px\)/);

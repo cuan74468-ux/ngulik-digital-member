@@ -97,10 +97,11 @@
         '<div class="ngdl-grid">'+cases.map(x=>card(x,'ngdl-offer')).join('')+'</div>'+
       '</section>':'')+
       (starter?'<section class="ngdl-story" aria-label="'+escape(starter.title||'')+'">'+
-        title(starter)+(starter.description?'<p>'+escape(starter.description)+'</p>':'')+
+        '<div class="ngdl-story-intro">'+title(starter)+(starter.description?'<p>'+escape(starter.description)+'</p>':'')+
+        button(starter,'ngdl-btn ngdl-btn-gold')+'</div>'+
         (bullets.length?'<ul>'+bullets.map(x=>
-          '<li><strong>'+escape(x.title||'')+'</strong> — '+escape(x.description||'')+'</li>').join('')+
-        '</ul>':'')+button(starter,'ngdl-btn ngdl-btn-gold')+'</section>':'')+
+          '<li><strong>'+escape(x.title||'')+'</strong>'+(x.description?'<span>'+escape(x.description)+'</span>':'')+'</li>').join('')+
+        '</ul>':'')+'</section>':'')+
       (honesty?'<section class="ngdl-benefits" aria-label="'+escape(honesty.title||'')+'">'+
         title(honesty)+'<p>'+escape(honesty.description||'')+'</p></section>':'')+
       (services.length?'<section class="ngdl-offers" aria-labelledby="ngd-cms-svc-title">'+
@@ -110,7 +111,7 @@
       '</section>':'')+
       (benefit?'<section class="ngdl-benefits">'+title(benefit)+
         '<ul>'+benefitItems.map(x=>'<li><strong>'+escape(x.title||'')+
-        '</strong> — '+escape(x.description||'')+'</li>').join('')+'</ul></section>':'')+
+        '</strong>'+(x.description?'<span>'+escape(x.description)+'</span>':'')+'</li>').join('')+'</ul></section>':'')+
       ((footerA||footerB)?'<footer class="ngdl-end">'+
         (footerA?'<strong>'+escape(footerA)+'</strong>':'')+
         (footerB?'<p>'+escape(footerB)+'</p>':'')+'</footer>':'')+

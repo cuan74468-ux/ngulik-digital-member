@@ -90,7 +90,7 @@ test('signed-in Admin dashboard prioritizes editable modules, not repeated disab
  const html=p.elements.screen.innerHTML;
  for(const route of ['konten','produk','lms','layanan'])
    assert.match(html,new RegExp('data-route="'+route+'"'));
- assert.match(html,/Pilih yang Mau Dikelola/);
- assert.match(html,/Pantau dan tindak lanjuti/);
+ assert.match(html,/Pintasan pengelolaan/);
+ assert.match(html,/<h2>Operasional<\/h2>/);
  assert.doesNotMatch(html,/Kesiapan operasional backend|Mode baca-saja|Perubahan data.*Nonaktif/);
 });

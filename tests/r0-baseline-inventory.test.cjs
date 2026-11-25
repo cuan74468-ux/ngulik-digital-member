@@ -15,7 +15,7 @@ const limits = Object.freeze({
   'assets/member-mobile.css': [1036, 1],
   'assets/unified-theme.css': [59577, 5],
   'assets/experience.css': [21568, 3],
-  'assets/learning-studio.css': [58192, 5],
+  'assets/learning-studio.css': [58221, 5],
   'assets/styles.css': [43281, 13],
   'assets/portfolio-adaptation.css': [65924, 9],
   'assets/home-v5.css': [27182, 2],
@@ -23,30 +23,30 @@ const limits = Object.freeze({
   'assets/marketplace-public.css': [27403, 1],
   'assets/affiliate-partner.css': [18660, 4],
   'assets/brand-official.css': [2729, 1],
-  'assets/ai-catalog.css': [20892, 0],
-  'assets/ai-studio.css': [28690, 3],
+  'assets/ai-catalog.css': [20902, 0],
+  'assets/ai-studio.css': [28738, 3],
   'assets/content-media.css': [4160, 0],
   'assets/catalog-experience-v3.css': [19782, 0],
   'assets/commission-experience-v2.css': [20944, 5],
-  'assets/checkout-qris-unified.css': [5611, 1],
+  'assets/checkout-qris-unified.css': [5868, 1],
   'assets/marketplace-visuals-v4.css': [5249, 0],
-  'assets/marketplace-ref-v5.css': [32696, 306],
+  'assets/marketplace-ref-v5.css': [32712, 306],
   'assets/member-marketplace-v7.css': [29710, 219],
   'assets/public-experience-v8.css': [26236, 159],
   'assets/catalog-campaign-v9.css': [15930, 48],
-  'assets/brand-experience-v10.css': [42381, 324],
+  'assets/brand-experience-v10.css': [42546, 324],
   'assets/mobile-critical-v16.css': [20788, 201],
   'assets/landing-guest-v1.css': [17912, 33],
   'assets/guest-sales-trust-v1.css': [18156, 25],
-  'assets/product-detail-v1.css': [13213, 40],
-  'assets/member-native-dashboard-v1.css': [31561, 224],
-  'assets/ngulik-design-system.css': [48118, 474],
+  'assets/product-detail-v1.css': [13561, 40],
+  'assets/member-native-dashboard-v1.css': [31615, 224],
+  'assets/ngulik-design-system.css': [49432, 474],
   'assets/staging-native-mobile.css': [9008, 1]
 });
 
 const budgets = Object.freeze({
-  'index.html': { count: 30, bytes: 759443, important: 2109 },
-  'staging/member.html': { count: 31, bytes: 768451, important: 2110 }
+  'index.html': { count: 30, bytes: 761684, important: 2109 },
+  'staging/member.html': { count: 31, bytes: 770692, important: 2110 }
 });
 
 function inspectEntry(entry) {

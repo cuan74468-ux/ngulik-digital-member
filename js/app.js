@@ -555,7 +555,7 @@ function viewHome(){
         '<div class="ngdm-wallet-grid"><div class="ngdm-wallet-numbers">'+
           '<p id="ngdm-wallet-heading">Saldo tersedia</p>'+
           '<div class="ngdm-wallet-number"><strong>'+esc(format)+'</strong><span>token</span></div>'+
-          '<p class="ngdm-wallet-hint">Token untuk layanan tertentu. Saldo dan tarif foto AI Visual terpisah.</p>'+
+          '<p class="ngdm-wallet-hint">Token berlaku untuk layanan tertentu. Foto AI Visual memiliki saldo dan tarif tersendiri.</p>'+
           '<div class="ngdm-wallet-actions">'+
              '<button type="button" class="ngdm-wallet-cta" data-route="ai">Jelajahi Studio '+icon('arrow')+'</button>'+
              '<button type="button" class="ngdm-wallet-secondary" data-route="katalog">Lihat paket</button></div>'+
@@ -591,7 +591,7 @@ function viewHome(){
             '<div class="ngdm-order-legend">'+
               '<div><span class="ngdm-indicator ngdm-indicator-finished"></span><span>Selesai / dibayar</span><strong>'+number('orders',String(completed))+'</strong></div>'+
               '<div><span class="ngdm-indicator ngdm-indicator-pending"></span><span>Menunggu</span><strong>'+number('orders',String(pending))+'</strong></div>'+
-              '<p>Grafik berdasarkan status pesanan yang tercatat, bukan estimasi penjualan.</p>'+
+              '<p>Grafik menampilkan status pesanan tercatat, bukan estimasi penjualan.</p>'+
             '</div>'+
           '</div></section>'+
         '<section class="ngdm-recent ngd-window-frame" aria-labelledby="ngdm-recent-title">'+
@@ -605,7 +605,7 @@ function viewHome(){
               '<time>'+esc(friendlyDate(x.at))+'</time></button>').join('')+'</div>':
             '<div class="ngdm-no-activity">'+icon('clock')+
               '<p>'+(state.memberDashboardReads?
-                'Belum ada aktivitas terbaru yang tercatat.':'Sedang menyiapkan aktivitas akun…')+'</p></div>')+
+                'Belum ada aktivitas terbaru.':'Sedang menyiapkan aktivitas akun…')+'</p></div>')+
         '</section>'+
       '</div>'+
       (products.length?'<section class="ngdm-owned ngd-window-frame">'+
@@ -977,8 +977,8 @@ function viewCatalog(){
       ['Canva',state.me?.status_canva||'Belum aktif']
     ].map(([name,status])=>'<span><strong>'+esc(name)+'</strong><small>'+esc(status)+'</small></span>').join('')+'</div></details>';
   return '<div class="ngd-member-catalog">'+
-    '<header class="ngd-member-page-intro"><div><p class="eyebrow">RUANG MEMBER / BELANJA</p><h1>Temukan kebutuhan berikutnya.</h1>'+
-    '<p>Pilih produk dan layanan untuk usaha Anda. Akses yang sudah dimiliki tetap bisa diperiksa di bawah.</p></div>'+
+    '<header class="ngd-member-page-intro"><div><p class="eyebrow">RUANG MEMBER / BELANJA</p><h1>Katalog produk dan jasa</h1>'+
+    '<p>Pilih produk atau jasa untuk usaha Anda. Produk yang sudah dibeli dapat dilihat di bawah.</p></div>'+
     '<button type="button" class="btn btn-secondary" data-route="pesanan">Pesanan Saya '+icon('arrow')+'</button></header>'+
     access+storefront+viewPartnerShelf_()+'</div>';
 }
@@ -1118,8 +1118,8 @@ function viewAI(){
   const balance=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
   const publicMode=!logged()||isAdmin();
   const intro='<header class="ai-catalog-intro"><div class="ai-catalog-intro-copy">'+
-    '<p class="eyebrow">'+(publicMode?'JELAJAH PUBLIK / STUDIO AI':'RUANG MEMBER / STUDIO AI')+'</p><h1>'+(publicMode?'Kenali alat AI untuk pekerjaan nyata.':'Pilih alat. Mulai berkarya.')+'</h1>'+
-    '<p>'+(publicMode?'Jelajahi alat untuk menulis, merencanakan konten, dan mendukung pekerjaan usaha. Masuk sebagai member untuk menjalankannya.':'Pilih alat, periksa kebutuhan token, lalu mulai bekerja dari satu tempat.')+'</p></div>'+
+    '<p class="eyebrow">'+(publicMode?'JELAJAH PUBLIK / STUDIO AI':'RUANG MEMBER / STUDIO AI')+'</p><h1>Studio AI</h1>'+
+    '<p>'+(publicMode?'Temukan alat AI untuk menulis, merencanakan konten, dan membantu pekerjaan usaha. Masuk sebagai member untuk menggunakannya.':'Pilih alat dan periksa biaya token sebelum mulai.')+'</p></div>'+
     (publicMode?'<img class="ngd-ai-hero-art" src="'+esc(cmsPageArt_('ai')||ngdPremiumArtSrc_('ai-pack'))+'" alt="" loading="lazy" decoding="async">':'')+
     (!publicMode?'<div class="ai-wallet-mini"><small>Saldo</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
     '<button type="button" data-catalog-go="ai">Isi Token</button></div>':'')+
@@ -1290,11 +1290,11 @@ function viewAffiliate(){
   const waShare=url?'https://wa.me/?text='+encodeURIComponent('Rekomendasi produk digital Ngulik Digital: '+url):'';
   return '<div class="partner-member">'+info+
     '<header class="partner-member-header"><div><p class="partner-kicker">DASHBOARD MEMBER</p>'+
-      '<h1>Komisi & tautan saya</h1><p>Bagikan rekomendasi dan pantau hasilnya.</p></div>'+
+      '<h1>Komisi & tautan saya</h1><p>Bagikan tautan dan pantau komisi Anda.</p></div>'+
       '<button type="button" class="partner-refresh" data-affiliate-refresh aria-label="Perbarui data komisi">'+icon('arrow')+' <span>Perbarui</span></button></header>'+
     '<section class="partner-link-panel" aria-label="Tautan ajak teman">'+
       '<div class="partner-link-copy"><p class="partner-kicker">LINK AJAK TEMAN ANDA</p>'+
-        '<h2>Satu tautan untuk mulai berbagi.</h2><p>Kirim kepada teman yang mungkin membutuhkan produk Ngulik Digital.</p>'+
+        '<h2>Tautan Ajak Teman</h2><p>Kirim kepada teman yang mungkin membutuhkan produk Ngulik Digital.</p>'+
         '<div class="partner-link-url" aria-label="Tautan pribadi">'+(url?esc(url):'Tautan belum tersedia')+'</div>'+
         (url?'<span class="partner-code">Kode Anda: <strong>'+esc(code)+'</strong></span>':'')+'</div>'+
       '<div class="partner-link-actions">'+
@@ -1302,7 +1302,7 @@ function viewAffiliate(){
         (url?'<a class="partner-btn partner-btn-outline" href="'+esc(waShare)+'" target="_blank" rel="noopener noreferrer">Bagikan ke WhatsApp '+icon('arrow')+'</a>':'')+
       '</div></section>'+
     '<section class="partner-wallet" aria-label="Ringkasan komisi">'+
-      '<header class="partner-section-heading"><div><h2>Ringkasan komisi</h2><p>Nilai dari transaksi yang tercatat di akun Anda.</p></div></header>'+
+      '<header class="partner-section-heading"><div><h2>Ringkasan komisi</h2><p>Komisi dari transaksi yang tercatat di akun Anda.</p></div></header>'+
       '<div class="partner-metric-grid">'+
         [['Siap diajukan',eligible,'approved','Komisi disetujui yang belum diajukan'],
          ['Dalam masa tahan',pending,'pending','Menunggu verifikasi dan masa tahan'],
@@ -1428,7 +1428,7 @@ function viewLogin(register=false,adminMode=false){
     const pos=Number(state.registrationWaitlist.posisi);
     return '<section class="login-shell" role="status" aria-live="polite">'+
       '<p class="eyebrow">PENDAFTARAN DITERIMA</p>'+
-      '<h1>Anda Ada di Daftar Tunggu</h1>'+
+      '<h1>Anda masuk daftar tunggu</h1>'+
       '<p class="lead">Nomor WhatsApp sudah terverifikasi. Kami kabari saat akun aktif.</p>'+
       (Number.isInteger(pos)&&pos>0?'<div class="surface"><strong>Posisi antrean: '+esc(pos)+'</strong></div>':'')+
       '<p class="card-desc">Anda bisa masuk setelah akun aktif.</p>'+
@@ -1461,7 +1461,7 @@ function viewLogin(register=false,adminMode=false){
     '<div class="ngd-auth-brand"><img src="'+esc(defaultBrandLogoSrc)+'" alt="" decoding="async">'+
       '<span><strong>Ngulik Digital</strong><small>'+esc(state.publicSettings?.tagline_brand||'')+'</small></span></div>'+
     '<p class="eyebrow">'+(adminMode?'AKSES PENGELOLA':'')+'</p>'+
-    '<h1>'+(adminMode?'Masuk sebagai Admin.':editorial('title'))+'</h1>'+
+    '<h1>'+(adminMode?'Masuk sebagai Admin':editorial('title'))+'</h1>'+
     '<p class="lead">'+(adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':
       editorial('description'))+'</p>'+
     (memberStaging?'<div class="ngd-auth-mode-switch" role="group" aria-label="Metode masuk member">'+
@@ -1732,10 +1732,10 @@ function viewAdminRuntime(){
 function viewAdmin(){
   if(!isAdmin())return needLogin('ruang kerja');
   const details=state.adminSummary?.ringkasan||[];
-  return '<section class="admin-operations-intro"><p class="eyebrow">PUSAT OPERASIONAL / ADMIN</p><h1>Prioritas pengelolaan hari ini.</h1><p>Tinjau pesanan dan dukungan, kemudian kelola katalog, konten, kelas, serta anggota. Data operasional tetap mengikuti izin backend.</p>'+
+  return '<div class="ngds-admin-overview"><section class="admin-operations-intro"><p class="eyebrow">PUSAT OPERASIONAL / ADMIN</p><h1>Dashboard admin</h1><p>Kelola pesanan, bantuan, katalog, konten, kelas, dan anggota. Akses data mengikuti izin backend.</p>'+
     (config.brand?.includes('STAGING')?'<span class="chip">DATA STAGING — bukan website produksi</span>':'<span class="chip">Data sesuai layanan terhubung</span>')+'</section>'+
     '<section class="admin-start-actions" aria-label="Mulai mengelola bisnis">'+
-    '<div><p class="eyebrow">PINTASAN UTAMA</p><h2>Pilih yang Mau Dikelola</h2></div>'+
+    '<div><p class="eyebrow">PINTASAN UTAMA</p><h2>Pintasan pengelolaan</h2></div>'+
     '<div class="admin-start-grid">'+[
       ['konten','Pasang banner','Atur gambar, judul dan tombol promosi.'],
       ['produk','Tambah produk','Masukkan nama, harga dan katalog.'],
@@ -1744,18 +1744,18 @@ function viewAdmin(){
     ].map(([route,heading,detail])=>'<button type="button" class="admin-start-item" data-route="'+route+'">'+
       '<strong>'+heading+' '+icon('arrow')+'</strong><small>'+detail+'</small></button>').join('')+
     '</div></section>'+
-    '<div class="admin-section-heading"><div><p class="eyebrow">OPERASIONAL</p><h2>Pantau dan tindak lanjuti</h2></div><p>Buka menu yang ingin Anda kelola.</p></div>'+ 
+    '<div class="admin-section-heading"><div><p class="eyebrow">OPERASIONAL</p><h2>Operasional</h2></div></div>'+ 
     '<div class="admin-module-grid">'+[
       ['clipboard','Pesanan','Pantau status pembayaran dan pemenuhan akses.','pesanan'],
       ['users','Kelola member','Periksa akun dan status keanggotaan.','member'],
-      ['clipboard','Tiket masuk','Jawab pertanyaan dan tindak lanjuti kendala.','dukungan'],
+      ['clipboard','Tiket bantuan','Jawab pertanyaan dan tindak lanjuti kendala.','dukungan'],
       ['clock','Antrean pendaftaran','Pantau kuota dan member menunggu.','antrean'],
       ['grid','Rilis produk','Kelola versi dan informasi pembaruan.','rilis'],
       ['shield','Pengaturan','Tinjau konfigurasi layanan yang berlaku.','pengaturan']
-    ].map(x=>'<article class="surface admin-module-card"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" data-route="'+x[3]+'">Buka materi '+icon('arrow')+'</button></article>').join('')+'</div>'+
+    ].map(x=>'<article class="surface admin-module-card"><div class="surface-icon">'+icon(x[0])+'</div><h3>'+x[1]+'</h3><p class="card-desc">'+x[2]+'</p><button class="btn btn-ghost btn-sm" data-route="'+x[3]+'">Buka '+icon('arrow')+'</button></article>').join('')+'</div>'+
     '<section class="section-gap">'+title('Ringkasan','RINGKASAN','Angka diperbarui dari data usaha.')+
     (details.length?'<div class="grid-3">'+details.slice(0,12).map(x=>'<div class="stat"><div class="stat-value">'+esc(x.nilai)+'</div><div class="stat-label">'+esc(x.metrik)+'</div></div>').join('')+'</div>':
-    empty('Ringkasan Belum Tersedia','Periksa koneksi lalu coba lagi.'))+'</section>';
+    empty('Ringkasan belum tersedia','Periksa koneksi lalu coba lagi.'))+'</section></div>';
 }
 // Read-only configuration viewer: never enables mutations and never reveals
 // operator emails, private WhatsApp numbers or Script Properties.
@@ -2018,22 +2018,22 @@ function viewServiceRequests(){
       '</header>'+
       '<section id="ngdb-packages" class="ngdb-packages" aria-labelledby="ngdb-packages-title">'+
         '<div class="ngdb-heading"><h2 id="ngdb-packages-title">Paket Jasa</h2>'+
-          '<p>Daftar dan harga ini diambil dari katalog. Untuk membeli, masuk atau daftar akun WhatsApp terlebih dahulu.</p></div>'+
+          '<p>Harga mengikuti katalog. Masuk atau daftar dengan WhatsApp untuk membeli.</p></div>'+
         (packages?'<div class="ngdb-package-list">'+packages+'</div>':
          '<div class="ngdb-no-packages"><strong>Paket jasa belum dapat ditampilkan.</strong>'+
          '<p>Cek katalog untuk pilihan terbaru, atau masuk sebagai member untuk menyampaikan kebutuhan khusus.</p>'+
          '<button type="button" class="ngdb-button ngdb-outline" data-route="katalog">Buka Katalog</button></div>')+
       '</section>'+
       '<section class="ngdb-process" aria-labelledby="ngdb-process-title">'+
-        '<div class="ngdb-heading"><p class="ngdb-overline">CARA PESAN</p><h2 id="ngdb-process-title">Alurnya sederhana.</h2></div>'+
+        '<div class="ngdb-heading"><p class="ngdb-overline">CARA PESAN</p><h2 id="ngdb-process-title">Cara memesan</h2></div>'+
         '<div class="ngdb-process-steps">'+
           '<div><span>01</span><h3>Pilih paket</h3><p>Baca rincian layanan dan harga yang tersedia.</p></div>'+
           '<div><span>02</span><h3>Masuk sebagai member</h3><p>Masuk atau daftar dengan WhatsApp. Periksa ketentuan Starter Pack sebelum membeli.</p></div>'+
-          '<div><span>03</span><h3>Ikuti prosesnya</h3><p>Bayar jika checkout tersedia, lalu pantau status melalui akun.</p></div>'+
+          '<div><span>03</span><h3>Bayar dan pantau</h3><p>Bayar jika checkout tersedia, lalu pantau status melalui akun.</p></div>'+
         '</div>'+
       '</section>'+
       '<footer class="ngdb-final"><div><h2>Permintaan Jasa Khusus</h2>'+
-        '<p>Member bisa mengirim brief untuk dibahas sebelum ada penawaran.</p></div>'+
+        '<p>Member dapat mengirim brief sebelum menerima penawaran.</p></div>'+
         '<button type="button" class="ngdb-button ngdb-primary" data-service-request>Ajukan brief '+icon('arrow')+'</button>'+
       '</footer>'+
     '</div>';

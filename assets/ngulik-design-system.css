@@ -14,6 +14,11 @@
  --ngds-heading:'Plus Jakarta Sans',system-ui,sans-serif;
  --ngds-mono:'JetBrains Mono',ui-monospace,monospace;
  --ngds-ease:cubic-bezier(.2,.8,.2,1);
+ --ngds-tint:#EAE5FF;--ngds-content-width:1180px;
+ --ngds-section-gap:clamp(28px,4vw,44px);--ngds-grid-gap:clamp(12px,1.8vw,20px);
+ --ngds-photo-overlay:linear-gradient(90deg,rgba(32,16,102,.97),rgba(32,16,102,.91) 55%,rgba(67,56,202,.20));
+ --ngds-photo-overlay-mobile:linear-gradient(180deg,rgba(67,56,202,.20),rgba(32,16,102,.91) 35%,rgba(32,16,102,.97));
+ --ngds-photo-overlay-top:linear-gradient(180deg,rgba(32,16,102,.98),rgba(32,16,102,.94) 48%,rgba(67,56,202,.20));
 }
 /* All base and component rules are under this opt-in body class. */
 body.ngd-public-app {
@@ -265,12 +270,12 @@ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero{
  background:var(--ngds-violet)!important;color:#fff!important;
  padding:clamp(24px,4vw,48px)!important;
  position:relative;display:grid;grid-template-columns:minmax(0,1fr);align-items:center;isolation:isolate;
- min-height:clamp(360px,36vw,480px);overflow:hidden;
+ min-height:clamp(380px,37vw,500px);overflow:hidden;
 }
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero::after{
  content:""!important;display:block;position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(32,16,102,.97),rgba(32,16,102,.91) 55%,rgba(67,56,202,.20));pointer-events:none;
 }
-html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero-copy{position:relative;z-index:2;max-width:600px}
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero-copy{position:relative;z-index:2;max-width:650px}
 html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdl-hero h1{
  color:#fff!important;-webkit-text-fill-color:#fff!important;
  font-size:var(--ngds-h1)!important;line-height:1.2!important;letter-spacing:-.02em;
@@ -356,12 +361,12 @@ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen  .ngdl-end .ng
  color:var(--ngds-violet)!important;
 }
 /* MEMBER — dark violet wallet + lime ledger plot, crisp cards, not white-on-white */
-html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-dashboard{
- max-width:1180px!important;gap:22px!important;
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen  .ngdm-dashboard{
+ max-width:var(--ngds-content-width)!important;gap:var(--ngds-grid-gap)!important;
 }
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-greeting{
- background:var(--ngds-bg)!important;
- padding:16px 4px 4px!important;
+ background:var(--ngds-tint)!important;
+ border:var(--ngds-line);border-radius:var(--ngds-radius);box-shadow:var(--ngds-shadow);padding:var(--ngds-pad)!important;
 }
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-greeting h1{
  font-size:var(--ngds-h1)!important;line-height:1.2!important;
@@ -458,12 +463,12 @@ html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-metric>
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-shortcuts{
  gap:12px!important;
 }
-html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-shortcut{
+html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen  .ngdm-shortcut{
  border:2px solid var(--ngds-ink)!important;
  border-radius:12px!important;
  background:var(--ngds-paper)!important;
  box-shadow:4px 4px 0 var(--ngds-ink)!important;
- min-height:121px!important;
+ min-height:116px!important;
 }
 html body.ngd-public-app[data-app-role="member"]:not(#ngd) #screen .ngdm-shortcut:hover{
  background:var(--ngds-board)!important;
@@ -491,9 +496,9 @@ html body.ngd-public-app:not(#ngd) #screen :is(.market-product-card,.ai-product-
  box-shadow:4px 4px 0 var(--ngds-ink)!important;
  color:var(--ngds-ink)!important;
 }
-html body.ngd-public-app:not(#ngd) #screen :is(.ai-catalog-intro,.ai-tool-detail-hero,.market-hero-content,.ngd-member-page-intro,.ngd-public-services-hero){
+html body.ngd-public-app:not(#ngd) #screen :is(.ai-catalog-intro,.ai-tool-detail-hero,.market-hero-content, .ngd-member-page-intro,.ngd-public-services-hero){
  border:2px solid var(--ngds-ink)!important;
- background:var(--ngds-lime)!important;
+ background:var(--ngds-tint)!important;
  border-radius:12px!important;
  box-shadow:4px 4px 0 var(--ngds-ink)!important;
  padding:var(--ngds-pad)!important;
@@ -523,8 +528,8 @@ html body.ngd-public-app:not(#ngd) #screen .market-product-price{
  font-family:var(--ngds-mono)!important;color:var(--ngds-ink)!important;
 }
 /* AFFILIATE + LMS + SUPPORT — no faded teal/beige second design language */
-html body.ngd-public-app:not(#ngd) #screen :is(.partner-hero,.partner-public-intro,.partner-member-header,.learning-intro,.learning-portal-hero,.learning-portal-promo,.ngd-help-hero){
- background:var(--ngds-lime)!important;color:var(--ngds-ink)!important;
+html body.ngd-public-app:not(#ngd) #screen :is(.partner-hero,.partner-public-intro,.partner-member-header,.learning-intro,.learning-portal-hero, .learning-portal-promo,.ngd-help-hero){
+ background:var(--ngds-tint)!important;color:var(--ngds-ink)!important;
  border:2px solid var(--ngds-ink)!important;
  border-radius:12px!important;box-shadow:4px 4px 0 var(--ngds-ink)!important;
 }
@@ -554,7 +559,7 @@ html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-ope
  background:var(--ngds-paper)!important;
 }
 html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-operations-intro,.admin-start-item:first-child){
- background:var(--ngds-lime)!important;
+ background:var(--ngds-tint)!important;
 }
 html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-operations-intro,.admin-start-item:first-child) :is(h1,h2,h3,p){
  color:var(--ngds-ink)!important;
@@ -563,6 +568,13 @@ html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-ope
  font-family:var(--ngds-heading)!important;
 }
 html body.ngd-public-app[data-app-role="admin"]:not(#ngd) #screen :is(.admin-runtime-flags,.admin-stats,.admin-modules) {min-width:0}
+/* Pro overview: an explicit page composition, not another route palette. */
+.ngds-admin-overview{display:grid;gap:var(--ngds-grid-gap);max-width:var(--ngds-content-width);margin-inline:auto;min-width:0}
+.ngds-admin-overview .section-gap{margin-top:0}
+.ngds-admin-overview .admin-module-card{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0}
+.ngds-admin-overview .admin-module-card .card-desc{flex:1;margin:0}
+.ngds-admin-overview .admin-module-card button{margin-top:auto;min-height:44px}
+.ngds-admin-overview .admin-start-actions{padding:var(--ngds-pad);border:var(--ngds-line);border-radius:var(--ngds-radius);background:var(--ngds-paper);box-shadow:var(--ngds-shadow)}
 /* Shared page hierarchy, not a separate role theme. Preserve widget-specific headings. */
 body.ngd-public-app #screen :is(.market-header,.ngdb-hero,.ngdb-help-intro,.ai-catalog-intro,.ngd-member-page-intro,.ngd-member-services,.partner-public-intro,.partner-hero,.learning-intro,.learning-portal-hero,.ngd-help-hero,.admin-operations-intro,.checkout-heading) h1{font-size:var(--ngds-h1);line-height:1.2}
 body.ngd-public-app #screen :is(.ngdl-section-top,.ngdb-heading,.ngdm-section-head,.market-results-header,.admin-module-card) h2{font-size:var(--ngds-h2);line-height:1.25}
@@ -904,7 +916,7 @@ html body.ngd-public-app:not(#ngd) #screen .ngd-window-frame>.ngd-window-titleba
  min-height:46px;
  margin:calc(-1 * var(--ngd-window-pad-y)) calc(-1 * var(--ngd-window-pad-x)) 18px;
  padding:9px 16px;
- background:#EAE5FF!important;
+ background:var(--ngds-tint)!important;
  color:#111827!important;
  border-bottom:2px solid #111827;
  border-radius:0;

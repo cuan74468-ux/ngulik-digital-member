@@ -702,7 +702,7 @@ body.ngd-public-app:not(#ngd) .admin-start-actions h2{
   font-size:clamp(1.32rem,2.25vw,1.8rem);margin:0;
 }
 body.ngd-public-app:not(#ngd) .admin-start-grid{
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--ngds-grid-gap);
 }
 body.ngd-public-app:not(#ngd) .admin-start-item{
   display:flex;flex-direction:column;text-align:left;align-items:flex-start;
@@ -900,7 +900,7 @@ html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #s
 html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-intro{
   display:flex;align-items:center;justify-content:space-between;gap:24px;
   padding:clamp(24px,3.3vw,43px);min-height:0;margin:0;
-  background:linear-gradient(115deg,#f2eeff 0%,#faf8ff 72%);border:1px solid #e9e3fb;
+  background:var(--ngds-tint);border:var(--ngds-line);
   border-radius:23px;box-shadow:none
 }
 html body.ngd-public-app[data-app-role="member"][data-member-route="belajar"] #screen .learning-intro-copy{min-width:0;flex:1}
@@ -1014,7 +1014,7 @@ html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #sc
   max-width:1120px;gap:21px
 }
 html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-hero{
-  border:1px solid #e9e2fa;background:#f5f2ff;color:#2a2343;box-shadow:none;border-radius:22px
+  border:var(--ngds-line);background:var(--ngds-tint);color:var(--ngds-ink);box-shadow:var(--ngds-shadow);border-radius:var(--ngds-radius)
 }
 html body.ngd-public-app[data-app-role="member"][data-member-route="portal"] #screen .learning-portal-hero h2{
   color:#27213d;font-size:clamp(1.75rem,3.3vw,2.6rem);max-width:25ch
