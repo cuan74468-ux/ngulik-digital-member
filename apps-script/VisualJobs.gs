@@ -36,8 +36,10 @@ function ngdVjPolicy_(config){
 function ngdVjHex_(v){return typeof v==='string'&&/^[a-f0-9]{64}$/i.test(v);}
 function ngdVjSignature_(bytes,mime){
  if(!bytes||bytes.length<12)return false;
- if(mime==='image/png')return bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71&&bytes[4]===13;
- if(mime==='image/jpeg')return bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
+ // GAS byte arrays may contain signed bytes; compare the unsigned octets.
+ var b=function(i){return bytes[i]&255;};
+ if(mime==='image/png')return b(0)===137&&b(1)===80&&b(2)===78&&b(3)===71&&b(4)===13;
+ if(mime==='image/jpeg')return b(0)===255&&b(1)===216&&b(2)===255;
  if(mime==='image/webp')return String.fromCharCode.apply(null,Array.prototype.slice.call(bytes,0,4))==='RIFF'&&
   String.fromCharCode.apply(null,Array.prototype.slice.call(bytes,8,12))==='WEBP';
  return false;

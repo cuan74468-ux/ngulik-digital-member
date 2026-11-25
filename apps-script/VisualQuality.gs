@@ -128,7 +128,7 @@ function ngdVisualImageDimensions_(bytes,mime){
 function ngdVisualOutputGeometry_(bytes,mime,format){
  var ratio={'4:5':4/5,'1:1':1,'9:16':9/16,'3:4':3/4}[format];
  var d=ngdVisualImageDimensions_(bytes,mime);
- if(!ratio||!d)return {ok:false,reason:'OUTPUT_HEADER_INVALID'};
+ if(!Number.isFinite(ratio)||ratio<=0||!d)return {ok:false,reason:'OUTPUT_HEADER_INVALID'};
  if(Math.min(d.width,d.height)<512||Math.max(d.width,d.height)>8192||d.width*d.height>20000000)
   return {ok:false,reason:'OUTPUT_SIZE_INVALID'};
  if(Math.abs((d.width/d.height)/ratio-1)>0.02)return {ok:false,reason:'OUTPUT_RATIO_MISMATCH'};

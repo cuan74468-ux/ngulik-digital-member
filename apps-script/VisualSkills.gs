@@ -356,11 +356,15 @@ function ngdFoodMagazinePrivateRegistry_(r){
  ngdVisualRequire_(ngdVisualIsPlain_(r)&&
   typeof r.version==='string'&&/^food-magazine-v2[._-][A-Za-z0-9._-]{1,50}$/.test(r.version),
   'FOOD_REGISTRY_VERSION_INVALID');
- ['role','preservation','food_type','cover_concept','camera_angle',
-  'lighting','surface','grade','styling','lens','format','similarity',
-  'quality','negative'].forEach(function(k){
-  ngdVisualRequire_(typeof r[k]==='string'||ngdVisualIsPlain_(r[k]),
-   'FOOD_REGISTRY_'+k.toUpperCase()+'_INVALID');
+ ['role','preservation','quality','negative'].forEach(function(k){
+  ngdVisualConfigString_(r[k],'FOOD_REGISTRY_'+k.toUpperCase(),{role:1400,preservation:1700,quality:1600,negative:1800}[k]);
+ });
+ Object.keys(NGD_FOOD_MAGAZINE_IDS_).forEach(function(group){
+  ngdVisualRequire_(ngdVisualIsPlain_(r[group]),'FOOD_REGISTRY_'+group.toUpperCase()+'_INVALID');
+  NGD_FOOD_MAGAZINE_IDS_[group].forEach(function(id){
+   ngdVisualRequire_(ngdVisualOwn_(r[group],id),'FOOD_REGISTRY_SKILL_MISSING');
+   ngdVisualConfigString_(r[group][id],'FOOD_REGISTRY_SKILL',1500);
+  });
  });
  return r;
 }
@@ -390,7 +394,7 @@ var NGD_VISUAL_MACHINE_CATALOG_=Object.freeze({
   description:'Direkomendasikan untuk mempertahankan bentuk produk dan kemasan.',
   credits_per_image:3,provider_group:'flux'}),
  flux_2_pro:Object.freeze({id:'flux_2_pro',
-  name:'Komersial Ultra HD',model:'FLUX.2 Pro',
+  name:'Detail Komersial',model:'FLUX.2 Pro',
   description:'Detail tekstur untuk materi iklan utama.',
   credits_per_image:4,provider_group:'flux'})
 });

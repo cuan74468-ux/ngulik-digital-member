@@ -264,3 +264,12 @@ test('studio does not claim refund at intermediate failure and requires a verifi
  assert.doesNotMatch(js,/Tidak ada pembayaran nyata yang diproses/);
  assert.match(code('VisualWorker.gs'),/ngdVisualOutputGeometry_\(bytes,mime,format\)/);
 });
+
+test('GAS signed binary signatures and uncertain request keys remain safe',()=>{
+ const c=runtime();
+ assert.equal(c.ngdVjSignature_([-119,80,78,71,13,10,26,10,0,0,0,0],'image/png'),true);
+ assert.equal(c.ngdVjSignature_([-1,-40,-1,0,0,0,0,0,0,0,0,0],'image/jpeg'),true);
+ const js=fs.readFileSync(path.join(root,'js/ai-studio.js'),'utf8');
+ assert.match(js,/if\(q.total_credits!==getCost\(\)\)\{if\(!liveInputAsset\)resetVisualLiveRequest/);
+ assert.match(js,/if\(liveRequestKey\)\{if\(liveBridgeReady\(\)\)void runVisualLive/);
+});

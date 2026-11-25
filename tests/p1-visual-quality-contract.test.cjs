@@ -124,6 +124,7 @@ test('output geometry uses binary headers and rejects wrong ratio, size and unkn
  assert.equal(c.ngdVisualOutputGeometry_(png(1080,1080),'image/png','4:5').reason,'OUTPUT_RATIO_MISMATCH');
  assert.equal(c.ngdVisualOutputGeometry_(png(400,500),'image/png','4:5').reason,'OUTPUT_SIZE_INVALID');
  assert.equal(c.ngdVisualOutputGeometry_(png(1080,1350),'image/png','2:3').ok,false);
+ assert.equal(c.ngdVisualOutputGeometry_(png(1080,1350),'image/png','__proto__').ok,false);
  assert.equal(c.ngdVisualOutputGeometry_(Array(33).fill(0),'image/png','4:5').ok,false);
  const jpeg=[255,216,255,192,0,17,8,5,70,4,56,3,1,17,0,2,17,0,3,17,0,255,217,0];
  assert.equal(c.ngdVisualOutputGeometry_(jpeg,'image/jpeg','4:5').ok,true);

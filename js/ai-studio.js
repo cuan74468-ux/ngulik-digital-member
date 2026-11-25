@@ -590,9 +590,9 @@ async function runVisualLive(){
     !Number.isSafeInteger(q.unit_credits)||q.unit_credits<1||
     !Number.isSafeInteger(q.total_credits)||q.total_credits!==q.unit_credits*q.count||
     q.server_authoritative!==true)throw Error('VISUAL_QUOTE_UNAVAILABLE');
-   if(q.total_credits!==getCost()){resetVisualLiveRequest();announce('Tarif server berubah. Jangan lanjut sebelum tarif diperbarui.');return;}
+   if(q.total_credits!==getCost()){if(!liveInputAsset)resetVisualLiveRequest();announce('Tarif server berubah. Jangan lanjut sebelum tarif diperbarui.');return;}
    // Older deployments cannot safely report the actual dedicated wallet.
-   if(q.wallet_kind!=='VISUAL'||!Number.isSafeInteger(q.available_credits)||q.available_credits<0){resetVisualLiveRequest();announce('Saldo Visual belum dapat diverifikasi.');return;}
+   if(q.wallet_kind!=='VISUAL'||!Number.isSafeInteger(q.available_credits)||q.available_credits<0){if(!liveInputAsset)resetVisualLiveRequest();announce('Saldo Visual belum dapat diverifikasi.');return;}
    if(!liveInputAsset&&q.available_credits<q.total_credits){resetVisualLiveRequest();liveStatus='Saldo Visual '+q.available_credits+' kredit, dibutuhkan '+q.total_credits+'. Top-up token member belum mengisi dompet Visual.';updateLiveStatus();announce(liveStatus);return;}
    liveQuote=q;liveStatus='Tarif terkonfirmasi server. Mengunggah foto privat…';
    updateLiveStatus();
@@ -776,7 +776,7 @@ function chooseQuickStyle(id){
  return true;
 }
 function quickLocked(){return livePolling||!!liveRequestKey;}
-function quickReady(){return (!!liveJobId||!!liveInputAsset||!!selectedLocalFile&&foodQuality.status==='pass')&&!state.busy&&!livePolling;}
+function quickReady(){return (!liveRequestKey||liveBridgeReady())&&(!!liveJobId||!!liveInputAsset||!!selectedLocalFile&&foodQuality.status==='pass')&&!state.busy&&!livePolling;}
 function syncQuickAction(){
  const button=node('ns-quick-generate');if(button)button.disabled=!quickReady();
 }
@@ -904,6 +904,7 @@ async function simulate(){if(state.busy)return;if(!state.photo){announce('Pilih 
 function handleClick(event){const target=event.target.closest('button');if(!target||!root.contains(target))return;if(quickLocked()&&target.id!=='ns-quick-generate'&&target.id!=='ns-food-live-generate'){announce('Selesaikan atau periksa status job sebelum mengubah pengaturan.');return}if(target.id==='ns-quick-upload'){node('ns-file')?.click();return}
 if(target.dataset.quickStyle){chooseQuickStyle(target.dataset.quickStyle);return}
 if(target.id==='ns-quick-generate'){
+ if(liveRequestKey){if(liveBridgeReady())void runVisualLive();else announce('Job menunggu pemeriksaan. Jangan membuat permintaan baru.');return;}
  if(!selectedLocalFile){announce('Unggah foto produk dari HP terlebih dahulu.');return}
  if(foodQuality.status!=='pass'){announce('Foto belum lolos pemeriksaan dasar. Coba foto yang lebih terang dan fokus.');return}
  if(liveBridgeReady()){void runVisualLive();return}
