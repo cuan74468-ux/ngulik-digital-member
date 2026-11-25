@@ -20,7 +20,8 @@ async function ciGate(env=process.env,api=github){
 }
 function localHead(){return cp.execFileSync('git',['rev-parse','HEAD'],{cwd:p.root,encoding:'utf8'}).trim();}
 function clasp(cwd,args){
- const result=cp.spawnSync(process.env.CLASP_BIN||'clasp',['--json',...args],{cwd,encoding:'utf8',timeout:90000,maxBuffer:8*1024*1024,stdio:['ignore','pipe','pipe']});
+ const env={...process.env};delete env.GITHUB_TOKEN;delete env.GAS_STAGING_SCRIPT_ID;
+ const result=cp.spawnSync(process.env.CLASP_BIN||'clasp',['--json',...args],{cwd,env,encoding:'utf8',timeout:90000,maxBuffer:8*1024*1024,stdio:['ignore','pipe','pipe']});
  // Never emit raw output or errors: private source and credentials may be present.
  check(!result.error&&result.status===0,'CLASP_FAILED: '+args[0]);
  try{return JSON.parse(result.stdout);}catch{throw Error('CLASP_JSON_UNVERIFIED: '+args[0]);}
@@ -71,6 +72,34 @@ async function health(endpoint,files){
  check(marker&&info.source_revision===marker[1],'STAGING_SOURCE_REVISION_UNVERIFIED');
  return JSON.stringify(keys.map(k=>identity[k]));
 }
+
+// Recovery is deliberately conservative: never overwrite an unknown version
+// or an unknown editor state. A lost runner is an operator recovery incident.
+async function recover(g,{head,live,r,newVersion,restoreDir},checkHealth){
+ const outcome={versionRestored:false,sourceRestored:false,healthRestored:false};
+ try{
+  const current=g.deployment(head.dir).versionNumber;
+  if(current!==live.versionNumber){
+   check(newVersion!==undefined&&current===newVersion,'UNRELATED_DEPLOYMENT');
+   g.redeploy(restoreDir,live.versionNumber,live.description);
+  }
+  check(g.deployment(head.dir).versionNumber===live.versionNumber,'ROLLBACK_DEPLOYMENT_UNCERTAIN');
+  outcome.versionRestored=true;
+ }catch{return outcome;}
+ try{
+  const current=g.clone().digest;
+  if(current!==head.digest){
+   check(current===r.candidateDigest,'UNRELATED_EDITOR_SOURCE');
+   // Recheck the known deployment before touching HEAD.
+   check(g.deployment(head.dir).versionNumber===live.versionNumber,'ROLLBACK_DEPLOYMENT_MOVED');
+   g.push(restoreDir);
+  }
+  check(g.clone().digest===head.digest,'ROLLBACK_EDITOR_UNCERTAIN');
+  outcome.sourceRestored=true;
+ }catch{return outcome;}
+ try{outcome.healthRestored=await checkHealth()===true;}catch{}
+ return outcome;
+}
 async function run(mode){
  check(['audit','deploy'].includes(mode),'MODE_INVALID');
  check(process.env.GITHUB_REPOSITORY===REPO&&process.env.GITHUB_REF==='refs/heads/main'&&process.env.GITHUB_EVENT_NAME==='workflow_dispatch'&&localHead()===process.env.GITHUB_SHA,'UNTRUSTED_CHECKOUT');
@@ -117,22 +146,12 @@ async function run(mode){
    if(attempted){
     // Do not overwrite an unexpected manual change. Treat uncertain state as
     // an incident: recovery version survives loss of runner/local filesystem.
-    let versionRestored=false,sourceRestored=false;
-    try{
-     const current=g.deployment(head.dir).versionNumber;
-     if(current===newVersion&&newVersion!==undefined)g.redeploy(restoreDir,live.versionNumber,live.description);
-     check(g.deployment(head.dir).versionNumber===live.versionNumber,'ROLLBACK_DEPLOYMENT_UNCERTAIN');
-     versionRestored=true;
-    }catch{console.error('ROLLBACK_DEPLOYMENT_MANUAL_REQUIRED');}
-    try{
-     const current=g.clone().digest;
-     if(current===r.candidateDigest&&current!==head.digest)g.push(restoreDir);
-     check(g.clone().digest===head.digest,'ROLLBACK_EDITOR_UNCERTAIN');
-     sourceRestored=true;
-    }catch{console.error('ROLLBACK_EDITOR_MANUAL_REQUIRED');}
-    if(versionRestored&&sourceRestored){
-     try{check(await health(ep.url,backup.files)===beforeFlags,'ROLLBACK_FLAGS_UNVERIFIED');console.log('ROLLBACK_BOTH_VERIFIED');}
-     catch{console.error('ROLLBACK_ENDPOINT_MANUAL_REQUIRED');}
+    const outcome=await recover(g,{head,live,r,newVersion,restoreDir},async()=>await health(ep.url,backup.files)===beforeFlags);
+    if(!outcome.versionRestored)console.error('ROLLBACK_DEPLOYMENT_MANUAL_REQUIRED');
+    if(!outcome.sourceRestored)console.error('ROLLBACK_EDITOR_MANUAL_REQUIRED');
+    if(outcome.versionRestored&&outcome.sourceRestored){
+     if(outcome.healthRestored)console.log('ROLLBACK_BOTH_VERIFIED');
+     else console.error('ROLLBACK_ENDPOINT_MANUAL_REQUIRED');
     }
     console.error('RECOVERY_VERSION: '+live.versionNumber+'; do not blindly retry');
    }
@@ -140,5 +159,5 @@ async function run(mode){
   }
  }finally{fs.rmSync(work,{recursive:true,force:true});}
 }
-module.exports={ciGate,required,session};
+module.exports={ciGate,required,session,recover};
 if(require.main===module)run(process.argv[2]||'audit').catch(e=>{console.error('STOP: '+e.message);process.exitCode=1;});

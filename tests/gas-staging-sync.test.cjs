@@ -40,3 +40,34 @@ test('CI gate binds main and all three successful workflow runs to exact commit'
  }
  await a.rejects(runner.ciGate(env,async route=>route.includes('/git/ref/')?{object:{sha}}:{workflow_runs:[{...ok,head_sha:'2'.repeat(40)}]}),/CI_NOT_GREEN/);
 });
+
+function recoveryFixture(version=35,digest='candidate'){
+ const calls=[];
+ const g={
+  deployment:()=>({versionNumber:version}),
+  clone:()=>({digest}),
+  redeploy:(dir,v,description)=>{calls.push(['redeploy',dir,v,description]);version=v;},
+  push:dir=>{calls.push(['push',dir]);digest='baseline';}
+ };
+ const state={head:{dir:'head',digest:'baseline'},live:{versionNumber:34,description:'prior'},r:{candidateDigest:'candidate'},newVersion:35,restoreDir:'private-backup'};
+ return {g,state,calls};
+}
+test('rollback restores existing deployment version AND editor independently; verifies read-only health',async()=>{
+ const {g,state,calls}=recoveryFixture();
+ const result=await runner.recover(g,state,async()=>true);
+ a.deepEqual(result,{versionRestored:true,sourceRestored:true,healthRestored:true});
+ a.deepEqual(calls,[['redeploy','private-backup',34,'prior'],['push','private-backup']]);
+});
+test('rollback refuses unknown deployment or unknown manual source; does not blindly retry',async()=>{
+ const unexpected=recoveryFixture(36);
+ a.deepEqual(await runner.recover(unexpected.g,unexpected.state,async()=>true),{versionRestored:false,sourceRestored:false,healthRestored:false});
+ a.deepEqual(unexpected.calls,[]);
+ const edited=recoveryFixture(34,'manual-edit');
+ a.deepEqual(await runner.recover(edited.g,edited.state,async()=>true),{versionRestored:true,sourceRestored:false,healthRestored:false});
+ a.deepEqual(edited.calls,[]);
+});
+test('rollback when only HEAD changed does not redeploy an already restored live version',async()=>{
+ const x=recoveryFixture(34);
+ a.deepEqual(await runner.recover(x.g,x.state,async()=>false),{versionRestored:true,sourceRestored:true,healthRestored:false});
+ a.deepEqual(x.calls,[['push','private-backup']]);
+});
