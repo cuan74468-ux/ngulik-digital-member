@@ -24,3 +24,17 @@ test('pending approval and changed fingerprints fail closed',()=>{
  a.throws(()=>p.authorize({...r,candidateDigest:'x'},34,approved),/MISMATCH/);
  a.throws(()=>p.authorize(r,34,{approval:{...approved.approval,triggerHandlers:['missing']}}),/TRIGGER/);
 });
+
+const runner=require('../scripts/gas-staging-run.cjs');
+test('CI gate binds main and all three successful workflow runs to exact commit',async()=>{
+ const sha='1'.repeat(40),env={GITHUB_REPOSITORY:'cuan74468-ux/ngulik-digital-member',GITHUB_REF:'refs/heads/main',GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_SHA:sha,GITHUB_TOKEN:'fixture'};
+ const ok={head_sha:sha,head_branch:'main',event:'push',status:'completed',conclusion:'success',created_at:'2026-11-25T00:00:00Z',id:1};
+ const api=async route=>route.includes('/git/ref/')?{object:{sha}}:{workflow_runs:[ok]};
+ await runner.ciGate(env,api);
+ await a.rejects(runner.ciGate({...env,GITHUB_REF:'refs/heads/topic'},api),/UNTRUSTED/);
+ await a.rejects(runner.ciGate(env,async route=>route.includes('/git/ref/')?{object:{sha:'2'.repeat(40)}}:{workflow_runs:[ok]}),/MAIN_MOVED/);
+ for(const conclusion of ['failure','cancelled','skipped',null]){
+  await a.rejects(runner.ciGate(env,async route=>route.includes('/git/ref/')?{object:{sha}}:{workflow_runs:[{...ok,conclusion}]}),/CI_NOT_GREEN/);
+ }
+ await a.rejects(runner.ciGate(env,async route=>route.includes('/git/ref/')?{object:{sha}}:{workflow_runs:[{...ok,head_sha:'2'.repeat(40)}]}),/CI_NOT_GREEN/);
+});
