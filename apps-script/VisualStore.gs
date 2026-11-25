@@ -95,8 +95,8 @@ function ngdVisualStoreDrive_(clock){
   },
   listExpired:function(time,cap){
    return read(function(s){return Object.keys(s.jobs).map(function(k){return s.jobs[k];})
-    .filter(function(j){return ['RESERVED','PROCESSING'].indexOf(j.status)>=0&&
-      j.expires_at<time;}).slice(0,Math.min(cap||50,100));});
+    .filter(function(j){return ['SUCCEEDED','PARTIAL_SUCCEEDED','FAILED'].indexOf(j.status)>=0||
+      (['RESERVED','PROCESSING'].indexOf(j.status)>=0&&j.expires_at<time);}).slice(0,Math.min(cap||50,100));});
   }
  };
  var ledger={
@@ -210,7 +210,7 @@ function ngdVisualStoreDrive_(clock){
   },
   next:function(limit){
    return read(function(s){return Object.keys(s.queue).filter(function(id){
-     var j=s.jobs[id];return j&&['RESERVED','PROCESSING'].indexOf(j.status)>=0;
+     var j=s.jobs[id];return j&&['RESERVED','PROCESSING','SUCCEEDED','PARTIAL_SUCCEEDED','FAILED'].indexOf(j.status)>=0;
    }).slice(0,Math.min(limit||2,10));});
   }
  };

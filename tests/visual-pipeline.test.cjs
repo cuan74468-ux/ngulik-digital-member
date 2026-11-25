@@ -239,3 +239,18 @@ test('frontend stays SIMULATION until a bridge is configured; default recommende
  assert.equal(api.adapterMode,'SIMULATION');
  api.configureVisualPipeline(null);
 });
+
+test('interrupted settlement and refund are recovered without another dispatch or reserve',()=>{
+ const c=runtime(),f=fake(),api=c.ngdVisualJobs_(f.d);
+ const id=api.create('alice_session',request()).job_id;api.process(id,'trusted_worker');
+ image(f,'asset_recovery_001','alice',id);
+ const row=f.records.get(id);row.status='SUCCEEDED';row.result_asset_ids=['asset_recovery_001'];
+ const id2=api.create('alice_session',request('flux_kontext_pro','idempotent_recovery_002')).job_id;
+ f.records.get(id2).status='FAILED';f.records.get(id2).error_code='PROVIDER_FAILED';
+ f.d.jobs.listExpired=()=>Array.from(f.records.values()).filter(j=>['SUCCEEDED','PARTIAL_SUCCEEDED','FAILED'].includes(j.status));
+ api.expire('trusted_worker');api.expire('trusted_worker');
+ assert.equal(f.records.get(id).status,'SETTLED');
+ assert.equal(f.records.get(id2).status,'REFUNDED');
+ assert.equal(f.stats.reserve,2);assert.equal(f.stats.settle,1);assert.equal(f.stats.refund,1);
+ assert.equal(f.stats.queued,2);
+});

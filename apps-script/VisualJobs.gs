@@ -224,6 +224,8 @@ function ngdVisualJobs_(dependencies){
   // External scheduler invokes this bounded cleanup, no GAS trigger installed.
   var affected=d.jobs.listExpired(now(),100);
   return affected.map(function(job){
+   if(['SUCCEEDED','PARTIAL_SUCCEEDED'].indexOf(job.status)>=0)return settle(job.id,worker);
+   if(job.status==='FAILED')return fail(job.id,worker,job.error_code||'PROVIDER_FAILED');
    if(d.slots&&typeof d.slots.expireUncertain==='function'){
     d.slots.expireUncertain(job.id,job.count);
     var partial=d.slots.summary(job.id,job.count);

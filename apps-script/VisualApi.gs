@@ -200,7 +200,7 @@ function ngdVisualPreparePrivateRegistryStaging(){
   return {ready:true,already_configured:true,overwritten:false};
  }
  var registry={
-  version:'food-magazine-v2.1',
+  version:'food-magazine-v2.2',
   role:'Commercial photographic retouch of the UPLOADED real product photo only.',
   preservation:'Preserve genuine product geometry, original ingredients, packaging, logo, and printed label; never invent items or words.',
   quality:'Plausible optics, texture, gravity, contact shadows, accurate real glass and liquid refraction.',
@@ -221,7 +221,7 @@ function ngdVisualPreparePrivateRegistryStaging(){
  Object.keys(NGD_FOOD_MAGAZINE_IDS_).forEach(function(group){
   registry[group]={};
   NGD_FOOD_MAGAZINE_IDS_[group].forEach(function(id){
-   registry[group][id]=neutral[group]+' (selection '+id+').';
+   registry[group][id]=ngdFoodPhotoLockedSkill_(group,id);
   });
  });
  var json=JSON.stringify(registry);

@@ -54,6 +54,8 @@ function ngdVisualWorker_(auth,worker){
   if(!ids.length)return {state:'IDLE'};
   var id=ids[0],job=store.jobs.get(id);
   if(!job||['REFUNDED','SETTLED'].indexOf(job.status)>=0)return {state:'IDLE'};
+  if(['SUCCEEDED','PARTIAL_SUCCEEDED'].indexOf(job.status)>=0)return jobs.settle(id,worker);
+  if(job.status==='FAILED')return jobs.fail(id,worker,job.error_code||'PROVIDER_FAILED');
   if(job.status==='RESERVED')jobs.process(id,worker);
   job=store.jobs.get(id);
   store.slots.initialize(id,job.count);

@@ -211,6 +211,91 @@ var NGD_FOOD_MAGAZINE_PRESETS_=Object.freeze({
  warung:{lighting:'window',surface:'bamboo',grade:'warm'},
  fine_dining:{lighting:'softbox',surface:'concrete',grade:'cool'}
 });
+// Server-side baseline skill lock. Public source contains generic professional
+// constraints, not the operator's private recipe registry or credentials.
+// The selected scenario has precedence over incompatible optional optics.
+var NGD_FOOD_PHOTO_LOCKS_=Object.freeze({
+ food_type:Object.freeze({
+  soup:'Retain the actual bowl, broth level and portions; natural sheen and steam only for genuinely hot food.',
+  rice:'Retain real grain structure, mound, sides and portions; no invented garnish.',
+  bakery:'Show actual crumb and crust with controlled highlights; never invent fillings.',
+  snack:'Resolve genuine crisp texture and original count; no artificial coating or extra pieces.',
+  drink:'Retain true liquid hue, opacity, level, container and cap; realistic refraction.',
+  dessert:'Retain actual layers, decoration and portion; accurate soft textures without invented toppings.'
+ }),
+ cover_concept:Object.freeze({
+  classic:'Balanced commercial hero composition with uncluttered setting.',
+  minimal:'Sparse set with one clear subject and deliberate negative space.',
+  hero:'Dominant product silhouette, no competing objects or misleading scale.',
+  flatlay:'Orderly overhead composition only where source geometry supports it.',
+  dramatic:'Low-key surroundings with readable product edges and label.',
+  bright:'High-key surroundings, protected highlights and true product color.',
+  warung:'Authentic clean Indonesian small-business setting, restrained props.',
+  fine_dining:'Refined uncluttered editorial setting; preserve actual serving and quantity.'
+ }),
+ camera_angle:Object.freeze({
+  top90:'Overhead framing only if compatible with the locked scenario and source.',
+  angle45:'Natural three-quarter perspective, no stretched geometry.',
+  eye:'Eye-level perspective, straight verticals and visible label.',
+  macro:'Close detail without sacrificing the recognizability of the whole product.',
+  diagonal:'Subtle diagonal composition, not distorted product perspective.',
+  low:'Low angle only when it does not obscure or distort the original product.'
+ }),
+ lighting:Object.freeze({
+  window:'Diffused window key and gentle fill, natural color.',
+  golden:'Warm background light without recoloring the product.',
+  side:'Controlled lateral key revealing true texture.',
+  softbox:'Large diffused studio key with restrained specular highlights.',
+  backlight:'Rim light behind subject, preserve label readability.',
+  candle:'Warm low-key practical ambience without darkening product details.'
+ }),
+ surface:Object.freeze({
+  dark_wood:'Matte dark wood with physically grounded shadows.',
+  white_marble:'Clean pale stone, subtle veins outside the subject.',
+  concrete:'Neutral mineral surface with restrained texture.',
+  bamboo:'Authentic clean bamboo surface; do not obscure product.',
+  linen:'Natural neutral fabric, no competing patterns.',
+  plain_white:'Seamless neutral white background and soft contact shadow.'
+ }),
+ grade:Object.freeze({
+  warm:'Warm surroundings, retain original product and label hues.',
+  cool:'Cool surroundings, retain original product and label hues.',
+  earthy:'Muted natural tones, accurate product colors.',
+  vivid:'Controlled contrast and saturation, no clipping or color distortion.',
+  matte:'Gentle highlight roll-off and natural blacks, not washed out.',
+  brand:'Preserve reference brand palette; no invented logos or recoloring.'
+ }),
+ styling:Object.freeze({
+  minimal:'No additional decoration unless required by the selected scenario.',
+  ingredients:'Only visually confirmed ingredients; no invented contents.',
+  steam:'Thin physically plausible steam only for hot food, never over a label.',
+  sauce:'Show only existing sauce and true quantity.',
+  sprinkle:'Only confirmed original topping material, never obscuring subject.',
+  hand:'Do not invent a hand or model; preserve a hand only if present in reference.'
+ }),
+ lens:Object.freeze({
+  mm35:'Natural wider context, straight lines without edge stretching.',
+  mm50:'Natural commercial perspective with controlled depth of field.',
+  mm85:'Compressed product perspective and clean separation from background.',
+  macro100:'Resolve true surface detail, preserve full identity and readable label.'
+ }),
+ format:Object.freeze({
+  '4:5':'Portrait 4:5, protect entire product and breathing room.',
+  '1:1':'Square 1:1, center balanced product and clear margins.',
+  '9:16':'Vertical 9:16, preserve full product within story-safe central region.',
+  '3:4':'Portrait 3:4, preserve full product and proportional framing.'
+ }),
+ similarity:Object.freeze({
+  exact:'Strict source fidelity: never alter SKU, label, material, geometry or quantity.',
+  enhanced:'Enhance only lighting, texture visibility and background; same strict product identity.'
+ })
+});
+function ngdFoodPhotoLockedSkill_(group,id){
+ ngdVisualRequire_(ngdVisualOwn_(NGD_FOOD_PHOTO_LOCKS_,group)&&
+  ngdVisualOwn_(NGD_FOOD_PHOTO_LOCKS_[group],id),'FOOD_LOCKED_SKILL_MISSING');
+ return NGD_FOOD_PHOTO_LOCKS_[group][id];
+}
+
 function ngdFoodMagazineCompatible_(ids){
  return !(ids.cover_concept==='dramatic'&&ids.surface==='plain_white')&&
    !(ids.cover_concept==='bright'&&ids.lighting==='candle')&&
@@ -256,7 +341,7 @@ function ngdFoodMagazineInput_(payload){
  // Client-estimated credit is never authoritative for actual billing.
  ngdVisualRequire_(payload.credit_per_image===undefined,'FOOD_CLIENT_CREDIT_FORBIDDEN');
  var notes=ngdVisualText_(payload.user_notes,240,'food_notes');
- ngdVisualRequire_(!/(ignore (all |previous |prior )?instructions|system prompt|developer message|role:|api[_ -]?key|secret|password)/i.test(notes),
+ ngdVisualRequire_(!/(ignore (all |previous |prior )?instructions|system prompt|developer message|role:|api[_ -]?key|secret|password|abaikan (semua |instruksi |aturan )|lupakan (instruksi|aturan)|ganti (prompt|instruksi)|bocorkan|kata sandi|\[0[1-9]_|\[1[0-2]_)/i.test(notes),
   'FOOD_NOTES_UNSAFE');
  return {ids:ids,count:count,brand_hex:hex,user_notes:notes,
   context:ngdVisualContextInput_(payload),

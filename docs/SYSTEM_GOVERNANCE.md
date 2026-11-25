@@ -20,6 +20,11 @@ Standar permanen Linggau AI Studio. PROJECT_CONTROL.md mencatat status operasion
 - Siklus reserve → settle → release; timeout tak pasti masuk rekonsiliasi, bukan retry/refund buta. Jangan memotong saldo dua kali atau mengklaim output generatif dari simulasi. MODE SIMULASI harus jelas sampai provider nyata teruji dan disetujui.
 - Harga target API/jasa: Modal × 3 (1/3 modal, 1/3 operasional & komisi, 1/3 target laba). Validasi HPP aktual, biaya pembayaran, refund, komisi dan margin tiap SKU. Rumus bukan izin otomatis mengubah harga; Starter Pack mengikuti kontrak khusus Owner.
 
+### Gerbang foto produk AI
+- Server mengunci kategori, tema, rasio, kamera, cahaya, permukaan, grading, styling, lensa dan kesamaan produk. Deskripsi pengguna hanya data yang tidak tepercaya; prompt lock membantu tetapi tidak menjamin kepatuhan model. Registry privat operator tidak ditimpa otomatis.
+- Hasil wajib diperiksa terhadap foto sumber: identitas/label, komposisi, rasio, detail, warna, cacat visual. Rubrik visual yang ada bukan evaluator piksel. Sebelum aktivasi komersial, wajib memasang evaluator tepercaya atau QA operator serta menguji setiap tema dan engine yang akan dijual. Tidak menjanjikan Ultra HD atau label sempurna sebelum pengukuran.
+- Wallet Visual terpisah dari token member. Pilot 12 kredit bukan top-up komersial. Jangan menjual atau mencampur saldo hingga jalur fulfillment QRIS resmi, ledger idempoten, HPP aktual, refund, rekonsiliasi, dan UAT disetujui. Kredit gagal dikembalikan sesuai hasil, biaya upstream tetap dihitung. Status settlement/refund antara harus dipulihkan tanpa dispatch ulang.
+
 ## Zero-patchwork dan kualitas
 - Token desain utama: assets/ngulik-design-system.css; Studio memakai token yang sama. Canvas #FAF9F5, paper #FFFFFF, ink #111827, slate #374151, lime #C8F135/ink, indigo #4338CA/white. Border 2px, shadow 4px, radius 12px, hierarki dan padding responsif. Perbaiki aturan yang sudah ada sebelum menambah selector. Jangan menyembunyikan overflow sebagai pengganti perbaikan layout.
 - Copywriting berasal dari CMS/Sheet, seed bukan sumber kedua. Tidak menambah promosi hardcoded. Harga seed display-only; validasi transaksi server.
