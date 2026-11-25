@@ -1,0 +1,66 @@
+name: GAS STAGING source integration (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Audit is read-only; deployment requires reviewed fingerprints
+        type: choice
+        options: [audit, deploy]
+        default: audit
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: ngd-gas-staging-exclusive
+  cancel-in-progress: false
+jobs:
+  staging:
+    if: github.repository == 'cuan74468-ux/ngulik-digital-member' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: STAGING
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout exact main SHA
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Node runtime
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Validate local package controls before loading secrets
+        env:
+          MODE: ${{ inputs.mode }}
+          ENV_READY: ${{ vars.GAS_STAGING_ENVIRONMENT_READY }}
+        run: |
+          set -euo pipefail
+          test "$ENV_READY" = true
+          node --test tests/gas-staging-sync.test.cjs
+          node --check scripts/gas-staging-run.cjs
+          if [[ "$MODE" == deploy ]]; then
+            node -e "if(require('./contracts/gas-staging-sync.json').approval.status!=='APPROVED')process.exit(1)"
+          fi
+          npm install --prefix "$RUNNER_TEMP/ngd-tooling" --ignore-scripts --no-audit --no-fund --no-save @google/clasp@3.4.1 acorn@8.15.0
+      - name: STAGING audit or explicitly gated deployment
+        env:
+          MODE: ${{ inputs.mode }}
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          GAS_STAGING_SCRIPT_ID: ${{ secrets.GAS_STAGING_SCRIPT_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "$CLASPRC_JSON" && test -n "$GAS_STAGING_SCRIPT_ID"
+          export HOME="$(mktemp -d "$RUNNER_TEMP/ngd-auth.XXXXXX")"
+          trap 'rm -rf "$HOME"' EXIT
+          printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
+          unset CLASPRC_JSON
+          export CLASP_BIN="$RUNNER_TEMP/ngd-tooling/node_modules/.bin/clasp"
+          export NODE_PATH="$RUNNER_TEMP/ngd-tooling/node_modules"
+          node scripts/gas-staging-run.cjs "$MODE"
