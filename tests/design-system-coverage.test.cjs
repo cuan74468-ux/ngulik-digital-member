@@ -44,3 +44,12 @@ test('master design system is CSS-only and does not hijack Studio, security, pay
   assert.ok(css.includes(':not(.ngd-studio *)'),'Studio scope exclusion missing');
   assert.doesNotMatch(css,/\p{Extended_Pictographic}/u);
 });
+
+test('pro composition shares tokens for checkout, login, product detail and studio without changing payment states',()=>{
+ const checkout=read('assets/checkout-qris-unified.css'),auth=read('assets/brand-experience-v10.css'),detail=read('assets/product-detail-v1.css');
+ assert.match(checkout,/\.checkout-total\{[^}]*background:var\(--ngds-tint\)/s);
+ assert.match(checkout,/\.btn-primary:disabled\{[^}]*cursor:not-allowed/s);
+ assert.match(auth,/\.ngd-auth-brand\{[^}]*background:var\(--ngds-tint\)/s);
+ assert.match(detail,/\.ngdp-pitch\{[^}]*box-shadow:var\(--ngds-shadow\)/s);
+ assert.match(studio,/\.ns-block\{[^}]*background:var\(--ns-white\)/s);
+});
