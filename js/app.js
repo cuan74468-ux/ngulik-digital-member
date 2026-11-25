@@ -1439,7 +1439,7 @@ function viewLogin(register=false,adminMode=false){
   // behind an unavailable submit button or imply that a guest can finish checkout.
   if(!register&&!adminMode&&!memberOtpLoginEnabled()){
     return '<section class="ngd-role-gate ngd-member-login-closed" role="status">'+
-      '<p class="eyebrow">AKSES MEMBER</p><h1>Login member belum dibuka di halaman publik.</h1>'+
+      '<p class="eyebrow">AKSES MEMBER</p><h1>Login member belum tersedia di halaman publik.</h1>'+
       '<p>Anda tetap bisa melihat katalog, harga, dan cara kerjanya. Pendaftaran dan login WhatsApp dibuka setelah layanan akun siap digunakan.</p>'+
       (state.pendingPurchaseId?'<p>Produk yang dipilih belum dipesan atau ditagihkan.</p>':'')+
       '<div class="ngd-role-actions"><button type="button" class="btn btn-primary" data-route="katalog">Lihat Katalog '+icon('arrow')+'</button>'+
@@ -1461,7 +1461,7 @@ function viewLogin(register=false,adminMode=false){
     '<div class="ngd-auth-brand"><img src="'+esc(defaultBrandLogoSrc)+'" alt="" decoding="async">'+
       '<span><strong>Ngulik Digital</strong><small>'+esc(state.publicSettings?.tagline_brand||'')+'</small></span></div>'+
     '<p class="eyebrow">'+(adminMode?'AKSES PENGELOLA':'')+'</p>'+
-    '<h1>'+(adminMode?'Masuk sebagai admin':editorial('title'))+'</h1>'+
+    '<h1>'+(adminMode?'Masuk sebagai Admin':editorial('title'))+'</h1>'+
     '<p class="lead">'+(adminMode?'Masuk dengan nomor WhatsApp Admin dan PIN enam angka.':
       editorial('description'))+'</p>'+
     (memberStaging?'<div class="ngd-auth-mode-switch" role="group" aria-label="Metode masuk member">'+
