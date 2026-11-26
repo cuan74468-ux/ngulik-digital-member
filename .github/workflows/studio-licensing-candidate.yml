@@ -25,7 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           npm install --prefix "$RUNNER_TEMP/ngd-ast" --ignore-scripts --no-audit --no-fund --no-save acorn@8.15.0
-          NODE_PATH="$RUNNER_TEMP/ngd-ast/node_modules" node --test scripts/gas-staging-ast.test.cjs prototypes/studio-licensing/package-compat.cjs
+          NODE_PATH="$RUNNER_TEMP/ngd-ast/node_modules" node --test scripts/gas-staging-ast.test.cjs prototypes/studio-licensing/package-compat.cjs prototypes/studio-licensing/review-local-package.test.cjs
           node --check scripts/gas-staging-run.cjs
       - name: Existing backend and frontend unit regression suite (no deploy)
         run: node --test tests/*.test.cjs
