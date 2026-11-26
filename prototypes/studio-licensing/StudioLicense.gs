@@ -13,11 +13,16 @@ function ngdStudioGuard_(){
   require_(String(db_().getId())===dbId,'MAINTENANCE','Workspace Studio belum sesuai.');
   var secret=String(props.getProperty('NGD_STUDIO_TOKEN_SECRET')||'');
   require_(/^[a-fA-F0-9]{64}$/.test(secret),'MAINTENANCE','Akses Studio belum siap.');
+  // Unique non-secret generation required on every activation or secret rotation.
+  // Bind cached credentials to both the generation and the current HMAC key.
+  var epoch=String(props.getProperty('NGD_STUDIO_PILOT_EPOCH')||'');
+  require_(/^[a-f0-9]{32}$/.test(epoch),'MAINTENANCE','Generasi akses Studio belum siap.');
+  var binding=hex_(Utilities.computeHmacSha256Signature('NGD_STUDIO_V1|epoch|'+epoch,secret,Utilities.Charset.UTF_8));
   var raw=String(props.getProperty('NGD_STUDIO_PILOT_MEMBER_IDS')||'').trim();
   var ids=raw?raw.split(',').map(function(s){return s.trim();}):[];
   require_(ids.length<=50&&ids.every(function(id){return /^M-[0-9]{1,12}$/.test(id);})&&
     new Set(ids).size===ids.length,'MAINTENANCE','Daftar akses Studio belum sesuai.');
-  return {secret:secret,ids:ids,props:props,cache:CacheService.getScriptCache()};
+  return {secret:secret,binding:binding,ids:ids,props:props,cache:CacheService.getScriptCache()};
 }
 function ngdStudioAllowed_(conf,m){
   return !!m&&m.role==='MEMBER'&&m.status==='AKTIF'&&conf.ids.indexOf(String(m.member_id))>=0;
@@ -36,7 +41,7 @@ function ngdStudioRead_(cache,key){
   try{return JSON.parse(raw);}catch(ignore){return null;}
 }
 function ngdStudioParent_(conf,record){
-  require_(record&&typeof record.member_id==='string'&&typeof record.parent_hash==='string'&&
+  require_(record&&record.binding===conf.binding&&typeof record.member_id==='string'&&typeof record.parent_hash==='string'&&
     /^[a-f0-9]{64}$/i.test(record.parent_hash)&&Number.isFinite(record.expires_at)&&record.expires_at>Date.now(),
     'UNAUTHORIZED','Akses Studio berakhir.');
   var sessions=findRows_('sessions',function(s){return String(s.token_hash)===record.parent_hash;});
@@ -56,7 +61,7 @@ function ngdStudioIssue_(portalToken){
     require_(!conf.cache.get(cool),'RATE_LIMITED','Coba kembali dalam 30 detik.');
     var code=ngdStudioToken_(conf,'grant'),hash=ngdStudioHash_(code);
     var previous=conf.cache.get(pending);if(previous)conf.cache.remove(ngdStudioKey_('grant',previous));
-    var record={member_id:id,parent_hash:sha256_(portalToken),expires_at:Date.now()+180000};
+    var record={member_id:id,parent_hash:sha256_(portalToken),binding:conf.binding,expires_at:Date.now()+180000};
     ngdStudioParent_(conf,record);
     conf.cache.put(ngdStudioKey_('grant',hash),JSON.stringify(record),180);
     conf.cache.put(pending,hash,180);
@@ -77,7 +82,7 @@ function ngdStudioExchange_(code){
     if(previous)conf.cache.remove(ngdStudioKey_('session',previous));
     var token=ngdStudioToken_(conf,'session'),sessionHash=ngdStudioHash_(token);
     var expires=Date.now()+1800000;
-    conf.cache.put(ngdStudioKey_('session',sessionHash),JSON.stringify({member_id:id,parent_hash:record.parent_hash,expires_at:expires}),1800);
+    conf.cache.put(ngdStudioKey_('session',sessionHash),JSON.stringify({member_id:id,parent_hash:record.parent_hash,binding:conf.binding,expires_at:expires}),1800);
     conf.cache.put(slot,sessionHash,1800);
     return {token:token,expires_at:expires};
   });

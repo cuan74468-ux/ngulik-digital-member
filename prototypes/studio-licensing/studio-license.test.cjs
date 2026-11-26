@@ -1,19 +1,25 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),crypto=require('node:crypto'),path=require('node:path');
 const code=fs.readFileSync(path.join(__dirname,'StudioLicense.gs'),'utf8');
-function fixture(){
+function fixture(actualGateway=false){
  let now=1700000000000,inLock=false,seq=0,mutations=true,beforeLock=null;
  const sha=x=>crypto.createHash('sha256').update(String(x)).digest('hex'),portal='A'.repeat(64);
- const props={NGD_ENVIRONMENT:'STAGING',NGD_DB_ID:'fixture',NGD_STUDIO_PILOT_DB_ID:'fixture',NGD_STUDIO_PILOT_ENABLED:'true',NGD_STUDIO_TOKEN_SECRET:'a'.repeat(64),NGD_STUDIO_PILOT_MEMBER_IDS:'M-0009'};
+ const props={NGD_ENVIRONMENT:'STAGING',NGD_DB_ID:'fixture',NGD_STUDIO_PILOT_DB_ID:'fixture',NGD_STUDIO_PILOT_ENABLED:'true',NGD_STUDIO_TOKEN_SECRET:'a'.repeat(64),NGD_STUDIO_PILOT_EPOCH:'1'.repeat(32),NGD_STUDIO_PILOT_MEMBER_IDS:'M-0009'};
  const adminToken='C'.repeat(64),audits=[];
  const member={member_id:'M-0009',status:'AKTIF',role:'MEMBER'},sessions=[{token_hash:sha(portal),member_id:member.member_id,role:'MEMBER',expires_at:new Date(now+7200000)}],map=new Map();
  const error=(c,m)=>Object.assign(Error(m),{publicCode:c});
  class Clock extends Date{static now(){return now;}}
  const cache={get(k){const v=map.get(k);return v&&v.exp>now?v.value:null;},put(k,v,ttl){assert.ok(inLock);map.set(k,{value:v,exp:now+ttl*1000});},remove(k){assert.ok(inLock);map.delete(k);}};
  const ctx=vm.createContext({Date:Clock,PropertiesService:{getScriptProperties:()=>({getProperty:k=>props[k]||null,setProperty:(k,v)=>{assert.ok(inLock);props[k]=v;}})},CacheService:{getScriptCache:()=>cache},db_:()=>({getId:()=> 'fixture'}),require_:(ok,c,m)=>{if(!ok)throw error(c,m);},ngdError_:error,requireAdminPortalEnabled_:()=>{},admin_:t=>{if(t!==adminToken)throw error('FORBIDDEN','admin');return {member_id:'M-0001',role:'ADMIN'};},logAudit_:(...args)=>{assert.ok(inLock);audits.push(args);},requireMutationsEnabled_:()=>{if(!mutations)throw error('MAINTENANCE','writes off');},withLock_:fn=>{assert.equal(inLock,false);if(beforeLock){const hook=beforeLock;beforeLock=null;hook();}inLock=true;try{return fn();}finally{inLock=false;}},activeMember_:t=>{if(t!==portal||member.status!=='AKTIF'||!sessions.length)throw error('UNAUTHORIZED','portal');return member;},findRows_:(name,fn)=>(name==='sessions'?sessions:[member]).filter(fn),sha256_:sha,uuid_:()=>String(++seq).padStart(32,'0'),hex_:b=>Buffer.from(b).toString('hex'),Utilities:{Charset:{UTF_8:'UTF-8'},computeHmacSha256Signature:(v,k)=>crypto.createHmac('sha256',k).update(v).digest()}});
- vm.runInContext(code,ctx);const route=(a,t,p)=>ctx.ngdStudioRoute_(a,t,p);
+ if(actualGateway){
+  const mock={};for(const k of ['db_','withLock_','findRows_','sha256_','uuid_','hex_','requireMutationsEnabled_','requireAdminPortalEnabled_','logAudit_'])mock[k]=ctx[k];
+  vm.runInContext(fs.readFileSync(path.resolve(__dirname,'../../apps-script/Code.gs'),'utf8'),ctx);
+  Object.assign(ctx,mock,{apiOutput_:v=>v,isoWib_:()=> 'fixture',now_:()=>new Clock()});
+ }else vm.runInContext(code,ctx);
+ const send=(action,token='',payload={})=>ctx.doPost({postData:{contents:JSON.stringify({action,token,payload,request_id:'fixture-request-123'})}});
+ const route=(a,t,p)=>ctx.ngdStudioRoute_(a,t,p);
  const issue=()=>route('studioIssueGrant',portal),exchange=code=>route('studioExchangeGrant','',{code}),validate=t=>route('studioValidateSession',t),logout=t=>route('studioLogout',t);
- return {props,member,sessions,map,issue,exchange,validate,logout,route,portal,adminToken,audits,advance:ms=>{now+=ms;},beforeLock:fn=>{beforeLock=fn;},disableWrites:()=>{mutations=false;}};
+ return {props,member,sessions,map,issue,exchange,validate,logout,route,send,portal,adminToken,audits,advance:ms=>{now+=ms;},beforeLock:fn=>{beforeLock=fn;},disableWrites:()=>{mutations=false;}};
 }
 const rejects=(fn,c)=>assert.throws(fn,e=>e.publicCode===c);
 test('default off, production, wrong database and invalid allowlist deny pilot',()=>{for(const patch of [{NGD_STUDIO_PILOT_ENABLED:''},{NGD_ENVIRONMENT:'PRODUCTION'},{NGD_STUDIO_PILOT_DB_ID:'other'},{NGD_STUDIO_PILOT_MEMBER_IDS:'M-0009,M-0009'},{NGD_STUDIO_TOKEN_SECRET:''}]){const f=fixture();Object.assign(f.props,patch);rejects(f.issue,'MAINTENANCE');assert.equal(f.map.size,0);}});
@@ -27,3 +33,9 @@ test('only authenticated portal admin can list or change pilot permissions; stal
 test('revoke and regrant do not revive old grants or sessions; suspended member cannot be granted',()=>{const f=fixture(),t=f.adminToken,s=f.exchange(f.issue().code);f.advance(31000);const g=f.issue();const set=(enabled,expected_enabled)=>f.route('studioAdminSet',t,{member_id:'M-0009',enabled,expected_enabled});set(false,true);rejects(()=>f.validate(s.token),'UNAUTHORIZED');set(true,false);rejects(()=>f.validate(s.token),'UNAUTHORIZED');rejects(()=>f.exchange(g.code),'UNAUTHORIZED');set(false,true);f.member.status='SUSPENDED';rejects(()=>set(true,false),'FORBIDDEN');assert.equal(f.props.NGD_STUDIO_PILOT_MEMBER_IDS,'');});
 
 test('queued issue, exchange and validation read current permission after acquiring lock',()=>{let f=fixture();f.beforeLock(()=>{f.props.NGD_STUDIO_PILOT_MEMBER_IDS='';});rejects(f.issue,'FORBIDDEN');f=fixture();let g=f.issue();f.beforeLock(()=>{f.props.NGD_STUDIO_PILOT_MEMBER_IDS='';});rejects(()=>f.exchange(g.code),'FORBIDDEN');f=fixture();const s=f.exchange(f.issue().code);f.beforeLock(()=>{f.props.NGD_STUDIO_PILOT_MEMBER_IDS='';});rejects(()=>f.validate(s.token),'FORBIDDEN');});
+
+test('missing or malformed activation generation denies even with valid key',()=>{for(const epoch of ['', 'invalid', 'A'.repeat(32)]){const f=fixture();f.props.NGD_STUDIO_PILOT_EPOCH=epoch;rejects(f.issue,'MAINTENANCE');assert.equal(f.map.size,0);}});
+test('emergency disable and fresh generation prevent old cache credentials from reviving',()=>{const f=fixture(),s=f.exchange(f.issue().code);f.advance(31000);const g=f.issue();f.props.NGD_STUDIO_PILOT_ENABLED='false';rejects(()=>f.validate(s.token),'MAINTENANCE');f.props.NGD_STUDIO_PILOT_EPOCH='2'.repeat(32);f.props.NGD_STUDIO_PILOT_ENABLED='true';rejects(()=>f.validate(s.token),'UNAUTHORIZED');rejects(()=>f.exchange(g.code),'UNAUTHORIZED');f.advance(31000);assert.equal(f.validate(f.exchange(f.issue().code).token).active,true);});
+test('secret rotation invalidates existing grant and session even when generation unchanged',()=>{const f=fixture(),s=f.exchange(f.issue().code);f.advance(31000);const g=f.issue();f.props.NGD_STUDIO_TOKEN_SECRET='b'.repeat(64);rejects(()=>f.validate(s.token),'UNAUTHORIZED');rejects(()=>f.exchange(g.code),'UNAUTHORIZED');});
+test('legacy cache records without generation binding fail closed',()=>{const f=fixture(),g=f.issue();for(const [k,v] of f.map){if(k.includes(':grant:')){const record=JSON.parse(v.value);delete record.binding;v.value=JSON.stringify(record);}}rejects(()=>f.exchange(g.code),'UNAUTHORIZED');});
+test('actual doPost and actual portal session helper integrate with Studio module using synthetic GAS primitives',()=>{const f=fixture(true);const g=f.send('studioIssueGrant',f.portal);assert.equal(g.ok,true);const s=f.send('studioExchangeGrant','',{code:g.data.code});assert.equal(s.ok,true);assert.equal(f.send('studioValidateSession',s.data.token).data.active,true);assert.equal(f.send('studioExchangeGrant','',{code:g.data.code}).error.code,'UNAUTHORIZED');assert.equal(f.send('getMe',s.data.token).error.code,'UNAUTHORIZED');assert.equal(f.send('studioAdminList',f.portal).error.code,'FORBIDDEN');f.sessions.push({...f.sessions[0]});assert.equal(f.send('studioValidateSession',s.data.token).error.code,'UNAUTHORIZED');f.sessions.pop();f.sessions[0].expires_at=new Date(0);assert.equal(f.send('studioValidateSession',s.data.token).error.code,'UNAUTHORIZED');});
