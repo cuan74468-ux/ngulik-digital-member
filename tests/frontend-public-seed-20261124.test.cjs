@@ -139,3 +139,24 @@ test('browser performance smoke runs in CI with intercepted external traffic', {
  };
  try{for(const entry of ['/','/staging/member.html']){for(const mode of ['normal','delay','abort','update'])await run(entry,mode);await run(entry,'normal',1366,768);}}finally{await new Promise(resolve=>server.close(resolve));}
 });
+
+
+test('published KB editorial snapshot is identical across seed environments, without private KB fields',()=>{
+ assert.deepEqual(seed.envs.prd.siteContent,seed.envs.stg.siteContent);
+ assert.equal(seed.envs.stg.siteContent.length,34);
+ const rows=new Map(seed.envs.stg.siteContent.map(r=>[r.content_id,r]));
+ assert.equal(rows.get('CNT-HERO-MAIN').title,'Solusi digital untuk kebutuhan usaha Anda');
+ assert.match(rows.get('CNT-HERO-MAIN').description,/Coba fasilitas yang tersedia/);
+ assert.equal(rows.get('CNT-HERO-MAIN').cta_label,'Daftar Akun Gratis');
+ assert.match(rows.get('CNT-USECASE-01').description,/Madu Ku dan roti keju/);
+ assert.equal(rows.get('CNT-USECASE-01').image_path,'https://cuan74468-ux.github.io/assets/uploads/5c62ad9ec6ea42f1a36e3cd9b8a33556.png');
+ assert.match(rows.get('CNT-NEXT-01').title,/Belum Dibuka/);
+ assert.match(rows.get('CNT-CHECKOUT-GUIDE').description,/status lunas ditetapkan setelah dana dicocokkan/);
+ assert.match(rows.get('CNT-AJAK-TEMAN-INFO').description,/bukan komisi dari pendaftaran gratis/);
+ assert.match(rows.get('CNT-MEMBER-CARD-01').description,/Premium belum aktif/);
+ for(const r of rows.values()){
+  assert.doesNotMatch(r.image_path,/drive\.google\.com|docs\.google\.com/);
+  assert.doesNotMatch(r.title+' '+r.description,/NIK|Kartu Keluarga|24 jam nonstop|AI tanpa batas/i);
+ }
+ for(const p of ['index.html','staging/member.html'])assert.match(read(p),/public-seed\.js\?v=[^"]+-kb1"/);
+});
