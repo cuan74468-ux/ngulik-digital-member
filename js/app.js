@@ -1109,6 +1109,8 @@ function aiCategoryOverview_(tools){
     }).join('')+'</section>';
 }
 const MEMBER_WRAPPER_URL_='https://share.gemini.google/HehJEIsDRqOm';
+// Independent, deliberately suspended until a reviewed premium release.
+const PREMIUM_EXECUTION_SUSPENDED_=true;
 function viewMemberWrapper_(){
   if(!logged()||isAdmin())return needLogin('Studio AI');
   return '<section class="surface" aria-labelledby="wrapper-title"><p class="eyebrow">RUANG MEMBER / STUDIO AI</p>'+
@@ -1229,8 +1231,8 @@ function aiWizardStep_(form,step){
 }
 async function submitAITool(form){
   // Premium execution is suspended, including admin preview.
-  return toast('Eksekusi Studio AI Premium sedang dinonaktifkan.',true);
-  /* Retained implementation for future reviewed release.
+  if(PREMIUM_EXECUTION_SUSPENDED_||!logged()||isAdmin())
+    return toast('Eksekusi Studio AI Premium sedang dinonaktifkan.',true);
   const btn=form.querySelector('[type=submit]'),box=form.querySelector('.ai-result'),area=form.querySelector('textarea');
   const detail=area.value.trim();
   const business=String(form.elements?.nama_usaha?.value||'').trim();
@@ -1262,7 +1264,6 @@ async function submitAITool(form){
     if(e.code==='AI_FAILED')toast('Kredit Anda sudah dikembalikan.');
     try{const d=await api('getBeranda',{},state.token);state.home=d;const bal=document.getElementById('ai-balance');if(bal)bal.textContent=(d.saldo_kredit??0)+' kredit';}catch{}
   }finally{btn.disabled=false;area.disabled=false;}
-  */
 }
 function uiCommissionText_(value){
   return String(value||'').replace(/\b(?:affiliate|afiliator|afiliasi|referral|payout|tier)\b/gi,'komisi');
@@ -2567,7 +2568,7 @@ function render(){
  */
 async function configureVisualBridgeStaging_(){
  // Retained bridge for future reviewed release; never connect in preview.
- return;
+ if(PREMIUM_EXECUTION_SUSPENDED_)return;
  if(!logged()||isAdmin()||!isConnected()||
   !String(location.pathname).includes('/staging/'))return;
  try{
