@@ -187,3 +187,7 @@ Satu-satunya berkas kendali operasional proyek. Gunakan tautan berikut; jangan m
 
 ## 26 November 2026 — Temporary member Studio AI substitution
 Owner explicitly requests member Studio AI to open the independent Gemini Wrapper (https://share.gemini.google/HehJEIsDRqOm); retain existing Premium Studio in admin-only application preview, with local simulation only. No member credit/provider calls from this page. Access model, licensing and distribution policy deferred; the external share link is not a membership-enforced license. Frontend route gating is not source confidentiality or API authorization: public GitHub source and existing deployed read-only catalogue endpoints remain accessible; do not enable premium API/finance flags. No GAS/database/provider changes or production backend deployment in this PR. Preserve all premium modules. Verify guest/member/admin routes in browser before merging.
+
+
+## 26 November 2026 — UI/UX Precision V6
+Owner requests visual alignment of public, member and admin with content unchanged. Scope: canonical design system CSS, cache revision, visual QA and existing design documentation. No content, navigation actions, API, authentication, database, prices, flags or premium/Wrapper access changes. Verify CI before merge; screenshots and real-device QA remain separate. No paid service or additional infrastructure.
