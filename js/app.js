@@ -107,7 +107,7 @@ const screens={
   ['lms-lesson']:['Editor Pelajaran','book'],['lms-course']:['Ruang Kelas','book'],
   ['lms-ai']:['Review Draft AI','spark'],
   ['lms-complete']:['Pelajaran Selesai','check'],katalog:['Katalog','store'],['detail-produk']:['Detail Produk','store'],
-  ai:['Studio AI','spark'],['ai-tool']:['Ruang Alat AI','spark'],affiliate:['Ajak Teman','link'],akun:['Akun','user'],
+  ai:['Studio AI','spark'],['ai-premium']:['Studio AI Premium','spark'],['ai-tool']:['Ruang Alat AI','spark'],affiliate:['Ajak Teman','link'],akun:['Akun','user'],
   produk:['Katalog Admin','store'],jasa:['Jasa','gift'],layanan:['Pesanan Jasa','gift'],
   admin:['Admin','grid'],konten:['Gambar & Banner','grid'],pesanan:['Pesanan','clipboard'],member:['Member','users'],
   antrean:['Daftar Tunggu','clock'],dukungan:['Bantuan','shield'],
@@ -123,11 +123,11 @@ const memberDesktopExtraRoutes=memberNav.filter(route=>!memberDesktopNav.include
 // The existing header nav remains available on wide screens only.
 const memberDockRoutes=['beranda','katalog','ai','pesanan'];
 const memberExtraRoutes=['jasa','belajar','affiliate','dukungan','akun'];
-const adminOnlyRoutes=new Set(['admin','konten','produk','layanan','lms','lms-editor','lms-lesson','lms-ai','member','antrean','pengaturan']);
-const adminNav=['admin','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
+const adminOnlyRoutes=new Set(['ai-premium','ai-tool','admin','konten','produk','layanan','lms','lms-editor','lms-lesson','lms-ai','member','antrean','pengaturan']);
+const adminNav=['admin','ai-premium','konten','produk','layanan','lms','pesanan','member','dukungan','rilis','antrean','pengaturan','akun'];
 const adminContextRoute=(route)=>({
   'lms-editor':'lms','lms-lesson':'lms','lms-ai':'lms',
-  'member360':'member',tiket:'dukungan','ai-tool':'ai'
+  'member360':'member',tiket:'dukungan','ai-tool':'ai-premium'
 })[route]||route;
 const tokenKey='ngd_member_session';
 const firstInviterKey='ngd_first_inviter_v1';
@@ -555,7 +555,7 @@ function viewHome(){
         '<div class="ngdm-wallet-grid"><div class="ngdm-wallet-numbers">'+
           '<p id="ngdm-wallet-heading">Saldo tersedia</p>'+
           '<div class="ngdm-wallet-number"><strong>'+esc(format)+'</strong><span>token</span></div>'+
-          '<p class="ngdm-wallet-hint">Token berlaku untuk layanan tertentu. Foto AI Visual memiliki saldo dan tarif tersendiri.</p>'+
+          '<p class="ngdm-wallet-hint">Kredit tersimpan untuk layanan Ngulik Digital. Studio AI sementara menggunakan Gemini dan tidak memotong saldo di sini.</p>'+
           '<div class="ngdm-wallet-actions">'+
              '<button type="button" class="ngdm-wallet-cta" data-route="ai">Jelajahi Studio '+icon('arrow')+'</button>'+
              '<button type="button" class="ngdm-wallet-secondary" data-route="katalog">Lihat paket</button></div>'+
@@ -617,7 +617,7 @@ function viewHome(){
           '<button type="button" data-route="dukungan">'+icon('check')+
             '<span>'+esc(p.nama||p.product_id||'Produk')+
               ' <small>· '+esc(p.akses_status||'Status belum tersedia')+'</small></span>'+icon('arrow')+'</button>').join('')+'</div></section>':'')+
-      (d.peringatan_kredit===true?'<p class="ngdm-low-credit" role="status">Token hampir habis. Periksa saldo sebelum menjalankan Studio AI.</p>':'')+
+      (d.peringatan_kredit===true?'<p class="ngdm-low-credit" role="status">Kredit hampir habis. Studio AI melalui Gemini tidak memotong saldo di sini.</p>':'')+
     '</div>';
   }
   // The buyer-facing home is a compact digital storefront; no synthetic
@@ -1108,25 +1108,35 @@ function aiCategoryOverview_(tools){
         icon('arrow')+'</span></button>';
     }).join('')+'</section>';
 }
+const MEMBER_WRAPPER_URL_='https://share.gemini.google/HehJEIsDRqOm';
+function viewMemberWrapper_(){
+  if(!logged()||isAdmin())return needLogin('Studio AI');
+  return '<section class="surface" aria-labelledby="wrapper-title"><p class="eyebrow">RUANG MEMBER / STUDIO AI</p>'+
+    '<h1 id="wrapper-title">Linggau AI Studio</h1><p>Buat foto produk, desain dan konten dengan alat AI pilihan.</p>'+
+    '<p>Studio dibuka di Gemini. Gunakan akun Google Anda; akses mengikuti ketersediaan dan kuota Gemini.</p>'+
+    '<a class="btn btn-primary" href="'+MEMBER_WRAPPER_URL_+'" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">Buka Studio AI '+icon('arrow')+'</a>'+
+    '<p class="form-hint">Tidak memotong kredit Ngulik Digital melalui halaman ini. Jangan unggah data pribadi pelanggan.</p></section>';
+}
+// Retained Premium catalogue: authenticated admin inspection only.
 function viewAI(){
-  const tools=logged()&&!isAdmin()&&state.tools.length?state.tools:(Array.isArray(state.publicTools)?state.publicTools:[]);
+  if(!logged()||!isAdmin())return needLogin('Studio AI Premium');
+  const tools=state.tools.length?state.tools:(Array.isArray(state.publicTools)?state.publicTools:[]);
   const category=state.aiCategory||'semua';
   const search=String(state.aiSearch||'').trim().toLocaleLowerCase('id-ID');
   const filtered=tools.filter(t=>(category==='semua'||aiToolCategory_(t)===category)&&
     (!search||[t.nama,t.deskripsi,t.tool_id,aiCategoryFor_(aiToolCategory_(t))?.title]
       .some(v=>String(v||'').toLocaleLowerCase('id-ID').includes(search))));
   const balance=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
-  const publicMode=!logged()||isAdmin();
+  const publicMode=false;
   const intro='<header class="ai-catalog-intro"><div class="ai-catalog-intro-copy">'+
-    '<p class="eyebrow">'+(publicMode?'JELAJAH PUBLIK / STUDIO AI':'RUANG MEMBER / STUDIO AI')+'</p><h1>Studio AI</h1>'+
-    '<p>'+(publicMode?'Temukan alat AI untuk menulis, merencanakan konten, dan membantu pekerjaan usaha. Masuk sebagai member untuk menggunakannya.':'Pilih alat dan periksa biaya token sebelum mulai.')+'</p></div>'+
+    '<p class="eyebrow">'+'PRATINJAU ADMIN / STUDIO PREMIUM'+'</p><h1>Studio AI Premium</h1>'+
+    '<p>'+'Pratinjau pengelola. Tidak ada panggilan provider atau debit kredit.'+'</p></div>'+
     (publicMode?'<img class="ngd-ai-hero-art" src="'+esc(cmsPageArt_('ai')||ngdPremiumArtSrc_('ai-pack'))+'" alt="" loading="lazy" decoding="async">':'')+
-    (!publicMode?'<div class="ai-wallet-mini"><small>Saldo</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
-    '<button type="button" data-catalog-go="ai">Isi Token</button></div>':'')+
+    ''+
     '</header>';
   const navigation=aiCategoryNav_(tools,publicMode);
   // Category chips are filters, not landing cards; show actual tool cards first.
-  const showVisual=logged()&&!isAdmin()&&
+  const showVisual=logged()&&isAdmin()&&
     ['semua','umkm','kreator'].includes(category)&&
     (!search||['ngulik studio','visual','foto produk','poster','iklan','gambar'].some(q=>q.includes(search)||search.includes(q)));
   const visualCard=showVisual?'<button type="button" class="ai-product-card" data-ai-open="ngulik-visual" aria-label="Buka Ngulik Studio Visual Generator">'+
@@ -1163,18 +1173,19 @@ function viewAI(){
 // Each active wrapper has its own addressable workspace page (#ai-tool/ID).
 // No client-side pricing or availability is invented: getTools is authoritative.
 function viewAITool(){
-  const tools=logged()&&!isAdmin()&&state.tools.length?state.tools:(Array.isArray(state.publicTools)?state.publicTools:[]);
-  if(state.selectedAiToolId==='ngulik-visual'&&logged()&&!isAdmin()){
+  if(!logged()||!isAdmin())return needLogin('Studio AI Premium');
+  const tools=state.tools.length?state.tools:(Array.isArray(state.publicTools)?state.publicTools:[]);
+  if(state.selectedAiToolId==='ngulik-visual'&&logged()&&isAdmin()){
     return '<div class="ngd-studio" id="ngd-studio-root" aria-label="Ngulik Studio — Visual Generator"></div>';
   }
   const selected=tools.find(t=>t.tool_id===state.selectedAiToolId);
-  if(!selected)return '<div class="ai-tool-detail"><button class="ai-tool-back" type="button" data-route="ai">'+icon('arrow')+' Kembali ke daftar alat</button>'+
+  if(!selected)return '<div class="ai-tool-detail"><button class="ai-tool-back" type="button" data-route="ai-premium">'+icon('arrow')+' Kembali ke daftar alat</button>'+
     '<div class="ai-catalog-empty"><strong>Alat Belum Tersedia</strong><p>Pilih alat lain dari daftar.</p></div></div>';
-  const cost=Number(selected.kredit_biaya)||0,can=logged()&&!isAdmin()&&isWriteEnabled();
+  const cost=Number(selected.kredit_biaya)||0,can=false;
   const category=aiCategoryFor_(aiToolCategory_(selected));
   const balance=Number(state.home?.saldo_kredit??state.me?.saldo_kredit??0);
-  if(!logged()||isAdmin())return '<div class="ai-tool-detail">'+
-    '<nav class="ai-tool-breadcrumb"><button type="button" data-route="ai">Studio AI</button><span>/</span><strong>'+esc(selected.nama)+'</strong></nav>'+
+  if(!logged()||!isAdmin())return '<div class="ai-tool-detail">'+
+    '<nav class="ai-tool-breadcrumb"><button type="button" data-route="ai-premium">Studio AI</button><span>/</span><strong>'+esc(selected.nama)+'</strong></nav>'+
     '<header class="ai-tool-detail-hero"><div class="ai-tool-detail-identity">'+
     '<span class="ai-product-icon">'+icon(category?.icon||'spark')+'</span>'+
     '<p class="eyebrow">'+esc(category?.title||'Studio AI')+'</p><h1>'+esc(selected.nama)+'</h1>'+
@@ -1183,14 +1194,13 @@ function viewAITool(){
     '<div class="ai-catalog-access"><strong>Masuk untuk mulai</strong>'+
     '<button type="button" class="btn btn-primary" data-route="login">Masuk member '+icon('arrow')+'</button></div></div>';
   return '<div class="ai-tool-detail"><nav class="ai-tool-breadcrumb" aria-label="Navigasi Studio AI">'+
-    '<button type="button" data-route="ai">Studio AI</button><span>/</span><span>'+esc(category?.short||'Tool')+'</span><span>/</span><strong>'+esc(selected.nama)+'</strong></nav>'+
+    '<button type="button" data-route="ai-premium">Studio AI</button><span>/</span><span>'+esc(category?.short||'Tool')+'</span><span>/</span><strong>'+esc(selected.nama)+'</strong></nav>'+
     '<header class="ai-tool-detail-hero"><div class="ai-tool-detail-identity">'+
     '<span class="ai-product-icon">'+icon(category?.icon||'spark')+'</span>'+
     '<p class="eyebrow">'+esc(category?.title||'STUDIO AI')+'</p>'+
     '<h1>'+esc(selected.nama)+'</h1><p>'+esc(selected.deskripsi||'Tulis kebutuhan Anda untuk mulai.')+'</p>'+
     '<span class="ai-detail-cost">'+esc(cost)+' Token per proses</span></div>'+
-    '<div class="ai-wallet-mini"><small>SALDO TOKEN</small><strong id="ai-balance">'+esc(balance)+' Token</strong>'+
-    '<button type="button" data-catalog-go="ai">+ Isi Token</button></div></header>'+
+    '</header>'+
     '<div class="ai-tool-detail-content"><section class="ai-tool-brief">'+
     '<div class="ai-workspace-title"><h2>Isi Kebutuhan</h2></div>'+
     '<form class="ai-form" data-tool-id="'+idSafe(selected.tool_id)+'" data-cost="'+esc(cost)+'" novalidate>'+
@@ -1203,7 +1213,7 @@ function viewAITool(){
     '<small class="form-hint">Jangan masukkan data pribadi pelanggan.</small></div>'+
     '<div class="ai-foot"><span class="ai-cost"><strong>'+esc(cost)+' Token</strong> / eksekusi</span>'+
     '<button class="btn btn-primary" type="submit"'+(can?'':' disabled')+'>Buat Hasil '+icon('arrow')+'</button></div>'+
-    (!can?'<p class="ai-workspace-notice">Alat ini belum bisa digunakan.</p>':'')+
+    (!can?'<p class="ai-workspace-notice">Pratinjau admin — eksekusi premium dinonaktifkan.</p>':'')+
     '<div class="ai-result" role="status" aria-live="polite" hidden></div></form></section>'+
     '</div></div>';
 }
@@ -1218,6 +1228,9 @@ function aiWizardStep_(form,step){
   });
 }
 async function submitAITool(form){
+  // Premium execution is suspended, including admin preview.
+  return toast('Eksekusi Studio AI Premium sedang dinonaktifkan.',true);
+  /* Retained implementation for future reviewed release.
   const btn=form.querySelector('[type=submit]'),box=form.querySelector('.ai-result'),area=form.querySelector('textarea');
   const detail=area.value.trim();
   const business=String(form.elements?.nama_usaha?.value||'').trim();
@@ -1249,6 +1262,7 @@ async function submitAITool(form){
     if(e.code==='AI_FAILED')toast('Kredit Anda sudah dikembalikan.');
     try{const d=await api('getBeranda',{},state.token);state.home=d;const bal=document.getElementById('ai-balance');if(bal)bal.textContent=(d.saldo_kredit??0)+' kredit';}catch{}
   }finally{btn.disabled=false;area.disabled=false;}
+  */
 }
 function uiCommissionText_(value){
   return String(value||'').replace(/\b(?:affiliate|afiliator|afiliasi|referral|payout|tier)\b/gi,'komisi');
@@ -2501,7 +2515,7 @@ function render(){
   renderNav();
   by('notice-slot').innerHTML=notice();
   const routes={
-    beranda:viewHome,belajar:viewLearn,portal:viewPortalGratis_,katalog:viewCatalog,'detail-produk':viewProductDetail,ai:viewAI,'ai-tool':viewAITool,affiliate:viewAffiliate,menu:viewMore,
+    beranda:viewHome,belajar:viewLearn,portal:viewPortalGratis_,katalog:viewCatalog,'detail-produk':viewProductDetail,ai:viewMemberWrapper_,'ai-premium':viewAI,'ai-tool':viewAITool,affiliate:viewAffiliate,menu:viewMore,
     lms:()=>isAdmin()&&window.NGD_LMS_UI?
       window.NGD_LMS_UI.adminCatalog(state.lmsAdminCourses,lmsWriteEnabled(),state.catalog):
       needLogin('studio LMS'),
@@ -2534,10 +2548,11 @@ function render(){
     (routes[state.route]||viewHome)();
   // Catalog has a single authoritative HERO slot; do not stack PAGE_COVER above it.
   by('screen').innerHTML=screen;
-  if(state.route==='ai-tool'&&state.selectedAiToolId==='ngulik-visual'&&logged()&&!isAdmin()){
-    window.NGD_STUDIO?.configureMemberScope(String(state.me?.member_id||''));
+  if(state.route==='ai-tool'&&state.selectedAiToolId==='ngulik-visual'&&logged()&&isAdmin()){
+    window.NGD_STUDIO?.configureVisualPipeline(null);
+    void window.NGD_STUDIO?.configureTemplateStorage(null);
+    window.NGD_STUDIO?.configureMemberScope('ADMIN-PREVIEW-'+String(state.me?.member_id||''));
     window.NGD_STUDIO?.mount(document.getElementById('ngd-studio-root'));
-    void configureVisualBridgeStaging_();
   }
   syncCheckoutClock_();
   syncHeroRotation_();
@@ -2551,6 +2566,8 @@ function render(){
  * Visual-only flags independently. Local simulation remains the fallback.
  */
 async function configureVisualBridgeStaging_(){
+ // Retained bridge for future reviewed release; never connect in preview.
+ return;
  if(!logged()||isAdmin()||!isConnected()||
   !String(location.pathname).includes('/staging/'))return;
  try{
@@ -2614,6 +2631,10 @@ async function configureVisualBridgeStaging_(){
 let lastRouteHash_=location.hash;
 const guestPrivateRoutes_=new Set(['ai','ai-tool','belajar','portal','lms-course','lms-complete','affiliate','pesanan','checkout','akun','layanan']);
 function guestRoute_(route){
+  if(route==='ai-tool'||route==='ai-premium'){
+    if(logged()&&!isAdmin())return 'ai';
+    if(!logged())return 'admin-login';
+  }
   if(!logged()&&!isAdmin()&&guestPrivateRoutes_.has(route)){
     if(route==='checkout'&&state.checkoutProductId)state.pendingPurchaseId=state.checkoutProductId;
     return 'login';
@@ -2978,7 +2999,7 @@ async function loadRoute(route){
       }));
       if(errors.every(Boolean))throw errors[0];
     }
-    if(route==='ai'||route==='ai-tool'){
+    if(isAdmin()&&(route==='ai-premium'||route==='ai-tool')){
       // Independent reads: two GAS calls in parallel without losing the
       // successful result when the other service is temporarily unavailable.
       const [homeResult,toolsResult]=await verifySessionRead(Promise.allSettled([
@@ -3920,7 +3941,7 @@ document.addEventListener('submit',(e)=>{
   go('katalog');
 });
 document.addEventListener('input',(e)=>{
-  if(e.target?.id==='ai-tool-search'&&state.route==='ai'){
+  if(e.target?.id==='ai-tool-search'&&state.route==='ai-premium'&&isAdmin()){
     state.aiSearch=e.target.value;
     const start=e.target.selectionStart,end=e.target.selectionEnd;
     render();
@@ -4244,14 +4265,16 @@ document.addEventListener('click',async(e)=>{
     if(Number.isInteger(step)&&step>=0&&step<3){state.publicStep=step;render();}
   }
   else if(target.hasAttribute('data-ai-category')){
+    if(!logged()||!isAdmin())return;
     const next=target.dataset.aiCategory;
     if(next!=='semua'&&!aiCategoryFor_(next))return;
     state.aiCategory=next;state.selectedAiToolId='';state.aiSearch='';
     render();
   }
   else if(target.hasAttribute('data-ai-open')){
-    const tools=logged()&&!isAdmin()&&state.tools.length?state.tools:state.publicTools;
-    if(target.dataset.aiOpen==='ngulik-visual'&&logged()&&!isAdmin()){
+    if(!logged()||!isAdmin())return;
+    const tools=state.tools.length?state.tools:state.publicTools;
+    if(target.dataset.aiOpen==='ngulik-visual'){
       state.selectedAiToolId='ngulik-visual';go('ai-tool');
     }else{
       const tool=tools.find(x=>x.tool_id===target.dataset.aiOpen);
@@ -4473,7 +4496,7 @@ by('mobile-back').addEventListener('click',()=>{
     tiket:'dukungan',checkout:state.checkoutReturnRoute||'katalog',
     'detail-produk':state.productDetailReturnRoute||'katalog',
     'lms-editor':'lms','lms-lesson':'lms-editor','lms-ai':'lms-editor',
-    'ai-tool':'ai',
+    'ai-tool':'ai-premium',
     member360:'member'
   };
   go(back[state.route]||'beranda');
@@ -4498,7 +4521,7 @@ async function init(){
   // protected deep links. Live sessions still require server validation.
   const previewActive=activatePreview();
   state.route=previewActive?
-    (screens[requestedRoute]?(requestedRoute==='menu'?'beranda':requestedRoute):'beranda'):
+    guestRoute_(screens[requestedRoute]?(requestedRoute==='menu'?'beranda':requestedRoute):'beranda'):
     guestRoute_(requestedRoute==='menu'?'beranda':requestedRoute);
   if(!previewActive){
     state.catalog=[];
@@ -4514,6 +4537,8 @@ async function init(){
     await restoreSession();
     if(logged()&&guestPrivateRoutes_.has(requestedRoute)&&!isAdmin()){
       // Only resume a bookmarked private route after the server confirms the session.
+      go(requestedRoute);
+    }else if(logged()&&isAdmin()&&['ai-premium','ai-tool'].includes(requestedRoute)){
       go(requestedRoute);
     }else if(logged())void loadRoute(state.route);
     await Promise.all([publicLoad,readinessLoad]);
