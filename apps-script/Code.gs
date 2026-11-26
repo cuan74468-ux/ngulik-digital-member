@@ -389,6 +389,24 @@ function updateActivity_(member) {
   if (elapsed >= 30 * 86400000) patch.d30_active = true;
   updateRow_('members', member._row, patch);
 }
+// Read the raw policy row: settings_ converts malformed NUMBER cells to 0
+// and silently picks the last duplicate key. Neither is valid grant authority.
+// A positive explicit amount remains supported pending separate Owner approval
+// to change existing STAGING configuration. No historical credit is rewritten.
+function ngdInitialCreditPolicy_(){
+  var rows=readAll_('pengaturan_sistem').filter(function(r){return r.key==='kredit_awal';});
+  require_(rows.length===1,'MAINTENANCE','Kebijakan kredit awal belum siap.');
+  var row=rows[0],raw=row.value;
+  require_(raw!==undefined&&raw!==null&&String(raw).trim()!=='','MAINTENANCE',
+    'Kebijakan kredit awal belum siap.');
+  require_(row.tipe==='NUMBER'&&(typeof raw==='number'||
+    (typeof raw==='string'&&/^(0|[1-9][0-9]*)$/.test(raw.trim()))),
+    'VALIDATION','Pengaturan kredit awal tidak valid.');
+  var amount=Number(raw);
+  require_(Number.isInteger(amount)&&amount>=0&&amount<=1000,'VALIDATION',
+    'Pengaturan kredit awal tidak valid.');
+  return amount;
+}
 function grantInitialCredit_(memberId, amount) {
   amount=Number(amount);
   require_(Number.isInteger(amount)&&amount>=0&&amount<=1000,'VALIDATION',
@@ -466,7 +484,7 @@ function seedSettings_() {
     ['link_classroom','https://classroom.google.com','TEXT'],
     ['qris_gambar_path','assets/qris.png','TEXT'], ['qris_atas_nama','','TEXT'],
     ['order_expiry_menit',60,'NUMBER'], ['kode_unik_min',100,'NUMBER'], ['kode_unik_max',999,'NUMBER'],
-    ['trial_hari',30,'NUMBER'], ['kredit_awal',10,'NUMBER'], ['kredit_peringatan_persen',20,'NUMBER'],
+    ['trial_hari',30,'NUMBER'], ['kredit_awal',0,'NUMBER'], ['kredit_peringatan_persen',20,'NUMBER'],
     ['komisi_persen',25,'NUMBER'], ['komisi_hanya_order_pertama',false,'BOOL'],
     ['masa_tahan_hari',14,'NUMBER'], ['min_payout',50000,'NUMBER'],
     ['ref_cookie_hari',30,'NUMBER'], ['ai_base_url','https://app.sobatagent.com/','TEXT'],
@@ -783,8 +801,7 @@ function adminPromoteWaitlist_(admin,p) {
     var target=members.filter(function(m){return m.member_id===memberId;})[0];
     // Kredit didahulukan dan idempoten: jika gagal sebelum status berubah,
     // retry tidak menambah grant kedua.
-    var initial=Number(setting_('kredit_awal',10));
-    require_(Number.isInteger(initial)&&initial>=0&&initial<=1000,'VALIDATION','Kredit awal tidak valid.');
+    var initial=ngdInitialCreditPolicy_();
     if(initial>0)grantInitialCredit_(memberId,initial);
     updateRow_('members',target._row,{status:'AKTIF'});
     var full=result.active+1>=quota;
@@ -934,12 +951,7 @@ function authRegister_(p) {
     var active=memberCount_(),wait=mode==='WAITING_LIST'||active>=Number(s.kuota_gelombang||50)||memberWaitlist_().length>0;
     // A verified policy must be present. Never silently mint the historic
     // default when the configuration key was removed or corrupted.
-    require_(s.kredit_awal!==undefined&&s.kredit_awal!==null&&
-      String(s.kredit_awal).trim()!=='','MAINTENANCE',
-      'Kebijakan kredit awal belum siap.');
-    var initial=Number(s.kredit_awal);
-    require_(Number.isInteger(initial)&&initial>=0&&initial<=1000,'VALIDATION',
-      'Pengaturan kredit awal tidak valid.');
+    var initial=ngdInitialCreditPolicy_();
     var ref=String(p.ref||'').trim().toUpperCase(),referrer=/^[A-Z0-9_-]{3,80}$/.test(ref)?byId_('members','kode_referral',ref):null;
     if(referrer&&referrer.wa===wa)referrer=null;
     if(referrer&&(referrer.status!=='AKTIF'||referrer.role!=='MEMBER'||

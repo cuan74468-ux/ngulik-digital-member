@@ -67,6 +67,10 @@ test('OTP validation rejects unverified codes BEFORE member insertion even if co
   env.sandbox.settings_ = () => ({
     mode_pendaftaran: 'TERBUKA',kuota_gelombang: 50,kredit_awal: 0
   });
+  env.sandbox.readAll_ = name => {
+    assert.equal(name,'pengaturan_sistem');
+    return [{key:'kredit_awal',value:0,tipe:'NUMBER'}];
+  };
   env.sandbox.memberCount_ = () => 0;
   env.sandbox.memberWaitlist_ = () => [];
   env.sandbox.newSalt_ = () => 'FAKE-SALT-ONLY';
