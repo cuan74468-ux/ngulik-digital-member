@@ -3496,19 +3496,18 @@ function ngdStudioLogout_(token){
 }
 // Admin operations use only existing portal ADMIN authentication, not Studio tokens.
 function ngdStudioAdminList_(token){
-  requireAdminPortalEnabled_();
   return withLock_(function(){
+    requireAdminPortalEnabled_();
     admin_(token);var conf=ngdStudioGuard_();
     return {member_ids:conf.ids.slice().sort(),limit:50};
   });
 }
 function ngdStudioAdminSet_(token,p){
-  requireAdminPortalEnabled_();
-  requireMutationsEnabled_();
   require_(p&&typeof p.member_id==='string'&&/^M-[0-9]{1,12}$/.test(p.member_id)&&
     typeof p.enabled==='boolean'&&typeof p.expected_enabled==='boolean',
     'VALIDATION','Permintaan Studio tidak valid.');
   return withLock_(function(){
+    requireAdminPortalEnabled_();requireMutationsEnabled_();
     var actor=admin_(token),conf=ngdStudioGuard_(),id=p.member_id;
     var enabled=conf.ids.indexOf(id)>=0;
     require_(enabled===p.expected_enabled,'CONFLICT','Daftar akses berubah.');
