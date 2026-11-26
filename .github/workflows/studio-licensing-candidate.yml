@@ -4,6 +4,9 @@ on:
     branches: [studio-licensing-candidate]
 permissions:
   contents: read
+concurrency:
+  group: ngd-studio-license-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest
