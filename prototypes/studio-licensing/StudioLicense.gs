@@ -17,7 +17,7 @@ function ngdStudioGuard_(){
   var ids=raw?raw.split(',').map(function(s){return s.trim();}):[];
   require_(ids.length<=50&&ids.every(function(id){return /^M-[0-9]{1,12}$/.test(id);})&&
     new Set(ids).size===ids.length,'MAINTENANCE','Daftar akses Studio belum sesuai.');
-  return {secret:secret,ids:ids,cache:CacheService.getScriptCache()};
+  return {secret:secret,ids:ids,props:props,cache:CacheService.getScriptCache()};
 }
 function ngdStudioAllowed_(conf,m){
   return !!m&&m.role==='MEMBER'&&m.status==='AKTIF'&&conf.ids.indexOf(String(m.member_id))>=0;
@@ -102,6 +102,47 @@ function ngdStudioLogout_(token){
     return {success:true};
   });
 }
+// Admin operations use only existing portal ADMIN authentication, not Studio tokens.
+function ngdStudioAdminList_(token){
+  requireAdminPortalEnabled_();
+  admin_(token);
+  var conf=ngdStudioGuard_();
+  return {member_ids:conf.ids.slice().sort(),limit:50};
+}
+function ngdStudioAdminSet_(token,p){
+  requireAdminPortalEnabled_();
+  requireMutationsEnabled_();
+  require_(p&&typeof p.member_id==='string'&&/^M-[0-9]{1,12}$/.test(p.member_id)&&
+    typeof p.enabled==='boolean'&&typeof p.expected_enabled==='boolean',
+    'VALIDATION','Permintaan Studio tidak valid.');
+  return withLock_(function(){
+    var actor=admin_(token),conf=ngdStudioGuard_(),id=p.member_id;
+    var enabled=conf.ids.indexOf(id)>=0;
+    require_(enabled===p.expected_enabled,'CONFLICT','Daftar akses berubah.');
+    if(enabled===p.enabled)return {member_id:id,enabled:enabled,changed:false};
+    if(p.enabled){
+      var members=findRows_('members',function(m){return m.member_id===id;});
+      require_(members.length===1&&members[0].role==='MEMBER'&&members[0].status==='AKTIF',
+        'FORBIDDEN','Member tidak memenuhi syarat.');
+      require_(conf.ids.length<50,'CONFLICT','Kuota pilot penuh.');
+    }
+    // Remove authoritative slot pointers first. Even if stale records survive
+    // eviction, validation/exchange require these slots to match.
+    var pending=ngdStudioKey_('pending',id),active=ngdStudioKey_('active',id);
+    var grantHash=conf.cache.get(pending),sessionHash=conf.cache.get(active);
+    conf.cache.remove(pending);conf.cache.remove(active);
+    if(grantHash)conf.cache.remove(ngdStudioKey_('grant',grantHash));
+    if(sessionHash)conf.cache.remove(ngdStudioKey_('session',sessionHash));
+    var ids=conf.ids.filter(function(x){return x!==id;});
+    if(p.enabled)ids.push(id);
+    // Record requested intent before writing the pilot list. This is not
+    // an atomic transaction; failed property updates require reconciliation.
+    logAudit_(actor.member_id,'ADMIN','STUDIO_PILOT_ACCESS_REQUESTED','studio_pilot',id,
+      enabled?'ENABLED':'DISABLED',p.enabled?'ENABLED':'DISABLED',{});
+    conf.props.setProperty('NGD_STUDIO_PILOT_MEMBER_IDS',ids.sort().join(','));
+    return {member_id:id,enabled:p.enabled,changed:true};
+  });
+}
 // Candidate doPost routes these explicitly BEFORE standard activeMember_.
 // No broad token acceptance.
 function ngdStudioRoute_(action,token,p){
@@ -111,6 +152,8 @@ function ngdStudioRoute_(action,token,p){
     case 'studioExchangeGrant':return ngdStudioExchange_(p.code);
     case 'studioValidateSession':return ngdStudioValidate_(token);
     case 'studioLogout':return ngdStudioLogout_(token);
+    case 'studioAdminList':return ngdStudioAdminList_(token);
+    case 'studioAdminSet':return ngdStudioAdminSet_(token,p);
     default:throw ngdError_('BAD_REQUEST','Aksi tidak dikenal.');
   }
 }
