@@ -2512,6 +2512,7 @@ function syncCheckoutClock_(){
 let studioGrantCard_=null;
 function syncStudioGrantCard_(){
   studioGrantCard_?.unmount();studioGrantCard_=null;
+  if(config.studioPilotEnabled!==true)return;
   const visible=()=>state.route==='beranda'&&studioPilotVisible({config:config.studioPilotEnabled,workspace:state.workspaceInfo,pathname:location.pathname,member:state.me,token:state.token,qa:state.qa,connected:isConnected(),writable:isWriteEnabled()});
   if(!visible())return;
   const token=state.token,id=state.me.member_id,root=by('screen').querySelector('.ngdm-dashboard');

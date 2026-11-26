@@ -26,3 +26,5 @@ Backend isolated CI 45827156342 passed 6/6; wrapper client CI 45827288643 passed
 
 ## Session 3 — portal grant UI
 070d9b0 CI 45827914396: 11 isolated tests, 889 existing passing assertions, zero failures (898 reported including suites). Wrapper c60a5dd 8/8. Candidate dashboard adds explicit default-OFF STAGING-only grant card using existing authenticated API, no code in URL or persistence, one pending request per controller, conservative expiry and stale-session discard, cleanup on render/pagehide. Manual select/copy avoids automatic clipboard writes. Re-render can discard a valid unused code; member may request another after server cooldown. Actual browser, CORS and GAS deployment not yet verified. No production changes or pricing decision.
+
+CI 45828327894: isolated 16 tests passed; legacy VM regression strips imports, so default-off render invoked undefined pilot dependency. Fix early flag guard before any pilot dependency/DOM; add default-off isolation test, no regression tests weakened. Retest pending.
