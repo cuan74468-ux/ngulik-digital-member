@@ -3433,8 +3433,8 @@ function ngdStudioParent_(conf,record){
   return members[0];
 }
 function ngdStudioIssue_(portalToken){
-  var conf=ngdStudioGuard_();requireMutationsEnabled_();
   return withLock_(function(){
+    var conf=ngdStudioGuard_();requireMutationsEnabled_();
     var m=activeMember_(portalToken);
     require_(ngdStudioAllowed_(conf,m),'FORBIDDEN','Akses Studio belum aktif.');
     var id=String(m.member_id),pending=ngdStudioKey_('pending',id),cool=ngdStudioKey_('cool',id);
@@ -3450,9 +3450,9 @@ function ngdStudioIssue_(portalToken){
   });
 }
 function ngdStudioExchange_(code){
-  var conf=ngdStudioGuard_();requireMutationsEnabled_();
   var hash=ngdStudioHash_(code);
   return withLock_(function(){
+    var conf=ngdStudioGuard_();requireMutationsEnabled_();
     var key=ngdStudioKey_('grant',hash),record=ngdStudioRead_(conf.cache,key);
     var m=ngdStudioParent_(conf,record),id=String(m.member_id),pending=ngdStudioKey_('pending',id);
     require_(conf.cache.get(pending)===hash,'UNAUTHORIZED','Kode akses tidak berlaku.');
@@ -3468,16 +3468,18 @@ function ngdStudioExchange_(code){
   });
 }
 function ngdStudioValidate_(token){
-  var conf=ngdStudioGuard_(),hash=ngdStudioHash_(token);
+  var hash=ngdStudioHash_(token);
   return withLock_(function(){
+    var conf=ngdStudioGuard_();
     var record=ngdStudioRead_(conf.cache,ngdStudioKey_('session',hash)),m=ngdStudioParent_(conf,record);
     require_(conf.cache.get(ngdStudioKey_('active',m.member_id))===hash,'UNAUTHORIZED','Sesi Studio berakhir.');
     return {active:true,member_id:String(m.member_id),expires_at:record.expires_at};
   });
 }
 function ngdStudioLogout_(token){
-  var conf=ngdStudioGuard_(),hash=ngdStudioHash_(token);
+  var hash=ngdStudioHash_(token);
   return withLock_(function(){
+    var conf=ngdStudioGuard_();
     var key=ngdStudioKey_('session',hash),record=ngdStudioRead_(conf.cache,key);
     if(record&&record.member_id){
       var slot=ngdStudioKey_('active',record.member_id);
@@ -3490,9 +3492,10 @@ function ngdStudioLogout_(token){
 // Admin operations use only existing portal ADMIN authentication, not Studio tokens.
 function ngdStudioAdminList_(token){
   requireAdminPortalEnabled_();
-  admin_(token);
-  var conf=ngdStudioGuard_();
-  return {member_ids:conf.ids.slice().sort(),limit:50};
+  return withLock_(function(){
+    admin_(token);var conf=ngdStudioGuard_();
+    return {member_ids:conf.ids.slice().sort(),limit:50};
+  });
 }
 function ngdStudioAdminSet_(token,p){
   requireAdminPortalEnabled_();

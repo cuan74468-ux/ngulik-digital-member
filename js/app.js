@@ -1,4 +1,5 @@
 import {api, ApiError, isConnected, isWriteEnabled, createRequestId} from './api.js?v=20261114-adminauth1';
+import {studioAdminVisible, mountStudioAdminCard} from './studio-admin.js?v=20261126-pilot1';
 import {studioPilotVisible, mountStudioGrantCard} from './studio-grant.js?v=20261126-pilot1';
 
 const config = window.NGD_CONFIG || {};
@@ -2523,7 +2524,18 @@ function syncStudioGrantCard_(){
     return api('studioIssueGrant',{},token,{write:true});
   }});
 }
-window.addEventListener('pagehide',()=>{studioGrantCard_?.unmount();studioGrantCard_=null;});
+let studioAdminCard_=null;
+function syncStudioAdminCard_(){
+  studioAdminCard_?.unmount();studioAdminCard_=null;
+  if(config.studioAdminPilotEnabled!==true)return;
+  const visible=()=>state.route==='pengaturan'&&studioAdminVisible({flag:config.studioAdminPilotEnabled,workspace:state.workspaceInfo,pathname:location.pathname,member:state.me,token:state.token,qa:state.qa,connected:isConnected()})&&adminLoginEnabled();
+  if(!visible())return;
+  const token=state.token,id=state.me.member_id;
+  const isCurrent=()=>visible()&&state.token===token&&state.me?.member_id===id;
+  const canWrite=()=>isCurrent()&&isWriteEnabled()&&state.workspaceInfo?.mutations_enabled===true;
+  studioAdminCard_=mountStudioAdminCard({root:by('screen'),isCurrent,canWrite,list:()=>{if(!isCurrent())throw new ApiError('Sesi berakhir.','UNAUTHORIZED');return api('studioAdminList',{},token);},set:p=>{if(!canWrite())throw new ApiError('Perubahan belum tersedia.','FORBIDDEN');return api('studioAdminSet',p,token,{write:true});}});
+}
+window.addEventListener('pagehide',()=>{studioGrantCard_?.unmount();studioGrantCard_=null;studioAdminCard_?.unmount();studioAdminCard_=null;});
 function render(){
   // Scoped mobile visual system: preserve the admin desktop appearance.
   document.body?.classList?.toggle('member-experience',!isAdmin());
@@ -2566,6 +2578,7 @@ function render(){
   // Catalog has a single authoritative HERO slot; do not stack PAGE_COVER above it.
   by('screen').innerHTML=screen;
   syncStudioGrantCard_();
+  syncStudioAdminCard_();
   if(state.route==='ai-tool'&&state.selectedAiToolId==='ngulik-visual'&&logged()&&isAdmin()){
     window.NGD_STUDIO?.configureVisualPipeline(null);
     void window.NGD_STUDIO?.configureTemplateStorage(null);
