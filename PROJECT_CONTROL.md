@@ -195,3 +195,7 @@ Owner requests visual alignment of public, member and admin with content unchang
 
 ## 26 November 2026 — Clarify account registration vs Starter Pack
 Owner requests unambiguous public home CTA. Registration code creates accounts without requiring a paid order; existing registration gates remain unchanged. Separate free account registration and paid Starter Pack Rp15.000; login for existing accounts; Starter CTA opens catalogue. Update editorial seed and exact legacy CMS rendering compatibility only, no Sheets mutation or entitlement/payment logic changes. Align actual CMS and Doc 06 subsequently via normal content governance; no claim that registration/public payments are open.
+
+
+## 27 November 2026 — Restore compact catalog
+Owner requests original two-card-per-row mobile catalog. Remove V6 product grid/card sizing overrides so marketplace-ref-v5 governs the responsive layout again. Keep hero, content, other pages, touch targets and commercial/access logic unchanged. Chrome public/member grid checks required before merge.

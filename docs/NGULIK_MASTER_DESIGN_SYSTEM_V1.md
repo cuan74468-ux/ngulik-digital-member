@@ -71,3 +71,6 @@ Owner requests a unified, comfortable Neo-Brutalist UI without content changes. 
 
 ### V6.1 — owner mobile feedback
 Full-width benefit grid (three equal desktop columns, full-width rows on mobile), existing catalog CMS imagery and Jasa artwork fill the hero with contrast overlay. Text-only editorial intros reuse local artwork; admin operational panels and transactional controls remain functional, not decorated banners. Added measured mobile hero coverage checks. No content changes.
+
+### V6.2 — Restore compact catalog layout
+Owner explicitly rejects the V6 single-column catalog on mobile. Restore established marketplace-ref-v5 responsive grid and compact card proportions; preserve shared brand identity, 44px product action touch height and V6.1 full-background banners. Verify equal-width two-column catalog on public and member at 360px. No functional changes.

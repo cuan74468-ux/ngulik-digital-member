@@ -133,6 +133,23 @@ async function visit(url,label){
     if(label==='guest-catalog'||label==='guest-services'){assert.ok(v.hero&&v.cover,label+' art must fill hero');assert.equal(v.position,'absolute');}
     console.log('NGD_HERO_PRECISION '+label+' '+JSON.stringify(v));
   }
+  if(['guest-catalog','member-catalog'].includes(label)){
+    const result=await request('Runtime.evaluate',{expression:`(()=>{
+      const grid=document.querySelector('#screen .market-product-grid');
+      const cards=grid?[...grid.querySelectorAll(':scope > .market-product-card')].filter(e=>e.getClientRects().length):[];
+      const r=cards.slice(0,2).map(e=>{const b=e.getBoundingClientRect();return {top:b.top,left:b.left,width:b.width,right:b.right}});
+      return {columns:grid?getComputedStyle(grid).gridTemplateColumns.split(/\\s+/).length:0,count:cards.length,r};
+    })()`,returnByValue:true});
+    assert.ok(!result.exceptionDetails);
+    const v=result.result.value;
+    assert.equal(v.columns,2,label+' must retain compact two-column catalog');
+    if(v.r.length===2){
+      assert.ok(Math.abs(v.r[0].top-v.r[1].top)<2,label+' first cards must share row');
+      assert.ok(Math.abs(v.r[0].width-v.r[1].width)<2,label+' equal card widths');
+      assert.ok(v.r[0].right<=v.r[1].left,label+' cards must not overlap');
+    }
+    console.log('NGD_CATALOG_TWO_COLUMNS '+label+' '+JSON.stringify(v));
+  }
   // Precision V6: verify actual card bounds and product touch targets.
   const precision=await request('Runtime.evaluate',{expression:`(()=>{
     const screen=document.getElementById('screen');
