@@ -10,7 +10,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -22,3 +22,5 @@ jobs:
       - run: node --test prototypes/studio-licensing/*.test.cjs
       - name: Existing backend and frontend unit regression suite (no deploy)
         run: node --test tests/*.test.cjs
+      - name: Chromium portal licensing cards and actual API envelope
+        run: node prototypes/studio-licensing/browser-run.mjs

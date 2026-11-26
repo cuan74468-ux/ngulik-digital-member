@@ -22,18 +22,18 @@ export function createGrantController({issue,isCurrent,onState,now=Date.now,sche
  function dispose(){alive=false;clear();}
  return Object.freeze({request,dismiss,dispose});
 }
-export function mountStudioGrantCard({root,issue,isCurrent}){
+export function mountStudioGrantCard({root,issue,isCurrent,now=Date.now,schedule=setTimeout,cancel=clearTimeout}){
  const doc=root.ownerDocument,el=(tag,text)=>{const n=doc.createElement(tag);if(text)n.textContent=text;return n;};
  const card=el("section");card.className="surface";card.setAttribute("aria-label","Akses Linggau AI Studio");
  const heading=el("h3","Linggau AI Studio"),intro=el("p","Ambil kode masuk untuk workspace Studio. Khusus member pilot yang diizinkan.");
  const button=el("button","Buat kode akses");button.type="button";button.className="btn btn-primary";
- const label=el("label","Kode masuk (berlaku maksimal 3 menit)"),field=el("input");field.type="text";field.readOnly=true;field.autocomplete="off";field.spellcheck=false;field.setAttribute("aria-label","Kode masuk Studio");
+ const label=el("label","Kode masuk (berlaku maksimal 3 menit)"),field=el("input");field.type="text";field.className="input";field.readOnly=true;field.autocomplete="off";field.spellcheck=false;field.setAttribute("aria-label","Kode masuk Studio");
  const select=el("button","Pilih kode untuk disalin");select.type="button";select.className="btn btn-secondary";
  const dismiss=el("button","Sembunyikan kode");dismiss.type="button";dismiss.className="btn btn-ghost";
  const status=el("p");status.setAttribute("role","status");
  const controls=el("div");controls.hidden=true;controls.append(label,field,select,dismiss);
  card.append(heading,intro,button,controls,status);root.prepend(card);
- const controller=createGrantController({issue,isCurrent,onState:s=>{
+ const controller=createGrantController({issue,isCurrent,now,schedule,cancel,onState:s=>{
   const ready=s.phase==="ready";field.value=ready?s.code:"";controls.hidden=!ready;button.disabled=ready||s.phase==="pending";
   status.textContent={idle:"",pending:"Meminta kode…",ready:"Salin kode ke Canvas resmi. Jangan bagikan kepada orang lain.",expired:"Kode kedaluwarsa. Buat kode baru.",error:"Kode tidak dapat dibuat. Periksa hak akses atau coba kembali."}[s.phase]||"";
  }});
