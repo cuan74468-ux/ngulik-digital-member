@@ -65,3 +65,6 @@ The owner rejected the first cross-route theme as too pale and not consistent wi
 - GitHub CI must validate Node tests and actual Chrome computed CSS colors for guest hero and member wallet/chart/metric on 360px.
 - Screenshots from both guest/member/admin must be reviewed for clipping, contrast, broken buttons and editorial proportions before merge.
 - Never alter `Code.gs`, `Diagnostics.gs`, GAS deployment, Script Properties, credits ledger, payment logic or staging/production sheets for UI migration.
+
+## V6 Precision (26 November 2026)
+Owner requests a unified, comfortable Neo-Brutalist UI without content changes. Existing ink/indigo/lime palette, 12px corners and hero imagery are retained; hard shadows reduced to 3px, common 1240px envelope, aligned card grids, bottom-aligned CTAs, 44px product actions, readable forms and scrollable admin tables. Narrow phones favor one catalog column instead of cramped cards. Admin module navigation wraps on desktop and scrolls within its own rail on mobile. Wrapper remains member-only, Premium admin-only. No changes to JS, CMS, business data, auth, provider or GAS. Legacy layout files remain until verified migration. Scoped CSS-first pass; visual/physical device QA remains separate. Budget increase limited to existing canonical CSS, no new stylesheet.

@@ -118,6 +118,18 @@ async function visit(url,label){
   // A newly provisioned CMS with no published rows must show a neutral loader,
   // not invent a marketing campaign. Test its mobile fit above; legacy window
   // chrome checks continue for authenticated member panels below.
+  // Precision V6: verify actual card bounds and product touch targets.
+  const precision=await request('Runtime.evaluate',{expression:`(()=>{
+    const screen=document.getElementById('screen');
+    const cards=[...screen.querySelectorAll('.market-product-card,.ai-product-card,.admin-module-card,.ngdm-shortcut,.ngdl-offer')].filter(e=>e.getClientRects().length);
+    const overflow=cards.filter(e=>{const r=e.getBoundingClientRect();return r.width>0&&(r.left<0||r.right>innerWidth+1)}).length;
+    const action=[...screen.querySelectorAll('.ngd-card-actions button')].filter(e=>e.getClientRects().length);
+    return {overflow,tiny:action.filter(e=>e.getBoundingClientRect().height<43).length,role:document.body.dataset.appRole,cardCount:cards.length};
+  })()`,returnByValue:true});
+  assert.ok(!precision.exceptionDetails,label+' precision check exception');
+  assert.equal(precision.result.value.overflow,0,label+' card outside viewport');
+  assert.equal(precision.result.value.tiny,0,label+' catalog CTA below tap target');
+  console.log('NGD_PRECISION '+label+' '+JSON.stringify(precision.result.value));
   if(label==='member-home'){
     const windowFrame=await request('Runtime.evaluate',{expression:`(()=>{
       const selector=document.body.dataset.appRole==='member'?

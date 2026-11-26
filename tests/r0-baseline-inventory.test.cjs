@@ -9,7 +9,7 @@ const root = path.resolve(__dirname, '..');
 
 // Audited 24 Nov: Visual beginner UX adds 1,332 bytes to existing ai-studio.css only;
 // no new stylesheet and no additional !important. Caps remain strict after this ratchet.
-// zero added stylesheets and zero additional !important. Preserve ratchet elsewhere.
+// V6: reviewed layout/legibility change in canonical CSS only. Preserve all other ratchets.
 const limits = Object.freeze({
   'assets/app.css': [22721, 2],
   'assets/member-mobile.css': [1036, 1],
@@ -40,13 +40,13 @@ const limits = Object.freeze({
   'assets/guest-sales-trust-v1.css': [18156, 25],
   'assets/product-detail-v1.css': [13561, 40],
   'assets/member-native-dashboard-v1.css': [31615, 224],
-  'assets/ngulik-design-system.css': [49432, 474],
+  'assets/ngulik-design-system.css': [58656, 518],
   'assets/staging-native-mobile.css': [9008, 1]
 });
 
 const budgets = Object.freeze({
-  'index.html': { count: 30, bytes: 761684, important: 2109 },
-  'staging/member.html': { count: 31, bytes: 770692, important: 2110 }
+  'index.html': { count: 30, bytes: 770908, important: 2153 },
+  'staging/member.html': { count: 31, bytes: 779916, important: 2154 }
 });
 
 function inspectEntry(entry) {
