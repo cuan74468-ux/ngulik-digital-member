@@ -47,15 +47,29 @@
       (to&&item.cta_label?button(item,'ngdl-offer-link'):'')+
       '</div></article>';
   }
+  // Compatibility correction for the exact published legacy home copy.
+  // Keep unrelated or subsequently edited CMS content intact; no data mutation.
+  function clarifyEntry(row){
+    if(!row)return row;
+    if(row.content_id==='CNT-HERO-MAIN'&&row.cta_label==='Mulai Tiket Masuk — Rp15.000'&&route(row)==='daftar')
+      return {...row,cta_label:'Daftar Akun Gratis',description:row.description==="Gunakan tools AI, template siap pakai, dan akses belajar terarah di Ngulik Digital untuk merapikan promosi dan operasional usaha Anda."?"Gunakan tools AI, template siap pakai, dan akses belajar terarah di Ngulik Digital untuk merapikan promosi dan operasional usaha Anda. Daftar akun gratis. Starter Pack Rp15.000 dibeli terpisah setelah masuk.":row.description};
+    if(row.content_id==='CNT-HERO-SECONDARY'&&row.cta_label==='Masuk Member'&&route(row)==='login'&&row.description==='Sudah terdaftar? Masuk dengan nomor WhatsApp Anda.')
+      return {...row,cta_label:'Sudah Punya Akun? Masuk'};
+    if(row.content_id==='CNT-STARTER-MAIN'&&row.cta_label==='Ambil Tiket Masuk — Rp15.000'&&route(row)==='daftar')
+      return {...row,title:row.title==='Tiket Masuk Awal: Starter Pack Rp15.000'?'Starter Pack — Rp15.000':row.title,
+        description:row.description==="Langkah pertama masuk ke ekosistem Ngulik Digital dengan fasilitas awal untuk mulai praktik."?"Pendaftaran akun gratis. Starter Pack merupakan paket berbayar terpisah untuk memperoleh manfaat paket setelah pembayaran terverifikasi.":row.description,
+        cta_label:'Lihat Starter Pack',cta_route:'#katalog'};
+    return row;
+  }
   function home(items,settings){
-    const hero=entry(items,'CNT-HERO-MAIN','HERO','home');
+    const hero=clarifyEntry(entry(items,'CNT-HERO-MAIN','HERO','home'));
     if(!hero)return '<div class="ngd-landing-v1" aria-live="polite">'+
       '<h1>Ngulik Digital</h1><p>Konten belum tersedia.</p>'+
       '<button type="button" data-route="katalog">Buka Katalog</button>'+
       '<button type="button" data-route="dukungan">Bantuan</button></div>';
     const pills=list(items,'HIGHLIGHT_PILL','home');
     const cases=list(items,'USECASE_CARD','home');
-    const starter=entry(items,'CNT-STARTER-MAIN','FEATURE_CARD','home');
+    const starter=clarifyEntry(entry(items,'CNT-STARTER-MAIN','FEATURE_CARD','home'));
     const bullets=list(items,'FEATURE_BULLET','home');
     const honesty=entry(items,'CNT-HONESTY-BOX','NOTICE_BOX','home');
     const services=list(items,'SERVICE_CARD','home');
@@ -70,7 +84,7 @@
         return cut<0?{title:clean,description:''}:
           {title:clean.slice(0,cut),description:clean.slice(cut+3)};
       }).filter(x=>x.title);
-    const second=entry(items,'CNT-HERO-SECONDARY','CTA_BUTTON','home');
+    const second=clarifyEntry(entry(items,'CNT-HERO-SECONDARY','CTA_BUTTON','home'));
     const useHeading=entry(items,'CNT-SECTION-USECASES','SECTION_HEADING','home');
     const svcHeading=entry(items,'CNT-SECTION-SERVICES','SECTION_HEADING','home');
     const title=t=>t?'<h2>'+escape(t.title||'')+'</h2>':'';
