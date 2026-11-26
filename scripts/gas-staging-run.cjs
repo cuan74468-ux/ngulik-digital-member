@@ -127,9 +127,10 @@ async function run(mode){
  fs.chmodSync(work,0o700);
  try{
   const g=session(work,id,ep.id),head=g.clone(),live=g.deployment(head.dir),backup=g.clone(live.versionNumber);
-  const r=p.build(p.readDir(path.join(p.root,'apps-script')),head.files,parse);
+  if(p.policy.releaseProfile)check(live.versionNumber===p.policy.initialVersion,'LICENSE_BASELINE_VERSION_DRIFT');
+  const r=p.buildRelease(p.readDir(path.join(p.root,'apps-script')),head.files,parse);
   const beforeFlags=await health(ep.url,backup.files);
-  console.log(JSON.stringify({version:live.versionNumber,editorFiles:head.files.size,editorEqualsLive:head.digest===backup.digest,candidateFiles:r.candidate.size,changed:r.changed,removed:r.removed,globalCount:r.after.size,baselineDigest:r.baselineDigest,candidateDigest:r.candidateDigest,releaseGate:p.policy.approval.status}));
+  console.log(JSON.stringify({version:live.versionNumber,editorFiles:head.files.size,editorEqualsLive:head.digest===backup.digest,candidateFiles:r.candidate.size,changed:r.changed,removed:r.removed,globalCount:r.after.size,releaseProfile:r.releaseProfile||'full-modular',baselineDigest:r.baselineDigest,candidateDigest:r.candidateDigest,releaseGate:p.policy.approval.status}));
   if(mode==='audit'){console.log('NGD_STAGING_AUDIT_COMPLETE_NO_REMOTE_WRITE');return;}
   p.authorize(r,live.versionNumber);
   check(head.digest===backup.digest,'EDITOR_DIFFERS_FROM_IMMUTABLE_BACKUP');

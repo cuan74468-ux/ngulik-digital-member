@@ -19,3 +19,25 @@ test('legacy modularization plus Studio candidate packages against exact pre-lic
  a.throws(()=>p.authorize(result,34),/PENDING/);
  console.log('NGD_STUDIO_SYNTHETIC_PACKAGE_PASS files='+result.candidate.size+' addedStudioGlobals='+added.length+' releaseGate=PENDING');
 });
+
+test('one-time license-only profile preserves all 27 other legacy files and refuses drift',()=>{
+ const repo=p.readDir(path.join(p.root,'apps-script')),remote=new Map([['appsscript.json',original('apps-script/appsscript.json')]]);
+ for(const [from,to] of Object.entries(p.policy.managed))if(!p.policy.visual.includes(from))remote.set(to,original('apps-script/'+from));
+ remote.set(p.policy.legacyBundle,original('handoff/VisualStudioBundle.gs'));
+ for(const [i,n] of p.policy.preserve.entries())remote.set(n,'// Synthetic preserve placeholder\nfunction fixtureStudioPreserve'+i+'(){}');
+ const policy={...p.policy,releaseProfile:{mode:'studio-license-only-v34',baselineDigest:p.digest(remote)}};
+ const result=p.buildRelease(repo,remote,parse,policy);
+ a.equal(result.candidate.size,28);a.deepEqual(result.changed,['Kode.js']);a.deepEqual(result.removed,[]);
+ a.equal(result.after.size-result.before.size,14);
+ for(const [name,value] of remote)if(name!=='Kode.js')a.equal(result.candidate.get(name),value);
+ a.equal(result.candidate.get('Kode.js'),repo.get('Code.gs'));
+ a.throws(()=>p.authorize(result,34,policy),/PENDING/);
+ const drift=new Map(remote);drift.set('Catalog.js',drift.get('Catalog.js')+'\n// drift');
+ a.throws(()=>p.buildRelease(repo,drift,parse,policy),/BASELINE_DRIFT/);
+ const bad=new Map(repo);bad.set('Code.gs',repo.get('Code.gs').replace("SESSION_DAYS: 7","SESSION_DAYS: 8").replace("function ngdStudioGuard_","function ngdStudioGuard_"));
+ // Independently test an unreviewed existing function change (not a global rename).
+ const src=repo.get('Code.gs'),needle="function authLogout_(token) {";
+ a.ok(src.includes(needle));bad.set('Code.gs',src.replace(needle,needle+'\n  throw new Error("fixture");'));
+ a.throws(()=>p.buildRelease(bad,remote,parse,policy),/UNRELATED_CODE_CHANGE/);
+ console.log('NGD_STUDIO_LICENSE_ONLY_SYNTHETIC_PASS files=28 changed=Kode.js preserved=27 added=14');
+});

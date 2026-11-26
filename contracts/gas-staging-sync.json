@@ -70,5 +70,9 @@
     "baselineVersion": null,
     "triggerAuditComplete": false,
     "sideEffectsReviewed": false
+  },
+  "releaseProfile": {
+    "mode": "studio-license-only-v34",
+    "baselineDigest": "99b88cf002f89f1509370f8d2864c90ff3d5543238a84f38c19b0780780f3a5e"
   }
 }
