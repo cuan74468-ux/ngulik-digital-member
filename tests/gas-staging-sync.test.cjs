@@ -107,3 +107,16 @@ test('clasp tracked inventory rejects missing extra duplicate and malformed path
  a.equal(runner.verifyTrackedInventory({filesToPush:['appsscript.json','Kode.js'],untrackedFiles:['.clasp.json']},files),2);
  for(const bad of [null,{}, {filesToPush:['Kode.js']},{filesToPush:['Kode.js','appsscript.json','private.js']},{filesToPush:['Kode.js','Kode.js']},{filesToPush:['./Kode.js','appsscript.json']}])a.throws(()=>runner.verifyTrackedInventory(bad,files),/CLASP_STATUS_INVALID|CLASP_TRACKED_INVENTORY_MISMATCH/);
 });
+
+// ciGate intentionally requires the exact SHA, including documentation-only
+// commits. Path filters on main push can silently starve the release gate.
+test('every exact main SHA schedules all three mandatory read-only CI workflows',()=>{
+ for(const name of runner.required){
+  const yaml=fs.readFileSync(path.join(p.root,'.github/workflows',name),'utf8');
+  const push=yaml.match(/^  push:\n((?:    [^\n]+\n)+)/m);
+  a.ok(push,name+' must run on main pushes');
+  a.match(push[1],/^    branches: \[main\]$/m);
+  a.doesNotMatch(push[1],/^    paths(?:-ignore)?:/m,name+' must not skip exact SHA checks');
+  a.match(yaml,/^  workflow_dispatch:/m);
+ }
+});

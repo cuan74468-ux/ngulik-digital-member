@@ -1,18 +1,8 @@
 name: Staging Source Check
 on:
+  # GAS release gate requires these checks on every exact main SHA.
   push:
     branches: [main]
-    paths:
-      - 'js/**'
-      - 'apps-script/**'
-      - 'scripts/gas-staging-*'
-      - 'contracts/gas-staging-sync.json'
-      - 'tests/gas-staging-sync.test.cjs'
-      - 'index.html'
-      - 'staging/**'
-      - 'assets/**'
-      - '.github/workflows/**'
-      - 'SECURITY.md'
   workflow_dispatch:
 permissions:
   contents: read

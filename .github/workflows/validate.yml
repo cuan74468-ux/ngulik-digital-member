@@ -1,26 +1,8 @@
 name: Validate backend and frontend (no deploy)
 on:
+  # GAS release gate requires these checks on every exact main SHA.
   push:
     branches: [main]
-    paths:
-      - 'apps-script/**'
-      - 'scripts/gas-staging-*'
-      - 'js/**'
-      - 'assets/**'
-      - 'tests/**'
-      - 'contracts/**'
-      - 'staging/**'
-      - 'index.html'
-      - 'config.js'
-      - '404.html'
-      - 'robots.txt'
-      - 'sitemap.xml'
-      - 'package.json'
-      - '.github/workflows/**'
-      - '.github/CODEOWNERS'
-      - '.github/pull_request_template.md'
-      - 'SECURITY.md'
-      - 'PROJECT_CONTROL.md'
   pull_request:
     branches: [main]
     paths:
