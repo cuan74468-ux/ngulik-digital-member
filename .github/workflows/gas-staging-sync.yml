@@ -8,6 +8,11 @@ on:
         options: [audit, deploy]
         default: audit
         required: true
+      audit_run_id:
+        description: Successful final audit run ID on this exact main SHA (required for deploy)
+        type: string
+        required: false
+        default: ''
 permissions:
   contents: read
 concurrency:
@@ -47,9 +52,10 @@ jobs:
           fi
           npm install --prefix "$RUNNER_TEMP/ngd-tooling" --ignore-scripts --no-audit --no-fund --no-save @google/clasp@3.4.1 acorn@8.15.0
           NODE_PATH="$RUNNER_TEMP/ngd-tooling/node_modules" node --test scripts/gas-staging-ast.test.cjs
-      - name: STAGING audit or explicitly gated deployment
+      - name: STAGING ${{ inputs.mode }} (protected)
         env:
           MODE: ${{ inputs.mode }}
+          GAS_FINAL_AUDIT_RUN_ID: ${{ inputs.audit_run_id }}
           CLASPRC_JSON: ${{ secrets.NGD_STAGING_CLASPRC_JSON }}
           GAS_STAGING_SCRIPT_ID: ${{ secrets.NGD_STAGING_SCRIPT_ID }}
           GITHUB_TOKEN: ${{ github.token }}

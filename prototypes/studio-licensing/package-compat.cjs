@@ -16,7 +16,8 @@ test('legacy modularization plus Studio candidate packages against exact pre-lic
  a.ok(added.length>=10&&added.every(n=>n.startsWith('ngdStudio')));
  for(const n of added)a.equal(result.after.get(n),'Kode.js');
  for(const n of p.policy.preserve)a.equal(result.candidate.get(n),remote.get(n));
- a.throws(()=>p.authorize(result,34),/PENDING/);
+ a.throws(()=>p.authorize(result,34,{approval:{status:'PENDING'}}),/PENDING/);
+ if(p.policy.approval.status==='APPROVED')a.throws(()=>p.authorize(result,34),/MISMATCH/);
  console.log('NGD_STUDIO_SYNTHETIC_PACKAGE_PASS files='+result.candidate.size+' addedStudioGlobals='+added.length+' releaseGate=PENDING');
 });
 
@@ -25,7 +26,7 @@ test('one-time license-only profile preserves all 27 other legacy files and refu
  for(const [from,to] of Object.entries(p.policy.managed))if(!p.policy.visual.includes(from))remote.set(to,original('apps-script/'+from));
  remote.set(p.policy.legacyBundle,original('handoff/VisualStudioBundle.gs'));
  for(const [i,n] of p.policy.preserve.entries())remote.set(n,'// Synthetic preserve placeholder\nfunction fixtureStudioPreserve'+i+'(){}');
- const policy={...p.policy,releaseProfile:{mode:'studio-license-only-v34',baselineDigest:p.digest(remote)}};
+ const policy={...p.policy,approval:{status:'PENDING'},releaseProfile:{mode:'studio-license-only-v34',baselineDigest:p.digest(remote)}};
  const result=p.buildRelease(repo,remote,parse,policy);
  a.equal(result.candidate.size,28);a.deepEqual(result.changed,['Kode.js']);a.deepEqual(result.removed,[]);
  a.equal(result.after.size-result.before.size,14);

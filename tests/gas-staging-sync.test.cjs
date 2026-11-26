@@ -17,7 +17,7 @@ test('digest detects any changed, missing or extra source; order independent',()
 });
 test('pending approval and changed fingerprints fail closed',()=>{
  const r={baselineDigest:'a'.repeat(64),candidateDigest:'b'.repeat(64),after:new Map([['report','Report.js']])};
- a.throws(()=>p.authorize(r,34),/PENDING/);
+ a.throws(()=>p.authorize(r,34,{approval:{status:'PENDING'}}),/PENDING/);
  const approved={approval:{status:'APPROVED',reviewReference:'review',baselineVersion:34,baselineDigest:r.baselineDigest,candidateDigest:r.candidateDigest,triggerHandlers:['report'],triggerAuditComplete:true,sideEffectsReviewed:true}};
  a.doesNotThrow(()=>p.authorize(r,34,approved));
  a.throws(()=>p.authorize(r,34,{approval:{...approved.approval,triggerAuditComplete:false}}),/REVIEW_PENDING/);
@@ -70,4 +70,29 @@ test('rollback when only HEAD changed does not redeploy an already restored live
  const x=recoveryFixture(34);
  a.deepEqual(await runner.recover(x.g,x.state,async()=>false),{versionRestored:true,sourceRestored:true,healthRestored:false});
  a.deepEqual(x.calls,[['push','private-backup']]);
+});
+
+test('protected final audit gate binds exact SHA, successful audit mode and freshness',async()=>{
+ const now=Date.parse('2026-11-26T15:00:00Z'),sha='1'.repeat(40),env={GITHUB_SHA:sha,GITHUB_RUN_ID:'999',GAS_FINAL_AUDIT_RUN_ID:'123'};
+ const run={id:123,path:'.github/workflows/gas-staging-sync.yml',head_sha:sha,head_branch:'main',event:'workflow_dispatch',status:'completed',conclusion:'success',updated_at:new Date(now-60000).toISOString()};
+ const job={name:'staging',status:'completed',conclusion:'success',steps:[{name:'STAGING audit (protected)',status:'completed',conclusion:'success'}]};
+ const api=(r=run,j=job)=>async route=>route.includes('/jobs?')?{jobs:[j]}:r;
+ await runner.auditGate(env,api(),now);
+ await a.rejects(runner.auditGate({...env,GAS_FINAL_AUDIT_RUN_ID:''},api(),now),/RUN_ID_REQUIRED/);
+ await a.rejects(runner.auditGate({...env,GAS_FINAL_AUDIT_RUN_ID:'999'},api(),now),/RUN_ID_REQUIRED/);
+ for(const patch of [{head_sha:'2'.repeat(40)},{head_branch:'other'},{path:'.github/workflows/other.yml'},{conclusion:'failure'},{status:'in_progress'},{event:'push'}])await a.rejects(runner.auditGate(env,api({...run,...patch}),now),/RUN_UNVERIFIED/);
+ await a.rejects(runner.auditGate(env,api({...run,updated_at:new Date(now-86400001).toISOString()}),now),/STALE/);
+ await a.rejects(runner.auditGate(env,api(run,{...job,steps:[{name:'STAGING deploy (protected)',status:'completed',conclusion:'success'}]}),now),/MODE_UNVERIFIED/);
+ await a.rejects(runner.auditGate(env,api(run,{...job,steps:[{name:'STAGING audit (protected)',status:'completed',conclusion:'failure'}]}),now),/MODE_UNVERIFIED/);
+});
+test('actual approved license policy binds owner-reviewed minimal fingerprint, not full migration',()=>{
+ const q=p.policy;
+ if(q.approval.status==='PENDING')return;
+ a.equal(q.releaseProfile.mode,'studio-license-only-v34');
+ a.equal(q.approval.baselineDigest,q.releaseProfile.baselineDigest);
+ a.equal(q.approval.baselineVersion,34);
+ a.deepEqual(q.approval.triggerHandlers,['ngdDailyExecutiveReportTask']);
+ const r={baselineDigest:q.approval.baselineDigest,candidateDigest:q.approval.candidateDigest,after:new Map([['ngdDailyExecutiveReportTask','DailyExecutiveReport.js']])};
+ a.doesNotThrow(()=>p.authorize(r,34,q));
+ a.throws(()=>p.authorize({...r,candidateDigest:'ed9fabc9bc24c72f524897beaed31857b2d076f17520fe9b450d96431e1b157d'},34,q),/MISMATCH/);
 });

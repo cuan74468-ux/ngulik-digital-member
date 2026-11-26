@@ -49,5 +49,5 @@ test('unmapped or reassigned managed globals fail even when names are unique',()
 });
 test('pending release gate cannot authorize real-package fingerprints',()=>{
  const r=p.build(repo,fixture(),parse);
- a.throws(()=>p.authorize(r,34),/PENDING/);
+ a.throws(()=>p.authorize(r,34,{approval:{status:'PENDING'}}),/PENDING/);
 });

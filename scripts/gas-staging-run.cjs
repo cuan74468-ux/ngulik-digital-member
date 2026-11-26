@@ -18,6 +18,22 @@ async function ciGate(env=process.env,api=github){
   check(runs.length>0&&runs[0].status==='completed'&&runs[0].conclusion==='success','CI_NOT_GREEN: '+name);
  }
 }
+// A deployment must cite a completed protected read-only audit on this
+// exact main SHA. The separately named successful audit step distinguishes
+// audit from deploy; the approved audit path checks fingerprints and flags.
+async function auditGate(env=process.env,api=github,now=Date.now()){
+ const id=String(env.GAS_FINAL_AUDIT_RUN_ID||'');
+ check(/^[1-9][0-9]{0,19}$/.test(id)&&id!==String(env.GITHUB_RUN_ID||''),'FINAL_AUDIT_RUN_ID_REQUIRED');
+ const run=await api('/actions/runs/'+id,env);
+ check(String(run.id)===id&&String(run.path||'').split('@')[0]==='.github/workflows/gas-staging-sync.yml'&&run.head_sha===env.GITHUB_SHA&&run.head_branch==='main'&&run.event==='workflow_dispatch'&&run.status==='completed'&&run.conclusion==='success','FINAL_AUDIT_RUN_UNVERIFIED');
+ const updated=Date.parse(run.updated_at);
+ check(Number.isFinite(updated)&&updated<=now+60000&&now-updated<=86400000,'FINAL_AUDIT_STALE');
+ const data=await api('/actions/runs/'+id+'/jobs?filter=latest&per_page=100',env);
+ check(Array.isArray(data.jobs)&&data.jobs.length===1,'FINAL_AUDIT_JOB_INVENTORY');
+ const job=data.jobs[0];
+ check(job.name==='staging'&&job.status==='completed'&&job.conclusion==='success'&&Array.isArray(job.steps)&&job.steps.some(s=>s.name==='STAGING audit (protected)'&&s.status==='completed'&&s.conclusion==='success'),'FINAL_AUDIT_MODE_UNVERIFIED');
+ console.log('FINAL_AUDIT_GATE_PASS: '+id);
+}
 function localHead(){return cp.execFileSync('git',['rev-parse','HEAD'],{cwd:p.root,encoding:'utf8'}).trim();}
 function clasp(cwd,args){
  const env={...process.env};delete env.GITHUB_TOKEN;delete env.GAS_STAGING_SCRIPT_ID;
@@ -119,6 +135,9 @@ async function run(mode){
  if(mode==='deploy'){
   check(p.policy.approval.status==='APPROVED','GEMINI_RECONCILIATION_PENDING');
   await ciGate();
+  await auditGate();
+ }else if(p.policy.approval.status==='APPROVED'){
+  await ciGate();
  }
  const id=process.env.GAS_STAGING_SCRIPT_ID;
  check(/^[A-Za-z0-9_-]{20,140}$/.test(id||''),'STAGING_SCRIPT_ID_MISSING');
@@ -131,17 +150,23 @@ async function run(mode){
   const r=p.buildRelease(p.readDir(path.join(p.root,'apps-script')),head.files,parse);
   const beforeFlags=await health(ep.url,backup.files);
   console.log(JSON.stringify({version:live.versionNumber,editorFiles:head.files.size,editorEqualsLive:head.digest===backup.digest,candidateFiles:r.candidate.size,changed:r.changed,removed:r.removed,globalCount:r.after.size,releaseProfile:r.releaseProfile||'full-modular',baselineDigest:r.baselineDigest,candidateDigest:r.candidateDigest,releaseGate:p.policy.approval.status}));
-  if(mode==='audit'){console.log('NGD_STAGING_AUDIT_COMPLETE_NO_REMOTE_WRITE');return;}
-  p.authorize(r,live.versionNumber);
-  check(head.digest===backup.digest,'EDITOR_DIFFERS_FROM_IMMUTABLE_BACKUP');
-  // Keep STAGING write gates closed; do not modify any Script Properties.
-  check(JSON.parse(beforeFlags)[0]===false,'STAGING_MUTATIONS_MUST_REMAIN_OFF');
+  if(mode==='deploy'||p.policy.approval.status==='APPROVED'){
+   p.authorize(r,live.versionNumber);
+   check(head.digest===backup.digest,'EDITOR_DIFFERS_FROM_IMMUTABLE_BACKUP');
+   // Keep STAGING write gates closed; do not modify any Script Properties.
+   check(JSON.parse(beforeFlags)[0]===false,'STAGING_MUTATIONS_MUST_REMAIN_OFF');
+  }
+  if(mode==='audit'){
+   if(p.policy.approval.status==='APPROVED')console.log('NGD_STAGING_APPROVED_PACKAGE_AUDIT_PASS');
+   console.log('NGD_STAGING_AUDIT_COMPLETE_NO_REMOTE_WRITE');return;
+  }
   const candidateDir=g.packageDir(r.candidate),restoreDir=g.packageDir(backup.files);
   // The existing immutable deployed version is the recovery source. No new
   // version is necessary before the push when HEAD is exactly identical.
   console.log('RECOVERY_VERSION_READY: '+live.versionNumber);
   await ciGate();
   check(g.clone().digest===head.digest&&g.deployment(head.dir).versionNumber===live.versionNumber,'MANUAL_DRIFT_BEFORE_UPLOAD');
+  check(await health(ep.url,backup.files)===beforeFlags,'STAGING_FLAGS_CHANGED_BEFORE_UPLOAD');
   let newVersion,attempted=false;
   try{
    attempted=true;g.push(candidateDir);
@@ -150,6 +175,7 @@ async function run(mode){
    check(g.clone(newVersion).digest===r.candidateDigest,'VERSION_CONTENT_MISMATCH');
    await ciGate();
    check(g.clone().digest===r.candidateDigest&&g.deployment(head.dir).versionNumber===live.versionNumber,'MANUAL_DRIFT_BEFORE_REDEPLOY');
+   check(await health(ep.url,backup.files)===beforeFlags,'STAGING_FLAGS_CHANGED_BEFORE_REDEPLOY');
    g.redeploy(candidateDir,newVersion,'NGD STAGING '+process.env.GITHUB_SHA);
    check(g.deployment(head.dir).versionNumber===newVersion,'LIVE_VERSION_MISMATCH');
    check(await health(ep.url,r.candidate)===beforeFlags,'STAGING_FLAGS_CHANGED');
@@ -173,5 +199,5 @@ async function run(mode){
   }
  }finally{fs.rmSync(work,{recursive:true,force:true});}
 }
-module.exports={ciGate,required,session,recover,verifyStudioDisabled};
+module.exports={ciGate,auditGate,required,session,recover,verifyStudioDisabled};
 if(require.main===module)run(process.argv[2]||'audit').catch(e=>{console.error('STOP: '+e.message);process.exitCode=1;});

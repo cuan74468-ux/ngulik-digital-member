@@ -62,14 +62,16 @@
     "VisualSetupSekali.js"
   ],
   "approval": {
-    "status": "PENDING",
-    "reviewReference": null,
-    "baselineDigest": null,
-    "candidateDigest": null,
-    "triggerHandlers": null,
-    "baselineVersion": null,
-    "triggerAuditComplete": false,
-    "sideEffectsReviewed": false
+    "status": "APPROVED",
+    "reviewReference": "Owner explicit authorization 2026-11-26: minimal STAGING only, after final audit PASS; RELEASE-REVIEW.md; PR #59; audit #45831921124; owner Cloud Shell and UI evidence.",
+    "baselineDigest": "99b88cf002f89f1509370f8d2864c90ff3d5543238a84f38c19b0780780f3a5e",
+    "candidateDigest": "95e430412408a8b01225d068d9fb6d64415fc1c0db02b44af8230977fe885adf",
+    "triggerHandlers": [
+      "ngdDailyExecutiveReportTask"
+    ],
+    "baselineVersion": 34,
+    "triggerAuditComplete": true,
+    "sideEffectsReviewed": true
   },
   "releaseProfile": {
     "mode": "studio-license-only-v34",
