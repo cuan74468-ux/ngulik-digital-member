@@ -24,3 +24,14 @@ jobs:
         run: node --test tests/*.test.cjs
       - name: Chromium portal licensing cards and actual API envelope
         run: node prototypes/studio-licensing/browser-run.mjs
+      - name: Cross-repository contract with exact public Studio client and synthetic GAS
+        shell: bash
+        run: |
+          set -euo pipefail
+          fixture="$RUNNER_TEMP/studio-cross-repo"
+          mkdir -p "$fixture"
+          git -C "$fixture" init -q
+          git -C "$fixture" fetch --no-tags --depth=1 https://github.com/cuan74468-ux/linggau-ai-wrapper.git 49a7943d6f1a107790f07e8d0c132496e751bc30
+          test "$(git -C "$fixture" rev-parse FETCH_HEAD)" = "49a7943d6f1a107790f07e8d0c132496e751bc30"
+          git -C "$fixture" show FETCH_HEAD:prototypes/studio-licensing/client.mjs > "$fixture/client.mjs"
+          STUDIO_CROSS_CLIENT="$fixture/client.mjs" node --test prototypes/studio-licensing/cross-repo-contract.cjs
