@@ -1,6 +1,5 @@
 /**
- * STAGING pilot source candidate. NOT installed in Apps Script, NOT routed
- * by doPost. No database writes, payments or provider calls. All functions
+ * STAGING pilot source candidate. NOT installed in Apps Script runtime. No database writes, payments or provider calls. All functions
  * end in underscore to avoid exposing editor methods as public RPC.
  * Cache eviction denies access, never grants it.
  */
@@ -103,8 +102,8 @@ function ngdStudioLogout_(token){
     return {success:true};
   });
 }
-// Future doPost integration MUST route these explicitly BEFORE standard
-// activeMember_(token) for Studio-scoped actions. No broad token acceptance.
+// Candidate doPost routes these explicitly BEFORE standard activeMember_.
+// No broad token acceptance.
 function ngdStudioRoute_(action,token,p){
   p=p||{};
   switch(action){

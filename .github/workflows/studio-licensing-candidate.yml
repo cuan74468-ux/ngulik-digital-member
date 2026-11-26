@@ -17,3 +17,5 @@ jobs:
           node-version: '24'
           package-manager-cache: false
       - run: node --test prototypes/studio-licensing/*.test.cjs
+      - name: Existing backend and frontend unit regression suite (no deploy)
+        run: node --test tests/*.test.cjs
