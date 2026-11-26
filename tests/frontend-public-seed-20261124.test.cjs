@@ -139,3 +139,16 @@ test('browser performance smoke runs in CI with intercepted external traffic', {
  };
  try{for(const entry of ['/','/staging/member.html']){for(const mode of ['normal','delay','abort','update'])await run(entry,mode);await run(entry,'normal',1366,768);}}finally{await new Promise(resolve=>server.close(resolve));}
 });
+
+test('KB editorial seed matches approved free account, recurring commission and real portfolio reference',()=>{
+ for(const data of Object.values(seed.envs)){
+  const row=id=>data.siteContent.find(r=>r.content_id===id);
+  assert.equal(row('CNT-HERO-MAIN').cta_label,'Daftar Akun Gratis');
+  assert.match(row('CNT-HERO-MAIN').description,/Starter Pack Rp15.000 dibeli terpisah/);
+  assert.match(row('CNT-AJAK-TEMAN-INFO').description,/komisi transaksi berikutnya sesuai tarif produk/);
+  assert.match(row('CNT-MEMBER-CARD-01').description,/Premium belum aktif/);
+  assert.equal(row('CNT-USECASE-01').image_path,'https://cuan74468-ux.github.io/assets/uploads/5c62ad9ec6ea42f1a36e3cd9b8a33556.png');
+  assert.ok(data.siteContent.every(r=>!(/tiket masuk|per member aktif/i.test([r.title,r.description,r.cta_label].join(' ')))));
+ }
+ assert.match(app,/if\(offerArt\)\{offerArt.hidden=true;offerArt.style.display='none';return;\}/);
+});

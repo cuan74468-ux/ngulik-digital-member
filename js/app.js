@@ -3988,6 +3988,9 @@ document.addEventListener('error',(event)=>{
     }else img.hidden=true;
     return;
   }
+  // Portfolio media is optional: never substitute a fictitious example or leave a broken slot.
+  const offerArt=img.closest?.('.ngdl-offer-image');
+  if(offerArt){offerArt.hidden=true;offerArt.style.display='none';return;}
   if(img.closest?.('.ngd-catalog-campaign-picture')){
     // CMS URLs can disappear after publication. Recover to the vetted local
     // wide artwork once, preserving the Admin-authored text and CTA.
