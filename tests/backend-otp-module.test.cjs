@@ -137,6 +137,8 @@ function registrationHarness(options={}) {
     return null;
   };
   x.settings_=()=>({mode_pendaftaran:'TERBUKA',kuota_gelombang:50,kredit_awal:10});
+  const originalReadAll=x.readAll_;
+  x.readAll_=name=>name==='pengaturan_sistem'?[{key:'kredit_awal',value:10,tipe:'NUMBER'}]:originalReadAll(name);
   x.memberCount_=()=>members.length;
   x.memberWaitlist_=()=>[];
   x.newSalt_=()=> 'TEST_SALT_NOT_REAL';
@@ -254,7 +256,7 @@ test('session issuance outage after successful grant never creates duplicate sta
 
 test('missing starter-credit policy fails closed before OTP or account mutations',()=>{
   const h=registrationHarness();
-  h.x.settings_=()=>({mode_pendaftaran:'TERBUKA',kuota_gelombang:50});
+  h.x.readAll_=()=>[];
   assert.throws(()=>h.register(),/Kebijakan kredit awal belum siap/);
   assert.equal(h.members.length,0);
   assert.equal(h.credits.length,0);
@@ -262,7 +264,7 @@ test('missing starter-credit policy fails closed before OTP or account mutations
 });
 test('blank starter-credit policy fails closed instead of defaulting to 10',()=>{
   const h=registrationHarness();
-  h.x.settings_=()=>({mode_pendaftaran:'TERBUKA',kuota_gelombang:50,kredit_awal:''});
+  h.x.readAll_=()=>[{key:'kredit_awal',value:'',tipe:'NUMBER'}];
   assert.throws(()=>h.register(),/Kebijakan kredit awal belum siap/);
   assert.equal(h.members.length,0);
   assert.equal(h.row.status,'VERIFIED');
@@ -309,4 +311,25 @@ test('PENDING OTP verification rejects corrupt attempt count without status writ
  let writes=0;x.ngdOtpPatch_=()=>writes++;
  assert.throws(()=>x.ngdOtpVerify_({wa:'081234567890',otp:'285947'}),/Batas percobaan/);
  assert.equal(writes,0);
+});
+
+test('free registration with explicit zero policy does not post welcome credit',()=>{
+ const h=registrationHarness();
+ h.x.readAll_=name=>{assert.equal(name,'pengaturan_sistem');return [{key:'kredit_awal',value:0,tipe:'NUMBER'}];};
+ const result=h.register();
+ assert.equal(result.status,'AKTIF');
+ assert.equal(h.members.length,1);
+ assert.equal(h.row.status,'USED');
+ assert.equal(h.credits.length,0);
+ assert.equal(h.sessions.length,1);
+});
+test('duplicate or malformed raw credit policy blocks registration before writes',()=>{
+ for(const rows of [[{key:'kredit_awal',value:0,tipe:'NUMBER'},{key:'kredit_awal',value:10,tipe:'NUMBER'}],[{key:'kredit_awal',value:'broken',tipe:'NUMBER'}]]){
+  const h=registrationHarness();
+  h.x.readAll_=()=>rows;
+  assert.throws(()=>h.register(),/kredit awal/);
+  assert.equal(h.members.length,0);
+  assert.equal(h.credits.length,0);
+  assert.equal(h.row.status,'VERIFIED');
+ }
 });
