@@ -51,6 +51,14 @@
   // Keep unrelated or subsequently edited CMS content intact; no data mutation.
   function clarifyEntry(row){
     if(!row)return row;
+    if(row.content_id==="CNT-STARTER-ITEM-01"&&row.description==="Saldo awal untuk langsung mencoba pembuatan materi promosi dan visual usaha.")
+      return {...row,description:"15 Kredit AI dicatat setelah Starter Pack lunas. Penggunaan kredit Premium menunggu aktivasi; Wrapper sementara tidak memotong kredit."};
+    if(row.content_id==="CNT-NEXT-01"&&row.description==="Isi ulang saldo kredit sesuai kebutuhan produksi konten Anda tanpa ikatan langganan bulanan.")
+      return {...row,description:"Top-up Kredit AI disiapkan untuk Studio AI Premium. Pembelian belum dibuka sampai layanan dan tarif siap.",title:row.title==="Top-Up Kredit Tools AI — Mulai Rp10.000"?"Top-Up Kredit AI — Belum Dibuka":row.title};
+    if(row.content_id==="CNT-USECASE-01"&&row.description==="Bikin foto produk lebih menarik tanpa studio mahal. Gunakan tools AI mandiri atau serahkan ke jasa foto produk komersil kami.")
+      return {...row,description:"Buat visual promosi melalui Wrapper AI yang tersedia saat uji coba, atau pilih jasa kreatif sesuai kebutuhan."};
+    if(row.content_id==="CNT-USECASE-02"&&row.description==="Susun caption media sosial, deskripsi marketplace, dan skrip promosi dalam hitungan detik langsung dari HP.")
+      return {...row,description:"Siapkan caption, deskripsi produk dan materi promosi dari HP. Gunakan alat yang tersedia sesuai kuota dan ketentuan penyedia.",title:row.title==="Konten Jualan & Balasan Chat Otomatis"?"Konten Jualan & Materi Promosi":row.title};
     if(row.content_id==='CNT-STARTER-ITEM-04'&&row.description==="Komisi Rp5.000 untuk setiap rekan usaha yang bergabung melalui tautan rujukan Anda.")
       return {...row,description:"Dapatkan Rp5.000 dari setiap Starter Pack lunas pelanggan yang Anda ajak, serta komisi transaksi berikutnya sesuai tarif produk."};
     if(row.content_id==='CNT-HERO-MAIN'&&row.cta_label==='Mulai Tiket Masuk — Rp15.000'&&route(row)==='daftar')
@@ -70,11 +78,11 @@
       '<button type="button" data-route="katalog">Buka Katalog</button>'+
       '<button type="button" data-route="dukungan">Bantuan</button></div>';
     const pills=list(items,'HIGHLIGHT_PILL','home');
-    const cases=list(items,'USECASE_CARD','home');
+    const cases=list(items,'USECASE_CARD','home').map(clarifyEntry);
     const starter=clarifyEntry(entry(items,'CNT-STARTER-MAIN','FEATURE_CARD','home'));
     const bullets=list(items,'FEATURE_BULLET','home').map(clarifyEntry);
     const honesty=entry(items,'CNT-HONESTY-BOX','NOTICE_BOX','home');
-    const services=list(items,'SERVICE_CARD','home');
+    const services=list(items,'SERVICE_CARD','home').map(clarifyEntry);
     const benefit=entry(items,'CNT-MEMBER-BENEFIT','BENEFIT_LIST','home');
     const benefits=list(items,'BENEFIT_BULLET','home');
     // Doc06 STAGING also permits four items packed into the section's

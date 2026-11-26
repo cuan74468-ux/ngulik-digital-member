@@ -19,6 +19,8 @@
  // Exact legacy text compatibility; subsequent CMS edits remain authoritative.
  function commissionCopy(r){
   if(!r)return r;
+  if(r.content_id==="CNT-MEMBER-CARD-01"&&r.description==="Sisa saldo: {{saldo_kredit}} kredit. Buat caption promosi, deskripsi produk, dan materi visual.")
+   return {...r,description:"Buka Wrapper AI melalui Gemini. Tidak memotong Kredit AI Ngulik Digital; Premium belum aktif.",title:r.title==="Studio AI & Foto Produk"?"Studio AI — Linggau AI Wrapper":r.title};
   if(r.content_id==='CNT-MEMBER-CARD-04'&&r.description==="Bagikan tautan rujukan Anda dan pantau perolehan komisi Rp5.000 per member aktif.")
    return {...r,description:"Bagikan tautan produk dan pantau komisi pembelian pertama serta transaksi lanjutan pelanggan yang Anda ajak."};
   if(r.content_id==='CNT-AJAK-TEMAN-INFO'&&r.description==="Bagikan tautan rujukan pribadi Anda kepada rekan pelaku usaha. Setiap pendaftaran Starter Pack yang terverifikasi lunas menghasilkan komisi Rp5.000, ditambah komisi lanjutan pada transaksi berikutnya.")

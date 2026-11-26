@@ -683,8 +683,8 @@ const offerCategoryLabel=p=>{
 };
 /* Public marketplace presentation only. Commerce decisions reuse the existing
  * verified catalog, availability and checkout rules; no invented discounts. */
-const offerUiTitle_=p=>String(p?.nama||'Produk');
-const offerUiDescription_=p=>String(p?.deskripsi||'');
+const offerUiTitle_=p=>String(p?.product_id)==='P-STARTER-15K'&&p.nama==="Starter Pack Rp15.000 — Tiket Masuk Awal & Fasilitas Dasar Member"?"Starter Pack — Rp15.000":String(p?.nama||'Produk');
+const offerUiDescription_=p=>String(p?.product_id)==='P-STARTER-15K'&&p.deskripsi==="Tiket masuk awal ekosistem Ngulik Digital: 15 kredit awal tools AI, akses portal belajar & direktori 39 layanan resmi UMKM, kumpulan template gratis siap pakai, serta hak tautan komisi Ajak Teman Rp5.000 per member."?"Paket satu kali setelah daftar akun gratis. Mendapat 15 Kredit AI setelah pembayaran sah, akses fasilitas Starter Pack yang tersedia, serta hak Ajak Teman bagi member yang memenuhi syarat. Komisi Rp5.000 untuk Starter Pack pelanggan yang diajak dan komisi transaksi berikutnya sesuai produk. Studio Premium belum aktif; Wrapper sementara tidak memotong kredit.":String(p?.deskripsi||'');
 const isPublicQaOffer_=p=>
   String(p?.product_id||'')==='P-B36AA0054926'||
   String(p?.sumber_produk||'').toUpperCase()==='QA_STAGING_TEST'||
@@ -740,7 +740,7 @@ function ngdProductImageFallback_(p,kind){
 }
 
 function viewPublicMarketplace(list){
-  const publicList=list.filter(p=>!isPublicQaOffer_(p));
+  const publicList=list.filter(p=>!isPublicQaOffer_(p)&&!catalogPortalResource_(p));
   const options=arguments[1]||{};
   const category=options.category??(state.catalogFilter||'semua');
   const search=String(options.search??state.marketplaceSearch??'').trim().toLocaleLowerCase('id-ID');
@@ -787,9 +787,11 @@ function viewPublicMarketplace(list){
     const detailHash='#detail-produk/'+encodeURIComponent(String(p.product_id||''));
     const detailAction='<a class="ngd-card-detail" href="'+esc(detailHash)+
       '" data-product-detail="'+idSafe(p.product_id)+'">Detail produk '+icon('arrow')+'</a>';
+    const held=catalogSaleHold_(p);
     const action='<div class="ngd-card-actions">'+detailAction+
+      (held?'<button type="button" class="market-product-action" disabled>Belum dibuka</button>':
       '<button type="button" class="market-product-action" data-checkout-product="'+idSafe(p.product_id)+'">'+
-      (price===0?'Akses Gratis':'Beli Sekarang')+' '+icon('arrow')+'</button></div>';
+      (price===0?'Akses Gratis':'Beli Sekarang')+' '+icon('arrow')+'</button>')+'</div>';
     // Optional short badge is owned by the published PRODUCT_IMAGE CMS entry.
     // Long descriptions are never converted into tiny marketing labels.
     const imageEntry=window.NGD_CONTENT_UI?.published(state.siteContent,'PRODUCT_IMAGE',p.product_id)?.[0];
@@ -809,7 +811,7 @@ function viewPublicMarketplace(list){
     const localSource=ngdPremiumArtSrc_(ngdProductArtId_(p,kind));
     const cover=cmsImage?cmsImage.replace('<img ',
       '<img data-market-fallback="'+esc(localSource)+'" '):fallbackCover;
-    const commissionLabel=ngdCommissionLabel_(p);
+    const commissionLabel=held?'':ngdCommissionLabel_(p);
     return '<article class="market-product-card" data-market-kind="'+esc(kind)+
       '" data-market-product="'+idSafe(p.product_id)+'" aria-label="'+esc(offerUiTitle_(p))+'">'+
       '<a class="market-product-media market-media-'+esc(kind)+'" href="'+esc(detailHash)+
@@ -894,7 +896,7 @@ function verifiedCommissionLink_(a){
     referralBase+'staging/member.html?ref='+encodeURIComponent(code):a.link;
 }
 function productCommissionLink_(product){
-  if(!product||product.bisa_komisi!==true||!(Number(product.harga)>0)||isPublicQaOffer_(product))return '';
+  if(!product||product.bisa_komisi!==true||!(Number(product.harga)>0)||isPublicQaOffer_(product)||catalogSaleHold_(product)||catalogPortalResource_(product))return '';
   const id=String(product.product_id||'');
   if(!/^[A-Za-z0-9_-]{1,100}$/.test(id))return '';
   const link=verifiedCommissionLink_(state.affiliates);
@@ -933,14 +935,16 @@ function viewProductDetail(){
     credits>0?'<span><strong>'+esc(credits)+' token</strong>Jumlah kredit</span>':'',
     days>0?'<span><strong>'+esc(days)+' hari</strong>Masa akses</span>':''
   ].filter(Boolean).join('');
-  const buyButton=validPrice?
+  const held=catalogSaleHold_(product);
+  const portalResource=catalogPortalResource_(product);
+  const buyButton=portalResource?'<button type="button" class="ngdp-button ngdp-secondary" data-route="'+(logged()?'belajar':'login')+'">'+(logged()?'Buka ruang belajar':'Masuk untuk akses belajar')+'</button>':held?'<span class="ngdp-unavailable" role="status">'+esc(held)+'</span>':validPrice?
     '<button type="button" class="ngdp-button ngdp-primary" data-checkout-product="'+idSafe(id)+'">'+
       (logged()?(price===0?'Lanjutkan Akses Gratis':'Lanjut ke Checkout'):(price===0?'Masuk untuk Akses':'Masuk untuk Membeli'))+
       ' '+icon('arrow')+'</button>':
     '<span class="ngdp-unavailable">Harga belum tersedia. Produk belum dapat dipesan.</span>';
   const shareLink=productCommissionLink_(product);
   const shareActions=shareLink?'<div class="ngdp-order-guide"><p class="ngdp-eyebrow">AJAK TEMAN</p><p>Bagikan produk ini. Komisi tercatat untuk transaksi sah dari pelanggan yang Anda ajak, sesuai tarif produk.</p><div class="ngdp-related-grid"><button type="button" class="ngdp-button ngdp-secondary" data-copy="'+esc(shareLink)+'">Salin tautan komisi</button><a class="ngdp-button ngdp-secondary" href="'+esc('https://wa.me/?text='+encodeURIComponent(offerUiTitle_(product)+' — '+shareLink))+'" target="_blank" rel="noopener noreferrer">Bagikan ke WhatsApp</a></div></div>':'';
-  const related=state.catalog.filter(p=>!isPublicQaOffer_(p)&&String(p.product_id)!==id&&
+  const related=state.catalog.filter(p=>!isPublicQaOffer_(p)&&!catalogPortalResource_(p)&&String(p.product_id)!==id&&
       offerCategory(p)===kind).slice(0,3);
   const relatedItems=related.map(p=>{
     const pid=String(p.product_id),href='#detail-produk/'+encodeURIComponent(pid);
@@ -1567,6 +1571,17 @@ function checkoutFreeUrl_(p){
   return moneyValue(p?.harga)===0&&String(p?.product_id)==='P-EBOOK'?NGD_FREE_EBOOK_URL:
     moneyValue(p?.harga)===0&&String(p?.product_id)==='P-CLASS-CH1'?NGD_FREE_CLASSROOM_URL:'';
 }
+// Temporary storefront safeguard. Catalog records and existing orders stay intact.
+function catalogSaleHold_(p){
+  const id=String(p?.product_id||'').toUpperCase(),type=String(p?.tipe||'').toUpperCase();
+  if(type==='TOPUP_TOKEN'||type==='TOPUP_KREDIT'||/^P-(TOKEN|KREDIT)-/.test(id))
+    return 'Top-up belum dibuka. Studio AI Premium dan tarif menunggu verifikasi.';
+  if(id==='P-CANVA-30')return 'Akses Canva belum dibuka. Hak distribusi harus diverifikasi.';
+  return '';
+}
+function catalogPortalResource_(p){
+  return ['P-EBOOK','P-CLASS-CH1'].includes(String(p?.product_id||'').toUpperCase());
+}
 function checkoutQrReady_(){
   // Browser UI is presentation only; GAS also checks NGD_FINANCE_ENABLED.
   return paymentEnabled()&&config.qrisOwnerImageApproved===true&&!!qrisUrl()&&
@@ -1578,6 +1593,8 @@ function openProductCheckout_(id){
   const product=Array.isArray(state.catalog)?state.catalog.find(p=>
     String(p.product_id)===String(id)&&!isPublicQaOffer_(p)):null;
   if(!product){toast('Produk belum tersedia. Muat ulang katalog.',true);return;}
+  if(catalogSaleHold_(product)){toast(catalogSaleHold_(product),true);return;}
+  if(catalogPortalResource_(product)){go(logged()?'belajar':'login');return;}
   state.checkoutProductId=String(product.product_id);
   if(state.route==='detail-produk')state.checkoutReturnRoute='detail-produk';
   else if(state.route!=='login')state.checkoutReturnRoute='katalog';
@@ -1601,7 +1618,8 @@ function viewCheckoutDraft_(){
   const price=moneyValue(p.harga);
   const free=price===0;
   const freeUrl=checkoutFreeUrl_(p);
-  const orderable=price!==null&&price>0&&Number.isSafeInteger(price)&&
+  const hold=catalogSaleHold_(p);
+  const orderable=!hold&&!catalogPortalResource_(p)&&price!==null&&price>0&&Number.isSafeInteger(price)&&
     supportedSaleTypes.has(String(p.tipe));
   const ready=checkoutQrReady_();
   const canCreate=orderable&&ready&&!isAdmin();
@@ -1612,9 +1630,9 @@ function viewCheckoutDraft_(){
       '<button type="button" class="btn btn-primary btn-wide" data-checkout-create="'+idSafe(p.product_id)+'">'+
         (logged()?'Buat pesanan QRIS':'Masuk & lanjut ke QRIS')+' '+icon('arrow')+'</button>':
     '<button class="btn btn-primary btn-wide" type="button" disabled>Pembayaran belum dibuka</button>';
-  const reason=!free&&(!orderable?
+  const reason=hold||(!free&&(!orderable?
     'Produk belum memenuhi persyaratan checkout (jenis atau harga). Tidak ada tagihan yang dibuat.':
-    !ready?'QRIS DANA Bisnis masih menunggu verifikasi merchant dan aktivasi pembayaran. Jangan mentransfer dana sekarang.':'');
+    !ready?'QRIS DANA Bisnis masih menunggu verifikasi merchant dan aktivasi pembayaran. Jangan mentransfer dana sekarang.':''));
   return '<div class="checkout-backdrop"><section class="checkout-dialog checkout-product-preview" role="dialog" aria-modal="true" aria-labelledby="checkout-title">'+
     '<header class="checkout-heading"><div><p class="eyebrow">NGULIK DIGITAL / CHECKOUT</p>'+
       '<h1 id="checkout-title">Rincian Checkout</h1><p>Periksa produk sebelum membuat pesanan.</p></div>'+
@@ -3382,6 +3400,7 @@ async function buy(productId){
   if(isAdmin())return toast('Checkout hanya untuk member.',true);
   const product=state.catalog.find(p=>p.product_id===productId);
   if(!product)return toast('Produk tidak ditemukan.',true);
+  if(catalogSaleHold_(product)||catalogPortalResource_(product))return toast('Produk belum dapat dipesan melalui checkout.',true);
   if(!supportedSaleTypes.has(String(product.tipe))||!(moneyValue(product.harga)>0))
     return toast('Produk belum bisa diproses sebagai pesanan berbayar.',true);
   if(!confirm('Buat pesanan '+product.nama+'? Nominal akhir termasuk kode unik ditentukan oleh server.'))return;

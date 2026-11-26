@@ -120,7 +120,7 @@ test('home polling is read-only, pauses on hidden tabs and keeps its timer acros
 });
 
 test('index.html cache-busts app.js for this change',()=>{
-  assert.match(indexHtml,/js\/app\.js\?v=[^"]*snap1-seed2-unified2-role1-pro3-hero3-wrapper-admin1-commission1"/);
+  assert.match(indexHtml,/js\/app\.js\?v=[^"]*snap1-seed2-unified2-role1-pro3-hero3-wrapper-admin1-commission1-readiness1"/);
 });
 
 test('editorial publication invalidates older snapshots',()=>{

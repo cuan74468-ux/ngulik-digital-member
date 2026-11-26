@@ -253,3 +253,10 @@ test('only a validated additive QRIS invoice permits CMS-owned WhatsApp proof',(
   assert.ok(checkout.includes("api('createOrder'"));
   assert.equal(checkout.includes('wa.me'),false);
 });
+
+test('unverified premium topups and Canva cannot create orders through checkout UI',()=>{
+ for(const id of ['P-TOKEN-10','P-KREDIT-50','P-CANVA-30']){
+  const h=harness({id,payments:true});assert.doesNotMatch(h.ui.viewCheckoutDraft_(),/data-checkout-create=/);h.ui.openProductCheckout_(id);assert.equal(h.routes.length,0);
+ }
+ const h=harness({id:'P-EBOOK',price:0,logged:true});h.ui.openProductCheckout_('P-EBOOK');assert.deepEqual(h.routes,['belajar']);
+});
