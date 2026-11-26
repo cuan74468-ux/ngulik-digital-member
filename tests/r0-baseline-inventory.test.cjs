@@ -98,7 +98,8 @@ test('R-0 inventory prints every loaded CSS file and all declared router keys', 
     stylesheets: [publicCss, stagingCss]
   }));
   assert.equal(new Set(routes).size, routes.length, 'duplicate router key');
-  assert.equal(routes.length, 33, 'router source has 33 keys; short list of 32 omitted admin-login');
+  assert.equal(routes.length, 34, 'router inventory includes the admin-only Premium route');
+  assert.ok(routes.includes('ai-premium'), 'ai-premium must be inventoried');
   assert.ok(routes.includes('admin-login'), 'admin-login must be inventoried');
 });
 

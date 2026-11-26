@@ -185,6 +185,13 @@ async function visit(url,label){
       assert.ok(v.walletShadow!=='none','Member wallet hard shadow missing');
     }
   }
+  if(['member-ai','member-studio-blocked','guest-premium','admin-premium'].includes(label)){
+    const access=await request('Runtime.evaluate',{expression:`(()=>({link:document.querySelector('#screen a[href="https://share.gemini.google/HehJEIsDRqOm"]')?.getAttribute('rel')||'',premium:!!document.querySelector('#screen [data-ai-open="ngulik-visual"]'),studio:!!document.querySelector('#ngd-studio-root')}))()`,returnByValue:true});
+    const v=access.result.value;
+    assert.equal(v.link.includes('noopener'),label==='member-ai'||label==='member-studio-blocked');
+    assert.equal(v.premium,label==='admin-premium');
+    assert.equal(v.studio,false);
+  }
   if(label==='member-studio'){
     const r=await request('Runtime.evaluate',{expression:`(()=>{
       const root=document.getElementById('ngd-studio-root');
@@ -316,7 +323,10 @@ async function visit(url,label){
       ['member-catalog','?preview=member#katalog'],
       ['member-services','?preview=member#jasa'],
       ['member-ai','?preview=member#ai'],
-      ['member-studio','?preview=member#ai-tool/ngulik-visual'],
+      ['member-studio-blocked','?preview=member#ai-tool/ngulik-visual'],
+      ['member-studio','?preview=admin#ai-tool/ngulik-visual'],
+      ['admin-premium','?preview=admin#ai-premium'],
+      ['guest-premium','#ai-premium'],
       ['member-learning','?preview=member#belajar'],['member-portal','?preview=member#portal'],
       ['member-support','?preview=member#dukungan'],
       ['member-account','?preview=member#akun'],

@@ -19,7 +19,7 @@ test('scope CSS and precise visual tokens; no global selectors or emoji',()=>{
 test('existing member shell and tool routes remain, with gated image visual route',()=>{
   assert.match(app,/function viewAI\(\)/);
   assert.match(app,/function viewAITool\(\)/);
-  assert.match(app,/selectedAiToolId==='ngulik-visual'&&logged\(\)&&!isAdmin\(\)/);
+  assert.match(app,/selectedAiToolId==='ngulik-visual'&&logged\(\)&&isAdmin\(\)/);
   assert.match(app,/window\.NGD_STUDIO\?\.mount/);
   assert.match(app,/data-ai-open="ngulik-visual"/);
   for(const html of ['index.html','staging/member.html']){
