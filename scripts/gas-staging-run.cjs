@@ -57,11 +57,23 @@ function session(work,id,deployId){
  }
  return {clone,deployment,packageDir,push,version,redeploy};
 }
+// New Studio-capable source must attest the switch and reject a syntactically
+// valid, unissued scoped credential before deployment can be accepted.
+// Historical source snapshots did not expose this flag; preserve their health
+// contract for baseline and rollback. No token issuance or mutation here.
+async function verifyStudioDisabled(files,identity,request){
+ const source=files.get('Kode.js')||'';
+ if(!/\bfunction\s+ngdStudioGuard_\s*\(/.test(source))return;
+ check(identity.studio_pilot_enabled===false,'STAGING_STUDIO_MUST_REMAIN_OFF');
+ const denied=await request({method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'studioValidateSession',payload:{},token:crypto.randomBytes(32).toString('hex'),request_id:crypto.randomUUID().replace(/-/g,'')+'aa'})});
+ check(denied?.ok===false&&denied.error?.code==='MAINTENANCE','STAGING_STUDIO_DEFAULT_OFF_UNVERIFIED');
+}
 async function health(endpoint,files){
- const request=async init=>{
-  const r=await fetch(endpoint,{...init,redirect:'follow',signal:AbortSignal.timeout(25000)});
-  check(r.ok,'STAGING_HTTP_UNVERIFIED');let j;try{j=await r.json();}catch{throw Error('STAGING_NON_JSON_RESPONSE');}check(j.ok===true&&j.data,'STAGING_RESPONSE_UNVERIFIED');return j.data;
+ const rawRequest=async init=>{
+  const r=await fetch(endpoint,{...init,credentials:'omit',redirect:'follow',signal:AbortSignal.timeout(25000)});
+  check(r.ok,'STAGING_HTTP_UNVERIFIED');let j;try{j=await r.json();}catch{throw Error('STAGING_NON_JSON_RESPONSE');}return j;
  };
+ const request=async init=>{const j=await rawRequest(init);check(j?.ok===true&&j.data,'STAGING_RESPONSE_UNVERIFIED');return j.data;};
  const info=await request({method:'GET'});
  const identity=await request({method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'getStagingWorkspaceInfo',payload:{},token:'',request_id:crypto.randomUUID().replace(/-/g,'')+'aa'})});
  check(info.app==='Ngulik Digital API'&&identity.workspace==='NGD_STAGING'&&identity.environment==='STAGING'&&identity.admin_login_enabled===true,'STAGING_IDENTITY_UNVERIFIED');
@@ -70,6 +82,7 @@ async function health(endpoint,files){
  check(typeof info.writes_enabled==='boolean'&&info.writes_enabled===identity.mutations_enabled,'STAGING_WRITE_FLAG_MISMATCH');
  const marker=files.get('Kode.js')?.match(/SOURCE_REVISION:\s*'([a-z0-9-]{12,80})'/);
  check(marker&&info.source_revision===marker[1],'STAGING_SOURCE_REVISION_UNVERIFIED');
+ await verifyStudioDisabled(files,identity,rawRequest);
  return JSON.stringify(keys.map(k=>identity[k]));
 }
 
@@ -159,5 +172,5 @@ async function run(mode){
   }
  }finally{fs.rmSync(work,{recursive:true,force:true});}
 }
-module.exports={ciGate,required,session,recover};
+module.exports={ciGate,required,session,recover,verifyStudioDisabled};
 if(require.main===module)run(process.argv[2]||'audit').catch(e=>{console.error('STOP: '+e.message);process.exitCode=1;});

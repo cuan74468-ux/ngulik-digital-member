@@ -10,7 +10,7 @@ const NGD = Object.freeze({
   VERSION: '1.0.3',
   // Manually bumped for each GAS bundle release. Not a source hash: the
   // identifier is also exposed by doGet and cannot self-reference.
-  SOURCE_REVISION: 'ngd-gas-staging-20261122-p5-r1',
+  SOURCE_REVISION: 'ngd-gas-staging-20261126-studio-pilot-r1',
   // Spreadsheet ID is read from Script Properties, not committed in source.
   DB_ID: '',
   TZ: 'Asia/Jakarta',
@@ -2374,6 +2374,8 @@ function ngdStagingWorkspaceInfo_() {
   return {
     workspace:'NGD_STAGING',environment:'STAGING',
     admin_login_enabled:true,
+    // Read-only raw switch attestation (not entitlement or a readiness claim).
+    studio_pilot_enabled:props.getProperty('NGD_STUDIO_PILOT_ENABLED')==='true',
     mutations_enabled:mutationsEnabled_(),
     registration_enabled:props.getProperty('NGD_REGISTRATION_ENABLED')==='true',
     otp_enabled:props.getProperty('NGD_OTP_REGISTRATION_ENABLED')==='true',

@@ -19,7 +19,7 @@ function fixture(){
  const fetcher=async(url,opt)=>{
   assert.equal(url,endpoint);assert.equal(opt.method,'POST');assert.equal(opt.credentials,'omit');assert.equal(opt.redirect,'follow');assert.equal(opt.headers['Content-Type'],'text/plain;charset=utf-8');
   const envelope=JSON.parse(opt.body);assert.match(envelope.request_id,/^[A-Za-z0-9_-]{16,80}$/);
-  assert.ok(['studioIssueGrant','studioExchangeGrant','studioValidateSession','studioLogout','studioAdminList','studioAdminSet','getMe'].includes(envelope.action));
+  assert.ok(['studioIssueGrant','studioExchangeGrant','studioValidateSession','studioLogout','studioAdminList','studioAdminSet','getMe','getStagingWorkspaceInfo'].includes(envelope.action));
   requests.push(envelope.action);
   const result=JSON.stringify(ctx.doPost({postData:{contents:opt.body}}));
   return {ok:true,url,text:async()=>result,json:async()=>JSON.parse(result)};
@@ -60,6 +60,13 @@ test('actual portal API -> actual GAS doPost + admin/session guards -> pinned wr
   f.sessions.splice(f.sessions.findIndex(x=>x.member_id===memberId),1);
   await assert.rejects(()=>c4.validate(),/UNAUTHORIZED/);assert.equal(c4.active(),false);
   assert.equal(f.audits.length,3);assert.ok(f.requests.includes('studioAdminSet')&&f.requests.includes('studioExchangeGrant'));
+  f.props.NGD_STUDIO_PILOT_ENABLED='false';
+  const {verifyStudioDisabled}=require('../../scripts/gas-staging-run.cjs');
+  const source=new Map([['Kode.js',fs.readFileSync(path.join(root,'apps-script','Code.gs'),'utf8')]]);
+  // Same endpoint identity helper used by the existing STAGING health check.
+  const identity=await send('getStagingWorkspaceInfo',{},'');
+  assert.equal(identity.studio_pilot_enabled,false);
+  await verifyStudioDisabled(source,identity,async opt=>(await f.fetcher(endpoint,{...opt,credentials:'omit',redirect:'follow'})).json());
   console.log('NGD_STUDIO_CROSS_REPO_CONTRACT_PASS actual portal + actual doPost + actual admin/session guards + pinned client; no external runtime');
  }finally{globalThis.fetch=oldFetch;if(oldWindow===undefined)delete globalThis.window;else globalThis.window=oldWindow;}
 });
