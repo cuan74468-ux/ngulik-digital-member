@@ -41,3 +41,15 @@ Ten special files are preserved byte-for-byte by existing packaging contract.
 7. Separate owner-approved small STAGING pilot, real Canvas transport/CORS and runtime tests, then commercial decision.
 
 Do not merge, deploy, modify Script Properties, activate finance, publish Canvas, or rotate preview pointer based on this checkpoint. This document records evidence and open gates, not a release approval.
+
+## Owner Cloud Shell reconciliation — 2026-11-26
+
+Owner supplied actual output of official package builder on snapshot with exact baseline matching run 45831921124. Main candidate digest assertion also passed. This is owner-executed evidence, not a direct connector inspection of the private snapshot.
+- Reviewed candidate source: 12ec132f70748ce559d556b46ab88613f074beb2 (Code.gs and all GAS source unchanged by this evidence-only commit).
+- Baseline digest: 99b88cf002f89f1509370f8d2864c90ff3d5543238a84f38c19b0780780f3a5e
+- License candidate digest: ed9fabc9bc24c72f524897beaed31857b2d076f17520fe9b450d96431e1b157d
+- 28 editor files; 40 total candidate files; 521 global bindings; 10 preserved files; 14 added globals relative to main package; release gate PENDING.
+- Runtime read-only attestation: environment STAGING; mutations false; finance false; Studio pilot NOT_EXPOSED_V34 (NOT evidence that raw property is OFF).
+- Preserved handler inventory includes ngdDailyExecutiveReportTask. This confirms the handler exists in proposed package, not that it is the only installed trigger. NGD_CreditLedgerSyntheticTest.js reports no global declarations; byte preservation confirmed, not a claim about internal behavior.
+- Remaining: owner read-only trigger UI inventory for all applicable accounts and raw pilot property absent/OFF; review private helper side effects and existing managed module changes (do not execute). Explicit approval of reviewed deployment and separate integration approval remain required. Recheck exact baseline/candidate digests immediately before any release. Do not use main digest to approve license package.
+- No remote mutation, no deployment, no approval change. The connector cannot independently inspect private helper contents or installed triggers. No private identifiers or credentials recorded.
