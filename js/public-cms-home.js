@@ -51,6 +51,8 @@
   // Keep unrelated or subsequently edited CMS content intact; no data mutation.
   function clarifyEntry(row){
     if(!row)return row;
+    if(row.content_id==='CNT-STARTER-ITEM-04'&&row.description==="Komisi Rp5.000 untuk setiap rekan usaha yang bergabung melalui tautan rujukan Anda.")
+      return {...row,description:"Dapatkan Rp5.000 dari setiap Starter Pack lunas pelanggan yang Anda ajak, serta komisi transaksi berikutnya sesuai tarif produk."};
     if(row.content_id==='CNT-HERO-MAIN'&&row.cta_label==='Mulai Tiket Masuk — Rp15.000'&&route(row)==='daftar')
       return {...row,cta_label:'Daftar Akun Gratis',description:row.description==="Gunakan tools AI, template siap pakai, dan akses belajar terarah di Ngulik Digital untuk merapikan promosi dan operasional usaha Anda."?"Gunakan tools AI, template siap pakai, dan akses belajar terarah di Ngulik Digital untuk merapikan promosi dan operasional usaha Anda. Daftar akun gratis. Starter Pack Rp15.000 dibeli terpisah setelah masuk.":row.description};
     if(row.content_id==='CNT-HERO-SECONDARY'&&row.cta_label==='Masuk Member'&&route(row)==='login'&&row.description==='Sudah terdaftar? Masuk dengan nomor WhatsApp Anda.')
@@ -70,7 +72,7 @@
     const pills=list(items,'HIGHLIGHT_PILL','home');
     const cases=list(items,'USECASE_CARD','home');
     const starter=clarifyEntry(entry(items,'CNT-STARTER-MAIN','FEATURE_CARD','home'));
-    const bullets=list(items,'FEATURE_BULLET','home');
+    const bullets=list(items,'FEATURE_BULLET','home').map(clarifyEntry);
     const honesty=entry(items,'CNT-HONESTY-BOX','NOTICE_BOX','home');
     const services=list(items,'SERVICE_CARD','home');
     const benefit=entry(items,'CNT-MEMBER-BENEFIT','BENEFIT_LIST','home');
