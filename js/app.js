@@ -253,6 +253,11 @@ function activatePreview(){
   state.lmsSelectedLessonId='LES-DEMO';
   state.lmsSelectedAIJobId='AIJ-DEMO';
   state.lmsCompletion={title:'Menyiapkan Profil Usaha',completed:1,total:1,preview:true};
+  // QA identity is localhost-only. Reuse the public editorial snapshot to
+  // exercise the actual product card layout, never a private member record.
+  const previewEnv=String(location.pathname||'').includes('/staging/')?'stg':'prd';
+  const previewCatalog=window.NGD_PUBLIC_SEED?.envs?.[previewEnv]?.catalog;
+  if(Array.isArray(previewCatalog))state.catalog=previewCatalog.map(p=>({...p}));
   state.qa=true;
   return true;
 }

@@ -199,3 +199,7 @@ Owner requests unambiguous public home CTA. Registration code creates accounts w
 
 ## 27 November 2026 — recurring direct customer commission
 Owner confirms Starter Pack fixed Rp5,000 is not the only commission. One-level recurring commission on eligible verified paid orders from directly attributed customers, according to product terms. Clarify public home/member shortcut/commission narrative, add product-specific copy and WhatsApp link on product detail for backend-authorized partners; STAGING invites land on STAGING. First-inviter and payment logic unchanged. No changes to financial rates, timing, entitlement, flags, database or GAS. Commercial readiness and commission timing reconciliation remain separate. Exact legacy CMS text adapter preserves future edits.
+
+
+## 27 November 2026 — Restore compact catalog and fixture coverage
+Owner requests original two-card-per-row mobile catalog. Remove V6 product grid/card sizing overrides so marketplace-ref-v5 governs responsive layout again. Public Chrome verified 2 columns of 161.5px at 360px. Member preview lacked catalog data; populate local QA using public seed catalogue only, never live private data. Preserve hero, content, touch targets and commercial/access logic. Reconcile PR #61 with merged PR #60; run fresh CI.

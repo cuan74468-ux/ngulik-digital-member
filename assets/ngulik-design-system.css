@@ -975,34 +975,29 @@ html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.section-head,.ngd
  margin:0;line-height:1.23;text-wrap:balance;
 }
 html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.section-head,.ngdl-section-top,.ngdm-section-head,.admin-section-heading,.market-results-header,.ngdb-heading,.partner-section-heading,.ai-tools-heading) p{line-height:1.5}
-html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.market-product-grid,.ngdl-grid,.ngd-home-services-grid,.ai-catalog-grid,.ngdb-package-list,.ngdb-process-steps,.learning-course-grid,.partner-metric-grid,.ngdm-shortcuts,.admin-start-grid,.admin-module-grid,.admin-runtime-flags,.ngdp-related-grid,.grid-2,.grid-3,.metric-grid):not(.ngd-studio *){
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.ngdl-grid,.ngd-home-services-grid,.ai-catalog-grid,.ngdb-package-list,.ngdb-process-steps,.learning-course-grid,.partner-metric-grid,.ngdm-shortcuts,.admin-start-grid,.admin-module-grid,.admin-runtime-flags,.ngdp-related-grid,.grid-2,.grid-3,.metric-grid):not(.ngd-studio *){
  gap:var(--ngds-grid-gap)!important;align-items:stretch;min-width:0;
 }
-html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.market-product-grid,.ai-catalog-grid,.admin-module-grid,.learning-course-grid){
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.ai-catalog-grid,.admin-module-grid,.learning-course-grid){
  grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))!important;
 }
-html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.market-product-card,.ngdl-offer,.ngd-home-service,.ai-product-card,.admin-module-card,.admin-start-item,.lms-course-tile){
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.ngdl-offer,.ngd-home-service,.ai-product-card,.admin-module-card,.admin-start-item,.lms-course-tile){
  min-width:0;max-width:100%;height:100%;text-align:start;
 }
-html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.market-product-card,.ngdl-offer,.ngd-home-service,.admin-module-card){display:flex;flex-direction:column}
-html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.market-product-body,.ngdl-offer-body){
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.ngdl-offer,.ngd-home-service,.admin-module-card){display:flex;flex-direction:column}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.ngdl-offer-body){
  display:flex;flex:1;flex-direction:column;gap:10px!important;min-width:0;padding:16px!important;
 }
-html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.market-product-body h3,.ngdl-offer h3,.admin-module-card h3,.ngd-home-service h3){
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.ngdl-offer h3,.admin-module-card h3,.ngd-home-service h3){
  margin:0;font-size:var(--ngds-h3)!important;line-height:1.35!important;overflow-wrap:anywhere;
 }
-html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.market-product-description,.ngdl-offer-body>p:not(.ngdl-offer-tag),.card-desc,.ai-product-card small){
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.ngdl-offer-body>p:not(.ngdl-offer-tag),.card-desc,.ai-product-card small){
  font-size:.875rem!important;line-height:1.55!important;overflow-wrap:anywhere;
 }
-html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.market-product-bottom,.ngdl-offer-link,.ngd-home-service-cta,.ai-product-bottom){margin-top:auto!important}
-html body.ngd-public-app[data-app-role]:not(#ngd) #screen .market-product-media{aspect-ratio:16/10;height:auto!important;min-height:0!important}
-html body.ngd-public-app[data-app-role]:not(#ngd) #screen .market-product-media img{width:100%;height:100%;object-fit:cover}
-html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-card-actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%;min-width:0}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.ngdl-offer-link,.ngd-home-service-cta,.ai-product-bottom){margin-top:auto!important}
 html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-card-actions button{
- min-height:44px!important;padding:8px!important;font:800 .78rem/1.25 var(--ngds-heading)!important;
- white-space:normal;overflow-wrap:anywhere;box-shadow:2px 2px 0 var(--ngds-ink)!important;
+ min-height:44px!important;
 }
-html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-card-actions .market-product-action{background:var(--ngds-violet)!important;border:2px solid var(--ngds-ink)!important;color:white!important}
 html body.ngd-public-app[data-app-role]:not(#ngd) #screen .market-product-card:hover{transform:none!important;box-shadow:var(--ngds-shadow)!important;border-color:var(--ngds-ink)!important}
 html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.ngdp-artwork,.ngdp-description,.ngdp-order-guide,.ngdp-purchase,.ngdp-related-item,.catalog-admin-row,.admin-payment-card,.table-wrap){
  border:var(--ngds-line)!important;border-radius:var(--ngds-radius)!important;min-width:0;
@@ -1040,15 +1035,14 @@ html body.ngd-public-app[data-app-role=member][data-member-route=ai]:not(#ngd) #
 html body.ngd-public-app[data-app-role=member][data-member-route=ai]:not(#ngd) #screen>section.surface :is(h1,p){margin:0;max-width:62ch}
 html body.ngd-public-app[data-app-role=member][data-member-route=ai]:not(#ngd) #screen>section.surface h1{font-size:var(--ngds-h1);line-height:1.2}
 @media(max-width:760px){
- html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.market-product-grid,.ai-catalog-grid,.admin-module-grid,.learning-course-grid){grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))!important}
+ html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.ai-catalog-grid,.admin-module-grid,.learning-course-grid){grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))!important}
  html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.ngdp-hero,.ngdp-information,.ngdb-process-steps,.admin-start-grid,.grid-2,.grid-3){grid-template-columns:minmax(0,1fr)!important}
  html body.ngd-public-app[data-app-role=member]:not(#ngd) .workarea .main-content{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))!important}
  html body.ngd-public-app[data-app-role=admin]:not(#ngd) .admin-commandbar{flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding:8px;scroll-padding:8px}
  html body.ngd-public-app[data-app-role=admin]:not(#ngd) .admin-commandbar .admin-command{flex:0 0 auto;white-space:nowrap}
 }
 @media(max-width:430px){
- html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.market-product-grid,.ai-catalog-grid,.admin-module-grid,.learning-course-grid){grid-template-columns:minmax(0,1fr)!important}
- html body.ngd-public-app[data-app-role]:not(#ngd) #screen .market-product-body{padding:14px!important}
+ html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.ai-catalog-grid,.admin-module-grid,.learning-course-grid){grid-template-columns:minmax(0,1fr)!important}
  html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.catalog-admin-controls,.ngdm-wallet-actions){display:flex;flex-wrap:wrap;gap:8px!important}
  html body.ngd-public-app[data-app-role]:not(#ngd) #screen .catalog-admin-controls button{flex:1 1 100px}
 }
