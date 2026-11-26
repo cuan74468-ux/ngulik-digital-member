@@ -16,6 +16,15 @@
    (x.kind===kind||(aliases[kind]||[]).includes(x.kind))&&x.placement===placement&&
    (x.status===undefined||x.status==='PUBLISHED'))||null;
  }
+ // Exact legacy text compatibility; subsequent CMS edits remain authoritative.
+ function commissionCopy(r){
+  if(!r)return r;
+  if(r.content_id==='CNT-MEMBER-CARD-04'&&r.description==="Bagikan tautan rujukan Anda dan pantau perolehan komisi Rp5.000 per member aktif.")
+   return {...r,description:"Bagikan tautan produk dan pantau komisi pembelian pertama serta transaksi lanjutan pelanggan yang Anda ajak."};
+  if(r.content_id==='CNT-AJAK-TEMAN-INFO'&&r.description==="Bagikan tautan rujukan pribadi Anda kepada rekan pelaku usaha. Setiap pendaftaran Starter Pack yang terverifikasi lunas menghasilkan komisi Rp5.000, ditambah komisi lanjutan pada transaksi berikutnya.")
+   return {...r,title:r.title==='Program Ajak Teman'?'Ajak Teman, Dapatkan Komisi Berulang':r.title,description:"Ajak teman sekali, dapatkan komisi berulang dari setiap transaksi yang memenuhi syarat. Setelah Starter Pack Anda lunas, bagikan tautan produk atau tautan pribadi. Dapatkan Rp5.000 dari Starter Pack pelanggan yang Anda ajak dan komisi pembelian berikutnya sesuai tarif produk. Hanya satu level, berdasarkan transaksi sah dan lunas; bukan komisi dari pendaftaran akun gratis."};
+  return r;
+ }
  function field(items,id,kind,placement,key='title'){
   const r=row(items,id,kind,placement);
   return r?String(r[key]||''):neutral;
@@ -42,7 +51,7 @@
   const routes=['ai','portal','katalog','affiliate'];
   const allowedRoutes=new Set(['ai','portal','katalog','affiliate','belajar','jasa','dukungan']);
   const cards=[1,2,3,4].map(i=>{
-   const d=row(items,'CNT-MEMBER-CARD-'+String(i).padStart(2,'0'),'MEMBER_CARD','member_home');
+   const d=commissionCopy(row(items,'CNT-MEMBER-CARD-'+String(i).padStart(2,'0'),'MEMBER_CARD','member_home'));
    const info=d?inject(d.description,{saldo_kredit:context?.balanceKnown?
      String(context.balance):'—'}):neutral;
    // Operational navigation comes from the row's editable cta_route when set.
@@ -63,7 +72,7 @@
     'member_portal','description');
  }
  function affiliateInfo(items){
-  const r=row(items,'CNT-AJAK-TEMAN-INFO','AFFILIATE_INFO','member_affiliate');
+  const r=commissionCopy(row(items,'CNT-AJAK-TEMAN-INFO','AFFILIATE_INFO','member_affiliate'));
   return '<section class="partner-public-intro ngd-cms-affiliate" aria-label="Program ajak teman">'+
     '<h1>'+h(r?.title||neutral)+'</h1><p>'+h(r?.description||neutral)+'</p></section>';
  }

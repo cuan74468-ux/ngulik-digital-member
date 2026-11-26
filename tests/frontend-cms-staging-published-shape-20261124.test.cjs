@@ -112,3 +112,12 @@ test('legacy paid-sounding signup copy is corrected without changing future CMS 
  assert.equal(input[0].cta_label,'Mulai Tiket Masuk — Rp15.000');
  assert.match(w.NGD_PUBLIC_CMS.home([{...input[0],cta_label:'CTA Admin Baru'}],{}),/CTA Admin Baru/);
 });
+
+test('commission copy separates paid Starter Pack and lifetime direct-customer sales',()=>{
+ const w=front();const data=[row('CNT-HERO-MAIN','HERO','home','Hero'),row('CNT-STARTER-MAIN','FEATURE_CARD','home','Starter'),row('CNT-STARTER-ITEM-04','FEATURE_ITEM','home','Ajak Teman',"Komisi Rp5.000 untuk setiap rekan usaha yang bergabung melalui tautan rujukan Anda."),row('CNT-MEMBER-CARD-04','MEMBER_CARD','member_home','Ajak Teman',"Bagikan tautan rujukan Anda dan pantau perolehan komisi Rp5.000 per member aktif."),row('CNT-AJAK-TEMAN-INFO','NOTICE_BOX','member_affiliate','Program Ajak Teman',"Bagikan tautan rujukan pribadi Anda kepada rekan pelaku usaha. Setiap pendaftaran Starter Pack yang terverifikasi lunas menghasilkan komisi Rp5.000, ditambah komisi lanjutan pada transaksi berikutnya.")];
+ assert.match(w.NGD_PUBLIC_CMS.home(data,{}),/komisi transaksi berikutnya sesuai tarif produk/);
+ assert.match(w.NGD_CMS_SURFACES.memberHome(data,{}),/transaksi lanjutan pelanggan/);
+ assert.match(w.NGD_CMS_SURFACES.affiliateInfo(data),/Ajak Teman, Dapatkan Komisi Berulang/);
+ assert.match(w.NGD_CMS_SURFACES.affiliateInfo(data),/bukan komisi dari pendaftaran akun gratis/);
+ assert.equal(data[2].description,"Komisi Rp5.000 untuk setiap rekan usaha yang bergabung melalui tautan rujukan Anda.");
+});

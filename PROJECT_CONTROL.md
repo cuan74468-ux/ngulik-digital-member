@@ -195,3 +195,7 @@ Owner requests visual alignment of public, member and admin with content unchang
 
 ## 26 November 2026 — Clarify account registration vs Starter Pack
 Owner requests unambiguous public home CTA. Registration code creates accounts without requiring a paid order; existing registration gates remain unchanged. Separate free account registration and paid Starter Pack Rp15.000; login for existing accounts; Starter CTA opens catalogue. Update editorial seed and exact legacy CMS rendering compatibility only, no Sheets mutation or entitlement/payment logic changes. Align actual CMS and Doc 06 subsequently via normal content governance; no claim that registration/public payments are open.
+
+
+## 27 November 2026 — recurring direct customer commission
+Owner confirms Starter Pack fixed Rp5,000 is not the only commission. One-level recurring commission on eligible verified paid orders from directly attributed customers, according to product terms. Clarify public home/member shortcut/commission narrative, add product-specific copy and WhatsApp link on product detail for backend-authorized partners; STAGING invites land on STAGING. First-inviter and payment logic unchanged. No changes to financial rates, timing, entitlement, flags, database or GAS. Commercial readiness and commission timing reconciliation remain separate. Exact legacy CMS text adapter preserves future edits.

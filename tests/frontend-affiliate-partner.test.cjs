@@ -34,7 +34,7 @@ test('member dashboard uses real backend data and distinguishes requested from a
   assert.match(app,/friendlyDate\(x\.created_at\)/);
   assert.doesNotMatch(app.slice(app.indexOf('function viewAffiliate(){'),app.indexOf('function viewNotificationCenter(){')),/konversi.*Pembelian terverifikasi/);
 });
-test('referral sharing uses production URL even on staging and validates code',()=>{
+test('referral sharing validates backend link and keeps STAGING invites isolated',()=>{
   assert.match(app,/const referralBase='https:\/\/cuan74468-ux\.github\.io\/ngulik-digital-member\/'/);
   assert.match(app,/\/\^\[A-Za-z0-9_-\]\{3,80\}\$\//);
   assert.match(app,/encodeURIComponent\(code\)/);
@@ -68,7 +68,7 @@ test('affiliate dashboard prioritizes verified referral link and hides payout wh
   const begin=app.indexOf('function viewAffiliate(){');
   const end=app.indexOf('function viewNotificationCenter(){',begin);
   const section=app.slice(begin,end);
-  assert.match(section,/const referralBase='https:\/\/cuan74468-ux\.github\.io\/ngulik-digital-member\/'/);
+  assert.match(section,/const url=verifiedCommissionLink_\(a\)/);
   assert.match(section,/data-copy=/);
   assert.match(section,/partner-link-panel/);
   assert.match(section,/partner-metric-grid/);
@@ -77,4 +77,20 @@ test('affiliate dashboard prioritizes verified referral link and hides payout wh
   assert.match(section,/canRequest\?'<div class="partner-payout-form">/);
   assert.match(section,/Pencairan belum dibuka/);
   assert.doesNotMatch(section,/partner-free-links|ebookInvite|classInvite/); // Material links are member-learning only.
+});
+
+test('product share links require backend-authorized active partner and valid commission product',()=>{
+ const vm=require('node:vm');const code=app.slice(app.indexOf('function verifiedCommissionLink_'),app.indexOf('function viewProductDetail(){'));
+ const base='https://cuan74468-ux.github.io/ngulik-digital-member/';
+ const state={qa:false,affiliates:{mitra_aktif:true,kode_referral:'ABC123',link:base+'?ref=ABC123'}};
+ const location={pathname:'/ngulik-digital-member/staging/member.html'};
+ let authenticated=true,admin=false;const ctx=vm.createContext({state,location,logged:()=>authenticated,isAdmin:()=>admin,isPublicQaOffer_:p=>p.product_id.startsWith('P-QA')});
+ vm.runInContext(code,ctx);const share=p=>ctx.productCommissionLink_(p);
+ const p={product_id:'P-POS',bisa_komisi:true,harga:149000};
+ assert.equal(share(p),base+'staging/member.html?ref=ABC123#detail-produk/P-POS');
+ location.pathname='/ngulik-digital-member/';assert.equal(share(p),base+'?ref=ABC123#detail-produk/P-POS');
+ for(const bad of [{...p,bisa_komisi:false},{...p,harga:0},{...p,product_id:'P-QA-1'},{...p,product_id:'<script>'}])assert.equal(share(bad),'');
+ admin=true;assert.equal(share(p),'');admin=false;authenticated=false;assert.equal(share(p),'');authenticated=true;
+ state.qa=true;assert.equal(share(p),'');state.qa=false;state.affiliates.mitra_aktif=false;assert.equal(share(p),'');
+ state.affiliates.mitra_aktif=true;state.affiliates.link='https://evil.example/?ref=ABC123';assert.equal(share(p),'');
 });
