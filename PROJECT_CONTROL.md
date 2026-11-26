@@ -191,3 +191,7 @@ Owner explicitly requests member Studio AI to open the independent Gemini Wrappe
 
 ## 26 November 2026 — UI/UX Precision V6
 Owner requests visual alignment of public, member and admin with content unchanged. Scope: canonical design system CSS, cache revision, visual QA and existing design documentation. No content, navigation actions, API, authentication, database, prices, flags or premium/Wrapper access changes. Verify CI before merge; screenshots and real-device QA remain separate. No paid service or additional infrastructure.
+
+
+## 26 November 2026 — Clarify account registration vs Starter Pack
+Owner requests unambiguous public home CTA. Registration code creates accounts without requiring a paid order; existing registration gates remain unchanged. Separate free account registration and paid Starter Pack Rp15.000; login for existing accounts; Starter CTA opens catalogue. Update editorial seed and exact legacy CMS rendering compatibility only, no Sheets mutation or entitlement/payment logic changes. Align actual CMS and Doc 06 subsequently via normal content governance; no claim that registration/public payments are open.

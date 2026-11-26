@@ -97,3 +97,18 @@ test('member card CTA destinations come from safe published rows, not arbitrary 
  const back=read('apps-script/Content.gs');
  assert.match(back,/'portal','portal-belajar'/);
 });
+
+test('legacy paid-sounding signup copy is corrected without changing future CMS copy or account gates',()=>{
+ const w=front();const input=[
+ row('CNT-HERO-MAIN','HERO','home','Hero',"Gunakan tools AI, template siap pakai, dan akses belajar terarah di Ngulik Digital untuk merapikan promosi dan operasional usaha Anda.",{cta_label:'Mulai Tiket Masuk — Rp15.000',cta_route:'#daftar'}),
+ row('CNT-HERO-SECONDARY','HERO_ACTION','home','Masuk Member','Sudah terdaftar? Masuk dengan nomor WhatsApp Anda.',{cta_label:'Masuk Member',cta_route:'#masuk'}),
+ row('CNT-STARTER-MAIN','FEATURE_CARD','home','Tiket Masuk Awal: Starter Pack Rp15.000',"Langkah pertama masuk ke ekosistem Ngulik Digital dengan fasilitas awal untuk mulai praktik.",{cta_label:'Ambil Tiket Masuk — Rp15.000',cta_route:'#daftar'})];
+ const html=w.NGD_PUBLIC_CMS.home(input,{});
+ assert.match(html,/data-route="daftar">Daftar Akun Gratis/);
+ assert.match(html,/data-route="login">Sudah Punya Akun\? Masuk/);
+ assert.match(html,/data-route="katalog">Lihat Starter Pack/);
+ assert.match(html,/Starter Pack Rp15.000 dibeli terpisah setelah masuk/);
+ assert.doesNotMatch(html,/Mulai Tiket Masuk|Ambil Tiket Masuk/);
+ assert.equal(input[0].cta_label,'Mulai Tiket Masuk — Rp15.000');
+ assert.match(w.NGD_PUBLIC_CMS.home([{...input[0],cta_label:'CTA Admin Baru'}],{}),/CTA Admin Baru/);
+});
