@@ -96,3 +96,14 @@ test('actual approved license policy binds owner-reviewed minimal fingerprint, n
  a.doesNotThrow(()=>p.authorize(r,34,q));
  a.throws(()=>p.authorize({...r,candidateDigest:'ed9fabc9bc24c72f524897beaed31857b2d076f17520fe9b450d96431e1b157d'},34,q),/MISMATCH/);
 });
+
+test('clasp failure classification never echoes sensitive error content',()=>{
+ const cases=[['insufficient authentication scopes','OAUTH_SCOPE'],['invalid_grant','AUTH_EXPIRED'],['The caller does not have permission','PERMISSION_DENIED'],['Syntax error: PRIVATE_SOURCE','SOURCE_SYNTAX'],['Conflicting files found','FILE_CONFLICT'],['rate limit exceeded','QUOTA'],['unknown option --bad','CLI_ARGUMENT'],['unrecognized PRIVATE_TOKEN','UNCLASSIFIED']];
+ for(const [message,category] of cases)a.equal(runner.classifyClaspFailure({status:1,stderr:message+' PRIVATE_CREDENTIAL'}),category);
+ a.equal(runner.classifyClaspFailure({error:{code:'ETIMEDOUT'}}),'TIMEOUT');
+});
+test('clasp tracked inventory rejects missing extra duplicate and malformed paths',()=>{
+ const files=new Map([['Kode.js','x'],['appsscript.json','{}']]);
+ a.equal(runner.verifyTrackedInventory({filesToPush:['appsscript.json','Kode.js'],untrackedFiles:['.clasp.json']},files),2);
+ for(const bad of [null,{}, {filesToPush:['Kode.js']},{filesToPush:['Kode.js','appsscript.json','private.js']},{filesToPush:['Kode.js','Kode.js']},{filesToPush:['./Kode.js','appsscript.json']}])a.throws(()=>runner.verifyTrackedInventory(bad,files),/CLASP_STATUS_INVALID|CLASP_TRACKED_INVENTORY_MISMATCH/);
+});

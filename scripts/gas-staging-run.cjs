@@ -35,11 +35,77 @@ async function auditGate(env=process.env,api=github,now=Date.now()){
  console.log('FINAL_AUDIT_GATE_PASS: '+id);
 }
 function localHead(){return cp.execFileSync('git',['rev-parse','HEAD'],{cwd:p.root,encoding:'utf8'}).trim();}
+// Only fixed diagnostic categories may leave the private runner. Never emit
+// stderr, stdout on failure, source snippets, paths, request bodies or tokens.
+function classifyClaspFailure(result){
+ if(result.error?.code==='ETIMEDOUT')return 'TIMEOUT';
+ if(result.error)return 'PROCESS_ERROR';
+ const message=String(result.stderr||'')+'\n'+String(result.stdout||'');
+ const patterns=[
+  ['OAUTH_SCOPE',/insufficient authentication scopes|ACCESS_TOKEN_SCOPE_INSUFFICIENT|insufficient scope/i],
+  ['AUTH_EXPIRED',/invalid_grant|invalid credentials|not authenticated|unauthenticated|401 unauthorized/i],
+  ['PERMISSION_DENIED',/permission.denied|not authorized|forbidden|403|caller does not have permission|insufficient permissions|access denied/i],
+  ['API_DISABLED',/API has not been used|API is disabled|accessNotConfigured|SERVICE_DISABLED/i],
+  ['SOURCE_SYNTAX',/syntax.?error|unexpected token|illegal character/i],
+  ['FILE_CONFLICT',/conflicting files|FILE_CONFLICT|duplicate file/i],
+  ['LOCAL_PATH',/security error|escapes project root|symlink|ENOENT/i],
+  ['QUOTA',/quota|rate.limit|RESOURCE_EXHAUSTED|too many requests|429/i],
+  ['INVALID_ARGUMENT',/invalid argument|INVALID_ARGUMENT|bad request|400/i],
+  ['CLI_ARGUMENT',/unknown option|unknown command|too many arguments|missing required argument/i],
+  ['NOT_FOUND',/not found|404/i],
+  ['TRANSIENT_NETWORK',/ECONNRESET|ETIMEDOUT|ENOTFOUND|503|502|service unavailable/i]
+ ];
+ return patterns.find(([,re])=>re.test(message))?.[0]||'UNCLASSIFIED';
+}
+function verifyTrackedInventory(status,files){
+ check(status&&Array.isArray(status.filesToPush)&&status.filesToPush.every(n=>typeof n==='string'),'CLASP_STATUS_INVALID');
+ const expected=p.names(files);
+ const actual=[...status.filesToPush].sort();
+ check(JSON.stringify(actual)===JSON.stringify(expected),'CLASP_TRACKED_INVENTORY_MISMATCH');
+ return actual.length;
+}
+// Use the exact installed clasp auth loader (v3.4.1) in the isolated HOME.
+// Requests below are GET or OAuth token introspection/refresh only, not GAS writes.
+async function inspectCredential(scriptId){
+ try{
+  delete process.env.DEBUG;delete process.env.NODE_DEBUG;
+  const bin=fs.realpathSync(process.env.CLASP_BIN||'');
+  check(path.basename(bin)==='index.js','CLASP_AUTH_PATH_INVALID');
+  const {pathToFileURL}=require('node:url');
+  const {initAuth}=await import(pathToFileURL(path.join(path.dirname(bin),'auth/auth.js')).href);
+  const {credentials}=await initAuth({authFilePath:path.join(os.homedir(),'.clasprc.json'),userKey:'default'});
+  check(credentials,'CLASP_AUTH_NOT_LOGGED_IN');
+  const {token}=await credentials.getAccessToken();
+  check(typeof token==='string'&&token.length>0,'CLASP_AUTH_TOKEN_UNAVAILABLE');
+  const info=await credentials.getTokenInfo(token);
+  const scopes=new Set(info.scopes||[]);
+  const projectsWrite=scopes.has('https://www.googleapis.com/auth/script.projects');
+  const deploymentsWrite=scopes.has('https://www.googleapis.com/auth/script.deployments');
+  console.log(JSON.stringify({diagnostic:'CLASP_OAUTH_SCOPE_CHECK',projects_write:projectsWrite,deployments_write:deploymentsWrite}));
+  check(projectsWrite&&deploymentsWrite,'CLASP_WRITE_SCOPE_MISSING');
+  const project=(await credentials.request({url:'https://script.googleapis.com/v1/projects/'+encodeURIComponent(scriptId),method:'GET',timeout:20000})).data;
+  check(project?.scriptId===scriptId,'CLASP_PROJECT_IDENTITY_UNVERIFIED');
+  // Bound project metadata points to its container. Capability is evidence of
+  // container edit access, not proof that Apps Script will accept updateContent.
+  if(project.parentId){
+   let meta;
+   try{meta=(await credentials.request({url:'https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(project.parentId),method:'GET',params:{fields:'capabilities(canEdit),ownedByMe',supportsAllDrives:true},timeout:20000})).data;}
+   catch(e){console.log(JSON.stringify({diagnostic:'CLASP_CONTAINER_CAPABILITY',can_edit:'UNVERIFIED',category:classifyClaspFailure({stderr:e?.message})}));return;}
+   const canEdit=meta?.capabilities?.canEdit;
+   console.log(JSON.stringify({diagnostic:'CLASP_CONTAINER_CAPABILITY',can_edit:typeof canEdit==='boolean'?canEdit:'UNVERIFIED',owned_by_credential:meta?.ownedByMe===true}));
+   check(canEdit!==false,'CLASP_CONTAINER_EDIT_DENIED');
+  }else console.log(JSON.stringify({diagnostic:'CLASP_CONTAINER_CAPABILITY',can_edit:'NOT_BOUND'}));
+ }catch(e){
+  // Only our own exact fixed errors may be surfaced, never Google error text.
+  const allowed=['CLASP_AUTH_PATH_INVALID','CLASP_AUTH_NOT_LOGGED_IN','CLASP_AUTH_TOKEN_UNAVAILABLE','CLASP_WRITE_SCOPE_MISSING','CLASP_PROJECT_IDENTITY_UNVERIFIED','CLASP_CONTAINER_EDIT_DENIED'];
+  throw Error(allowed.includes(e?.message)?e.message:'CLASP_CREDENTIAL_DIAGNOSTIC_FAILED: '+classifyClaspFailure({stderr:e?.message}));
+ }
+}
 function clasp(cwd,args){
- const env={...process.env};delete env.GITHUB_TOKEN;delete env.GAS_STAGING_SCRIPT_ID;
+ const env={...process.env};delete env.GITHUB_TOKEN;delete env.GAS_STAGING_SCRIPT_ID;delete env.DEBUG;delete env.NODE_DEBUG;
  const result=cp.spawnSync(process.env.CLASP_BIN||'clasp',['--json',...args],{cwd,env,encoding:'utf8',timeout:90000,maxBuffer:8*1024*1024,stdio:['ignore','pipe','pipe']});
  // Never emit raw output or errors: private source and credentials may be present.
- check(!result.error&&result.status===0,'CLASP_FAILED: '+args[0]);
+ if(result.error||result.status!==0)throw Error('CLASP_FAILED: '+args[0]+'; category='+classifyClaspFailure(result));
  try{return JSON.parse(result.stdout);}catch{throw Error('CLASP_JSON_UNVERIFIED: '+args[0]);}
 }
 function session(work,id,deployId){
@@ -65,13 +131,14 @@ function session(work,id,deployId){
   fs.writeFileSync(path.join(dir,'.clasp.json'),JSON.stringify({scriptId:id,rootDir:'.',scriptExtensions:['.js','.gs']}),{mode:0o600});
   return dir;
  }
+ function verifyPackage(dir,files){return verifyTrackedInventory(clasp(dir,['show-file-status']),files);}
  function push(dir){clasp(dir,['push','--force']);}
  function version(dir,sha){const r=clasp(dir,['create-version','NGD STAGING '+sha]);check(Number.isSafeInteger(r.versionNumber)&&r.versionNumber>0,'VERSION_UNVERIFIED');return r.versionNumber;}
  function redeploy(dir,v,description){
   const r=clasp(dir,['update-deployment',deployId,'--versionNumber',String(v),'--description',description||'NGD STAGING']);
   check(r.deploymentId===deployId&&r.versionNumber===v,'DEPLOYMENT_UPDATE_UNVERIFIED');
  }
- return {clone,deployment,packageDir,push,version,redeploy};
+ return {clone,deployment,packageDir,verifyPackage,push,version,redeploy};
 }
 // New Studio-capable source must attest the switch and reject a syntactically
 // valid, unissued scoped credential before deployment can be accepted.
@@ -156,11 +223,14 @@ async function run(mode){
    // Keep STAGING write gates closed; do not modify any Script Properties.
    check(JSON.parse(beforeFlags)[0]===false,'STAGING_MUTATIONS_MUST_REMAIN_OFF');
   }
+  const candidateDir=g.packageDir(r.candidate),restoreDir=g.packageDir(backup.files);
+  const candidateCount=g.verifyPackage(candidateDir,r.candidate),restoreCount=g.verifyPackage(restoreDir,backup.files);
+  console.log(JSON.stringify({diagnostic:'CLASP_TRACKED_INVENTORY_PASS',candidate_files:candidateCount,rollback_files:restoreCount}));
+  await inspectCredential(id);
   if(mode==='audit'){
    if(p.policy.approval.status==='APPROVED')console.log('NGD_STAGING_APPROVED_PACKAGE_AUDIT_PASS');
    console.log('NGD_STAGING_AUDIT_COMPLETE_NO_REMOTE_WRITE');return;
   }
-  const candidateDir=g.packageDir(r.candidate),restoreDir=g.packageDir(backup.files);
   // The existing immutable deployed version is the recovery source. No new
   // version is necessary before the push when HEAD is exactly identical.
   console.log('RECOVERY_VERSION_READY: '+live.versionNumber);
@@ -199,5 +269,5 @@ async function run(mode){
   }
  }finally{fs.rmSync(work,{recursive:true,force:true});}
 }
-module.exports={ciGate,auditGate,required,session,recover,verifyStudioDisabled};
+module.exports={ciGate,auditGate,required,session,recover,verifyStudioDisabled,classifyClaspFailure,verifyTrackedInventory};
 if(require.main===module)run(process.argv[2]||'audit').catch(e=>{console.error('STOP: '+e.message);process.exitCode=1;});
