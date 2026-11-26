@@ -57,11 +57,23 @@ function session(work,id,deployId){
  }
  return {clone,deployment,packageDir,push,version,redeploy};
 }
+// New Studio-capable source must attest the switch and reject a syntactically
+// valid, unissued scoped credential before deployment can be accepted.
+// Historical source snapshots did not expose this flag; preserve their health
+// contract for baseline and rollback. No token issuance or mutation here.
+async function verifyStudioDisabled(files,identity,request){
+ const source=files.get('Kode.js')||'';
+ if(!/\bfunction\s+ngdStudioGuard_\s*\(/.test(source))return;
+ check(identity.studio_pilot_enabled===false,'STAGING_STUDIO_MUST_REMAIN_OFF');
+ const denied=await request({method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'studioValidateSession',payload:{},token:crypto.randomBytes(32).toString('hex'),request_id:crypto.randomUUID().replace(/-/g,'')+'aa'})});
+ check(denied?.ok===false&&denied.error?.code==='MAINTENANCE','STAGING_STUDIO_DEFAULT_OFF_UNVERIFIED');
+}
 async function health(endpoint,files){
- const request=async init=>{
-  const r=await fetch(endpoint,{...init,redirect:'follow',signal:AbortSignal.timeout(25000)});
-  check(r.ok,'STAGING_HTTP_UNVERIFIED');let j;try{j=await r.json();}catch{throw Error('STAGING_NON_JSON_RESPONSE');}check(j.ok===true&&j.data,'STAGING_RESPONSE_UNVERIFIED');return j.data;
+ const rawRequest=async init=>{
+  const r=await fetch(endpoint,{...init,credentials:'omit',redirect:'follow',signal:AbortSignal.timeout(25000)});
+  check(r.ok,'STAGING_HTTP_UNVERIFIED');let j;try{j=await r.json();}catch{throw Error('STAGING_NON_JSON_RESPONSE');}return j;
  };
+ const request=async init=>{const j=await rawRequest(init);check(j?.ok===true&&j.data,'STAGING_RESPONSE_UNVERIFIED');return j.data;};
  const info=await request({method:'GET'});
  const identity=await request({method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'getStagingWorkspaceInfo',payload:{},token:'',request_id:crypto.randomUUID().replace(/-/g,'')+'aa'})});
  check(info.app==='Ngulik Digital API'&&identity.workspace==='NGD_STAGING'&&identity.environment==='STAGING'&&identity.admin_login_enabled===true,'STAGING_IDENTITY_UNVERIFIED');
@@ -70,6 +82,7 @@ async function health(endpoint,files){
  check(typeof info.writes_enabled==='boolean'&&info.writes_enabled===identity.mutations_enabled,'STAGING_WRITE_FLAG_MISMATCH');
  const marker=files.get('Kode.js')?.match(/SOURCE_REVISION:\s*'([a-z0-9-]{12,80})'/);
  check(marker&&info.source_revision===marker[1],'STAGING_SOURCE_REVISION_UNVERIFIED');
+ await verifyStudioDisabled(files,identity,rawRequest);
  return JSON.stringify(keys.map(k=>identity[k]));
 }
 
@@ -114,9 +127,10 @@ async function run(mode){
  fs.chmodSync(work,0o700);
  try{
   const g=session(work,id,ep.id),head=g.clone(),live=g.deployment(head.dir),backup=g.clone(live.versionNumber);
-  const r=p.build(p.readDir(path.join(p.root,'apps-script')),head.files,parse);
+  if(p.policy.releaseProfile)check(live.versionNumber===p.policy.initialVersion,'LICENSE_BASELINE_VERSION_DRIFT');
+  const r=p.buildRelease(p.readDir(path.join(p.root,'apps-script')),head.files,parse);
   const beforeFlags=await health(ep.url,backup.files);
-  console.log(JSON.stringify({version:live.versionNumber,editorFiles:head.files.size,editorEqualsLive:head.digest===backup.digest,candidateFiles:r.candidate.size,changed:r.changed,removed:r.removed,globalCount:r.after.size,baselineDigest:r.baselineDigest,candidateDigest:r.candidateDigest,releaseGate:p.policy.approval.status}));
+  console.log(JSON.stringify({version:live.versionNumber,editorFiles:head.files.size,editorEqualsLive:head.digest===backup.digest,candidateFiles:r.candidate.size,changed:r.changed,removed:r.removed,globalCount:r.after.size,releaseProfile:r.releaseProfile||'full-modular',baselineDigest:r.baselineDigest,candidateDigest:r.candidateDigest,releaseGate:p.policy.approval.status}));
   if(mode==='audit'){console.log('NGD_STAGING_AUDIT_COMPLETE_NO_REMOTE_WRITE');return;}
   p.authorize(r,live.versionNumber);
   check(head.digest===backup.digest,'EDITOR_DIFFERS_FROM_IMMUTABLE_BACKUP');
@@ -159,5 +173,5 @@ async function run(mode){
   }
  }finally{fs.rmSync(work,{recursive:true,force:true});}
 }
-module.exports={ciGate,required,session,recover};
+module.exports={ciGate,required,session,recover,verifyStudioDisabled};
 if(require.main===module)run(process.argv[2]||'audit').catch(e=>{console.error('STOP: '+e.message);process.exitCode=1;});

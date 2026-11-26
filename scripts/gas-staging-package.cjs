@@ -100,6 +100,44 @@ function build(repoFiles,remote,parse,p=policy){
  for(const n of p.preserve)if(candidate.get(n)!==remote.get(n))fail('PRESERVE_DRIFT');
  return {candidate,before,after,baselineDigest:digest(remote),candidateDigest:digest(candidate),changed:names(candidate).filter(n=>candidate.get(n)!==remote.get(n)),removed:names(remote).filter(n=>!candidate.has(n))};
 }
+// One-time license-only release profile. Keep existing v34 bundle and every
+// other editor file byte-for-byte; do not promote unrelated module changes.
+// Full modular build remains available as a separate reviewed plan.
+function buildRelease(repoFiles,remote,parse,p=policy){
+ const profile=p.releaseProfile;
+ if(!profile)return build(repoFiles,remote,parse,p);
+ if(profile.mode!=='studio-license-only-v34'||p.initialVersion!==34||!/^[a-f0-9]{64}$/.test(profile.baselineDigest||''))fail('RELEASE_PROFILE_INVALID');
+ if(digest(remote)!==profile.baselineDigest)fail('LICENSE_BASELINE_DRIFT');
+ if(remote.size!==28||!remote.has(p.legacyBundle)||p.managed['Code.gs']!=='Kode.js')fail('LICENSE_BASELINE_INVENTORY');
+ // Apply the original structural/manifest checks as well; no broad output is used.
+ const full=build(repoFiles,remote,parse,p);
+ const candidate=new Map(remote);
+ candidate.set('Kode.js',repoFiles.get('Code.gs'));
+ const before=full.before,after=globals(candidate,parse);
+ const allowed=['ngdStudioGuard_','ngdStudioAllowed_','ngdStudioToken_','ngdStudioKey_','ngdStudioHash_','ngdStudioRead_','ngdStudioParent_','ngdStudioIssue_','ngdStudioExchange_','ngdStudioValidate_','ngdStudioLogout_','ngdStudioAdminList_','ngdStudioAdminSet_','ngdStudioRoute_'].sort();
+ for(const [name,file] of before)if(after.get(name)!==file)fail('LICENSE_EXISTING_GLOBAL_DRIFT: '+name);
+ same(sorted([...after.keys()].filter(n=>!before.has(n))),allowed,'LICENSE_NEW_GLOBAL_INVENTORY');
+ for(const name of allowed)if(after.get(name)!=='Kode.js')fail('LICENSE_GLOBAL_OWNER');
+ // Exact AST inventory for pre-existing Kode.js top-level statements. Only
+ // the reviewed NGD revision, STAGING identity and gateway may differ.
+ const nodes=src=>parse(src,{ecmaVersion:'latest',sourceType:'script'}).body;
+ const norm=n=>JSON.stringify(n,(k,v)=>['start','end','loc','range','raw'].includes(k)?undefined:typeof v==='bigint'?String(v)+'n':v);
+ const old=nodes(remote.get('Kode.js')),fresh=nodes(candidate.get('Kode.js'));
+ const isNew=n=>n.type==='FunctionDeclaration'&&allowed.includes(n.id?.name);
+ const isReviewed=n=>n.type==='FunctionDeclaration'&&['ngdStagingWorkspaceInfo_','doPost'].includes(n.id?.name)||n.type==='VariableDeclaration'&&n.declarations.length===1&&n.declarations[0].id?.name==='NGD';
+ const filtered=fresh.filter(n=>!isNew(n));
+ if(old.length!==filtered.length)fail('LICENSE_CODE_STATEMENT_DRIFT');
+ let changes=0;
+ for(let i=0;i<old.length;i++){
+  if(norm(old[i])===norm(filtered[i]))continue;
+  if(!isReviewed(old[i])||!isReviewed(filtered[i]))fail('LICENSE_UNRELATED_CODE_CHANGE');
+  changes++;
+ }
+ if(changes!==3)fail('LICENSE_EXPECTED_CODE_DELTA');
+ const changed=names(candidate).filter(n=>candidate.get(n)!==remote.get(n));
+ same(changed,['Kode.js'],'LICENSE_PACKAGE_DELTA');
+ return {candidate,before,after,baselineDigest:digest(remote),candidateDigest:digest(candidate),changed,removed:[],releaseProfile:profile.mode};
+}
 function authorize(r,version,p=policy){
  const a=p.approval;
  if(a.status!=='APPROVED'||typeof a.reviewReference!=='string'||!a.reviewReference.trim())fail('GEMINI_RECONCILIATION_PENDING');
@@ -108,14 +146,14 @@ function authorize(r,version,p=policy){
  if(!Array.isArray(a.triggerHandlers)||new Set(a.triggerHandlers).size!==a.triggerHandlers.length||a.triggerHandlers.some(n=>typeof n!=='string'||!r.after.has(n)))fail('UNMAPPED_TRIGGER');
 }
 function writePackage(dir,files){fs.mkdirSync(dir,{mode:0o700});for(const [n,s] of files){if(path.basename(n)!==n||!/^(?:[A-Za-z0-9_.$-]+\.js|appsscript\.json)$/.test(n))fail('UNSAFE_PACKAGE_NAME');fs.writeFileSync(path.join(dir,n),s,{mode:0o600,flag:'wx'});}}
-module.exports={root,policy,readDir,digest,globals,build,authorize,writePackage,endpoint,names};
+module.exports={root,policy,readDir,digest,globals,build,buildRelease,authorize,writePackage,endpoint,names};
 if(require.main===module){
  try{
   const [remote,versionDir,out]=process.argv.slice(2);
   if(!remote||!versionDir||!out)fail('Usage: node scripts/gas-staging-package.cjs <editor snapshot> <deployed snapshot> <new package dir>');
   const parse=require('acorn').parse;
   const actual=readDir(remote,true),deployed=readDir(versionDir,true);
-  const r=build(readDir(path.join(root,'apps-script')),actual,parse);
+  const r=buildRelease(readDir(path.join(root,'apps-script')),actual,parse);
   writePackage(out,r.candidate);
   console.log(JSON.stringify({editorFiles:actual.size,versionMatchesEditor:digest(actual)===digest(deployed),candidateFiles:r.candidate.size,globalCount:r.after.size,changed:r.changed,removed:r.removed,baselineDigest:r.baselineDigest,candidateDigest:r.candidateDigest,releaseGate:policy.approval.status}));
   console.log('NGD_STAGING_AUDIT_COMPLETE_NO_REMOTE_WRITE');
