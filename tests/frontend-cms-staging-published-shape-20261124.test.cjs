@@ -121,3 +121,9 @@ test('commission copy separates paid Starter Pack and lifetime direct-customer s
  assert.match(w.NGD_CMS_SURFACES.affiliateInfo(data),/bukan komisi dari pendaftaran akun gratis/);
  assert.equal(data[2].description,"Komisi Rp5.000 untuk setiap rekan usaha yang bergabung melalui tautan rujukan Anda.");
 });
+
+test('legacy premium copy is honest during Wrapper-only staging',()=>{
+ const w=front();const data=[row('CNT-HERO-MAIN','HERO','home','Hero'),row('CNT-STARTER-MAIN','FEATURE_CARD','home','Starter'),row('CNT-STARTER-ITEM-01','FEATURE_ITEM','home','15 Kredit AI',"Saldo awal untuk langsung mencoba pembuatan materi promosi dan visual usaha."),row('CNT-NEXT-01','SERVICE_CARD','home',"Top-Up Kredit Tools AI — Mulai Rp10.000","Isi ulang saldo kredit sesuai kebutuhan produksi konten Anda tanpa ikatan langganan bulanan."),row('CNT-MEMBER-CARD-01','MEMBER_CARD','member_home',"Studio AI & Foto Produk","Sisa saldo: {{saldo_kredit}} kredit. Buat caption promosi, deskripsi produk, dan materi visual.")];
+ const html=w.NGD_PUBLIC_CMS.home(data,{});assert.match(html,/Premium menunggu aktivasi/);assert.match(html,/Top-Up Kredit AI — Belum Dibuka/);
+ assert.match(w.NGD_CMS_SURFACES.memberHome(data,{}),/Tidak memotong Kredit AI Ngulik Digital/);
+});

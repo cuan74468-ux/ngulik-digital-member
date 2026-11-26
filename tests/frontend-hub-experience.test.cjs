@@ -53,14 +53,16 @@ test('guest learning page redirects to member login without exposing free resour
   assert.match(h.nodes.screen.innerHTML,/Login member belum tersedia|Masuk ke akun Anda/);
   assert.equal(h.apiCalls.length,0);
 });
-test('guest marketplace displays all eight official QA fixtures without pretending payment is available',()=>{
+test('guest marketplace excludes portal-only resource and disables unavailable premium/Canva offers',()=>{
   const h=preview();h.go('katalog');const html=h.nodes.screen.innerHTML;
-  assert.equal((html.match(/class="market-product-card" data-market-kind=/g)||[]).length,8);
-  assert.match(html,/8 dari 8 produk/);
+  assert.equal((html.match(/class="market-product-card" data-market-kind=/g)||[]).length,7);
+  assert.match(html,/7 dari 7 produk/);
   assert.match(html,/market-search/);
   assert.match(html,/market-sort/);
   assert.match(html,/Jasa Video Iklan/);
-  assert.match(html,/Bundel Ebook Vibe Coder/);
+  assert.doesNotMatch(html,/Bundel Ebook Vibe Coder|data-checkout-product="P-EBOOK"/);
+  assert.match(html,/Belum dibuka/);
+  assert.doesNotMatch(html,/data-checkout-product="P-(?:KREDIT-50|KREDIT-150|KREDIT-400|CANVA)"/);
   assert.doesNotMatch(html,/data-buy="/);
   assert.match(html,/data-checkout-product=/);
   assert.doesNotMatch(html,/Tanya via WhatsApp|Chat WhatsApp/);
@@ -86,10 +88,11 @@ test('guest category controls filter services without creating fake checkout',()
   assert.match(html,/Jasa Video Iklan/);
   assert.doesNotMatch(html,/Top-up 150 Kredit AI/);
   assert.match(html,/aria-pressed="true"/);
-  assert.match(html,/2 dari 8 produk/);
+  assert.match(html,/2 dari 7 produk/);
   assert.doesNotMatch(html,/data-buy="/);
   vm.runInContext("state.catalogFilter='belajar';render()",h.ctx);
-  assert.match(h.nodes.screen.innerHTML,/Bundel Ebook Vibe Coder/);
+  assert.doesNotMatch(h.nodes.screen.innerHTML,/Bundel Ebook Vibe Coder/);
+  assert.match(h.nodes.screen.innerHTML,/Produk Tidak Ditemukan/);
   assert.doesNotMatch(h.nodes.screen.innerHTML,/Jasa Video Iklan/);
 });
 test('money formatting handles Indonesian Sheets format without inventing Rp0',()=>{

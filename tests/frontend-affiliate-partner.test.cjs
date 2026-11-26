@@ -80,7 +80,7 @@ test('affiliate dashboard prioritizes verified referral link and hides payout wh
 });
 
 test('product share links require backend-authorized active partner and valid commission product',()=>{
- const vm=require('node:vm');const code=app.slice(app.indexOf('function verifiedCommissionLink_'),app.indexOf('function viewProductDetail(){'));
+ const vm=require('node:vm');const code=app.slice(app.indexOf('function catalogSaleHold_'),app.indexOf('function checkoutQrReady_'))+app.slice(app.indexOf('function verifiedCommissionLink_'),app.indexOf('function viewProductDetail(){'));
  const base='https://cuan74468-ux.github.io/ngulik-digital-member/';
  const state={qa:false,affiliates:{mitra_aktif:true,kode_referral:'ABC123',link:base+'?ref=ABC123'}};
  const location={pathname:'/ngulik-digital-member/staging/member.html'};
@@ -89,7 +89,7 @@ test('product share links require backend-authorized active partner and valid co
  const p={product_id:'P-POS',bisa_komisi:true,harga:149000};
  assert.equal(share(p),base+'staging/member.html?ref=ABC123#detail-produk/P-POS');
  location.pathname='/ngulik-digital-member/';assert.equal(share(p),base+'?ref=ABC123#detail-produk/P-POS');
- for(const bad of [{...p,bisa_komisi:false},{...p,harga:0},{...p,product_id:'P-QA-1'},{...p,product_id:'<script>'}])assert.equal(share(bad),'');
+ for(const bad of [{...p,bisa_komisi:false},{...p,harga:0},{...p,product_id:'P-QA-1'},{...p,product_id:'<script>'},{...p,product_id:'P-TOKEN-10'},{...p,product_id:'P-CANVA-30'},{...p,product_id:'P-EBOOK'}])assert.equal(share(bad),'');
  admin=true;assert.equal(share(p),'');admin=false;authenticated=false;assert.equal(share(p),'');authenticated=true;
  state.qa=true;assert.equal(share(p),'');state.qa=false;state.affiliates.mitra_aktif=false;assert.equal(share(p),'');
  state.affiliates.mitra_aktif=true;state.affiliates.link='https://evil.example/?ref=ABC123';assert.equal(share(p),'');

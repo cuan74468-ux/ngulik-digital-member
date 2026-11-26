@@ -259,7 +259,9 @@ test('preview catalog uses sample products with internal checkout previews',()=>
   assert.match(nodes.screen.innerHTML,/Paket 3-in-1/);
   assert.match(nodes.screen.innerHTML,/Top-up 400 Kredit AI/);
   assert.match(nodes.screen.innerHTML,/Jasa Video Iklan/);
-  assert.match(nodes.screen.innerHTML,/Bundel Ebook Vibe Coder/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/Bundel Ebook Vibe Coder|data-checkout-product="P-EBOOK"/);
+  assert.match(nodes.screen.innerHTML,/Belum dibuka/);
+  assert.doesNotMatch(nodes.screen.innerHTML,/data-checkout-product="P-KREDIT-400"/);
   assert.match(nodes.screen.innerHTML,/data-catalog-filter="aplikasi"/);
   assert.match(nodes.screen.innerHTML,/data-catalog-filter="jasa"/);
   assert.match(nodes.screen.innerHTML,/data-checkout-product=/);
