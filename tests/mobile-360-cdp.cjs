@@ -143,6 +143,7 @@ async function visit(url,label){
     assert.ok(!result.exceptionDetails);
     const v=result.result.value;
     assert.equal(v.columns,2,label+' must retain compact two-column catalog');
+    assert.ok(v.count>=2,label+' requires actual product cards in fixture');
     if(v.r.length===2){
       assert.ok(Math.abs(v.r[0].top-v.r[1].top)<2,label+' first cards must share row');
       assert.ok(Math.abs(v.r[0].width-v.r[1].width)<2,label+' equal card widths');

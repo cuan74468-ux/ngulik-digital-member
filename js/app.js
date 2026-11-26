@@ -253,6 +253,11 @@ function activatePreview(){
   state.lmsSelectedLessonId='LES-DEMO';
   state.lmsSelectedAIJobId='AIJ-DEMO';
   state.lmsCompletion={title:'Menyiapkan Profil Usaha',completed:1,total:1,preview:true};
+  // QA identity is localhost-only. Reuse the public editorial snapshot to
+  // exercise the actual product card layout, never a private member record.
+  const previewEnv=String(location.pathname||'').includes('/staging/')?'stg':'prd';
+  const previewCatalog=window.NGD_PUBLIC_SEED?.envs?.[previewEnv]?.catalog;
+  if(Array.isArray(previewCatalog))state.catalog=previewCatalog.map(p=>({...p}));
   state.qa=true;
   return true;
 }
@@ -878,6 +883,23 @@ function openProductDetail_(rawId){
   state.productDetailId=id;
   go('detail-produk');
 }
+// Use only a link authorized by the authenticated commission dashboard.
+function verifiedCommissionLink_(a){
+  const referralBase='https://cuan74468-ux.github.io/ngulik-digital-member/';
+  if(!logged()||isAdmin()||state.qa||a?.mitra_aktif!==true)return '';
+  const code=String(a.kode_referral||'');
+  if(!/^[A-Za-z0-9_-]{3,80}$/.test(code)||String(a.link||'')!==referralBase+'?ref='+encodeURIComponent(code))return '';
+  // Test invites must land in STAGING, not the production database.
+  return String(location.pathname||'').includes('/staging/')?
+    referralBase+'staging/member.html?ref='+encodeURIComponent(code):a.link;
+}
+function productCommissionLink_(product){
+  if(!product||product.bisa_komisi!==true||!(Number(product.harga)>0)||isPublicQaOffer_(product))return '';
+  const id=String(product.product_id||'');
+  if(!/^[A-Za-z0-9_-]{1,100}$/.test(id))return '';
+  const link=verifiedCommissionLink_(state.affiliates);
+  return link?link+'#detail-produk/'+encodeURIComponent(id):'';
+}
 function viewProductDetail(){
   const id=String(state.productDetailId||'');
   const product=Array.isArray(state.catalog)?state.catalog.find(p=>
@@ -916,6 +938,8 @@ function viewProductDetail(){
       (logged()?(price===0?'Lanjutkan Akses Gratis':'Lanjut ke Checkout'):(price===0?'Masuk untuk Akses':'Masuk untuk Membeli'))+
       ' '+icon('arrow')+'</button>':
     '<span class="ngdp-unavailable">Harga belum tersedia. Produk belum dapat dipesan.</span>';
+  const shareLink=productCommissionLink_(product);
+  const shareActions=shareLink?'<div class="ngdp-order-guide"><p class="ngdp-eyebrow">AJAK TEMAN</p><p>Bagikan produk ini. Komisi tercatat untuk transaksi sah dari pelanggan yang Anda ajak, sesuai tarif produk.</p><div class="ngdp-related-grid"><button type="button" class="ngdp-button ngdp-secondary" data-copy="'+esc(shareLink)+'">Salin tautan komisi</button><a class="ngdp-button ngdp-secondary" href="'+esc('https://wa.me/?text='+encodeURIComponent(offerUiTitle_(product)+' — '+shareLink))+'" target="_blank" rel="noopener noreferrer">Bagikan ke WhatsApp</a></div></div>':'';
   const related=state.catalog.filter(p=>!isPublicQaOffer_(p)&&String(p.product_id)!==id&&
       offerCategory(p)===kind).slice(0,3);
   const relatedItems=related.map(p=>{
@@ -940,7 +964,7 @@ function viewProductDetail(){
         (facts?'<div class="ngdp-facts">'+facts+'</div>':'')+
         '<div class="ngdp-purchase"><p>Harga katalog</p><strong>'+
           (price===0?'Gratis':price!==null&&price>0?rupiah(product.harga):'Belum tersedia')+'</strong>'+
-          buyButton+
+          buyButton+shareActions+
           '<small>'+(logged()?'Periksa kembali produk dan nominal sebelum membuat pesanan.':
             'Anda perlu masuk sebagai member untuk memesan dan menyimpan akses produk.')+'</small>'+
         '</div>'+
@@ -1288,9 +1312,7 @@ function viewAffiliate(){
   // referral link from a cached profile or from the browser query string.
   const unlocked=a.mitra_aktif===true;
   const code=unlocked?String(a.kode_referral||''):'';
-  const referralBase='https://cuan74468-ux.github.io/ngulik-digital-member/';
-  const url=unlocked&&/^[A-Za-z0-9_-]{3,80}$/.test(code)&&
-    String(a.link||'')===referralBase+'?ref='+encodeURIComponent(code)?a.link:'';
+  const url=verifiedCommissionLink_(a);
   if(!unlocked)return '<section class="partner-member partner-locked">'+
     info+'<button type="button" class="partner-btn partner-btn-outline" data-route="katalog">Katalog</button></section>';
   const all=Array.isArray(a.komisi)?a.komisi:[];
@@ -1311,7 +1333,7 @@ function viewAffiliate(){
       '<button type="button" class="partner-refresh" data-affiliate-refresh aria-label="Perbarui data komisi">'+icon('arrow')+' <span>Perbarui</span></button></header>'+
     '<section class="partner-link-panel" aria-label="Tautan ajak teman">'+
       '<div class="partner-link-copy"><p class="partner-kicker">LINK AJAK TEMAN ANDA</p>'+
-        '<h2>Tautan Ajak Teman</h2><p>Kirim kepada teman yang mungkin membutuhkan produk Ngulik Digital.</p>'+
+        '<h2>Tautan Ajak Teman</h2><p>Bagikan tautan ini atau salin tautan komisi dari halaman detail produk.</p>'+
         '<div class="partner-link-url" aria-label="Tautan pribadi">'+(url?esc(url):'Tautan belum tersedia')+'</div>'+
         (url?'<span class="partner-code">Kode Anda: <strong>'+esc(code)+'</strong></span>':'')+'</div>'+
       '<div class="partner-link-actions">'+
@@ -3103,6 +3125,10 @@ async function loadRoute(route){
     if(route==='akun'&&!isAdmin()&&config.notificationsEnabled===true)
       state.notifications=await sessionApi('getMyNotifications',{},token);
     if(route==='affiliate')state.affiliates=await sessionApi('getAffiliateDashboard',{},token);
+    if(route==='detail-produk'&&!isAdmin()&&!state.affiliates){
+      try{state.affiliates=await sessionApi('getAffiliateDashboard',{},token);}
+      catch(e){if(!sameSession())return;state.affiliates=null;}
+    }
     if(route==='pesanan'){
       if(isAdmin()){
         // Reconciliation is not displayed on this page; avoid an extra GAS
