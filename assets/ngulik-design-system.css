@@ -1052,3 +1052,81 @@ html body.ngd-public-app[data-app-role=member][data-member-route=ai]:not(#ngd) #
  html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.catalog-admin-controls,.ngdm-wallet-actions){display:flex;flex-wrap:wrap;gap:8px!important}
  html body.ngd-public-app[data-app-role]:not(#ngd) #screen .catalog-admin-controls button{flex:1 1 100px}
 }
+
+/* V6.1 — actual mobile feedback: full-width benefit rows and photo-backed editorial heroes. */
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngd-cms-landing .ngdl-trust{
+ display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ width:100%;align-items:stretch;justify-items:stretch;gap:12px!important;
+ margin:0!important;padding:0!important;
+}
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngd-cms-landing .ngdl-trust span{
+ display:flex!important;width:100%!important;max-width:none!important;min-height:52px;
+ justify-content:center;text-align:center;box-sizing:border-box;
+ padding:12px 14px!important;line-height:1.4;font-size:13px!important;
+}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen .market-banner-shell .ngd-catalog-campaign{
+ border:var(--ngds-line);border-radius:var(--ngds-radius)!important;box-shadow:var(--ngds-shadow)!important;
+}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-catalog-campaign-slide:not([hidden]){
+ display:grid!important;align-items:center;min-height:clamp(310px,35vw,420px);isolation:isolate;
+}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-catalog-campaign-picture{
+ position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-height:none!important;z-index:0;
+}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-catalog-campaign-picture img{width:100%!important;height:100%!important;object-fit:cover!important}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-catalog-campaign-slide::before{
+ background:linear-gradient(90deg,rgba(23,16,66,.97),rgba(23,16,66,.86) 55%,rgba(23,16,66,.22))!important;
+}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-catalog-campaign-copy{
+ width:min(100%,680px);max-width:100%;padding:clamp(24px,4vw,42px)!important;z-index:2;
+}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-catalog-campaign-cta{
+ background:var(--ngds-lime)!important;border:var(--ngds-line)!important;color:var(--ngds-ink)!important;
+ box-shadow:var(--ngds-shadow)!important;min-height:44px;
+}
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdb-hero{
+ position:relative;isolation:isolate;overflow:hidden;display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ min-height:clamp(310px,35vw,420px);align-items:center;background:#201066!important;
+ padding:clamp(24px,4vw,42px)!important;gap:0!important;
+}
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdb-hero-visual{
+ position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-height:none!important;z-index:0;pointer-events:none;
+}
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdb-hero-visual img{
+ width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;border-radius:0;
+}
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdb-hero::after{
+ content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+ background:linear-gradient(90deg,rgba(23,16,66,.97),rgba(23,16,66,.86) 55%,rgba(23,16,66,.22));
+}
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdb-hero-copy{position:relative;z-index:2;width:min(100%,640px);max-width:100%;gap:12px}
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdb-hero-copy :is(h1,p,small){color:#fff!important;-webkit-text-fill-color:#fff!important;text-shadow:none!important}
+html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdb-hero-copy .ngdb-overline{color:var(--ngds-lime)!important;-webkit-text-fill-color:var(--ngds-lime)!important}
+/* Intro-only images for existing text-only editorial routes. Do not style transactional cards or admin tables as banners. */
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.partner-public-intro,.ngdb-help-intro,.learning-portal-hero,.learning-intro,.ngd-member-page-intro,.ai-catalog-intro){
+ --ngds-cover:url("media/ngd-v8-ai-pack.webp");background-color:#201066!important;
+ background-image:linear-gradient(90deg,rgba(23,16,66,.97),rgba(23,16,66,.87) 65%,rgba(23,16,66,.48)),var(--ngds-cover)!important;
+ background-size:cover!important;background-position:center!important;
+ padding:clamp(22px,3vw,34px)!important;
+}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen .partner-public-intro{--ngds-cover:url("media/ngd-v6-bundle.webp")}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngdb-help-intro{--ngds-cover:url("media/ngd-v6-integrasi.webp")}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.learning-portal-hero,.learning-intro){--ngds-cover:url("media/ngd-v8-class.webp")}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-member-page-intro{--ngds-cover:url("media/ngd-catalog-v9-wide.webp")}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.partner-public-intro,.ngdb-help-intro,.learning-portal-hero,.ngd-member-page-intro,.ai-catalog-intro) :is(h1,h2,p):not(button *,a *),
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen .learning-intro-copy :is(h1,h2,p){color:#fff!important;-webkit-text-fill-color:#fff!important}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen :is(.partner-public-intro,.ngdb-help-intro,.learning-portal-hero,.ngd-member-page-intro,.ai-catalog-intro,.learning-intro-copy) :is(.eyebrow,.ngdb-overline,.learning-overline){
+ color:var(--ngds-lime)!important;-webkit-text-fill-color:var(--ngds-lime)!important;
+}
+html body.ngd-public-app[data-app-role]:not(#ngd) #screen .learning-portal-hero .learning-portal-total,html body.ngd-public-app[data-app-role]:not(#ngd) #screen .learning-intro-copy .learning-next-hint{color:#fff!important}
+@media(max-width:760px){
+ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngd-cms-landing .ngdl-trust{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}
+ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngd-cms-landing .ngdl-trust span{justify-content:flex-start;text-align:left}
+ html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-catalog-campaign-slide:not([hidden]),html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdb-hero{min-height:360px}
+ html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-catalog-campaign-copy{width:100%;padding:24px 20px!important}
+ html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-catalog-campaign-slide::before,html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdb-hero::after{
+  background:linear-gradient(180deg,rgba(23,16,66,.93),rgba(23,16,66,.84) 60%,rgba(23,16,66,.58))!important;
+ }
+ html body.ngd-public-app[data-app-role]:not(#ngd) #screen .ngd-catalog-campaign-actions{gap:10px;align-items:flex-start;flex-direction:column}
+ html body.ngd-public-app[data-app-role="guest"]:not(#ngd) #screen .ngdb-hero-copy{width:100%}
+}

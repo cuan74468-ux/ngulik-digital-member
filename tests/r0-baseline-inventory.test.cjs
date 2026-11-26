@@ -40,13 +40,13 @@ const limits = Object.freeze({
   'assets/guest-sales-trust-v1.css': [18156, 25],
   'assets/product-detail-v1.css': [13561, 40],
   'assets/member-native-dashboard-v1.css': [31615, 224],
-  'assets/ngulik-design-system.css': [58656, 518],
+  'assets/ngulik-design-system.css': [65636, 579],
   'assets/staging-native-mobile.css': [9008, 1]
 });
 
 const budgets = Object.freeze({
-  'index.html': { count: 30, bytes: 770908, important: 2153 },
-  'staging/member.html': { count: 31, bytes: 779916, important: 2154 }
+  'index.html': { count: 30, bytes: 777888, important: 2214 },
+  'staging/member.html': { count: 31, bytes: 786896, important: 2215 }
 });
 
 function inspectEntry(entry) {

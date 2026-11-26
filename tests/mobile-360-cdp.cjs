@@ -118,6 +118,21 @@ async function visit(url,label){
   // A newly provisioned CMS with no published rows must show a neutral loader,
   // not invent a marketing campaign. Test its mobile fit above; legacy window
   // chrome checks continue for authenticated member panels below.
+  if(['guest-home','guest-catalog','guest-services'].includes(label)){
+    const h=await request('Runtime.evaluate',{expression:`(()=>{
+      const trust=document.querySelector('.ngdl-trust');
+      const rows=trust?[...trust.querySelectorAll('span')].map(e=>e.getBoundingClientRect().width):[];
+      const hero=document.querySelector('.ngd-catalog-campaign-slide:not([hidden]),.ngdb-hero');
+      const art=hero?.querySelector('.ngd-catalog-campaign-picture,.ngdb-hero-visual');
+      const r=hero?.getBoundingClientRect(),a=art?.getBoundingClientRect();
+      return {trust:trust?.clientWidth||0,rows,hero:!!hero,cover:!!(r&&a&&Math.abs(r.width-a.width)<=4&&Math.abs(r.height-a.height)<=4),position:art?getComputedStyle(art).position:''};
+    })()`,returnByValue:true});
+    assert.ok(!h.exceptionDetails);
+    const v=h.result.value;
+    if(label==='guest-home'&&v.rows.length)assert.ok(v.rows.every(w=>Math.abs(w-v.trust)<=2),'trust rows must fill width');
+    if(label==='guest-catalog'||label==='guest-services'){assert.ok(v.hero&&v.cover,label+' art must fill hero');assert.equal(v.position,'absolute');}
+    console.log('NGD_HERO_PRECISION '+label+' '+JSON.stringify(v));
+  }
   // Precision V6: verify actual card bounds and product touch targets.
   const precision=await request('Runtime.evaluate',{expression:`(()=>{
     const screen=document.getElementById('screen');
