@@ -50,6 +50,7 @@ test('truthful badges only reflect price and product terms; no invented ratings'
   const h=preview();
   vm.runInContext("state.catalog=["+
     "{product_id:'P-EBOOK',nama:'Buku Panduan',deskripsi:'Baca langsung',tipe:'PRODUK_DIGITAL',harga:0,aktif:true},"+
+    "{product_id:'P-FREE-EXAMPLE',nama:'Contoh Gratis',deskripsi:'Produk bebas tanpa fasilitas portal',tipe:'PRODUK_DIGITAL',harga:0,aktif:true},"+
     "{product_id:'P-3IN1',nama:'Website',deskripsi:'Katalog digital',tipe:'LANGGANAN_30H',harga:'Rp99.000',durasi_hari:30,aktif:true},"+
     "{product_id:'P-POS',nama:'Kasir',deskripsi:'POS sederhana',tipe:'LISENSI_SEKALI',harga:149000,aktif:true}"+
     "];state.info={wa_admin:'081234567890'};state.route='katalog';render()",h.ctx);
@@ -57,7 +58,8 @@ test('truthful badges only reflect price and product terms; no invented ratings'
   assert.match(html,/market-product-badge[^>]*>Gratis/);
   assert.match(html,/market-product-badge[^>]*>30 hari/);
   assert.match(html,/market-product-badge[^>]*>Sekali bayar/);
-  assert.match(html,/data-checkout-product="P-EBOOK"/);
+  assert.doesNotMatch(html,/data-checkout-product="P-EBOOK"|Buku Panduan/);
+  assert.match(html,/data-checkout-product="P-FREE-EXAMPLE"/);
   assert.match(html,/data-checkout-product="P-3IN1"/);
   assert.doesNotMatch(html,/wa\.me\/|Tanya via WhatsApp|Chat WhatsApp/);
   assert.doesNotMatch(html,/data-buy="P-3IN1"/);

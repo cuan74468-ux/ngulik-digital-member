@@ -1576,7 +1576,7 @@ function catalogSaleHold_(p){
   const id=String(p?.product_id||'').toUpperCase(),type=String(p?.tipe||'').toUpperCase();
   if(type==='TOPUP_TOKEN'||type==='TOPUP_KREDIT'||/^P-(TOKEN|KREDIT)-/.test(id))
     return 'Top-up belum dibuka. Studio AI Premium dan tarif menunggu verifikasi.';
-  if(id==='P-CANVA-30')return 'Akses Canva belum dibuka. Hak distribusi harus diverifikasi.';
+  if(/^P-CANVA(?:-|$)/.test(id))return 'Akses Canva belum dibuka. Hak distribusi harus diverifikasi.';
   return '';
 }
 function catalogPortalResource_(p){
