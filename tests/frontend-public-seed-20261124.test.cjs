@@ -174,3 +174,9 @@ test('commission seed mirrors latest three published CMS rows in both environmen
 test('failed CMS portfolio media is hidden rather than substituted; no legacy asset allowlist',()=>{
  assert.match(app,/img\.closest\?\.\('\[data-cms-portfolio\]'\)/);assert.match(app,/portfolio\.hidden=true;portfolio\.style\.display='none'/);assert.match(app,/state\.adminContent\.some\(r=>r\.status!=='ARCHIVED'/);assert.doesNotMatch(app,/const approved=new Set\(\['ngd-catalog-v9-wide.webp'/);
 });
+
+
+test('Jasa uses the title and description of the actual published CMS photo, not the old hardcoded sample',()=>{
+ const src=app.slice(app.indexOf('function servicePortfolio_(){'),app.indexOf('function viewServiceRequests(){'));
+ assert.match(src,/esc\(photoCase.title/);assert.match(src,/esc\(photoCase.description/);assert.match(src,/if\(!configured&&!reusedPhoto\)return ''/);assert.doesNotMatch(src,/Visual promosi madu/);
+});
