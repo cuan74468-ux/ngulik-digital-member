@@ -8,7 +8,7 @@ var NGD_CONTENT_KINDS_=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_
  'HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CARD','FEATURE_BULLET','NOTICE_BOX','SERVICE_CARD',
  'BENEFIT_LIST','BENEFIT_BULLET','SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD',
  'CHECKOUT_GUIDE','CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO',
- 'HERO_ACTION','SECTION_HEADER','FEATURE_ITEM','CHECKOUT_COPY','MEMBER_GREETING','DISCLAIMER','PAGE_COPY','FAQ_ITEM','PORTFOLIO_IMAGE','PORTFOLIO_VIDEO'];
+ 'HERO_ACTION','SECTION_HEADER','FEATURE_ITEM','CHECKOUT_COPY','MEMBER_GREETING','DISCLAIMER','PAGE_COPY','FAQ_ITEM','PORTFOLIO_IMAGE','PORTFOLIO_VIDEO','PORTFOLIO_CARD'];
 var NGD_CONTENT_TEXT_KINDS_=NGD_CONTENT_KINDS_.slice(8).filter(function(k){return k!=='PORTFOLIO_IMAGE'&&k!=='PORTFOLIO_VIDEO';});
 var NGD_CONTENT_ROUTES_=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun','daftar','masuk','auth','checkout','member','portal','portal-belajar','ajak-teman'];
 var NGD_CONTENT_FIELDS_=[
@@ -57,11 +57,15 @@ function contentPlacement_(kind,value) {
     valid=['home','catalog','member_home','ai','belajar'].indexOf(place)>=0;
   if(NGD_CONTENT_TEXT_KINDS_.indexOf(kind)>=0)
     valid=['home','auth','checkout','member_home','member_portal','member_affiliate'].indexOf(place)>=0;
+  if(kind==='PORTFOLIO_CARD')valid=place==='home';
   if(kind==='PAGE_COPY')valid=['jasa','dukungan','ai'].indexOf(place)>=0;
   if(kind==='FAQ_ITEM')valid=place==='dukungan';
   if(kind==='PORTFOLIO_IMAGE'||kind==='PORTFOLIO_VIDEO')valid=place==='jasa';
   require_(valid,'VALIDATION','Lokasi gambar tidak dikenali untuk jenis konten ini.');
   return place;
+}
+function contentExternalExample_(kind,placement,route) {
+  return ['PORTFOLIO_CARD','SERVICE_CARD','PROMO'].indexOf(kind)>=0&&placement==='home'&&route==='https://cuan74468-ux.github.io/bakso-len-1-menu/';
 }
 function contentPayload_(p,existing) {
   require_(p&&typeof p==='object'&&!Array.isArray(p),
@@ -84,14 +88,14 @@ function contentPayload_(p,existing) {
     image_path:p.kind==='PORTFOLIO_VIDEO'?contentVideoPath_(p.image_path):contentImagePath_(p.image_path,p.kind==='HERO'||
       NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0||
       p.kind==='PROMO'||p.kind==='ANNOUNCEMENT'),
-    cta_label:safeText_(p.cta_label,48),cta_route:String(p.cta_route||'').trim().replace(/^#/,'').toLowerCase(),
+    cta_label:safeText_(p.cta_label,48),cta_route:contentExternalExample_(p.kind,p.placement,String(p.cta_route||'').trim())?String(p.cta_route).trim():String(p.cta_route||'').trim().replace(/^#/,'').toLowerCase(),
     sort_order:Number(p.sort_order),
     start_date:contentDate_(p.start_date,'mulai'),
     end_date:contentDate_(p.end_date,'akhir')
   };
   require_(Number.isSafeInteger(draft.sort_order)&&draft.sort_order>=1&&draft.sort_order<=10000,
     'VALIDATION','Urutan tampilan tidak valid.');
-  require_(!draft.cta_route||NGD_CONTENT_ROUTES_.indexOf(draft.cta_route)>=0,
+  require_(!draft.cta_route||NGD_CONTENT_ROUTES_.indexOf(draft.cta_route)>=0||contentExternalExample_(draft.kind,draft.placement,draft.cta_route),
     'VALIDATION','Tujuan tombol tidak diizinkan.');
   require_(!draft.cta_label||!!draft.cta_route||
     (draft.placement==='auth'&&draft.kind==='CTA_BUTTON')||
@@ -228,6 +232,7 @@ function contentSetStatus_(admin,p) {
       require_(NGD_CONTENT_KINDS_.indexOf(old.kind)>=0,'VALIDATION','Format banner lama tidak dapat diterbitkan. Buat HERO atau PROMO baru.');
       if(old.kind==='PORTFOLIO_VIDEO')contentVideoPath_(old.image_path);
       if(old.kind==='PORTFOLIO_IMAGE')contentImagePath_(old.image_path,false);
+      if(old.kind==='PORTFOLIO_CARD'||/^https:/i.test(String(old.cta_route||'')))require_(!old.cta_route||NGD_CONTENT_ROUTES_.indexOf(String(old.cta_route).replace(/^#/,''))>=0||contentExternalExample_(old.kind,old.placement,old.cta_route),'VALIDATION','Tujuan tombol tidak diizinkan.');
       var starts=ngdContentDateCell_(old.start_date),ends=ngdContentDateCell_(old.end_date);
       require_(starts!==null&&ends!==null&&(!starts||!ends||starts<=ends),'VALIDATION','Jadwal tayang tidak valid.');
     }

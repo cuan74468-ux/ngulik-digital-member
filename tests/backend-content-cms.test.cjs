@@ -196,3 +196,5 @@ test('CMS portfolio accepts owned direct video, rejects embeds and unsafe paths;
  assert.equal(h.ctx.contentAdminView_({...p,start_date:46350,end_date:46752}).start_date,'2026-11-24');
  assert.equal(h.ctx.contentPayload_(sample({kind:'WA_TEMPLATE',placement:'checkout',image_path:'',cta_route:'',cta_label:'Kirim bukti'}),null).cta_label,'Kirim bukti');
 });
+
+test('Bakso Len CMS permits only approved example CTA on three public home kinds',()=>{const h=fixture();const url='https://cuan74468-ux.github.io/bakso-len-1-menu/';for(const kind of ['PORTFOLIO_CARD','SERVICE_CARD','PROMO']){const p=sample({kind,placement:'home',cta_route:url});assert.equal(h.ctx.contentPayload_(p,null).cta_route,url);}for(const cta_route of ['https://evil.example/','https://cuan74468-ux.github.io/bakso-len-1-menu/../','javascript:alert(1)'])assert.throws(()=>h.ctx.contentPayload_(sample({kind:'PORTFOLIO_CARD',cta_route}),null),/Tujuan tombol/);assert.throws(()=>h.ctx.contentPayload_(sample({kind:'HERO',cta_route:url}),null),/Tujuan tombol/);assert.throws(()=>h.ctx.contentPayload_(sample({kind:'PORTFOLIO_CARD',placement:'auth',cta_route:url}),null),/Lokasi/);});

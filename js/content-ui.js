@@ -11,15 +11,17 @@
     'HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CARD','FEATURE_BULLET','NOTICE_BOX','SERVICE_CARD',
     'BENEFIT_LIST','BENEFIT_BULLET','SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD',
     'CHECKOUT_GUIDE','CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO',
-    'HERO_ACTION','SECTION_HEADER','FEATURE_ITEM','CHECKOUT_COPY','MEMBER_GREETING','DISCLAIMER','PAGE_COPY','FAQ_ITEM','PORTFOLIO_IMAGE','PORTFOLIO_VIDEO'];
+    'HERO_ACTION','SECTION_HEADER','FEATURE_ITEM','CHECKOUT_COPY','MEMBER_GREETING','DISCLAIMER','PAGE_COPY','FAQ_ITEM','PORTFOLIO_IMAGE','PORTFOLIO_VIDEO','PORTFOLIO_CARD'];
   const textKinds=new Set(kinds.slice(8).filter(k=>!['PORTFOLIO_IMAGE','PORTFOLIO_VIDEO'].includes(k)));
   // Resolve assets against the shared project root, never the current page folder.
   // Works identically for /index.html and /staging/member.html.
   const projectRoot=typeof URL==='function'&&typeof location!=='undefined' ?
     new URL('../',document.currentScript?.src||new URL('js/content-ui.js',location.href)) : null;
+  function exampleUrl(row){return ['PORTFOLIO_CARD','SERVICE_CARD','PROMO'].includes(row?.kind)&&row?.placement==='home'&&String(row?.cta_route||'').trim()==='https://cuan74468-ux.github.io/bakso-len-1-menu/'?'https://cuan74468-ux.github.io/bakso-len-1-menu/':'';}
   function mediaPath(raw){
     const path=String(raw||'').trim();
     if(!path)return '';
+    if(/^https:\/\/cuan74468-ux\.github\.io\/assets\/bakso-len\/[A-Za-z0-9_.-]+\.(?:jpe?g|png|webp)$/i.test(path))return projectRoot?new URL(path.replace('https://cuan74468-ux.github.io/',''),projectRoot).href:path;
     if(path.length<=500&&/^assets\/[A-Za-z0-9_./-]+\.(?:png|jpe?g|webp|gif|avif)(?:\?[A-Za-z0-9_=&%-]+)?$/i.test(path)&&
       !path.includes('..')&&!path.includes('//'))return projectRoot?new URL(path,projectRoot).href:'./'+path;
     if(path.length<=2048&&/^https:\/\/[A-Za-z0-9.-]+(?::[0-9]{2,5})?(?:\/[A-Za-z0-9!$&'()*+,;=:@%_./~-]*)?(?:\?[A-Za-z0-9!$&'()*+,;=:@%_./?~-]*)?(?:#[A-Za-z0-9_.-]*)?$/i.test(path))return path;
@@ -38,13 +40,13 @@
     return editorialRows(contents,'PAGE_COPY',placement).find(r=>r.content_id===id)||null;
   }
   function portfolio(contents){
-    return [...editorialRows(contents,'PORTFOLIO_IMAGE','jasa'),...editorialRows(contents,'PORTFOLIO_VIDEO','jasa')]
+    return [...editorialRows(contents,'PORTFOLIO_IMAGE','jasa'),...editorialRows(contents,'PORTFOLIO_VIDEO','jasa'),...editorialRows(contents,'PORTFOLIO_CARD','home'),...editorialRows(contents,'SERVICE_CARD','home').filter(exampleUrl),...editorialRows(contents,'PROMO','home').filter(exampleUrl)]
       .sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)).map(r=>{
       const video=r.kind==='PORTFOLIO_VIDEO',src=video?videoPath(r.image_path):mediaPath(r.image_path);
       if(!src)return '';
       return '<article class="ngdb-package"><div class="ngdb-package-media ngdb-portfolio-image">'+
         (video?'<video controls playsinline preload="none" style="width:100%;max-height:420px" aria-label="'+h(r.title||'Video portofolio')+'" src="'+h(src)+'"></video>':'<img src="'+h(src)+'" alt="'+h(r.title||'Portofolio')+'" loading="lazy" decoding="async">')+
-        '</div><div class="ngdb-package-main"><h3>'+h(r.title||'')+'</h3><p>'+h(r.description||'')+'</p></div></article>';
+        '</div><div class="ngdb-package-main"><h3>'+h(r.title||'')+'</h3><p>'+h(r.description||'')+'</p>'+(exampleUrl(r)&&r.cta_label?'<a class="btn btn-secondary" href="'+h(exampleUrl(r))+'" target="_blank" rel="noopener noreferrer">'+h(r.cta_label)+'</a>':'')+'</div></article>';
     }).join('');
   }
   function published(contents,kind,placement){
@@ -188,7 +190,7 @@
     WA_TEMPLATE:'Pesan WhatsApp',MEMBER_COPY:'Sapaan member',MEMBER_CARD:'Menu member',
     PORTAL_NOTICE:'Disclaimer portal',AFFILIATE_INFO:'Informasi ajak teman',
      HERO_ACTION:'Tombol beranda',SECTION_HEADER:'Judul seksi',FEATURE_ITEM:'Rincian paket',
-     CHECKOUT_COPY:'Instruksi QRIS',MEMBER_GREETING:'Sapaan member',DISCLAIMER:'Disclaimer resmi',PAGE_COPY:'Narasi halaman',FAQ_ITEM:'Pertanyaan & jawaban',PORTFOLIO_IMAGE:'Portofolio foto',PORTFOLIO_VIDEO:'Portofolio video'};
+     CHECKOUT_COPY:'Instruksi QRIS',MEMBER_GREETING:'Sapaan member',DISCLAIMER:'Disclaimer resmi',PAGE_COPY:'Narasi halaman',FAQ_ITEM:'Pertanyaan & jawaban',PORTFOLIO_IMAGE:'Portofolio foto',PORTFOLIO_VIDEO:'Portofolio video',PORTFOLIO_CARD:'Kartu portofolio'};
   const places=[
     ['HERO','home','Beranda publik'],['HERO','catalog','Banner promosi marketplace publik'],['HERO','member_home','Beranda member'],
     ...['belajar','aplikasi','ai','jasa','katalog','affiliate','dukungan','login']
@@ -200,8 +202,8 @@
     ...['jasa','dukungan','ai'].map(p=>['PAGE_COPY',p,'Narasi '+p]),
     ['FAQ_ITEM','dukungan','FAQ Bantuan'],
     ['PORTFOLIO_IMAGE','jasa','Foto portofolio Jasa'],['PORTFOLIO_VIDEO','jasa','Video portofolio Jasa'],
-    ['BRAND_LOGO','brand','Logo Ngulik Digital'],
-    ...[...textKinds].filter(k=>!['PAGE_COPY','FAQ_ITEM'].includes(k)).flatMap(kind=>['home','auth','checkout','member_home',
+    ['BRAND_LOGO','brand','Logo Ngulik Digital'],['PORTFOLIO_CARD','home','Portofolio beranda'],
+    ...[...textKinds].filter(k=>!['PAGE_COPY','FAQ_ITEM','PORTFOLIO_CARD'].includes(k)).flatMap(kind=>['home','auth','checkout','member_home',
       'member_portal','member_affiliate'].map(place=>[kind,place,'Konten '+place]))
   ];
   function admin(ctx){
@@ -288,6 +290,7 @@
       '<div class="field"><label for="content-route">Halaman tujuan</label>'+
       '<select class="input" id="content-route" name="cta_route"><option value="">Tanpa tombol</option>'+
       routes.map(k=>'<option value="'+k+'" '+(String(draft.cta_route||'').replace(/^#/,'')===k?'selected':'')+'>'+k+'</option>').join('')+
+       '<option value="https://cuan74468-ux.github.io/bakso-len-1-menu/" '+(exampleUrl(draft)?'selected':'')+'>Contoh E-Katalog Bakso Len</option>'+
       '</select></div></div>'+
       '<div class="grid-2"><div class="field"><label for="content-order">Urutan</label>'+
       '<input class="input" type="number" min="1" max="10000" step="1" name="sort_order" id="content-order" required value="'+h(draft.sort_order??1)+'"></div>'+
@@ -345,5 +348,5 @@
       '<details class="surface"><summary>Panduan slot narasi dan portofolio</summary><p>Jenis Narasi halaman: isi ID CNT-JASA-HERO, CNT-JASA-PORTFOLIO, CNT-JASA-PACKAGES, CNT-JASA-PROCESS, CNT-JASA-STEP-01 hingga 03, CNT-JASA-FINAL (lokasi jasa); CNT-HELP-HERO, CNT-HELP-STEPS, CNT-HELP-STEP-01 hingga 03, CNT-HELP-FAQ, CNT-HELP-FINAL (dukungan); CNT-AI-INTRO (ai). FAQ Bantuan dan portofolio foto/video memakai ID unik, urutan, dan tanggal tayang. Untuk video asli gunakan ID VID-PORT-01, VID-PORT-02 atau VID-PORT-03, jenis Video portofolio Jasa, lokasi jasa, judul/deskripsi sesuai karya, dan path MP4/WebM milik studio di assets/media/. Isi path hanya setelah file tersedia; urutkan 10, 20, 30. Periksa pratinjau; gunakan DRAFT lalu Terbitkan setelah gerbang CMS diizinkan. Video diputar atas tindakan pengunjung, tanpa autoplay. Jangan memasukkan tautan Drive/YouTube atau menerbitkan slot kosong. Slot kosong memakai teks standar; pengaman akun dan pembayaran tidak dapat diubah lewat CMS.</p></details>'+
       '<div class="content-admin-layout">'+rowsHtml+form+'</div>';
   }
-  window.NGD_CONTENT_UI=Object.freeze({mediaPath,videoPath,editorialRows,pageCopy,portfolio,published,media,hero,catalogBanner,promotion,cover,admin});
+  window.NGD_CONTENT_UI=Object.freeze({mediaPath,videoPath,exampleUrl,editorialRows,pageCopy,portfolio,published,media,hero,catalogBanner,promotion,cover,admin});
 })();
