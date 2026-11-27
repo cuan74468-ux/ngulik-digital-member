@@ -51,3 +51,37 @@ test('pending release gate cannot authorize real-package fingerprints',()=>{
  const r=p.build(repo,fixture(),parse);
  a.throws(()=>p.authorize(r,34,{approval:{status:'PENDING'}}),/PENDING/);
 });
+
+const runner=require('./gas-staging-run.cjs');
+test('owner format equivalence is restricted to Kode.js and preserves actual approved program AST',()=>{
+ const c=fixture(),source=repo.get('Code.gs');c.set('Kode.js',source);
+ const expected={candidate:c,candidateDigest:p.digest(c)};
+ const baseline={digest:p.policy.approval.baselineDigest};
+ const snapshot=files=>({files,digest:p.digest(files)});
+ const vary=s=>new Map(c).set('Kode.js',s);
+ for(const variant of [source.replace(/\n+$/,''),source+'\n','\uFEFF'+source]){
+  const observed=vary(variant);
+  a.ok(runner.ownerFormatEquivalent(observed,c,parse));
+  a.equal(runner.ownerAttestation(snapshot(observed),{versionNumber:34},baseline,expected,baseline,parse),'OWNER_EDITOR_VERIFIED');
+  a.equal(runner.ownerAttestation(snapshot(observed),{versionNumber:35},baseline,expected,snapshot(observed),parse),'OWNER_DEPLOY_VERIFIED');
+  a.throws(()=>runner.ownerAttestation(snapshot(observed),{versionNumber:35},baseline,expected,snapshot(c),parse),/LIVE_FINGERPRINT/);
+ }
+ const changed=vary(source+'\n');changed.set('appsscript.json','{}');
+ const missing=vary(source+'\n');missing.delete('appsscript.json');
+ const extra=vary(source+'\n');extra.set('extra.js','');
+ for(const bad of [changed,missing,extra,vary(source+'// different'),vary(' '+source),vary(source+'\r')]){
+  a.equal(runner.ownerFormatEquivalent(bad,c,parse),false);
+  a.throws(()=>runner.ownerAttestation(snapshot(bad),{versionNumber:34},baseline,expected,baseline,parse),/EDITOR_FINGERPRINT/);
+ }
+});
+test('owner format AST comparison permits CRLF but rejects raw literal drift and parse failures',()=>{
+ const c=new Map([['Kode.js','const a=1;\nconst b=2n;\n']]);
+ const observed=new Map(c).set('Kode.js','const a=1;\r\nconst b=2n;\r\n');
+ a.ok(runner.ownerFormatEquivalent(observed,c,parse));
+ a.deepEqual(runner.ownerFormatEvidence(observed,c),{diagnostic:'OWNER_FORMAT_EVIDENCE',observed:{bom:false,crlf:2,terminal_newlines:1},approved:{bom:false,crlf:0,terminal_newlines:1}});
+ const literal=new Map([['Kode.js',"const a='x\\\ny';\n"]]);
+ const changed=new Map(literal).set('Kode.js',literal.get('Kode.js').replace(/\n/g,'\r\n'));
+ a.equal(runner.ownerFormatEquivalent(changed,literal,parse),false);
+ const invalid=new Map([['Kode.js','const =;\n']]);
+ a.equal(runner.ownerFormatEquivalent(new Map(invalid).set('Kode.js','const =;'),invalid,parse),false);
+});
