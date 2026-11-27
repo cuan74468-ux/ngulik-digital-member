@@ -2033,6 +2033,21 @@ async function saveLegacyCms_(form){
 
 const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
 function editorialPageCopy_(place,id){return window.NGD_CONTENT_UI?.pageCopy?.(state.siteContent,place,id)||{};}
+function servicePortfolio_(){
+    // Portfolio source is the existing public editorial CMS image, not a synthetic sample.
+    const photoCase=window.NGD_PUBLIC_CMS?.list(state.siteContent,'USECASE_CARD','home').find(x=>x.content_id==='CNT-USECASE-01');
+    const photoSrc=window.NGD_CONTENT_UI?.mediaPath(photoCase?.image_path)||'';
+    const portfolioCopy=editorialPageCopy_('jasa','CNT-JASA-PORTFOLIO');
+    const configuredPortfolio=window.NGD_CONTENT_UI?.portfolio?.(state.siteContent)||'';
+    return '<section class="ngdb-packages" aria-labelledby="ngdb-portfolio-title">'+
+      '<div class="ngdb-heading"><h2 id="ngdb-portfolio-title">'+esc(portfolioCopy.title||'Contoh karya Linggau AI Studio')+'</h2>'+
+      '<p>'+esc(portfolioCopy.description||'Lihat hasil karya sebelum menentukan kebutuhan promosi Anda.')+'</p></div>'+
+      '<div class="ngdb-package-list">'+(configuredPortfolio+(!window.NGD_CONTENT_UI?.portfolio?.((state.siteContent||[]).filter(r=>r.kind==='PORTFOLIO_IMAGE'))?('<article class="ngdb-package">'+
+      (photoSrc?'<div class="ngdb-package-media ngdb-portfolio-image"><img src="'+esc(photoSrc)+'" alt="Portofolio visual produk Linggau AI Studio" loading="lazy" decoding="async"></div>':'')+
+      '<div class="ngdb-package-main"><p class="ngdb-overline">FOTO PRODUK</p><h3>Visual promosi madu &amp; roti</h3>'+
+      '<p>Contoh eksplorasi visual produk dari katalog portofolio studio.</p>'+
+      '<a href="https://cuan74468-ux.github.io/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Lihat portofolio studio</a></div></article>'):'') )+'</div></section>';
+}
 function viewServiceRequests(){
   if(!logged()&&!isAdmin()){
     // A sales-facing page uses actual published catalogue items and backend prices.
@@ -2065,19 +2080,7 @@ function viewServiceRequests(){
         '</div></article>';
     }).join('');
     const serviceCopy=window.NGD_PUBLIC_CMS?.list(state.siteContent,'SERVICE_CARD','home').find(x=>x.content_id==='CNT-NEXT-02');
-    // Portfolio source is the existing public editorial CMS image, not a synthetic sample.
-    const photoCase=window.NGD_PUBLIC_CMS?.list(state.siteContent,'USECASE_CARD','home').find(x=>x.content_id==='CNT-USECASE-01');
-    const photoSrc=window.NGD_CONTENT_UI?.mediaPath(photoCase?.image_path)||'';
-    const portfolioCopy=editorialPageCopy_('jasa','CNT-JASA-PORTFOLIO');
-    const configuredPortfolio=window.NGD_CONTENT_UI?.portfolio?.(state.siteContent)||'';
-    const portfolio='<section class="ngdb-packages" aria-labelledby="ngdb-portfolio-title">'+
-      '<div class="ngdb-heading"><h2 id="ngdb-portfolio-title">'+esc(portfolioCopy.title||'Contoh karya Linggau AI Studio')+'</h2>'+
-      '<p>'+esc(portfolioCopy.description||'Lihat hasil karya sebelum menentukan kebutuhan promosi Anda.')+'</p></div>'+
-      '<div class="ngdb-package-list">'+(configuredPortfolio||('<article class="ngdb-package">'+
-      (photoSrc?'<div class="ngdb-package-media ngdb-portfolio-image"><img src="'+esc(photoSrc)+'" alt="Portofolio visual produk Linggau AI Studio" loading="lazy" decoding="async"></div>':'')+
-      '<div class="ngdb-package-main"><p class="ngdb-overline">FOTO PRODUK</p><h3>Visual promosi madu &amp; roti</h3>'+
-      '<p>Contoh eksplorasi visual produk dari katalog portofolio studio.</p>'+
-      '<a href="https://cuan74468-ux.github.io/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Lihat portofolio studio</a></div></article>'))+'</div></section>';
+    const portfolio=servicePortfolio_();
 
     const heroCopy=editorialPageCopy_('jasa','CNT-JASA-HERO'),packageCopy=editorialPageCopy_('jasa','CNT-JASA-PACKAGES'),processCopy=editorialPageCopy_('jasa','CNT-JASA-PROCESS'),finalCopy=editorialPageCopy_('jasa','CNT-JASA-FINAL');
     const stepCopy=(i,title,desc)=>{const r=editorialPageCopy_('jasa','CNT-JASA-STEP-0'+i);return '<div><span>0'+i+'</span><h3>'+esc(r.title||title)+'</h3><p>'+esc(r.description||desc)+'</p></div>';};
@@ -2117,7 +2120,7 @@ function viewServiceRequests(){
   }
   return window.NGD_SERVICES_UI?
     window.NGD_SERVICES_UI.member({logged:logged()&&!isAdmin(),
-      items:state.services,enabled:serviceWriteEnabled(),kind:state.serviceKind}):
+      items:state.services,enabled:serviceWriteEnabled(),kind:state.serviceKind})+(!isAdmin()?servicePortfolio_():''):
     empty('Halaman Belum Tersedia','Coba muat ulang halaman.');
 }
 function viewAdminServices(){
