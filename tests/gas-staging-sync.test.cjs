@@ -156,3 +156,16 @@ test('owner attestation accepts only approved editor and exact baseline or candi
  a.throws(()=>runner.ownerAttestation(candidate,{versionNumber:35},baseline,r,baseline),/LIVE_FINGERPRINT/);
  a.throws(()=>runner.ownerAttestation(candidate,{versionNumber:34},{digest:'other'},r,baseline),/BASELINE_DRIFT/);
 });
+
+test('owner diagnostic reports bounded categories without exposing private names or source, and does not waive exact digest',()=>{
+ const b=new Map([['Kode.js','old\n'],['private.js','private source']]);
+ const c=new Map(b);c.set('Kode.js','new\n');
+ const d=(a)=>runner.ownerEditorDiagnostic(a,b,c);
+ a.deepEqual(d(c),{diagnostic:'OWNER_EDITOR_DIFF',code:'EXACT_CANDIDATE',missing_other:0,extra_other:0,changed_other:0});
+ a.equal(d(b).code,'EXACT_BASELINE');
+ const format=new Map(c);format.set('Kode.js','\uFEFFnew\r\n');a.equal(d(format).code,'FORMAT_ONLY_CANDIDATE');
+ a.notEqual(p.digest(format),p.digest(c));
+ a.throws(()=>runner.ownerAttestation({digest:p.digest(format)},{versionNumber:34},{digest:p.policy.approval.baselineDigest},{candidateDigest:p.digest(c)},{digest:p.policy.approval.baselineDigest}),/EDITOR_FINGERPRINT/);
+ const changed=new Map(c);changed.set('Kode.js','unexpected');changed.set('private.js','secret');changed.set('extra.js','secret');a.deepEqual(d(changed),{diagnostic:'OWNER_EDITOR_DIFF',code:'CONTENT_DIFFERS',missing_other:0,extra_other:1,changed_other:1});
+ changed.delete('private.js');changed.delete('Kode.js');a.deepEqual(d(changed),{diagnostic:'OWNER_EDITOR_DIFF',code:'MISSING',missing_other:1,extra_other:1,changed_other:0});
+});

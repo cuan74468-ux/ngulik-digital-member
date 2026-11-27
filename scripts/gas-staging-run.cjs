@@ -248,6 +248,14 @@ async function recover(g,{head,live,r,newVersion,restoreDir},checkHealth){
 }
 // Read-only attestation for an owner-performed update of the existing deployment.
 // Rebuild the approved candidate from immutable v34, not from changed HEAD.
+// Only bounded categories and counts; never log private names, hashes or source.
+function ownerEditorDiagnostic(actual,baseline,candidate){
+ const name='Kode.js',a=actual.get(name),b=baseline.get(name),c=candidate.get(name);
+ const normalize=s=>s.replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n').replace(/\n+$/,'');
+ const code=typeof a!=='string'?'MISSING':a===c?'EXACT_CANDIDATE':a===b?'EXACT_BASELINE':typeof c==='string'&&normalize(a)===normalize(c)?'FORMAT_ONLY_CANDIDATE':'CONTENT_DIFFERS';
+ const other=xs=>[...xs.keys()].filter(n=>n!==name);
+ return {diagnostic:'OWNER_EDITOR_DIFF',code,missing_other:other(candidate).filter(n=>!actual.has(n)).length,extra_other:other(actual).filter(n=>!candidate.has(n)).length,changed_other:other(candidate).filter(n=>actual.has(n)&&actual.get(n)!==candidate.get(n)).length};
+}
 function ownerAttestation(head,live,baseline,r,active){
  check(baseline.digest===p.policy.approval.baselineDigest,'OWNER_BASELINE_DRIFT');
  check(head.digest===r.candidateDigest,'OWNER_EDITOR_FINGERPRINT_MISMATCH');
@@ -348,5 +356,5 @@ async function run(mode){
   }
  }finally{fs.rmSync(work,{recursive:true,force:true});}
 }
-module.exports={ciGate,auditGate,required,session,recover,verifyStudioDisabled,classifyClaspFailure,verifyTrackedInventory,contentMap,contentPayload,apiFailure,requestContent,updateContent,ownerAttestation};
+module.exports={ciGate,auditGate,required,session,recover,verifyStudioDisabled,classifyClaspFailure,verifyTrackedInventory,contentMap,contentPayload,apiFailure,requestContent,updateContent,ownerAttestation,ownerEditorDiagnostic};
 if(require.main===module)run(process.argv[2]||'audit').catch(e=>{console.error('STOP: '+e.message);process.exitCode=1;});
