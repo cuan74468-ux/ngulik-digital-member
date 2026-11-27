@@ -2062,6 +2062,18 @@ function viewServiceRequests(){
         '</div></article>';
     }).join('');
     const serviceCopy=window.NGD_PUBLIC_CMS?.list(state.siteContent,'SERVICE_CARD','home').find(x=>x.content_id==='CNT-NEXT-02');
+    // Portfolio source is the existing public editorial CMS image, not a synthetic sample.
+    const photoCase=window.NGD_PUBLIC_CMS?.list(state.siteContent,'USECASE_CARD','home').find(x=>x.content_id==='CNT-USECASE-01');
+    const photoSrc=window.NGD_CONTENT_UI?.mediaPath(photoCase?.image_path)||'';
+    const portfolio='<section class="ngdb-packages" aria-labelledby="ngdb-portfolio-title">'+
+      '<div class="ngdb-heading"><h2 id="ngdb-portfolio-title">Contoh karya Linggau AI Studio</h2>'+
+      '<p>Lihat hasil karya sebelum menentukan kebutuhan promosi Anda.</p></div>'+
+      '<div class="ngdb-package-list"><article class="ngdb-package">'+
+      (photoSrc?'<div class="ngdb-package-media ngdb-portfolio-image"><img src="'+esc(photoSrc)+'" alt="Portofolio visual produk Linggau AI Studio" loading="lazy" decoding="async"></div>':'')+
+      '<div class="ngdb-package-main"><p class="ngdb-overline">FOTO PRODUK</p><h3>Visual promosi madu &amp; roti</h3>'+
+      '<p>Contoh eksplorasi visual produk dari katalog portofolio studio.</p>'+
+      '<a href="https://cuan74468-ux.github.io/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Lihat portofolio studio</a></div></article></div></section>';
+
     return '<div class="ngd-buyer-services">'+
       '<header class="ngdb-hero">'+
         '<div class="ngdb-hero-copy"><p class="ngdb-overline">'+esc(state.publicSettings?.tagline_brand||'Ngulik Digital')+'</p>'+
@@ -2073,6 +2085,7 @@ function viewServiceRequests(){
         '</div>'+
         '<div class="ngdb-hero-visual"><img src="'+guestMediaBase_()+'ngd-v8-video.webp" alt="Ilustrasi layanan produksi materi promosi digital" width="800" height="800" decoding="async"></div>'+
       '</header>'+
+      portfolio+
       '<section id="ngdb-packages" class="ngdb-packages" aria-labelledby="ngdb-packages-title">'+
         '<div class="ngdb-heading"><h2 id="ngdb-packages-title">Paket Jasa</h2>'+
           '<p>Harga mengikuti katalog. Masuk atau daftar dengan WhatsApp untuk membeli.</p></div>'+
@@ -2216,13 +2229,13 @@ function viewSupport(){
   if(!logged())return '<div class="ngd-buyer-help">'+
     '<header class="ngdb-help-intro">'+
       '<p class="ngdb-overline">CARA KERJA & BANTUAN</p>'+
-      '<h1>Sebelum pesan, boleh tahu dulu cara kerjanya.</h1>'+
-      '<p>Cari tahu soal akun, pembayaran, dan cara menerima produk atau jasa. Baca dulu supaya tidak bingung setelah membeli.</p>'+
+      '<h1>Butuh bantuan memilih produk atau jasa?</h1>'+
+      '<p>Cari jawaban tentang akun, cara pesan, pembayaran, dan kebutuhan khusus usaha Anda.</p>'+
       '<div class="ngdb-actions"><button type="button" class="ngdb-button ngdb-primary" data-route="katalog">Lihat Katalog '+icon('arrow')+'</button>'+
         '<button type="button" class="ngdb-button ngdb-outline" data-route="login">Masuk / Daftar Member</button></div>'+
     '</header>'+
     '<section class="ngdb-help-steps" aria-labelledby="ngdb-help-steps-title">'+
-      '<div class="ngdb-heading"><p class="ngdb-overline">TIGA LANGKAH</p><h2 id="ngdb-help-steps-title">Dari lihat-lihat sampai punya akses.</h2></div>'+
+      '<div class="ngdb-heading"><p class="ngdb-overline">TIGA LANGKAH</p><h2 id="ngdb-help-steps-title">Cara menggunakan Ngulik Digital</h2></div>'+
       '<div class="ngdb-process-steps">'+
         '<div><span>01</span><h3>Cek isi & harga</h3><p>Katalog bisa dibuka tanpa akun. Baca detail sebelum memilih.</p></div>'+
         '<div><span>02</span><h3>Masuk dengan WhatsApp</h3><p>Akun member diperlukan untuk membuat pesanan dan menyimpan akses.</p></div>'+
@@ -2241,7 +2254,7 @@ function viewSupport(){
       ].map(q=>'<details class="ngdb-question"><summary>'+esc(q[0])+'</summary><p>'+esc(q[1])+'</p></details>').join('')+
       '</div>'+
     '</section>'+
-    '<footer class="ngdb-help-foot"><div><h2>Mau lihat-lihat dulu? Silakan.</h2>'+
+    '<footer class="ngdb-help-foot"><div><h2>Mulai dari katalog</h2>'+
       '<p>Lihat isi dan harga katalog dulu. Materi belajar tersedia setelah masuk sebagai member.</p></div>'+
       '<button type="button" class="ngdb-button ngdb-primary" data-route="katalog">Buka Katalog '+icon('arrow')+'</button>'+
     '</footer>'+
@@ -3989,7 +4002,7 @@ document.addEventListener('error',(event)=>{
     return;
   }
   // Portfolio media is optional: never substitute a fictitious example or leave a broken slot.
-  const offerArt=img.closest?.('.ngdl-offer-image');
+  const offerArt=img.closest?.('.ngdl-offer-image,.ngdb-portfolio-image');
   if(offerArt){offerArt.hidden=true;offerArt.style.display='none';return;}
   if(img.closest?.('.ngd-catalog-campaign-picture')){
     // CMS URLs can disappear after publication. Recover to the vetted local

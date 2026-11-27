@@ -152,3 +152,14 @@ test('KB editorial seed matches approved free account, recurring commission and 
  }
  assert.match(app,/if\(offerArt\)\{offerArt.hidden=true;offerArt.style.display='none';return;\}/);
 });
+
+test('owner editorial revision uses real portfolio image references without pretending video playback',()=>{
+ for(const data of Object.values(seed.envs)){
+  const row=id=>data.siteContent.find(r=>r.content_id===id);
+  assert.equal(row('CNT-HERO-MAIN').title,'Belajar AI, berkarya, dan kelola usaha');
+  assert.match(row('CNT-USECASE-02').image_path,/assets\/ebook-lms\.jpg$/);
+  assert.match(row('CNT-USECASE-03').image_path,/assets\/proyek-pos-sederhana\.jpg$/);
+  assert.match(row('CNT-NEXT-03').image_path,/assets\/proyek-smartlink\.jpg$/);
+ }
+ assert.match(app,/Contoh karya Linggau AI Studio/);assert.match(app,/ngdb-portfolio-image/);
+});
