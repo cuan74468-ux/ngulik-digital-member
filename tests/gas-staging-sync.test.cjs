@@ -170,7 +170,15 @@ test('owner diagnostic reports bounded categories without exposing private names
  changed.delete('private.js');changed.delete('Kode.js');a.deepEqual(d(changed),{diagnostic:'OWNER_EDITOR_DIFF',code:'MISSING',missing_other:1,extra_other:1,changed_other:0});
 });
 
-test('verify-owner emits bounded diagnostics before exact digest gate',()=>{
+test('verify-owner emits bounded diagnostics before owner attestation gate',()=>{
  const source=fs.readFileSync(path.join(p.root,'scripts/gas-staging-run.cjs'),'utf8');
- a.match(source,/if\(head\.digest!==r\.candidateDigest\)console\.log\(JSON\.stringify\(ownerEditorDiagnostic\(head\.files,baseline\.files,r\.candidate\)\)\);\s*const status=ownerAttestation\(head,live,baseline,r,backup\);/);
+ a.match(source,/if\(head\.digest!==r\.candidateDigest\)console\.log\(JSON\.stringify\(ownerEditorDiagnostic\(head\.files,baseline\.files,r\.candidate\)\)\);\s*const status=ownerAttestation\(head,live,baseline,r,backup,parse\);/);
+});
+
+test('verify-owner binds direct read, re-read and deployed version to observed raw fingerprint',()=>{
+ const source=fs.readFileSync(path.join(p.root,'scripts/gas-staging-run.cjs'),'utf8');
+ a.match(source,/p\.digest\(apiHead\)===head\.digest/);
+ a.match(source,/g\.clone\(\)\.digest===head\.digest/);
+ a.match(source,/g\.clone\(live\.versionNumber\)\.digest===backup\.digest/);
+ a.match(source,/active\.digest===\(deployed\?head\.digest:baseline\.digest\)/);
 });

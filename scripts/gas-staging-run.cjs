@@ -256,12 +256,32 @@ function ownerEditorDiagnostic(actual,baseline,candidate){
  const other=xs=>[...xs.keys()].filter(n=>n!==name);
  return {diagnostic:'OWNER_EDITOR_DIFF',code,missing_other:other(candidate).filter(n=>!actual.has(n)).length,extra_other:other(actual).filter(n=>!candidate.has(n)).length,changed_other:other(candidate).filter(n=>actual.has(n)&&actual.get(n)!==candidate.get(n)).length};
 }
-function ownerAttestation(head,live,baseline,r,active){
+// Owner read-only attestation only; original approval and automated deploy stay exact.
+function ownerFormatEquivalent(actual,candidate,parse){
+ if(!(actual instanceof Map)||!(candidate instanceof Map)||typeof parse!=='function')return false;
+ if(JSON.stringify(p.names(actual))!==JSON.stringify(p.names(candidate)))return false;
+ for(const [name,source] of candidate)if(name!=='Kode.js'&&actual.get(name)!==source)return false;
+ const a=actual.get('Kode.js'),c=candidate.get('Kode.js');
+ if(typeof a!=='string'||typeof c!=='string'||a===c)return false;
+ // No whitespace trimming, Unicode normalization, or lone CR conversion.
+ const normalize=s=>s.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\n+$/,'');
+ if(/\r(?!\n)/.test(a)||/\r(?!\n)/.test(c)||normalize(a)!==normalize(c))return false;
+ // Retain literal raw values, template raw/cooked values and directives.
+ const tree=s=>JSON.stringify(parse(s,{ecmaVersion:'latest',sourceType:'script'}),(k,v)=>k==='start'||k==='end'?undefined:typeof v==='bigint'?String(v)+'n':v);
+ try{return tree(a)===tree(c);}catch{return false;}
+}
+function ownerFormatEvidence(actual,candidate){
+ const detail=s=>({bom:s.charCodeAt(0)===0xfeff,crlf:(s.match(/\r\n/g)||[]).length,terminal_newlines:(s.replace(/\r\n/g,'\n').match(/\n+$/)||[''])[0].length});
+ return {diagnostic:'OWNER_FORMAT_EVIDENCE',observed:detail(actual.get('Kode.js')),approved:detail(candidate.get('Kode.js'))};
+}
+function ownerAttestation(head,live,baseline,r,active,parse){
  check(baseline.digest===p.policy.approval.baselineDigest,'OWNER_BASELINE_DRIFT');
- check(head.digest===r.candidateDigest,'OWNER_EDITOR_FINGERPRINT_MISMATCH');
+ const exact=head.digest===r.candidateDigest;
+ const equivalent=!exact&&head.files instanceof Map&&r.candidate instanceof Map&&p.digest(head.files)===head.digest&&p.digest(r.candidate)===r.candidateDigest&&ownerFormatEquivalent(head.files,r.candidate,parse);
+ check(exact||equivalent,'OWNER_EDITOR_FINGERPRINT_MISMATCH');
  check(Number.isSafeInteger(live.versionNumber)&&live.versionNumber>=p.policy.initialVersion,'OWNER_VERSION_INVALID');
  const deployed=live.versionNumber!==p.policy.initialVersion;
- check(active.digest===(deployed?r.candidateDigest:baseline.digest),'OWNER_LIVE_FINGERPRINT_MISMATCH');
+ check(active.digest===(deployed?head.digest:baseline.digest),'OWNER_LIVE_FINGERPRINT_MISMATCH');
  return deployed?'OWNER_DEPLOY_VERIFIED':'OWNER_EDITOR_VERIFIED';
 }
 async function run(mode){
@@ -288,14 +308,17 @@ async function run(mode){
    const r=p.buildRelease(p.readDir(path.join(p.root,'apps-script')),baseline.files,parse);
    p.authorize(r,p.policy.initialVersion);
    if(head.digest!==r.candidateDigest)console.log(JSON.stringify(ownerEditorDiagnostic(head.files,baseline.files,r.candidate)));
-   const status=ownerAttestation(head,live,baseline,r,backup);
+   const status=ownerAttestation(head,live,baseline,r,backup,parse);
+   const representation=head.digest===r.candidateDigest?'EXACT':'FORMAT_EQUIVALENT';
+   if(representation==='FORMAT_EQUIVALENT')console.log(JSON.stringify(ownerFormatEvidence(head.files,r.candidate)));
    const flags=await health(ep.url,backup.files);
    check(JSON.parse(flags)[0]===false,'STAGING_MUTATIONS_MUST_REMAIN_OFF');
    credentials=await inspectCredential(id);
    const apiHead=contentMap(await requestContent(credentials,id),id);
-   check(p.digest(apiHead)===r.candidateDigest,'OWNER_DIRECT_READ_MISMATCH');
-   check(g.clone().digest===r.candidateDigest&&g.deployment(head.dir).versionNumber===live.versionNumber,'OWNER_ATTESTATION_DRIFT');
-   console.log(status+': '+live.versionNumber+'; 28 files; candidateDigest='+r.candidateDigest);
+   check(p.digest(apiHead)===head.digest,'OWNER_DIRECT_READ_MISMATCH');
+   check(g.clone().digest===head.digest&&g.deployment(head.dir).versionNumber===live.versionNumber,'OWNER_ATTESTATION_DRIFT');
+   check(g.clone(live.versionNumber).digest===backup.digest,'OWNER_ACTIVE_SNAPSHOT_DRIFT');
+   console.log(status+': '+live.versionNumber+'; 28 files; candidateDigest='+r.candidateDigest+'; observedDigest='+head.digest+'; representation='+representation);
    console.log('NGD_STAGING_OWNER_ATTESTATION_NO_REMOTE_WRITE');return;
   }
   if(p.policy.releaseProfile)check(live.versionNumber===p.policy.initialVersion,'LICENSE_BASELINE_VERSION_DRIFT');
@@ -357,5 +380,5 @@ async function run(mode){
   }
  }finally{fs.rmSync(work,{recursive:true,force:true});}
 }
-module.exports={ciGate,auditGate,required,session,recover,verifyStudioDisabled,classifyClaspFailure,verifyTrackedInventory,contentMap,contentPayload,apiFailure,requestContent,updateContent,ownerAttestation,ownerEditorDiagnostic};
+module.exports={ciGate,auditGate,required,session,recover,verifyStudioDisabled,classifyClaspFailure,verifyTrackedInventory,contentMap,contentPayload,apiFailure,requestContent,updateContent,ownerAttestation,ownerEditorDiagnostic,ownerFormatEquivalent,ownerFormatEvidence};
 if(require.main===module)run(process.argv[2]||'audit').catch(e=>{console.error('STOP: '+e.message);process.exitCode=1;});
