@@ -169,3 +169,8 @@ test('commission seed mirrors latest three published CMS rows in both environmen
  const expected={"CNT-AJAK-TEMAN-INFO":{"title":"Program Komisi","description":"Bagikan tautan produk atau jasa kepada jaringan Anda. Member yang memenuhi syarat memperoleh Rp5.000 dari penjualan Starter Pack kepada pelanggan yang diajak, serta komisi transaksi berikutnya sesuai tarif produk. Komisi berlaku untuk transaksi pelanggan langsung yang sah dan lunas, setelah Starter Pack pengajak lunas."},"CNT-MEMBER-CARD-04":{"title":"Komisi","description":"Bagikan produk, pantau penjualan dan komisi Anda."},"CNT-STARTER-ITEM-04":{"title":"Komisi Penjualan","description":"Komisi Rp5.000 dari Starter Pack dan komisi pembelian berikutnya sesuai tarif produk serta ketentuan program."}};
  for(const env of Object.values(seed.envs))for(const [id,copy] of Object.entries(expected)){const row=env.siteContent.find(r=>r.content_id===id);assert.equal(row.title,copy.title);assert.equal(row.description,copy.description);}
 });
+
+
+test('failed CMS portfolio media is hidden rather than substituted; no legacy asset allowlist',()=>{
+ assert.match(app,/img\.closest\?\.\('\[data-cms-portfolio\]'\)/);assert.match(app,/portfolio\.hidden=true;portfolio\.style\.display='none'/);assert.match(app,/state\.adminContent\.some\(r=>r\.status!=='ARCHIVED'/);assert.doesNotMatch(app,/const approved=new Set\(\['ngd-catalog-v9-wide.webp'/);
+});
