@@ -23,8 +23,10 @@
    return {...r,description:"Buka Wrapper AI melalui Gemini. Tidak memotong Kredit AI Ngulik Digital; Premium belum aktif.",title:r.title==="Studio AI & Foto Produk"?"Studio AI — Linggau AI Wrapper":r.title};
   if(r.content_id==='CNT-MEMBER-CARD-04'&&r.description==="Bagikan tautan rujukan Anda dan pantau perolehan komisi Rp5.000 per member aktif.")
    return {...r,description:"Bagikan tautan produk dan pantau komisi pembelian pertama serta transaksi lanjutan pelanggan yang Anda ajak."};
-  if(r.content_id==='CNT-AJAK-TEMAN-INFO'&&r.description==="Bagikan tautan rujukan pribadi Anda kepada rekan pelaku usaha. Setiap pendaftaran Starter Pack yang terverifikasi lunas menghasilkan komisi Rp5.000, ditambah komisi lanjutan pada transaksi berikutnya.")
-   return {...r,title:r.title==='Program Ajak Teman'?'Ajak Teman, Dapatkan Komisi Berulang':r.title,description:"Ajak teman sekali, dapatkan komisi berulang dari setiap transaksi yang memenuhi syarat. Setelah Starter Pack Anda lunas, bagikan tautan produk atau tautan pribadi. Dapatkan Rp5.000 dari Starter Pack pelanggan yang Anda ajak dan komisi pembelian berikutnya sesuai tarif produk. Hanya satu level, berdasarkan transaksi sah dan lunas; bukan komisi dari pendaftaran akun gratis."};
+  if(r.content_id==='CNT-AJAK-TEMAN-INFO'&&((r.title==="Ajak Teman, Dapatkan Komisi Berulang"&&r.description==="Sudah membeli Starter Pack dan memenuhi syarat? Bagikan tautan Anda. Dapatkan Rp5.000 dari Starter Pack lunas pelanggan yang Anda ajak, ditambah komisi transaksi berikutnya sesuai tarif produk. Komisi hanya dari transaksi sah pelanggan langsung, bukan pendaftaran gratis. Pencairan mengikuti ketentuan program.")||(r.title==='Program Ajak Teman'&&r.description==="Bagikan tautan rujukan pribadi Anda kepada rekan pelaku usaha. Setiap pendaftaran Starter Pack yang terverifikasi lunas menghasilkan komisi Rp5.000, ditambah komisi lanjutan pada transaksi berikutnya.")))
+   return {...r,title:"Program Komisi",description:"Bagikan tautan produk atau jasa kepada jaringan Anda. Member yang memenuhi syarat memperoleh Rp5.000 dari penjualan Starter Pack kepada pelanggan yang diajak, serta komisi transaksi berikutnya sesuai tarif produk. Komisi berlaku untuk transaksi pelanggan langsung yang sah dan lunas, setelah Starter Pack pengajak lunas."};
+  if(r.content_id==='CNT-MEMBER-CARD-04'&&r.title==="Ajak Teman"&&r.description==="Bagikan tautan produk dan pantau komisi dari transaksi pelanggan yang Anda ajak.")
+   return {...r,title:"Komisi",description:"Bagikan produk, pantau penjualan dan komisi Anda."};
   return r;
  }
  function field(items,id,kind,placement,key='title'){
@@ -75,7 +77,7 @@
  }
  function affiliateInfo(items){
   const r=commissionCopy(row(items,'CNT-AJAK-TEMAN-INFO','AFFILIATE_INFO','member_affiliate'));
-  return '<section class="partner-public-intro ngd-cms-affiliate" aria-label="Program ajak teman">'+
+  return '<section class="partner-public-intro ngd-cms-affiliate" aria-label="Program komisi">'+
     '<h1>'+h(r?.title||neutral)+'</h1><p>'+h(r?.description||neutral)+'</p></section>';
  }
  function checkoutGuide(items){
