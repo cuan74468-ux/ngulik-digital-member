@@ -34,11 +34,12 @@ test('admin HERO/catalog owns title, CTA, image, and carousel order without HTML
   assert.equal((html.match(/data-hero-panel=/g)||[]).length,2);
   assert.doesNotMatch(html,/ngd-catalog-v9-mobile/);
 });
-test('Admin CMS has catalog status, asset presets, source validation and draft first',()=>{
-  const html=ui().admin({authorized:true,items:[],enabled:true,products:[],
+test('Admin CMS has catalog status, CMS image references, source validation and draft first',()=>{
+  const html=ui().admin({authorized:true,items:[banner({content_id:'CNT-CUSTOM',status:'PUBLISHED',image_path:'assets/media/custom-catalog.webp'})],enabled:true,products:[],
     defaultPlacement:'catalog'});
   assert.match(html,/data-content-create="catalog"/);
-  assert.match(html,/data-content-asset="assets\/media\/ngd-catalog-v9-wide.webp"/);
+  assert.match(html,/data-content-asset="assets\/media\/custom-catalog.webp"/);
+  assert.doesNotMatch(html,/data-content-asset="assets\/media\/ngd-catalog-v9-wide.webp"/);
   assert.match(html,/name="placement"/);
   assert.match(html,/id="content-placement"/);
   assert.match(html,/value="catalog" data-content-kind="HERO" selected/);
