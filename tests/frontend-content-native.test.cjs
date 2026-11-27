@@ -71,7 +71,7 @@ test('mobile native and custom media theme is scoped to same shared design style
     assert.ok(css.includes(key),key);
   }
   assert.match(css,/@media\(max-width:760px\)/);
-  assert.ok(html.includes('src="./js/content-ui.js?v=20261121-proportions-v13-1-cmsmedia1-portfolioslots1"'));
+  assert.ok(html.includes('src="./js/content-ui.js?v=20261121-proportions-v13-1-cmsmedia1-portfolioslots1-media2"'));
   assert.ok(html.indexOf('content-ui.js')<html.indexOf('js/app.js'));
   assert.ok(html.includes('id="brand-mark"'));
 });
@@ -133,4 +133,10 @@ test('CMS supports public portfolio media, published copy, FAQ and legacy route 
 
 test('portfolio slots are admin guidance only; blank and draft videos never render',()=>{
  const ui=make();const rows=[{kind:'PORTFOLIO_VIDEO',placement:'jasa',content_id:'VID-PORT-01',status:'PUBLISHED',image_path:''},{kind:'PORTFOLIO_VIDEO',placement:'jasa',content_id:'VID-PORT-02',status:'DRAFT',image_path:'assets/media/test.webm'}];assert.equal(ui.portfolio(rows),'');const valid={...rows[0],image_path:'assets/media/real.webm'};assert.match(ui.portfolio([valid]),/<video controls playsinline preload="none"/);assert.doesNotMatch(ui.portfolio([valid]),/autoplay/);
+});
+
+
+test('CMS picker derives image references from non-archived CMS rows; no hardcoded preview',()=>{
+ const ui=make();const img=hero({content_id:'X',title:'Custom',status:'PUBLISHED',image_path:'assets/media/custom.webp'}),archived=hero({content_id:'Y',status:'ARCHIVED',image_path:'assets/media/archived.webp'});
+ const html=ui.admin({authorized:true,enabled:true,items:[img,archived],products:[]});assert.match(html,/data-content-asset="assets\/media\/custom.webp"/);assert.doesNotMatch(html,/data-content-asset="assets\/media\/archived.webp"|data-content-asset="assets\/media\/ngd-v6-starter.webp"/);assert.match(html,/name="image_path"[^>]*value=""/);assert.equal(ui.published([archived],'HERO','home').length,0);
 });
