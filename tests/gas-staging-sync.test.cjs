@@ -146,3 +146,13 @@ test('direct API writes exactly once and confirms response digest; no retry on d
 test('structured API failure never exposes arbitrary error fields',()=>{
  a.equal(runner.apiFailure(400,{error:{status:'PRIVATE_TOKEN',message:'PRIVATE_SOURCE'}}),'GAS_CONTENT_HTTP_400; status=UNKNOWN; category=UNCLASSIFIED');
 });
+
+
+test('owner attestation accepts only approved editor and exact baseline or candidate deployed version',()=>{
+ const baseline={digest:p.policy.approval.baselineDigest},candidate={digest:p.policy.approval.candidateDigest},r={candidateDigest:candidate.digest};
+ a.equal(runner.ownerAttestation(candidate,{versionNumber:34},baseline,r,baseline),'OWNER_EDITOR_VERIFIED');
+ a.equal(runner.ownerAttestation(candidate,{versionNumber:35},baseline,r,candidate),'OWNER_DEPLOY_VERIFIED');
+ a.throws(()=>runner.ownerAttestation(baseline,{versionNumber:34},baseline,r,baseline),/EDITOR_FINGERPRINT/);
+ a.throws(()=>runner.ownerAttestation(candidate,{versionNumber:35},baseline,r,baseline),/LIVE_FINGERPRINT/);
+ a.throws(()=>runner.ownerAttestation(candidate,{versionNumber:34},{digest:'other'},r,baseline),/BASELINE_DRIFT/);
+});
