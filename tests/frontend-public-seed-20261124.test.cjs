@@ -163,3 +163,14 @@ test('owner editorial revision uses real portfolio image references without pret
  }
  assert.match(app,/Contoh karya Linggau AI Studio/);assert.match(app,/ngdb-portfolio-image/);
 });
+
+test('commission editorial uses plain program wording and preserves recurring sales',()=>{
+ for(const data of Object.values(seed.envs)){
+  const row=id=>data.siteContent.find(r=>r.content_id===id);
+  assert.equal(row('CNT-AJAK-TEMAN-INFO').title,'Program Komisi');
+  assert.match(row('CNT-AJAK-TEMAN-INFO').description,/pelanggan langsung yang sah dan lunas/);
+  assert.match(row('CNT-AJAK-TEMAN-INFO').description,/komisi transaksi berikutnya sesuai tarif produk/);
+  assert.equal(row('CNT-MEMBER-CARD-04').title,'Komisi');
+  assert.equal(row('CNT-STARTER-ITEM-04').title,'Komisi Penjualan');
+ }
+});
