@@ -2034,19 +2034,20 @@ async function saveLegacyCms_(form){
 const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
 function editorialPageCopy_(place,id){return window.NGD_CONTENT_UI?.pageCopy?.(state.siteContent,place,id)||{};}
 function servicePortfolio_(){
-    // Portfolio source is the existing public editorial CMS image, not a synthetic sample.
-    const photoCase=window.NGD_PUBLIC_CMS?.list(state.siteContent,'USECASE_CARD','home').find(x=>x.content_id==='CNT-USECASE-01');
-    const photoSrc=window.NGD_CONTENT_UI?.mediaPath(photoCase?.image_path)||'';
-    const portfolioCopy=editorialPageCopy_('jasa','CNT-JASA-PORTFOLIO');
-    const configuredPortfolio=window.NGD_CONTENT_UI?.portfolio?.(state.siteContent)||'';
-    return '<section class="ngdb-packages" aria-labelledby="ngdb-portfolio-title">'+
-      '<div class="ngdb-heading"><h2 id="ngdb-portfolio-title">'+esc(portfolioCopy.title||'Contoh karya Linggau AI Studio')+'</h2>'+
-      '<p>'+esc(portfolioCopy.description||'Lihat hasil karya sebelum menentukan kebutuhan promosi Anda.')+'</p></div>'+
-      '<div class="ngdb-package-list">'+(configuredPortfolio+(!window.NGD_CONTENT_UI?.portfolio?.((state.siteContent||[]).filter(r=>r.kind==='PORTFOLIO_IMAGE'))?('<article class="ngdb-package">'+
-      (photoSrc?'<div class="ngdb-package-media ngdb-portfolio-image"><img src="'+esc(photoSrc)+'" alt="Portofolio visual produk Linggau AI Studio" loading="lazy" decoding="async"></div>':'')+
-      '<div class="ngdb-package-main"><p class="ngdb-overline">FOTO PRODUK</p><h3>Visual promosi madu &amp; roti</h3>'+
-      '<p>Contoh eksplorasi visual produk dari katalog portofolio studio.</p>'+
-      '<a href="https://cuan74468-ux.github.io/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Lihat portofolio studio</a></div></article>'):'') )+'</div></section>';
+  // When no dedicated photo is configured, reuse only the actual published CMS photo and its copy.
+  const photoCase=window.NGD_PUBLIC_CMS?.list(state.siteContent,'USECASE_CARD','home').find(x=>x.content_id==='CNT-USECASE-01');
+  const photoSrc=window.NGD_CONTENT_UI?.mediaPath(photoCase?.image_path)||'';
+  const portfolioCopy=editorialPageCopy_('jasa','CNT-JASA-PORTFOLIO');
+  const configured=window.NGD_CONTENT_UI?.portfolio?.(state.siteContent)||'';
+  const hasPhoto=window.NGD_CONTENT_UI?.portfolio?.((state.siteContent||[]).filter(r=>r.kind==='PORTFOLIO_IMAGE'));
+  const reusedPhoto=photoSrc&&!hasPhoto?'<article class="ngdb-package" data-cms-portfolio>'+
+    '<div class="ngdb-package-media ngdb-portfolio-image"><img src="'+esc(photoSrc)+'" alt="'+esc(photoCase.title||'Foto produk')+'" loading="lazy" decoding="async"></div>'+
+    '<div class="ngdb-package-main"><h3>'+esc(photoCase.title||'')+'</h3><p>'+esc(photoCase.description||'')+'</p></div></article>':'';
+  if(!configured&&!reusedPhoto)return '';
+  return '<section class="ngdb-packages" aria-labelledby="ngdb-portfolio-title">'+
+    '<div class="ngdb-heading"><h2 id="ngdb-portfolio-title">'+esc(portfolioCopy.title||'Contoh karya Linggau AI Studio')+'</h2>'+
+    (portfolioCopy.description?'<p>'+esc(portfolioCopy.description)+'</p>':'')+'</div>'+
+    '<div class="ngdb-package-list">'+configured+reusedPhoto+'</div></section>';
 }
 function viewServiceRequests(){
   if(!logged()&&!isAdmin()){
