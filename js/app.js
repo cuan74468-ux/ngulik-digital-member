@@ -1143,8 +1143,9 @@ const MEMBER_WRAPPER_URL_='https://share.gemini.google/HehJEIsDRqOm';
 const PREMIUM_EXECUTION_SUSPENDED_=true;
 function viewMemberWrapper_(){
   if(!logged()||isAdmin())return needLogin('Studio AI');
+  const copy=editorialPageCopy_('ai','CNT-AI-INTRO');
   return '<section class="surface" aria-labelledby="wrapper-title"><p class="eyebrow">RUANG MEMBER / STUDIO AI</p>'+
-    '<h1 id="wrapper-title">Linggau AI Studio</h1><p>Buat foto produk, desain dan konten dengan alat AI pilihan.</p>'+
+    '<h1 id="wrapper-title">'+esc(copy.title||'Linggau AI Studio')+'</h1><p>'+esc(copy.description||'Buat foto produk, desain dan konten dengan alat AI pilihan.')+'</p>'+
     '<p>Studio dibuka di Gemini. Gunakan akun Google Anda; akses mengikuti ketersediaan dan kuota Gemini.</p>'+
     '<a class="btn btn-primary" href="'+MEMBER_WRAPPER_URL_+'" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">Buka Studio AI '+icon('arrow')+'</a>'+
     '<p class="form-hint">Tidak memotong kredit Ngulik Digital melalui halaman ini. Jangan unggah data pribadi pelanggan.</p></section>';
@@ -1980,7 +1981,7 @@ const contentWriteEnabled=()=>isWriteEnabled()&&config.contentEnabled===true;
 const ngdTextContentKinds_=new Set(['HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CARD',
   'FEATURE_BULLET','NOTICE_BOX','SERVICE_CARD','BENEFIT_LIST','BENEFIT_BULLET',
   'SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD','CHECKOUT_GUIDE',
-  'CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO']);
+  'CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO','HERO_ACTION','SECTION_HEADER','FEATURE_ITEM','CHECKOUT_COPY','MEMBER_GREETING','DISCLAIMER','PAGE_COPY','FAQ_ITEM']);
 function viewAdminContent(){
   const editorial=window.NGD_CONTENT_UI?
     window.NGD_CONTENT_UI.admin({authorized:isAdmin(),items:state.adminContent,
@@ -2030,6 +2031,7 @@ async function saveLegacyCms_(form){
 }
 
 const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
+function editorialPageCopy_(place,id){return window.NGD_CONTENT_UI?.pageCopy?.(state.siteContent,place,id)||{};}
 function viewServiceRequests(){
   if(!logged()&&!isAdmin()){
     // A sales-facing page uses actual published catalogue items and backend prices.
@@ -2065,45 +2067,49 @@ function viewServiceRequests(){
     // Portfolio source is the existing public editorial CMS image, not a synthetic sample.
     const photoCase=window.NGD_PUBLIC_CMS?.list(state.siteContent,'USECASE_CARD','home').find(x=>x.content_id==='CNT-USECASE-01');
     const photoSrc=window.NGD_CONTENT_UI?.mediaPath(photoCase?.image_path)||'';
+    const portfolioCopy=editorialPageCopy_('jasa','CNT-JASA-PORTFOLIO');
+    const configuredPortfolio=window.NGD_CONTENT_UI?.portfolio?.(state.siteContent)||'';
     const portfolio='<section class="ngdb-packages" aria-labelledby="ngdb-portfolio-title">'+
-      '<div class="ngdb-heading"><h2 id="ngdb-portfolio-title">Contoh karya Linggau AI Studio</h2>'+
-      '<p>Lihat hasil karya sebelum menentukan kebutuhan promosi Anda.</p></div>'+
-      '<div class="ngdb-package-list"><article class="ngdb-package">'+
+      '<div class="ngdb-heading"><h2 id="ngdb-portfolio-title">'+esc(portfolioCopy.title||'Contoh karya Linggau AI Studio')+'</h2>'+
+      '<p>'+esc(portfolioCopy.description||'Lihat hasil karya sebelum menentukan kebutuhan promosi Anda.')+'</p></div>'+
+      '<div class="ngdb-package-list">'+(configuredPortfolio||('<article class="ngdb-package">'+
       (photoSrc?'<div class="ngdb-package-media ngdb-portfolio-image"><img src="'+esc(photoSrc)+'" alt="Portofolio visual produk Linggau AI Studio" loading="lazy" decoding="async"></div>':'')+
       '<div class="ngdb-package-main"><p class="ngdb-overline">FOTO PRODUK</p><h3>Visual promosi madu &amp; roti</h3>'+
       '<p>Contoh eksplorasi visual produk dari katalog portofolio studio.</p>'+
-      '<a href="https://cuan74468-ux.github.io/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Lihat portofolio studio</a></div></article></div></section>';
+      '<a href="https://cuan74468-ux.github.io/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Lihat portofolio studio</a></div></article>'))+'</div></section>';
 
+    const heroCopy=editorialPageCopy_('jasa','CNT-JASA-HERO'),packageCopy=editorialPageCopy_('jasa','CNT-JASA-PACKAGES'),processCopy=editorialPageCopy_('jasa','CNT-JASA-PROCESS'),finalCopy=editorialPageCopy_('jasa','CNT-JASA-FINAL');
+    const stepCopy=(i,title,desc)=>{const r=editorialPageCopy_('jasa','CNT-JASA-STEP-0'+i);return '<div><span>0'+i+'</span><h3>'+esc(r.title||title)+'</h3><p>'+esc(r.description||desc)+'</p></div>';};
     return '<div class="ngd-buyer-services">'+
       '<header class="ngdb-hero">'+
         '<div class="ngdb-hero-copy"><p class="ngdb-overline">'+esc(state.publicSettings?.tagline_brand||'Ngulik Digital')+'</p>'+
-          '<h1>Jasa Kreatif</h1>'+
-          (serviceCopy?.description?'<p>'+esc(serviceCopy.description)+'</p>':'')+
+          '<h1>'+esc(heroCopy.title||'Jasa Kreatif')+'</h1>'+
+          ((heroCopy.description||serviceCopy?.description)?'<p>'+esc(heroCopy.description||serviceCopy.description)+'</p>':'')+
           '<div class="ngdb-actions"><button type="button" class="ngdb-button ngdb-primary" data-services-packages>Lihat paket & harga</button>'+
           '<button type="button" class="ngdb-button ngdb-outline" data-service-request>Ajukan kebutuhan khusus</button></div>'+
           '<small>Harga paket mengikuti katalog. Permintaan khusus perlu dibahas terlebih dahulu.</small>'+
         '</div>'+
-        '<div class="ngdb-hero-visual"><img src="'+guestMediaBase_()+'ngd-v8-video.webp" alt="Ilustrasi layanan produksi materi promosi digital" width="800" height="800" decoding="async"></div>'+
+        '<div class="ngdb-hero-visual"><img src="'+esc(cmsPageArt_('jasa')||guestMediaBase_()+'ngd-v8-video.webp')+'" alt="Ilustrasi layanan produksi materi promosi digital" width="800" height="800" decoding="async"></div>'+
       '</header>'+
       portfolio+
       '<section id="ngdb-packages" class="ngdb-packages" aria-labelledby="ngdb-packages-title">'+
-        '<div class="ngdb-heading"><h2 id="ngdb-packages-title">Paket Jasa</h2>'+
-          '<p>Harga mengikuti katalog. Masuk atau daftar dengan WhatsApp untuk membeli.</p></div>'+
+        '<div class="ngdb-heading"><h2 id="ngdb-packages-title">'+esc(packageCopy.title||'Paket Jasa')+'</h2>'+
+          '<p>'+esc(packageCopy.description||'Harga mengikuti katalog. Masuk atau daftar dengan WhatsApp untuk membeli.')+'</p></div>'+
         (packages?'<div class="ngdb-package-list">'+packages+'</div>':
          '<div class="ngdb-no-packages"><strong>Paket jasa belum dapat ditampilkan.</strong>'+
          '<p>Cek katalog untuk pilihan terbaru, atau masuk sebagai member untuk menyampaikan kebutuhan khusus.</p>'+
          '<button type="button" class="ngdb-button ngdb-outline" data-route="katalog">Buka Katalog</button></div>')+
       '</section>'+
       '<section class="ngdb-process" aria-labelledby="ngdb-process-title">'+
-        '<div class="ngdb-heading"><p class="ngdb-overline">CARA PESAN</p><h2 id="ngdb-process-title">Cara memesan</h2></div>'+
+        '<div class="ngdb-heading"><p class="ngdb-overline">CARA PESAN</p><h2 id="ngdb-process-title">'+esc(processCopy.title||'Cara memesan')+'</h2></div>'+
         '<div class="ngdb-process-steps">'+
-          '<div><span>01</span><h3>Pilih paket</h3><p>Baca rincian layanan dan harga yang tersedia.</p></div>'+
-          '<div><span>02</span><h3>Masuk sebagai member</h3><p>Masuk atau daftar dengan WhatsApp. Periksa ketentuan Starter Pack sebelum membeli.</p></div>'+
-          '<div><span>03</span><h3>Bayar dan pantau</h3><p>Bayar jika checkout tersedia, lalu pantau status melalui akun.</p></div>'+
+          stepCopy(1,"Pilih paket","Baca rincian layanan dan harga yang tersedia.")+
+          stepCopy(2,"Masuk sebagai member","Masuk atau daftar dengan WhatsApp. Periksa ketentuan Starter Pack sebelum membeli.")+
+          stepCopy(3,"Bayar dan pantau","Bayar jika checkout tersedia, lalu pantau status melalui akun.")+
         '</div>'+
       '</section>'+
-      '<footer class="ngdb-final"><div><h2>Permintaan Jasa Khusus</h2>'+
-        '<p>Member dapat mengirim brief sebelum menerima penawaran.</p></div>'+
+      '<footer class="ngdb-final"><div><h2>'+esc(finalCopy.title||'Permintaan Jasa Khusus')+'</h2>'+
+        '<p>'+esc(finalCopy.description||'Member dapat mengirim brief sebelum menerima penawaran.')+'</p></div>'+
         '<button type="button" class="ngdb-button ngdb-primary" data-service-request>Ajukan brief '+icon('arrow')+'</button>'+
       '</footer>'+
     '</div>';
@@ -2226,36 +2232,39 @@ function supportTicketCard(t){
     '<button type="button" class="btn btn-secondary btn-sm" style="margin-top:15px" data-ticket-id="'+esc(t.ticket_id)+'">Buka tiket '+icon('arrow')+'</button></article>';
 }
 function viewSupport(){
+  const helpHero=editorialPageCopy_('dukungan','CNT-HELP-HERO'),helpSteps=editorialPageCopy_('dukungan','CNT-HELP-STEPS'),helpFaq=editorialPageCopy_('dukungan','CNT-HELP-FAQ'),helpFinal=editorialPageCopy_('dukungan','CNT-HELP-FINAL');
+  const faqRows=window.NGD_CONTENT_UI?.editorialRows?.(state.siteContent,'FAQ_ITEM','dukungan')||[];
+  const helpStep=(i,title,desc)=>{const r=editorialPageCopy_('dukungan','CNT-HELP-STEP-0'+i);return '<div><span>0'+i+'</span><h3>'+esc(r.title||title)+'</h3><p>'+esc(r.description||desc)+'</p></div>';};
   if(!logged())return '<div class="ngd-buyer-help">'+
     '<header class="ngdb-help-intro">'+
       '<p class="ngdb-overline">CARA KERJA & BANTUAN</p>'+
-      '<h1>Butuh bantuan memilih produk atau jasa?</h1>'+
-      '<p>Cari jawaban tentang akun, cara pesan, pembayaran, dan kebutuhan khusus usaha Anda.</p>'+
+      '<h1>'+esc(helpHero.title||'Butuh bantuan memilih produk atau jasa?')+'</h1>'+
+      '<p>'+esc(helpHero.description||'Cari jawaban tentang akun, cara pesan, pembayaran, dan kebutuhan khusus usaha Anda.')+'</p>'+
       '<div class="ngdb-actions"><button type="button" class="ngdb-button ngdb-primary" data-route="katalog">Lihat Katalog '+icon('arrow')+'</button>'+
         '<button type="button" class="ngdb-button ngdb-outline" data-route="login">Masuk / Daftar Member</button></div>'+
     '</header>'+
     '<section class="ngdb-help-steps" aria-labelledby="ngdb-help-steps-title">'+
-      '<div class="ngdb-heading"><p class="ngdb-overline">TIGA LANGKAH</p><h2 id="ngdb-help-steps-title">Cara menggunakan Ngulik Digital</h2></div>'+
+      '<div class="ngdb-heading"><p class="ngdb-overline">TIGA LANGKAH</p><h2 id="ngdb-help-steps-title">'+esc(helpSteps.title||'Cara menggunakan Ngulik Digital')+'</h2></div>'+
       '<div class="ngdb-process-steps">'+
-        '<div><span>01</span><h3>Cek isi & harga</h3><p>Katalog bisa dibuka tanpa akun. Baca detail sebelum memilih.</p></div>'+
-        '<div><span>02</span><h3>Masuk dengan WhatsApp</h3><p>Akun member diperlukan untuk membuat pesanan dan menyimpan akses.</p></div>'+
-        '<div><span>03</span><h3>Bayar, lalu cek status</h3><p>Ikuti instruksi checkout yang tersedia. Akses mengikuti verifikasi pembayaran.</p></div>'+
+        helpStep(1,"Cek isi & harga","Katalog bisa dibuka tanpa akun. Baca detail sebelum memilih.")+
+        helpStep(2,"Masuk dengan WhatsApp","Akun member diperlukan untuk membuat pesanan dan menyimpan akses.")+
+        helpStep(3,"Bayar, lalu cek status","Ikuti instruksi checkout yang tersedia. Akses mengikuti verifikasi pembayaran.")+
       '</div>'+
     '</section>'+
     '<section class="ngdb-help-answers" aria-labelledby="ngdb-help-answers-title">'+
-      '<div class="ngdb-heading"><p class="ngdb-overline">PERTANYAAN UMUM</p><h2 id="ngdb-help-answers-title">Yang biasanya ditanyakan.</h2></div>'+
+      '<div class="ngdb-heading"><p class="ngdb-overline">PERTANYAAN UMUM</p><h2 id="ngdb-help-answers-title">'+esc(helpFaq.title||'Yang biasanya ditanyakan.')+'</h2></div>'+
       '<div class="ngdb-questions">'+
-      [
+      (faqRows.length?faqRows.map(r=>[r.title,r.description]):[
         ['Harus daftar dulu untuk membeli?','Ya. Melihat katalog tidak perlu login, tetapi checkout dan akses produk memerlukan akun member yang terverifikasi. Daftar akun tidak dikenakan biaya.'],
         ['Bagaimana cara membayar?','Gunakan metode yang ditampilkan di halaman checkout saat pembayaran aktif. Jika QRIS DANA Bisnis tersedia, ikuti nominal dan instruksi pesanan. Jangan membayar dari QR yang dikirim di luar alur resmi.'],
         ['Setelah membayar, apakah akses langsung aktif?','Belum tentu. Pembayaran perlu diverifikasi sesuai proses yang berlaku. Status pesanan dan akses dapat diperiksa di akun member.'],
         ['Kalau ingin jasa yang berbeda dari paket?','Masuk sebagai member, buka menu Jasa, lalu kirim brief. Kebutuhan dan penawaran dibahas sebelum pengerjaan.'],
         ['Bagaimana kalau ada kendala pada pesanan?','Masuk ke akun member, buka Bantuan, lalu kirim laporan agar bisa dikaitkan dengan produk dan riwayat pesanan.']
-      ].map(q=>'<details class="ngdb-question"><summary>'+esc(q[0])+'</summary><p>'+esc(q[1])+'</p></details>').join('')+
+      ]).map(q=>'<details class="ngdb-question"><summary>'+esc(q[0])+'</summary><p>'+esc(q[1])+'</p></details>').join('')+
       '</div>'+
     '</section>'+
-    '<footer class="ngdb-help-foot"><div><h2>Mulai dari katalog</h2>'+
-      '<p>Lihat isi dan harga katalog dulu. Materi belajar tersedia setelah masuk sebagai member.</p></div>'+
+    '<footer class="ngdb-help-foot"><div><h2>'+esc(helpFinal.title||'Mulai dari katalog')+'</h2>'+
+      '<p>'+esc(helpFinal.description||'Lihat isi dan harga katalog dulu. Materi belajar tersedia setelah masuk sebagai member.')+'</p></div>'+
       '<button type="button" class="ngdb-button ngdb-primary" data-route="katalog">Buka Katalog '+icon('arrow')+'</button>'+
     '</footer>'+
   '</div>';
@@ -2440,7 +2449,11 @@ function syncHeroRotation_(){
 function updateContentPreview_(){
   const form=document.getElementById('content-editor-form');
   if(!form)return;
-  const src=window.NGD_CONTENT_UI?.mediaPath(form.querySelector('[name="image_path"]')?.value);
+  const raw=form.querySelector('[name="image_path"]')?.value;
+  const isVideo=form.querySelector('[name="kind"]')?.value==='PORTFOLIO_VIDEO';
+  const src=isVideo?'':window.NGD_CONTENT_UI?.mediaPath(raw);
+  const video=form.querySelector('[data-content-preview-video]');
+  if(video){const v=isVideo?window.NGD_CONTENT_UI?.videoPath(raw):'';video.hidden=!v;if(v&&video.getAttribute('src')!==v)video.src=v;else if(!v)video.removeAttribute('src');}
   const title=String(form.querySelector('[name="title"]')?.value||'Judul banner Anda');
   const kind=form.querySelector('[name="kind"]')?.value;
   const place=form.querySelector('[name="placement"]');
@@ -2483,11 +2496,12 @@ async function submitContentForm_(form){
   if(old){
     if(old.status==='PUBLISHED')
       return toast('Tarik tayang konten terlebih dahulu sebelum mengedit. Ini mencegah perubahan live tanpa persetujuan publikasi ulang.',true);
-    payload.content_id=id;payload.revision=old.revision;
+    if(form.dataset.contentRevision!==old.revision)return toast('Konten berubah. Muat ulang sebelum menyimpan.',true);
+    payload.content_id=id;payload.revision=form.dataset.contentRevision;
   }
   if(!ngdTextContentKinds_.has(payload.kind)&&
       !['HERO','PROMO','ANNOUNCEMENT'].includes(payload.kind)||payload.image_path){
-    if(!window.NGD_CONTENT_UI?.mediaPath(payload.image_path))
+    if(!(payload.kind==='PORTFOLIO_VIDEO'?window.NGD_CONTENT_UI?.videoPath(payload.image_path):window.NGD_CONTENT_UI?.mediaPath(payload.image_path)))
       return toast('Gunakan URL HTTPS gambar atau path assets/ (PNG, JPG, WebP, AVIF).',true);
   }
   const btn=form.querySelector('[type=submit]');
@@ -2514,9 +2528,11 @@ async function changeContentStatus_(id,nextStatus){
   if(!old)return toast('Konten tidak ditemukan.',true);
   if(nextStatus==='PUBLISHED'){
     if(!['HERO','PRODUCT_IMAGE','FEATURE_ICON','PAGE_COVER','NAV_ICON','BRAND_LOGO',
-      'PROMO','ANNOUNCEMENT'].includes(old.kind)&&!ngdTextContentKinds_.has(old.kind))
+      'PROMO','ANNOUNCEMENT','PORTFOLIO_IMAGE','PORTFOLIO_VIDEO'].includes(old.kind)&&!ngdTextContentKinds_.has(old.kind))
       return toast('Format konten lama tidak dapat diterbitkan. Buat konten baru dengan jenis yang didukung.',true);
-    const src=window.NGD_CONTENT_UI?.mediaPath(old.image_path);
+    const isVideo=old.kind==='PORTFOLIO_VIDEO';
+    const src=isVideo?window.NGD_CONTENT_UI?.videoPath(old.image_path):window.NGD_CONTENT_UI?.mediaPath(old.image_path);
+    if(old.image_path&&!src)return toast('Alamat media tidak valid.',true);
     if(!src&&(['HERO','PROMO','ANNOUNCEMENT'].includes(old.kind)||ngdTextContentKinds_.has(old.kind))){
       if(!ngdTextContentKinds_.has(old.kind)&&
          !confirm('Terbitkan '+(old.kind==='HERO'?'banner teks':old.kind==='PROMO'?'promosi':'pengumuman')+' tanpa gambar?'))return;
@@ -2524,14 +2540,15 @@ async function changeContentStatus_(id,nextStatus){
     // A valid path is not evidence that a file exists: verify the image loads
     // before a published CMS row can replace the homepage or product image.
     const reachable=!src?true:await new Promise(resolve=>{
+      if(isVideo){const v=document.createElement('video');const done=ok=>{clearTimeout(guard);v.onloadedmetadata=null;v.onerror=null;v.removeAttribute('src');v.load();resolve(ok);};const guard=setTimeout(()=>done(false),8000);v.preload='metadata';v.onloadedmetadata=()=>done(v.videoWidth>0);v.onerror=()=>done(false);v.src=src;return;}
       const img=new Image();
       const guard=setTimeout(()=>{img.onload=null;img.onerror=null;resolve(false);},8000);
       img.onload=()=>{clearTimeout(guard);resolve(img.naturalWidth>0);};
       img.onerror=()=>{clearTimeout(guard);resolve(false);};
       img.src=src;
     });
-    if(!reachable)return toast('Gambar tidak bisa dibuka. Periksa alamatnya.',true);
-    if(src&&!confirm('Gambar berhasil dibuka. Terbitkan konten ini sekarang?'))return;
+    if(!reachable)return toast('Media tidak bisa dibuka. Periksa alamatnya.',true);
+    if(!confirm('Terbitkan konten ini sekarang?'))return;
   }
   try{
     await api('adminSetContentStatus',{

@@ -188,3 +188,11 @@ test('published CMS cannot be edited live or republished with legacy unknown kin
   h.rows[1].status='PUBLISHED';
   assert.equal(h.ctx.contentPublicList_().some(x=>x.kind==='BANNER'),false);
 });
+
+test('CMS portfolio accepts owned direct video, rejects embeds and unsafe paths; normalizes legacy dates',()=>{
+ const h=fixture();const p=sample({kind:'PORTFOLIO_VIDEO',placement:'jasa',image_path:'assets/media/portfolio.mp4',cta_label:'',cta_route:''});
+ const item=h.create(p).item;assert.equal(item.kind,'PORTFOLIO_VIDEO');
+ for(const url of ['https://youtube.com/watch?v=1','https://example.org/clip.mp4','assets/../private.mp4','data:video/mp4;base64,AAA','assets/media/a//b.mp4'])assert.throws(()=>h.create({...p,image_path:url},'OTHER_REQUEST_123456789'),/MP4/);
+ assert.equal(h.ctx.contentAdminView_({...p,start_date:46350,end_date:46752}).start_date,'2026-11-24');
+ assert.equal(h.ctx.contentPayload_(sample({kind:'WA_TEMPLATE',placement:'checkout',image_path:'',cta_route:'',cta_label:'Kirim bukti'}),null).cta_label,'Kirim bukti');
+});

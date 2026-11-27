@@ -11,8 +11,8 @@
     'HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CARD','FEATURE_BULLET','NOTICE_BOX','SERVICE_CARD',
     'BENEFIT_LIST','BENEFIT_BULLET','SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD',
     'CHECKOUT_GUIDE','CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO',
-    'HERO_ACTION','SECTION_HEADER','FEATURE_ITEM','CHECKOUT_COPY','MEMBER_GREETING','DISCLAIMER'];
-  const textKinds=new Set(kinds.slice(8));
+    'HERO_ACTION','SECTION_HEADER','FEATURE_ITEM','CHECKOUT_COPY','MEMBER_GREETING','DISCLAIMER','PAGE_COPY','FAQ_ITEM','PORTFOLIO_IMAGE','PORTFOLIO_VIDEO'];
+  const textKinds=new Set(kinds.slice(8).filter(k=>!['PORTFOLIO_IMAGE','PORTFOLIO_VIDEO'].includes(k)));
   // Resolve assets against the shared project root, never the current page folder.
   // Works identically for /index.html and /staging/member.html.
   const projectRoot=typeof URL==='function'&&typeof location!=='undefined' ?
@@ -25,6 +25,27 @@
     if(path.length<=2048&&/^https:\/\/[A-Za-z0-9.-]+(?::[0-9]{2,5})?(?:\/[A-Za-z0-9!$&'()*+,;=:@%_./~-]*)?(?:\?[A-Za-z0-9!$&'()*+,;=:@%_./?~-]*)?(?:#[A-Za-z0-9_.-]*)?$/i.test(path))return path;
     if(path.length<=45000&&/^data:image\/(?:png|jpeg|jpg|webp|gif|avif);base64,[A-Za-z0-9+/]+={0,2}$/i.test(path))return path;
     return '';
+  }
+  function videoPath(raw){
+    const p=String(raw||'').trim();
+    if(p.length>500||p.includes('..')||p.replace(/^https:\/\//,'').includes('//')||!/^(?:https:\/\/cuan74468-ux\.github\.io\/(?:ngulik-digital-member\/)?)?assets\/[A-Za-z0-9_./-]+\.(?:mp4|webm)$/i.test(p))return '';
+    return p.startsWith('https://')?p:projectRoot?new URL(p,projectRoot).href:'./'+p;
+  }
+  function editorialRows(contents,kind,placement){
+    return (Array.isArray(contents)?contents:[]).filter(x=>x&&x.kind===kind&&x.placement===placement&&(x.status===undefined||x.status==='PUBLISHED')).sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0));
+  }
+  function pageCopy(contents,placement,id){
+    return editorialRows(contents,'PAGE_COPY',placement).find(r=>r.content_id===id)||null;
+  }
+  function portfolio(contents){
+    return [...editorialRows(contents,'PORTFOLIO_IMAGE','jasa'),...editorialRows(contents,'PORTFOLIO_VIDEO','jasa')]
+      .sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)).map(r=>{
+      const video=r.kind==='PORTFOLIO_VIDEO',src=video?videoPath(r.image_path):mediaPath(r.image_path);
+      if(!src)return '';
+      return '<article class="ngdb-package"><div class="ngdb-package-media ngdb-portfolio-image">'+
+        (video?'<video controls playsinline preload="none" style="width:100%;max-height:420px" aria-label="'+h(r.title||'Video portofolio')+'" src="'+h(src)+'"></video>':'<img src="'+h(src)+'" alt="'+h(r.title||'Portofolio')+'" loading="lazy" decoding="async">')+
+        '</div><div class="ngdb-package-main"><h3>'+h(r.title||'')+'</h3><p>'+h(r.description||'')+'</p></div></article>';
+    }).join('');
   }
   function published(contents,kind,placement){
     return (Array.isArray(contents)?contents:[]).filter(x=>x&&x.kind===kind&&
@@ -167,18 +188,20 @@
     WA_TEMPLATE:'Pesan WhatsApp',MEMBER_COPY:'Sapaan member',MEMBER_CARD:'Menu member',
     PORTAL_NOTICE:'Disclaimer portal',AFFILIATE_INFO:'Informasi ajak teman',
      HERO_ACTION:'Tombol beranda',SECTION_HEADER:'Judul seksi',FEATURE_ITEM:'Rincian paket',
-     CHECKOUT_COPY:'Instruksi QRIS',MEMBER_GREETING:'Sapaan member',DISCLAIMER:'Disclaimer resmi'};
+     CHECKOUT_COPY:'Instruksi QRIS',MEMBER_GREETING:'Sapaan member',DISCLAIMER:'Disclaimer resmi',PAGE_COPY:'Narasi halaman',FAQ_ITEM:'Pertanyaan & jawaban',PORTFOLIO_IMAGE:'Portofolio foto',PORTFOLIO_VIDEO:'Portofolio video'};
   const places=[
     ['HERO','home','Beranda publik'],['HERO','catalog','Banner promosi marketplace publik'],['HERO','member_home','Beranda member'],
     ...['belajar','aplikasi','ai','jasa','katalog','affiliate','dukungan','login']
       .map(x=>['FEATURE_ICON',x,'Ikon fitur '+x]),
     ...routes.map(x=>['NAV_ICON',x,'Navigasi '+x]),
-    ...['belajar','jasa','ai','affiliate','dukungan']
+    ...['belajar','katalog','jasa','ai','affiliate','dukungan']
       .map(x=>['PAGE_COVER',x,'Sampul '+x]),
-    ['PROMO','member_home','Promosi beranda member'],
-    ['ANNOUNCEMENT','member_home','Pengumuman beranda member'],
+    ...['home','catalog','member_home','ai','belajar'].flatMap(p=>[['PROMO',p,'Promosi '+p],['ANNOUNCEMENT',p,'Pengumuman '+p]]),
+    ...['jasa','dukungan','ai'].map(p=>['PAGE_COPY',p,'Narasi '+p]),
+    ['FAQ_ITEM','dukungan','FAQ Bantuan'],
+    ['PORTFOLIO_IMAGE','jasa','Foto portofolio Jasa'],['PORTFOLIO_VIDEO','jasa','Video portofolio Jasa'],
     ['BRAND_LOGO','brand','Logo Ngulik Digital'],
-    ...[...textKinds].flatMap(kind=>['home','auth','checkout','member_home',
+    ...[...textKinds].filter(k=>!['PAGE_COPY','FAQ_ITEM'].includes(k)).flatMap(kind=>['home','auth','checkout','member_home',
       'member_portal','member_affiliate'].map(place=>[kind,place,'Konten '+place]))
   ];
   function admin(ctx){
@@ -214,26 +237,26 @@
       ['Template','assets/media/ngd-v8-templates.webp','PRODUCT_IMAGE']
     ];
     const allowedPlaces=places.slice();
-    if(draft.kind==='PRODUCT_IMAGE'&&Array.isArray(ctx.products))
+    if(Array.isArray(ctx.products))
       ctx.products.forEach(p=>{
         if(/^P-[A-Za-z0-9-]{2,60}$/.test(String(p.product_id||'')))
           allowedPlaces.push(['PRODUCT_IMAGE',p.product_id,p.nama]);
       });
-    if(!allowedPlaces.some(p=>p[1]===draft.placement))
+    if(!allowedPlaces.some(p=>p[0]===draft.kind&&p[1]===draft.placement))
       allowedPlaces.push([draft.kind,draft.placement,draft.placement]);
     const locked=ctx.enabled!==true;
     const form='<section class="surface content-editor" aria-label="Editor konten visual">'+
       '<div class="content-editor-heading"><div><p class="eyebrow">EDIT KONTEN</p><h2>'+
       (selected?'Ubah konten':'Tambah konten')+'</h2></div>'+
       (selected?'<button type="button" class="btn btn-secondary btn-sm" data-content-new>Tambah baru</button>':'')+'</div>'+
-      '<div class="ngd-media-help"><div><strong>Panduan gambar menurut fungsi halaman</strong><p>Hero Beranda: artwork lanskap 1600 × 900 px, subjek di kanan dan ruang teks di kiri. Banner Katalog: 1600 × 640 px; versi seluler menata teks dan gambar bertumpuk sehingga artwork tidak terpotong. Produk: 1200 × 1000 px, fokus produk di tengah. Sampul halaman: ilustrasi relevan, bukan salinan banner Beranda. Jangan masukkan harga, testimoni, atau tombol palsu ke gambar.</p><p>CMS saat ini menggunakan satu gambar per penempatan untuk HP dan desktop. Periksa keduanya pada pratinjau sebelum terbit.</p></div>'+ 
+      '<div class="ngd-media-help"><div><strong>Panduan gambar menurut fungsi halaman</strong><p>Hero Beranda: artwork lanskap 1600 × 900 px, subjek di kanan dan ruang teks di kiri. Banner Katalog: 1600 × 640 px; gambar memenuhi latar, teks di atas overlay. Periksa crop pada HP. Produk: 1200 × 1000 px, fokus produk di tengah. Sampul halaman: ilustrasi relevan, bukan salinan banner Beranda. Jangan masukkan harga, testimoni, atau tombol palsu ke gambar.</p><p>CMS saat ini menggunakan satu gambar per penempatan untuk HP dan desktop. Periksa keduanya pada pratinjau sebelum terbit.</p></div>'+ 
       '<a class="btn btn-secondary btn-sm" href="https://github.com/cuan74468-ux/ngulik-digital-member/upload/main/assets/media" target="_blank" rel="noopener noreferrer">Unggah gambar ↗</a></div>'+
-      '<form id="content-editor-form" data-content-id="'+h(selected?.content_id||'')+'" class="content-form">'+
+      '<form id="content-editor-form" data-content-id="'+h(selected?.content_id||'')+'" data-content-revision="'+h(selected?.revision||'')+'" class="content-form">'+
       '<div class="field"><label for="content-id">ID konten (opsional; tetap setelah dibuat)</label>'+
       '<input class="input" id="content-id" name="content_id" maxlength="64" '+
       (selected?'readonly ':'placeholder="CNT-HERO-MAIN" ')+
       'value="'+h(selected?.content_id||'')+'"></div>'+
-      '<div class="grid-2"><div class="field"><label for="content-kind">Jenis gambar</label>'+
+      '<div class="grid-2"><div class="field"><label for="content-kind">Jenis konten</label>'+
       (selected?'<input class="input" value="'+h(names[draft.kind]||draft.kind)+'" disabled>'+
         '<input type="hidden" name="kind" value="'+h(draft.kind)+'">':
         '<select class="input" name="kind" id="content-kind">'+
@@ -242,11 +265,11 @@
       '<select class="input" id="content-placement" name="placement" required aria-label="Pilih lokasi tayang">'+
         allowedPlaces.map(p=>'<option value="'+h(p[1])+'" data-content-kind="'+h(p[0])+'" '+
           (p[0]!==draft.kind?'hidden disabled ':'')+
-          (draft.placement===p[1]?'selected':'')+'>'+h(p[2])+'</option>').join('')+
+          (draft.kind===p[0]&&draft.placement===p[1]?'selected':'')+'>'+h(p[2])+'</option>').join('')+
       '</select></div></div>'+
-      '<div class="field"><label for="content-image">Alamat gambar (HTTPS atau assets/media/)</label>'+
+      '<div class="field"><label for="content-image">Alamat media (gambar atau MP4/WebM milik studio)</label>'+
       '<input class="input" id="content-image" name="image_path" maxlength="45000" placeholder="assets/media/ngd-catalog-v9-wide.webp" value="'+h(draft.image_path||'')+'">'+
-      '<p class="form-hint">Admin hanya menyimpan alamat gambar. Gambar harus bisa diakses publik saat diterbitkan.</p></div>'+
+      '<p class="form-hint">Admin menyimpan alamat media, bukan file biner. Video memakai jenis Portofolio video, file MP4/WebM di GitHub Pages milik studio. Periksa akses publik sebelum tayang.</p></div>'+
       '<div class="ngd-cms-art-presets" aria-label="Pilihan artwork siap pakai">'+
         '<strong>Artwork resmi Ngulik Digital</strong>'+
         '<div class="ngd-cms-art-grid">'+presets.map(p=>
@@ -264,7 +287,7 @@
       '<input class="input" id="content-cta" name="cta_label" maxlength="48" value="'+h(draft.cta_label||'')+'"></div>'+
       '<div class="field"><label for="content-route">Halaman tujuan</label>'+
       '<select class="input" id="content-route" name="cta_route"><option value="">Tanpa tombol</option>'+
-      routes.map(k=>'<option value="'+k+'" '+(draft.cta_route===k?'selected':'')+'>'+k+'</option>').join('')+
+      routes.map(k=>'<option value="'+k+'" '+(String(draft.cta_route||'').replace(/^#/,'')===k?'selected':'')+'>'+k+'</option>').join('')+
       '</select></div></div>'+
       '<div class="grid-2"><div class="field"><label for="content-order">Urutan</label>'+
       '<input class="input" type="number" min="1" max="10000" step="1" name="sort_order" id="content-order" required value="'+h(draft.sort_order??1)+'"></div>'+
@@ -282,16 +305,17 @@
               '<span data-content-preview-title>'+h(draft.title||'Judul banner Anda')+'</span>'+
             '</div><figcaption>'+h(device==='desktop'?'Tampilan PC':'Tampilan HP')+'</figcaption></figure>'
         ).join('')+'</div>'+
-        '<p class="form-hint">Desktop memakai ruang lanskap; HP memisahkan teks dan gambar agar pesan tidak terpotong. Periksa subjek, kontras, panjang judul, dan tombol sebelum terbit. Jangan menerbitkan gambar yang belum teruji.</p>'+
+        '<div><video data-content-preview-video controls playsinline preload="none" style="max-width:100%;max-height:320px" '+(draft.kind==='PORTFOLIO_VIDEO'&&videoPath(draft.image_path)?'src="'+h(videoPath(draft.image_path))+'"':'hidden')+'></video></div>'+
+        '<p class="form-hint">Desktop dan HP menggunakan latar penuh untuk banner. Pratinjau ini bukan simulasi semua halaman. Periksa subjek, kontras, panjang judul, dan tombol sebelum terbit. Jangan menerbitkan gambar yang belum teruji.</p>'+
       '</div>'+
       (selected?.status==='PUBLISHED'?'<p class="ngd-cms-published-warning">Konten sedang tayang. Pilih Tarik tayang pada daftar, kemudian edit draf dan terbitkan ulang setelah pratinjau.</p>':'')+
       (legacy?'<p class="ngd-cms-legacy-warning">Konten lama tipe '+h(selected.kind)+' tidak mendukung penyuntingan. Tarik/arsipkan lalu buat banner HERO baru.</p>':'')+
-      '<button class="btn btn-primary" type="submit" '+(locked||legacy||selected?.status==='PUBLISHED'?'disabled':'')+'>'+(selected?'Simpan perubahan':'Simpan draf')+'</button>'+
+      '<button class="btn btn-primary" type="submit" '+(locked||legacy||['PUBLISHED','ARCHIVED'].includes(selected?.status)?'disabled':'')+'>'+(selected?'Simpan perubahan':'Simpan draf')+'</button>'+
       (locked?'<p class="form-hint">Edit konten belum tersedia.</p>':'')+
       '</form></section>';
     const rowsHtml='<section class="content-admin-list" aria-label="Daftar gambar dan banner">'+
       (rows.length?rows.map(x=>{
-        const url=mediaPath(x.image_path),status=String(x.status||'DRAFT');
+        const url=x.kind==='PORTFOLIO_VIDEO'?'':mediaPath(x.image_path),status=String(x.status||'DRAFT');
         const action=status==='PUBLISHED'?'DRAFT':status==='ARCHIVED'?'DRAFT':'PUBLISHED';
         const caption=status==='PUBLISHED'?'Tarik tayang':status==='ARCHIVED'?'Pulihkan draft':'Terbitkan';
         return '<article class="content-admin-item">'+
@@ -310,15 +334,16 @@
       }).join(''):'<div class="empty"><h3>Belum Ada Gambar</h3><p>Gambar dan banner yang Anda tambah akan muncul di sini.</p></div>')+
       '</section>';
     return '<section class="content-admin-heading"><p class="eyebrow">ADMIN / KONTEN</p>'+
-      '<h1>Kelola Gambar & Banner</h1><p>Atur gambar, judul, tombol, dan jadwal tayang dari satu CMS.</p>'+
-      '<span class="chip">'+rows.length+' gambar tersimpan</span></section>'+
+      '<h1>Kelola Konten & Media</h1><p>Atur narasi, gambar, video portofolio, tombol, dan jadwal tayang.</p>'+
+      '<span class="chip">'+rows.length+' konten tersimpan</span></section>'+
       '<section class="ngd-cms-campaign-status" aria-label="Status kampanye katalog">'+
         '<div><p class="eyebrow">BANNER KATALOG</p><strong>'+h(coverState)+'</strong>'+
         '<p>HERO · katalog · maksimal 4 banner aktif; urutan dan jadwal diatur pada form.</p>'+
         (rows.some(x=>x.kind==='BANNER')?'<small>Ada banner format lama (BANNER) yang tidak lagi didukung sebagai HERO. Anda dapat mengarsipkannya.</small>':'')+
         '</div><button type="button" class="btn btn-primary" data-content-create="catalog" '+(locked?'disabled':'')+'>Buat Banner Katalog</button>'+
       '</section>'+
+      '<details class="surface"><summary>Panduan slot narasi dan portofolio</summary><p>Jenis Narasi halaman: isi ID CNT-JASA-HERO, CNT-JASA-PORTFOLIO, CNT-JASA-PACKAGES, CNT-JASA-PROCESS, CNT-JASA-STEP-01 hingga 03, CNT-JASA-FINAL (lokasi jasa); CNT-HELP-HERO, CNT-HELP-STEPS, CNT-HELP-STEP-01 hingga 03, CNT-HELP-FAQ, CNT-HELP-FINAL (dukungan); CNT-AI-INTRO (ai). FAQ Bantuan dan portofolio foto/video memakai ID unik, urutan, dan tanggal tayang. Gunakan DRAFT lalu Terbitkan. Slot kosong memakai teks standar; pengaman akun dan pembayaran tidak dapat diubah lewat CMS.</p></details>'+
       '<div class="content-admin-layout">'+rowsHtml+form+'</div>';
   }
-  window.NGD_CONTENT_UI=Object.freeze({mediaPath,published,media,hero,catalogBanner,promotion,cover,admin});
+  window.NGD_CONTENT_UI=Object.freeze({mediaPath,videoPath,editorialRows,pageCopy,portfolio,published,media,hero,catalogBanner,promotion,cover,admin});
 })();

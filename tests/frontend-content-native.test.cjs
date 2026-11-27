@@ -71,7 +71,7 @@ test('mobile native and custom media theme is scoped to same shared design style
     assert.ok(css.includes(key),key);
   }
   assert.match(css,/@media\(max-width:760px\)/);
-  assert.ok(html.includes('src="./js/content-ui.js?v=20261121-proportions-v13-1"'));
+  assert.ok(html.includes('src="./js/content-ui.js?v=20261121-proportions-v13-1-cmsmedia1"'));
   assert.ok(html.indexOf('content-ui.js')<html.indexOf('js/app.js'));
   assert.ok(html.includes('id="brand-mark"'));
 });
@@ -120,4 +120,12 @@ test('app integrates real image slots across guest home and catalogue and admin 
   vm.runInContext("state.me={role:'ADMIN',member_id:'TEST_ADMIN',nama:'Operator'};state.token='SYNTHETIC_ONLY';go('konten')",admin.ctx,{timeout:3000});
   assert.match(admin.nodes.screen.innerHTML,/id="content-editor-form"/);
   assert.match(admin.nodes['notice-slot'].innerHTML,/data-route="konten" aria-current="page"/);
+});
+
+test('CMS supports public portfolio media, published copy, FAQ and legacy route selection',()=>{
+ const ui=make();const rows=[{kind:'PORTFOLIO_VIDEO',placement:'jasa',title:'<script>',description:'Video contoh',image_path:'assets/media/clip.mp4',status:'PUBLISHED',sort_order:1},{kind:'PORTFOLIO_VIDEO',placement:'jasa',image_path:'https://evil.example/clip.mp4',status:'PUBLISHED'},{kind:'PORTFOLIO_VIDEO',placement:'jasa',image_path:'assets/media/draft.mp4',status:'DRAFT'}];
+ const html=ui.portfolio(rows);assert.match(html,/<video controls playsinline preload="none"/);assert.match(html,/&lt;script&gt;/);assert.doesNotMatch(html,/evil.example|draft.mp4|autoplay|<iframe/);
+ assert.equal(ui.videoPath('https://cuan74468-ux.github.io/assets/demo.webm'),'https://cuan74468-ux.github.io/assets/demo.webm');
+ const row={...hero(),content_id:'CNT-HERO-MAIN',revision:'r1',status:'DRAFT',cta_route:'#katalog'};const admin=ui.admin({authorized:true,enabled:true,items:[row],selectedId:row.content_id,products:[]});assert.match(admin,/data-content-revision="r1"/);assert.match(admin,/<option value="katalog" selected>/);
+ assert.equal(ui.pageCopy([{kind:'PAGE_COPY',placement:'jasa',content_id:'CNT-JASA-HERO',title:'Custom'}],'jasa','CNT-JASA-HERO').title,'Custom');
 });
