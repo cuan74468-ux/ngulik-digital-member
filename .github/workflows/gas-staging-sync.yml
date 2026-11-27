@@ -5,7 +5,7 @@ on:
       mode:
         description: Audit is read-only; deployment requires reviewed fingerprints
         type: choice
-        options: [audit, deploy]
+        options: [audit, deploy, verify-owner]
         default: audit
         required: true
       audit_run_id:

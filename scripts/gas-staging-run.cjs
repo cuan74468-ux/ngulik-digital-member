@@ -246,8 +246,18 @@ async function recover(g,{head,live,r,newVersion,restoreDir},checkHealth){
  try{outcome.healthRestored=await checkHealth()===true;}catch{}
  return outcome;
 }
+// Read-only attestation for an owner-performed update of the existing deployment.
+// Rebuild the approved candidate from immutable v34, not from changed HEAD.
+function ownerAttestation(head,live,baseline,r,active){
+ check(baseline.digest===p.policy.approval.baselineDigest,'OWNER_BASELINE_DRIFT');
+ check(head.digest===r.candidateDigest,'OWNER_EDITOR_FINGERPRINT_MISMATCH');
+ check(Number.isSafeInteger(live.versionNumber)&&live.versionNumber>=p.policy.initialVersion,'OWNER_VERSION_INVALID');
+ const deployed=live.versionNumber!==p.policy.initialVersion;
+ check(active.digest===(deployed?r.candidateDigest:baseline.digest),'OWNER_LIVE_FINGERPRINT_MISMATCH');
+ return deployed?'OWNER_DEPLOY_VERIFIED':'OWNER_EDITOR_VERIFIED';
+}
 async function run(mode){
- check(['audit','deploy'].includes(mode),'MODE_INVALID');
+ check(['audit','deploy','verify-owner'].includes(mode),'MODE_INVALID');
  check(process.env.GITHUB_REPOSITORY===REPO&&process.env.GITHUB_REF==='refs/heads/main'&&process.env.GITHUB_EVENT_NAME==='workflow_dispatch'&&localHead()===process.env.GITHUB_SHA,'UNTRUSTED_CHECKOUT');
  if(mode==='deploy'){
   check(p.policy.approval.status==='APPROVED','GEMINI_RECONCILIATION_PENDING');
@@ -264,6 +274,21 @@ async function run(mode){
  try{
   let credentials;
   const g=session(work,id,ep.id,(files,before,after)=>updateContent(credentials,id,files,before,after)),head=g.clone(),live=g.deployment(head.dir),backup=g.clone(live.versionNumber);
+  if(mode==='verify-owner'){
+   check(p.policy.releaseProfile?.mode==='studio-license-only-v34','OWNER_RELEASE_PROFILE_INVALID');
+   const baseline=g.clone(p.policy.initialVersion);
+   const r=p.buildRelease(p.readDir(path.join(p.root,'apps-script')),baseline.files,parse);
+   p.authorize(r,p.policy.initialVersion);
+   const status=ownerAttestation(head,live,baseline,r,backup);
+   const flags=await health(ep.url,backup.files);
+   check(JSON.parse(flags)[0]===false,'STAGING_MUTATIONS_MUST_REMAIN_OFF');
+   credentials=await inspectCredential(id);
+   const apiHead=contentMap(await requestContent(credentials,id),id);
+   check(p.digest(apiHead)===r.candidateDigest,'OWNER_DIRECT_READ_MISMATCH');
+   check(g.clone().digest===r.candidateDigest&&g.deployment(head.dir).versionNumber===live.versionNumber,'OWNER_ATTESTATION_DRIFT');
+   console.log(status+': '+live.versionNumber+'; 28 files; candidateDigest='+r.candidateDigest);
+   console.log('NGD_STAGING_OWNER_ATTESTATION_NO_REMOTE_WRITE');return;
+  }
   if(p.policy.releaseProfile)check(live.versionNumber===p.policy.initialVersion,'LICENSE_BASELINE_VERSION_DRIFT');
   const r=p.buildRelease(p.readDir(path.join(p.root,'apps-script')),head.files,parse);
   const beforeFlags=await health(ep.url,backup.files);
@@ -323,5 +348,5 @@ async function run(mode){
   }
  }finally{fs.rmSync(work,{recursive:true,force:true});}
 }
-module.exports={ciGate,auditGate,required,session,recover,verifyStudioDisabled,classifyClaspFailure,verifyTrackedInventory,contentMap,contentPayload,apiFailure,requestContent,updateContent};
+module.exports={ciGate,auditGate,required,session,recover,verifyStudioDisabled,classifyClaspFailure,verifyTrackedInventory,contentMap,contentPayload,apiFailure,requestContent,updateContent,ownerAttestation};
 if(require.main===module)run(process.argv[2]||'audit').catch(e=>{console.error('STOP: '+e.message);process.exitCode=1;});
