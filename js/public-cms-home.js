@@ -59,6 +59,8 @@
       return {...row,description:"Buat visual promosi melalui Wrapper AI yang tersedia saat uji coba, atau pilih jasa kreatif sesuai kebutuhan."};
     if(row.content_id==="CNT-USECASE-02"&&row.description==="Susun caption media sosial, deskripsi marketplace, dan skrip promosi dalam hitungan detik langsung dari HP.")
       return {...row,description:"Siapkan caption, deskripsi produk dan materi promosi dari HP. Gunakan alat yang tersedia sesuai kuota dan ketentuan penyedia.",title:row.title==="Konten Jualan & Balasan Chat Otomatis"?"Konten Jualan & Materi Promosi":row.title};
+    if(row.content_id==='CNT-STARTER-ITEM-04'&&row.title==='Komisi Ajak Teman'&&row.description==="Rp5.000 untuk Starter Pack lunas dari teman yang Anda ajak, ditambah komisi pembelian berikutnya sesuai tarif produk dan syarat program.")
+      return {...row,title:"Komisi Penjualan",description:"Komisi Rp5.000 dari Starter Pack dan komisi pembelian berikutnya sesuai tarif produk serta ketentuan program."};
     if(row.content_id==='CNT-STARTER-ITEM-04'&&row.description==="Komisi Rp5.000 untuk setiap rekan usaha yang bergabung melalui tautan rujukan Anda.")
       return {...row,description:"Dapatkan Rp5.000 dari setiap Starter Pack lunas pelanggan yang Anda ajak, serta komisi transaksi berikutnya sesuai tarif produk."};
     if(row.content_id==='CNT-HERO-MAIN'&&row.cta_label==='Mulai Tiket Masuk — Rp15.000'&&route(row)==='daftar')
