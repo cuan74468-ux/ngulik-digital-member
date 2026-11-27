@@ -71,7 +71,7 @@ test('mobile native and custom media theme is scoped to same shared design style
     assert.ok(css.includes(key),key);
   }
   assert.match(css,/@media\(max-width:760px\)/);
-  assert.ok(html.includes('src="./js/content-ui.js?v=20261121-proportions-v13-1-cmsmedia1"'));
+  assert.ok(html.includes('src="./js/content-ui.js?v=20261121-proportions-v13-1-cmsmedia1-portfolioslots1"'));
   assert.ok(html.indexOf('content-ui.js')<html.indexOf('js/app.js'));
   assert.ok(html.includes('id="brand-mark"'));
 });
@@ -128,4 +128,9 @@ test('CMS supports public portfolio media, published copy, FAQ and legacy route 
  assert.equal(ui.videoPath('https://cuan74468-ux.github.io/assets/demo.webm'),'https://cuan74468-ux.github.io/assets/demo.webm');
  const row={...hero(),content_id:'CNT-HERO-MAIN',revision:'r1',status:'DRAFT',cta_route:'#katalog'};const admin=ui.admin({authorized:true,enabled:true,items:[row],selectedId:row.content_id,products:[]});assert.match(admin,/data-content-revision="r1"/);assert.match(admin,/<option value="katalog" selected>/);
  assert.equal(ui.pageCopy([{kind:'PAGE_COPY',placement:'jasa',content_id:'CNT-JASA-HERO',title:'Custom'}],'jasa','CNT-JASA-HERO').title,'Custom');
+});
+
+
+test('portfolio slots are admin guidance only; blank and draft videos never render',()=>{
+ const ui=make();const rows=[{kind:'PORTFOLIO_VIDEO',placement:'jasa',content_id:'VID-PORT-01',status:'PUBLISHED',image_path:''},{kind:'PORTFOLIO_VIDEO',placement:'jasa',content_id:'VID-PORT-02',status:'DRAFT',image_path:'assets/media/test.webm'}];assert.equal(ui.portfolio(rows),'');const valid={...rows[0],image_path:'assets/media/real.webm'};assert.match(ui.portfolio([valid]),/<video controls playsinline preload="none"/);assert.doesNotMatch(ui.portfolio([valid]),/autoplay/);
 });
