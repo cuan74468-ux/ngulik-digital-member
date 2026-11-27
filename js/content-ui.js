@@ -42,14 +42,14 @@
       .sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)).map(r=>{
       const video=r.kind==='PORTFOLIO_VIDEO',src=video?videoPath(r.image_path):mediaPath(r.image_path);
       if(!src)return '';
-      return '<article class="ngdb-package"><div class="ngdb-package-media ngdb-portfolio-image">'+
+      return '<article class="ngdb-package" data-cms-portfolio><div class="ngdb-package-media ngdb-portfolio-image">'+
         (video?'<video controls playsinline preload="none" style="width:100%;max-height:420px" aria-label="'+h(r.title||'Video portofolio')+'" src="'+h(src)+'"></video>':'<img src="'+h(src)+'" alt="'+h(r.title||'Portofolio')+'" loading="lazy" decoding="async">')+
         '</div><div class="ngdb-package-main"><h3>'+h(r.title||'')+'</h3><p>'+h(r.description||'')+'</p></div></article>';
     }).join('');
   }
   function published(contents,kind,placement){
     return (Array.isArray(contents)?contents:[]).filter(x=>x&&x.kind===kind&&
-      x.placement===placement&&!!mediaPath(x.image_path));
+      x.placement===placement&&(x.status===undefined||x.status==='PUBLISHED')&&!!mediaPath(x.image_path));
   }
   function media(contents,kind,placement,cssClass,alt=''){
     const item=published(contents,kind,placement)[0];
@@ -215,8 +215,7 @@
     const preferred=['home','catalog','member_home'].includes(product)?product:'catalog';
     const draft=selected||{kind:productValid?'PRODUCT_IMAGE':'HERO',
       placement:productValid?product:preferred,title:'',description:'',
-      image_path:productValid?'':preferred==='catalog'?
-        'assets/media/ngd-catalog-v9-wide.webp':'assets/media/ngd-v6-hero.webp',
+      image_path:'',
       cta_label:'',cta_route:'',sort_order:rows.length+1,start_date:'',end_date:''};
     const legacy=!!selected&&!kinds.includes(selected.kind);
     const catalogRows=rows.filter(x=>x.kind==='HERO'&&x.placement==='catalog');
@@ -224,18 +223,9 @@
     const coverState=publishedCatalog.length?
       'Terdapat '+publishedCatalog.length+' banner PUBLISHED (jadwal tayang tetap diperiksa runtime).':
       'Belum ada HERO katalog terbit. Website memakai banner bawaan yang konsisten.';
-    const presets=[
-      ['Banner Katalog V9','assets/media/ngd-catalog-v9-wide.webp','HERO'],
-      ['Showcase Produk','assets/media/ngd-v6-hero.webp','HERO'],
-      ['eBook','assets/media/ngd-v6-ebook.webp','PRODUCT_IMAGE'],
-      ['Starter Pack','assets/media/ngd-v6-starter.webp','PRODUCT_IMAGE'],
-      ['Paket 3-in-1','assets/media/ngd-v6-bundle.webp','PRODUCT_IMAGE'],
-      ['Sistem POS','assets/media/ngd-v8-pos.webp','PRODUCT_IMAGE'],
-      ['Video AI','assets/media/ngd-v8-video.webp','PRODUCT_IMAGE'],
-      ['Integrasi GAS','assets/media/ngd-v8-gas.webp','PRODUCT_IMAGE'],
-      ['Kredit AI','assets/media/ngd-v8-ai-small.webp','PRODUCT_IMAGE'],
-      ['Template','assets/media/ngd-v8-templates.webp','PRODUCT_IMAGE']
-    ];
+    // Reuse existing CMS image references; no fixed preset catalogue.
+    const presets=[...new Map(rows.filter(x=>x.status!=='ARCHIVED'&&x.kind!=='PORTFOLIO_VIDEO'&&mediaPath(x.image_path))
+      .map(x=>[x.image_path,[x.title||'Gambar',x.image_path,x.kind]])).values()];
     const allowedPlaces=places.slice();
     if(Array.isArray(ctx.products))
       ctx.products.forEach(p=>{
@@ -268,10 +258,10 @@
           (draft.kind===p[0]&&draft.placement===p[1]?'selected':'')+'>'+h(p[2])+'</option>').join('')+
       '</select></div></div>'+
       '<div class="field"><label for="content-image">Alamat media (gambar atau MP4/WebM milik studio)</label>'+
-      '<input class="input" id="content-image" name="image_path" maxlength="45000" placeholder="assets/media/ngd-catalog-v9-wide.webp" value="'+h(draft.image_path||'')+'">'+
+      '<input class="input" id="content-image" name="image_path" maxlength="45000" placeholder="assets/media/nama-file.webp" value="'+h(draft.image_path||'')+'">'+
       '<p class="form-hint">Admin menyimpan alamat media, bukan file biner. Video memakai jenis Portofolio video, file MP4/WebM di GitHub Pages milik studio. Periksa akses publik sebelum tayang.</p></div>'+
       '<div class="ngd-cms-art-presets" aria-label="Pilihan artwork siap pakai">'+
-        '<strong>Artwork resmi Ngulik Digital</strong>'+
+        '<strong>Gambar dari konten CMS</strong>'+
         '<div class="ngd-cms-art-grid">'+presets.map(p=>
           '<button type="button" class="ngd-cms-preset" data-content-asset="'+h(p[1])+'" '+
             (locked||legacy?'disabled':'')+'><img src="'+h(mediaPath(p[1]))+
@@ -300,8 +290,8 @@
         '<div class="ngd-cms-preview-grid">'+['desktop','mobile'].map(device=>
           '<figure class="ngd-cms-preview-'+device+'">'+
             '<div class="ngd-cms-preview-image"><img data-content-preview-image src="'+
-              h(draft.kind==='PORTFOLIO_VIDEO'?'':mediaPath(draft.image_path)||mediaPath('assets/media/ngd-catalog-v9-wide.webp'))+
-              '" alt="" loading="lazy" '+(draft.kind==='PORTFOLIO_VIDEO'?'hidden':'')+'>'+ 
+              h(draft.kind==='PORTFOLIO_VIDEO'?'':mediaPath(draft.image_path))+
+              '" alt="" loading="lazy" '+(draft.kind==='PORTFOLIO_VIDEO'||!mediaPath(draft.image_path)?'hidden':'')+'>'+ 
               '<span data-content-preview-title>'+h(draft.title||'Judul banner Anda')+'</span>'+
             '</div><figcaption>'+h(device==='desktop'?'Tampilan PC':'Tampilan HP')+'</figcaption></figure>'
         ).join('')+'</div>'+

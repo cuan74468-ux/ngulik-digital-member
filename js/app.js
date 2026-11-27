@@ -948,7 +948,7 @@ function viewProductDetail(){
       offerCategory(p)===kind).slice(0,3);
   const relatedItems=related.map(p=>{
     const pid=String(p.product_id),href='#detail-produk/'+encodeURIComponent(pid);
-    const image=ngdPremiumArtSrc_(ngdProductArtId_(p,offerCategory(p)));
+    const image=window.NGD_CONTENT_UI?.mediaPath(window.NGD_CONTENT_UI?.published(state.siteContent,'PRODUCT_IMAGE',p.product_id)?.[0]?.image_path)||ngdPremiumArtSrc_(ngdProductArtId_(p,offerCategory(p)));
     const amt=moneyValue(p.harga);
     return '<a class="ngdp-related-item" href="'+esc(href)+'" data-product-detail="'+idSafe(pid)+'">'+
       '<img src="'+esc(image)+'" alt="" loading="lazy" decoding="async">'+
@@ -2034,19 +2034,20 @@ async function saveLegacyCms_(form){
 const serviceWriteEnabled=()=>isWriteEnabled()&&config.serviceEnabled===true;
 function editorialPageCopy_(place,id){return window.NGD_CONTENT_UI?.pageCopy?.(state.siteContent,place,id)||{};}
 function servicePortfolio_(){
-    // Portfolio source is the existing public editorial CMS image, not a synthetic sample.
-    const photoCase=window.NGD_PUBLIC_CMS?.list(state.siteContent,'USECASE_CARD','home').find(x=>x.content_id==='CNT-USECASE-01');
-    const photoSrc=window.NGD_CONTENT_UI?.mediaPath(photoCase?.image_path)||'';
-    const portfolioCopy=editorialPageCopy_('jasa','CNT-JASA-PORTFOLIO');
-    const configuredPortfolio=window.NGD_CONTENT_UI?.portfolio?.(state.siteContent)||'';
-    return '<section class="ngdb-packages" aria-labelledby="ngdb-portfolio-title">'+
-      '<div class="ngdb-heading"><h2 id="ngdb-portfolio-title">'+esc(portfolioCopy.title||'Contoh karya Linggau AI Studio')+'</h2>'+
-      '<p>'+esc(portfolioCopy.description||'Lihat hasil karya sebelum menentukan kebutuhan promosi Anda.')+'</p></div>'+
-      '<div class="ngdb-package-list">'+(configuredPortfolio+(!window.NGD_CONTENT_UI?.portfolio?.((state.siteContent||[]).filter(r=>r.kind==='PORTFOLIO_IMAGE'))?('<article class="ngdb-package">'+
-      (photoSrc?'<div class="ngdb-package-media ngdb-portfolio-image"><img src="'+esc(photoSrc)+'" alt="Portofolio visual produk Linggau AI Studio" loading="lazy" decoding="async"></div>':'')+
-      '<div class="ngdb-package-main"><p class="ngdb-overline">FOTO PRODUK</p><h3>Visual promosi madu &amp; roti</h3>'+
-      '<p>Contoh eksplorasi visual produk dari katalog portofolio studio.</p>'+
-      '<a href="https://cuan74468-ux.github.io/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Lihat portofolio studio</a></div></article>'):'') )+'</div></section>';
+  // When no dedicated photo is configured, reuse only the actual published CMS photo and its copy.
+  const photoCase=window.NGD_PUBLIC_CMS?.list(state.siteContent,'USECASE_CARD','home').find(x=>x.content_id==='CNT-USECASE-01');
+  const photoSrc=window.NGD_CONTENT_UI?.mediaPath(photoCase?.image_path)||'';
+  const portfolioCopy=editorialPageCopy_('jasa','CNT-JASA-PORTFOLIO');
+  const configured=window.NGD_CONTENT_UI?.portfolio?.(state.siteContent)||'';
+  const hasPhoto=window.NGD_CONTENT_UI?.portfolio?.((state.siteContent||[]).filter(r=>r.kind==='PORTFOLIO_IMAGE'));
+  const reusedPhoto=photoSrc&&!hasPhoto?'<article class="ngdb-package" data-cms-portfolio>'+
+    '<div class="ngdb-package-media ngdb-portfolio-image"><img src="'+esc(photoSrc)+'" alt="'+esc(photoCase.title||'Foto produk')+'" loading="lazy" decoding="async"></div>'+
+    '<div class="ngdb-package-main"><h3>'+esc(photoCase.title||'')+'</h3><p>'+esc(photoCase.description||'')+'</p></div></article>':'';
+  if(!configured&&!reusedPhoto)return '';
+  return '<section class="ngdb-packages" aria-labelledby="ngdb-portfolio-title">'+
+    '<div class="ngdb-heading"><h2 id="ngdb-portfolio-title">'+esc(portfolioCopy.title||'Contoh karya Linggau AI Studio')+'</h2>'+
+    (portfolioCopy.description?'<p>'+esc(portfolioCopy.description)+'</p>':'')+'</div>'+
+    '<div class="ngdb-package-list">'+configured+reusedPhoto+'</div></section>';
 }
 function viewServiceRequests(){
   if(!logged()&&!isAdmin()){
@@ -2058,7 +2059,7 @@ function viewServiceRequests(){
         (moneyValue(b.harga)??Number.POSITIVE_INFINITY));
     const packages=services.map(p=>{
       const price=moneyValue(p.harga);
-      const imageSrc=ngdPremiumArtSrc_(ngdProductArtId_(p,'jasa'));
+      const imageSrc=window.NGD_CONTENT_UI?.mediaPath(window.NGD_CONTENT_UI?.published(state.siteContent,'PRODUCT_IMAGE',p.product_id)?.[0]?.image_path)||ngdPremiumArtSrc_(ngdProductArtId_(p,'jasa'));
       const detail=offerUiDescription_(p)||'Rincian paket mengikuti informasi produk yang diterbitkan.';
       return '<article class="ngdb-package">'+
         '<div class="ngdb-package-media"><img src="'+esc(imageSrc)+'" alt="Visual '+esc(offerUiTitle_(p))+
@@ -4017,6 +4018,14 @@ async function submitServiceQuote(form){
 }
 document.addEventListener('error',(event)=>{
   const img=event.target;
+  if(img?.tagName==='VIDEO'||img?.tagName==='IMG'){
+    const portfolio=img.closest?.('[data-cms-portfolio]');
+    if(portfolio){portfolio.hidden=true;portfolio.style.display='none';return;}
+    if(img.hasAttribute?.('data-content-preview-video')||img.hasAttribute?.('data-content-preview-image')){
+      img.hidden=true;return;
+    }
+    if(img?.tagName==='VIDEO')return;
+  }
   if(img?.tagName!=='IMG')return;
   if(img.classList?.contains('ngd-home-artwork')){
     const fallback=String(img.dataset?.homeFallback||'');
@@ -4029,14 +4038,10 @@ document.addEventListener('error',(event)=>{
   const offerArt=img.closest?.('.ngdl-offer-image,.ngdb-portfolio-image');
   if(offerArt){offerArt.hidden=true;offerArt.style.display='none';return;}
   if(img.closest?.('.ngd-catalog-campaign-picture')){
-    // CMS URLs can disappear after publication. Recover to the vetted local
-    // wide artwork once, preserving the Admin-authored text and CTA.
-    if(img.dataset?.campaignRecovered==='1'){img.hidden=true;return;}
-    img.dataset.campaignRecovered='1';
-    const root=String(window.location?.pathname||'').includes('/staging/')?'../':'./';
-    img.src=root+'assets/media/ngd-catalog-v9-wide.webp';
-    return;
+    // Keep the published copy, but never replace a failed custom image with obsolete art.
+    img.hidden=true;img.style.display='none';return;
   }
+  if(img.classList?.contains('ngd-cms-hero-art')||img.classList?.contains('ngdp-cover')||img.closest?.('.ngdb-hero-visual,.ngdb-package-media,.ngdp-related-item')){img.hidden=true;img.style.display='none';return;}
   if(!img.classList?.contains('market-product-image'))return;
   const fallback=String(img.dataset?.marketFallback||'');
   if(fallback&&img.dataset.marketFallbackUsed!=='1'){
@@ -4417,11 +4422,8 @@ document.addEventListener('click',async(e)=>{
   }else if(target.hasAttribute('data-content-asset')){
     if(!isAdmin())return;
     const asset=String(target.dataset.contentAsset||'');
-    const approved=new Set(['ngd-catalog-v9-wide.webp','ngd-v6-hero.webp',
-      'ngd-v6-ebook.webp','ngd-v6-starter.webp','ngd-v6-bundle.webp',
-      'ngd-v8-pos.webp','ngd-v8-video.webp','ngd-v8-gas.webp',
-      'ngd-v8-ai-small.webp','ngd-v8-templates.webp']);
-    if(!asset.startsWith('assets/media/')||!approved.has(asset.slice(13)))return;
+    if(!contentWriteEnabled()||!window.NGD_CONTENT_UI?.mediaPath(asset)||
+      !state.adminContent.some(r=>r.status!=='ARCHIVED'&&r.kind!=='PORTFOLIO_VIDEO'&&r.image_path===asset))return;
     const field=document.getElementById('content-image');
     if(field){field.value=asset;updateContentPreview_();}
   }else if(target.hasAttribute('data-content-edit')){
