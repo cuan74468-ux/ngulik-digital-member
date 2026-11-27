@@ -300,8 +300,8 @@
         '<div class="ngd-cms-preview-grid">'+['desktop','mobile'].map(device=>
           '<figure class="ngd-cms-preview-'+device+'">'+
             '<div class="ngd-cms-preview-image"><img data-content-preview-image src="'+
-              h(mediaPath(draft.image_path)||mediaPath('assets/media/ngd-catalog-v9-wide.webp'))+
-              '" alt="" loading="lazy">'+
+              h(draft.kind==='PORTFOLIO_VIDEO'?'':mediaPath(draft.image_path)||mediaPath('assets/media/ngd-catalog-v9-wide.webp'))+
+              '" alt="" loading="lazy" '+(draft.kind==='PORTFOLIO_VIDEO'?'hidden':'')+'>'+ 
               '<span data-content-preview-title>'+h(draft.title||'Judul banner Anda')+'</span>'+
             '</div><figcaption>'+h(device==='desktop'?'Tampilan PC':'Tampilan HP')+'</figcaption></figure>'
         ).join('')+'</div>'+
@@ -311,7 +311,7 @@
       (selected?.status==='PUBLISHED'?'<p class="ngd-cms-published-warning">Konten sedang tayang. Pilih Tarik tayang pada daftar, kemudian edit draf dan terbitkan ulang setelah pratinjau.</p>':'')+
       (legacy?'<p class="ngd-cms-legacy-warning">Konten lama tipe '+h(selected.kind)+' tidak mendukung penyuntingan. Tarik/arsipkan lalu buat banner HERO baru.</p>':'')+
       '<button class="btn btn-primary" type="submit" '+(locked||legacy||['PUBLISHED','ARCHIVED'].includes(selected?.status)?'disabled':'')+'>'+(selected?'Simpan perubahan':'Simpan draf')+'</button>'+
-      (locked?'<p class="form-hint">Edit konten belum tersedia.</p>':'')+
+      (locked?'<p class="form-hint">Mode baca-saja. Penyimpanan memerlukan STAGING terverifikasi dan izin mutasi backend; tidak ada perubahan yang dikirim.</p>':'')+
       '</form></section>';
     const rowsHtml='<section class="content-admin-list" aria-label="Daftar gambar dan banner">'+
       (rows.length?rows.map(x=>{

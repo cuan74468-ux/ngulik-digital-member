@@ -1977,7 +1977,8 @@ function viewAdminCatalog(){
     '</div></form></section>';
   return intro+'<div class="catalog-admin-layout"><div>'+entries+'</div>'+form+'</div>';
 }
-const contentWriteEnabled=()=>isWriteEnabled()&&config.contentEnabled===true;
+const contentWriteEnabled=()=>isAdmin()&&!state.qa&&!!state.token&&isWriteEnabled()&&config.contentEnabled===true&&
+  state.workspaceInfo?.workspace==='NGD_STAGING'&&state.workspaceInfo?.environment==='STAGING'&&state.workspaceInfo?.mutations_enabled===true;
 const ngdTextContentKinds_=new Set(['HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CARD',
   'FEATURE_BULLET','NOTICE_BOX','SERVICE_CARD','BENEFIT_LIST','BENEFIT_BULLET',
   'SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD','CHECKOUT_GUIDE',
@@ -2464,8 +2465,11 @@ function updateContentPreview_(){
       option.hidden=!valid;option.disabled=!valid;
       if(valid&&!first)first=option.value;
     }
-    if(place.selectedOptions?.[0]?.disabled&&first)place.value=first;
+    if((!place.selectedOptions?.length||place.selectedOptions[0].disabled)&&first)place.value=first;
   }
+  const text=ngdTextContentKinds_.has(kind),titleField=form.querySelector('[name="title"]'),descriptionField=form.querySelector('[name="description"]');
+  if(titleField)titleField.maxLength=text?1600:120;
+  if(descriptionField)descriptionField.maxLength=kind==='PRODUCT_IMAGE'?24:text?1600:400;
   form.querySelectorAll('[data-content-preview-title]').forEach(node=>{node.textContent=title;});
   form.querySelectorAll('[data-content-preview-image]').forEach(img=>{
     if(src){img.src=src;img.hidden=false;}
@@ -2771,7 +2775,7 @@ async function refreshStagingReadiness_(){
     state.workspaceInfo=null;
   }
   // Re-evaluate login/registration independently of catalog or member session.
-  if(state.route==='daftar'||state.route==='login')render();
+  if(['daftar','login','konten'].includes(state.route))render();
 }
 async function refreshPublic(){
   // Offline/QA previews have no real CMS endpoint. Keep their neutral loading
