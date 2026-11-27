@@ -120,3 +120,29 @@ test('every exact main SHA schedules all three mandatory read-only CI workflows'
   a.match(yaml,/^  workflow_dispatch:/m);
  }
 });
+
+const sampleId='x'.repeat(25);
+function directFixture(){
+ const remote={scriptId:sampleId,files:[{name:'appsscript',type:'JSON',source:'{}'},...Array.from({length:27},(_,i)=>({name:'F'+i,type:'SERVER_JS',source:'// '+i}))]};
+ const before=runner.contentMap(remote,sampleId),after=new Map(before);after.set('F0.js','// approved change');return {remote,before,after,beforeDigest:p.digest(before),afterDigest:p.digest(after)};
+}
+test('direct API payload preserves 28 names, remote order, types and approved fingerprints',()=>{
+ const x=directFixture(),payload=runner.contentPayload(x.remote,sampleId,x.after,x.beforeDigest,x.afterDigest);
+ a.deepEqual(payload.files.map(f=>[f.name,f.type]),x.remote.files.map(f=>[f.name,f.type]));
+ a.equal(payload.files.filter((f,i)=>f.source!==x.remote.files[i].source).length,1);
+ a.throws(()=>runner.contentPayload(x.remote,sampleId,x.after,'wrong',x.afterDigest),/HEAD_DRIFT/);
+ a.throws(()=>runner.contentPayload(x.remote,sampleId,x.after,x.beforeDigest,'wrong'),/PACKAGE_DRIFT/);
+ a.throws(()=>runner.contentMap({...x.remote,scriptId:'other'},sampleId),/IDENTITY/);
+ a.throws(()=>runner.contentMap({...x.remote,files:[...x.remote.files,x.remote.files[0]]},sampleId),/INVENTORY/);
+});
+test('direct API writes exactly once and confirms response digest; no retry on denial',async()=>{
+ const x=directFixture(),credential={getAccessToken:async()=>({token:'PRIVATE_TOKEN'})};let calls=[];
+ const transport=async(url,init)=>{calls.push(init.method);a.equal(url,'https://script.googleapis.com/v1/projects/'+sampleId+'/content');a.equal(init.redirect,'error');return {ok:true,status:200,json:async()=>init.method==='GET'?x.remote:{scriptId:sampleId,...JSON.parse(init.body)}};};
+ await runner.updateContent(credential,sampleId,x.after,x.beforeDigest,x.afterDigest,transport);a.deepEqual(calls,['GET','PUT']);
+ calls=[];const denied=async(url,init)=>{calls.push(init.method);return init.method==='GET'?{ok:true,status:200,json:async()=>x.remote}:{ok:false,status:403,json:async()=>({error:{status:'PERMISSION_DENIED',message:'PRIVATE_TOKEN access denied'}})};};
+ await a.rejects(runner.updateContent(credential,sampleId,x.after,x.beforeDigest,x.afterDigest,denied),e=>e.message==='GAS_CONTENT_HTTP_403; status=PERMISSION_DENIED; category=PERMISSION_DENIED');a.deepEqual(calls,['GET','PUT']);
+ calls=[];await a.rejects(runner.updateContent(credential,sampleId,x.after,'changed',x.afterDigest,transport),/HEAD_DRIFT/);a.deepEqual(calls,['GET']);
+});
+test('structured API failure never exposes arbitrary error fields',()=>{
+ a.equal(runner.apiFailure(400,{error:{status:'PRIVATE_TOKEN',message:'PRIVATE_SOURCE'}}),'GAS_CONTENT_HTTP_400; status=UNKNOWN; category=UNCLASSIFIED');
+});

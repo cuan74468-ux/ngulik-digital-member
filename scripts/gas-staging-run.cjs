@@ -66,8 +66,7 @@ function verifyTrackedInventory(status,files){
 }
 // Use the exact installed clasp auth loader (v3.4.1) in the isolated HOME.
 // Requests below are GET or OAuth token introspection/refresh only, not GAS writes.
-async function inspectCredential(scriptId){
- try{
+async function loadCredential(){
   delete process.env.DEBUG;delete process.env.NODE_DEBUG;
   const bin=fs.realpathSync(process.env.CLASP_BIN||'');
   check(path.basename(bin)==='index.js','CLASP_AUTH_PATH_INVALID');
@@ -75,6 +74,11 @@ async function inspectCredential(scriptId){
   const {initAuth}=await import(pathToFileURL(path.join(path.dirname(bin),'auth/auth.js')).href);
   const {credentials}=await initAuth({authFilePath:path.join(os.homedir(),'.clasprc.json'),userKey:'default'});
   check(credentials,'CLASP_AUTH_NOT_LOGGED_IN');
+  return credentials;
+}
+async function inspectCredential(scriptId){
+ try{
+  const credentials=await loadCredential();
   const {token}=await credentials.getAccessToken();
   check(typeof token==='string'&&token.length>0,'CLASP_AUTH_TOKEN_UNAVAILABLE');
   const info=await credentials.getTokenInfo(token);
@@ -90,16 +94,62 @@ async function inspectCredential(scriptId){
   if(project.parentId){
    let meta;
    try{meta=(await credentials.request({url:'https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(project.parentId),method:'GET',params:{fields:'capabilities(canEdit),ownedByMe',supportsAllDrives:true},timeout:20000})).data;}
-   catch(e){console.log(JSON.stringify({diagnostic:'CLASP_CONTAINER_CAPABILITY',can_edit:'UNVERIFIED',category:classifyClaspFailure({stderr:e?.message})}));return;}
+   catch(e){console.log(JSON.stringify({diagnostic:'CLASP_CONTAINER_CAPABILITY',can_edit:'UNVERIFIED',category:classifyClaspFailure({stderr:e?.message})}));return credentials;}
    const canEdit=meta?.capabilities?.canEdit;
    console.log(JSON.stringify({diagnostic:'CLASP_CONTAINER_CAPABILITY',can_edit:typeof canEdit==='boolean'?canEdit:'UNVERIFIED',owned_by_credential:meta?.ownedByMe===true}));
    check(canEdit!==false,'CLASP_CONTAINER_EDIT_DENIED');
   }else console.log(JSON.stringify({diagnostic:'CLASP_CONTAINER_CAPABILITY',can_edit:'NOT_BOUND'}));
+  return credentials;
  }catch(e){
   // Only our own exact fixed errors may be surfaced, never Google error text.
   const allowed=['CLASP_AUTH_PATH_INVALID','CLASP_AUTH_NOT_LOGGED_IN','CLASP_AUTH_TOKEN_UNAVAILABLE','CLASP_WRITE_SCOPE_MISSING','CLASP_PROJECT_IDENTITY_UNVERIFIED','CLASP_CONTAINER_EDIT_DENIED'];
   throw Error(allowed.includes(e?.message)?e.message:'CLASP_CREDENTIAL_DIAGNOSTIC_FAILED: '+classifyClaspFailure({stderr:e?.message}));
  }
+}
+// Apps Script updateContent is the same official API called by clasp push.
+// Keep the approved full inventory, preserve the remote file order and never
+// retry a write automatically. Only bounded status enums leave the runner.
+function contentMap(data,id){
+ check(data?.scriptId===id&&Array.isArray(data.files),'GAS_CONTENT_IDENTITY_UNVERIFIED');
+ const files=new Map();
+ for(const f of data.files){
+  check(f&&typeof f.name==='string'&&typeof f.source==='string','GAS_CONTENT_FILE_INVALID');
+  const n=f.type==='JSON'&&f.name==='appsscript'?'appsscript.json':f.type==='SERVER_JS'&&/^[A-Za-z0-9_.$-]+$/.test(f.name)?f.name+'.js':null;
+  check(n&&!files.has(n),'GAS_CONTENT_INVENTORY_INVALID');files.set(n,f.source);
+ }
+ check(files.size===28&&files.has('appsscript.json'),'GAS_CONTENT_INVENTORY_INVALID');
+ return files;
+}
+function contentPayload(remote,id,files,expectedBefore,expectedAfter){
+ const before=contentMap(remote,id);
+ check(p.digest(before)===expectedBefore,'GAS_CONTENT_HEAD_DRIFT');
+ check(files instanceof Map&&p.digest(files)===expectedAfter,'GAS_CONTENT_PACKAGE_DRIFT');
+ check(JSON.stringify(p.names(before))===JSON.stringify(p.names(files)),'GAS_CONTENT_PACKAGE_INVENTORY');
+ return {files:remote.files.map(f=>({name:f.name,type:f.type,source:files.get(f.type==='JSON'?'appsscript.json':f.name+'.js')}))};
+}
+function apiFailure(status,body){
+ const allowed=new Set(['INVALID_ARGUMENT','FAILED_PRECONDITION','PERMISSION_DENIED','UNAUTHENTICATED','NOT_FOUND','RESOURCE_EXHAUSTED','UNAVAILABLE','DEADLINE_EXCEEDED','INTERNAL','ABORTED','ALREADY_EXISTS','UNIMPLEMENTED']);
+ const http=Number.isInteger(status)&&status>=400&&status<=599?status:0;
+ const code=allowed.has(body?.error?.status)?body.error.status:'UNKNOWN';
+ const category=classifyClaspFailure({stderr:typeof body?.error?.message==='string'?body.error.message:''});
+ return 'GAS_CONTENT_HTTP_'+http+'; status='+code+'; category='+category;
+}
+async function requestContent(credentials,id,method='GET',payload,transport=fetch){
+ check(/^[A-Za-z0-9_-]{20,140}$/.test(id||'')&&['GET','PUT'].includes(method),'GAS_CONTENT_REQUEST_INVALID');
+ let token;try{({token}=await credentials.getAccessToken());}catch{throw Error('GAS_CONTENT_AUTH_FAILED');}
+ check(typeof token==='string'&&token.length>0,'GAS_CONTENT_AUTH_FAILED');
+ let response;
+ try{response=await transport('https://script.googleapis.com/v1/projects/'+encodeURIComponent(id)+'/content',{method,headers:{Authorization:'Bearer '+token,Accept:'application/json',...(method==='PUT'?{'Content-Type':'application/json'}:{})},...(method==='PUT'?{body:JSON.stringify(payload)}:{}),redirect:'error',signal:AbortSignal.timeout(60000)});}catch{throw Error('GAS_CONTENT_TRANSPORT_FAILED');}
+ let body;try{body=await response.json();}catch{if(!response.ok)throw Error(apiFailure(response.status,null));throw Error('GAS_CONTENT_RESPONSE_INVALID');}
+ if(!response.ok)throw Error(apiFailure(response.status,body));
+ return body;
+}
+async function updateContent(credentials,id,files,expectedBefore,expectedAfter,transport=fetch){
+ const remote=await requestContent(credentials,id,'GET',undefined,transport);
+ const payload=contentPayload(remote,id,files,expectedBefore,expectedAfter);
+ const result=await requestContent(credentials,id,'PUT',payload,transport);
+ check(p.digest(contentMap(result,id))===expectedAfter,'GAS_CONTENT_RESPONSE_DRIFT');
+ console.log('GAS_CONTENT_UPDATE_RESPONSE_VERIFIED');
 }
 function clasp(cwd,args){
  const env={...process.env};delete env.GITHUB_TOKEN;delete env.GAS_STAGING_SCRIPT_ID;delete env.DEBUG;delete env.NODE_DEBUG;
@@ -108,7 +158,7 @@ function clasp(cwd,args){
  if(result.error||result.status!==0)throw Error('CLASP_FAILED: '+args[0]+'; category='+classifyClaspFailure(result));
  try{return JSON.parse(result.stdout);}catch{throw Error('CLASP_JSON_UNVERIFIED: '+args[0]);}
 }
-function session(work,id,deployId){
+function session(work,id,deployId,writeContent){
  let i=0;
  function clone(version){
   const dir=path.join(work,'snapshot-'+(++i));fs.mkdirSync(dir,{mode:0o700});
@@ -132,7 +182,7 @@ function session(work,id,deployId){
   return dir;
  }
  function verifyPackage(dir,files){return verifyTrackedInventory(clasp(dir,['show-file-status']),files);}
- function push(dir){clasp(dir,['push','--force']);}
+ async function push(dir,expectedBefore,expectedAfter){check(typeof writeContent==='function','GAS_CONTENT_WRITER_UNAVAILABLE');await writeContent(p.readDir(dir,true),expectedBefore,expectedAfter);}
  function version(dir,sha){const r=clasp(dir,['create-version','NGD STAGING '+sha]);check(Number.isSafeInteger(r.versionNumber)&&r.versionNumber>0,'VERSION_UNVERIFIED');return r.versionNumber;}
  function redeploy(dir,v,description){
   const r=clasp(dir,['update-deployment',deployId,'--versionNumber',String(v),'--description',description||'NGD STAGING']);
@@ -188,7 +238,7 @@ async function recover(g,{head,live,r,newVersion,restoreDir},checkHealth){
    check(current===r.candidateDigest,'UNRELATED_EDITOR_SOURCE');
    // Recheck the known deployment before touching HEAD.
    check(g.deployment(head.dir).versionNumber===live.versionNumber,'ROLLBACK_DEPLOYMENT_MOVED');
-   g.push(restoreDir);
+   await g.push(restoreDir,r.candidateDigest,head.digest);
   }
   check(g.clone().digest===head.digest,'ROLLBACK_EDITOR_UNCERTAIN');
   outcome.sourceRestored=true;
@@ -212,7 +262,8 @@ async function run(mode){
  const work=fs.mkdtempSync(path.join(os.tmpdir(),'ngd-gas-sync-'));
  fs.chmodSync(work,0o700);
  try{
-  const g=session(work,id,ep.id),head=g.clone(),live=g.deployment(head.dir),backup=g.clone(live.versionNumber);
+  let credentials;
+  const g=session(work,id,ep.id,(files,before,after)=>updateContent(credentials,id,files,before,after)),head=g.clone(),live=g.deployment(head.dir),backup=g.clone(live.versionNumber);
   if(p.policy.releaseProfile)check(live.versionNumber===p.policy.initialVersion,'LICENSE_BASELINE_VERSION_DRIFT');
   const r=p.buildRelease(p.readDir(path.join(p.root,'apps-script')),head.files,parse);
   const beforeFlags=await health(ep.url,backup.files);
@@ -226,7 +277,10 @@ async function run(mode){
   const candidateDir=g.packageDir(r.candidate),restoreDir=g.packageDir(backup.files);
   const candidateCount=g.verifyPackage(candidateDir,r.candidate),restoreCount=g.verifyPackage(restoreDir,backup.files);
   console.log(JSON.stringify({diagnostic:'CLASP_TRACKED_INVENTORY_PASS',candidate_files:candidateCount,rollback_files:restoreCount}));
-  await inspectCredential(id);
+  credentials=await inspectCredential(id);
+  const apiHead=await requestContent(credentials,id);
+  contentPayload(apiHead,id,r.candidate,head.digest,r.candidateDigest);
+  console.log('GAS_CONTENT_DIRECT_READ_AND_PAYLOAD_PASS');
   if(mode==='audit'){
    if(p.policy.approval.status==='APPROVED')console.log('NGD_STAGING_APPROVED_PACKAGE_AUDIT_PASS');
    console.log('NGD_STAGING_AUDIT_COMPLETE_NO_REMOTE_WRITE');return;
@@ -239,7 +293,7 @@ async function run(mode){
   check(await health(ep.url,backup.files)===beforeFlags,'STAGING_FLAGS_CHANGED_BEFORE_UPLOAD');
   let newVersion,attempted=false;
   try{
-   attempted=true;g.push(candidateDir);
+   attempted=true;await g.push(candidateDir,head.digest,r.candidateDigest);
    check(g.clone().digest===r.candidateDigest,'POST_PUSH_EDITOR_MISMATCH');
    newVersion=g.version(candidateDir,process.env.GITHUB_SHA);
    check(g.clone(newVersion).digest===r.candidateDigest,'VERSION_CONTENT_MISMATCH');
@@ -269,5 +323,5 @@ async function run(mode){
   }
  }finally{fs.rmSync(work,{recursive:true,force:true});}
 }
-module.exports={ciGate,auditGate,required,session,recover,verifyStudioDisabled,classifyClaspFailure,verifyTrackedInventory};
+module.exports={ciGate,auditGate,required,session,recover,verifyStudioDisabled,classifyClaspFailure,verifyTrackedInventory,contentMap,contentPayload,apiFailure,requestContent,updateContent};
 if(require.main===module)run(process.argv[2]||'audit').catch(e=>{console.error('STOP: '+e.message);process.exitCode=1;});
