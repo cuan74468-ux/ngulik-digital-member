@@ -80,3 +80,5 @@ test('backend exposes only allowlisted public settings; release gates are unchan
  assert.match(gateway,/function requireMutationsEnabled_\(/);
  assert.match(gateway,/function requireFinanceEnabled_\(/);
 });
+
+test('home displays three CMS portfolio example cards with safe external links',()=>{const c=cms(),url='https://cuan74468-ux.github.io/bakso-len-1-menu/';const rows=[row('CNT-HERO-MAIN','HERO','Hero'),...['PORTFOLIO_CARD','SERVICE_CARD','PROMO'].map((kind,i)=>row('BL-'+i,kind,'Example '+i,'CMS copy','home',i+2,{cta_label:'Lihat Contoh',cta_route:url})),row('bad','PORTFOLIO_CARD','Unsafe','bad','home',7,{cta_label:'Unsafe link',cta_route:'https://evil.example/'})];const html=c.home(rows,{});assert.equal((html.match(/href="https:\/\/cuan74468-ux\.github\.io\/bakso-len-1-menu\/" target="_blank" rel="noopener noreferrer"/g)||[]).length,3);assert.doesNotMatch(html,/href="https:\/\/evil/);assert.match(html,/Example 0/);assert.match(html,/Example 1/);assert.match(html,/Example 2/);});

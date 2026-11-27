@@ -8,6 +8,7 @@
   const allowed=new Set(['beranda','katalog','jasa','ai','dukungan','belajar',
     'affiliate','login','daftar','masuk']);
   const photo=raw=>global.NGD_CONTENT_UI?.mediaPath(raw)||'';
+  function exampleUrl(row){return ['PORTFOLIO_CARD','SERVICE_CARD','PROMO'].includes(row?.kind)&&row?.placement==='home'&&String(row?.cta_route||'').trim()==='https://cuan74468-ux.github.io/bakso-len-1-menu/'?'https://cuan74468-ux.github.io/bakso-len-1-menu/':'';}
   function route(row){
     const id=String(row?.cta_route||'').replace(/^#/,'').trim().toLowerCase();
     return allowed.has(id)?id==='masuk'?'login':id:'';
@@ -32,13 +33,14 @@
     return list(items,kind,place).find(x=>x.content_id===id||x.content_id===idAliases[id]);
   }
   function button(row,css){
-    const to=route(row),label=String(row?.cta_label||'').trim();
+    const to=route(row),label=String(row?.cta_label||'').trim(),external=exampleUrl(row);
+    if(external&&label)return '<a class="'+css+'" href="'+escape(external)+'" target="_blank" rel="noopener noreferrer">'+escape(label)+'</a>';
     if(!to||!label)return '';
     return '<button type="button" class="'+css+'" data-route="'+
       escape(to)+'">'+escape(label)+'</button>';
   }
   function card(item,css){
-    const url=photo(item.image_path),to=route(item);
+    const url=photo(item.image_path),to=route(item)||exampleUrl(item);
     return '<article class="'+css+'">'+
       (url?'<div class="ngdl-offer-image"><img src="'+escape(url)+
         '" alt="'+escape(item.title)+'" loading="lazy" decoding="async"></div>':'')+
@@ -85,6 +87,7 @@
     const bullets=list(items,'FEATURE_BULLET','home').map(clarifyEntry);
     const honesty=entry(items,'CNT-HONESTY-BOX','NOTICE_BOX','home');
     const services=list(items,'SERVICE_CARD','home').map(clarifyEntry);
+    const portfolio=[...list(items,'PORTFOLIO_CARD','home'),...list(items,'PROMO','home').filter(exampleUrl)].sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0));
     const benefit=entry(items,'CNT-MEMBER-BENEFIT','BENEFIT_LIST','home');
     const benefits=list(items,'BENEFIT_BULLET','home');
     // Doc06 STAGING also permits four items packed into the section's
@@ -135,6 +138,7 @@
         escape(svcHeading?.title||'')+'</h2></div>'+
         '<div class="ngdl-grid">'+services.map(x=>card(x,'ngdl-offer')).join('')+'</div>'+
       '</section>':'')+
+      (portfolio.length?'<section class="ngdl-offers" aria-label="Contoh karya"><div class="ngdl-grid">'+portfolio.map(x=>card(x,'ngdl-offer')).join('')+'</div></section>':'')+
       (benefit?'<section class="ngdl-benefits">'+title(benefit)+
         '<ul>'+benefitItems.map(x=>'<li><strong>'+escape(x.title||'')+
         '</strong>'+(x.description?'<span>'+escape(x.description)+'</span>':'')+'</li>').join('')+'</ul></section>':'')+
