@@ -2120,7 +2120,7 @@ function viewServiceRequests(){
   }
   return window.NGD_SERVICES_UI?
     window.NGD_SERVICES_UI.member({logged:logged()&&!isAdmin(),
-      items:state.services,enabled:serviceWriteEnabled(),kind:state.serviceKind})+(!isAdmin()?servicePortfolio_():''):
+      items:state.services,enabled:serviceWriteEnabled(),kind:state.serviceKind})+(!isAdmin()?'<div class="ngd-buyer-services">'+servicePortfolio_()+'</div>':''):
     empty('Halaman Belum Tersedia','Coba muat ulang halaman.');
 }
 function viewAdminServices(){
