@@ -169,3 +169,8 @@ test('owner diagnostic reports bounded categories without exposing private names
  const changed=new Map(c);changed.set('Kode.js','unexpected');changed.set('private.js','secret');changed.set('extra.js','secret');a.deepEqual(d(changed),{diagnostic:'OWNER_EDITOR_DIFF',code:'CONTENT_DIFFERS',missing_other:0,extra_other:1,changed_other:1});
  changed.delete('private.js');changed.delete('Kode.js');a.deepEqual(d(changed),{diagnostic:'OWNER_EDITOR_DIFF',code:'MISSING',missing_other:1,extra_other:1,changed_other:0});
 });
+
+test('verify-owner emits bounded diagnostics before exact digest gate',()=>{
+ const source=fs.readFileSync(path.join(p.root,'scripts/gas-staging-run.cjs'),'utf8');
+ a.match(source,/if\(head\.digest!==r\.candidateDigest\)console\.log\(JSON\.stringify\(ownerEditorDiagnostic\(head\.files,baseline\.files,r\.candidate\)\)\);\s*const status=ownerAttestation\(head,live,baseline,r,backup\);/);
+});

@@ -287,6 +287,7 @@ async function run(mode){
    const baseline=g.clone(p.policy.initialVersion);
    const r=p.buildRelease(p.readDir(path.join(p.root,'apps-script')),baseline.files,parse);
    p.authorize(r,p.policy.initialVersion);
+   if(head.digest!==r.candidateDigest)console.log(JSON.stringify(ownerEditorDiagnostic(head.files,baseline.files,r.candidate)));
    const status=ownerAttestation(head,live,baseline,r,backup);
    const flags=await health(ep.url,backup.files);
    check(JSON.parse(flags)[0]===false,'STAGING_MUTATIONS_MUST_REMAIN_OFF');
