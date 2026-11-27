@@ -8,8 +8,8 @@ var NGD_CONTENT_KINDS_=['HERO','FEATURE_ICON','PRODUCT_IMAGE','PAGE_COVER','NAV_
  'HIGHLIGHT_PILL','USECASE_CARD','FEATURE_CARD','FEATURE_BULLET','NOTICE_BOX','SERVICE_CARD',
  'BENEFIT_LIST','BENEFIT_BULLET','SECTION_HEADING','CTA_BUTTON','AUTH_COPY','AUTH_FIELD',
  'CHECKOUT_GUIDE','CHECKOUT_STEP','WA_TEMPLATE','MEMBER_COPY','MEMBER_CARD','PORTAL_NOTICE','AFFILIATE_INFO',
- 'HERO_ACTION','SECTION_HEADER','FEATURE_ITEM','CHECKOUT_COPY','MEMBER_GREETING','DISCLAIMER'];
-var NGD_CONTENT_TEXT_KINDS_=NGD_CONTENT_KINDS_.slice(8);
+ 'HERO_ACTION','SECTION_HEADER','FEATURE_ITEM','CHECKOUT_COPY','MEMBER_GREETING','DISCLAIMER','PAGE_COPY','FAQ_ITEM','PORTFOLIO_IMAGE','PORTFOLIO_VIDEO'];
+var NGD_CONTENT_TEXT_KINDS_=NGD_CONTENT_KINDS_.slice(8).filter(function(k){return k!=='PORTFOLIO_IMAGE'&&k!=='PORTFOLIO_VIDEO';});
 var NGD_CONTENT_ROUTES_=['beranda','belajar','katalog','jasa','ai','affiliate','dukungan','login','akun','daftar','masuk','auth','checkout','member','portal','portal-belajar','ajak-teman'];
 var NGD_CONTENT_FIELDS_=[
   'kind','placement','title','description','image_path','cta_label','cta_route',
@@ -27,6 +27,11 @@ function contentImagePath_(value,optional) {
   require_((optional&&!path)||!!path&&(local||external||inline),'VALIDATION',
     'Gunakan path assets/..., gambar HTTPS, atau data URI gambar.');
   return path;
+}
+function contentVideoPath_(value) {
+  var p=String(value||'').trim();
+  require_(p.length<=500&&p.indexOf('..')<0&&p.replace(/^https:\/\//,'').indexOf('//')<0&&/^(?:https:\/\/cuan74468-ux\.github\.io\/(?:ngulik-digital-member\/)?)?assets\/[A-Za-z0-9_./-]+\.(?:mp4|webm)$/i.test(p),'VALIDATION','Gunakan MP4/WebM pada assets/ atau GitHub Pages milik studio.');
+  return p;
 }
 function contentDate_(value,label) {
   var date=String(value==null?'':value).trim();
@@ -52,6 +57,9 @@ function contentPlacement_(kind,value) {
     valid=['home','catalog','member_home','ai','belajar'].indexOf(place)>=0;
   if(NGD_CONTENT_TEXT_KINDS_.indexOf(kind)>=0)
     valid=['home','auth','checkout','member_home','member_portal','member_affiliate'].indexOf(place)>=0;
+  if(kind==='PAGE_COPY')valid=['jasa','dukungan','ai'].indexOf(place)>=0;
+  if(kind==='FAQ_ITEM')valid=place==='dukungan';
+  if(kind==='PORTFOLIO_IMAGE'||kind==='PORTFOLIO_VIDEO')valid=place==='jasa';
   require_(valid,'VALIDATION','Lokasi gambar tidak dikenali untuk jenis konten ini.');
   return place;
 }
@@ -73,7 +81,7 @@ function contentPayload_(p,existing) {
     kind:p.kind,placement:contentPlacement_(p.kind,p.placement),
     title:safeText_(p.title,NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0?1600:120),
     description:safeText_(p.description,NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0?1600:400),
-    image_path:contentImagePath_(p.image_path,p.kind==='HERO'||
+    image_path:p.kind==='PORTFOLIO_VIDEO'?contentVideoPath_(p.image_path):contentImagePath_(p.image_path,p.kind==='HERO'||
       NGD_CONTENT_TEXT_KINDS_.indexOf(p.kind)>=0||
       p.kind==='PROMO'||p.kind==='ANNOUNCEMENT'),
     cta_label:safeText_(p.cta_label,48),cta_route:String(p.cta_route||'').trim().replace(/^#/,'').toLowerCase(),
@@ -87,7 +95,7 @@ function contentPayload_(p,existing) {
     'VALIDATION','Tujuan tombol tidak diizinkan.');
   require_(!draft.cta_label||!!draft.cta_route||
     (draft.placement==='auth'&&draft.kind==='CTA_BUTTON')||
-    (draft.placement==='checkout'&&draft.kind==='CHECKOUT_GUIDE'),
+    (draft.placement==='checkout'&&['CHECKOUT_GUIDE','CHECKOUT_COPY','WA_TEMPLATE'].indexOf(draft.kind)>=0),
     'VALIDATION','Tombol harus memiliki tujuan.');
   require_(!draft.end_date||!draft.start_date||draft.end_date>=draft.start_date,
     'VALIDATION','Tanggal akhir tidak boleh sebelum tanggal mulai.');
@@ -102,7 +110,7 @@ function contentRevision_(row) {
 }
 function contentAdminView_(row) {
   var out={content_id:row.content_id,status:row.status,revision:contentRevision_(row)};
-  NGD_CONTENT_FIELDS_.forEach(function(key){out[key]=row[key];});
+  NGD_CONTENT_FIELDS_.forEach(function(key){out[key]=(key==='start_date'||key==='end_date')?(ngdContentDateCell_(row[key])===null?String(row[key]):ngdContentDateCell_(row[key])):row[key];});
   return out;
 }
 function contentAdminList_() {
@@ -216,8 +224,13 @@ function contentSetStatus_(admin,p) {
       'CONFLICT','Status konten sudah berubah. Muat ulang.');
     require_(old.status!=='ARCHIVED'||p.status==='DRAFT',
       'CONFLICT','Pulihkan arsip sebagai draft sebelum menerbitkan.');
-    if(p.status==='PUBLISHED')require_(NGD_CONTENT_KINDS_.indexOf(old.kind)>=0,
-      'VALIDATION','Format banner lama tidak dapat diterbitkan. Buat HERO atau PROMO baru.');
+    if(p.status==='PUBLISHED'){
+      require_(NGD_CONTENT_KINDS_.indexOf(old.kind)>=0,'VALIDATION','Format banner lama tidak dapat diterbitkan. Buat HERO atau PROMO baru.');
+      if(old.kind==='PORTFOLIO_VIDEO')contentVideoPath_(old.image_path);
+      if(old.kind==='PORTFOLIO_IMAGE')contentImagePath_(old.image_path,false);
+      var starts=ngdContentDateCell_(old.start_date),ends=ngdContentDateCell_(old.end_date);
+      require_(starts!==null&&ends!==null&&(!starts||!ends||starts<=ends),'VALIDATION','Jadwal tayang tidak valid.');
+    }
     updateRow_('site_content',old._row,{status:p.status,updated_at:now_()});
     logAudit_(admin.member_id,'ADMIN','CONTENT_STATUS','site_content',id,
       old.status,p.status,{kind:old.kind,placement:old.placement});
